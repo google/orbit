@@ -50,11 +50,10 @@ class OrbitStartupWindow : public QDialog {
     if (std::holds_alternative<SshInfo>(result_)) {
       auto& ssh_info = std::get<SshInfo>(result_);
       Credentials credentials{};
-      credentials.host = ssh_info.host.toStdString();
+      credentials.addr_and_port = {ssh_info.host.toStdString(), ssh_info.port};
       credentials.key_path = ssh_info.key_path.toStdString();
       credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
       credentials.user = ssh_info.user.toStdString();
-      credentials.port = ssh_info.port;
       return outcome::success(std::move(credentials));
     } else if (std::holds_alternative<QString>(result_)) {
       return outcome::success(std::get<QString>(result_));

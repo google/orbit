@@ -155,7 +155,7 @@ class StateMachineHelper : public QObject {
       if (result) {
         self()->started();
       } else {
-        if (OrbitSsh::shouldITryAgain(result)) {
+        if (OrbitSsh::ShouldITryAgain(result)) {
           self()->HandleEagain();
         } else {
           self()->SetError(result.error());
@@ -169,7 +169,7 @@ class StateMachineHelper : public QObject {
       const auto result = self()->run();
 
       if (!result) {
-        if (OrbitSsh::shouldITryAgain(result)) {
+        if (OrbitSsh::ShouldITryAgain(result)) {
           self()->HandleEagain();
         } else {
           self()->SetError(result.error());
@@ -185,7 +185,7 @@ class StateMachineHelper : public QObject {
       if (result) {
         self()->stopped();
       } else {
-        if (OrbitSsh::shouldITryAgain(result)) {
+        if (OrbitSsh::ShouldITryAgain(result)) {
           self()->HandleEagain();
         } else {
           self()->SetError(result.error());

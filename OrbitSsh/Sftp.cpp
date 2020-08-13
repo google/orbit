@@ -10,26 +10,26 @@ namespace OrbitSsh {
 
 outcome::result<Sftp> Sftp::Init(Session* session) {
   CHECK(session);
-  const auto result = libssh2_sftp_init(session->GetRawSessionPtr());
+  auto* const result = libssh2_sftp_init(session->GetRawSessionPtr());
 
-  if (result) {
-    return Sftp{result, session};
-  } else {
+  if (result == nullptr) {
     return static_cast<Error>(
         libssh2_session_last_errno(session->GetRawSessionPtr()));
   }
+
+  return Sftp{result, session};
 }
 
 outcome::result<void> Sftp::Shutdown() {
   CHECK(raw_sftp_ptr_);
   const auto result = libssh2_sftp_shutdown(raw_sftp_ptr_.get());
 
-  if (result == 0) {
-    raw_sftp_ptr_.release();
-    return outcome::success();
-  } else {
+  if (result < 0) {
     return outcome::failure(static_cast<Error>(result));
   }
+
+  (void)raw_sftp_ptr_.release();
+  return outcome::success();
 }
 
 }  // namespace OrbitSsh

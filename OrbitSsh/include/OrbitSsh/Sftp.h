@@ -22,8 +22,10 @@ class Sftp {
 
   outcome::result<void> Shutdown();
 
-  LIBSSH2_SFTP* GetRawSftpPtr() const noexcept { return raw_sftp_ptr_.get(); }
-  Session* GetSession() const noexcept { return session_; }
+  [[nodiscard]] LIBSSH2_SFTP* GetRawSftpPtr() const noexcept {
+    return raw_sftp_ptr_.get();
+  }
+  [[nodiscard]] Session* GetSession() const noexcept { return session_; }
 
  private:
   explicit Sftp(LIBSSH2_SFTP* raw_sftp_ptr, Session* session)

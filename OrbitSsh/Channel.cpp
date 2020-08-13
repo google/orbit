@@ -55,12 +55,10 @@ outcome::result<std::string> Channel::ReadStdOut(int buffer_size) {
   const int rc = libssh2_channel_read(raw_channel_ptr_.get(), buffer.data(),
                                       buffer.size());
 
-  if (rc >= 0) {
-    buffer.resize(rc);
-    return outcome::success(std::move(buffer));
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  buffer.resize(rc);
+  return outcome::success(std::move(buffer));
 }
 
 outcome::result<std::string> Channel::ReadStdErr(int buffer_size) {
@@ -68,23 +66,19 @@ outcome::result<std::string> Channel::ReadStdErr(int buffer_size) {
   const int rc = libssh2_channel_read_stderr(raw_channel_ptr_.get(),
                                              buffer.data(), buffer.size());
 
-  if (rc >= 0) {
-    buffer.resize(rc);
-    return outcome::success(std::move(buffer));
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  buffer.resize(rc);
+  return outcome::success(std::move(buffer));
 }
 
-outcome::result<int> Channel::Write(std::string_view data) {
+outcome::result<int> Channel::Write(std::string_view text) {
   const int rc =
-      libssh2_channel_write(raw_channel_ptr_.get(), data.data(), data.size());
+      libssh2_channel_write(raw_channel_ptr_.get(), text.data(), text.size());
 
-  if (rc >= 0) {
-    return outcome::success(rc);
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  return outcome::success(rc);
 }
 
 outcome::result<void> Channel::WriteBlocking(std::string_view text) {
@@ -102,42 +96,34 @@ outcome::result<void> Channel::WriteBlocking(std::string_view text) {
 outcome::result<void> Channel::SendEOF() {
   const int rc = libssh2_channel_send_eof(raw_channel_ptr_.get());
 
-  if (rc == 0) {
-    return outcome::success();
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  return outcome::success();
 }
 
 outcome::result<void> Channel::WaitRemoteEOF() {
   const int rc = libssh2_channel_wait_eof(raw_channel_ptr_.get());
 
-  if (rc == 0) {
-    return outcome::success();
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  return outcome::success();
 }
 
 outcome::result<void> Channel::Close() {
   const int rc = libssh2_channel_close(raw_channel_ptr_.get());
 
-  if (rc == 0) {
-    raw_channel_ptr_.reset();
-    return outcome::success();
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  raw_channel_ptr_.reset();
+  return outcome::success();
 }
 
 outcome::result<void> Channel::WaitClosed() {
   const int rc = libssh2_channel_wait_closed(raw_channel_ptr_.get());
 
-  if (rc == 0) {
-    return outcome::success();
-  } else {
-    return static_cast<Error>(rc);
-  }
+  if (rc < 0) return static_cast<Error>(rc);
+
+  return outcome::success();
 }
 
 int Channel::GetExitStatus() {

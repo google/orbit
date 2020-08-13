@@ -21,8 +21,10 @@ enum class KnownHostsError {
 struct KnownHostsErrorCategory : std::error_category {
   using std::error_category::error_category;
 
-  const char* name() const noexcept override { return "libssh2_known_hosts"; }
-  std::string message(int condition) const override;
+  [[nodiscard]] const char* name() const noexcept override {
+    return "libssh2_known_hosts";
+  }
+  [[nodiscard]] std::string message(int condition) const override;
 };
 
 inline const KnownHostsErrorCategory& GetKnownHostsErrorCategory() {
@@ -30,6 +32,7 @@ inline const KnownHostsErrorCategory& GetKnownHostsErrorCategory() {
   return category;
 }
 
+// NOLINTNEXTLINE: This is the overload for the global make_error_code
 inline std::error_code make_error_code(KnownHostsError e) {
   return std::error_code{static_cast<int>(e), GetKnownHostsErrorCategory()};
 }

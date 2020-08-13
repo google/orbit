@@ -29,7 +29,7 @@ outcome::result<void> Session::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kSocketCreated: {
-      OUTCOME_TRY(socket_->Connect(credentials_.host, credentials_.port));
+      OUTCOME_TRY(socket_->Connect(credentials_.addr_and_port));
       SetState(State::kSocketConnected);
       ABSL_FALLTHROUGH_INTENDED;
     }
@@ -46,8 +46,8 @@ outcome::result<void> Session::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kHandshaked: {
-      OUTCOME_TRY(session_->MatchKnownHosts(
-          credentials_.host, credentials_.port, credentials_.known_hosts_path));
+      OUTCOME_TRY(session_->MatchKnownHosts(credentials_.addr_and_port,
+                                            credentials_.known_hosts_path));
       SetState(State::kMatchedKnownHosts);
       ABSL_FALLTHROUGH_INTENDED;
     }

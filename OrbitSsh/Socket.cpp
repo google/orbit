@@ -24,12 +24,12 @@ Socket& Socket::operator=(Socket&& other) noexcept {
   return *this;
 }
 
-outcome::result<void> Socket::Connect(const std::string& ip_address, int port,
-                                      int domain) {
-  sockaddr_in sin;
+outcome::result<void> Socket::Connect(const AddrAndPort& addr_and_port,
+                                      int domain) const {
+  sockaddr_in sin{};
   sin.sin_family = domain;
-  sin.sin_port = htons(port);
-  sin.sin_addr.s_addr = inet_addr(ip_address.c_str());
+  sin.sin_port = htons(addr_and_port.port);
+  sin.sin_addr.s_addr = inet_addr(addr_and_port.addr.c_str());
 
   if (sin.sin_addr.s_addr == INADDR_NONE) {
     return Error::kInvalidIP;
@@ -38,24 +38,17 @@ outcome::result<void> Socket::Connect(const std::string& ip_address, int port,
   const int rc = connect(descriptor_, reinterpret_cast<sockaddr*>(&sin),
                          sizeof(sockaddr_in));
 
-  if (rc == 0) {
-    return outcome::success();
-  } else {
-    return getLastError();
-  }
+  if (rc != 0) return GetLastError();
+
+  return outcome::success();
 }
 
-outcome::result<void> Socket::Connect(const AddrAndPort& addrAndPort,
-                                      int domain) {
-  return Connect(addrAndPort.addr, addrAndPort.port, domain);
-}
-
-outcome::result<void> Socket::Bind(const std::string& ip_address, int port,
-                                   int domain) {
-  sockaddr_in sin;
+outcome::result<void> Socket::Bind(const AddrAndPort& addr_and_port,
+                                   int domain) const {
+  sockaddr_in sin{};
   sin.sin_family = domain;
-  sin.sin_port = htons(port);
-  sin.sin_addr.s_addr = inet_addr(ip_address.c_str());
+  sin.sin_port = htons(addr_and_port.port);
+  sin.sin_addr.s_addr = inet_addr(addr_and_port.addr.c_str());
   if (sin.sin_addr.s_addr == INADDR_NONE) {
     return outcome::failure(Error::kInvalidIP);
   }
@@ -63,36 +56,32 @@ outcome::result<void> Socket::Bind(const std::string& ip_address, int port,
   const int result =
       bind(descriptor_, reinterpret_cast<sockaddr*>(&sin), sizeof(sockaddr_in));
 
-  if (result == 0) {
-    return outcome::success();
-  } else {
-    return getLastError();
-  }
+  if (result != 0) return GetLastError();
+
+  return outcome::success();
 }
 
-outcome::result<Socket::AddrAndPort> Socket::GetSocketAddrAndPort() {
-  struct sockaddr_in sin;
+outcome::result<AddrAndPort> Socket::GetSocketAddrAndPort() const {
+  struct sockaddr_in sin {};
   socklen_t len = sizeof(sin);
   if (getsockname(descriptor_, reinterpret_cast<sockaddr*>(&sin), &len) == 0) {
     return outcome::success(
         AddrAndPort{std::string{inet_ntoa(sin.sin_addr)}, ntohs(sin.sin_port)});
   }
 
-  return getLastError();
+  return GetLastError();
 }
 
-outcome::result<void> Socket::Listen() {
+outcome::result<void> Socket::Listen() const {
   const int rc = listen(descriptor_, 0);
 
-  if (rc == 0) {
-    return outcome::success();
-  } else {
-    return getLastError();
-  }
+  if (rc != 0) return GetLastError();
+
+  return outcome::success();
 }
 
-outcome::result<void> Socket::CanBeRead() {
-  timeval select_timeout;
+outcome::result<void> Socket::CanBeRead() const {
+  timeval select_timeout{};
   select_timeout.tv_sec = 0;
   select_timeout.tv_usec = 0;
 
@@ -101,45 +90,40 @@ outcome::result<void> Socket::CanBeRead() {
   FD_SET(descriptor_, &socket_set);
 
   const int result =
-      select(descriptor_ + 1, &socket_set, NULL, NULL, &select_timeout);
-  if (result > 0) {
-    return outcome::success();
-  } else if (result == 0) {
-    return Error::kEagain;
-  } else {
-    return getLastError();
-  }
+      select(descriptor_ + 1, &socket_set, nullptr, nullptr, &select_timeout);
+
+  if (result < 0) return GetLastError();
+
+  if (result == 0) return Error::kEagain;
+
+  return outcome::success();
 }
 
-outcome::result<std::string> Socket::Receive(size_t buffer_size) {
+outcome::result<std::string> Socket::Receive(size_t buffer_size) const {
   OUTCOME_TRY(CanBeRead());
 
   std::string buffer(buffer_size, '\0');
 
   const int rc = recv(descriptor_, buffer.data(), buffer.size(), 0);
 
-  if (rc < 0) {
-    return getLastError();
-  } else {
-    buffer.resize(rc);
-    return buffer;
-  }
+  if (rc < 0) return GetLastError();
+
+  buffer.resize(rc);
+  return buffer;
 }
 
-outcome::result<size_t> Socket::Send(std::string_view data) {
+outcome::result<size_t> Socket::Send(std::string_view data) const {
   const int rc = send(descriptor_, data.data(), data.size(), 0);
 
-  if (rc > 0) {
-    return outcome::success(static_cast<size_t>(rc));
-  } else {
-    return getLastError();
-  }
+  if (rc < 0) return GetLastError();
+
+  return outcome::success(static_cast<size_t>(rc));
 }
 
 outcome::result<void> Socket::SendBlocking(std::string_view data) {
   do {
     const auto result = Send(data);
-    if (!result && !shouldITryAgain(result)) {
+    if (!result && !ShouldITryAgain(result)) {
       // A non recoverable error occurred.
       return result.error();
     }
@@ -153,13 +137,11 @@ outcome::result<void> Socket::WaitDisconnect() {
   OUTCOME_TRY(CanBeRead());
   OUTCOME_TRY(data, Receive());
 
-  if (data.empty()) {
-    return outcome::success();
-  }
+  if (data.empty()) return outcome::success();
 
   LOG("Received data after sending shutdown on socket (%d bytes)",
       data.length());
-  return getLastError();
+  return GetLastError();
 }
 
 }  // namespace OrbitSsh

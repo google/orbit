@@ -21,7 +21,8 @@
 #include <optional>
 #include <outcome.hpp>
 #include <string>
-#include <tuple>
+
+#include "OrbitSsh/AddrAndPort.h"
 
 namespace OrbitSsh {
 
@@ -30,19 +31,6 @@ namespace OrbitSsh {
 class Socket {
  public:
   using Descriptor = libssh2_socket_t;
-
-  struct AddrAndPort {
-    std::string addr;
-    int port;
-
-    friend bool operator==(const AddrAndPort& lhs, const AddrAndPort& rhs) {
-      return std::tie(lhs.addr, lhs.port) == std::tie(rhs.addr, rhs.port);
-    }
-
-    friend bool operator!=(const AddrAndPort& lhs, const AddrAndPort& rhs) {
-      return !(lhs == rhs);
-    }
-  };
 
   Socket(const Socket&) = delete;
   Socket& operator=(const Socket&) = delete;
@@ -57,29 +45,30 @@ class Socket {
                                         int protocol = IPPROTO_TCP);
   static void PrintWithLastError(const std::string& message);
 
-  outcome::result<void> Connect(const std::string& ip_address, int port,
-                                int domain = AF_INET);
-  outcome::result<void> Connect(const AddrAndPort& addrAndPort,
-                                int domain = AF_INET);
-  outcome::result<void> Bind(const std::string& ip_address, int port,
-                             int domain = AF_INET);
-  outcome::result<void> Listen();
-  outcome::result<std::string> Receive(size_t buffer_size = 0x400);
-  outcome::result<void> SendBlocking(std::string_view text);
-  outcome::result<AddrAndPort> GetSocketAddrAndPort();
-  outcome::result<Socket> Accept();
+  [[nodiscard]] outcome::result<void> Connect(const AddrAndPort& addr_and_port,
+                                              int domain = AF_INET) const;
+  [[nodiscard]] outcome::result<void> Bind(const AddrAndPort& addr_and_port,
+                                           int domain = AF_INET) const;
+  [[nodiscard]] outcome::result<void> Listen() const;
+  [[nodiscard]] outcome::result<std::string> Receive(
+      size_t buffer_size = 0x400) const;
+  [[nodiscard]] outcome::result<void> SendBlocking(std::string_view data);
+  [[nodiscard]] outcome::result<AddrAndPort> GetSocketAddrAndPort() const;
+  [[nodiscard]] outcome::result<Socket> Accept() const;
 
-  outcome::result<void> Shutdown();
+  [[nodiscard]] outcome::result<void> Shutdown() const;
   outcome::result<void> WaitDisconnect();
-  Descriptor GetFileDescriptor() const { return descriptor_; }
+  [[nodiscard]] Descriptor GetFileDescriptor() const { return descriptor_; }
 
-  outcome::result<void> CanBeRead();
+  [[nodiscard]] outcome::result<void> CanBeRead() const;
 
  private:
   explicit Socket(Descriptor descriptor);
-  outcome::result<size_t> Send(std::string_view data);
+
+  [[nodiscard]] outcome::result<size_t> Send(std::string_view data) const;
+
   Descriptor descriptor_ = LIBSSH2_INVALID_SOCKET;
-  static std::error_code getLastError();
+  static std::error_code GetLastError();
 };
 
 }  // namespace OrbitSsh

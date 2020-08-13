@@ -165,7 +165,7 @@ outcome::result<void> Tunnel::readFromChannel() {
     const size_t kChunkSize = 8192;
     const auto result = channel_->ReadStdOut(kChunkSize);
 
-    if (!result && !OrbitSsh::shouldITryAgain(result)) {
+    if (!result && !OrbitSsh::ShouldITryAgain(result)) {
       return outcome::failure(result.error());
     } else if (!result) {
       // That's the EAGAIN case
@@ -225,7 +225,7 @@ void Tunnel::HandleIncomingDataLocalSocket() {
 
   const auto result = writeToChannel();
 
-  if (!result && !OrbitSsh::shouldITryAgain(result)) {
+  if (!result && !OrbitSsh::ShouldITryAgain(result)) {
     SetError(result.error());
     return;
   } else if (!result) {

@@ -14,6 +14,8 @@
 #include <outcome.hpp>
 #include <string>
 
+#include "OrbitSsh/AddrAndPort.h"
+
 namespace OrbitSsh {
 
 class Session {
@@ -21,14 +23,15 @@ class Session {
   static outcome::result<Session> Create(Context* context);
 
   outcome::result<void> Handshake(Socket* socket_ptr);
-  outcome::result<void> MatchKnownHosts(std::string host, int port,
-                                        std::filesystem::path known_hosts_path);
-  outcome::result<void> Authenticate(std::string username,
-                                     std::filesystem::path key_path,
-                                     std::string pass_phrase = "");
+  outcome::result<void> MatchKnownHosts(
+      const AddrAndPort& addr_and_port,
+      const std::filesystem::path& known_hosts_path);
+  outcome::result<void> Authenticate(const std::string& username,
+                                     const std::filesystem::path& key_path,
+                                     const std::string& pass_phrase = "");
   outcome::result<void> Disconnect(
-      std::string message = "Disconnecting normally");
-  LIBSSH2_SESSION* GetRawSessionPtr() const noexcept {
+      const std::string& message = "Disconnecting normally");
+  [[nodiscard]] LIBSSH2_SESSION* GetRawSessionPtr() const noexcept {
     return raw_session_ptr_.get();
   }
   void SetBlocking(bool value);

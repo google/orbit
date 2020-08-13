@@ -379,9 +379,10 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
 }
 
 outcome::result<void> ServiceDeployManager::ConnectToServer() {
-  emit statusMessage(QString("Connecting to %1:%2...")
-                         .arg(QString::fromStdString(credentials_.host))
-                         .arg(credentials_.port));
+  emit statusMessage(
+      QString("Connecting to %1:%2...")
+          .arg(QString::fromStdString(credentials_.addr_and_port.addr))
+          .arg(credentials_.addr_and_port.port));
 
   session_.emplace(context_);
 
@@ -394,9 +395,10 @@ outcome::result<void> ServiceDeployManager::ConnectToServer() {
 
   OUTCOME_TRY(MapError(loop_.exec(), Error::kCouldNotConnectToServer));
 
-  emit statusMessage(QString("Successfully connected to %1:%2.")
-                         .arg(QString::fromStdString(credentials_.host))
-                         .arg(credentials_.port));
+  emit statusMessage(
+      QString("Successfully connected to %1:%2.")
+          .arg(QString::fromStdString(credentials_.addr_and_port.addr))
+          .arg(credentials_.addr_and_port.port));
 
   QObject::connect(&session_.value(), &Session::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);

@@ -12,7 +12,7 @@ namespace OrbitSsh {
 
 TEST(Context, Create) {
   auto context = Context::Create();
-  ASSERT_TRUE(context.has_value());
+  ASSERT_TRUE(context);
   ASSERT_TRUE(context.value().active());
 
   auto context2 = std::move(context.value());

@@ -28,8 +28,8 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   ASSERT_EQ(app->arguments().size(), 6);
 
   OrbitSsh::Credentials creds{
-      /* .host = */ app->arguments()[1].toStdString(),
-      /* .port = */ app->arguments()[2].toInt(),
+      /* .addr_and_port = */ {app->arguments()[1].toStdString(),
+                              app->arguments()[2].toInt()},
       /* .user = */ app->arguments()[3].toStdString(),
       /* .known_hosts_path = */
       std::filesystem::path{app->arguments()[4].toStdString()},
@@ -228,8 +228,8 @@ TEST(OrbitSshQtTests, CopyToLocalTest) {
   ASSERT_EQ(app->arguments().size(), 6);
 
   OrbitSsh::Credentials creds{
-      /* .host = */ app->arguments()[1].toStdString(),
-      /* .port = */ app->arguments()[2].toInt(),
+      /* .addr_and_port = */ {app->arguments()[1].toStdString(),
+                              app->arguments()[2].toInt()},
       /* .user = */ app->arguments()[3].toStdString(),
       /* .known_hosts_path = */
       std::filesystem::path{app->arguments()[4].toStdString()},
