@@ -8,7 +8,6 @@
 #include "Capture.h"
 #include "EventTracer.h"
 #include "GlUtils.h"
-#include "PrintVar.h"
 #include "absl/base/casts.h"
 
 using orbit_client_protos::TimerInfo;
@@ -662,6 +661,13 @@ float CaptureWindow::GetTopBarTextY() {
          m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
 }
 
+template <class T>
+static std::string VariableToString(std::string_view name, const T& value) {
+  std::stringstream string_stream{};
+  string_stream << name << " = " << value;
+  return string_stream.str();
+}
+
 void CaptureWindow::RenderUI() {
   // Don't draw ImGui when picking.
   if (m_Picking || m_IsHovering) {
@@ -670,6 +676,8 @@ void CaptureWindow::RenderUI() {
 
   ScopeImguiContext state(m_ImGuiContext);
   Orbit_ImGui_NewFrame(this);
+
+#define VAR_TO_STR(var) VariableToString(#var, var)
 
   if (m_DrawStats) {
     ImGui::ShowDemoWindow();
@@ -703,6 +711,8 @@ void CaptureWindow::RenderUI() {
 
     m_StatsWindow.Draw("Capture Stats", &m_DrawStats);
   }
+
+#undef VAR_TO_STR
 
   if (m_DrawHelp) {
     RenderHelpUi();
