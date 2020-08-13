@@ -9,7 +9,6 @@
 #include <cinttypes>
 #include <string>
 
-#include "ElfUtils/ElfFile.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
@@ -22,8 +21,7 @@ using orbit_client_protos::FunctionInfo;
 Module::Module(const std::string& file_name, uint64_t address_start,
                uint64_t address_end) {
   if (!std::filesystem::exists(file_name)) {
-    ERROR("Creating Module from path \"%s\": file does not exist",
-          file_name.c_str());
+    ERROR("Creating Module from path \"%s\": file does not exist", file_name);
   }
 
   m_FullName = file_name;
@@ -38,7 +36,7 @@ Module::Module(const std::string& file_name, uint64_t address_start,
 
 void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
   if (m_Pdb != nullptr) {
-    LOG("Warning: Module %s already contained symbols, will override now.",
+    LOG("Warning: Module \"%s\" already contained symbols, will override now",
         m_Name);
   }
 

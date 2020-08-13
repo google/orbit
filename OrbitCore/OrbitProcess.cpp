@@ -16,7 +16,6 @@ using orbit_client_protos::FunctionInfo;
 Process::Process() {
   m_ID = 0;
   m_Is64Bit = false;
-  m_IsRemote = false;
 }
 
 FunctionInfo* Process::GetFunctionFromAddress(uint64_t address,
