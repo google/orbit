@@ -97,8 +97,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
 
-  void OnProcessSelected(int32_t pid);
-
   void AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
   void AddSelectionReport(std::shared_ptr<SamplingProfiler> a_SamplingProfiler);
   void AddTopDownView(const SamplingProfiler& sampling_profiler);
@@ -203,7 +201,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void LoadModulesFromPreset(
       const std::shared_ptr<Process>& process,
       const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  void UpdateModuleList(int32_t pid);
+  void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateSamplingReport();
   void LoadPreset(

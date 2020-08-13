@@ -813,7 +813,8 @@ void OrbitApp::LoadModulesFromPreset(
   }
 }
 
-void OrbitApp::UpdateModuleList(int32_t pid) {
+void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
+  CHECK(m_ProcessesDataView->GetSelectedProcessId() == pid);
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result =
         process_manager_->LoadModuleList(pid);
@@ -838,6 +839,7 @@ void OrbitApp::UpdateModuleList(int32_t pid) {
       // TODO: remove this part when all client code is moved to
       // new data model.
       std::shared_ptr<Process> process = FindProcessByPid(pid);
+      CHECK(process != nullptr);
 
       for (const ModuleInfo& info : module_infos) {
         // if module already exists, don't create it again.
@@ -862,20 +864,16 @@ void OrbitApp::UpdateModuleList(int32_t pid) {
       }
       // To this point ----------------------------------
 
+      // To this point all data is ready. We can set the Process and then
+      // propagate the changes to the UI.
+
+      if (pid != Capture::GTargetProcess->GetID()) {
+        Capture::SetTargetProcess(std::move(process));
+      }
+
       FireRefreshCallbacks();
     });
   });
-}
-
-void OrbitApp::OnProcessSelected(int32_t pid) {
-  CHECK(m_ProcessesDataView->GetSelectedProcessId() == pid);
-
-  std::shared_ptr<Process> process = FindProcessByPid(pid);
-  CHECK(process != nullptr);
-  Capture::SetTargetProcess(std::move(process));
-
-  // Update modules when process changed
-  UpdateModuleList(pid);
 }
 
 std::shared_ptr<Process> OrbitApp::FindProcessByPid(int32_t pid) {
@@ -925,7 +923,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!m_ProcessesDataView) {
         m_ProcessesDataView = std::make_unique<ProcessesDataView>();
         m_ProcessesDataView->SetSelectionListener(
-            [&](int32_t pid) { OnProcessSelected(pid); });
+            [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
         m_Panels.push_back(m_ProcessesDataView.get());
       }
       return m_ProcessesDataView.get();

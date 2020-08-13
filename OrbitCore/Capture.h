@@ -23,9 +23,8 @@ class SamplingProfiler;
 
 class Capture {
  public:
-
   static void Init();
-  static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
+  static void SetTargetProcess(std::shared_ptr<Process> process);
   static ErrorMessageOr<void> StartCapture();
   static void FinalizeCapture();
   static void ClearCaptureData();
