@@ -111,7 +111,9 @@ class Batcher {
     picking_manager_ = picking_manager;
   }
 
+  [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);
+
   [[nodiscard]] TextBox* GetTextBox(PickingId id);
 
  protected:

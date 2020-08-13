@@ -2,33 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "PickingManagerTest.h"
+
 #include <gtest/gtest.h>
 
 #include <cstring>
-
-#include "PickingManager.h"
-#include "absl/base/casts.h"
-
-class PickableMock : public Pickable {
- public:
-  void OnPick(int, int) override { picked_ = true; }
-  void OnDrag(int, int) override { dragging_ = true; }
-  void OnRelease() override {
-    dragging_ = false;
-    picked_ = false;
-  }
-  void Draw(GlCanvas*, PickingMode) override {}
-
-  bool Draggable() override { return true; }
-
-  bool picked_ = false;
-  bool dragging_ = false;
-
-  void Reset() {
-    picked_ = false;
-    dragging_ = false;
-  }
-};
 
 class UndraggableMock : public PickableMock {
   bool Draggable() override { return false; }
@@ -46,13 +24,6 @@ TEST(PickingManager, PickableMock) {
   ASSERT_FALSE(pickable.dragging_);
   pickable.Reset();
   ASSERT_FALSE(pickable.picked_);
-}
-
-// Simulate "rendering" the picking color into a uint32_t target
-PickingId MockRenderPickingColor(const Color& col_vec) {
-  uint32_t col = absl::bit_cast<uint32_t, Color>(col_vec);
-  PickingId picking_id = PickingId::FromPixelValue(col);
-  return picking_id;
 }
 
 TEST(PickingManager, BasicFunctionality) {
