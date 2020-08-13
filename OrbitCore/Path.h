@@ -31,7 +31,6 @@ class Path {
 
 #ifdef __linux__
   static std::string GetHome();
-  static std::string GetServiceLogFilePath();
 #endif
 
   static std::string GetFileName(const std::string& a_FullName);

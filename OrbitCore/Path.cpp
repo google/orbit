@@ -255,12 +255,6 @@ std::string Path::GetHome() {
   std::string home = GetEnvVar("HOME") + "/";
   return home;
 }
-
-std::string Path::GetServiceLogFilePath() {
-  std::string logsDir = Path::JoinPath({"/", "var", "log"});
-  std::filesystem::create_directory(logsDir);
-  return Path::JoinPath({logsDir, "OrbitService.log"});
-}
 #endif
 
 std::vector<std::string> Path::ListFiles(
