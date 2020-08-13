@@ -16,7 +16,7 @@
 #include "Utils.h"
 
 outcome::result<void, std::string> ProcessList::Refresh() {
-  const auto cpu_result = LinuxUtils::GetCpuUtilization();
+  auto cpu_result = LinuxUtils::GetCpuUtilization();
   if (!cpu_result) {
     return outcome::failure(
         absl::StrFormat("Unable to retrieve cpu usage of processes: %s",
@@ -27,15 +27,14 @@ outcome::result<void, std::string> ProcessList::Refresh() {
 
   std::vector<ProcessInfo> updated_processes;
 
-
-  // TODO (161423785) This for loop should be refactored. For example, when
-  // parts are in a separate function, OUTCOME_TRY could be used to simplify
-  // error handling. Also use ErrorMessageOr
+  // TODO(b/161423785): This for loop should be refactored. For example, when
+  //  parts are in a separate function, OUTCOME_TRY could be used to simplify
+  //  error handling. Also use ErrorMessageOr
   for (const auto& directory_entry :
        std::filesystem::directory_iterator("/proc")) {
     if (!directory_entry.is_directory()) continue;
 
-    const std::filesystem::path path = directory_entry.path();
+    const std::filesystem::path& path = directory_entry.path();
     std::string folder_name = path.filename().string();
 
     uint32_t pid;
@@ -50,7 +49,7 @@ outcome::result<void, std::string> ProcessList::Refresh() {
     }
 
     const std::filesystem::path name_file_path = path / "comm";
-    const auto name_file_result = OrbitUtils::FileToString(name_file_path);
+    auto name_file_result = OrbitUtils::FileToString(name_file_path);
     if (!name_file_result) {
       ERROR("Failed to read %s: %s", name_file_path.string(),
             name_file_result.error().message());
@@ -70,8 +69,7 @@ outcome::result<void, std::string> ProcessList::Refresh() {
     // separated by null bytes ('\0')".
     const std::filesystem::path cmdline_file_path =
         directory_entry.path() / "cmdline";
-    const auto cmdline_file_result =
-        OrbitUtils::FileToString(cmdline_file_path);
+    auto cmdline_file_result = OrbitUtils::FileToString(cmdline_file_path);
     if (!cmdline_file_result) {
       ERROR("Failed to read %s: %s", cmdline_file_path.string(),
             name_file_result.error().message());
@@ -89,7 +87,7 @@ outcome::result<void, std::string> ProcessList::Refresh() {
     }
     process.set_is_64_bit(is_64_bit_result.value());
 
-    const auto file_path_result = LinuxUtils::GetExecutablePath(pid);
+    auto file_path_result = LinuxUtils::GetExecutablePath(pid);
     if (file_path_result) {
       process.set_full_path(std::move(file_path_result.value()));
     }

@@ -27,11 +27,11 @@ class OrbitService {
   std::optional<std::chrono::time_point<std::chrono::steady_clock>>
       last_stdin_message_ = std::nullopt;
   const std::string_view kStartWatchdogPassphrase = "start_watchdog";
-  // TODO(antonrohr) The main thread can currently be blocked by slow functions
-  // like FunctionsDataView::DoSort and FunctionsDataView::DoFilter. The default
-  // timeout of 10 seconds is not enough with the blocking behaviour. As soon as
-  // the main thread does not block anymore, revert this from 25 seconds back to
-  // 10 seconds.
+  // TODO(antonrohr): The main thread can currently be blocked by slow functions
+  //  like FunctionsDataView::DoSort and FunctionsDataView::DoFilter. The
+  //  default timeout of 10 seconds is not enough with the blocking behaviour.
+  //  As soon as the main thread does not block anymore, revert this from 25
+  //  seconds back to 10 seconds.
   const int kWatchdogTimeoutInSeconds = 25;
 };
 
