@@ -40,8 +40,6 @@ void Select(orbit_client_protos::FunctionInfo* func);
 void UnSelect(orbit_client_protos::FunctionInfo* func);
 bool IsSelected(const orbit_client_protos::FunctionInfo& func);
 
-void Print(const orbit_client_protos::FunctionInfo& func);
-
 bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
 bool IsSelected(const SampledFunction& func);
