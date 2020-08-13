@@ -20,27 +20,38 @@ typedef struct {
 } vertex_t;
 
 TextRenderer::TextRenderer()
-    : m_Atlas(NULL),
-      m_Buffer(NULL),
-      m_Font(NULL),
-      m_Canvas(NULL),
+    : m_Atlas(nullptr),
+      m_Buffer(nullptr),
+      m_Font(nullptr),
+      m_Canvas(nullptr),
       m_Initialized(false),
       m_DrawOutline(false) {}
 
 TextRenderer::~TextRenderer() {
+  // Freetype-gl doesn't handle nullptr in its
+  // delete functions, hence the checks.
+
   if (m_Font) {
     texture_font_delete(m_Font);
   }
 
+  for (const auto& pair : m_FontsBySize) {
+    texture_font_delete(pair.second);
+  }
+  m_FontsBySize.clear();
+
   if (m_Buffer) {
     vertex_buffer_delete(m_Buffer);
+  }
+
+  if (m_Atlas) {
+    texture_atlas_delete(m_Atlas);
   }
 }
 
 void TextRenderer::Init() {
   if (m_Initialized) return;
 
-  m_Font = NULL;
   int atlasSize = 2 * 1024;
   m_Atlas = texture_atlas_new(atlasSize, atlasSize, 1);
 
@@ -81,9 +92,7 @@ void TextRenderer::SetFontSize(int size) {
   }
 }
 
-int TextRenderer::GetFontSize() {
-  return current_font_size_;
-}
+int TextRenderer::GetFontSize() { return current_font_size_; }
 
 void TextRenderer::Display(Batcher* batcher) {
   if (m_DrawOutline) {
