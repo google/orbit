@@ -33,7 +33,7 @@ class Block final {
   friend class BlockIterator<T, Size>;
   friend class BlockChain<T, Size>;
 
-  [[nodiscard]] T& Get(uint32_t index) { return data_[index]; }
+  [[nodiscard]] const T& Get(uint32_t index) const { return data_[index]; }
   [[nodiscard]] Block<T, Size>* mutable_next() { return next_; }
   [[nodiscard]] Block<T, Size>* mutable_prev() { return prev_; }
 
@@ -71,11 +71,11 @@ class Block final {
 template <class T, uint32_t BlockSize>
 class BlockIterator final {
  public:
-  explicit BlockIterator(Block<T, BlockSize>* block) : block_(block) {
+  explicit BlockIterator(const Block<T, BlockSize>* block) : block_(block) {
     index_ = (block_ != nullptr && block_->size() > 0) ? 0 : -1;
   }
 
-  T& operator*() { return block_->Get(index_); }
+  const T& operator*() const { return block_->Get(index_); }
 
   bool operator!=(const BlockIterator& other) const {
     if (block_ != other.block_) {
@@ -90,9 +90,9 @@ class BlockIterator final {
       return *this;
     }
 
-    if (block_->next() != nullptr && block_->next()->size() > 0) {
+    if (block_->HasNext() && block_->next()->size() > 0) {
       index_ = 0;
-      block_ = block_->mutable_next();
+      block_ = block_->next();
     } else {
       // end()
       block_ = nullptr;
@@ -103,7 +103,7 @@ class BlockIterator final {
   }
 
  private:
-  Block<T, BlockSize>* block_;
+  const Block<T, BlockSize>* block_;
   uint32_t index_;
 };
 
@@ -175,68 +175,15 @@ class BlockChain final {
 
   [[nodiscard]] uint32_t size() const { return size_; }
 
-  T* SlowAt(uint32_t index) {
-    if (index > size_) {
-      return nullptr;
-    }
-
-    uint32_t count = 1;
-    Block<T, BlockSize>* block = root_;
-    while (count * BlockSize < index && block && block->HasNext()) {
-      block = block->mutable_next();
-      ++count;
-    }
-
-    CHECK(block != nullptr);
-
-    return &block->Get(index % BlockSize);
-  }
-
-  T* GetElementAfter(const T* element) {
-    auto block = GetBlockContaining(element);
-    if (!block) {
-      return nullptr;
-    }
-
-    T* begin = &block->Get(0);
-    uint32_t index = element - begin;
-
-    if (index + 1 < block->size()) {
-      return &block->Get(index + 1);
-    }
-
-    if (block->HasNext() && block->next()->size() != 0) {
-      return &block->mutable_next()->Get(0);
-    }
-
-    return nullptr;
-  }
-
-  BlockIterator<T, BlockSize> begin() {
+  [[nodiscard]] BlockIterator<T, BlockSize> begin() const {
     return BlockIterator<T, BlockSize>(root_);
   }
-  BlockIterator<T, BlockSize> end() {
+
+  [[nodiscard]] BlockIterator<T, BlockSize> end() const {
     return BlockIterator<T, BlockSize>(nullptr);
   }
 
  private:
-  Block<T, BlockSize>* GetBlockContaining(const T* element) {
-    Block<T, BlockSize>* block = root_;
-    while (block != nullptr) {
-      uint32_t size = block->size();
-      if (size != 0) {
-        T* begin = &block->Get(0);
-        T* end = &block->Get(size - 1);
-        if (begin <= element && end >= element) {
-          return block;
-        }
-      }
-      block = block->mutable_next();
-    }
-
-    return nullptr;
-  }
-
   Block<T, BlockSize>* root_;
   Block<T, BlockSize>* current_;
   uint32_t size_;

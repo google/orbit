@@ -56,19 +56,14 @@ TEST(BlockChain, AddCopyableTypes) {
   v1.set_value("new v1");
   v2.set_value("new v2");
 
-  EXPECT_EQ(chain.SlowAt(0)->value(), "hello world");
-  EXPECT_EQ(chain.SlowAt(1)->value(), "or not");
+  EXPECT_EQ(chain.root()->data()[0].value(), "hello world");
+  EXPECT_EQ(chain.root()->data()[1].value(), "or not");
 
   // Multi-block test
   for (int i = 0; i < 2000; ++i) {
     chain.push_back(v1);
   }
   EXPECT_EQ(chain.size(), 2002);
-}
-
-TEST(BlockChain, SlowAtOutOfBounds) {
-  BlockChain<std::string, 1024> chain;
-  EXPECT_EQ(chain.SlowAt(1), nullptr);
 }
 
 TEST(BlockChain, Clear) {
@@ -83,7 +78,7 @@ TEST(BlockChain, Clear) {
 
   chain.push_back(v2);
   EXPECT_GT(chain.size(), 0);
-  EXPECT_EQ(*chain.SlowAt(0), v2);
+  EXPECT_EQ(chain.root()->data()[0], v2);
 
   // Multi-block test
   for (int i = 0; i < 2000; ++i) {
@@ -91,30 +86,6 @@ TEST(BlockChain, Clear) {
   }
   chain.clear();
   EXPECT_EQ(chain.size(), 0);
-}
-
-TEST(BlockChain, RetrieveCopyableTypes) {
-  const std::string v1 = "hello world";
-  const std::string v2 = "or not";
-  
-  BlockChain<std::string, 1024> chain;
-  chain.push_back(v1);
-  chain.push_back(v2);
-  EXPECT_EQ(*chain.SlowAt(0), v1);
-  EXPECT_EQ(*chain.SlowAt(1), v2);
-
-  // Expect those types to be copied
-  EXPECT_NE(chain.SlowAt(0), &v1);
-  EXPECT_NE(chain.SlowAt(1), &v2);
-
-  // Multi-block test
-  chain.clear();
-  for (int i = 0; i < 2000; ++i) {
-    chain.push_back(i % 2 == 0 ? v1 : v2);
-  }
-  for (int i = 0; i < 2000; ++i) {
-    EXPECT_EQ(*chain.SlowAt(i), i % 2 == 0 ? v1 : v2);
-  }
 }
 
 TEST(BlockChain, ElementIteration) {
@@ -126,13 +97,6 @@ TEST(BlockChain, ElementIteration) {
   chain.push_back(v1);
   chain.push_back(v2);
   chain.push_back(v3);
-
-  // The original element can't be found - BlockChain manages copies!
-  EXPECT_EQ(chain.GetElementAfter(&v1), nullptr);
-
-  int* el = chain.GetElementAfter(chain.SlowAt(0));
-  ASSERT_NE(el, nullptr);
-  EXPECT_EQ(*el, v2);
 
   // Note that only the "++it" operator is supported
   auto it = chain.begin();
@@ -206,7 +170,7 @@ TEST(BlockChain, Reset) {
 
   chain.push_back_n(10, 1024);
   EXPECT_GT(chain.size(), 0);
-  EXPECT_EQ(*chain.SlowAt(0), 10);
+  EXPECT_EQ(chain.root()->data()[0], 10);
   EXPECT_EQ(chain.root(), blockPtr[0]);
   EXPECT_EQ(chain.root()->next(), blockPtr[1]);
   EXPECT_EQ(blockPtr[1]->size(), 0);
@@ -228,6 +192,6 @@ TEST(BlockChain, MovableType) {
   chain.push_back(MovableType("v2"));
   EXPECT_EQ(chain.size(), 2);
 
-  EXPECT_EQ(chain.SlowAt(0)->value(), "v1");
-  EXPECT_EQ(chain.SlowAt(1)->value(), "v2");
+  EXPECT_EQ(chain.root()->data()[0].value(), "v1");
+  EXPECT_EQ(chain.root()->data()[1].value(), "v2");
 }
