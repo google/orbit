@@ -65,9 +65,9 @@ class Process {
   Mutex m_DataMutex;
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
-  // TODO(antonrohr) change the usage of m_NameToModuleMap to
-  // path_to_module_map_, since the name of a module is not unique
-  // (/usr/lib/libbase.so and /opt/somedir/libbase.so)
+  // TODO(antonrohr): Change the usage of m_NameToModuleMap to
+  //  path_to_module_map_, since the name of a module is not unique
+  //  (/usr/lib/libbase.so and /opt/somedir/libbase.so)
   std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
   std::map<std::string, std::shared_ptr<Module>> path_to_module_map_;
 
