@@ -91,12 +91,16 @@ class GlCanvas : public GlPanel {
                 const Color& a_Color, float a_MaxSize = -1.f,
                 bool a_RightJustified = false, bool a_InvertY = true);
 
+  void ResetHoverTimer();
+
   float GetDeltaTimeSeconds() const { return m_DeltaTime; }
 
   virtual void Draw() {}
   virtual void DrawScreenSpace() {}
   virtual void RenderUI() {}
   virtual void RenderText() {}
+
+  virtual void Hover(int /*a_X*/, int /*a_Y*/) {}
 
   ImGuiContext* GetImGuiContext() { return m_ImGuiContext; }
   Batcher* GetBatcher() { return &ui_batcher_; }
@@ -118,6 +122,8 @@ class GlCanvas : public GlPanel {
   static float Z_VALUE_EVENT_BAR_PICKING;
 
  protected:
+  [[nodiscard]] PickingMode GetPickingMode();
+
   int m_Width;
   int m_Height;
   float m_WorldWidth;
@@ -149,6 +155,11 @@ class GlCanvas : public GlPanel {
   bool m_ImguiActive;
   int m_ID;
   Vec4 m_BackgroundColor;
+
+  Timer m_HoverTimer;
+  int m_HoverDelayMs;
+  bool m_IsHovering;
+  bool m_CanHover;
 
   ImGuiContext* m_ImGuiContext;
   TickType m_RefTimeClick;

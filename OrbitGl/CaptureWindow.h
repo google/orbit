@@ -28,7 +28,7 @@ class CaptureWindow : public GlCanvas {
   void Pick();
   void Pick(int a_X, int a_Y);
   void Pick(PickingId a_ID, int a_X, int a_Y);
-  void Hover(int a_X, int a_Y);
+  void Hover(int a_X, int a_Y) override;
   void FindCode(uint64_t address);
   void RightDown(int a_X, int a_Y) override;
   bool RightUp() override;
@@ -49,7 +49,6 @@ class CaptureWindow : public GlCanvas {
   void Resize(int a_Width, int a_Height) override;
   void RenderHelpUi();
   void RenderTimeBar();
-  void ResetHoverTimer();
   void SelectTextBox(TextBox* text_box);
   void OnDrag(float a_Ratio);
   void OnVerticalDrag(float a_Ratio);
@@ -64,15 +63,8 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(BatcherId batcher_id);
 
  private:
-  [[nodiscard]] PickingMode GetPickingMode();
-
- private:
   TimeGraph time_graph_;
   OutputWindow m_StatsWindow;
-  Timer m_HoverTimer;
-  int m_HoverDelayMs;
-  bool m_IsHovering;
-  bool m_CanHover;
   bool m_DrawHelp;
   bool m_DrawFilter;
   bool m_FirstHelpDraw;

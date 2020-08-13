@@ -111,9 +111,6 @@ class TimeGraph {
   bool IsVisible(VisibilityType vis_type, TickType min, TickType max) const;
 
   int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
-  void SetPickingManager(class PickingManager* a_Manager) {
-    m_PickingManager = a_Manager;
-  }
   void SetTextRenderer(TextRenderer* a_TextRenderer) {
     m_TextRenderer = a_TextRenderer;
   }
@@ -148,7 +145,9 @@ class TimeGraph {
 
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
-      const absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>& iterator_functions) {
+      const absl::flat_hash_map<uint64_t,
+                                const orbit_client_protos::FunctionInfo*>&
+          iterator_functions) {
     iterator_text_boxes_ = iterator_text_boxes;
     iterator_functions_ = iterator_functions;
     NeedsRedraw();
@@ -177,7 +176,8 @@ class TimeGraph {
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
-  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> iterator_functions_;
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>
+      iterator_functions_;
 
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
@@ -212,7 +212,6 @@ class TimeGraph {
   bool m_DrawText = true;
 
   Batcher m_Batcher;
-  PickingManager* m_PickingManager = nullptr;
   Timer m_LastThreadReorder;
 
   mutable Mutex m_Mutex;

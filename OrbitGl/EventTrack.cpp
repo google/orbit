@@ -24,9 +24,7 @@ std::string EventTrack::GetTooltip() const {
 
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
-  PickingManager& picking_manager = canvas->GetPickingManager();
 
-  const bool picking = picking_mode != PickingMode::kNone;
   // The sample indicators are at z == 0 and do not respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if
   // handling a click, and underneath otherwise.
@@ -35,14 +33,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
                               ? GlCanvas::Z_VALUE_EVENT_BAR_PICKING
                               : GlCanvas::Z_VALUE_EVENT_BAR;
   Color color = m_Color;
-
-  if (picking) {
-    color =
-        picking_manager.GetPickableColor(shared_from_this(), BatcherId::kUi);
-  }
-
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
-  batcher->AddBox(box, color, PickingType::kPickable);
+  batcher->AddBox(box, color, shared_from_this());
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
@@ -54,9 +46,9 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float y1 = y0 - m_Size[1];
 
   batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color,
-                   PickingType::kPickable);
+                   shared_from_this());
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR,
-                   color, PickingType::kPickable);
+                   color, shared_from_this());
 
   if (m_Picked) {
     Vec2& from = m_MousePos[0];
@@ -69,7 +61,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
     Color picked_color(0, 128, 255, 128);
     Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), -0.f);
-    batcher->AddBox(box, picked_color, PickingType::kPickable);
+    batcher->AddBox(box, picked_color, shared_from_this());
   }
 
   m_Canvas = canvas;
@@ -96,8 +88,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       uint64_t time = pair.first;
       if (time > min_tick && time < max_tick) {
         Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
-        batcher->AddVerticalLine(pos, -track_height, z, kWhite,
-                                 PickingType::kLine);
+        batcher->AddVerticalLine(pos, -track_height, z, kWhite);
       }
     }
 
@@ -107,8 +98,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
     for (const CallstackEvent& event :
          time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), m_Pos[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
-                               PickingType::kLine);
+      batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
     }
   } else {
     // Draw boxes instead of lines to make picking easier, even if this may
@@ -126,7 +116,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
             nullptr,
             [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
         user_data->custom_data_ = &pair.second;
-        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingType::kBox,
+        batcher->AddShadedBox(pos, size, z, kGreenSelection,
                               std::move(user_data));
       }
     }

@@ -56,9 +56,9 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
   return result;
 }
 
-void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
-                     const Vec2& pos, const Color& color, float rotation,
-                     float z) {
+void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
+                            const Vec2& pos, const Color& color, float rotation,
+                            float z) {
   if (points.size() < 3) {
     return;
   }
@@ -74,7 +74,7 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
     vertices[i % 2] =
         position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    batcher->AddTriangle(triangle, color, PickingType::kPickable);
+    batcher->AddTriangle(triangle, color, shared_from_this());
   }
 }
 
@@ -82,12 +82,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  Color picking_color = canvas->GetPickingManager().GetPickableColor(
-      shared_from_this(), BatcherId::kUi);
   const Color kTabColor(50, 50, 50, 255);
   const bool picking = picking_mode != PickingMode::kNone;
-  Color color = picking ? picking_color : kTabColor;
-  glColor4ubv(&color[0]);
 
   float x0 = m_Pos[0];
   float x1 = x0 + m_Size[0];
@@ -102,7 +98,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin),
               Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
-      batcher->AddBox(box, color, PickingType::kPickable);
+      batcher->AddBox(box, kTabColor, shared_from_this());
     }
   }
 
@@ -114,7 +110,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, color, PickingType::kPickable);
+  batcher->AddBox(box, kTabColor, shared_from_this());
 
   // Draw rounded corners.
   if (!picking) {
@@ -132,9 +128,11 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 end_bottom(x1 - vertical_margin, y1);
     Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
     float z = GlCanvas::Z_VALUE_BOX_ACTIVE + 0.001f;
+
+    glColor4ubv(&kTabColor[0]);
     DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0,
                     z);
-    DrawTriangleFan(batcher, rounded_corner, bottom_right, color, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_right, kTabColor, 0, z);
     DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f,
                     z);
     DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f,
