@@ -8,9 +8,10 @@
 #include <fstream>
 #include <string>
 
-#include "absl/flags/flag.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "PrintVar.h"
 #include "Utils.h"
+#include "absl/flags/flag.h"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -18,9 +19,9 @@
 #include "Shlobj.h"
 #else
 #include <dirent.h>
+#include <linux/limits.h>
 #include <sys/stat.h>
 
-#include "LinuxUtils.h"
 #endif
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
@@ -49,13 +50,15 @@ std::string Path::GetExecutableName() {
   std::replace(exeFullName.begin(), exeFullName.end(), '\\', '/');
   return ws2s(exeFullName);
 #else
-  const auto path_result = LinuxUtils::GetExecutablePath(getpid());
-  if (path_result) {
-    return path_result.value();
-  } else {
+  char buffer[PATH_MAX];
+  ssize_t length = readlink("/proc/self/exe", buffer, sizeof(buffer));
+  if (length == -1) {
     // TODO (161419404) implement error handling
+    ERROR("Unable to readlink /proc/self/exe, error: %s", SafeStrerror(errno));
     return "";
   }
+
+  return std::string(buffer, length);
 #endif
 }
 
