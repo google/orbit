@@ -17,8 +17,6 @@ target_sources(OrbitServiceLib PRIVATE
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         FramePointerValidatorServiceImpl.h
-        LinuxUtils.cpp
-        LinuxUtils.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
@@ -26,7 +24,9 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessList.cpp
         ProcessList.h
         ProcessServiceImpl.cpp
-        ProcessServiceImpl.h)
+        ProcessServiceImpl.h
+        Utils.cpp
+        Utils.h)
 
 if (NOT WIN32)
   target_sources(OrbitServiceLib PRIVATE
