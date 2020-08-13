@@ -12,12 +12,7 @@
 
 #define ORBIT_LOG(msg) GLogger.Log(OrbitLog::Global, msg)
 #define ORBIT_LOGV(var) GLogger.Log(OrbitLog::Global, #var, var)
-#define ORBIT_VIZ(msg) GLogger.Logf(OrbitLog::Viz, msg)
 #define ORBIT_VIZV(var) GLogger.Log(OrbitLog::Viz, #var, var)
-#define ORBIT_LOG_DEBUG(msg) GLogger.Log(OrbitLog::Debug, msg)
-#define ORBIT_PRINTF(msg) GLogger.Logf(OrbitLog::Viz, msg)
-#define ORBIT_LOG_PDB(msg)
-#define ORBIT_ERROR GLogger.LogError(__FUNCTION__, __LINE__)
 
 class OrbitLog {
  public:
@@ -55,28 +50,12 @@ class Logger {
     m_Logs[a_Type].Log(a_String);
   }
 
-  void LogError(const char* function, int line) {
-    std::string err = GetLastErrorAsString();
-    Log(OrbitLog::Global, absl::StrFormat("Error: %s (%i) LastError: %s",
-                                          function, line, err.c_str()));
-  }
-
   template <class T>
   inline void Log(OrbitLog::Type a_Type, const char* a_VarName,
                   const T& a_Value) {
     std::stringstream l_StringStream;
     l_StringStream << a_VarName << " = " << a_Value << std::endl;
     Log(a_Type, l_StringStream.str().c_str());
-  }
-
-  void GetLockedLog(OrbitLog::Type a_Type,
-                    std::function<void(const std::vector<std::string>)> a_Func,
-                    bool a_Clear = false) {
-    ScopeLock lock(m_Mutexes[a_Type]);
-    a_Func(m_Logs[a_Type].GetEntries());
-    if (a_Clear) {
-      m_Logs[a_Type].Clear();
-    }
   }
 
   std::vector<std::string> ConsumeEntries(OrbitLog::Type a_Type) {
