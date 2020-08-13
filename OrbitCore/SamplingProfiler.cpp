@@ -6,7 +6,6 @@
 
 #include "Capture.h"
 #include "FunctionUtils.h"
-#include "Log.h"
 #include "OrbitModule.h"
 #include "Path.h"
 
@@ -295,7 +294,7 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   return result;
 }
 
-const std::string SamplingProfiler::kUnknownFunctionOrModuleName = "???";
+const std::string SamplingProfiler::kUnknownFunctionOrModuleName{"???"};
 
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   LinuxAddressInfo* address_info =
