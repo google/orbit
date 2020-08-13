@@ -88,7 +88,7 @@ message TimerInfo {
   enum Type {
     kNone = 0;
     kCoreActivity = 1;
-    kIntrospection = 2;
+    kIntrospection = 2;  // TODO: Deprecate this value.
     kGpuActivity = 3;
   }
   Type type = 6;

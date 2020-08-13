@@ -5,7 +5,6 @@
 #include "TracerThread.h"
 
 #include <OrbitBase/Logging.h>
-#include <OrbitBase/Tracing.h>
 
 #include <thread>
 
@@ -571,8 +570,6 @@ void TracerThread::Run(
                                      this);
 
   while (!(*exit_requested)) {
-    ORBIT_SCOPE("Tracer Iteration");
-
     if (!last_iteration_saw_events) {
       // Periodically print event statistics.
       PrintStatsIfTimerElapsed();
@@ -580,10 +577,7 @@ void TracerThread::Run(
       // Sleep if there was no new event in the last iteration so that we are
       // not constantly polling. Don't sleep so long that ring buffers overflow.
       // TODO: Refine this sleeping pattern, possibly using exponential backoff.
-      {
-        ORBIT_SCOPE("Sleep");
-        usleep(IDLE_TIME_ON_EMPTY_RING_BUFFERS_US);
-      }
+      usleep(IDLE_TIME_ON_EMPTY_RING_BUFFERS_US);
     }
 
     last_iteration_saw_events = false;

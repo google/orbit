@@ -19,7 +19,6 @@ target_include_directories(OrbitLinuxTracing PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(OrbitLinuxTracing PUBLIC
-        include/OrbitLinuxTracing/OrbitTracing.h
         include/OrbitLinuxTracing/Tracer.h
         include/OrbitLinuxTracing/TracerListener.h)
 
@@ -33,7 +32,6 @@ target_sources(OrbitLinuxTracing PRIVATE
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         ManualInstrumentationConfig.h
-        OrbitTracing.cpp
         PerfEvent.cpp
         PerfEvent.h
         PerfEventOpen.cpp

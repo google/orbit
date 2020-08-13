@@ -36,20 +36,12 @@ class Timer {
     return ElapsedSeconds();
   }
 
-  enum Type : uint8_t {
-    NONE,
-    CORE_ACTIVITY,
-    INTROSPECTION,
-    GPU_ACTIVITY,
-  };
-
  public:
   // Needs to have to exact same layout in win32/x64, debug/release
 
   int32_t m_PID = 0;
   int32_t m_TID = 0;
   uint8_t m_Depth = 0;
-  Type m_Type = NONE;
   uint8_t m_Processor = -1;
   uint64_t m_CallstackHash = 0;
   uint64_t m_FunctionAddress = 0;

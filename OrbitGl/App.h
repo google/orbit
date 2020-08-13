@@ -22,7 +22,6 @@
 #include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
-#include "LinuxCallstackEvent.h"
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
