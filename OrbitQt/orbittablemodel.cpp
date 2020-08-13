@@ -13,8 +13,6 @@ OrbitTableModel::OrbitTableModel(DataView* data_view, QObject* parent)
 OrbitTableModel::OrbitTableModel(QObject* parent)
     : QAbstractTableModel(parent), m_DataView(nullptr) {}
 
-OrbitTableModel::~OrbitTableModel() {}
-
 int OrbitTableModel::columnCount(const QModelIndex& /*parent*/) const {
   return static_cast<int>(m_DataView->GetColumns().size());
 }

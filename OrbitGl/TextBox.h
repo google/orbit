@@ -23,8 +23,6 @@ class TextBox {
   TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color);
   TextBox(const Vec2& a_Pos, const Vec2& a_Size);
 
-  ~TextBox();
-
   void Draw(Batcher* batcher, TextRenderer& a_TextRenderer,
             float a_MinX = -FLT_MAX, bool a_Visible = true,
             bool a_RightJustify = false, bool a_IsInactive = false,

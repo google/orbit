@@ -11,8 +11,6 @@ class RingBuffer {
  public:
   RingBuffer() : m_CurrentSize(0), m_CurrentIndex(0) {}
 
-  ~RingBuffer() {}
-
   inline void Clear() { m_CurrentSize = m_CurrentIndex = 0; }
 
   inline void Add(const T& a_Item) {
