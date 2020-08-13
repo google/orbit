@@ -14,7 +14,7 @@
 #include "absl/flags/usage.h"
 #include "absl/flags/usage_config.h"
 
-ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc server port");
+ABSL_FLAG(uint64_t, grpc_port, 44765, "gRPC server port");
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode");
 

@@ -71,12 +71,12 @@ Status ProcessServiceImpl::GetProcessMemory(
     return Status::OK;
   } else {
     response->mutable_memory()->resize(0);
-    ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u",
+    ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %d",
           size, request->address(), request->pid());
     return Status(
         StatusCode::PERMISSION_DENIED,
         absl::StrFormat(
-            "Could not read %lu bytes from address %#lx of process %u", size,
+            "Could not read %lu bytes from address %#lx of process %d", size,
             request->address(), request->pid()));
   }
 }

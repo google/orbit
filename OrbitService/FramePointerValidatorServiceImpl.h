@@ -17,8 +17,6 @@ class FramePointerValidatorServiceImpl final
   grpc::Status ValidateFramePointers(
       grpc::ServerContext* context, const ValidateFramePointersRequest* request,
       ValidateFramePointersResponse* response) override;
-
- private:
 };
 
 #endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_

@@ -53,7 +53,7 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
   }
 
   server_ = builder.BuildAndStart();
-};
+}
 
 void OrbitGrpcServerImpl::Shutdown() { server_->Shutdown(); }
 
