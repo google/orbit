@@ -51,16 +51,6 @@ target_sources(
           SymbolHelper.cpp
           Utils.cpp)
 
-if(NOT WIN32)
-  target_sources(
-    OrbitCore
-    PUBLIC LinuxUtils.h)
-
-  target_sources(
-    OrbitCore
-    PRIVATE LinuxUtils.cpp)
-endif()
-
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(

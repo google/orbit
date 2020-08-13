@@ -17,12 +17,14 @@ target_sources(OrbitServiceLib PRIVATE
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         FramePointerValidatorServiceImpl.h
+        LinuxUtils.cpp
+        LinuxUtils.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
         OrbitService.h
-        ProcessList.h
         ProcessList.cpp
+        ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h)
 
