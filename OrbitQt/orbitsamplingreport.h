@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_SAMPLING_REPORT_H_
+#define ORBIT_QT_ORBIT_SAMPLING_REPORT_H_
 
 #include <QWidget>
 #include <memory>
@@ -22,7 +23,7 @@ class OrbitSamplingReport : public QWidget {
   ~OrbitSamplingReport() override;
 
   void Initialize(DataView* callstack_data_view,
-                  std::shared_ptr<class SamplingReport> report);
+                  const std::shared_ptr<class SamplingReport>& report);
 
   void RefreshCallstackView();
   void RefreshTabs();
@@ -36,3 +37,5 @@ class OrbitSamplingReport : public QWidget {
   std::shared_ptr<SamplingReport> m_SamplingReport;
   std::vector<OrbitDataViewPanel*> m_OrbitDataViews;
 };
+
+#endif  // ORBIT_QT_ORBIT_SAMPLING_REPORT_H_

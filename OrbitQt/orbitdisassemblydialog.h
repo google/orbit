@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBITDISASSEMBLYDIALOG_H
-#define ORBITDISASSEMBLYDIALOG_H
+#ifndef ORBIT_QT_ORBIT_DISASSEMBLY_DIALOG_H_
+#define ORBIT_QT_ORBIT_DISASSEMBLY_DIALOG_H_
 
 #include <DisassemblyReport.h>
 
@@ -29,4 +29,4 @@ class OrbitDisassemblyDialog : public QDialog {
   Ui::OrbitDisassemblyDialog* ui;
 };
 
-#endif  // ORBITDISASSEMBLYDIALOG_H
+#endif  // ORBIT_QT_ORBIT_DISASSEMBLY_DIALOG_H_

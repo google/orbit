@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LIVE_FUNCTIONS_H_
-#define ORBIT_LIVE_FUNCTIONS_H_
+#ifndef ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
+#define ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 
 #include "absl/container/flat_hash_map.h"
 
@@ -43,4 +43,4 @@ class OrbitLiveFunctions : public QWidget {
   OrbitEventIterator* all_events_iterator_;
 };
 
-#endif  // ORBIT_LIVE_FUNCTIONS_H_
+#endif  // ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_

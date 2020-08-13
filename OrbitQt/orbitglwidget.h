@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_GL_WIDGET_H_
+#define ORBIT_QT_ORBIT_GL_WIDGET_H_
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -45,3 +46,5 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   std::unique_ptr<GlPanel> m_OrbitPanel;
   QOpenGLDebugLogger* m_DebugLogger;
 };
+
+#endif  // ORBIT_QT_ORBIT_GL_WIDGET_H_

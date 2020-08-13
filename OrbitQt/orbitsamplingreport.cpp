@@ -31,8 +31,9 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
 
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui; }
 
-void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
-                                     std::shared_ptr<SamplingReport> report) {
+void OrbitSamplingReport::Initialize(
+    DataView* callstack_data_view,
+    const std::shared_ptr<SamplingReport>& report) {
   ui->CallstackTreeView->Initialize(
       callstack_data_view, SelectionType::kExtended, FontType::kDefault, false);
   m_SamplingReport = report;
@@ -42,12 +43,12 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
   m_SamplingReport->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
   for (SamplingReportDataView& report_data_view : report->GetThreadReports()) {
-    QWidget* tab = new QWidget();
+    auto* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
 
-    QGridLayout* gridLayout_2 = new QGridLayout(tab);
+    auto* gridLayout_2 = new QGridLayout(tab);
     gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
-    OrbitDataViewPanel* treeView = new OrbitDataViewPanel(tab);
+    auto* treeView = new OrbitDataViewPanel(tab);
     treeView->SetDataModel(&report_data_view);
 
     if (!report_data_view.IsSortingAllowed()) {
@@ -73,7 +74,7 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
     // This is hack - it is needed to update ui when data changes
     // TODO: Remove this once model is implemented properly and there
-    // is no need in manual updates.
+    //  is no need for manual updates.
     m_OrbitDataViews.push_back(treeView);
 
     QString threadName = QString::fromStdString(report_data_view.GetName());

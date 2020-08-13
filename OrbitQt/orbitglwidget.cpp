@@ -8,11 +8,9 @@
 #include <QMenuBar>
 #include <QMouseEvent>
 #include <QOpenGLDebugLogger>
-#include <QOpenGLDebugMessage>
 #include <QSignalMapper>
 
 #include "OrbitBase/Logging.h"
-#include "Utils.h"
 #include "orbitmainwindow.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0

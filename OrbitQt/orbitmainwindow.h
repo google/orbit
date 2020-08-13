@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_MAIN_WINDOW_H_
+#define ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 
 #include <DisassemblyReport.h>
 
@@ -48,8 +49,6 @@ class OrbitMainWindow : public QMainWindow {
   void OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view);
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
-  void PostInit();
-  bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
   void OpenDisassembly(std::string a_String, DisassemblyReport report);
   void SetTitle(const QString& task_description);
   outcome::result<void> OpenCapture(const std::string& filepath);
@@ -62,14 +61,12 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionReport_Bug_triggered();
 
   void OnTimer();
-  void OnHideSearch();
   void OnLiveTabFunctionsFilterTextChanged(const QString& text);
   void OnFilterFunctionsTextChanged(const QString& text);
   void OnFilterTracksTextChanged(const QString& text);
 
   void on_actionOpen_Preset_triggered();
   void on_actionQuit_triggered();
-  void on_actionToogleDevMode_toggled(bool arg1);
   void on_actionSave_Preset_As_triggered();
 
   void on_actionToggle_Capture_triggered();
@@ -91,12 +88,11 @@ class OrbitMainWindow : public QMainWindow {
   void StartMainTimer();
   void SetupCaptureToolbar();
   void SetupCodeView();
-  void ShowFeedbackDialog();
 
  private:
   QApplication* m_App;
   Ui::OrbitMainWindow* ui;
-  QTimer* m_MainTimer;
+  QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> m_GlWidgets;
 
   // Capture toolbar.
@@ -108,3 +104,5 @@ class OrbitMainWindow : public QMainWindow {
 
   std::string m_CurrentPdbName;
 };
+
+#endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

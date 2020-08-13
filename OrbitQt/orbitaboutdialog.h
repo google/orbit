@@ -2,15 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_ORBITABOUTDIALOG_H_
-#define ORBIT_QT_ORBITABOUTDIALOG_H_
+#ifndef ORBIT_QT_ORBIT_ABOUT_DIALOG_H_
+#define ORBIT_QT_ORBIT_ABOUT_DIALOG_H_
 
 #include <QDialog>
 #include <memory>
 
-namespace Ui {
-class OrbitAboutDialog;
-}  // namespace Ui
+#include "ui_orbitaboutdialog.h"
 
 namespace OrbitQt {
 
@@ -22,7 +20,7 @@ class OrbitAboutDialog : public QDialog {
   void SetVersionString(const QString& version);
   void SetBuildInformation(const QString& build_info);
 
-  ~OrbitAboutDialog() noexcept;
+  ~OrbitAboutDialog() noexcept override = default;
 
  private:
   std::unique_ptr<Ui::OrbitAboutDialog> ui_;
@@ -30,4 +28,4 @@ class OrbitAboutDialog : public QDialog {
 
 }  // namespace OrbitQt
 
-#endif  // ORBIT_QT_ORBITABOUTDIALOG_H_
+#endif  // ORBIT_QT_ORBIT_ABOUT_DIALOG_H_

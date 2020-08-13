@@ -135,7 +135,6 @@ static outcome::result<void> RunUiInstance(
   // "resize" is required to make "showMaximized" work properly.
   w.resize(1280, 720);
   w.showMaximized();
-  w.PostInit();
 
   std::optional<std::error_code> error;
   auto error_handler = [&]() -> ScopedConnection {

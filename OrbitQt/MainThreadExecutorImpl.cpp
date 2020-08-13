@@ -24,7 +24,7 @@ void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
       [action = std::move(action)]() { action->Execute(); });
 }
 
-};  // namespace
+}  // namespace
 
 std::unique_ptr<MainThreadExecutor> CreateMainThreadExecutor() {
   return std::make_unique<MainThreadExecutorImpl>();

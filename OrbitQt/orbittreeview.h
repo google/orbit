@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_TREE_VIEW_H_
+#define ORBIT_QT_ORBIT_TREE_VIEW_H_
 
 #include <QItemSelection>
 #include <QTimer>
@@ -57,3 +58,5 @@ class OrbitTreeView : public QTreeView {
   bool auto_resize_;
   bool is_internal_refresh_ = false;
 };
+
+#endif  // ORBIT_QT_ORBIT_TREE_VIEW_H_

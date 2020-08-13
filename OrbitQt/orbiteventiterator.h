@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_EVENT_ITERATOR_H_
-#define ORBIT_EVENT_ITERATOR_H_
+#ifndef ORBIT_QT_ORBIT_EVENT_ITERATOR_H_
+#define ORBIT_QT_ORBIT_EVENT_ITERATOR_H_
 
 #include <QFrame>
 #include <QLabel>
@@ -63,4 +63,4 @@ class OrbitEventIterator : public QFrame {
   TickType current_time_;
 };
 
-#endif  // ORBIT_EVENT_ITERATOR_H_
+#endif  // ORBIT_QT_ORBIT_EVENT_ITERATOR_H_
