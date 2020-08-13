@@ -13,7 +13,7 @@ outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   Descriptor descriptor = socket(domain, type, protocol);
   if (descriptor == LIBSSH2_INVALID_SOCKET) {
     PrintWithLastError("Unable to create socket");
-    return getLastError();
+    return GetLastError();
   }
 
   return Socket(descriptor);
@@ -29,14 +29,14 @@ Socket::~Socket() noexcept {
   PrintWithLastError("Socket abnormal close");
 }
 
-outcome::result<Socket> Socket::Accept() {
+outcome::result<Socket> Socket::Accept() const {
   OUTCOME_TRY(CanBeRead());
 
-  const Descriptor descriptor = accept(descriptor_, NULL, NULL);
+  const Descriptor descriptor = accept(descriptor_, nullptr, nullptr);
 
   if (descriptor < 0) {
     PrintWithLastError("Unable to accept");
-    return getLastError();
+    return GetLastError();
   }
 
   return Socket{descriptor};
@@ -46,14 +46,14 @@ void Socket::PrintWithLastError(const std::string& message) {
   ERROR("%s: %s", message.c_str(), SafeStrerror(errno));
 }
 
-outcome::result<void> Socket::Shutdown() {
+outcome::result<void> Socket::Shutdown() const {
   if (shutdown(descriptor_, SHUT_RDWR) == 0) return outcome::success();
 
   PrintWithLastError("Socket abnormal shutdown");
-  return getLastError();
+  return GetLastError();
 }
 
-std::error_code Socket::getLastError() {
+std::error_code Socket::GetLastError() {
   return std::error_code{errno, std::system_category()};
 }
 

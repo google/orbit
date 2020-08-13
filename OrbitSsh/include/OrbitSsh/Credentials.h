@@ -8,19 +8,15 @@
 #include <filesystem>
 #include <string>
 
+#include "OrbitSsh/AddrAndPort.h"
+
 namespace OrbitSsh {
 
 struct Credentials {
-  std::string host;
-  int port = -1;
+  AddrAndPort addr_and_port;
   std::string user;
   std::filesystem::path known_hosts_path;
   std::filesystem::path key_path;
-
-  bool Empty() const {
-    return host.empty() && port == -1 && user.empty() &&
-           known_hosts_path.empty() && key_path.empty();
-  }
 };
 
 }  // namespace OrbitSsh

@@ -70,15 +70,17 @@ enum class Error {
 struct ErrorCategory : std::error_category {
   using std::error_category::error_category;
 
-  const char* name() const noexcept override { return "libssh2_sftp"; }
-  std::string message(int condition) const override;
-  std::error_condition default_error_condition(int c) const noexcept override {
+  [[nodiscard]] const char* name() const noexcept override {
+    return "libssh2_sftp";
+  }
+  [[nodiscard]] std::string message(int condition) const override;
+  [[nodiscard]] std::error_condition default_error_condition(int c) const
+      noexcept override {
     if (static_cast<Error>(c) == Error::kEagain) {
       return std::make_error_condition(
           std::errc::resource_unavailable_try_again);
-    } else {
-      return std::error_condition{c, *this};
     }
+    return std::error_condition{c, *this};
   }
 };
 
@@ -87,16 +89,13 @@ inline const ErrorCategory& GetErrorCategory() {
   return category;
 }
 
+// NOLINTNEXTLINE: This is the overload for the global make_error_code
 inline std::error_code make_error_code(Error e) {
   return std::error_code{static_cast<int>(e), GetErrorCategory()};
 }
 
-inline bool shouldITryAgain(std::error_code e) {
-  return e == std::errc::resource_unavailable_try_again;
-}
-
 template <typename T>
-bool shouldITryAgain(const outcome::result<T>& result) {
+bool ShouldITryAgain(const outcome::result<T>& result) {
   return result.has_error() &&
          result.error() == std::errc::resource_unavailable_try_again;
 }

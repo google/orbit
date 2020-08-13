@@ -16,7 +16,8 @@ target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(
   OrbitSsh
-  PUBLIC include/OrbitSsh/Channel.h
+  PUBLIC include/OrbitSsh/AddrAndPort.h
+         include/OrbitSsh/Channel.h
          include/OrbitSsh/Context.h
          include/OrbitSsh/Credentials.h
          include/OrbitSsh/Error.h

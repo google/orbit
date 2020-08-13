@@ -30,13 +30,13 @@ class SftpFile {
  public:
   static outcome::result<SftpFile> Open(Session* session, Sftp* sftp,
                                         std::string_view filepath,
-                                        FxfFlags flags, long mode);
+                                        FxfFlags flags, int64_t mode);
 
   outcome::result<std::string> Read(size_t max_length_in_bytes);
   outcome::result<void> Close();
   outcome::result<size_t> Write(std::string_view data);
 
-  LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept {
+  [[nodiscard]] LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept {
     return file_ptr_.get();
   }
 
