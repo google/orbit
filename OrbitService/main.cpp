@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include <csignal>
+#include <filesystem>
 #include <iostream>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitService.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "Path.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -35,11 +35,18 @@ void InstallSigintHandler() {
   act.sa_restorer = nullptr;
   sigaction(SIGINT, &act, nullptr);
 }
+
+std::string GetLogFilePath() {
+  std::filesystem::path var_log{"/var/log"};
+  std::filesystem::create_directory(var_log);
+  const std::string log_file_path = var_log / "OrbitService.log";
+  return log_file_path;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
-  const std::string log_file_path = Path::GetServiceLogFilePath();
-  InitLogFile(log_file_path);
+  InitLogFile(GetLogFilePath());
 
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
   absl::SetFlagsUsageConfig(
