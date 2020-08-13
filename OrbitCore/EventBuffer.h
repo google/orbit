@@ -12,10 +12,6 @@
 #include "Threading.h"
 #include "capture_data.pb.h"
 
-#ifdef __linux
-#include "LinuxUtils.h"
-#endif
-
 class EventBuffer {
  public:
   EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX) {}
