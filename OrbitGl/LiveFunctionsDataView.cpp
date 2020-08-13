@@ -8,7 +8,6 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
-#include "Log.h"
 #include "Pdb.h"
 #include "Profiling.h"
 #include "TextBox.h"

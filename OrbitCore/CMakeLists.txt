@@ -21,7 +21,6 @@ target_sources(
          Introspection.h
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
-         Log.h
          OrbitModule.h
          OrbitProcess.h
          OrbitVersion.h

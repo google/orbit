@@ -5,20 +5,15 @@
 #include "GlCanvas.h"
 
 #include <string>
-#include <vector>
 
 #include "App.h"
-#include "Capture.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
-#include "Log.h"
 #include "OpenGl.h"
-#include "Pdb.h"
 #include "PrintVar.h"
 #include "RingBuffer.h"
 #include "SamplingProfiler.h"
 #include "TextBox.h"
-#include "TextRenderer.h"
 #include "absl/strings/str_format.h"
 
 RingBuffer<float, 512> GDeltaTimeBuffer;

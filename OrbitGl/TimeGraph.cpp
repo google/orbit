@@ -19,7 +19,6 @@
 #include "GlCanvas.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
-#include "Log.h"
 #include "Params.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"

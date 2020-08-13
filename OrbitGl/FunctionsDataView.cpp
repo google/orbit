@@ -7,7 +7,6 @@
 #include "App.h"
 #include "Capture.h"
 #include "FunctionUtils.h"
-#include "Log.h"
 #include "OrbitProcess.h"
 #include "Pdb.h"
 #include "absl/flags/flag.h"
