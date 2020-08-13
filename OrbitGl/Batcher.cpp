@@ -113,7 +113,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
   triangle_buffer_.user_data_.push_back(std::move(user_data));
 }
 
-PickingUserData* Batcher::GetUserData(PickingId id) {
+const PickingUserData* Batcher::GetUserData(PickingId id) const {
   CHECK(id.element_id >= 0);
   CHECK(id.batcher_id == batcher_id_);
 
@@ -134,6 +134,11 @@ PickingUserData* Batcher::GetUserData(PickingId id) {
   }
 
   UNREACHABLE();
+}
+
+PickingUserData* Batcher::GetUserData(PickingId id) {
+  return const_cast<PickingUserData*>(
+      static_cast<const Batcher*>(this)->GetUserData(id));
 }
 
 TextBox* Batcher::GetTextBox(PickingId id) {
@@ -223,7 +228,7 @@ void Batcher::DrawLineBuffer(bool picking) const {
 
 void Batcher::DrawTriangleBuffer(bool picking) const {
   const Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>*
-      triangle_buffer_.triangles_.root();
+      triangle_block = triangle_buffer_.triangles_.root();
   const Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
 
   color_block = !picking ? triangle_buffer_.colors_.root()
