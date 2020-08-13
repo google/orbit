@@ -56,8 +56,6 @@ TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size)
   Update();
 }
 
-TextBox::~TextBox() {}
-
 void TextBox::Update() {
   m_Min = m_Pos;
   m_Max = m_Pos + Vec2(std::abs(m_Size[0]), std::abs(m_Size[1]));

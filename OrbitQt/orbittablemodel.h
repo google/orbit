@@ -15,7 +15,6 @@ class OrbitTableModel : public QAbstractTableModel {
  public:
   explicit OrbitTableModel(DataView* data_view, QObject* parent = nullptr);
   explicit OrbitTableModel(QObject* parent = nullptr);
-  ~OrbitTableModel() override;
 
   int columnCount(const QModelIndex& parent = QModelIndex()) const override;
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
