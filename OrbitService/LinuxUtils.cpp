@@ -4,13 +4,17 @@
 
 #include "LinuxUtils.h"
 
+#include <absl/base/casts.h>
 #include <absl/strings/str_split.h>
 #include <cxxabi.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #include <charconv>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -18,8 +22,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "Path.h"
-#include "Utils.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
 
@@ -28,9 +30,17 @@ namespace LinuxUtils {
 using ::ElfUtils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 
+namespace {
+uint64_t FileSize(const std::string& file) {
+  struct stat stat_buf;
+  int ret = stat(file.c_str(), &stat_buf);
+  return ret == 0 ? stat_buf.st_size : 0;
+}
+}  // namespace
+
 outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid) {
   std::filesystem::path maps_path{absl::StrFormat("/proc/%d/maps", pid)};
-  OUTCOME_TRY(maps_string, OrbitUtils::FileToString(maps_path));
+  OUTCOME_TRY(maps_string, FileToString(maps_path));
   return absl::StrSplit(maps_string, '\n');
 }
 
@@ -96,7 +106,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
     if (!std::filesystem::exists(module_path)) continue;
-    uint64_t file_size = Path::FileSize(module_path);
+    uint64_t file_size = FileSize(module_path);
     if (file_size == 0) continue;
 
     ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(module_path);
@@ -108,7 +118,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     }
 
     ModuleInfo module_info;
-    module_info.set_name(Path::GetFileName(module_path));
+    module_info.set_name(std::filesystem::path{module_path}.filename());
     module_info.set_file_path(module_path);
     module_info.set_file_size(file_size);
     module_info.set_address_start(address_range.start_address);
@@ -156,6 +166,26 @@ ErrorMessageOr<std::string> GetExecutablePath(int32_t pid) {
   }
 
   return std::string(buffer, length);
+}
+
+outcome::result<std::string> FileToString(
+    const std::filesystem::path& file_name) {
+  std::ifstream file_stream(file_name);
+  if (file_stream.fail()) {
+    return outcome::failure(static_cast<std::errc>(errno));
+  }
+  return outcome::success(
+      std::string{std::istreambuf_iterator<char>{file_stream},
+                  std::istreambuf_iterator<char>{}});
+}
+
+bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
+                       uint64_t size, uint64_t* num_bytes_read) {
+  iovec local_iov[] = {{buffer, size}};
+  iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
+  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov),
+                                     remote_iov, ABSL_ARRAYSIZE(remote_iov), 0);
+  return *num_bytes_read == size;
 }
 
 }  // namespace LinuxUtils

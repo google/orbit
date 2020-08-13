@@ -41,6 +41,8 @@ class Path {
   static std::string GetParentDirectory(std::string a_FullName);
   static std::string JoinPath(const std::vector<std::string>& parts);
 
+  // TODO(159868905): This is only used by OrbitModule. Remove this as soon as
+  //  OrbitModule is removed.
   static uint64_t FileSize(const std::string& a_File);
   static bool DirExists(const std::string& a_Dir);
 

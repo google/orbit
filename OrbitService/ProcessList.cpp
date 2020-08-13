@@ -13,7 +13,6 @@
 
 #include "LinuxUtils.h"
 #include "OrbitBase/Logging.h"
-#include "Utils.h"
 
 namespace orbit_service {
 
@@ -50,7 +49,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     }
 
     const std::filesystem::path name_file_path = path / "comm";
-    auto name_file_result = OrbitUtils::FileToString(name_file_path);
+    auto name_file_result = LinuxUtils::FileToString(name_file_path);
     if (!name_file_result) {
       ERROR("Failed to read %s: %s", name_file_path.string(), name_file_result.error().message());
       continue;
@@ -68,7 +67,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     // "The command-line arguments appear [...] as a set of strings
     // separated by null bytes ('\0')".
     const std::filesystem::path cmdline_file_path = directory_entry.path() / "cmdline";
-    auto cmdline_file_result = OrbitUtils::FileToString(cmdline_file_path);
+    auto cmdline_file_result = LinuxUtils::FileToString(cmdline_file_path);
     if (!cmdline_file_result) {
       ERROR("Failed to read %s: %s", cmdline_file_path.string(),
             name_file_result.error().message());

@@ -277,21 +277,3 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
 
   return std::string(buffer);
 }
-
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read) {
-#ifdef _WIN32
-  HANDLE h_process = absl::bit_cast<HANDLE>(static_cast<uintptr_t>(pid));
-  SIZE_T bytes_read;
-  BOOL res =
-      ReadProcessMemory(h_process, absl::bit_cast<void*>(address), buffer, size, &bytes_read);
-  if (num_bytes_read) *num_bytes_read = bytes_read;
-  return res == TRUE;
-#else
-  iovec local_iov[] = {{buffer, size}};
-  iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
-  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov), remote_iov,
-                                     ABSL_ARRAYSIZE(remote_iov), 0);
-  return *num_bytes_read == size;
-#endif
-}
