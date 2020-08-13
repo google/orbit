@@ -159,9 +159,10 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
                                          time.c_str());
       text_box->SetText(text);
     } else {
-      ERROR("Unexpected case in ThreadTrack::SetTimesliceText");
-      PRINT_VAR(timer_info.type());
-      PRINT_VAR(func);
+      ERROR(
+          "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
+          "type=%d",
+          func->name(), static_cast<int>(timer_info.type()));
     }
   }
 

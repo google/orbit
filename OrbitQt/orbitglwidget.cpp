@@ -70,9 +70,9 @@ void OrbitGLWidget::initializeGL() {
 }
 
 void OrbitGLWidget::PrintContextInformation() {
-  QString glType;
-  QString glVersion;
-  QString glProfile;
+  std::string glType;
+  std::string glVersion;
+  std::string glProfile;
 
   // Get Version Information
   glType = (context()->isOpenGLES()) ? "OpenGL ES" : "OpenGL";
@@ -89,10 +89,8 @@ void OrbitGLWidget::PrintContextInformation() {
     CASE(CompatibilityProfile);
   }
 #undef CASE
-
-  PRINT_VAR(qPrintable(glType));
-  PRINT_VAR(qPrintable(glVersion));
-  PRINT_VAR(qPrintable(glProfile));
+  LOG(R"(glType="%s", glVersion="%s", glProfile="%s")", glType, glVersion,
+      glProfile);
 }
 
 void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {

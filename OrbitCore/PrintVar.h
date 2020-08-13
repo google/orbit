@@ -7,11 +7,6 @@
 
 #include <sstream>
 
-#include "OrbitBase/Logging.h"
-#include "Utils.h"
-#include "absl/strings/str_format.h"
-
-#define PRINT_VAR(var) LOG("%s", VAR_TO_STR(var).c_str())
 #define VAR_TO_STR(var) VariableToString(#var, var)
 
 template <class T>
@@ -20,7 +15,5 @@ inline std::string VariableToString(const char* name, const T& value) {
   string_stream << name << " = " << value;
   return string_stream.str();
 }
-
-inline void PrintLastError() { PRINT_VAR(GetLastErrorAsString()); }
 
 #endif  // ORBIT_CORE_PRINT_VAR_H_
