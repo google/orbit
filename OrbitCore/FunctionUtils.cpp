@@ -70,13 +70,6 @@ bool IsSelected(const FunctionInfo& func) {
   return Capture::GSelectedFunctionsMap.count(GetAbsoluteAddress(func)) > 0;
 }
 
-void Print(const FunctionInfo& func) {
-  ORBIT_VIZV(func.address());
-  ORBIT_VIZV(func.file());
-  ORBIT_VIZV(func.line());
-  ORBIT_VIZV(IsSelected(func));
-}
-
 const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>&
 GetFunctionNameToOrbitTypeMap() {
   static absl::flat_hash_map<const char*, FunctionInfo::OrbitType>

@@ -9,7 +9,6 @@
 #include <iostream>
 
 void CheckGlError();
-void OutputGlMatrices();
 
 inline std::ostream& operator<<(std::ostream& os, const ftgl::mat4& mat) {
   os << std::endl;

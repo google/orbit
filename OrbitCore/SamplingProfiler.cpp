@@ -347,13 +347,9 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
 
 void SamplingProfiler::FillThreadSampleDataSampleReports() {
   for (auto& data : thread_id_to_sample_data_) {
-    ThreadID thread_id = data.first;
     ThreadSampleData* thread_sample_data = &data.second;
     std::vector<SampledFunction>* sampled_functions =
         &thread_sample_data->sampled_function;
-
-    ORBIT_LOGV(thread_id);
-    ORBIT_LOGV(thread_sample_data->samples_count);
 
     for (auto sortedIt = thread_sample_data->address_count_sorted.rbegin();
          sortedIt != thread_sample_data->address_count_sorted.rend();

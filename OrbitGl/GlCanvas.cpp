@@ -93,10 +93,10 @@ void GlCanvas::Initialize() {
     // glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     CheckGlError();
-    if (GLEW_OK != err) {
+    if (err != GLEW_OK) {
       /* Problem: glewInit failed, something is seriously wrong. */
-      ORBIT_LOGV(glewGetErrorString(err));
-      exit(EXIT_FAILURE);
+      FATAL("Problem: glewInit failed, something is seriously wrong: %s",
+            reinterpret_cast<const char*>(glewGetErrorString(err)));
     }
     std::string glew = absl::StrFormat(
         "Using GLEW %s",
