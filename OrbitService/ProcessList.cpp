@@ -11,15 +11,16 @@
 #include <filesystem>
 #include <unordered_map>
 
-#include "LinuxUtils.h"
+#include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "Utils.h"
 
 namespace orbit_service {
 
 using orbit_grpc_protos::ProcessInfo;
 
 ErrorMessageOr<void> ProcessList::Refresh() {
-  auto cpu_result = LinuxUtils::GetCpuUtilization();
+  auto cpu_result = utils::GetCpuUtilization();
   if (!cpu_result) {
     return outcome::failure(absl::StrFormat("Unable to retrieve cpu usage of processes: %s",
                                             cpu_result.error().message()));
@@ -49,7 +50,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     }
 
     const std::filesystem::path name_file_path = path / "comm";
-    auto name_file_result = LinuxUtils::FileToString(name_file_path);
+    auto name_file_result = utils::ReadFileToString(name_file_path);
     if (!name_file_result) {
       ERROR("Failed to read %s: %s", name_file_path.string(), name_file_result.error().message());
       continue;
@@ -67,7 +68,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     // "The command-line arguments appear [...] as a set of strings
     // separated by null bytes ('\0')".
     const std::filesystem::path cmdline_file_path = directory_entry.path() / "cmdline";
-    auto cmdline_file_result = LinuxUtils::FileToString(cmdline_file_path);
+    auto cmdline_file_result = utils::ReadFileToString(cmdline_file_path);
     if (!cmdline_file_result) {
       ERROR("Failed to read %s: %s", cmdline_file_path.string(),
             name_file_result.error().message());
@@ -77,17 +78,17 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
     process.set_command_line(cmdline);
 
-    const auto& is_64_bit_result = LinuxUtils::Is64Bit(pid);
-    if (!is_64_bit_result) {
-      ERROR("Failed to get if process \"%s\" (pid %d) is 64 bit: %s", name.c_str(), pid,
-            is_64_bit_result.error().message().c_str());
-      continue;
-    }
-    process.set_is_64_bit(is_64_bit_result.value());
-
-    auto file_path_result = LinuxUtils::GetExecutablePath(pid);
+    auto file_path_result = utils::GetExecutablePath(pid);
     if (file_path_result) {
       process.set_full_path(std::move(file_path_result.value()));
+
+      const auto& elf_file = ElfUtils::ElfFile::Create(file_path_result.value());
+      if (elf_file) {
+        process.set_is_64_bit(elf_file.value()->Is64Bit());
+      } else {
+        LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %d)",
+            file_path_result.value(), pid);
+      }
     }
 
     updated_processes.push_back(process);
