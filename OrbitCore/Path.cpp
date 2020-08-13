@@ -5,7 +5,6 @@
 #include "Path.h"
 
 #include <filesystem>
-#include <fstream>
 #include <string>
 
 #include "OrbitBase/SafeStrerror.h"
@@ -31,8 +30,8 @@ std::string Path::base_path_;
 void Path::Init() { GetBasePath(); }
 
 std::string Path::GetExecutableName() {
-  // TODO(161419404) This function should probably be called GetExecutablePath
-  // or GetExecutableFullPath
+  // TODO(161419404): This function should probably be called GetExecutablePath
+  //  or GetExecutableFullPath.
 #ifdef _WIN32
   WCHAR cwBuffer[2048] = {0};
   LPWSTR pszBuffer = cwBuffer;
@@ -53,8 +52,8 @@ std::string Path::GetExecutableName() {
   char buffer[PATH_MAX];
   ssize_t length = readlink("/proc/self/exe", buffer, sizeof(buffer));
   if (length == -1) {
-    // TODO (161419404) implement error handling
-    ERROR("Unable to readlink /proc/self/exe, error: %s", SafeStrerror(errno));
+    // TODO (161419404): implement error handling
+    ERROR("Unable to readlink /proc/self/exe: %s", SafeStrerror(errno));
     return "";
   }
 
@@ -63,10 +62,10 @@ std::string Path::GetExecutableName() {
 }
 
 std::string Path::GetExecutablePath() {
-  // TODO(161419404) This function should probably be named
-  // GetExecutableDirectory
+  // TODO(161419404): This function should probably be named
+  //  GetExecutableDirectory.
   std::string fullPath = GetExecutableName();
-  std::string path = fullPath.substr(0, fullPath.find_last_of("/")) + "/";
+  std::string path = fullPath.substr(0, fullPath.find_last_of('/')) + "/";
   return path;
 }
 
@@ -166,9 +165,9 @@ std::string Path::GetDumpPath() {
 std::string Path::GetFileName(const std::string& a_FullName) {
   std::string FullName = a_FullName;
   std::replace(FullName.begin(), FullName.end(), '\\', '/');
-  auto index = FullName.find_last_of("/");
+  auto index = FullName.find_last_of('/');
   if (index != std::string::npos) {
-    std::string FileName = FullName.substr(FullName.find_last_of("/") + 1);
+    std::string FileName = FullName.substr(FullName.find_last_of('/') + 1);
     return FileName;
   }
 
@@ -180,14 +179,14 @@ std::string Path::GetFileNameNoExt(const std::string& a_FullName) {
 }
 
 std::string Path::StripExtension(const std::string& a_FullName) {
-  size_t index = a_FullName.find_last_of(".");
+  size_t index = a_FullName.find_last_of('.');
   if (index != std::string::npos) return a_FullName.substr(0, index);
   return a_FullName;
 }
 
 std::string Path::GetExtension(const std::string& a_FullName) {
   // returns ".ext" (includes point)
-  size_t index = a_FullName.find_last_of(".");
+  size_t index = a_FullName.find_last_of('.');
   if (index != std::string::npos)
     return a_FullName.substr(index, a_FullName.length());
   return "";
@@ -196,9 +195,9 @@ std::string Path::GetExtension(const std::string& a_FullName) {
 std::string Path::GetDirectory(const std::string& a_FullName) {
   std::string FullName = a_FullName;
   std::replace(FullName.begin(), FullName.end(), '\\', '/');
-  auto index = FullName.find_last_of("/");
+  auto index = FullName.find_last_of('/');
   if (index != std::string::npos) {
-    std::string FileName = FullName.substr(0, FullName.find_last_of("/") + 1);
+    std::string FileName = FullName.substr(0, FullName.find_last_of('/') + 1);
     return FileName;
   }
 
@@ -267,7 +266,7 @@ std::string Path::GetServiceLogFilePath() {
 
 std::vector<std::string> Path::ListFiles(
     const std::string& directory,
-    std::function<bool(const std::string&)> filter) {
+    const std::function<bool(const std::string&)>& filter) {
   std::vector<std::string> files;
 
   for (const auto& file : std::filesystem::directory_iterator(directory)) {
