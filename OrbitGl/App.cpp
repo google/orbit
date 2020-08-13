@@ -30,7 +30,6 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitVersion.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"

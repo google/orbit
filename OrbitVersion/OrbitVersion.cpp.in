@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitVersion.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "absl/strings/str_format.h"
 
 #define OrbitVersionStr "@VERSION_STRING@"

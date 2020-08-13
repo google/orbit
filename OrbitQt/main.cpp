@@ -30,7 +30,7 @@
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitStartupWindow.h"
-#include "OrbitVersion.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "deploymentconfigurations.h"
 #include "opengldetect.h"

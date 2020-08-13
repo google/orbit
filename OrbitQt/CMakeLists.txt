@@ -70,6 +70,7 @@ target_link_libraries(
           OrbitGl
           OrbitGgp
           OrbitSshQt
+          OrbitVersion
           Qt5::Widgets
           Qt5::Core
           qtpropertybrowser::qtpropertybrowser)

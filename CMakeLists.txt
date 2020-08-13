@@ -144,6 +144,7 @@ add_subdirectory(OrbitCore)
 add_subdirectory(OrbitFramePointerValidator)
 add_subdirectory(OrbitCaptureClient)
 add_subdirectory(OrbitTest)
+add_subdirectory(OrbitVersion)
 add_subdirectory(protos)
 
 if(WITH_GUI)
