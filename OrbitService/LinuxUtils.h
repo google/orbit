@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
@@ -22,4 +23,8 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ListModules(int32_t p
 outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization();
 outcome::result<bool> Is64Bit(pid_t pid);
 ErrorMessageOr<std::string> GetExecutablePath(int32_t pid);
+outcome::result<std::string> FileToString(
+    const std::filesystem::path& file_name);
+bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
+                       uint64_t size, uint64_t* num_bytes_read);
 }  // namespace LinuxUtils

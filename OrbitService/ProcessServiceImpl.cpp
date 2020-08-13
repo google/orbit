@@ -9,7 +9,6 @@
 #include "LinuxUtils.h"
 #include "OrbitBase/Logging.h"
 #include "SymbolHelper.h"
-#include "Utils.h"
 #include "symbol.pb.h"
 
 namespace orbit_service {
@@ -74,8 +73,8 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
   uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
   response->mutable_memory()->resize(size);
   uint64_t num_bytes_read = 0;
-  if (ReadProcessMemory(request->pid(), request->address(), response->mutable_memory()->data(),
-                        size, &num_bytes_read)) {
+  if (LinuxUtils::ReadProcessMemory(request->pid(), request->address(),
+                                    response->mutable_memory()->data(), size, &num_bytes_read)) {
     response->mutable_memory()->resize(num_bytes_read);
     return Status::OK;
   }

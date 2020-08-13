@@ -90,19 +90,6 @@ inline T ToLower(const T& a_Str) {
   return str;
 }
 
-namespace OrbitUtils {
-
-inline outcome::result<std::string> FileToString(const std::filesystem::path& file_name) {
-  std::ifstream file_stream(file_name);
-  if (file_stream.fail()) {
-    return outcome::failure(static_cast<std::errc>(errno));
-  }
-  return outcome::success(
-      std::string{std::istreambuf_iterator<char>{file_stream}, std::istreambuf_iterator<char>{}});
-}
-
-}  // namespace OrbitUtils
-
 template <class T>
 inline void Append(std::vector<T>& a_Dest, const std::vector<T>& a_Source) {
   a_Dest.insert(std::end(a_Dest), std::begin(a_Source), std::end(a_Source));
@@ -328,6 +315,3 @@ std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
 
 std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
-
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read);
