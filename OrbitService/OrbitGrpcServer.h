@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+namespace orbit_service {
 // Wrapper around GRPC server. This class takes care of registering
 // all GRPC services.
 //
@@ -25,8 +26,10 @@ class OrbitGrpcServer {
 
   // Creates a server listening specified address and registers all
   // necessary services.
-  static std::unique_ptr<OrbitGrpcServer> Create(
+  [[nodiscard]] static std::unique_ptr<OrbitGrpcServer> Create(
       std::string_view server_address);
 };
+
+}  // namespace orbit_service
 
 #endif  // ORBIT_SERVICE_ORBIT_GRPC_SERVER_H_

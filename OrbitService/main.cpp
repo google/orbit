@@ -21,15 +21,15 @@ ABSL_FLAG(bool, devmode, false, "Enable developer mode");
 namespace {
 std::atomic<bool> exit_requested;
 
-void sigint_handler(int signum) {
+void SigintHandler(int signum) {
   if (signum == SIGINT) {
     exit_requested = true;
   }
 }
 
-void install_sigint_handler() {
-  struct sigaction act;
-  act.sa_handler = sigint_handler;
+void InstallSigintHandler() {
+  struct sigaction act {};
+  act.sa_handler = SigintHandler;
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
   act.sa_restorer = nullptr;
@@ -46,11 +46,11 @@ int main(int argc, char** argv) {
       absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
-  install_sigint_handler();
+  InstallSigintHandler();
 
   uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
 
   exit_requested = false;
-  OrbitService service{grpc_port};
+  orbit_service::OrbitService service{grpc_port};
   service.Run(&exit_requested);
 }

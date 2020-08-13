@@ -8,16 +8,23 @@
 #include <outcome.hpp>
 #include <vector>
 
+#include "OrbitBase/Result.h"
 #include "process.pb.h"
+
+namespace orbit_service {
 
 class ProcessList {
  public:
-  outcome::result<void, std::string> Refresh();
-  const std::vector<ProcessInfo>& GetProcesses() { return processes_; }
+  [[nodiscard]] ErrorMessageOr<void> Refresh();
+  [[nodiscard]] const std::vector<ProcessInfo>& GetProcesses() {
+    return processes_;
+  }
 
  private:
   std::vector<ProcessInfo> processes_;
   std::unordered_map<int32_t, ProcessInfo*> processes_map_;
 };
+
+}  // namespace orbit_service
 
 #endif  // ORBIT_SERVICE_PROCESS_LIST_

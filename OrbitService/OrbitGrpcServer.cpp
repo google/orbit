@@ -16,6 +16,8 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
+namespace orbit_service {
+
 namespace {
 
 class OrbitGrpcServerImpl final : public OrbitGrpcServer {
@@ -70,3 +72,5 @@ std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(
 
   return std::move(server_impl);
 }
+
+}  // namespace orbit_service

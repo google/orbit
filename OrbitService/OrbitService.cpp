@@ -14,6 +14,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGrpcServer.h"
 
+namespace {
+
 static std::string ReadStdIn() {
   int tmp = fgetc(stdin);
   if (tmp == -1) return "";
@@ -34,6 +36,9 @@ static bool IsSshConnectionAlive(
              std::chrono::steady_clock::now() - last_ssh_message)
              .count() < timeout_in_seconds;
 }
+}  // namespace
+
+namespace orbit_service {
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
@@ -48,7 +53,7 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   while (!(*exit_requested)) {
     std::string stdin_data = ReadStdIn();
     // If ssh sends EOF, end main loop.
-    if (feof(stdin)) break;
+    if (feof(stdin) != 0) break;
 
     if (IsSshWatchdogActive() ||
         absl::StrContains(stdin_data, kStartWatchdogPassphrase)) {
@@ -68,3 +73,5 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   grpc_server->Shutdown();
   grpc_server->Wait();
 }
+
+}  // namespace orbit_service

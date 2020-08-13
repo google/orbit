@@ -7,6 +7,8 @@
 
 #include "services.grpc.pb.h"
 
+namespace orbit_service {
+
 // Runs on the service and receives requests from FramePointerValidatorClient to
 // validate whether certain modules are compiled with frame pointers.
 // It returns a list of functions that don't have a prologue and epilogue
@@ -14,9 +16,11 @@
 class FramePointerValidatorServiceImpl final
     : public FramePointerValidatorService::Service {
  public:
-  grpc::Status ValidateFramePointers(
+  [[nodiscard]] grpc::Status ValidateFramePointers(
       grpc::ServerContext* context, const ValidateFramePointersRequest* request,
       ValidateFramePointersResponse* response) override;
 };
+
+}  // namespace orbit_service
 
 #endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_

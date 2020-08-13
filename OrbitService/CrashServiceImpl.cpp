@@ -7,6 +7,8 @@
 #include "OrbitBase/Logging.h"
 #include "services.pb.h"
 
+namespace orbit_service {
+
 using grpc::ServerContext;
 using grpc::Status;
 
@@ -40,3 +42,5 @@ Status CrashServiceImpl::CrashOrbitService(
 
   return Status::OK;
 }
+
+}  // namespace orbit_service

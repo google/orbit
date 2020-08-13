@@ -15,7 +15,9 @@
 #include "OrbitBase/Logging.h"
 #include "Utils.h"
 
-outcome::result<void, std::string> ProcessList::Refresh() {
+namespace orbit_service {
+
+ErrorMessageOr<void> ProcessList::Refresh() {
   auto cpu_result = LinuxUtils::GetCpuUtilization();
   if (!cpu_result) {
     return outcome::failure(
@@ -103,3 +105,5 @@ outcome::result<void, std::string> ProcessList::Refresh() {
 
   return outcome::success();
 }
+
+}  // namespace orbit_service
