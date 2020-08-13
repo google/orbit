@@ -47,7 +47,6 @@ target_sources(
           FunctionUtils.cpp
           Introspection.cpp
           LinuxTracingBuffer.cpp
-          Log.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           Params.cpp

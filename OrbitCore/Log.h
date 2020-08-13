@@ -10,10 +10,6 @@
 
 #include "Threading.h"
 
-#define ORBIT_LOG(msg) GLogger.Log(OrbitLog::Global, msg)
-#define ORBIT_LOGV(var) GLogger.Log(OrbitLog::Global, #var, var)
-#define ORBIT_VIZV(var) GLogger.Log(OrbitLog::Viz, #var, var)
-
 class OrbitLog {
  public:
   enum Type { Global, Debug, Pdb, Viz, NumLogTypes };
@@ -68,5 +64,3 @@ class Logger {
   OrbitLog m_Logs[OrbitLog::NumLogTypes];
   Mutex m_Mutexes[OrbitLog::NumLogTypes];
 };
-
-extern Logger GLogger;
