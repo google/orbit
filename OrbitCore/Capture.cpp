@@ -33,8 +33,8 @@ void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 void Capture::SetTargetProcess(std::shared_ptr<Process> process) {
   if (process != GTargetProcess) {
-    GTargetProcess = std::move(process);
     GSamplingProfiler = std::make_shared<SamplingProfiler>(process);
+    GTargetProcess = std::move(process);
     GSelectedFunctionsMap.clear();
   }
 }

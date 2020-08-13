@@ -814,6 +814,7 @@ void OrbitApp::LoadModulesFromPreset(
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
+  CHECK(m_ProcessesDataView->GetSelectedProcessId() == pid);
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result =
         process_manager_->LoadModuleList(pid);
@@ -875,13 +876,6 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
   });
 }
 
-void OrbitApp::OnProcessSelected(int32_t pid) {
-  CHECK(m_ProcessesDataView->GetSelectedProcessId() == pid);
-
-  // Update modules and process together to avoid inconsistent state
-  UpdateProcessAndModuleList(pid);
-}
-
 std::shared_ptr<Process> OrbitApp::FindProcessByPid(int32_t pid) {
   absl::MutexLock lock(&process_map_mutex_);
   auto it = process_map_.find(pid);
@@ -929,7 +923,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!m_ProcessesDataView) {
         m_ProcessesDataView = std::make_unique<ProcessesDataView>();
         m_ProcessesDataView->SetSelectionListener(
-            [&](int32_t pid) { OnProcessSelected(pid); });
+            [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
         m_Panels.push_back(m_ProcessesDataView.get());
       }
       return m_ProcessesDataView.get();
