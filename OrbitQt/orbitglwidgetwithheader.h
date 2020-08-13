@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_GL_WIDGET_WITH_HEADER_H_
+#define ORBIT_QT_ORBIT_GL_WIDGET_WITH_HEADER_H_
 
 #include <QWidget>
 
@@ -23,3 +24,5 @@ class OrbitGlWidgetWithHeader : public QWidget {
  private:
   Ui::OrbitGlWidgetWithHeader* ui;
 };
+
+#endif  // ORBIT_QT_ORBIT_GL_WIDGET_WITH_HEADER_H_

@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_TABLE_MODEL_H_
+#define ORBIT_QT_ORBIT_TABLE_MODEL_H_
 
 #include <QAbstractTableModel>
 #include <memory>
@@ -41,3 +42,5 @@ class OrbitTableModel : public QAbstractTableModel {
  protected:
   DataView* m_DataView;
 };
+
+#endif  // ORBIT_QT_ORBIT_TABLE_MODEL_H_

@@ -5,7 +5,6 @@
 #include "orbitdataviewpanel.h"
 
 #include <string>
-#include <utility>
 
 #include "ui_orbitdataviewpanel.h"
 

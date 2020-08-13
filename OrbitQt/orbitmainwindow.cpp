@@ -13,10 +13,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
-#include <QPointer>
 #include <QProgressDialog>
 #include <QSettings>
-#include <QSortFilterProxyModel>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -37,10 +35,6 @@
 #include "orbitsamplingreport.h"
 #include "services.pb.h"
 #include "ui_orbitmainwindow.h"
-
-#ifdef _WIN32
-#include <shellapi.h>
-#endif
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
@@ -131,7 +125,7 @@ OrbitMainWindow::OrbitMainWindow(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
   GOrbitApp->SetDisassemblyCallback(
       [this](std::string disassembly, DisassemblyReport report) {
-        OpenDisassembly(disassembly, report);
+        OpenDisassembly(std::move(disassembly), std::move(report));
       });
   GOrbitApp->SetErrorMessageCallback(
       [this](const std::string& title, const std::string& text) {
@@ -204,7 +198,6 @@ OrbitMainWindow::OrbitMainWindow(
   GOrbitApp->PostInit();
 }
 
-namespace {
 static void SetFontSize(QWidget* widget, uint32_t font_size) {
   QFont font = widget->font();
   font.setPointSize(font_size);
@@ -212,13 +205,13 @@ static void SetFontSize(QWidget* widget, uint32_t font_size) {
 }
 
 static QWidget* CreateSpacer(QWidget* parent) {
-  QLabel* spacer = new QLabel(parent);
+  auto* spacer = new QLabel(parent);
   spacer->setText("    ");
   return spacer;
 }
 
 static QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
-  QAction* action = new QAction(icon, "", parent);
+  auto* action = new QAction(icon, "", parent);
   action->setDisabled(true);
   return action;
 }
@@ -226,7 +219,6 @@ static QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
 static QIcon GetIcon(const std::string& icon_name) {
   return QIcon(Path::JoinPath({Path::GetIconsPath(), icon_name}).c_str());
 }
-}  // namespace
 
 void OrbitMainWindow::SetupCaptureToolbar() {
   // Sizes.
@@ -306,23 +298,6 @@ void OrbitMainWindow::SetupCodeView() {
 }
 
 OrbitMainWindow::~OrbitMainWindow() { delete ui; }
-
-void OrbitMainWindow::PostInit() {}
-
-bool OrbitMainWindow::HideTab(QTabWidget* a_TabWidget, const char* a_TabName) {
-  QTabWidget* tab = a_TabWidget;
-
-  for (int i = 0; i < tab->count(); ++i) {
-    std::string tabName = tab->tabText(i).toStdString();
-
-    if (tabName == a_TabName) {
-      tab->removeTab(i);
-      return true;
-    }
-  }
-
-  return false;
-}
 
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   if (a_Type == DataViewType::ALL) {
@@ -471,8 +446,6 @@ void OrbitMainWindow::OnTimer() {
   }
 }
 
-void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
-
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
   // The toolbar and live tab filters are mirrored.
   ui->liveFunctions->SetFilter(text);
@@ -517,10 +490,6 @@ QPixmap QtGrab(OrbitMainWindow* a_Window) {
     pixMap.copy();
   }
   return pixMap;
-}
-
-void OrbitMainWindow::on_actionToogleDevMode_toggled(bool a_Toggle) {
-  UNUSED(a_Toggle);
 }
 
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {

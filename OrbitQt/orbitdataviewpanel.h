@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_ORBIT_DATA_VIEW_PANEL_H_
+#define ORBIT_QT_ORBIT_DATA_VIEW_PANEL_H_
 
 #include <QLineEdit>
 #include <QWidget>
@@ -38,3 +39,5 @@ class OrbitDataViewPanel : public QWidget {
  private:
   Ui::OrbitDataViewPanel* ui;
 };
+
+#endif  // ORBIT_QT_ORBIT_DATA_VIEW_PANEL_H_

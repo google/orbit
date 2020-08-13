@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef PROCESSLAUNCHERWIDGET_H
-#define PROCESSLAUNCHERWIDGET_H
+#ifndef ORBIT_QT_PROCESS_LAUNCHER_WIDGET_H
+#define ORBIT_QT_PROCESS_LAUNCHER_WIDGET_H
 
 #include <QWidget>
 
@@ -27,4 +27,4 @@ class ProcessLauncherWidget : public QWidget {
   Ui::ProcessLauncherWidget* ui;
 };
 
-#endif  // PROCESSLAUNCHERWIDGET_H
+#endif  // ORBIT_QT_PROCESS_LAUNCHER_WIDGET_H
