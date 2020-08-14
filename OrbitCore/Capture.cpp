@@ -45,7 +45,7 @@ ErrorMessageOr<void> Capture::StartCapture(
 
 void Capture::FinalizeCapture() {
   if (Capture::GSamplingProfiler != nullptr) {
-    Capture::GSamplingProfiler->ProcessSamples();
+    Capture::GSamplingProfiler->ProcessSamples(*Capture::capture_data_.GetCallstackData());
   }
 }
 

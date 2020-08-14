@@ -16,6 +16,7 @@
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
 #include "Callstack.h"
+#include "CallstackData.h"
 #include "CaptureWindow.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
@@ -34,6 +35,7 @@
 #include "OrbitClientServices/ProcessManager.h"
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
+#include "SamplingReport.h"
 #include "SamplingReportDataView.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
@@ -85,7 +87,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnCallstack(CallStack callstack) override;
+  void OnUniqueCallStack(CallStack callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
@@ -94,8 +96,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void RegisterCaptureWindow(CaptureWindow* capture);
 
-  void AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
-  void AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
+  void AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+                         const CallstackData* callstack_data);
+  void AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+                          const CallstackData* callstack_data);
   void AddTopDownView(const SamplingProfiler& sampling_profiler);
 
   bool SelectProcess(const std::string& process);

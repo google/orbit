@@ -13,6 +13,7 @@ target_sources(
   OrbitCore
   PUBLIC BlockChain.h
          Callstack.h
+         CallstackData.h
          CallstackTypes.h
          Capture.h
          CaptureData.h
@@ -35,7 +36,8 @@ target_sources(
 
 target_sources(
   OrbitCore
-  PRIVATE Capture.cpp
+  PRIVATE CallstackData.cpp
+          Capture.cpp
           CaptureData.cpp
           EventBuffer.cpp
           FunctionUtils.cpp

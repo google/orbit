@@ -202,7 +202,7 @@ uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
 
   if (!callstack_hashes_seen_.contains(hash)) {
     callstack_hashes_seen_.emplace(hash);
-    capture_listener_->OnCallstack(cs);
+    capture_listener_->OnUniqueCallStack(cs);
   }
   return hash;
 }

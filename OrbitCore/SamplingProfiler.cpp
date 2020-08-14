@@ -62,22 +62,6 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(uint6
   return SortCallstacks(thread_id_to_sample_data_[thread_id], callstacks, callstacks_count);
 }
 
-void SamplingProfiler::AddCallStack(CallstackEvent&& callstack_event) {
-  CallstackID hash = callstack_event.callstack_hash();
-  if (!HasCallStack(hash)) {
-    std::shared_ptr<CallStack> callstack = Capture::GSamplingProfiler->GetCallStack(hash);
-    AddUniqueCallStack(*callstack);
-  }
-
-  callstack_events_.push_back(std::move(callstack_event));
-}
-
-void SamplingProfiler::AddUniqueCallStack(CallStack call_stack) {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
-  auto key = call_stack.GetHash();
-  unique_callstacks_[key] = std::make_shared<CallStack>(std::move(call_stack));
-}
-
 const CallStack& SamplingProfiler::GetResolvedCallstack(CallstackID raw_callstack_id) const {
   auto resolved_callstack_id_it = original_to_resolved_callstack_.find(raw_callstack_id);
   CHECK(resolved_callstack_id_it != original_to_resolved_callstack_.end());
@@ -125,7 +109,7 @@ void SamplingProfiler::SortByThreadUsage() {
        });
 }
 
-void SamplingProfiler::ProcessSamples() {
+void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data) {
   // Clear the result of a previous call to ProcessSamples.
   thread_id_to_sample_data_.clear();
   unique_resolved_callstacks_.clear();
@@ -138,32 +122,30 @@ void SamplingProfiler::ProcessSamples() {
   address_to_module_name_.clear();
 
   // Unique call stacks and per thread data
-  for (const CallstackEvent& callstack : callstack_events_) {
-    if (!HasCallStack(callstack.callstack_hash())) {
-      ERROR("Processed unknown callstack!");
-      continue;
-    }
+  for (const CallstackEvent& callstack : callstack_data.callstack_events()) {
+    CHECK(callstack_data.HasCallStack(callstack.callstack_hash()));
 
     ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[callstack.thread_id()];
     thread_sample_data->samples_count++;
     thread_sample_data->callstack_count[callstack.callstack_hash()]++;
 
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    for (uint64_t address : unique_callstacks_[callstack.callstack_hash()]->GetFrames()) {
-      thread_sample_data->raw_address_count[address]++;
-    }
+    callstack_data.ForEachFrameInCallstack(callstack.callstack_hash(),
+                                           [&thread_sample_data](uint64_t address) {
+                                             thread_sample_data->raw_address_count[address]++;
+                                           });
 
     if (generate_summary_) {
       ThreadSampleData* all_thread_sample_data = &thread_id_to_sample_data_[kAllThreadsFakeTid];
       all_thread_sample_data->samples_count++;
       all_thread_sample_data->callstack_count[callstack.callstack_hash()]++;
-      for (uint64_t address : unique_callstacks_[callstack.callstack_hash()]->GetFrames()) {
-        all_thread_sample_data->raw_address_count[address]++;
-      }
+      callstack_data.ForEachFrameInCallstack(callstack.callstack_hash(),
+                                             [&all_thread_sample_data](uint64_t address) {
+                                               all_thread_sample_data->raw_address_count[address]++;
+                                             });
     }
   }
 
-  ResolveCallstacks();
+  ResolveCallstacks(callstack_data);
 
   for (auto& sample_data_it : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &sample_data_it.second;
@@ -203,24 +185,15 @@ void SamplingProfiler::ProcessSamples() {
   SortByThreadUsage();
 
   FillThreadSampleDataSampleReports();
-
-  samples_count_ = callstack_events_.size();
-
-  // Don't clear callstack_events_, so that ProcessSamples can be called again,
-  // e.g. when new callstacks have been added or after a module has been loaded.
 }
 
-void SamplingProfiler::ResolveCallstacks() {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
-
-  for (const auto& it : unique_callstacks_) {
-    CallstackID raw_callstack_id = it.first;
-    const std::shared_ptr<CallStack> callstack = it.second;
-    // A "resolved callstack" is a callstack where every address is replaced by
-    // the start address of the function (if known).
+void SamplingProfiler::ResolveCallstacks(const CallstackData& callstack_data) {
+  callstack_data.ForEachUniqueCallstack([this](const CallStack& call_stack) {
+    // A "resolved callstack" is a callstack where every address is replaced
+    // by the start address of the function (if known).
     std::vector<uint64_t> resolved_callstack_data;
 
-    for (uint64_t address : callstack->GetFrames()) {
+    for (uint64_t address : call_stack.GetFrames()) {
       if (exact_address_to_function_address_.find(address) ==
           exact_address_to_function_address_.end()) {
         UpdateAddressInfo(address);
@@ -230,7 +203,7 @@ void SamplingProfiler::ResolveCallstacks() {
       if (address_it != exact_address_to_function_address_.end()) {
         const uint64_t& function_address = address_it->second;
         resolved_callstack_data.push_back(function_address);
-        function_address_to_callstack_[function_address].insert(raw_callstack_id);
+        function_address_to_callstack_[function_address].insert(call_stack.GetHash());
       } else {
         resolved_callstack_data.push_back(address);
       }
@@ -245,8 +218,8 @@ void SamplingProfiler::ResolveCallstacks() {
           std::make_shared<CallStack>(resolved_callstack);
     }
 
-    original_to_resolved_callstack_[raw_callstack_id] = resolved_callstack_id;
-  }
+    original_to_resolved_callstack_[call_stack.GetHash()] = resolved_callstack_id;
+  });
 }
 
 const ThreadSampleData* SamplingProfiler::GetSummary() const {

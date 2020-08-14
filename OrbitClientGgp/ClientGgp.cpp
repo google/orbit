@@ -95,7 +95,7 @@ void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo&) {}
 
 void ClientGgp::OnKeyAndString(uint64_t, std::string) {}
 
-void ClientGgp::OnCallstack(CallStack) {}
+void ClientGgp::OnUniqueCallStack(CallStack) {}
 
 void ClientGgp::OnCallstackEvent(orbit_client_protos::CallstackEvent) {}
 

@@ -11,13 +11,15 @@
 #include <string>
 #include <vector>
 
+#include "CallstackData.h"
 #include "CallstackTypes.h"
 #include "SamplingProfiler.h"
 #include "SamplingReportDataView.h"
 
 class SamplingReport {
  public:
-  explicit SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
+  explicit SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+                          const CallstackData* callstack_data);
 
   void UpdateReport();
   [[nodiscard]] std::shared_ptr<SamplingProfiler> GetProfiler() const { return profiler_; };
@@ -29,7 +31,9 @@ class SamplingReport {
   [[nodiscard]] std::string GetSelectedCallstackString() const;
   void SetUiRefreshFunc(std::function<void()> func) { ui_refresh_func_ = std::move(func); };
   [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
-  [[nodiscard]] bool HasSamples() const { return profiler_->GetNumSamples() > 0; }
+  [[nodiscard]] bool HasSamples() const {
+    return callstack_data_ != nullptr && callstack_data_->GetCallstackEventsSize() > 0;
+  }
 
  protected:
   void FillReport();
@@ -37,6 +41,7 @@ class SamplingReport {
 
  protected:
   std::shared_ptr<SamplingProfiler> profiler_;
+  const CallstackData* callstack_data_;
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;
 
