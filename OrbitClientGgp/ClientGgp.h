@@ -38,6 +38,7 @@ class ClientGgp final : public CaptureListener {
  private:
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
+  std::shared_ptr<Process> target_process;
   std::unique_ptr<CaptureClient> capture_client_;
 
   void InitCapture();
