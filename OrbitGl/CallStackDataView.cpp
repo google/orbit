@@ -14,51 +14,52 @@
 using orbit_client_protos::FunctionInfo;
 
 CallStackDataView::CallStackDataView()
-    : DataView(DataViewType::CALLSTACK), callstack_(nullptr) {}
+    : DataView(DataViewType::kCallstack), callstack_(nullptr) {}
 
 void CallStackDataView::SetAsMainInstance() {}
 
 const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
-    columns.resize(COLUMN_NUM);
-    columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_NAME] = {"Function", .65f, SortingOrder::Ascending};
-    columns[COLUMN_SIZE] = {"Size", .0f, SortingOrder::Ascending};
-    columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
-    columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
-    columns[COLUMN_MODULE] = {"Module", .0f, SortingOrder::Ascending};
-    columns[COLUMN_ADDRESS] = {"Sampled Address", .0f, SortingOrder::Ascending};
+    columns.resize(kNumColumns);
+    columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
+    columns[kColumnName] = {"Function", .65f, SortingOrder::kAscending};
+    columns[kColumnSize] = {"Size", .0f, SortingOrder::kAscending};
+    columns[kColumnFile] = {"File", .0f, SortingOrder::kAscending};
+    columns[kColumnLine] = {"Line", .0f, SortingOrder::kAscending};
+    columns[kColumnModule] = {"Module", .0f, SortingOrder::kAscending};
+    columns[kColumnAddress] = {"Sampled Address", .0f,
+                               SortingOrder::kAscending};
     return columns;
   }();
   return columns;
 }
 
-std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
-  if (a_Row >= static_cast<int>(GetNumElements())) {
+std::string CallStackDataView::GetValue(int row, int column) {
+  if (row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
-  CallStackDataViewFrame frame = GetFrameFromRow(a_Row);
+  CallStackDataViewFrame frame = GetFrameFromRow(row);
   FunctionInfo* function = frame.function;
   Module* module = frame.module.get();
 
-  switch (a_Column) {
-    case COLUMN_SELECTED:
+  switch (column) {
+    case kColumnSelected:
       return (function != nullptr && FunctionUtils::IsSelected(*function))
                  ? "X"
                  : "-";
-    case COLUMN_NAME:
+    case kColumnName:
       return function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                  : frame.fallback_name;
-    case COLUMN_SIZE:
+    case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size())
                                  : "";
-    case COLUMN_FILE:
+    case kColumnFile:
       return function != nullptr ? function->file() : "";
-    case COLUMN_LINE:
+    case kColumnLine:
       return function != nullptr ? absl::StrFormat("%d", function->line()) : "";
-    case COLUMN_MODULE:
+    case kColumnModule:
       if (function != nullptr &&
           !FunctionUtils::GetLoadedModuleName(*function).empty()) {
         return FunctionUtils::GetLoadedModuleName(*function);
@@ -71,26 +72,26 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
             frame.address);
       }
       return "";
-    case COLUMN_ADDRESS:
+    case kColumnAddress:
       return absl::StrFormat("%#llx", frame.address);
     default:
       return "";
   }
 }
 
-const std::string CallStackDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
-const std::string CallStackDataView::MENU_ACTION_SELECT = "Hook";
-const std::string CallStackDataView::MENU_ACTION_UNSELECT = "Unhook";
-const std::string CallStackDataView::MENU_ACTION_DISASSEMBLY =
+const std::string CallStackDataView::kMenuActionLoadSymbols = "Load Symbols";
+const std::string CallStackDataView::kMenuActionSelect = "Hook";
+const std::string CallStackDataView::kMenuActionUnselect = "Unhook";
+const std::string CallStackDataView::kMenuActionDisassembly =
     "Go to Disassembly";
 
 std::vector<std::string> CallStackDataView::GetContextMenu(
-    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+    int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
   bool enable_select = false;
   bool enable_unselect = false;
   bool enable_disassembly = false;
-  for (int index : a_SelectedIndices) {
+  for (int index : selected_indices) {
     CallStackDataViewFrame frame = GetFrameFromRow(index);
     FunctionInfo* function = frame.function;
     Module* module = frame.module.get();
@@ -106,19 +107,18 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   }
 
   std::vector<std::string> menu;
-  if (enable_load) menu.emplace_back(MENU_ACTION_MODULES_LOAD);
-  if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
-  if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
-  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
+  if (enable_load) menu.emplace_back(kMenuActionLoadSymbols);
+  if (enable_select) menu.emplace_back(kMenuActionSelect);
+  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
+  if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
+  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
-void CallStackDataView::OnContextMenu(const std::string& a_Action,
-                                      int a_MenuIndex,
-                                      const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_MODULES_LOAD) {
-    for (int i : a_ItemIndices) {
+void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
+                                      const std::vector<int>& item_indices) {
+  if (action == kMenuActionLoadSymbols) {
+    for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
       if (module != nullptr && module->IsLoadable() && !module->IsLoaded()) {
@@ -126,28 +126,28 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
       }
     }
 
-  } else if (a_Action == MENU_ACTION_SELECT) {
-    for (int i : a_ItemIndices) {
+  } else if (action == kMenuActionSelect) {
+    for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       FunctionInfo* function = frame.function;
       FunctionUtils::Select(function);
     }
 
-  } else if (a_Action == MENU_ACTION_UNSELECT) {
-    for (int i : a_ItemIndices) {
+  } else if (action == kMenuActionUnselect) {
+    for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       FunctionInfo* function = frame.function;
       FunctionUtils::UnSelect(function);
     }
 
-  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
+  } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::GTargetProcess->GetID();
-    for (int i : a_ItemIndices) {
+    for (int i : item_indices) {
       GOrbitApp->Disassemble(pid, *GetFrameFromRow(i).function);
     }
 
   } else {
-    DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
+    DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
 
@@ -155,7 +155,7 @@ void CallStackDataView::DoFilter() {
   if (!callstack_) return;
 
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < callstack_->GetFramesCount(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
@@ -165,8 +165,8 @@ void CallStackDataView::DoFilter() {
                                     : frame.fallback_name);
     bool match = true;
 
-    for (std::string& filterToken : tokens) {
-      if (name.find(filterToken) == std::string::npos) {
+    for (std::string& filter_token : tokens) {
+      if (name.find(filter_token) == std::string::npos) {
         match = false;
         break;
       }
@@ -181,9 +181,9 @@ void CallStackDataView::DoFilter() {
 }
 
 void CallStackDataView::OnDataChanged() {
-  size_t numFunctions = callstack_ ? callstack_->GetFramesCount() : 0;
-  indices_.resize(numFunctions);
-  for (size_t i = 0; i < numFunctions; ++i) {
+  size_t num_functions = callstack_ ? callstack_->GetFramesCount() : 0;
+  indices_.resize(num_functions);
+  for (size_t i = 0; i < num_functions; ++i) {
     indices_[i] = i;
   }
 

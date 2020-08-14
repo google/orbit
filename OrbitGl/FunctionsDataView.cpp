@@ -14,47 +14,47 @@
 
 using orbit_client_protos::FunctionInfo;
 
-FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {}
+FunctionsDataView::FunctionsDataView() : DataView(DataViewType::kFunctions) {}
 
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
-    columns.resize(COLUMN_NUM);
-    columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_NAME] = {"Function", .65f, SortingOrder::Ascending};
-    columns[COLUMN_SIZE] = {"Size", .0f, SortingOrder::Ascending};
-    columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
-    columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
-    columns[COLUMN_MODULE] = {"Module", .0f, SortingOrder::Ascending};
-    columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
+    columns.resize(kNumColumns);
+    columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
+    columns[kColumnName] = {"Function", .65f, SortingOrder::kAscending};
+    columns[kColumnSize] = {"Size", .0f, SortingOrder::kAscending};
+    columns[kColumnFile] = {"File", .0f, SortingOrder::kAscending};
+    columns[kColumnLine] = {"Line", .0f, SortingOrder::kAscending};
+    columns[kColumnModule] = {"Module", .0f, SortingOrder::kAscending};
+    columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
 }
 
-std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
+std::string FunctionsDataView::GetValue(int row, int column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-  if (a_Row >= static_cast<int>(GetNumElements())) {
+  if (row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
-  FunctionInfo& function = GetFunction(a_Row);
+  FunctionInfo& function = GetFunction(row);
 
-  switch (a_Column) {
-    case COLUMN_SELECTED:
+  switch (column) {
+    case kColumnSelected:
       return FunctionUtils::IsSelected(function) ? "X" : "-";
-    case COLUMN_NAME:
+    case kColumnName:
       return FunctionUtils::GetDisplayName(function);
-    case COLUMN_SIZE:
+    case kColumnSize:
       return absl::StrFormat("%lu", function.size());
-    case COLUMN_FILE:
+    case kColumnFile:
       return function.file();
-    case COLUMN_LINE:
+    case kColumnLine:
       return absl::StrFormat("%i", function.line());
-    case COLUMN_MODULE:
+    case kColumnModule:
       return FunctionUtils::GetLoadedModuleName(function);
-    case COLUMN_ADDRESS:
+    case kColumnAddress:
       return absl::StrFormat("0x%llx",
                              FunctionUtils::GetAbsoluteAddress(function));
     default:
@@ -82,32 +82,32 @@ void FunctionsDataView::DoSort() {
   // not be called on the main thread and as soon as this is done the watchdog
   // timeout should be rolled back from 25 seconds to 10 seconds in
   // OrbitService.h
-  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
 
-  switch (m_SortingColumn) {
-    case COLUMN_SELECTED:
+  switch (sorting_column_) {
+    case kColumnSelected:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
-    case COLUMN_NAME:
+    case kColumnName:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetDisplayName);
       break;
-    case COLUMN_SIZE:
+    case kColumnSize:
       sorter = ORBIT_FUNC_SORT(size());
       break;
-    case COLUMN_FILE:
+    case kColumnFile:
       sorter = ORBIT_FUNC_SORT(file());
       break;
-    case COLUMN_LINE:
+    case kColumnLine:
       sorter = ORBIT_FUNC_SORT(line());
       break;
-    case COLUMN_MODULE:
+    case kColumnModule:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetLoadedModuleName);
       break;
-    case COLUMN_ADDRESS:
+    case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
       break;
     default:
@@ -119,47 +119,46 @@ void FunctionsDataView::DoSort() {
   }
 }
 
-const std::string FunctionsDataView::MENU_ACTION_SELECT = "Hook";
-const std::string FunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
-const std::string FunctionsDataView::MENU_ACTION_DISASSEMBLY =
+const std::string FunctionsDataView::kMenuActionSelect = "Hook";
+const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
+const std::string FunctionsDataView::kMenuActionDisassembly =
     "Go to Disassembly";
 
 std::vector<std::string> FunctionsDataView::GetContextMenu(
-    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+    int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
-  for (int index : a_SelectedIndices) {
+  for (int index : selected_indices) {
     const FunctionInfo& function = GetFunction(index);
     enable_select |= !FunctionUtils::IsSelected(function);
     enable_unselect |= FunctionUtils::IsSelected(function);
   }
 
   std::vector<std::string> menu;
-  if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
-  if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  menu.emplace_back(MENU_ACTION_DISASSEMBLY);
-  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
+  if (enable_select) menu.emplace_back(kMenuActionSelect);
+  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
+  menu.emplace_back(kMenuActionDisassembly);
+  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
-void FunctionsDataView::OnContextMenu(const std::string& a_Action,
-                                      int a_MenuIndex,
-                                      const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_SELECT) {
-    for (int i : a_ItemIndices) {
+void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
+                                      const std::vector<int>& item_indices) {
+  if (action == kMenuActionSelect) {
+    for (int i : item_indices) {
       FunctionUtils::Select(&GetFunction(i));
     }
-  } else if (a_Action == MENU_ACTION_UNSELECT) {
-    for (int i : a_ItemIndices) {
+  } else if (action == kMenuActionUnselect) {
+    for (int i : item_indices) {
       FunctionUtils::UnSelect(&GetFunction(i));
     }
-  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
+  } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::GTargetProcess->GetID();
-    for (int i : a_ItemIndices) {
+    for (int i : item_indices) {
       GOrbitApp->Disassemble(pid, GetFunction(i));
     }
   } else {
-    DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
+    DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
 
@@ -171,7 +170,7 @@ void FunctionsDataView::DoFilter() {
   // not be called on the main thread and as soon as this is done the watchdog
   // timeout should be rolled back from 25 seconds to 10 seconds in
   // OrbitService.h
-  m_FilterTokens = absl::StrSplit(ToLower(m_Filter), ' ');
+  m_FilterTokens = absl::StrSplit(ToLower(filter_), ' ');
 
 #ifdef WIN32
   ParallelFilter();
@@ -187,8 +186,8 @@ void FunctionsDataView::DoFilter() {
 
     bool match = true;
 
-    for (std::string& filterToken : m_FilterTokens) {
-      if (name.find(filterToken) == std::string::npos) {
+    for (std::string& filter_token : m_FilterTokens) {
+      if (name.find(filter_token) == std::string::npos) {
         match = false;
         break;
       }
@@ -201,7 +200,7 @@ void FunctionsDataView::DoFilter() {
 
   indices_ = indices;
 
-  OnSort(m_SortingColumn, {});
+  OnSort(sorting_column_, {});
 #endif
 }
 
@@ -250,18 +249,18 @@ void FunctionsDataView::ParallelFilter() {
 void FunctionsDataView::OnDataChanged() {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-  size_t numFunctions = Capture::GTargetProcess->GetFunctions().size();
-  indices_.resize(numFunctions);
-  for (size_t i = 0; i < numFunctions; ++i) {
+  size_t num_functions = Capture::GTargetProcess->GetFunctions().size();
+  indices_.resize(num_functions);
+  for (size_t i = 0; i < num_functions; ++i) {
     indices_[i] = i;
   }
 
   DataView::OnDataChanged();
 }
 
-FunctionInfo& FunctionsDataView::GetFunction(int a_Row) const {
+FunctionInfo& FunctionsDataView::GetFunction(int row) const {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  return *functions[indices_[a_Row]];
+  return *functions[indices_[row]];
 }

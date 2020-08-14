@@ -57,7 +57,7 @@ void OrbitSamplingReport::Initialize(
       int column = report_data_view.GetDefaultSortingColumn();
       Qt::SortOrder order =
           report_data_view.GetColumns()[column].initial_order ==
-                  DataView::SortingOrder::Ascending
+                  DataView::SortingOrder::kAscending
               ? Qt::AscendingOrder
               : Qt::DescendingOrder;
       treeView->GetTreeView()->sortByColumn(column, order);

@@ -19,34 +19,34 @@
 
 using orbit_client_protos::PresetFile;
 
-PresetsDataView::PresetsDataView() : DataView(DataViewType::PRESETS) {}
+PresetsDataView::PresetsDataView() : DataView(DataViewType::kPresets) {}
 
 const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
-    columns.resize(COLUMN_NUM);
-    columns[COLUMN_SESSION_NAME] = {"Preset", .49f, SortingOrder::Ascending};
-    columns[COLUMN_PROCESS_NAME] = {"Process", .49f, SortingOrder::Ascending};
+    columns.resize(kNumColumns);
+    columns[kColumnSessionName] = {"Preset", .49f, SortingOrder::kAscending};
+    columns[kColumnProcessName] = {"Process", .49f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
 }
 
-std::string PresetsDataView::GetValue(int row, int col) {
+std::string PresetsDataView::GetValue(int row, int column) {
   const std::shared_ptr<PresetFile>& preset = GetPreset(row);
 
-  switch (col) {
-    case COLUMN_SESSION_NAME:
+  switch (column) {
+    case kColumnSessionName:
       return Path::GetFileName(preset->file_name());
-    case COLUMN_PROCESS_NAME:
+    case kColumnProcessName:
       return Path::GetFileName(preset->preset_info().process_full_path());
     default:
       return "";
   }
 }
 
-std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
-  const PresetFile& preset = *GetPreset(a_Row);
+std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
+  const PresetFile& preset = *GetPreset(row);
   return preset.file_name();
 }
 
@@ -57,14 +57,14 @@ std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   }
 
 void PresetsDataView::DoSort() {
-  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (m_SortingColumn) {
-    case COLUMN_SESSION_NAME:
+  switch (sorting_column_) {
+    case kColumnSessionName:
       sorter = ORBIT_PRESET_SORT(file_name());
       break;
-    case COLUMN_PROCESS_NAME:
+    case kColumnProcessName:
       sorter = ORBIT_PRESET_SORT(preset_info().process_full_path());
       break;
     default:
@@ -76,36 +76,35 @@ void PresetsDataView::DoSort() {
   }
 }
 
-const std::string PresetsDataView::MENU_ACTION_LOAD = "Load Preset";
-const std::string PresetsDataView::MENU_ACTION_DELETE = "Delete Preset";
+const std::string PresetsDataView::kMenuActionLoad = "Load Preset";
+const std::string PresetsDataView::kMenuActionDelete = "Delete Preset";
 
 std::vector<std::string> PresetsDataView::GetContextMenu(
-    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+    int clicked_index, const std::vector<int>& selected_indices) {
   std::vector<std::string> menu;
   // Note that the UI already enforces a single selection.
-  if (a_SelectedIndices.size() == 1) {
-    Append(menu, {MENU_ACTION_LOAD, MENU_ACTION_DELETE});
+  if (selected_indices.size() == 1) {
+    Append(menu, {kMenuActionLoad, kMenuActionDelete});
   }
-  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
+  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
-void PresetsDataView::OnContextMenu(const std::string& a_Action,
-                                    int a_MenuIndex,
-                                    const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_LOAD) {
-    if (a_ItemIndices.size() != 1) {
+void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
+                                    const std::vector<int>& item_indices) {
+  if (action == kMenuActionLoad) {
+    if (item_indices.size() != 1) {
       return;
     }
-    const std::shared_ptr<PresetFile>& preset = GetPreset(a_ItemIndices[0]);
+    const std::shared_ptr<PresetFile>& preset = GetPreset(item_indices[0]);
 
     GOrbitApp->LoadPreset(preset);
 
-  } else if (a_Action == MENU_ACTION_DELETE) {
-    if (a_ItemIndices.size() != 1) {
+  } else if (action == kMenuActionDelete) {
+    if (item_indices.size() != 1) {
       return;
     }
-    int row = a_ItemIndices[0];
+    int row = item_indices[0];
     const std::shared_ptr<PresetFile>& preset = GetPreset(row);
     const std::string& filename = preset->file_name();
     int ret = remove(filename.c_str());
@@ -120,14 +119,14 @@ void PresetsDataView::OnContextMenu(const std::string& a_Action,
     }
 
   } else {
-    DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
+    DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
 
 void PresetsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < presets_.size(); ++i) {
     const PresetFile& preset = *presets_[i];
@@ -136,9 +135,9 @@ void PresetsDataView::DoFilter() {
 
     bool match = true;
 
-    for (std::string& filterToken : tokens) {
-      if (!(name.find(filterToken) != std::string::npos ||
-            path.find(filterToken) != std::string::npos)) {
+    for (std::string& filter_token : tokens) {
+      if (!(name.find(filter_token) != std::string::npos ||
+            path.find(filter_token) != std::string::npos)) {
         match = false;
         break;
       }
@@ -151,7 +150,7 @@ void PresetsDataView::DoFilter() {
 
   indices_ = indices;
 
-  OnSort(m_SortingColumn, {});
+  OnSort(sorting_column_, {});
 }
 
 void PresetsDataView::OnDataChanged() {
@@ -170,6 +169,6 @@ void PresetsDataView::SetPresets(
 }
 
 const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(
-    unsigned int a_Row) const {
-  return presets_[indices_[a_Row]];
+    unsigned int row) const {
+  return presets_[indices_[row]];
 }

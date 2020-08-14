@@ -9,12 +9,12 @@
 #include "App.h"
 
 void DataView::InitSortingOrders() {
-  m_SortingOrders.clear();
+  sorting_orders_.clear();
   for (const auto& column : GetColumns()) {
-    m_SortingOrders.push_back(column.initial_order);
+    sorting_orders_.push_back(column.initial_order);
   }
 
-  m_SortingColumn = GetDefaultSortingColumn();
+  sorting_column_ = GetDefaultSortingColumn();
 }
 
 void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
@@ -26,20 +26,20 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
     return;
   }
 
-  if (m_SortingOrders.empty()) {
+  if (sorting_orders_.empty()) {
     InitSortingOrders();
   }
 
-  m_SortingColumn = column;
+  sorting_column_ = column;
   if (new_order.has_value()) {
-    m_SortingOrders[column] = new_order.value();
+    sorting_orders_[column] = new_order.value();
   }
 
   DoSort();
 }
 
 void DataView::OnFilter(const std::string& filter) {
-  m_Filter = filter;
+  filter_ = filter;
   DoFilter();
 }
 
@@ -50,17 +50,17 @@ void DataView::SetUiFilterString(const std::string& filter) {
 }
 
 void DataView::OnDataChanged() {
-  OnSort(m_SortingColumn, std::optional<SortingOrder>{});
-  OnFilter(m_Filter);
+  OnSort(sorting_column_, std::optional<SortingOrder>{});
+  OnFilter(filter_);
 }
 
-const std::string DataView::MENU_ACTION_COPY_SELECTION = "Copy Selection";
-const std::string DataView::MENU_ACTION_EXPORT_TO_CSV = "Export to CSV";
+const std::string DataView::kMenuActionCopySelection = "Copy Selection";
+const std::string DataView::kMenuActionExportToCsv = "Export to CSV";
 
 std::vector<std::string> DataView::GetContextMenu(
-    int /*a_ClickedIndex*/, const std::vector<int>& /*a_SelectedIndices*/) {
-  static std::vector<std::string> menu = {MENU_ACTION_COPY_SELECTION,
-                                          MENU_ACTION_EXPORT_TO_CSV};
+    int /*clicked_index*/, const std::vector<int>& /*selected_indices*/) {
+  static std::vector<std::string> menu = {kMenuActionCopySelection,
+                                          kMenuActionExportToCsv};
   return menu;
 }
 
@@ -68,12 +68,12 @@ void DataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                              const std::vector<int>& a_ItemIndices) {
   UNUSED(a_MenuIndex);
 
-  if (a_Action == MENU_ACTION_EXPORT_TO_CSV) {
+  if (a_Action == kMenuActionExportToCsv) {
     std::string save_file = GOrbitApp->GetSaveFile(".csv");
     if (!save_file.empty()) {
       ExportCSV(save_file);
     }
-  } else if (a_Action == MENU_ACTION_COPY_SELECTION) {
+  } else if (a_Action == kMenuActionCopySelection) {
     CopySelection(a_ItemIndices);
   }
 }

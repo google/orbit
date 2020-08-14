@@ -15,7 +15,7 @@ class ProcessesDataView final : public DataView {
   void SetSelectionListener(
       const std::function<void(int32_t)>& selection_listener);
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_CPU; }
+  int GetDefaultSortingColumn() override { return kColumnCpu; }
   std::string GetValue(int row, int column) override;
   std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Processes"; }
@@ -41,11 +41,5 @@ class ProcessesDataView final : public DataView {
   int32_t selected_process_id_;
   std::function<void(int32_t)> selection_listener_;
 
-  enum ColumnIndex {
-    COLUMN_PID,
-    COLUMN_NAME,
-    COLUMN_CPU,
-    COLUMN_TYPE,
-    COLUMN_NUM
-  };
+  enum ColumnIndex { kColumnPid, kColumnName, kColumnCpu, kNumColumns };
 };

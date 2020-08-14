@@ -52,7 +52,7 @@ OrbitMainWindow::OrbitMainWindow(
   ui->setupUi(this);
 
   ui->ProcessesList->SetDataView(
-      data_view_factory->GetOrCreateDataView(DataViewType::PROCESSES));
+      data_view_factory->GetOrCreateDataView(DataViewType::kProcesses));
 
   QList<int> sizes;
   sizes.append(5000);
@@ -156,16 +156,16 @@ OrbitMainWindow::OrbitMainWindow(
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
 
   ui->ModulesList->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::MODULES),
+      data_view_factory->GetOrCreateDataView(DataViewType::kModules),
       SelectionType::kExtended, FontType::kDefault);
   ui->FunctionsList->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::FUNCTIONS),
+      data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
       SelectionType::kExtended, FontType::kDefault);
   ui->CallStackView->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::CALLSTACK),
+      data_view_factory->GetOrCreateDataView(DataViewType::kCallstack),
       SelectionType::kExtended, FontType::kDefault);
   ui->SessionList->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::PRESETS),
+      data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
       SelectionType::kDefault, FontType::kDefault);
 
   SetupCodeView();
@@ -300,8 +300,8 @@ void OrbitMainWindow::SetupCodeView() {
 OrbitMainWindow::~OrbitMainWindow() { delete ui; }
 
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
-  if (a_Type == DataViewType::ALL) {
-    for (int i = 0; i < static_cast<int>(DataViewType::ALL); ++i) {
+  if (a_Type == DataViewType::kAll) {
+    for (int i = 0; i < static_cast<int>(DataViewType::kAll); ++i) {
       UpdatePanel(static_cast<DataViewType>(i));
     }
   } else {
@@ -311,25 +311,25 @@ void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
 
 void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
   switch (a_Type) {
-    case DataViewType::CALLSTACK:
+    case DataViewType::kCallstack:
       ui->CallStackView->Refresh();
       break;
-    case DataViewType::FUNCTIONS:
+    case DataViewType::kFunctions:
       ui->FunctionsList->Refresh();
       break;
-    case DataViewType::LIVE_FUNCTIONS:
+    case DataViewType::kLiveFunctions:
       ui->liveFunctions->Refresh();
       break;
-    case DataViewType::MODULES:
+    case DataViewType::kModules:
       ui->ModulesList->Refresh();
       break;
-    case DataViewType::PROCESSES:
+    case DataViewType::kProcesses:
       ui->ProcessesList->Refresh();
       break;
-    case DataViewType::PRESETS:
+    case DataViewType::kPresets:
       ui->SessionList->Refresh();
       break;
-    case DataViewType::SAMPLING:
+    case DataViewType::kSampling:
       ui->samplingReport->RefreshCallstackView();
       ui->samplingReport->RefreshTabs();
       ui->selectionReport->RefreshCallstackView();

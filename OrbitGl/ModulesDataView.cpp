@@ -14,18 +14,18 @@
 ABSL_FLAG(bool, enable_frame_pointer_validator, false,
           "Enable validation of frame pointers");
 
-ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {}
+ModulesDataView::ModulesDataView() : DataView(DataViewType::kModules) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
-    columns.resize(COLUMN_NUM);
-    columns[COLUMN_NAME] = {"Name", .2f, SortingOrder::Ascending};
-    columns[COLUMN_PATH] = {"Path", .5f, SortingOrder::Ascending};
-    columns[COLUMN_ADDRESS_RANGE] = {"Address Range", .15f,
-                                     SortingOrder::Ascending};
-    columns[COLUMN_FILE_SIZE] = {"File Size", .0f, SortingOrder::Descending};
-    columns[COLUMN_LOADED] = {"Loaded", .0f, SortingOrder::Descending};
+    columns.resize(kNumColumns);
+    columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
+    columns[kColumnPath] = {"Path", .5f, SortingOrder::kAscending};
+    columns[kColumnAddressRange] = {"Address Range", .15f,
+                                    SortingOrder::kAscending};
+    columns[kColumnFileSize] = {"File Size", .0f, SortingOrder::kDescending};
+    columns[kColumnLoaded] = {"Loaded", .0f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;
@@ -35,15 +35,15 @@ std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleData* module = GetModule(row);
 
   switch (col) {
-    case COLUMN_NAME:
+    case kColumnName:
       return module->name();
-    case COLUMN_PATH:
+    case kColumnPath:
       return module->file_path();
-    case COLUMN_ADDRESS_RANGE:
+    case kColumnAddressRange:
       return module->address_range();
-    case COLUMN_FILE_SIZE:
+    case kColumnFileSize:
       return GetPrettySize(module->file_size());
-    case COLUMN_LOADED:
+    case kColumnLoaded:
       return module->is_loaded() ? "*" : "";
     default:
       return "";
@@ -57,23 +57,23 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 
 void ModulesDataView::DoSort() {
-  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (m_SortingColumn) {
-    case COLUMN_NAME:
+  switch (sorting_column_) {
+    case kColumnName:
       sorter = ORBIT_PROC_SORT(name());
       break;
-    case COLUMN_PATH:
+    case kColumnPath:
       sorter = ORBIT_PROC_SORT(file_path());
       break;
-    case COLUMN_ADDRESS_RANGE:
+    case kColumnAddressRange:
       sorter = ORBIT_PROC_SORT(address_start());
       break;
-    case COLUMN_FILE_SIZE:
+    case kColumnFileSize:
       sorter = ORBIT_PROC_SORT(file_size());
       break;
-    case COLUMN_LOADED:
+    case kColumnLoaded:
       sorter = ORBIT_PROC_SORT(is_loaded());
       break;
     default:
@@ -85,8 +85,8 @@ void ModulesDataView::DoSort() {
   }
 }
 
-const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
-const std::string ModulesDataView::MENU_ACTION_MODULES_VERIFY =
+const std::string ModulesDataView::kMenuActionLoadSymbols = "Load Symbols";
+const std::string ModulesDataView::kMenuActionVerifyFramePointers =
     "Verify Frame Pointers";
 
 std::vector<std::string> ModulesDataView::GetContextMenu(
@@ -106,10 +106,10 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
 
   std::vector<std::string> menu;
   if (enable_load) {
-    menu.emplace_back(MENU_ACTION_MODULES_LOAD);
+    menu.emplace_back(kMenuActionLoadSymbols);
   }
   if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
-    menu.emplace_back(MENU_ACTION_MODULES_VERIFY);
+    menu.emplace_back(kMenuActionVerifyFramePointers);
   }
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
@@ -117,7 +117,7 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
 
 void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
-  if (action == MENU_ACTION_MODULES_LOAD) {
+  if (action == kMenuActionLoadSymbols) {
     std::vector<std::shared_ptr<Module>> modules;
     for (int index : item_indices) {
       const ModuleData* module_data = GetModule(index);
@@ -128,7 +128,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     }
     GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
 
-  } else if (action == MENU_ACTION_MODULES_VERIFY) {
+  } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
       const ModuleData* module = GetModule(index);
@@ -146,7 +146,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
 
 void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
@@ -170,7 +170,7 @@ void ModulesDataView::DoFilter() {
 
   indices_ = indices;
 
-  OnSort(m_SortingColumn, {});
+  OnSort(sorting_column_, {});
 }
 
 void ModulesDataView::SetModules(int32_t process_id,
@@ -209,6 +209,4 @@ bool ModulesDataView::GetDisplayColor(int row, int /*column*/,
     blue = 218;
     return true;
   }
-
-  return false;
 }

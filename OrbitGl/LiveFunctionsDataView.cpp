@@ -20,56 +20,56 @@ using orbit_client_protos::FunctionStats;
 
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsController* live_functions)
-    : DataView(DataViewType::LIVE_FUNCTIONS), live_functions_(live_functions) {
-  m_UpdatePeriodMs = 300;
+    : DataView(DataViewType::kLiveFunctions), live_functions_(live_functions) {
+  update_period_ms_ = 300;
   OnDataChanged();
 }
 
 const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
-    columns.resize(COLUMN_NUM);
-    columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_NAME] = {"Function", .4f, SortingOrder::Ascending};
-    columns[COLUMN_COUNT] = {"Count", .0f, SortingOrder::Descending};
-    columns[COLUMN_TIME_TOTAL] = {"Total", .075f, SortingOrder::Descending};
-    columns[COLUMN_TIME_AVG] = {"Avg", .075f, SortingOrder::Descending};
-    columns[COLUMN_TIME_MIN] = {"Min", .075f, SortingOrder::Descending};
-    columns[COLUMN_TIME_MAX] = {"Max", .075f, SortingOrder::Descending};
-    columns[COLUMN_MODULE] = {"Module", .1f, SortingOrder::Ascending};
-    columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
+    columns.resize(kNumColumns);
+    columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
+    columns[kColumnName] = {"Function", .4f, SortingOrder::kAscending};
+    columns[kColumnCount] = {"Count", .0f, SortingOrder::kDescending};
+    columns[kColumnTimeTotal] = {"Total", .075f, SortingOrder::kDescending};
+    columns[kColumnTimeAvg] = {"Avg", .075f, SortingOrder::kDescending};
+    columns[kColumnTimeMin] = {"Min", .075f, SortingOrder::kDescending};
+    columns[kColumnTimeMax] = {"Max", .075f, SortingOrder::kDescending};
+    columns[kColumnModule] = {"Module", .1f, SortingOrder::kAscending};
+    columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
 }
 
-std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
-  if (a_Row >= static_cast<int>(GetNumElements())) {
+std::string LiveFunctionsDataView::GetValue(int row, int column) {
+  if (row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
-  const FunctionInfo& function = *GetFunction(a_Row);
+  const FunctionInfo& function = *GetFunction(row);
   const FunctionStats& stats =
       Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
 
-  switch (a_Column) {
-    case COLUMN_SELECTED:
+  switch (column) {
+    case kColumnSelected:
       return FunctionUtils::IsSelected(function) ? "X" : "-";
-    case COLUMN_NAME:
+    case kColumnName:
       return FunctionUtils::GetDisplayName(function);
-    case COLUMN_COUNT:
+    case kColumnCount:
       return absl::StrFormat("%lu", stats.count());
-    case COLUMN_TIME_TOTAL:
+    case kColumnTimeTotal:
       return GetPrettyTime(absl::Nanoseconds(stats.total_time_ns()));
-    case COLUMN_TIME_AVG:
+    case kColumnTimeAvg:
       return GetPrettyTime(absl::Nanoseconds(stats.average_time_ns()));
-    case COLUMN_TIME_MIN:
+    case kColumnTimeMin:
       return GetPrettyTime(absl::Nanoseconds(stats.min_ns()));
-    case COLUMN_TIME_MAX:
+    case kColumnTimeMax:
       return GetPrettyTime(absl::Nanoseconds(stats.max_ns()));
-    case COLUMN_MODULE:
+    case kColumnModule:
       return function.loaded_module_path();
-    case COLUMN_ADDRESS:
+    case kColumnAddress:
       return absl::StrFormat("0x%llx",
                              FunctionUtils::GetAbsoluteAddress(function));
     default:
@@ -99,37 +99,37 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 void LiveFunctionsDataView::DoSort() {
-  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   const std::vector<std::shared_ptr<FunctionInfo>>& functions = functions_;
 
-  switch (m_SortingColumn) {
-    case COLUMN_SELECTED:
+  switch (sorting_column_) {
+    case kColumnSelected:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
-    case COLUMN_NAME:
+    case kColumnName:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetDisplayName);
       break;
-    case COLUMN_COUNT:
+    case kColumnCount:
       sorter = ORBIT_STAT_SORT(count());
       break;
-    case COLUMN_TIME_TOTAL:
+    case kColumnTimeTotal:
       sorter = ORBIT_STAT_SORT(total_time_ns());
       break;
-    case COLUMN_TIME_AVG:
+    case kColumnTimeAvg:
       sorter = ORBIT_STAT_SORT(average_time_ns());
       break;
-    case COLUMN_TIME_MIN:
+    case kColumnTimeMin:
       sorter = ORBIT_STAT_SORT(min_ns());
       break;
-    case COLUMN_TIME_MAX:
+    case kColumnTimeMax:
       sorter = ORBIT_STAT_SORT(max_ns());
       break;
-    case COLUMN_MODULE:
+    case kColumnModule:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetLoadedModuleName);
       break;
-    case COLUMN_ADDRESS:
+    case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
       break;
     default:
@@ -141,28 +141,24 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
-const std::string LiveFunctionsDataView::MENU_ACTION_SELECT = "Hook";
-const std::string LiveFunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
-const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_FIRST =
+const std::string LiveFunctionsDataView::kMenuActionSelect = "Hook";
+const std::string LiveFunctionsDataView::kMenuActionUnselect = "Unhook";
+const std::string LiveFunctionsDataView::kMenuActionJumpToFirst =
     "Jump to first";
-const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_LAST =
-    "Jump to last";
-const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MIN =
-    "Jump to min";
-const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MAX =
-    "Jump to max";
-const std::string LiveFunctionsDataView::MENU_ACTION_DISASSEMBLY =
+const std::string LiveFunctionsDataView::kMenuActionJumpToLast = "Jump to last";
+const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
+const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
+const std::string LiveFunctionsDataView::kMenuActionDisassembly =
     "Go to Disassembly";
-const std::string LiveFunctionsDataView::MENU_ACTION_ITERATE =
-    "Add iterator(s)";
+const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
 
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
-    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+    int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
   bool enable_iterator = false;
-  bool enable_disassembly = !a_SelectedIndices.empty();
-  for (int index : a_SelectedIndices) {
+  bool enable_disassembly = !selected_indices.empty();
+  for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunction(index);
     const FunctionStats& stats =
         Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
@@ -172,83 +168,82 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   }
 
   std::vector<std::string> menu;
-  if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
-  if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
+  if (enable_select) menu.emplace_back(kMenuActionSelect);
+  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
+  if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
 
   if (enable_iterator) {
-    menu.emplace_back(MENU_ACTION_ITERATE);
+    menu.emplace_back(kMenuActionIterate);
   }
 
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
-  if (a_SelectedIndices.size() == 1) {
-    const FunctionInfo& function = *GetFunction(a_SelectedIndices[0]);
+  if (selected_indices.size() == 1) {
+    const FunctionInfo& function = *GetFunction(selected_indices[0]);
     const FunctionStats& stats =
         Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
     if (stats.count() > 0) {
-      menu.insert(menu.end(),
-                  {MENU_ACTION_JUMP_TO_FIRST, MENU_ACTION_JUMP_TO_LAST,
-                   MENU_ACTION_JUMP_TO_MIN, MENU_ACTION_JUMP_TO_MAX});
+      menu.insert(menu.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast,
+                               kMenuActionJumpToMin, kMenuActionJumpToMax});
     }
   }
-  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
+  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
 void LiveFunctionsDataView::OnContextMenu(
-    const std::string& a_Action, int a_MenuIndex,
-    const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_SELECT) {
-    for (int i : a_ItemIndices) {
+    const std::string& action, int menu_index,
+    const std::vector<int>& item_indices) {
+  if (action == kMenuActionSelect) {
+    for (int i : item_indices) {
       FunctionInfo* function = GetFunction(i);
       FunctionUtils::Select(function);
     }
-  } else if (a_Action == MENU_ACTION_UNSELECT) {
-    for (int i : a_ItemIndices) {
+  } else if (action == kMenuActionUnselect) {
+    for (int i : item_indices) {
       FunctionInfo* function = GetFunction(i);
       FunctionUtils::UnSelect(function);
     }
-  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
+  } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::GTargetProcess->GetID();
-    for (int i : a_ItemIndices) {
+    for (int i : item_indices) {
       const FunctionInfo& function = *GetFunction(i);
       GOrbitApp->Disassemble(pid, function);
     }
-  } else if (a_Action == MENU_ACTION_JUMP_TO_FIRST) {
-    CHECK(a_ItemIndices.size() == 1);
+  } else if (action == kMenuActionJumpToFirst) {
+    CHECK(item_indices.size() == 1);
     auto function_address =
-        FunctionUtils::GetAbsoluteAddress(*GetFunction(a_ItemIndices[0]));
+        FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
         function_address, std::numeric_limits<TickType>::lowest());
-    if (first_box) {
+    if (first_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(first_box);
     }
-  } else if (a_Action == MENU_ACTION_JUMP_TO_LAST) {
-    CHECK(a_ItemIndices.size() == 1);
+  } else if (action == kMenuActionJumpToLast) {
+    CHECK(item_indices.size() == 1);
     auto function_address =
-        FunctionUtils::GetAbsoluteAddress(*GetFunction(a_ItemIndices[0]));
+        FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
         function_address, std::numeric_limits<TickType>::max());
-    if (last_box) {
+    if (last_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(last_box);
     }
-  } else if (a_Action == MENU_ACTION_JUMP_TO_MIN) {
-    CHECK(a_ItemIndices.size() == 1);
-    const FunctionInfo& function = *GetFunction(a_ItemIndices[0]);
+  } else if (action == kMenuActionJumpToMin) {
+    CHECK(item_indices.size() == 1);
+    const FunctionInfo& function = *GetFunction(item_indices[0]);
     auto [min_box, _] = GetMinMax(function);
-    if (min_box) {
+    if (min_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(min_box);
     }
-  } else if (a_Action == MENU_ACTION_JUMP_TO_MAX) {
-    CHECK(a_ItemIndices.size() == 1);
-    const FunctionInfo& function = *GetFunction(a_ItemIndices[0]);
+  } else if (action == kMenuActionJumpToMax) {
+    CHECK(item_indices.size() == 1);
+    const FunctionInfo& function = *GetFunction(item_indices[0]);
     auto [_, max_box] = GetMinMax(function);
-    if (max_box) {
+    if (max_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(max_box);
     }
-  } else if (a_Action == MENU_ACTION_ITERATE) {
-    for (int i : a_ItemIndices) {
+  } else if (action == kMenuActionIterate) {
+    for (int i : item_indices) {
       FunctionInfo* function = GetFunction(i);
       const FunctionStats& stats =
           Capture::capture_data_.GetFunctionStatsOrDefault(function->address());
@@ -257,14 +252,14 @@ void LiveFunctionsDataView::OnContextMenu(
       }
     }
   } else {
-    DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
+    DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
 
 void LiveFunctionsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < functions_.size(); ++i) {
     const std::shared_ptr<FunctionInfo> function = functions_[i];
@@ -273,8 +268,8 @@ void LiveFunctionsDataView::DoFilter() {
 
       bool match = true;
 
-      for (std::string& filterToken : tokens) {
-        if (name.find(filterToken) == std::string::npos) {
+      for (std::string& filter_token : tokens) {
+        if (name.find(filter_token) == std::string::npos) {
           match = false;
           break;
         }
@@ -288,7 +283,7 @@ void LiveFunctionsDataView::DoFilter() {
 
   indices_ = indices;
 
-  OnSort(m_SortingColumn, {});
+  OnSort(sorting_column_, {});
 
   // Filter drawn textboxes
   Capture::GVisibleFunctionsMap.clear();
@@ -317,39 +312,41 @@ void LiveFunctionsDataView::OnDataChanged() {
 
 void LiveFunctionsDataView::OnTimer() {
   if (GOrbitApp->IsCapturing()) {
-    OnSort(m_SortingColumn, {});
+    OnSort(sorting_column_, {});
   }
 }
 
-FunctionInfo* LiveFunctionsDataView::GetFunction(unsigned int a_Row) const {
-  CHECK(a_Row < functions_.size());
-  CHECK(functions_[indices_[a_Row]]);
-  return functions_[indices_[a_Row]].get();
+FunctionInfo* LiveFunctionsDataView::GetFunction(unsigned int row) const {
+  CHECK(row < functions_.size());
+  CHECK(functions_[indices_[row]]);
+  return functions_[indices_[row]].get();
 }
 
 std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
     const FunctionInfo& function) const {
   auto function_address = FunctionUtils::GetAbsoluteAddress(function);
-  TextBox *min_box = nullptr, *max_box = nullptr;
+  TextBox* min_box = nullptr;
+  TextBox* max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
+    for (auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         if (box.GetTimerInfo().function_address() == function_address) {
           uint64_t elapsed_nanos = TicksToNanoseconds(
               box.GetTimerInfo().start(), box.GetTimerInfo().end());
-          if (!min_box || elapsed_nanos < TicksToNanoseconds(
-                                              min_box->GetTimerInfo().start(),
-                                              min_box->GetTimerInfo().end())) {
+          if (min_box == nullptr ||
+              elapsed_nanos <
+                  TicksToNanoseconds(min_box->GetTimerInfo().start(),
+                                     min_box->GetTimerInfo().end())) {
             min_box = &box;
           }
-          if (!max_box || elapsed_nanos > TicksToNanoseconds(
-                                              max_box->GetTimerInfo().start(),
-                                              max_box->GetTimerInfo().end())) {
+          if (max_box == nullptr ||
+              elapsed_nanos >
+                  TicksToNanoseconds(max_box->GetTimerInfo().start(),
+                                     max_box->GetTimerInfo().end())) {
             max_box = &box;
           }
         }
