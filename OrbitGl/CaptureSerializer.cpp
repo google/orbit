@@ -60,10 +60,8 @@ void WriteMessage(const google::protobuf::Message* message,
 }
 
 void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
-  for (const auto& function : Capture::capture_data_.selected_functions()) {
-    if (function != nullptr) {
-      capture_info->add_selected_functions()->CopyFrom(*function);
-    }
+  for (const auto& pair : Capture::capture_data_.selected_functions()) {
+    capture_info->add_selected_functions()->CopyFrom(pair.second);
   }
 
   capture_info->set_process_id(Capture::capture_data_.process_id());
@@ -180,16 +178,15 @@ void FillEventBuffer() {
 
 void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   // Clear the old capture
-  Capture::GSelectedFunctionsMap.clear();
-  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
+  GOrbitApp->ClearSelectedFunctions();
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
       selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
-    std::shared_ptr<FunctionInfo> function_ptr =
-        std::make_shared<FunctionInfo>(function);
-    selected_functions.push_back(function_ptr);
-    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
-        *function_ptr)] = function_ptr.get();
+    uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
+    selected_functions[address] = function;
   }
+  Capture::GVisibleFunctionsMap = selected_functions;
+
   absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
       capture_info.function_stats().begin(),
       capture_info.function_stats().end()};
@@ -208,8 +205,6 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
       capture_info.thread_names().begin(), capture_info.thread_names().end()};
   capture_data.set_thread_names(thread_names);
   Capture::capture_data_ = std::move(capture_data);
-
-  Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();

@@ -82,7 +82,8 @@ void OrbitApp::OnCaptureStarted() {
       capture_started_callback_();
     }
 
-    if (!Capture::GSelectedFunctionsMap.empty() && select_live_tab_callback_) {
+    if (!Capture::capture_data_.selected_functions().empty() &&
+        select_live_tab_callback_) {
       select_live_tab_callback_();
     }
 
@@ -465,9 +466,46 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
-  OUTCOME_TRY(Capture::SavePreset(filename));
+  OUTCOME_TRY(SavePreset(filename));
   ListPresets();
   Refresh(DataViewType::kPresets);
+  return outcome::success();
+}
+
+ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
+  PresetInfo preset;
+  const int32_t pid = m_ProcessesDataView->GetSelectedProcessId();
+  const std::shared_ptr<Process>& process = FindProcessByPid(pid);
+  preset.set_process_full_path(
+      data_manager_->GetProcessByPid(pid)->full_path());
+
+  for (uint64_t function_address : data_manager_->selected_functions()) {
+    FunctionInfo* func = process->GetFunctionFromAddress(function_address);
+    // No need to store the manually instrumented functions
+    if (!FunctionUtils::IsOrbitFunc(*func)) {
+      uint64_t hash = FunctionUtils::GetHash(*func);
+      (*preset.mutable_path_to_module())[func->loaded_module_path()]
+          .add_function_hashes(hash);
+    }
+  }
+
+  std::string filename_with_ext = filename;
+  if (!absl::EndsWith(filename, ".opr")) {
+    filename_with_ext += ".opr";
+  }
+
+  std::ofstream file(filename_with_ext, std::ios::binary);
+  if (file.fail()) {
+    ERROR("Saving preset in \"%s\": %s", filename_with_ext, "file.fail()");
+    return ErrorMessage("Error opening the file for writing");
+  }
+
+  {
+    SCOPE_TIMER_LOG(
+        absl::StrFormat("Saving preset in \"%s\"", filename_with_ext));
+    preset.SerializeToOstream(&file);
+  }
+
   return outcome::success();
 }
 
@@ -550,15 +588,16 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  ErrorMessageOr<void> result = Capture::StartCapture();
+  int32_t pid = m_ProcessesDataView->GetSelectedProcessId();
+  std::string process_name = data_manager_->GetProcessByPid(pid)->name();
+  absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
+      GetSelectedFunctionsAndOrbitFunctions();
+  ErrorMessageOr<void> result =
+      Capture::StartCapture(pid, process_name, selected_functions);
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
     return false;
   }
-
-  int32_t pid = Capture::GTargetProcess->GetID();
-  std::map<uint64_t, FunctionInfo*> selected_functions =
-      Capture::GSelectedFunctionsMap;
 
   result = capture_client_->StartCapture(thread_pool_.get(), pid,
                                          selected_functions);
@@ -569,6 +608,18 @@ bool OrbitApp::StartCapture() {
   }
 
   return true;
+}
+
+absl::flat_hash_map<uint64_t, FunctionInfo>
+OrbitApp::GetSelectedFunctionsAndOrbitFunctions() const {
+  absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
+  for (const auto& func : Capture::GTargetProcess->GetFunctions()) {
+    if (IsFunctionSelected(*func) || FunctionUtils::IsOrbitFunc(*func)) {
+      uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
+      selected_functions[address] = *(func.get());
+    }
+  }
+  return selected_functions;
 }
 
 void OrbitApp::StopCapture() {
@@ -723,7 +774,10 @@ void OrbitApp::SymbolLoadingFinished(
   if (preset != nullptr) {
     auto it = preset->preset_info().path_to_module().find(module->m_FullName);
     if (it != preset->preset_info().path_to_module().end()) {
-      module->m_Pdb->ApplyPreset(*preset);
+      for (const FunctionInfo* func :
+           module->m_Pdb->FunctionsToSelect(*preset)) {
+        SelectFunction(*func);
+      }
     }
   }
 
@@ -786,7 +840,10 @@ void OrbitApp::LoadModulesFromPreset(
     }
     if (module->IsLoaded()) {
       CHECK(module->m_Pdb != nullptr);
-      module->m_Pdb->ApplyPreset(*preset);
+      for (const FunctionInfo* func :
+           module->m_Pdb->FunctionsToSelect(*preset)) {
+        SelectFunction(*func);
+      }
       continue;
     }
     modules_to_load.emplace_back(std::move(module));
@@ -859,6 +916,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // propagate the changes to the UI.
 
       if (pid != Capture::GTargetProcess->GetID()) {
+        data_manager_->ClearSelectedFunctions();
         Capture::SetTargetProcess(std::move(process));
       }
 
@@ -875,6 +933,31 @@ std::shared_ptr<Process> OrbitApp::FindProcessByPid(int32_t pid) {
   }
 
   return it->second;
+}
+
+void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
+  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
+  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
+      ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
+      func.pretty_name(), absolute_address, func.address(), func.load_bias(),
+      func.module_base_address());
+  data_manager_->SelectFunction(absolute_address);
+}
+void OrbitApp::UnSelectFunction(const orbit_client_protos::FunctionInfo& func) {
+  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
+  data_manager_->UnSelectFunction(absolute_address);
+}
+void OrbitApp::ClearSelectedFunctions() {
+  data_manager_->ClearSelectedFunctions();
+}
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(
+    const orbit_client_protos::FunctionInfo& func) const {
+  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
+  return data_manager_->IsFunctionSelected(absolute_address);
+}
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(
+    const SampledFunction& func) const {
+  return data_manager_->IsFunctionSelected(func.address);
 }
 
 void OrbitApp::UpdateSamplingReport() {

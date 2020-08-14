@@ -6,7 +6,9 @@
 
 #include "Profiling.h"
 
+using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+using orbit_client_protos::TimerInfo;
 
 orbit_client_protos::LinuxAddressInfo* CaptureData::GetAddressInfo(
     uint64_t address) {
@@ -27,9 +29,8 @@ const FunctionStats& CaptureData::GetFunctionStatsOrDefault(
   return function_stats_it->second;
 }
 
-void CaptureData::UpdateFunctionStats(
-    orbit_client_protos::FunctionInfo* func,
-    const orbit_client_protos::TimerInfo& timer_info) {
+void CaptureData::UpdateFunctionStats(FunctionInfo* func,
+                                      const TimerInfo& timer_info) {
   const uint64_t function_address = func->address();
   FunctionStats& stats = functions_stats_[function_address];
   stats.set_count(stats.count() + 1);
@@ -45,4 +46,13 @@ void CaptureData::UpdateFunctionStats(
   if (stats.min_ns() == 0 || elapsed_nanos < stats.min_ns()) {
     stats.set_min_ns(elapsed_nanos);
   }
+}
+
+const FunctionInfo* CaptureData::GetSelectedFunction(
+    uint64_t function_address) const {
+  auto selected_functions_it = selected_functions_.find(function_address);
+  if (selected_functions_it == selected_functions_.end()) {
+    return nullptr;
+  }
+  return &selected_functions_it->second;
 }

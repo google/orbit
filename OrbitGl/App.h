@@ -220,6 +220,15 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() {
     return main_thread_executor_.get();
   }
+  [[nodiscard]] std::shared_ptr<Process> FindProcessByPid(int32_t pid);
+
+  // TODO(kuebler): Move them to a separate controler at some point
+  void SelectFunction(const orbit_client_protos::FunctionInfo& func);
+  void UnSelectFunction(const orbit_client_protos::FunctionInfo& func);
+  void ClearSelectedFunctions();
+  [[nodiscard]] bool IsFunctionSelected(
+      const orbit_client_protos::FunctionInfo& func) const;
+  [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
 
  private:
   void LoadModuleOnRemote(
@@ -228,10 +237,13 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SymbolLoadingFinished(
       uint32_t process_id, const std::shared_ptr<Module>& module,
       const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::string& filename);
+
+  [[nodiscard]] absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
+  GetSelectedFunctionsAndOrbitFunctions() const;
+  ErrorMessageOr<void> SavePreset(const std::string& filename);
 
   ApplicationOptions options_;
 

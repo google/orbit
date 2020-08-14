@@ -27,7 +27,7 @@ IntrumentedFunctionTypeFromOrbitType(FunctionInfo::OrbitType orbit_type) {
 
 ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, int32_t pid,
-    const std::map<uint64_t, FunctionInfo*>& selected_functions) {
+    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return ErrorMessage(
@@ -43,7 +43,8 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 }
 
 void CaptureClient::Capture(
-    int32_t pid, const std::map<uint64_t, FunctionInfo*>& selected_functions) {
+    int32_t pid,
+    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
   CHECK(reader_writer_ == nullptr);
 
   event_processor_.emplace(capture_listener_);
@@ -69,7 +70,7 @@ void CaptureClient::Capture(
 
   capture_options->set_trace_gpu_driver(true);
   for (const auto& pair : selected_functions) {
-    const FunctionInfo& function = *pair.second;
+    const FunctionInfo& function = pair.second;
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());

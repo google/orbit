@@ -696,7 +696,6 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldMinWidth));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseX));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
-    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GSelectedFunctionsMap.size()));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GVisibleFunctionsMap.size()));
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumDrawnTextBoxes()));
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumTimers()));

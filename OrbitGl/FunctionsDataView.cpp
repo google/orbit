@@ -39,11 +39,11 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     return "";
   }
 
-  FunctionInfo& function = GetFunction(row);
+  const FunctionInfo& function = GetFunction(row);
 
   switch (column) {
     case kColumnSelected:
-      return FunctionUtils::IsSelected(function) ? "X" : "-";
+      return GOrbitApp->IsFunctionSelected(function) ? "X" : "-";
     case kColumnName:
       return FunctionUtils::GetDisplayName(function);
     case kColumnSize:
@@ -90,7 +90,7 @@ void FunctionsDataView::DoSort() {
 
   switch (sorting_column_) {
     case kColumnSelected:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(GOrbitApp->IsFunctionSelected);
       break;
     case kColumnName:
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetDisplayName);
@@ -130,8 +130,8 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   bool enable_unselect = false;
   for (int index : selected_indices) {
     const FunctionInfo& function = GetFunction(index);
-    enable_select |= !FunctionUtils::IsSelected(function);
-    enable_unselect |= FunctionUtils::IsSelected(function);
+    enable_select |= !GOrbitApp->IsFunctionSelected(function);
+    enable_unselect |= GOrbitApp->IsFunctionSelected(function);
   }
 
   std::vector<std::string> menu;
@@ -146,11 +146,11 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (int i : item_indices) {
-      FunctionUtils::Select(&GetFunction(i));
+      GOrbitApp->SelectFunction(GetFunction(i));
     }
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
-      FunctionUtils::UnSelect(&GetFunction(i));
+      GOrbitApp->UnSelectFunction(GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::GTargetProcess->GetID();

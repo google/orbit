@@ -4,6 +4,7 @@
 
 #include "TextBox.h"
 
+#include "App.h"
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
@@ -91,8 +92,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
   }
 
   float z = a_IsHighlighted ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
-                            : isInactive ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                                         : GlCanvas::Z_VALUE_BOX_ACTIVE;
+            : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
+                            : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
   Color color = col;
   if (a_IsPicking) {
@@ -113,8 +114,10 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     float maxSize = m_Pos[0] + m_Size[0] - posX;
 
-    FunctionInfo* func =
-        Capture::GSelectedFunctionsMap[timer_info_.function_address()];
+    const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
+        timer_info_.function_address());
+    CHECK(func != nullptr);
+    CHECK(func != nullptr);
     std::string text = absl::StrFormat(
         "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "",
         m_Text.c_str());

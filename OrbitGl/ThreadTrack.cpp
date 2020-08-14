@@ -4,6 +4,7 @@
 
 #include "ThreadTrack.h"
 
+#include "App.h"
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
@@ -45,23 +46,24 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
 
-  FunctionInfo* func = Capture::GSelectedFunctionsMap[text_box->GetTimerInfo()
-                                                          .function_address()];
+  const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
+      text_box->GetTimerInfo().function_address());
+  CHECK(func != nullptr);
+
   if (!func) {
     return text_box->GetText();
   }
 
   return absl::StrFormat(
-    "<b>%s</b><br/>"
-    "<i>Timing measured through dynamic instrumentation</i>"
-    "<br/><br/>"
-    "<b>Module:</b> %s<br/>"
-    "<b>Time:</b> %s",
-    FunctionUtils::GetDisplayName(*func),
-    FunctionUtils::GetLoadedModuleName(*func),
-    GetPrettyTime(TicksToDuration(text_box->GetTimerInfo().start(),
-                                  text_box->GetTimerInfo().end()))
-  );
+      "<b>%s</b><br/>"
+      "<i>Timing measured through dynamic instrumentation</i>"
+      "<br/><br/>"
+      "<b>Module:</b> %s<br/>"
+      "<b>Time:</b> %s",
+      FunctionUtils::GetDisplayName(*func),
+      FunctionUtils::GetLoadedModuleName(*func),
+      GetPrettyTime(TicksToDuration(text_box->GetTimerInfo().start(),
+                                    text_box->GetTimerInfo().end())));
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -69,7 +71,8 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
          Capture::GVisibleFunctionsMap.end();
 }
 
-Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info,
+                                 bool is_selected) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
@@ -126,8 +129,9 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
-    FunctionInfo* func =
-        Capture::GSelectedFunctionsMap[timer_info.function_address()];
+    const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
+        timer_info.function_address());
+    CHECK(func != nullptr);
 
     text_box->SetElapsedTimeTextLength(time.length());
 

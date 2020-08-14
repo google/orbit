@@ -38,11 +38,11 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
 }
 
 std::string SamplingReportDataView::GetValue(int row, int column) {
-  SampledFunction& func = GetSampledFunction(row);
+  const SampledFunction& func = GetSampledFunction(row);
 
   switch (column) {
     case kColumnSelected:
-      return FunctionUtils::IsSelected(func) ? "X" : "-";
+      return GOrbitApp->IsFunctionSelected(func) ? "X" : "-";
     case kColumnFunctionName:
       return func.name;
     case kColumnExclusive:
@@ -82,7 +82,7 @@ void SamplingReportDataView::DoSort() {
 
   switch (sorting_column_) {
     case kColumnSelected:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(GOrbitApp->IsFunctionSelected);
       break;
     case kColumnFunctionName:
       sorter = ORBIT_PROC_SORT(name);
@@ -175,8 +175,8 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   bool enable_disassembly = !selected_functions.empty();
 
   for (const FunctionInfo* function : selected_functions) {
-    enable_select |= !FunctionUtils::IsSelected(*function);
-    enable_unselect |= FunctionUtils::IsSelected(*function);
+    enable_select |= !GOrbitApp->IsFunctionSelected(*function);
+    enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
   }
 
   bool enable_load = false;
@@ -200,11 +200,11 @@ void SamplingReportDataView::OnContextMenu(
     const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      FunctionUtils::Select(function);
+      GOrbitApp->SelectFunction(*function);
     }
   } else if (action == kMenuActionUnselect) {
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      FunctionUtils::UnSelect(function);
+      GOrbitApp->UnSelectFunction(*function);
     }
   } else if (action == kMenuActionLoadSymbols) {
     std::vector<std::shared_ptr<Module>> modules;

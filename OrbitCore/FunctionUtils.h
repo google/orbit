@@ -36,13 +36,7 @@ std::shared_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
     uint64_t load_bias, uint64_t size, std::string file, uint32_t line,
     std::string loaded_module_path, uint64_t module_base_address);
 
-void Select(orbit_client_protos::FunctionInfo* func);
-void UnSelect(orbit_client_protos::FunctionInfo* func);
-bool IsSelected(const orbit_client_protos::FunctionInfo& func);
-
 bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
-
-bool IsSelected(const SampledFunction& func);
 
 }  // namespace FunctionUtils
 

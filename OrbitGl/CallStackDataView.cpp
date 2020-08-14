@@ -46,7 +46,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return (function != nullptr && FunctionUtils::IsSelected(*function))
+      return (function != nullptr && GOrbitApp->IsFunctionSelected(*function))
                  ? "X"
                  : "-";
     case kColumnName:
@@ -97,8 +97,8 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
     Module* module = frame.module.get();
 
     if (frame.function != nullptr) {
-      enable_select |= !FunctionUtils::IsSelected(*function);
-      enable_unselect |= FunctionUtils::IsSelected(*function);
+      enable_select |= !GOrbitApp->IsFunctionSelected(*function);
+      enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
       enable_disassembly = true;
     } else if (module != nullptr && module->IsLoadable() &&
                !module->IsLoaded()) {
@@ -130,14 +130,14 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       FunctionInfo* function = frame.function;
-      FunctionUtils::Select(function);
+      GOrbitApp->SelectFunction(*function);
     }
 
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       FunctionInfo* function = frame.function;
-      FunctionUtils::UnSelect(function);
+      GOrbitApp->UnSelectFunction(*function);
     }
 
   } else if (action == kMenuActionDisassembly) {
