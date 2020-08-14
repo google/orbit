@@ -487,7 +487,7 @@ void GlCanvas::ResetHoverTimer() {
 }
 
 [[nodiscard]] PickingMode GlCanvas::GetPickingMode() {
-  if (m_Picking) {
+  if (m_Picking && !m_IsHovering) {
     return PickingMode::kClick;
   }
   if (m_IsHovering) {
