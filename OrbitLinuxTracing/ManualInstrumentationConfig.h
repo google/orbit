@@ -11,13 +11,9 @@
 
 class ManualInstrumentationConfig {
  public:
-  void AddTimerStartAddress(uint64_t address) {
-    timer_start_addresses_.insert(address);
-  }
+  void AddTimerStartAddress(uint64_t address) { timer_start_addresses_.insert(address); }
 
-  void AddTimerStopAddress(uint64_t address) {
-    timer_stop_addresses_.insert(address);
-  }
+  void AddTimerStopAddress(uint64_t address) { timer_stop_addresses_.insert(address); }
 
   bool IsTimerStartAddress(uint64_t address) const {
     return timer_start_addresses_.contains(address);

@@ -43,8 +43,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   }
 
   batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, shared_from_this());
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color,
-                   shared_from_this());
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, shared_from_this());
 
   const Color kLineColor(0, 128, 255, 128);
 
@@ -67,8 +66,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float x1 = time_graph_->GetWorldFromTick(time);
     float y0 = base_y + static_cast<float>(last_normalized_value) * m_Size[1];
     float y1 = base_y + static_cast<float>(normalized_value) * m_Size[1];
-    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z,
-                                      kLineColor);
+    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z, kLineColor);
 
     previous_time = time;
     last_normalized_value = normalized_value;
@@ -98,8 +96,7 @@ double GraphTrack::GetValueAtTime(uint64_t time, double default_value) const {
 
 float GraphTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  float height = layout.GetTextBoxHeight() +
-                 layout.GetSpaceBetweenTracksAndThread() +
+  float height = layout.GetTextBoxHeight() + layout.GetSpaceBetweenTracksAndThread() +
                  layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
   return height;
 }

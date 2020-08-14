@@ -55,13 +55,11 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
     box_height /= static_cast<float>(depth_);
   }
 
-  return m_Pos[1] - layout.GetEventTrackHeight() -
-         layout.GetSpaceBetweenTracksAndThread() - box_height * (depth + 1);
+  return m_Pos[1] - layout.GetEventTrackHeight() - layout.GetSpaceBetweenTracksAndThread() -
+         box_height * (depth + 1);
 }
 
-void TimerTrack::UpdateBoxHeight() {
-  box_height_ = time_graph_->GetLayout().GetTextBoxHeight();
-}
+void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
 
 void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                   PickingMode /*picking_mode*/) {
@@ -86,11 +84,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
-  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(MicrosecondsToTicks(
-                                      time_graph_->GetTimeWindowUs())) /
-                                  canvas->getWidth();
-  uint64_t min_timegraph_tick =
-      time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+  uint64_t pixel_delta_in_ticks =
+      static_cast<uint64_t>(MicrosecondsToTicks(time_graph_->GetTimeWindowUs())) /
+      canvas->getWidth();
+  uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
@@ -106,10 +103,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       for (size_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
         const TimerInfo& timer_info = text_box.GetTimerInfo();
-        if (min_tick > timer_info.end() || max_tick < timer_info.start())
-          continue;
-        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore)
-          continue;
+        if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
+        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
         if (!TimerFilter(timer_info)) continue;
 
         UpdateDepth(timer_info.depth() + 1);
@@ -118,10 +113,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         double elapsed_us = end_us - start_us;
         double normalized_start = start_us * inv_time_window;
         double normalized_length = elapsed_us * inv_time_window;
-        float world_timer_width =
-            static_cast<float>(normalized_length * world_width);
-        float world_timer_x =
-            static_cast<float>(world_start_x + normalized_start * world_width);
+        float world_timer_width = static_cast<float>(normalized_length * world_width);
+        float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
         float world_timer_y = GetYFromDepth(timer_info.depth());
 
         bool is_visible_width = normalized_length * canvas->getWidth() > 1;
@@ -143,8 +136,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           }
           batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
         } else {
-          batcher->AddVerticalLine(pos, size[1], z, color,
-                                   std::move(user_data));
+          batcher->AddVerticalLine(pos, size[1], z, color, std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks). If pixel_delta_in_ticks is
@@ -152,8 +144,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           // gain anything here.
           if (pixel_delta_in_ticks != 0) {
             min_ignore = min_timegraph_tick +
-                         ((timer_info.start() - min_timegraph_tick) /
-                          pixel_delta_in_ticks) *
+                         ((timer_info.start() - min_timegraph_tick) / pixel_delta_in_ticks) *
                              pixel_delta_in_ticks;
             max_ignore = min_ignore + pixel_delta_in_ticks;
           }
@@ -193,8 +184,8 @@ float TimerTrack::GetHeight() const {
   uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
   return layout.GetTextBoxHeight() * depth +
-         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) +
-         layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
+         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
+         layout.GetTrackBottomMargin();
 }
 
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
@@ -206,8 +197,7 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
   return timers;
 }
 
-const TextBox* TimerTrack::GetFirstAfterTime(TickType time,
-                                             uint32_t depth) const {
+const TextBox* TimerTrack::GetFirstAfterTime(TickType time, uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 
@@ -223,8 +213,7 @@ const TextBox* TimerTrack::GetFirstAfterTime(TickType time,
   return nullptr;
 }
 
-const TextBox* TimerTrack::GetFirstBeforeTime(TickType time,
-                                              uint32_t depth) const {
+const TextBox* TimerTrack::GetFirstBeforeTime(TickType time, uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 

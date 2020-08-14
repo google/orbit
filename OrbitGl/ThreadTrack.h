@@ -29,16 +29,13 @@ class ThreadTrack : public TimerTrack {
   void SetEventTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
 
  protected:
-  [[nodiscard]] bool IsTimerActive(
-      const orbit_client_protos::TimerInfo& timer) const override;
+  [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
                                     bool is_selected) const override;
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer,
-                        double elapsed_us, float min_x,
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
                         TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 

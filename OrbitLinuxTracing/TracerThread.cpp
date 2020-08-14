@@ -35,19 +35,16 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
   }
 
   instrumented_functions_.clear();
-  instrumented_functions_.reserve(
-      capture_options.instrumented_functions_size());
+  instrumented_functions_.reserve(capture_options.instrumented_functions_size());
 
   for (const CaptureOptions::InstrumentedFunction& instrumented_function :
        capture_options.instrumented_functions()) {
     uint64_t absolute_address = instrumented_function.absolute_address();
     instrumented_functions_.emplace_back(instrumented_function.file_path(),
-                                         instrumented_function.file_offset(),
-                                         absolute_address);
+                                         instrumented_function.file_offset(), absolute_address);
 
     // Manual instrumentation.
-    if (instrumented_function.function_type() ==
-        CaptureOptions_InstrumentedFunction::kTimerStart) {
+    if (instrumented_function.function_type() == CaptureOptions_InstrumentedFunction::kTimerStart) {
       manual_instrumentation_config_.AddTimerStartAddress(absolute_address);
     } else if (instrumented_function.function_type() ==
                CaptureOptions_InstrumentedFunction::kTimerStop) {
@@ -63,8 +60,7 @@ void CloseFileDescriptors(const std::vector<int>& fds) {
   }
 }
 
-void CloseFileDescriptors(
-    const absl::flat_hash_map<int32_t, int>& fds_per_cpu) {
+void CloseFileDescriptors(const absl::flat_hash_map<int32_t, int>& fds_per_cpu) {
   for (const auto& pair : fds_per_cpu) {
     close(pair.second);
   }
@@ -81,8 +77,7 @@ bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
         context_switch_fd, CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB, buffer_name};
     if (context_switch_ring_buffer.IsOpen()) {
       context_switch_tracing_fds.push_back(context_switch_fd);
-      context_switch_ring_buffers.push_back(
-          std::move(context_switch_ring_buffer));
+      context_switch_ring_buffers.push_back(std::move(context_switch_ring_buffer));
     } else {
       ERROR("Opening context switch events for cpu %d", cpu);
       CloseFileDescriptors(context_switch_tracing_fds);
@@ -100,13 +95,12 @@ bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
 }
 
 void TracerThread::InitUprobesEventProcessor() {
-  auto uprobes_unwinding_visitor =
-      std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
+  auto uprobes_unwinding_visitor = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
   uprobes_unwinding_visitor->SetListener(listener_);
   uprobes_unwinding_visitor->SetUnwindErrorsAndDiscardedSamplesCounters(
       stats_.unwind_error_count, stats_.discarded_samples_in_uretprobes_count);
-  uprobes_event_processor_ = std::make_unique<PerfEventProcessor>(
-      std::move(uprobes_unwinding_visitor));
+  uprobes_event_processor_ =
+      std::make_unique<PerfEventProcessor>(std::move(uprobes_unwinding_visitor));
 }
 
 bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
@@ -125,16 +119,15 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
   return true;
 }
 
-bool TracerThread::OpenUretprobes(
-    const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
-    absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
+                                  const std::vector<int32_t>& cpus,
+                                  absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   const char* module = function.BinaryPath().c_str();
   const uint64_t offset = function.FileOffset();
   for (int32_t cpu : cpus) {
     int fd = uretprobes_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Opening uretprobe 0x%lx on cpu %d", function.VirtualAddress(),
-            cpu);
+      ERROR("Opening uretprobe 0x%lx on cpu %d", function.VirtualAddress(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -235,8 +228,8 @@ bool TracerThread::OpenMmapTask(const std::vector<int32_t>& cpus) {
   for (int32_t cpu : cpus) {
     int mmap_task_fd = mmap_task_event_open(-1, cpu);
     std::string buffer_name = absl::StrFormat("mmap_task_%d", cpu);
-    PerfEventRingBuffer mmap_task_ring_buffer{
-        mmap_task_fd, MMAP_TASK_RING_BUFFER_SIZE_KB, buffer_name};
+    PerfEventRingBuffer mmap_task_ring_buffer{mmap_task_fd, MMAP_TASK_RING_BUFFER_SIZE_KB,
+                                              buffer_name};
     if (mmap_task_ring_buffer.IsOpen()) {
       mmap_task_tracing_fds.push_back(mmap_task_fd);
       mmap_task_ring_buffers.push_back(std::move(mmap_task_ring_buffer));
@@ -276,8 +269,8 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
     }
 
     std::string buffer_name = absl::StrFormat("sampling_%d", cpu);
-    PerfEventRingBuffer sampling_ring_buffer{
-        sampling_fd, SAMPLING_RING_BUFFER_SIZE_KB, buffer_name};
+    PerfEventRingBuffer sampling_ring_buffer{sampling_fd, SAMPLING_RING_BUFFER_SIZE_KB,
+                                             buffer_name};
     if (sampling_ring_buffer.IsOpen()) {
       sampling_tracing_fds.push_back(sampling_fd);
       sampling_ring_buffers.push_back(std::move(sampling_ring_buffer));
@@ -306,8 +299,8 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
 void TracerThread::OpenRingBuffersOrRedirectOnExisting(
     const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
     absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
-    std::vector<PerfEventRingBuffer>* ring_buffers,
-    uint64_t ring_buffer_size_kb, std::string_view buffer_name_prefix) {
+    std::vector<PerfEventRingBuffer>* ring_buffers, uint64_t ring_buffer_size_kb,
+    std::string_view buffer_name_prefix) {
   // Redirect all events on the same cpu to a single ring buffer.
   for (const auto& cpu_and_fd : fds_per_cpu) {
     int32_t cpu = cpu_and_fd.first;
@@ -319,28 +312,23 @@ void TracerThread::OpenRingBuffersOrRedirectOnExisting(
     } else {
       // Create a ring buffer for this cpu.
       int ring_buffer_fd = fd;
-      std::string buffer_name =
-          absl::StrFormat("%s_%d", buffer_name_prefix, cpu);
-      ring_buffers->emplace_back(ring_buffer_fd, ring_buffer_size_kb,
-                                 buffer_name);
+      std::string buffer_name = absl::StrFormat("%s_%d", buffer_name_prefix, cpu);
+      ring_buffers->emplace_back(ring_buffer_fd, ring_buffer_size_kb, buffer_name);
       ring_buffer_fds_per_cpu->emplace(cpu, ring_buffer_fd);
     }
   }
 }
 
 bool TracerThread::OpenRingBuffersForTracepoint(
-    const char* tracepoint_category, const char* tracepoint_name,
-    const std::vector<int32_t>& cpus, std::vector<int>* tracing_fds,
-    absl::flat_hash_set<uint64_t>* tracepoint_ids,
+    const char* tracepoint_category, const char* tracepoint_name, const std::vector<int32_t>& cpus,
+    std::vector<int>* tracing_fds, absl::flat_hash_set<uint64_t>* tracepoint_ids,
     absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu,
     std::vector<PerfEventRingBuffer>* ring_buffers) {
   absl::flat_hash_map<int32_t, int> tracepoint_fds_per_cpu;
   for (int32_t cpu : cpus) {
-    int fd =
-        tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+    int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
     if (fd < 0) {
-      ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category,
-            tracepoint_name, cpu);
+      ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name, cpu);
       for (const auto& open_fd : tracepoint_fds_per_cpu) {
         close(open_fd.second);
       }
@@ -355,9 +343,8 @@ bool TracerThread::OpenRingBuffersForTracepoint(
     tracepoint_ids->insert(stream_id);
   }
 
-  OpenRingBuffersOrRedirectOnExisting(
-      tracepoint_fds_per_cpu, tracepoint_ring_buffer_fds_per_cpu, ring_buffers,
-      TRACEPOINTS_RING_BUFFER_SIZE_KB, "tracepoints");
+  OpenRingBuffersOrRedirectOnExisting(tracepoint_fds_per_cpu, tracepoint_ring_buffer_fds_per_cpu,
+                                      ring_buffers, TRACEPOINTS_RING_BUFFER_SIZE_KB, "tracepoints");
   return true;
 }
 
@@ -365,18 +352,17 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
   bool tracepoint_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
 
-  tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
-      "task", "task_newtask", cpus, &tracing_fds_, &task_newtask_ids_,
-      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+  tracepoint_event_open_errors |=
+      !OpenRingBuffersForTracepoint("task", "task_newtask", cpus, &tracing_fds_, &task_newtask_ids_,
+                                    &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
-  tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
-      "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
-      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
-  
+  tracepoint_event_open_errors |=
+      !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
+                                    &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+
   /*tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
       "sched", "sched_switch", cpus, &tracing_fds_, &sched_switch_ids_,
       &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);*/
-
 
   return !tracepoint_event_open_errors;
 }
@@ -406,8 +392,7 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
   absl::flat_hash_map<int32_t, int> dma_fence_signaled_fds_per_cpu;
   bool tracepoint_event_open_errors = false;
   for (int32_t cpu : cpus) {
-    int amdgpu_cs_ioctl_fd =
-        tracepoint_event_open("amdgpu", "amdgpu_cs_ioctl", -1, cpu);
+    int amdgpu_cs_ioctl_fd = tracepoint_event_open("amdgpu", "amdgpu_cs_ioctl", -1, cpu);
     if (amdgpu_cs_ioctl_fd == -1) {
       ERROR("Opening amdgpu:amdgpu_cs_ioctl tracepoint for cpu %d", cpu);
       tracepoint_event_open_errors = true;
@@ -415,8 +400,7 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
     }
     amdgpu_cs_ioctl_fds_per_cpu.emplace(cpu, amdgpu_cs_ioctl_fd);
 
-    int amdgpu_sched_run_job_fd =
-        tracepoint_event_open("amdgpu", "amdgpu_sched_run_job", -1, cpu);
+    int amdgpu_sched_run_job_fd = tracepoint_event_open("amdgpu", "amdgpu_sched_run_job", -1, cpu);
     if (amdgpu_sched_run_job_fd == -1) {
       ERROR("Opening amdgpu:amdgpu_sched_run_job tracepoint for cpu %d", cpu);
       tracepoint_event_open_errors = true;
@@ -424,8 +408,7 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
     }
     amdgpu_sched_run_job_fds_per_cpu.emplace(cpu, amdgpu_sched_run_job_fd);
 
-    int dma_fence_signaled_fd =
-        tracepoint_event_open("dma_fence", "dma_fence_signaled", -1, cpu);
+    int dma_fence_signaled_fd = tracepoint_event_open("dma_fence", "dma_fence_signaled", -1, cpu);
     if (dma_fence_signaled_fd == -1) {
       ERROR("Opening dma_fence:dma_fence_signaled tracepoint for cpu %d", cpu);
       tracepoint_event_open_errors = true;
@@ -466,23 +449,19 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
   // each CPU.
   absl::flat_hash_map<int32_t, int> gpu_tracepoint_ring_buffer_fds_per_cpu;
   OpenRingBuffersOrRedirectOnExisting(
-      amdgpu_cs_ioctl_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu,
-      &ring_buffers_, GPU_TRACING_RING_BUFFER_SIZE_KB,
-      absl::StrFormat("%s:%s", "amdgpu", "amdgpu_cs_ioctl"));
+      amdgpu_cs_ioctl_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_,
+      GPU_TRACING_RING_BUFFER_SIZE_KB, absl::StrFormat("%s:%s", "amdgpu", "amdgpu_cs_ioctl"));
   OpenRingBuffersOrRedirectOnExisting(
-      amdgpu_sched_run_job_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu,
-      &ring_buffers_, GPU_TRACING_RING_BUFFER_SIZE_KB,
-      absl::StrFormat("%s:%s", "amdgpu", "amdgpu_sched_run_job"));
+      amdgpu_sched_run_job_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_,
+      GPU_TRACING_RING_BUFFER_SIZE_KB, absl::StrFormat("%s:%s", "amdgpu", "amdgpu_sched_run_job"));
   OpenRingBuffersOrRedirectOnExisting(
-      dma_fence_signaled_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu,
-      &ring_buffers_, GPU_TRACING_RING_BUFFER_SIZE_KB,
-      absl::StrFormat("%s:%s", "dma_fence", "dma_fence_signaled"));
+      dma_fence_signaled_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_,
+      GPU_TRACING_RING_BUFFER_SIZE_KB, absl::StrFormat("%s:%s", "dma_fence", "dma_fence_signaled"));
 
   return true;
 }
 
-void TracerThread::Run(
-    const std::shared_ptr<std::atomic<bool>>& exit_requested) {
+void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   FAIL_IF(listener_ == nullptr, "No listener set");
 
   Reset();
@@ -572,8 +551,7 @@ void TracerThread::Run(
   stats_.Reset();
 
   bool last_iteration_saw_events = false;
-  std::thread deferred_events_thread(&TracerThread::ProcessDeferredEvents,
-                                     this);
+  std::thread deferred_events_thread(&TracerThread::ProcessDeferredEvents, this);
 
   while (!(*exit_requested)) {
     ORBIT_SCOPE("Tracer Iteration");
@@ -606,8 +584,7 @@ void TracerThread::Run(
       //  processing time but are less frequent than others (e.g., context
       //  switches). Take this into account in our scheduling algorithm.
       for (int32_t read_from_this_buffer = 0;
-           read_from_this_buffer < ROUND_ROBIN_POLLING_BATCH_SIZE;
-           ++read_from_this_buffer) {
+           read_from_this_buffer < ROUND_ROBIN_POLLING_BATCH_SIZE; ++read_from_this_buffer) {
         if (*exit_requested) {
           break;
         }
@@ -652,13 +629,11 @@ void TracerThread::Run(
           case PERF_RECORD_THROTTLE:
             // We don't use throttle/unthrottle events, but log them separately
             // from the default 'Unexpected perf_event_header::type' case.
-            LOG("PERF_RECORD_THROTTLE in ring buffer '%s'",
-                ring_buffer.GetName().c_str());
+            LOG("PERF_RECORD_THROTTLE in ring buffer '%s'", ring_buffer.GetName().c_str());
             ring_buffer.SkipRecord(header);
             break;
           case PERF_RECORD_UNTHROTTLE:
-            LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'",
-                ring_buffer.GetName().c_str());
+            LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'", ring_buffer.GetName().c_str());
             ring_buffer.SkipRecord(header);
             break;
           default:
@@ -690,8 +665,8 @@ void TracerThread::Run(
   }
 }
 
-void TracerThread::ProcessContextSwitchCpuWideEvent(
-    const perf_event_header& header, PerfEventRingBuffer* ring_buffer) {
+void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
+                                                    PerfEventRingBuffer* ring_buffer) {
   SystemWideContextSwitchPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
   pid_t pid = event.GetPid();
@@ -754,8 +729,7 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 
   // There was a call to mmap with PROT_EXEC, hence refresh the maps.
   // This should happen rarely.
-  auto event =
-      std::make_unique<MapsPerfEvent>(MonotonicTimestampNs(), ReadMaps(pid_));
+  auto event = std::make_unique<MapsPerfEvent>(MonotonicTimestampNs(), ReadMaps(pid_));
   event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }
@@ -770,15 +744,12 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_sched_switch = sched_switch_ids_.contains(stream_id);
   bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_amdgpu_cs_ioctl_event = amdgpu_cs_ioctl_ids_.contains(stream_id);
-  bool is_amdgpu_sched_run_job_event =
-      amdgpu_sched_run_job_ids_.contains(stream_id);
-  bool is_dma_fence_signaled_event =
-      dma_fence_signaled_ids_.contains(stream_id);
+  bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
+  bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
-  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask +
-            is_task_rename + is_sched_switch + is_amdgpu_cs_ioctl_event +
-            is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
-            is_callchain_sample <=
+  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask + is_task_rename +
+            is_sched_switch + is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
+            is_dma_fence_signaled_event + is_callchain_sample <=
         1);
 
   int fd = ring_buffer->GetFileDescriptor();
@@ -793,8 +764,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       return;
     }
 
-    event->SetFunction(
-        uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -808,8 +778,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       return;
     }
 
-    event->SetFunction(
-        uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -841,8 +810,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
-    auto event =
-        ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
     ThreadName thread_name;
     thread_name.set_tid(event->GetTid());
     thread_name.set_name(event->GetComm());
@@ -850,8 +818,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     listener_->OnThreadName(std::move(thread_name));
 
   } else if (is_task_rename) {
-    auto event =
-        ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
     ThreadName thread_name;
     thread_name.set_tid(event->GetTid());
     thread_name.set_name(event->GetNewComm());
@@ -859,29 +826,25 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     listener_->OnThreadName(std::move(thread_name));
 
   } else if (is_sched_switch) {
-    auto event =
-        ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
 
     LOG(" CPU: %d ** %s : %d -> %s : %d", event->GetCpu(), event->GetPrevComm(),
         event->GetPrevPid(), event->GetNextComm(), event->GetNextPid());
 
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
-    auto event =
-        ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
 
   } else if (is_amdgpu_sched_run_job_event) {
-    auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(
-        ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
   } else if (is_dma_fence_signaled_event) {
-    auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(
-        ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
 
@@ -983,11 +946,9 @@ void TracerThread::Reset() {
 
 void TracerThread::PrintStatsIfTimerElapsed() {
   uint64_t timestamp_ns = MonotonicTimestampNs();
-  if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND <
-      timestamp_ns) {
+  if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
     double actual_window_s =
-        static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) /
-        NS_PER_SECOND;
+        static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
     LOG("Events per second (last %.1f s):", actual_window_s);
     LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
     LOG("  samples: %.0f", stats_.sample_count / actual_window_s);
@@ -1007,8 +968,7 @@ void TracerThread::PrintStatsIfTimerElapsed() {
     uint64_t unwind_error_count = *stats_.unwind_error_count;
     LOG("  unwind errors: %.0f (%.1f%%)", unwind_error_count / actual_window_s,
         100.0 * unwind_error_count / stats_.sample_count);
-    uint64_t discarded_samples_in_uretprobes_count =
-        *stats_.discarded_samples_in_uretprobes_count;
+    uint64_t discarded_samples_in_uretprobes_count = *stats_.discarded_samples_in_uretprobes_count;
     LOG("  discarded samples in u(ret)probes: %.0f (%.1f%%)",
         discarded_samples_in_uretprobes_count / actual_window_s,
         100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);

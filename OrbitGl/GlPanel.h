@@ -29,8 +29,8 @@ class GlPanel {
     m_MainWindowHeight = a_Height;
   }
 
-  virtual void MouseMoved(int /*a_X*/, int /*a_Y*/, bool /*a_Left*/,
-                          bool /*a_Right*/, bool /*a_Middle*/) {}
+  virtual void MouseMoved(int /*a_X*/, int /*a_Y*/, bool /*a_Left*/, bool /*a_Right*/,
+                          bool /*a_Middle*/) {}
   virtual void LeftDown(int /*a_X*/, int /*a_Y*/) {}
   virtual void LeftUp() {}
   virtual void RightDown(int /*a_X*/, int /*a_Y*/) {}
@@ -38,22 +38,17 @@ class GlPanel {
   virtual void MiddleDown(int /*a_X*/, int /*a_Y*/) {}
   virtual void MiddleUp(int /*a_X*/, int /*a_Y*/) {}
   virtual void LeftDoubleClick() {}
-  virtual void MouseWheelMoved(int /*a_X*/, int /*a_Y*/, int /*a_Delta*/,
-                               bool /*a_Ctrl*/) {}
-  virtual void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta,
-                                           bool a_Ctrl) {
+  virtual void MouseWheelMoved(int /*a_X*/, int /*a_Y*/, int /*a_Delta*/, bool /*a_Ctrl*/) {}
+  virtual void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
     MouseWheelMoved(a_X, a_Y, a_Delta, a_Ctrl);
   }
   virtual void CharEvent(unsigned int /*a_Char*/) {}
-  virtual void KeyPressed(unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/,
-                          bool /*a_Shift*/, bool /*a_Alt*/) {}
-  virtual void KeyReleased(unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/,
-                           bool /*a_Shift*/, bool /*a_Alt*/) {}
-  virtual std::vector<std::string> GetContextMenu() {
-    return std::vector<std::string>();
-  }
-  virtual void OnContextMenu(const std::string& /*a_Action*/,
-                             int /*a_MenuIndex*/) {}
+  virtual void KeyPressed(unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/, bool /*a_Shift*/,
+                          bool /*a_Alt*/) {}
+  virtual void KeyReleased(unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/, bool /*a_Shift*/,
+                           bool /*a_Alt*/) {}
+  virtual std::vector<std::string> GetContextMenu() { return std::vector<std::string>(); }
+  virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
 
   bool GetIsMouseOver() const { return is_mouse_over_; }
   void SetIsMouseOver(bool value) { is_mouse_over_ = value; }

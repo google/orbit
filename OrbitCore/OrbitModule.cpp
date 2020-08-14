@@ -20,8 +20,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
 
-Module::Module(const std::string& file_name, uint64_t address_start,
-               uint64_t address_end) {
+Module::Module(const std::string& file_name, uint64_t address_start, uint64_t address_end) {
   if (!std::filesystem::exists(file_name)) {
     ERROR("Creating Module from path \"%s\": file does not exist", file_name);
   }
@@ -38,8 +37,7 @@ Module::Module(const std::string& file_name, uint64_t address_start,
 
 void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
   if (m_Pdb != nullptr) {
-    LOG("Warning: Module \"%s\" already contained symbols, will override now",
-        m_Name);
+    LOG("Warning: Module \"%s\" already contained symbols, will override now", m_Name);
   }
 
   m_Pdb = std::make_shared<Pdb>(m_AddressStart, module_symbols.load_bias(),
@@ -48,9 +46,8 @@ void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
   for (const SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     std::shared_ptr<FunctionInfo> function = FunctionUtils::CreateFunctionInfo(
         symbol_info.name(), symbol_info.demangled_name(), symbol_info.address(),
-        module_symbols.load_bias(), symbol_info.size(),
-        symbol_info.source_file(), symbol_info.source_line(), m_FullName,
-        m_AddressStart);
+        module_symbols.load_bias(), symbol_info.size(), symbol_info.source_file(),
+        symbol_info.source_line(), m_FullName, m_AddressStart);
     m_Pdb->AddFunction(function);
   }
 

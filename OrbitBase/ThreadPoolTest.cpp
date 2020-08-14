@@ -31,10 +31,9 @@ TEST(ThreadPool, Smoke) {
 
     EXPECT_FALSE(called);
 
-    EXPECT_TRUE(mutex.AwaitWithTimeout(
-        absl::Condition(
-            +[](bool* called) { return *called; }, &called),
-        absl::Milliseconds(100)));
+    EXPECT_TRUE(mutex.AwaitWithTimeout(absl::Condition(
+                                           +[](bool* called) { return *called; }, &called),
+                                       absl::Milliseconds(100)));
 
     EXPECT_TRUE(called);
     called = false;
@@ -78,9 +77,8 @@ TEST(ThreadPool, CheckTtl) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 5;
   constexpr size_t kThreadTtlMillis = 5;
-  std::unique_ptr<ThreadPool> thread_pool =
-      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize,
-                         absl::Milliseconds(kThreadTtlMillis));
+  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
+      kThreadPoolMinSize, kThreadPoolMaxSize, absl::Milliseconds(kThreadTtlMillis));
 
   absl::Mutex actions_started_mutex;
   size_t actions_started = 0;
@@ -116,8 +114,7 @@ TEST(ThreadPool, CheckTtl) {
     // Wait until all actions completed.
     EXPECT_TRUE(actions_executed_mutex.AwaitWithTimeout(
         absl::Condition(
-            +[](size_t* executed) { return *executed == 7; },
-            &actions_executed),
+            +[](size_t* executed) { return *executed == 7; }, &actions_executed),
         absl::Milliseconds(50)));
   }
 
@@ -134,9 +131,8 @@ TEST(ThreadPool, ExtendThreadPool) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 5;
   constexpr size_t kThreadTtlMillis = 5;
-  std::unique_ptr<ThreadPool> thread_pool =
-      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize,
-                         absl::Milliseconds(kThreadTtlMillis));
+  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
+      kThreadPoolMinSize, kThreadPoolMaxSize, absl::Milliseconds(kThreadTtlMillis));
 
   absl::Mutex actions_started_mutex;
   size_t actions_started = 0;
@@ -195,8 +191,7 @@ TEST(ThreadPool, ExtendThreadPool) {
 
     EXPECT_TRUE(actions_executed_mutex.AwaitWithTimeout(
         absl::Condition(
-            +[](size_t* executed) { return *executed == 12; },
-            &actions_executed),
+            +[](size_t* executed) { return *executed == 12; }, &actions_executed),
         absl::Milliseconds(100)))
         << "actions_executed=" << actions_executed << ", expected 12";
   }
@@ -288,9 +283,7 @@ TEST(ThreadPool, InvalidArguments) {
       "");
 }
 
-TEST(ThreadPool, NoShutdown) {
-  EXPECT_DEATH(ThreadPool::Create(1, 4, absl::Milliseconds(10)), "");
-}
+TEST(ThreadPool, NoShutdown) { EXPECT_DEATH(ThreadPool::Create(1, 4, absl::Milliseconds(10)), ""); }
 
 TEST(ThreadPool, ScheduleAfterShutdown) {
   EXPECT_DEATH(
@@ -298,8 +291,8 @@ TEST(ThreadPool, ScheduleAfterShutdown) {
         constexpr size_t kThreadPoolMinSize = 1;
         constexpr size_t kThreadPoolMaxSize = 2;
         constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-        std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
-            kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
+        std::unique_ptr<ThreadPool> thread_pool =
+            ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
         thread_pool->Shutdown();
         thread_pool->Schedule([] {});
@@ -313,8 +306,8 @@ TEST(ThreadPool, WaitWithoutShutdown) {
         constexpr size_t kThreadPoolMinSize = 1;
         constexpr size_t kThreadPoolMaxSize = 2;
         constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-        std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
-            kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
+        std::unique_ptr<ThreadPool> thread_pool =
+            ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
         thread_pool->Wait();
       },

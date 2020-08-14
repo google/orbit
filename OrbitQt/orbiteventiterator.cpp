@@ -49,10 +49,9 @@ void OrbitEventIterator::SetCurrentTime(TickType current_time) {
 }
 
 void OrbitEventIterator::UpdatePositionLabel() {
-  double fraction = static_cast<double>(current_time_ - min_time_) /
-                    static_cast<double>(max_time_ - min_time_);
-  ui->position_label_->setText(
-      QString::fromStdString(absl::StrFormat("%.6f", fraction)));
+  double fraction =
+      static_cast<double>(current_time_ - min_time_) / static_cast<double>(max_time_ - min_time_);
+  ui->position_label_->setText(QString::fromStdString(absl::StrFormat("%.6f", fraction)));
 }
 
 void OrbitEventIterator::HideDeleteButton() { ui->DeleteButton->hide(); }

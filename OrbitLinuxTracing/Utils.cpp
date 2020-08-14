@@ -41,8 +41,7 @@ std::string ReadMaps(pid_t pid) {
 }
 
 std::optional<std::string> ExecuteCommand(const std::string& cmd) {
-  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"),
-                                                pclose};
+  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"), pclose};
   if (!pipe) {
     ERROR("Could not open pipe for \"%s\"", cmd.c_str());
     return std::optional<std::string>{};
@@ -58,8 +57,7 @@ std::optional<std::string> ExecuteCommand(const std::string& cmd) {
 
 std::vector<pid_t> ListThreads(pid_t pid) {
   std::vector<pid_t> threads;
-  std::optional<std::string> tasks =
-      ExecuteCommand(absl::StrFormat("ls /proc/%d/task", pid));
+  std::optional<std::string> tasks = ExecuteCommand(absl::StrFormat("ls /proc/%d/task", pid));
   if (!tasks.has_value()) {
     return {};
   }
@@ -107,8 +105,7 @@ static std::optional<std::string> ReadCgroupContent(pid_t pid) {
 }
 
 // Extract the cpuset entry from the content of /proc/<pid>/cgroup.
-std::optional<std::string> ExtractCpusetFromCgroup(
-    const std::string& cgroup_content) {
+std::optional<std::string> ExtractCpusetFromCgroup(const std::string& cgroup_content) {
   std::istringstream cgroup_content_ss{cgroup_content};
   std::string cgroup_line;
   while (std::getline(cgroup_content_ss, cgroup_line)) {
@@ -124,19 +121,16 @@ std::optional<std::string> ExtractCpusetFromCgroup(
 }
 
 // Read /sys/fs/cgroup/cpuset/<cgroup>/cpuset.cpus.
-static std::optional<std::string> ReadCpusetCpusContent(
-    const std::string& cgroup_cpuset) {
-  std::string cpuset_cpus_filename =
-      absl::StrFormat("/sys/fs/cgroup/cpuset%s/cpuset.cpus",
-                      cgroup_cpuset == "/" ? "" : cgroup_cpuset);
+static std::optional<std::string> ReadCpusetCpusContent(const std::string& cgroup_cpuset) {
+  std::string cpuset_cpus_filename = absl::StrFormat("/sys/fs/cgroup/cpuset%s/cpuset.cpus",
+                                                     cgroup_cpuset == "/" ? "" : cgroup_cpuset);
   return ReadFile(cpuset_cpus_filename);
 }
 
 std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content) {
   std::vector<int> cpuset_cpus{};
   // Example of format: "0-2,7,12-14".
-  for (const auto& range :
-       absl::StrSplit(cpuset_cpus_content, ',', absl::SkipEmpty())) {
+  for (const auto& range : absl::StrSplit(cpuset_cpus_content, ',', absl::SkipEmpty())) {
     std::vector<std::string> values = absl::StrSplit(range, '-');
     if (values.size() == 1) {
       int cpu = std::stoi(values[0]);
@@ -177,11 +171,9 @@ std::vector<int> GetCpusetCpus(pid_t pid) {
   return ParseCpusetCpus(cpuset_cpus_content_opt.value());
 }
 
-int GetTracepointId(const char* tracepoint_category,
-                    const char* tracepoint_name) {
-  std::string filename =
-      absl::StrFormat("/sys/kernel/debug/tracing/events/%s/%s/id",
-                      tracepoint_category, tracepoint_name);
+int GetTracepointId(const char* tracepoint_category, const char* tracepoint_name) {
+  std::string filename = absl::StrFormat("/sys/kernel/debug/tracing/events/%s/%s/id",
+                                         tracepoint_category, tracepoint_name);
 
   std::optional<std::string> file_content = ReadFile(filename);
   if (!file_content.has_value()) {
@@ -189,8 +181,7 @@ int GetTracepointId(const char* tracepoint_category,
   }
   int tp_id = -1;
   if (!absl::SimpleAtoi(file_content.value(), &tp_id)) {
-    ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category,
-          tracepoint_name);
+    ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category, tracepoint_name);
     return -1;
   }
   return tp_id;

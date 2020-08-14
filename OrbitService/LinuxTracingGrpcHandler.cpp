@@ -27,8 +27,7 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
     // Protect tracer_ with event_buffer_mutex_ so that we can use tracer_ in
     // Conditions for Await/LockWhen (specifically, in SenderThread).
     absl::MutexLock lock{&event_buffer_mutex_};
-    tracer_ =
-        std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
+    tracer_ = std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
   }
   tracer_->SetListener(this);
   tracer_->Start();
@@ -49,8 +48,7 @@ void LinuxTracingGrpcHandler::Stop() {
   sender_thread_.join();
 }
 
-void LinuxTracingGrpcHandler::OnSchedulingSlice(
-    SchedulingSlice scheduling_slice) {
+void LinuxTracingGrpcHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
   CaptureEvent event;
   *event.mutable_scheduling_slice() = std::move(scheduling_slice);
   {
@@ -59,10 +57,8 @@ void LinuxTracingGrpcHandler::OnSchedulingSlice(
   }
 }
 
-void LinuxTracingGrpcHandler::OnCallstackSample(
-    CallstackSample callstack_sample) {
-  CHECK(callstack_sample.callstack_or_key_case() ==
-        CallstackSample::kCallstack);
+void LinuxTracingGrpcHandler::OnCallstackSample(CallstackSample callstack_sample) {
+  CHECK(callstack_sample.callstack_or_key_case() == CallstackSample::kCallstack);
   callstack_sample.set_callstack_key(
       InternCallstackIfNecessaryAndGetKey(callstack_sample.callstack()));
 
@@ -115,11 +111,11 @@ void LinuxTracingGrpcHandler::OnAddressInfo(AddressInfo address_info) {
   }
 
   CHECK(address_info.function_name_or_key_case() == AddressInfo::kFunctionName);
-  address_info.set_function_name_key(InternStringIfNecessaryAndGetKey(
-      llvm::demangle(address_info.function_name())));
+  address_info.set_function_name_key(
+      InternStringIfNecessaryAndGetKey(llvm::demangle(address_info.function_name())));
   CHECK(address_info.map_name_or_key_case() == AddressInfo::kMapName);
-  address_info.set_map_name_key(InternStringIfNecessaryAndGetKey(
-      std::move(*address_info.mutable_map_name())));
+  address_info.set_map_name_key(
+      InternStringIfNecessaryAndGetKey(std::move(*address_info.mutable_map_name())));
 
   CaptureEvent event;
   *event.mutable_address_info() = std::move(address_info);
@@ -129,8 +125,7 @@ void LinuxTracingGrpcHandler::OnAddressInfo(AddressInfo address_info) {
   }
 }
 
-uint64_t LinuxTracingGrpcHandler::ComputeCallstackKey(
-    const Callstack& callstack) {
+uint64_t LinuxTracingGrpcHandler::ComputeCallstackKey(const Callstack& callstack) {
   uint64_t key = 17;
   for (uint64_t pc : callstack.pcs()) {
     key = 31 * key + pc;
@@ -138,8 +133,7 @@ uint64_t LinuxTracingGrpcHandler::ComputeCallstackKey(
   return key;
 }
 
-uint64_t LinuxTracingGrpcHandler::InternCallstackIfNecessaryAndGetKey(
-    Callstack callstack) {
+uint64_t LinuxTracingGrpcHandler::InternCallstackIfNecessaryAndGetKey(Callstack callstack) {
   uint64_t key = ComputeCallstackKey(callstack);
   {
     absl::MutexLock lock{&callstack_keys_sent_mutex_};
@@ -163,8 +157,7 @@ uint64_t LinuxTracingGrpcHandler::ComputeStringKey(const std::string& str) {
   return std::hash<std::string>{}(str);
 }
 
-uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(
-    std::string str) {
+uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(std::string str) {
   uint64_t key = ComputeStringKey(str);
   {
     absl::MutexLock lock{&string_keys_sent_mutex_};
@@ -193,14 +186,14 @@ void LinuxTracingGrpcHandler::SenderThread() {
 
   bool stopped = false;
   while (!stopped) {
-    event_buffer_mutex_.LockWhenWithTimeout(
-        absl::Condition(
-            +[](LinuxTracingGrpcHandler* self) {
-              return self->event_buffer_.size() >= kSendEventCountInterval ||
-                     self->tracer_ == nullptr;
-            },
-            this),
-        kSendTimeInterval);
+    event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
+                                                +[](LinuxTracingGrpcHandler* self) {
+                                                  return self->event_buffer_.size() >=
+                                                             kSendEventCountInterval ||
+                                                         self->tracer_ == nullptr;
+                                                },
+                                                this),
+                                            kSendTimeInterval);
     if (tracer_ == nullptr) {
       stopped = true;
     }
@@ -211,8 +204,7 @@ void LinuxTracingGrpcHandler::SenderThread() {
   }
 }
 
-void LinuxTracingGrpcHandler::SendBufferedEvents(
-    std::vector<CaptureEvent>&& buffered_events) {
+void LinuxTracingGrpcHandler::SendBufferedEvents(std::vector<CaptureEvent>&& buffered_events) {
   if (buffered_events.empty()) {
     return;
   }

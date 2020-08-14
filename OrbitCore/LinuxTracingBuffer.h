@@ -26,8 +26,7 @@ class LinuxTracingBuffer {
 
   void RecordTimer(Timer&& timer);
   void RecordCallstack(LinuxCallstackEvent&& callstack);
-  void RecordHashedCallstack(
-      orbit_client_protos::CallstackEvent&& hashed_callstack);
+  void RecordHashedCallstack(orbit_client_protos::CallstackEvent&& hashed_callstack);
   void RecordAddressInfo(orbit_client_protos::LinuxAddressInfo&& address_info);
   void RecordKeyAndString(KeyAndString&& key_and_string);
   void RecordKeyAndString(uint64_t key, std::string str);
@@ -38,10 +37,8 @@ class LinuxTracingBuffer {
   // They return true if the buffer was not empty.
   bool ReadAllTimers(std::vector<Timer>* out_buffer);
   bool ReadAllCallstacks(std::vector<LinuxCallstackEvent>* out_buffer);
-  bool ReadAllHashedCallstacks(
-      std::vector<orbit_client_protos::CallstackEvent>* out_buffer);
-  bool ReadAllAddressInfos(
-      std::vector<orbit_client_protos::LinuxAddressInfo>* out_buffer);
+  bool ReadAllHashedCallstacks(std::vector<orbit_client_protos::CallstackEvent>* out_buffer);
+  bool ReadAllAddressInfos(std::vector<orbit_client_protos::LinuxAddressInfo>* out_buffer);
   bool ReadAllKeysAndStrings(std::vector<KeyAndString>* out_buffer);
   bool ReadAllThreadNames(std::vector<TidAndThreadName>* out_buffer);
 

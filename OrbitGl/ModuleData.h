@@ -19,9 +19,7 @@ class ModuleData final {
   explicit ModuleData(orbit_grpc_protos::ModuleInfo info)
       : module_info_(std::move(info)), is_loaded_(false) {}
 
-  void SetModuleInfo(const orbit_grpc_protos::ModuleInfo& info) {
-    module_info_ = info;
-  }
+  void SetModuleInfo(const orbit_grpc_protos::ModuleInfo& info) { module_info_ = info; }
 
   const std::string& name() const { return module_info_.name(); }
   const std::string& file_path() const { return module_info_.file_path(); }
@@ -29,8 +27,7 @@ class ModuleData final {
   uint64_t address_start() const { return module_info_.address_start(); }
 
   std::string address_range() const {
-    return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]",
-                           module_info_.address_start(),
+    return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]", module_info_.address_start(),
                            module_info_.address_end());
   }
 

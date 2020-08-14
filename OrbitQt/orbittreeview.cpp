@@ -25,8 +25,7 @@
 #include "DataView.h"
 #include "orbitglwidget.h"
 
-OrbitTreeView::OrbitTreeView(QWidget* parent)
-    : QTreeView(parent), auto_resize_(true) {
+OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(true) {
   header()->setSortIndicatorShown(true);
   header()->setSectionsClickable(true);
 
@@ -50,8 +49,7 @@ OrbitTreeView::OrbitTreeView(QWidget* parent)
           SLOT(OnRangeChanged(int, int)));
 }
 
-void OrbitTreeView::Initialize(DataView* data_view,
-                               SelectionType selection_type,
+void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type,
                                FontType font_type) {
   model_ = std::make_unique<OrbitTableModel>(data_view);
   setModel(model_.get());
@@ -62,8 +60,7 @@ void OrbitTreeView::Initialize(DataView* data_view,
     // forces a sort by the first column.
     setSortingEnabled(false);
   } else {
-    std::pair<int, Qt::SortOrder> column_and_order =
-        model_->GetDefaultSortingColumnAndOrder();
+    std::pair<int, Qt::SortOrder> column_and_order = model_->GetDefaultSortingColumnAndOrder();
     sortByColumn(column_and_order.first, column_and_order.second);
   }
 
@@ -127,8 +124,7 @@ void OrbitTreeView::Refresh() {
 
     // Don't re-trigger row selection callback when re-selecting.
     is_internal_refresh_ = true;
-    selection->select(
-        idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    selection->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     is_internal_refresh_ = false;
   }
 }
@@ -139,8 +135,7 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
     for (size_t i = 0; i < model_->GetDataView()->GetColumns().size(); ++i) {
       float ratio = model_->GetDataView()->GetColumns()[i].ratio;
       if (ratio > 0.f) {
-        header()->resizeSection(i,
-                                static_cast<int>(headerSize.width() * ratio));
+        header()->resizeSection(i, static_cast<int>(headerSize.width() * ratio));
       }
     }
   }
@@ -159,8 +154,7 @@ void OrbitTreeView::SetGlWidget(OrbitGLWidget* a_GlWidget) {
   model_->GetDataView()->SetGlPanel(a_GlWidget->GetPanel());
 }
 
-void OrbitTreeView::drawRow(QPainter* painter,
-                            const QStyleOptionViewItem& options,
+void OrbitTreeView::drawRow(QPainter* painter, const QStyleOptionViewItem& options,
                             const QModelIndex& index) const {
   QTreeView::drawRow(painter, options, index);
 }
@@ -177,8 +171,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
     for (QModelIndex& selected_index : selection_list) {
       selection_set.insert(selected_index.row());
     }
-    std::vector<int> selected_indices(selection_set.begin(),
-                                      selection_set.end());
+    std::vector<int> selected_indices(selection_set.begin(), selection_set.end());
 
     std::vector<std::string> menu =
         model_->GetDataView()->GetContextMenu(clicked_index, selected_indices);
@@ -188,8 +181,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
       std::vector<std::unique_ptr<QAction>> actions;
 
       for (size_t i = 0; i < menu.size(); ++i) {
-        actions.push_back(
-            std::make_unique<QAction>(QString::fromStdString(menu[i])));
+        actions.push_back(std::make_unique<QAction>(QString::fromStdString(menu[i])));
         connect(actions[i].get(), &QAction::triggered,
                 [this, &menu, i] { OnMenuClicked(menu[i], i); });
         contextMenu.addAction(actions[i].get());
@@ -201,8 +193,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   }
 }
 
-void OrbitTreeView::OnMenuClicked(const std::string& a_Action,
-                                  int a_MenuIndex) {
+void OrbitTreeView::OnMenuClicked(const std::string& a_Action, int a_MenuIndex) {
   QModelIndexList selection_list = selectionModel()->selectedIndexes();
   std::set<int> selection_set;
   for (QModelIndex& index : selection_list) {
@@ -278,8 +269,7 @@ void OrbitTreeView::OnRefreshButtonClicked() {
   }
 }
 
-void OrbitTreeView::columnResized(int /*column*/, int /*oldSize*/,
-                                  int /*newSize*/) {
+void OrbitTreeView::columnResized(int /*column*/, int /*oldSize*/, int /*newSize*/) {
   if (QApplication::mouseButtons() == Qt::LeftButton) {
     auto_resize_ = false;
   }

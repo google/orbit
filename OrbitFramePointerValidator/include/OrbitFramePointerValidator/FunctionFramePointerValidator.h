@@ -14,17 +14,14 @@
 // exists.
 class FunctionFramePointerValidator {
  public:
-  FunctionFramePointerValidator(csh handle, const uint8_t* code,
-                                size_t code_size);
+  FunctionFramePointerValidator(csh handle, const uint8_t* code, size_t code_size);
   virtual ~FunctionFramePointerValidator();
 
   // FunctionFramePointerValidator is neither copyable nor movable.
   FunctionFramePointerValidator(const FunctionFramePointerValidator&) = delete;
-  FunctionFramePointerValidator& operator=(
-      const FunctionFramePointerValidator&) = delete;
+  FunctionFramePointerValidator& operator=(const FunctionFramePointerValidator&) = delete;
   FunctionFramePointerValidator(FunctionFramePointerValidator&&) = delete;
-  FunctionFramePointerValidator& operator=(FunctionFramePointerValidator&&) =
-      delete;
+  FunctionFramePointerValidator& operator=(FunctionFramePointerValidator&&) = delete;
 
   bool Validate();
 

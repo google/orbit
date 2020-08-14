@@ -35,8 +35,7 @@ outcome::result<Instance> GetInstanceFromJson(const QJsonObject& obj) {
   OUTCOME_TRY(owner, process(obj.value("owner")));
   OUTCOME_TRY(pool, process(obj.value("pool")));
 
-  auto last_updated_date_time =
-      QDateTime::fromString(last_updated, Qt::ISODate);
+  auto last_updated_date_time = QDateTime::fromString(last_updated, Qt::ISODate);
   if (!last_updated_date_time.isValid()) {
     return Error::kUnableToParseJson;
   }
@@ -55,8 +54,7 @@ outcome::result<Instance> GetInstanceFromJson(const QJsonObject& obj) {
 
 }  // namespace
 
-outcome::result<QVector<Instance>> Instance::GetListFromJson(
-    const QByteArray& json) {
+outcome::result<QVector<Instance>> Instance::GetListFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
   if (!doc.isArray()) return Error::kUnableToParseJson;
@@ -75,8 +73,6 @@ outcome::result<QVector<Instance>> Instance::GetListFromJson(
   return list;
 }
 
-bool Instance::CmpById(const Instance& lhs, const Instance& rhs) {
-  return lhs.id < rhs.id;
-}
+bool Instance::CmpById(const Instance& lhs, const Instance& rhs) { return lhs.id < rhs.id; }
 
 }  // namespace OrbitGgp

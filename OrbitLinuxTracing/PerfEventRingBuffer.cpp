@@ -30,13 +30,11 @@ static inline uint64_t ReadRingBufferHead(perf_event_mmap_page* base) {
   return smp_load_acquire(&base->data_head);
 }
 
-static inline void WriteRingBufferTail(perf_event_mmap_page* base,
-                                       uint64_t tail) {
+static inline void WriteRingBufferTail(perf_event_mmap_page* base, uint64_t tail) {
   smp_store_release(&base->data_tail, tail);
 }
 
-PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
-                                         std::string name) {
+PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb, std::string name) {
   if (perf_event_fd < 0) {
     return;
   }
@@ -55,8 +53,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
   ring_buffer_size_log2_ = __builtin_ffsl(ring_buffer_size_) - 1;
   mmap_length_ = GetPageSize() + ring_buffer_size_;
 
-  void* mmap_address =
-      perf_event_open_mmap_ring_buffer(perf_event_fd, mmap_length_);
+  void* mmap_address = perf_event_open_mmap_ring_buffer(perf_event_fd, mmap_length_);
   if (mmap_address == nullptr) {
     return;
   }
@@ -79,8 +76,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) noexcept {
   std::swap(name_, o.name_);
 }
 
-PerfEventRingBuffer& PerfEventRingBuffer::operator=(
-    PerfEventRingBuffer&& o) noexcept {
+PerfEventRingBuffer& PerfEventRingBuffer::operator=(PerfEventRingBuffer&& o) noexcept {
   if (&o != this) {
     std::swap(mmap_length_, o.mmap_length_);
     std::swap(metadata_page_, o.metadata_page_);
@@ -113,8 +109,7 @@ bool PerfEventRingBuffer::HasNewData() {
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
   ReadAtTail(header, sizeof(perf_event_header));
   DCHECK(header->type != 0);
-  DCHECK(metadata_page_->data_tail + header->size <=
-         ReadRingBufferHead(metadata_page_));
+  DCHECK(metadata_page_->data_tail + header->size <= ReadRingBufferHead(metadata_page_));
 }
 
 void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
@@ -123,21 +118,18 @@ void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
   WriteRingBufferTail(metadata_page_, new_tail);
 }
 
-void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header,
-                                        void* record) {
+void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header, void* record) {
   ReadAtTail(static_cast<uint8_t*>(record), header.size);
   SkipRecord(header);
 }
 
-void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest,
-                                               uint64_t offset_from_tail,
+void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail,
                                                uint64_t count) {
   DCHECK(IsOpen());
 
   uint64_t head = ReadRingBufferHead(metadata_page_);
   if (offset_from_tail + count > head - metadata_page_->data_tail) {
-    ERROR("Reading more data than it is available from ring buffer '%s'",
-          name_.c_str());
+    ERROR("Reading more data than it is available from ring buffer '%s'", name_.c_str());
   } else if (offset_from_tail + count > ring_buffer_size_) {
     ERROR("Reading more than the size of ring buffer '%s'", name_.c_str());
   } else if (head > metadata_page_->data_tail + ring_buffer_size_) {
@@ -164,10 +156,9 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest,
     memcpy(dest, ring_buffer_ + index_mod_size, count);
   } else if (index_div_size == last_index_div_size - 1) {
     // Need two copies as the data to read wraps around the ring buffer.
-    memcpy(dest, ring_buffer_ + index_mod_size,
-           ring_buffer_size_ - index_mod_size);
-    memcpy(static_cast<uint8_t*>(dest) + (ring_buffer_size_ - index_mod_size),
-           ring_buffer_, count - (ring_buffer_size_ - index_mod_size));
+    memcpy(dest, ring_buffer_ + index_mod_size, ring_buffer_size_ - index_mod_size);
+    memcpy(static_cast<uint8_t*>(dest) + (ring_buffer_size_ - index_mod_size), ring_buffer_,
+           count - (ring_buffer_size_ - index_mod_size));
   } else {
     FATAL("Control shouldn't reach here");
   }

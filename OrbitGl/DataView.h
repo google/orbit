@@ -25,16 +25,13 @@ class DataView {
   struct Column {
     Column() : Column{"", .0f, SortingOrder::kAscending} {}
     Column(std::string header, float ratio, SortingOrder initial_order)
-        : header{std::move(header)},
-          ratio{ratio},
-          initial_order{initial_order} {}
+        : header{std::move(header)}, ratio{ratio}, initial_order{initial_order} {}
     std::string header;
     float ratio;
     SortingOrder initial_order;
   };
 
-  explicit DataView(DataViewType type)
-      : update_period_ms_(-1), selected_index_(-1), type_(type) {}
+  explicit DataView(DataViewType type) : update_period_ms_(-1), selected_index_(-1), type_(type) {}
 
   virtual ~DataView() = default;
 
@@ -42,8 +39,8 @@ class DataView {
   virtual const std::vector<Column>& GetColumns() = 0;
   virtual bool IsSortingAllowed() { return true; }
   virtual int GetDefaultSortingColumn() { return 0; }
-  virtual std::vector<std::string> GetContextMenu(
-      int clicked_index, const std::vector<int>& selected_indices);
+  virtual std::vector<std::string> GetContextMenu(int clicked_index,
+                                                  const std::vector<int>& selected_indices);
   virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*a_Row*/, int /*a_Column*/) { return ""; }
   virtual std::string GetToolTip(int /*a_Row*/, int /*a_Column*/) { return ""; }
@@ -54,9 +51,7 @@ class DataView {
   void SetUiFilterString(const std::string& filter);
   // Filter callback set from UI layer.
   using FilterCallback = std::function<void(const std::string&)>;
-  void SetUiFilterCallback(FilterCallback callback) {
-    filter_callback_ = std::move(callback);
-  }
+  void SetUiFilterCallback(FilterCallback callback) { filter_callback_ = std::move(callback); }
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
   virtual void OnContextMenu(const std::string& action, int menu_index,
@@ -66,9 +61,8 @@ class DataView {
   virtual void OnDataChanged();
   virtual void OnTimer() {}
   virtual bool WantsDisplayColor() { return false; }
-  virtual bool GetDisplayColor(int /*row*/, int /*column*/,
-                               unsigned char& /*red*/, unsigned char& /*green*/,
-                               unsigned char& /*blue*/) {
+  virtual bool GetDisplayColor(int /*row*/, int /*column*/, unsigned char& /*red*/,
+                               unsigned char& /*green*/, unsigned char& /*blue*/) {
     return false;
   }
   virtual std::string GetLabel() { return ""; }

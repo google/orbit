@@ -53,8 +53,7 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   }
 }
 
-void CaptureEventProcessor::ProcessSchedulingSlice(
-    const SchedulingSlice& scheduling_slice) {
+void CaptureEventProcessor::ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice) {
   TimerInfo timer_info;
   timer_info.set_start(scheduling_slice.in_timestamp_ns());
   timer_info.set_end(scheduling_slice.out_timestamp_ns());
@@ -67,22 +66,17 @@ void CaptureEventProcessor::ProcessSchedulingSlice(
   capture_listener_->OnTimer(timer_info);
 }
 
-void CaptureEventProcessor::ProcessInternedCallstack(
-    InternedCallstack interned_callstack) {
+void CaptureEventProcessor::ProcessInternedCallstack(InternedCallstack interned_callstack) {
   if (callstack_intern_pool.contains(interned_callstack.key())) {
-    ERROR("Overwriting InternedCallstack with key %llu",
-          interned_callstack.key());
+    ERROR("Overwriting InternedCallstack with key %llu", interned_callstack.key());
   }
-  callstack_intern_pool.emplace(
-      interned_callstack.key(),
-      std::move(*interned_callstack.mutable_intern()));
+  callstack_intern_pool.emplace(interned_callstack.key(),
+                                std::move(*interned_callstack.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessCallstackSample(
-    const CallstackSample& callstack_sample) {
+void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callstack_sample) {
   Callstack callstack;
-  if (callstack_sample.callstack_or_key_case() ==
-      CallstackSample::kCallstackKey) {
+  if (callstack_sample.callstack_or_key_case() == CallstackSample::kCallstackKey) {
     callstack = callstack_intern_pool[callstack_sample.callstack_key()];
   } else {
     callstack = callstack_sample.callstack();
@@ -96,8 +90,7 @@ void CaptureEventProcessor::ProcessCallstackSample(
   capture_listener_->OnCallstackEvent(std::move(callstack_event));
 }
 
-void CaptureEventProcessor::ProcessFunctionCall(
-    const FunctionCall& function_call) {
+void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_call) {
   TimerInfo timer_info;
   timer_info.set_thread_id(function_call.tid());
   timer_info.set_start(function_call.begin_timestamp_ns());
@@ -115,13 +108,11 @@ void CaptureEventProcessor::ProcessFunctionCall(
   capture_listener_->OnTimer(timer_info);
 }
 
-void CaptureEventProcessor::ProcessInternedString(
-    InternedString interned_string) {
+void CaptureEventProcessor::ProcessInternedString(InternedString interned_string) {
   if (string_intern_pool.contains(interned_string.key())) {
     ERROR("Overwriting InternedString with key %llu", interned_string.key());
   }
-  string_intern_pool.emplace(interned_string.key(),
-                             std::move(*interned_string.mutable_intern()));
+  string_intern_pool.emplace(interned_string.key(), std::move(*interned_string.mutable_intern()));
 }
 
 void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
@@ -162,8 +153,7 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   capture_listener_->OnTimer(std::move(timer_sched_to_start));
 
   constexpr const char* hw_execution = "hw execution";
-  uint64_t hw_execution_key =
-      GetStringHashAndSendToListenerIfNecessary(hw_execution);
+  uint64_t hw_execution_key = GetStringHashAndSendToListenerIfNecessary(hw_execution);
 
   TimerInfo timer_start_to_finish;
   timer_start_to_finish.set_thread_id(gpu_job.tid());
@@ -181,11 +171,9 @@ void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
   capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
 }
 
-void CaptureEventProcessor::ProcessAddressInfo(
-    const AddressInfo& address_info) {
+void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) {
   std::string function_name;
-  if (address_info.function_name_or_key_case() ==
-      AddressInfo::kFunctionNameKey) {
+  if (address_info.function_name_or_key_case() == AddressInfo::kFunctionNameKey) {
     function_name = string_intern_pool[address_info.function_name_key()];
   } else {
     function_name = address_info.function_name();
@@ -219,8 +207,7 @@ uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
   return hash;
 }
 
-uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(
-    const std::string& str) {
+uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
   uint64_t hash = StringHash(str);
   if (!string_hashes_seen_.contains(hash)) {
     string_hashes_seen_.emplace(hash);

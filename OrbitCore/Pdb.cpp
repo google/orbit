@@ -79,8 +79,7 @@ FunctionInfo* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
   return it->second;
 }
 
-std::vector<FunctionInfo*> Pdb::GetSelectedFunctionsFromPreset(
-    const PresetFile& preset) const {
+std::vector<FunctionInfo*> Pdb::GetSelectedFunctionsFromPreset(const PresetFile& preset) const {
   std::vector<FunctionInfo*> functions_to_select;
 
   std::string module_name = m_LoadedModuleName;

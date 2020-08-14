@@ -29,10 +29,9 @@ std::string GetLastErrorAsString() {
 
   LPSTR messageBuffer = nullptr;
   size_t size = FormatMessageA(
-      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-          FORMAT_MESSAGE_IGNORE_INSERTS,
-      NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPSTR)&messageBuffer, 0, NULL);
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0,
+      NULL);
 
   std::string message(messageBuffer, size);
 
@@ -237,16 +236,13 @@ static const AFX_MAP_MESSAGE allMessages[] = {
         NULL,
     }  // end of message list
 };
-std::string CWindowsMessageToString::GetStringFromMsg(
-    DWORD dwMessage, bool bShowFrequentMessages) {
+std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bShowFrequentMessages) {
   if (!bShowFrequentMessages &&
-      (dwMessage == WM_MOUSEMOVE || dwMessage == WM_NCMOUSEMOVE ||
-       dwMessage == WM_NCHITTEST || dwMessage == WM_SETCURSOR ||
-       dwMessage == WM_CTLCOLORBTN || dwMessage == WM_CTLCOLORDLG ||
+      (dwMessage == WM_MOUSEMOVE || dwMessage == WM_NCMOUSEMOVE || dwMessage == WM_NCHITTEST ||
+       dwMessage == WM_SETCURSOR || dwMessage == WM_CTLCOLORBTN || dwMessage == WM_CTLCOLORDLG ||
        dwMessage == WM_CTLCOLOREDIT || dwMessage == WM_CTLCOLORLISTBOX ||
        dwMessage == WM_CTLCOLORMSGBOX || dwMessage == WM_CTLCOLORSCROLLBAR ||
-       dwMessage == WM_CTLCOLORSTATIC || dwMessage == WM_ENTERIDLE ||
-       dwMessage == WM_CANCELMODE ||
+       dwMessage == WM_CTLCOLORSTATIC || dwMessage == WM_ENTERIDLE || dwMessage == WM_CANCELMODE ||
        dwMessage == 0x0118))  // WM_SYSTIMER (caret blink)
   {
     // don't report very frequently sent messages
@@ -282,20 +278,20 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   return std::string(buffer);
 }
 
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
-                       uint64_t size, uint64_t* num_bytes_read) {
+bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
+                       uint64_t* num_bytes_read) {
 #ifdef _WIN32
   HANDLE h_process = absl::bit_cast<HANDLE>(static_cast<uintptr_t>(pid));
   SIZE_T bytes_read;
-  BOOL res = ReadProcessMemory(h_process, absl::bit_cast<void*>(address),
-                               buffer, size, &bytes_read);
+  BOOL res =
+      ReadProcessMemory(h_process, absl::bit_cast<void*>(address), buffer, size, &bytes_read);
   if (num_bytes_read) *num_bytes_read = bytes_read;
   return res == TRUE;
 #else
   iovec local_iov[] = {{buffer, size}};
   iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
-  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov),
-                                     remote_iov, ABSL_ARRAYSIZE(remote_iov), 0);
+  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov), remote_iov,
+                                     ABSL_ARRAYSIZE(remote_iov), 0);
   return *num_bytes_read == size;
 #endif
 }

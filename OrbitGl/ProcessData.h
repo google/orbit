@@ -32,13 +32,10 @@ class ProcessData final {
   const std::string& name() const { return process_info_.name(); }
   double cpu_usage() const { return process_info_.cpu_usage(); }
   const std::string& full_path() const { return process_info_.full_path(); }
-  const std::string& command_line() const {
-    return process_info_.command_line();
-  }
+  const std::string& command_line() const { return process_info_.command_line(); }
   bool is_64_bit() const { return process_info_.is_64_bit(); }
 
-  void UpdateModuleInfos(
-      const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
+  void UpdateModuleInfos(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
     current_module_list_.clear();
     for (const orbit_grpc_protos::ModuleInfo& info : module_infos) {
       uint64_t module_id = info.address_start();
@@ -55,9 +52,7 @@ class ProcessData final {
     }
   }
 
-  const std::vector<ModuleData*>& GetModules() const {
-    return current_module_list_;
-  }
+  const std::vector<ModuleData*>& GetModules() const { return current_module_list_; }
 
   ModuleData* FindModuleByAddressStart(uint64_t address_start) {
     auto it = modules_.find(address_start);

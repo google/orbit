@@ -13,8 +13,7 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
   auto* const result = libssh2_sftp_init(session->GetRawSessionPtr());
 
   if (result == nullptr) {
-    return static_cast<Error>(
-        libssh2_session_last_errno(session->GetRawSessionPtr()));
+    return static_cast<Error>(libssh2_session_last_errno(session->GetRawSessionPtr()));
   }
 
   return Sftp{result, session};

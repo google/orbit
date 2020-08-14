@@ -19,9 +19,8 @@ class MainThreadExecutorImpl : public MainThreadExecutor {
 };
 
 void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
-  QMetaObject::invokeMethod(
-      QCoreApplication::instance(),
-      [action = std::move(action)]() { action->Execute(); });
+  QMetaObject::invokeMethod(QCoreApplication::instance(),
+                            [action = std::move(action)]() { action->Execute(); });
 }
 
 }  // namespace

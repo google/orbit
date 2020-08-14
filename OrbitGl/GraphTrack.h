@@ -19,8 +19,7 @@ class GraphTrack : public Track {
   void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) override;
   [[nodiscard]] float GetHeight() const override;
   void AddValue(double value, uint64_t time);
-  [[nodiscard]] double GetValueAtTime(uint64_t time,
-                                      double default_value = 0) const;
+  [[nodiscard]] double GetValueAtTime(uint64_t time, double default_value = 0) const;
 
  protected:
   std::map<uint64_t, double> values_;

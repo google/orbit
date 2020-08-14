@@ -25,8 +25,8 @@ class GpuTracepointEventProcessor {
   // Keys are context, seqno, and timeline
   typedef std::tuple<uint32_t, uint32_t, std::string> Key;
 
-  int ComputeDepthForEvent(const std::string& timeline,
-                           uint64_t start_timestamp, uint64_t end_timestamp);
+  int ComputeDepthForEvent(const std::string& timeline, uint64_t start_timestamp,
+                           uint64_t end_timestamp);
 
   void CreateGpuExecutionEventIfComplete(const Key& key);
 
@@ -59,8 +59,7 @@ class GpuTracepointEventProcessor {
 
   absl::flat_hash_map<std::string, uint64_t> timeline_to_latest_dma_signal_;
 
-  absl::flat_hash_map<std::string, std::vector<uint64_t>>
-      timeline_to_latest_timestamp_per_depth_;
+  absl::flat_hash_map<std::string, std::vector<uint64_t>> timeline_to_latest_timestamp_per_depth_;
 };
 
 }  // namespace LinuxTracing

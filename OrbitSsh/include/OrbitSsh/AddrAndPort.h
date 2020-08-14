@@ -19,9 +19,7 @@ struct AddrAndPort {
     return std::tie(lhs.addr, lhs.port) == std::tie(rhs.addr, rhs.port);
   }
 
-  friend bool operator!=(const AddrAndPort& lhs, const AddrAndPort& rhs) {
-    return !(lhs == rhs);
-  }
+  friend bool operator!=(const AddrAndPort& lhs, const AddrAndPort& rhs) { return !(lhs == rhs); }
 };
 
 }  // namespace OrbitSsh

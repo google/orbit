@@ -20,8 +20,7 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
 ProcessLauncherWidget::~ProcessLauncherWidget() { delete ui; }
 
 void ProcessLauncherWidget::SetDataView(DataView* data_view) {
-  ui->LiveProcessList->Initialize(data_view, SelectionType::kDefault,
-                                  FontType::kDefault);
+  ui->LiveProcessList->Initialize(data_view, SelectionType::kDefault, FontType::kDefault);
 }
 
 void ProcessLauncherWidget::Refresh() { ui->LiveProcessList->Refresh(); }

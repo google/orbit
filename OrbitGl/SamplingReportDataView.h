@@ -14,8 +14,8 @@ class SamplingReportDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }
-  std::vector<std::string> GetContextMenu(
-      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::vector<std::string> GetContextMenu(int clicked_index,
+                                          const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   const std::string& GetName() { return name_; }
 
@@ -38,8 +38,7 @@ class SamplingReportDataView : public DataView {
   SampledFunction& GetSampledFunction(unsigned int row);
   std::vector<orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
       const std::vector<int>& indices);
-  std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
-      const std::vector<int>& indices);
+  std::vector<std::shared_ptr<Module>> GetModulesFromIndices(const std::vector<int>& indices);
 
  private:
   std::vector<SampledFunction> functions_;

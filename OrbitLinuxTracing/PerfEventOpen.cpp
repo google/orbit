@@ -37,15 +37,13 @@ int generic_event_open(perf_event_attr* attr, pid_t pid, int32_t cpu) {
   return fd;
 }
 
-perf_event_attr uprobe_event_attr(const char* module,
-                                  uint64_t function_offset) {
+perf_event_attr uprobe_event_attr(const char* module, uint64_t function_offset) {
   perf_event_attr pe = generic_event_attr();
 
-  pe.type = 7;  // TODO: should be read from
-                //  "/sys/bus/event_source/devices/uprobe/type"
-  pe.config1 =
-      absl::bit_cast<uint64_t>(module);    // pe.config1 == pe.uprobe_path
-  pe.config2 = function_offset;            // pe.config2 == pe.probe_offset
+  pe.type = 7;                                    // TODO: should be read from
+                                                  //  "/sys/bus/event_source/devices/uprobe/type"
+  pe.config1 = absl::bit_cast<uint64_t>(module);  // pe.config1 == pe.uprobe_path
+  pe.config2 = function_offset;                   // pe.config2 == pe.probe_offset
 
   return pe;
 }
@@ -95,8 +93,8 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   return generic_event_open(&pe, pid, cpu);
 }
 
-int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
-                               pid_t pid, int32_t cpu) {
+int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                               int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 0;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
@@ -110,8 +108,7 @@ int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
   return generic_event_open(&pe, pid, cpu);
 }
 
-int uretprobes_event_open(const char* module, uint64_t function_offset,
-                          pid_t pid, int32_t cpu) {
+int uretprobes_event_open(const char* module, uint64_t function_offset, pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 1;  // Set bit 0 of config for uretprobe.
 
@@ -124,15 +121,13 @@ int uretprobes_event_open(const char* module, uint64_t function_offset,
 void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   // The size of the ring buffer excluding the metadata page must be a power of
   // two number of pages.
-  if (mmap_length < GetPageSize() ||
-      __builtin_popcountl(mmap_length - GetPageSize()) != 1) {
+  if (mmap_length < GetPageSize() || __builtin_popcountl(mmap_length - GetPageSize()) != 1) {
     ERROR("mmap length for perf_event_open not 1+2^n pages: %lu", mmap_length);
     return nullptr;
   }
 
   // Use mmap to get access to the ring buffer.
-  void* mmap_ret =
-      mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  void* mmap_ret = mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (mmap_ret == MAP_FAILED) {
     ERROR("mmap: %s", SafeStrerror(errno));
     return nullptr;
@@ -141,8 +136,8 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   return mmap_ret;
 }
 
-int tracepoint_event_open(const char* tracepoint_category,
-                          const char* tracepoint_name, pid_t pid, int32_t cpu) {
+int tracepoint_event_open(const char* tracepoint_category, const char* tracepoint_name, pid_t pid,
+                          int32_t cpu) {
   int tp_id = GetTracepointId(tracepoint_category, tracepoint_name);
   if (tp_id == -1) {
     return -1;

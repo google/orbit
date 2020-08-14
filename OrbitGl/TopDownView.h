@@ -41,11 +41,10 @@ class [[nodiscard]] TopDownInternalNode : public TopDownNode {
     CHECK(parent != nullptr);
   }
 
-  [[nodiscard]] TopDownFunction* GetFunctionOrNull(
-      uint64_t function_absolute_address);
+  [[nodiscard]] TopDownFunction* GetFunctionOrNull(uint64_t function_absolute_address);
 
-  [[nodiscard]] TopDownFunction* AddAndGetFunction(
-      uint64_t function_absolute_address, std::string function_name);
+  [[nodiscard]] TopDownFunction* AddAndGetFunction(uint64_t function_absolute_address,
+                                                   std::string function_name);
 
   [[nodiscard]] float GetInclusivePercent(uint64_t total_sample_count) const {
     return 100.0f * sample_count() / total_sample_count;
@@ -63,19 +62,15 @@ class [[nodiscard]] TopDownInternalNode : public TopDownNode {
 
 class [[nodiscard]] TopDownFunction : public TopDownInternalNode {
  public:
-  explicit TopDownFunction(uint64_t function_absolute_address,
-                           std::string function_name, TopDownNode* parent)
+  explicit TopDownFunction(uint64_t function_absolute_address, std::string function_name,
+                           TopDownNode* parent)
       : TopDownInternalNode{parent},
         function_absolute_address_{function_absolute_address},
         function_name_{std::move(function_name)} {}
 
-  [[nodiscard]] uint64_t function_absolute_address() const {
-    return function_absolute_address_;
-  }
+  [[nodiscard]] uint64_t function_absolute_address() const { return function_absolute_address_; }
 
-  [[nodiscard]] const std::string& function_name() const {
-    return function_name_;
-  }
+  [[nodiscard]] const std::string& function_name() const { return function_name_; }
 
   [[nodiscard]] uint64_t GetExclusiveSampleCount() const {
     uint64_t children_sample_count = 0;
@@ -89,9 +84,7 @@ class [[nodiscard]] TopDownFunction : public TopDownInternalNode {
     return 100.0f * GetExclusiveSampleCount() / total_sample_count;
   }
 
-  [[nodiscard]] uint64_t child_count() const override {
-    return function_nodes_.size();
-  }
+  [[nodiscard]] uint64_t child_count() const override { return function_nodes_.size(); }
 
   [[nodiscard]] std::vector<const TopDownNode*> children() const override {
     std::vector<const TopDownNode*> ret;
@@ -108,19 +101,14 @@ class [[nodiscard]] TopDownFunction : public TopDownInternalNode {
 
 class [[nodiscard]] TopDownThread : public TopDownInternalNode {
  public:
-  explicit TopDownThread(int32_t thread_id, std::string thread_name,
-                         TopDownNode* parent)
-      : TopDownInternalNode{parent},
-        thread_id_{thread_id},
-        thread_name_{std::move(thread_name)} {}
+  explicit TopDownThread(int32_t thread_id, std::string thread_name, TopDownNode* parent)
+      : TopDownInternalNode{parent}, thread_id_{thread_id}, thread_name_{std::move(thread_name)} {}
 
   [[nodiscard]] int32_t thread_id() const { return thread_id_; }
 
   [[nodiscard]] const std::string& thread_name() const { return thread_name_; }
 
-  [[nodiscard]] uint64_t child_count() const override {
-    return function_nodes_.size();
-  }
+  [[nodiscard]] uint64_t child_count() const override { return function_nodes_.size(); }
 
   [[nodiscard]] std::vector<const TopDownNode*> children() const override {
     std::vector<const TopDownNode*> ret;
@@ -138,20 +126,16 @@ class [[nodiscard]] TopDownThread : public TopDownInternalNode {
 class [[nodiscard]] TopDownView : public TopDownNode {
  public:
   [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromSamplingProfiler(
-      const SamplingProfiler& sampling_profiler,
-      const std::string& process_name,
+      const SamplingProfiler& sampling_profiler, const std::string& process_name,
       const absl::flat_hash_map<int32_t, std::string>& thread_names);
 
   TopDownView() : TopDownNode{nullptr} {}
 
   [[nodiscard]] TopDownThread* GetThreadOrNull(int32_t thread_id);
 
-  [[nodiscard]] TopDownThread* AddAndGetThread(int32_t thread_id,
-                                               std::string thread_name);
+  [[nodiscard]] TopDownThread* AddAndGetThread(int32_t thread_id, std::string thread_name);
 
-  [[nodiscard]] uint64_t child_count() const override {
-    return thread_nodes_.size();
-  }
+  [[nodiscard]] uint64_t child_count() const override { return thread_nodes_.size(); }
 
   [[nodiscard]] std::vector<const TopDownNode*> children() const override {
     std::vector<const TopDownNode*> ret;

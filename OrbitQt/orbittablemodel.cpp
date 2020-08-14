@@ -21,8 +21,7 @@ int OrbitTableModel::rowCount(const QModelIndex& /*parent*/) const {
   return static_cast<int>(m_DataView->GetNumElements());
 }
 
-QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
-                                     int role) const {
+QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
   switch (role) {
     case Qt::DisplayRole:
       if (orientation == Qt::Horizontal &&
@@ -36,8 +35,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
       }
 
     case Qt::InitialSortOrderRole:
-      return m_DataView->GetColumns()[section].initial_order ==
-                     DataView::SortingOrder::kAscending
+      return m_DataView->GetColumns()[section].initial_order == DataView::SortingOrder::kAscending
                  ? Qt::AscendingOrder
                  : Qt::DescendingOrder;
 
@@ -71,22 +69,20 @@ void OrbitTableModel::sort(int column, Qt::SortOrder order) {
   // On Linux, the arrows for ascending/descending are reversed, e.g. ascending
   // has an arrow pointing down, which is unexpected. This is because of some
   // Linux UI guideline, it is not the case on Windows.
-  m_DataView->OnSort(column, order == Qt::AscendingOrder
-                                 ? DataView::SortingOrder::kAscending
-                                 : DataView::SortingOrder::kDescending);
+  m_DataView->OnSort(column, order == Qt::AscendingOrder ? DataView::SortingOrder::kAscending
+                                                         : DataView::SortingOrder::kDescending);
 }
 
-std::pair<int, Qt::SortOrder>
-OrbitTableModel::GetDefaultSortingColumnAndOrder() {
+std::pair<int, Qt::SortOrder> OrbitTableModel::GetDefaultSortingColumnAndOrder() {
   if (!IsSortingAllowed()) {
     return std::make_pair(-1, Qt::AscendingOrder);
   }
 
   int column = m_DataView->GetDefaultSortingColumn();
-  Qt::SortOrder order = m_DataView->GetColumns()[column].initial_order ==
-                                DataView::SortingOrder::kAscending
-                            ? Qt::AscendingOrder
-                            : Qt::DescendingOrder;
+  Qt::SortOrder order =
+      m_DataView->GetColumns()[column].initial_order == DataView::SortingOrder::kAscending
+          ? Qt::AscendingOrder
+          : Qt::DescendingOrder;
   return std::make_pair(column, order);
 }
 

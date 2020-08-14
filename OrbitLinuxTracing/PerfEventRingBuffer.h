@@ -15,8 +15,7 @@ namespace LinuxTracing {
 
 class PerfEventRingBuffer {
  public:
-  explicit PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
-                               std::string name);
+  explicit PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb, std::string name);
   ~PerfEventRingBuffer();
 
   PerfEventRingBuffer(PerfEventRingBuffer&&) noexcept;
@@ -54,12 +53,9 @@ class PerfEventRingBuffer {
   int file_descriptor_ = -1;
   std::string name_;
 
-  void ReadAtTail(void* dest, uint64_t count) {
-    return ReadAtOffsetFromTail(dest, 0, count);
-  }
+  void ReadAtTail(void* dest, uint64_t count) { return ReadAtOffsetFromTail(dest, 0, count); }
 
-  void ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail,
-                            uint64_t count);
+  void ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail, uint64_t count);
 };
 
 }  // namespace LinuxTracing

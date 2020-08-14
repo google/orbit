@@ -113,9 +113,7 @@ std::string Path::GetDllPath(bool a_Is64Bit) {
   return basePath + GetDllName(a_Is64Bit);
 }
 
-std::string Path::GetDllName(bool a_Is64Bit) {
-  return a_Is64Bit ? "Orbit64.dll" : "Orbit32.dll";
-}
+std::string Path::GetDllName(bool a_Is64Bit) { return a_Is64Bit ? "Orbit64.dll" : "Orbit32.dll"; }
 
 static std::string CreateAndGetConfigPath() {
   std::string configDir = Path::JoinPath({Path::GetAppDataPath(), "config"});
@@ -186,8 +184,7 @@ std::string Path::StripExtension(const std::string& a_FullName) {
 std::string Path::GetExtension(const std::string& a_FullName) {
   // returns ".ext" (includes point)
   size_t index = a_FullName.find_last_of('.');
-  if (index != std::string::npos)
-    return a_FullName.substr(index, a_FullName.length());
+  if (index != std::string::npos) return a_FullName.substr(index, a_FullName.length());
   return "";
 }
 
@@ -257,9 +254,8 @@ std::string Path::GetHome() {
 }
 #endif
 
-std::vector<std::string> Path::ListFiles(
-    const std::string& directory,
-    const std::function<bool(const std::string&)>& filter) {
+std::vector<std::string> Path::ListFiles(const std::string& directory,
+                                         const std::function<bool(const std::string&)>& filter) {
   std::vector<std::string> files;
 
   for (const auto& file : std::filesystem::directory_iterator(directory)) {
@@ -272,8 +268,7 @@ std::vector<std::string> Path::ListFiles(
   return files;
 }
 
-std::vector<std::string> Path::ListFiles(const std::string& directory,
-                                         const std::string& filter) {
+std::vector<std::string> Path::ListFiles(const std::string& directory, const std::string& filter) {
   return ListFiles(directory, [&](const std::string& file_name) {
     return absl::StrContains(file_name, filter);
   });

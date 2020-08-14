@@ -28,27 +28,20 @@ constexpr inline FxfFlags operator|(FxfFlags lhs, FxfFlags rhs) {
 
 class SftpFile {
  public:
-  static outcome::result<SftpFile> Open(Session* session, Sftp* sftp,
-                                        std::string_view filepath,
+  static outcome::result<SftpFile> Open(Session* session, Sftp* sftp, std::string_view filepath,
                                         FxfFlags flags, int64_t mode);
 
   outcome::result<std::string> Read(size_t max_length_in_bytes);
   outcome::result<void> Close();
   outcome::result<size_t> Write(std::string_view data);
 
-  [[nodiscard]] LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept {
-    return file_ptr_.get();
-  }
+  [[nodiscard]] LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept { return file_ptr_.get(); }
 
  private:
-  SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr, Session* session,
-           std::string_view filepath)
-      : file_ptr_(file_ptr, &libssh2_sftp_close_handle),
-        session_(session),
-        filepath_(filepath) {}
+  SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr, Session* session, std::string_view filepath)
+      : file_ptr_(file_ptr, &libssh2_sftp_close_handle), session_(session), filepath_(filepath) {}
 
-  std::unique_ptr<LIBSSH2_SFTP_HANDLE, decltype(&libssh2_sftp_close_handle)>
-      file_ptr_;
+  std::unique_ptr<LIBSSH2_SFTP_HANDLE, decltype(&libssh2_sftp_close_handle)> file_ptr_;
   Session* session_;
   std::string filepath_;
 };

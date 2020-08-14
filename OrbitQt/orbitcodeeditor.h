@@ -87,15 +87,11 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void saveFileMap();
   void gotoLine(int a_Line);
   void SetText(std::string a_Text);
-  void SetReport(std::unique_ptr<CodeReport> report) {
-    report_ = std::move(report);
-  }
+  void SetReport(std::unique_ptr<CodeReport> report) { report_ = std::move(report); }
   void HighlightWord(const std::string& a_Text, const QColor& a_Color,
                      QList<QTextEdit::ExtraSelection>& extraSelections);
 
-  static void setFileMappingWidget(QWidget* a_Widget) {
-    GFileMapWidget = a_Widget;
-  }
+  static void setFileMappingWidget(QWidget* a_Widget) { GFileMapWidget = a_Widget; }
 
   enum EditorType { CODE_VIEW, FILE_MAPPING };
 
@@ -139,9 +135,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
 
 class LineNumberArea : public QWidget {
  public:
-  explicit LineNumberArea(OrbitCodeEditor* editor) : QWidget(editor) {
-    codeEditor = editor;
-  }
+  explicit LineNumberArea(OrbitCodeEditor* editor) : QWidget(editor) { codeEditor = editor; }
 
   [[nodiscard]] QSize sizeHint() const Q_DECL_OVERRIDE {
     return QSize(codeEditor->lineNumberAreaWidth(), 0);
@@ -158,18 +152,14 @@ class LineNumberArea : public QWidget {
 
 class HeatMapArea : public QWidget {
  public:
-  explicit HeatMapArea(OrbitCodeEditor* editor) : QWidget(editor) {
-    codeEditor = editor;
-  }
+  explicit HeatMapArea(OrbitCodeEditor* editor) : QWidget(editor) { codeEditor = editor; }
 
   [[nodiscard]] QSize sizeHint() const Q_DECL_OVERRIDE {
     return QSize(codeEditor->lineNumberAreaWidth(), 0);
   }
 
  protected:
-  void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE {
-    codeEditor->HeatMapAreaPaintEvent(event);
-  }
+  void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE { codeEditor->HeatMapAreaPaintEvent(event); }
 
  private:
   OrbitCodeEditor* codeEditor;

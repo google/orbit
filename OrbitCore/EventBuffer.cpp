@@ -13,16 +13,16 @@ using orbit_client_protos::CallstackEvent;
 
 EventTracer GEventTracer;
 
-std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
-    uint64_t a_TimeBegin, uint64_t a_TimeEnd, ThreadID a_ThreadId /*= 0*/) {
+std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(uint64_t a_TimeBegin,
+                                                            uint64_t a_TimeEnd,
+                                                            ThreadID a_ThreadId /*= 0*/) {
   std::vector<CallstackEvent> callstackEvents;
   for (auto& pair : m_CallstackEvents) {
     ThreadID threadID = pair.first;
     std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
 
     if (a_ThreadId == 0 || threadID == a_ThreadId) {
-      for (auto it = callstacks.lower_bound(a_TimeBegin);
-           it != callstacks.end(); ++it) {
+      for (auto it = callstacks.lower_bound(a_TimeBegin); it != callstacks.end(); ++it) {
         uint64_t time = it->first;
         if (time < a_TimeEnd) {
           callstackEvents.push_back(it->second);
@@ -34,8 +34,7 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
   return callstackEvents;
 }
 
-void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
-                                    ThreadID thread_id) {
+void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID thread_id) {
   ScopeLock lock(m_Mutex);
   std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
   CallstackEvent event;

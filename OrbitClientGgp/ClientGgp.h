@@ -29,11 +29,9 @@ class ClientGgp final : public CaptureListener {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnCallstack(CallStack callstack) override;
-  void OnCallstackEvent(
-      orbit_client_protos::CallstackEvent callstack_event) override;
+  void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
-  void OnAddressInfo(
-      orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
 
  private:
   ClientGgpOptions options_;

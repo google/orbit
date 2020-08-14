@@ -11,8 +11,7 @@
 namespace LinuxTracing {
 class Function {
  public:
-  Function(std::string binary_path, uint64_t file_offset,
-           uint64_t virtual_address)
+  Function(std::string binary_path, uint64_t file_offset, uint64_t virtual_address)
       : binary_path_{std::move(binary_path)},
         file_offset_{file_offset},
         virtual_address_{virtual_address} {}

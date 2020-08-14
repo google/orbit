@@ -9,9 +9,8 @@
 namespace OrbitSshQt {
 
 SftpChannel::SftpChannel(Session* session) : session_(session) {
-  about_to_shutdown_connection_.emplace(
-      QObject::connect(session_, &Session::aboutToShutdown, this,
-                       &SftpChannel::HandleSessionShutdown));
+  about_to_shutdown_connection_.emplace(QObject::connect(session_, &Session::aboutToShutdown, this,
+                                                         &SftpChannel::HandleSessionShutdown));
 }
 
 void SftpChannel::Start() {
@@ -30,8 +29,8 @@ void SftpChannel::Stop() {
 
 outcome::result<void> SftpChannel::startup() {
   if (!data_event_connection_) {
-    data_event_connection_.emplace(QObject::connect(
-        session_, &Session::dataEvent, this, &SftpChannel::OnEvent));
+    data_event_connection_.emplace(
+        QObject::connect(session_, &Session::dataEvent, this, &SftpChannel::OnEvent));
   }
 
   switch (CurrentState()) {

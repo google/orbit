@@ -30,23 +30,20 @@ class TimeGraph {
   TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
-  void DrawTracks(GlCanvas* canvas,
-                  PickingMode picking_mode = PickingMode::kNone);
+  void DrawTracks(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
   void DrawOverlay(GlCanvas* canvas, PickingMode picking_mode);
   void DrawText(GlCanvas* canvas);
 
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
-  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(
-      float a_WorldStart, float a_WorldEnd, ThreadID a_TID);
-  const std::vector<orbit_client_protos::CallstackEvent>&
-  GetSelectedCallstackEvents(ThreadID tid);
+  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(float a_WorldStart,
+                                                                float a_WorldEnd, ThreadID a_TID);
+  const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessOrbitFunctionTimer(
-      const orbit_client_protos::FunctionInfo* function,
-      const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo* function,
+                                 const orbit_client_protos::TimerInfo& timer_info);
   void UpdateMaxTimeStamp(TickType a_Time);
 
   float GetThreadTotalHeight();
@@ -68,36 +65,26 @@ class TimeGraph {
   void ZoomTime(float a_ZoomValue, double a_MouseRatio);
   void VerticalZoom(float a_ZoomValue, float a_MouseRatio);
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
-  void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
-               double a_InitialTime);
+  void PanTime(int a_InitialX, int a_CurrentX, int a_Width, double a_InitialTime);
   enum class VisibilityType {
     kPartlyVisible,
     kFullyVisible,
   };
-  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
-                                TickType max, double distance = 0.3);
-  void HorizontallyMoveIntoView(VisibilityType vis_type,
-                                const TextBox* text_box, double distance = 0.3);
+  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max,
+                                double distance = 0.3);
+  void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
+                                double distance = 0.3);
   void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
   void Select(const TextBox* a_TextBox);
-  enum class JumpScope {
-    kGlobal,
-    kSameDepth,
-    kSameThread,
-    kSameFunction,
-    kSameThreadSameFunction
-  };
+  enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
-  void JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
-                         JumpScope jump_scope);
-  const TextBox* FindPreviousFunctionCall(
-      uint64_t function_address, TickType current_time,
-      std::optional<int32_t> thread_ID = std::nullopt) const;
-  const TextBox* FindNextFunctionCall(
-      uint64_t function_address, TickType current_time,
-      std::optional<int32_t> thread_ID = std::nullopt) const;
+  void JumpToNeighborBox(TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
+  const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time,
+                                          std::optional<int32_t> thread_ID = std::nullopt) const;
+  const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time,
+                                      std::optional<int32_t> thread_ID = std::nullopt) const;
   void SelectAndZoom(const TextBox* a_TextBox);
   double GetCaptureTimeSpanUs();
   double GetCurrentTimeSpanUs();
@@ -111,9 +98,7 @@ class TimeGraph {
   bool IsVisible(VisibilityType vis_type, TickType min, TickType max) const;
 
   int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
-  void SetTextRenderer(TextRenderer* a_TextRenderer) {
-    m_TextRenderer = a_TextRenderer;
-  }
+  void SetTextRenderer(TextRenderer* a_TextRenderer) { m_TextRenderer = a_TextRenderer; }
   TextRenderer* GetTextRenderer() { return &m_TextRendererStatic; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
   StringManager* GetStringManager() { return string_manager_.get(); }
@@ -140,13 +125,11 @@ class TimeGraph {
   const TextBox* FindDown(TextBox* from);
 
   Color GetThreadColor(ThreadID tid) const;
-  [[nodiscard]] std::string GetManualInstrumentationString(
-      uint64_t string_address) const;
+  [[nodiscard]] std::string GetManualInstrumentationString(uint64_t string_address) const;
 
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
-      const absl::flat_hash_map<uint64_t,
-                                const orbit_client_protos::FunctionInfo*>&
+      const absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>&
           iterator_functions) {
     iterator_text_boxes_ = iterator_text_boxes;
     iterator_functions_ = iterator_functions;
@@ -162,10 +145,9 @@ class TimeGraph {
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(uint64_t graph_id);
 
-  void ProcessOrbitFunctionTimer(
-      const orbit_client_protos::FunctionInfo* function, const Timer& timer);
-  void ProcessManualIntrumentationTimer(
-      const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo* function,
+                                 const Timer& timer);
+  void ProcessManualIntrumentationTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
   TextRenderer m_TextRendererStatic;
@@ -176,8 +158,7 @@ class TimeGraph {
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
-  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>
-      iterator_functions_;
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> iterator_functions_;
 
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
@@ -227,8 +208,7 @@ class TimeGraph {
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
 
-  absl::flat_hash_map<ThreadID,
-                      std::vector<orbit_client_protos::CallstackEvent>>
+  absl::flat_hash_map<ThreadID, std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;
 
   std::shared_ptr<StringManager> string_manager_;

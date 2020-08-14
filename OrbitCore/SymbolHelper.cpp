@@ -27,8 +27,7 @@ std::vector<std::string> ReadSymbolsFile() {
     outfile << "//-------------------" << std::endl
             << "// Orbit Symbol Locations" << std::endl
             << "//-------------------" << std::endl
-            << "// Orbit will scan the specified directories for symbol files."
-            << std::endl
+            << "// Orbit will scan the specified directories for symbol files." << std::endl
             << "// Enter one directory per line, like so:" << std::endl
 #ifdef _WIN32
             << "// C:\\MyApp\\Release\\" << std::endl
@@ -60,9 +59,9 @@ std::vector<std::string> ReadSymbolsFile() {
   return directories;
 }
 
-ErrorMessageOr<std::string> FindSymbolsFile(
-    const std::string& module_path,
-    const std::vector<std::string>& search_paths, const std::string& build_id) {
+ErrorMessageOr<std::string> FindSymbolsFile(const std::string& module_path,
+                                            const std::vector<std::string>& search_paths,
+                                            const std::string& build_id) {
   std::string filename = Path::GetFileName(module_path);
   std::string filename_without_extension = Path::StripExtension(filename);
 
@@ -72,8 +71,7 @@ ErrorMessageOr<std::string> FindSymbolsFile(
   for (const auto& directory : search_paths) {
     search_file_paths.emplace_back(
         Path::JoinPath({directory, filename_without_extension + ".debug"}));
-    search_file_paths.emplace_back(
-        Path::JoinPath({directory, filename + ".debug"}));
+    search_file_paths.emplace_back(Path::JoinPath({directory, filename + ".debug"}));
     search_file_paths.emplace_back(Path::JoinPath({directory, filename}));
   }
 
@@ -81,8 +79,7 @@ ErrorMessageOr<std::string> FindSymbolsFile(
   for (const auto& symbols_file_path : search_file_paths) {
     if (!std::filesystem::exists(symbols_file_path)) continue;
 
-    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file =
-        ElfFile::Create(symbols_file_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file = ElfFile::Create(symbols_file_path);
     if (!symbols_file) continue;
     if (!symbols_file.value()->HasSymtab()) continue;
 
@@ -96,19 +93,17 @@ ErrorMessageOr<std::string> FindSymbolsFile(
     if (symbols_file.value()->GetBuildId().empty()) continue;
     if (symbols_file.value()->GetBuildId() != build_id) continue;
 
-    LOG("Found debug info for module \"%s\" -> \"%s\"", module_path,
-        symbols_file_path);
+    LOG("Found debug info for module \"%s\" -> \"%s\"", module_path, symbols_file_path);
     return symbols_file_path;
   }
 
-  return ErrorMessage(absl::StrFormat(
-      "Could not find a file with debug symbols for module \"%s\"",
-      module_path));
+  return ErrorMessage(
+      absl::StrFormat("Could not find a file with debug symbols for module \"%s\"", module_path));
 }
 
-ErrorMessageOr<ModuleSymbols> FindSymbols(
-    const std::string& module_path, const std::string& build_id,
-    const std::vector<std::string>& search_paths) {
+ErrorMessageOr<ModuleSymbols> FindSymbols(const std::string& module_path,
+                                          const std::string& build_id,
+                                          const std::vector<std::string>& search_paths) {
   ErrorMessageOr<std::string> debug_info_file_path =
       FindSymbolsFile(module_path, search_paths, build_id);
 
@@ -120,9 +115,9 @@ ErrorMessageOr<ModuleSymbols> FindSymbols(
       ElfFile::Create(debug_info_file_path.value());
 
   if (!elf_file_result) {
-    return ErrorMessage(absl::StrFormat(
-        "Failed to load debug symbols for \"%s\" from \"%s\": %s", module_path,
-        debug_info_file_path.value(), elf_file_result.error().message()));
+    return ErrorMessage(absl::StrFormat("Failed to load debug symbols for \"%s\" from \"%s\": %s",
+                                        module_path, debug_info_file_path.value(),
+                                        elf_file_result.error().message()));
   }
 
   return elf_file_result.value()->LoadSymbols();
@@ -131,22 +126,17 @@ ErrorMessageOr<ModuleSymbols> FindSymbols(
 }  // namespace
 
 SymbolHelper::SymbolHelper()
-    : collector_symbol_directories_{"/home/cloudcast/",
-                                    "/home/cloudcast/debug_symbols/",
-                                    "/mnt/developer/",
-                                    "/mnt/developer/debug_symbols/",
-                                    "/srv/game/assets/",
-                                    "/srv/game/assets/debug_symbols/"},
+    : collector_symbol_directories_{"/home/cloudcast/",  "/home/cloudcast/debug_symbols/",
+                                    "/mnt/developer/",   "/mnt/developer/debug_symbols/",
+                                    "/srv/game/assets/", "/srv/game/assets/debug_symbols/"},
       symbols_file_directories_(ReadSymbolsFile()) {}
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
     const std::string& module_path) const {
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result =
-      ElfFile::Create(module_path);
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result = ElfFile::Create(module_path);
 
   if (!elf_file_result) {
-    return ErrorMessage(absl::StrFormat("Unable to load ELF file: \"%s\": %s",
-                                        module_path,
+    return ErrorMessage(absl::StrFormat("Unable to load ELF file: \"%s\": %s", module_path,
                                         elf_file_result.error().message()));
   }
 
@@ -157,11 +147,11 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
   }
 
   if (elf_file->GetBuildId().empty()) {
-    return ErrorMessage(absl::StrFormat(
-        "No symbols are contained in the module \"%s\". Symbols cannot be "
-        "loaded from a separate symbols file, because module does not "
-        "contain a build_id,",
-        module_path));
+    return ErrorMessage(
+        absl::StrFormat("No symbols are contained in the module \"%s\". Symbols cannot be "
+                        "loaded from a separate symbols file, because module does not "
+                        "contain a build_id,",
+                        module_path));
   }
 
   std::vector<std::string> search_directories = collector_symbol_directories_;
@@ -175,20 +165,18 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadUsingSymbolsPathFile(
   return FindSymbols(module_path, build_id, symbols_file_directories_);
 }
 
-ErrorMessageOr<std::string> SymbolHelper::FindDebugSymbolsFile(
-    const std::string& module_path, const std::string& build_id) const {
+ErrorMessageOr<std::string> SymbolHelper::FindDebugSymbolsFile(const std::string& module_path,
+                                                               const std::string& build_id) const {
   return FindSymbolsFile(module_path, collector_symbol_directories_, build_id);
 }
 
-ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
-    const std::string& file_path, const std::string& build_id) const {
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result =
-      ElfFile::Create(file_path);
+ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const std::string& file_path,
+                                                                const std::string& build_id) const {
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result = ElfFile::Create(file_path);
 
   if (!elf_file_result) {
-    return ErrorMessage(
-        absl::StrFormat("Failed to load debug symbols from \"%s\": %s",
-                        file_path, elf_file_result.error().message()));
+    return ErrorMessage(absl::StrFormat("Failed to load debug symbols from \"%s\": %s", file_path,
+                                        elf_file_result.error().message()));
   }
 
   const std::string& target_build_id = elf_file_result.value()->GetBuildId();
@@ -202,8 +190,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
   return elf_file_result.value()->LoadSymbols();
 }
 
-std::string SymbolHelper::GenerateCachedFileName(
-    const std::string& file_path) const {
+std::string SymbolHelper::GenerateCachedFileName(const std::string& file_path) const {
   auto file_name = absl::StrReplaceAll(file_path, {{"/", "_"}});
   return Path::JoinPath({Path::GetCachePath(), file_name});
 }

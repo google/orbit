@@ -30,8 +30,7 @@ IMGUI_API void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas);
 // GLFW callbacks (installed by default if you enable 'install_callbacks' during
 // initialization) Provided here if you want to chain callbacks. You can also
 // handle inputs yourself and use those as a reference.
-IMGUI_API void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_Canvas, int button,
-                                               bool down);
+IMGUI_API void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_Canvas, int button, bool down);
 IMGUI_API void Orbit_ImGui_ScrollCallback(GlCanvas* a_Canvas, int scroll);
 IMGUI_API void Orbit_ImGui_KeyCallback(GlCanvas* a_Canvas, int key, bool down);
 IMGUI_API void Orbit_ImGui_CharCallback(GlCanvas* a_Canvas, unsigned int c);
@@ -39,11 +38,9 @@ IMGUI_API void Orbit_ImGui_CharCallback(GlCanvas* a_Canvas, unsigned int c);
 // Returns OpenGL texture id or 0 in case of an error.
 uint32_t LoadTextureFromFile(const char* filename);
 
-
 struct ScopeImguiContext {
   explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
-    ImGuiContext* state =
-        static_cast<ImGuiContext*>(ImGui::GetCurrentContext());
+    ImGuiContext* state = static_cast<ImGuiContext*>(ImGui::GetCurrentContext());
     if (state != a_State) {
       m_ImGuiContext = state;
       ImGui::SetCurrentContext(a_State);
@@ -90,19 +87,16 @@ struct DebugWindow {
     ImGui::SameLine();
     Filter.Draw("Filter", -100.0f);
     ImGui::Separator();
-    ImGui::BeginChild("scrolling", ImVec2(0, 0), false,
-                      ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
     if (copy) ImGui::LogToClipboard();
 
     if (Filter.IsActive()) {
       const char* buf_begin = Buf.begin();
       const char* line = buf_begin;
       for (int line_no = 0; line != nullptr; line_no++) {
-        const char* line_end = (line_no < LineOffsets.Size)
-                                   ? buf_begin + LineOffsets[line_no]
-                                   : nullptr;
-        if (Filter.PassFilter(line, line_end))
-          ImGui::TextUnformatted(line, line_end);
+        const char* line_end =
+            (line_no < LineOffsets.Size) ? buf_begin + LineOffsets[line_no] : nullptr;
+        if (Filter.PassFilter(line, line_end)) ImGui::TextUnformatted(line, line_end);
         line = line_end && line_end[1] ? line_end + 1 : nullptr;
       }
     } else {
@@ -124,8 +118,7 @@ class LogWindow {
   bool ScrollToBottom = false;
   bool m_Open = false;
 
-  void Draw(const char* title, const std::vector<std::string>& lines,
-            bool* p_opened = nullptr) {
+  void Draw(const char* title, const std::vector<std::string>& lines, bool* p_opened = nullptr) {
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin(title, p_opened);
 
@@ -133,14 +126,12 @@ class LogWindow {
     ImGui::SameLine();
     Filter.Draw("Filter", -100.0f);
     ImGui::Separator();
-    ImGui::BeginChild("scrolling", ImVec2(0, 0), false,
-                      ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
     if (copy) ImGui::LogToClipboard();
 
     if (Filter.IsActive()) {
       for (const std::string& line : lines) {
-        if (Filter.PassFilter(line.c_str()))
-          ImGui::TextUnformatted(line.c_str());
+        if (Filter.PassFilter(line.c_str())) ImGui::TextUnformatted(line.c_str());
       }
     } else {
       for (const std::string& line : lines) {
@@ -179,8 +170,7 @@ struct VizWindow {
     // WindowFlags |= ImGuiWindowFlags_MenuBar;
   }
 
-  void Draw(const char* title, bool* p_opened = nullptr,
-            ImVec2* a_Size = nullptr) {
+  void Draw(const char* title, bool* p_opened = nullptr, ImVec2* a_Size = nullptr) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 
     if (a_Size) {
@@ -202,19 +192,16 @@ struct VizWindow {
     ImGui::SameLine();
     Filter.Draw("Filter", -100.0f);
     ImGui::Separator();
-    ImGui::BeginChild("scrolling", ImVec2(0, 0), false,
-                      ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
     if (copy) ImGui::LogToClipboard();
 
     if (Filter.IsActive()) {
       const char* buf_begin = Buf.begin();
       const char* line = buf_begin;
       for (int line_no = 0; line != nullptr; line_no++) {
-        const char* line_end = (line_no < LineOffsets.Size)
-                                   ? buf_begin + LineOffsets[line_no]
-                                   : nullptr;
-        if (Filter.PassFilter(line, line_end))
-          ImGui::TextUnformatted(line, line_end);
+        const char* line_end =
+            (line_no < LineOffsets.Size) ? buf_begin + LineOffsets[line_no] : nullptr;
+        if (Filter.PassFilter(line, line_end)) ImGui::TextUnformatted(line, line_end);
         line = line_end && line_end[1] ? line_end + 1 : nullptr;
       }
     } else {
@@ -242,6 +229,5 @@ struct OutputWindow {
     LineOffsets.clear();
   }
   void AddLine(const std::string& a_String);
-  void Draw(const char* title, bool* p_opened = nullptr,
-            ImVec2* a_Size = nullptr);
+  void Draw(const char* title, bool* p_opened = nullptr, ImVec2* a_Size = nullptr);
 };

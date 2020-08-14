@@ -68,8 +68,7 @@ class ThreadPool {
   // for the such a thread to remain in idle state before it finishes the
   // execution.
   static std::unique_ptr<ThreadPool> Create(size_t thread_pool_min_size,
-                                            size_t thread_pool_max_size,
-                                            absl::Duration thread_ttl);
+                                            size_t thread_pool_max_size, absl::Duration thread_ttl);
 };
 
 #endif  // ORBIT_BASE_THREAD_POOL_H_

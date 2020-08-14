@@ -6,16 +6,15 @@
 
 namespace OrbitSshQt {
 
-SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session,
-                                                   SftpChannel* channel)
+SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel)
     : session_(session), channel_(channel) {
   about_to_shutdown_connection_.emplace(
       QObject::connect(channel_, &SftpChannel::aboutToShutdown, this,
                        &SftpCopyToLocalOperation::HandleChannelShutdown));
 }
 
-void SftpCopyToLocalOperation::CopyFileToLocal(
-    std::filesystem::path source, std::filesystem::path destination) {
+void SftpCopyToLocalOperation::CopyFileToLocal(std::filesystem::path source,
+                                               std::filesystem::path destination) {
   source_ = std::move(source);
   destination_ = std::move(destination);
 
@@ -32,19 +31,17 @@ outcome::result<void> SftpCopyToLocalOperation::run() { return startup(); }
 
 outcome::result<void> SftpCopyToLocalOperation::startup() {
   if (!data_event_connection_) {
-    data_event_connection_.emplace(
-        QObject::connect(channel_, &SftpChannel::dataEvent, this,
-                         &SftpCopyToLocalOperation::OnEvent));
+    data_event_connection_.emplace(QObject::connect(channel_, &SftpChannel::dataEvent, this,
+                                                    &SftpCopyToLocalOperation::OnEvent));
   }
 
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoOperation: {
       OUTCOME_TRY(sftp_file,
-                  OrbitSsh::SftpFile::Open(
-                      session_->GetRawSession(), channel_->GetRawSftp(),
-                      source_.string(), OrbitSsh::FxfFlags::kRead,
-                      0 /* mode - not applicable for kRead */));
+                  OrbitSsh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
+                                           source_.string(), OrbitSsh::FxfFlags::kRead,
+                                           0 /* mode - not applicable for kRead */));
       sftp_file_ = std::move(sftp_file);
       SetState(State::kRemoteFileOpened);
       ABSL_FALLTHROUGH_INTENDED;
@@ -105,9 +102,7 @@ void SftpCopyToLocalOperation::SetError(std::error_code e) {
   local_file_.close();
 }
 
-void SftpCopyToLocalOperation::HandleChannelShutdown() {
-  SetError(Error::kUncleanChannelShutdown);
-}
+void SftpCopyToLocalOperation::HandleChannelShutdown() { SetError(Error::kUncleanChannelShutdown); }
 
 void SftpCopyToLocalOperation::HandleEagain() {
   if (session_) {

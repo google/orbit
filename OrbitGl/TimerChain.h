@@ -69,9 +69,7 @@ class TimerChainIterator {
 
   TimerBlock& operator*() { return *block_; }
 
-  bool operator!=(const TimerChainIterator& other) const {
-    return block_ != other.block_;
-  }
+  bool operator!=(const TimerChainIterator& other) const { return block_ != other.block_; }
 
   TimerChainIterator& operator++() {
     block_ = block_->next_;
@@ -94,9 +92,7 @@ class TimerChain {
   friend class TimerBlock;
 
  public:
-  TimerChain() : num_blocks_(1), num_items_(0) {
-    root_ = current_ = new TimerBlock(this, nullptr);
-  }
+  TimerChain() : num_blocks_(1), num_items_(0) { root_ = current_ = new TimerBlock(this, nullptr); }
 
   ~TimerChain();
 

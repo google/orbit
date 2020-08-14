@@ -22,11 +22,9 @@ class Client : public QObject {
  public:
   static outcome::result<QPointer<Client>> Create(QObject* parent);
 
-  void GetInstancesAsync(
-      const std::function<void(outcome::result<QVector<Instance>>)>& callback);
-  void GetSshInfoAsync(
-      const Instance& ggp_instance,
-      const std::function<void(outcome::result<SshInfo>)>& callback);
+  void GetInstancesAsync(const std::function<void(outcome::result<QVector<Instance>>)>& callback);
+  void GetSshInfoAsync(const Instance& ggp_instance,
+                       const std::function<void(outcome::result<SshInfo>)>& callback);
 
  private:
   explicit Client(QObject* parent) : QObject(parent) {}

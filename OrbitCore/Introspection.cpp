@@ -25,8 +25,7 @@ namespace orbit::introspection {
 
 thread_local std::vector<Scope> scopes;
 
-Handler::Handler(LinuxTracingBuffer* tracing_buffer)
-    : tracing_buffer_(tracing_buffer) {}
+Handler::Handler(LinuxTracingBuffer* tracing_buffer) : tracing_buffer_(tracing_buffer) {}
 
 void Handler::Begin(const char* name) {
   scopes.emplace_back(Scope{Timer(), name});

@@ -35,17 +35,13 @@ class OrbitMainWindow : public QMainWindow {
                   OrbitQt::ServiceDeployManager* service_deploy_manager);
   ~OrbitMainWindow() override;
 
-  void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) {
-    m_GlWidgets.push_back(a_GlWidget);
-  }
+  void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) { m_GlWidgets.push_back(a_GlWidget); }
   void OnRefreshDataViewPanels(DataViewType a_Type);
   void UpdatePanel(DataViewType a_Type);
-  void OnNewSamplingReport(
-      DataView* callstack_data_view,
-      std::shared_ptr<class SamplingReport> sampling_report);
-  void OnNewSelectionReport(
-      DataView* callstack_data_view,
-      std::shared_ptr<class SamplingReport> sampling_report);
+  void OnNewSamplingReport(DataView* callstack_data_view,
+                           std::shared_ptr<class SamplingReport> sampling_report);
+  void OnNewSelectionReport(DataView* callstack_data_view,
+                            std::shared_ptr<class SamplingReport> sampling_report);
   void OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view);
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);

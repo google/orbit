@@ -18,9 +18,7 @@ outcome::result<Context> Context::Create() {
   return Context{};
 }
 
-Context::Context(Context&& other) noexcept : active_(other.active_) {
-  other.active_ = false;
-}
+Context::Context(Context&& other) noexcept : active_(other.active_) { other.active_ = false; }
 
 Context& Context::operator=(Context&& other) noexcept {
   if (&other != this) {

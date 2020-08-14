@@ -37,8 +37,7 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace OrbitGl
 
-GpuTrack::GpuTrack(TimeGraph* time_graph,
-                   std::shared_ptr<StringManager> string_manager,
+GpuTrack::GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
                    uint64_t timeline_hash)
     : TimerTrack(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
@@ -51,9 +50,8 @@ GpuTrack::GpuTrack(TimeGraph* time_graph,
   string_manager_ = string_manager;
 
   // Gpu tracks are collapsed by default.
-  collapse_toggle_->SetState(
-      TriangleToggle::State::kCollapsed,
-      TriangleToggle::InitialStateUpdate::kReplaceInitialState);
+  collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
+                             TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
 bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -66,8 +64,7 @@ bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return is_same_tid_as_selected || no_thread_selected;
 }
 
-Color GpuTrack::GetTimerColor(const TimerInfo& timer_info,
-                              bool is_selected) const {
+Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
@@ -83,8 +80,7 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info,
   // We disambiguate the different types of GPU activity based on the
   // string that is displayed on their timeslice.
   float coeff = 1.0f;
-  std::string gpu_stage =
-      string_manager_->Get(timer_info.user_data_key()).value_or("");
+  std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
   if (gpu_stage == kSwQueueString) {
     coeff = 0.5f;
   } else if (gpu_stage == kHwQueueString) {
@@ -110,15 +106,13 @@ float GpuTrack::GetYFromDepth(uint32_t depth) const {
   if (collapse_toggle_->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
-  return m_Pos[1] -
-         time_graph_->GetLayout().GetTextBoxHeight() * (adjusted_depth + 1.f);
+  return m_Pos[1] - time_graph_->GetLayout().GetTextBoxHeight() * (adjusted_depth + 1.f);
 }
 
 // When track is collapsed, only draw "hardware execution" timers.
 bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
-    std::string gpu_stage =
-        string_manager_->Get(timer_info.user_data_key()).value_or("");
+    std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
     if (gpu_stage != kHwExecutionString) {
       return false;
     }
@@ -126,8 +120,8 @@ bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   return true;
 }
 
-void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us,
-                                float min_x, TextBox* text_box) {
+void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
+                                TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
@@ -136,11 +130,9 @@ void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us,
 
     CHECK(timer_info.type() == TimerInfo::kGpuActivity);
 
-    std::string text = absl::StrFormat("%s  %s",
-                                       time_graph_->GetStringManager()
-                                           ->Get(timer_info.user_data_key())
-                                           .value_or(""),
-                                       time.c_str());
+    std::string text = absl::StrFormat(
+        "%s  %s", time_graph_->GetStringManager()->Get(timer_info.user_data_key()).value_or(""),
+        time.c_str());
     text_box->SetText(text);
   }
 
@@ -150,9 +142,8 @@ void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us,
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x,
-      text_box->GetPosY() + layout.GetTextOffset(), GlCanvas::Z_VALUE_TEXT,
-      kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
+      text_box->GetText().c_str(), pos_x, text_box->GetPosY() + layout.GetTextOffset(),
+      GlCanvas::Z_VALUE_TEXT, kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
 }
 
 std::string GpuTrack::GetTooltip() const {
@@ -189,14 +180,12 @@ const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
 
 std::string GpuTrack::GetBoxTooltip(PickingId id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
-  if (!text_box ||
-      text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
+  if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }
 
   std::string gpu_stage =
-      string_manager_->Get(text_box->GetTimerInfo().user_data_key())
-          .value_or("");
+      string_manager_->Get(text_box->GetTimerInfo().user_data_key()).value_or("");
   if (gpu_stage == kSwQueueString) {
     return GetSwQueueTooltip(text_box->GetTimerInfo());
   } else if (gpu_stage == kHwQueueString) {
@@ -217,10 +206,8 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
-      timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
-          .c_str());
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
 std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
@@ -231,10 +218,8 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
-      timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
-          .c_str());
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
 std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
@@ -246,8 +231,6 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
-      timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
-          .c_str());
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }

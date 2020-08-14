@@ -57,10 +57,9 @@ void DataView::OnDataChanged() {
 const std::string DataView::kMenuActionCopySelection = "Copy Selection";
 const std::string DataView::kMenuActionExportToCsv = "Export to CSV";
 
-std::vector<std::string> DataView::GetContextMenu(
-    int /*clicked_index*/, const std::vector<int>& /*selected_indices*/) {
-  static std::vector<std::string> menu = {kMenuActionCopySelection,
-                                          kMenuActionExportToCsv};
+std::vector<std::string> DataView::GetContextMenu(int /*clicked_index*/,
+                                                  const std::vector<int>& /*selected_indices*/) {
+  static std::vector<std::string> menu = {kMenuActionCopySelection, kMenuActionExportToCsv};
   return menu;
 }
 

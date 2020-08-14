@@ -20,25 +20,15 @@ class SamplingReport {
   explicit SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
 
   void UpdateReport();
-  [[nodiscard]] std::shared_ptr<SamplingProfiler> GetProfiler() const {
-    return profiler_;
-  };
-  [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() {
-    return thread_reports_;
-  };
-  void SetCallstackDataView(CallStackDataView* data_view) {
-    callstack_data_view_ = data_view;
-  };
+  [[nodiscard]] std::shared_ptr<SamplingProfiler> GetProfiler() const { return profiler_; };
+  [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
+  void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
   void OnSelectAddress(uint64_t address, ThreadID thread_id);
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
   [[nodiscard]] std::string GetSelectedCallstackString() const;
-  void SetUiRefreshFunc(std::function<void()> func) {
-    ui_refresh_func_ = std::move(func);
-  };
-  [[nodiscard]] bool HasCallstacks() const {
-    return selected_sorted_callstack_report_ != nullptr;
-  };
+  void SetUiRefreshFunc(std::function<void()> func) { ui_refresh_func_ = std::move(func); };
+  [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
 
  protected:
   void FillReport();

@@ -20,20 +20,16 @@ struct Instance {
   QString owner;
   QString pool;
 
-  static outcome::result<QVector<Instance>> GetListFromJson(
-      const QByteArray& json);
+  static outcome::result<QVector<Instance>> GetListFromJson(const QByteArray& json);
   static bool CmpById(const Instance& lhs, const Instance& rhs);
 
   friend bool operator==(const Instance& lhs, const Instance& rhs) {
-    return std::tie(lhs.display_name, lhs.id, lhs.ip_address, lhs.last_updated,
-                    lhs.owner, lhs.pool) ==
-           std::tie(rhs.display_name, rhs.id, rhs.ip_address, rhs.last_updated,
-                    rhs.owner, rhs.pool);
+    return std::tie(lhs.display_name, lhs.id, lhs.ip_address, lhs.last_updated, lhs.owner,
+                    lhs.pool) == std::tie(rhs.display_name, rhs.id, rhs.ip_address,
+                                          rhs.last_updated, rhs.owner, rhs.pool);
   }
 
-  friend bool operator!=(const Instance& lhs, const Instance& rhs) {
-    return !(lhs == rhs);
-  }
+  friend bool operator!=(const Instance& lhs, const Instance& rhs) { return !(lhs == rhs); }
 };
 
 }  // namespace OrbitGgp

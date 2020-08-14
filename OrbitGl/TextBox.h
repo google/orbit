@@ -23,11 +23,9 @@ class TextBox {
   TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color);
   TextBox(const Vec2& a_Pos, const Vec2& a_Size);
 
-  void Draw(Batcher* batcher, TextRenderer& a_TextRenderer,
-            float a_MinX = -FLT_MAX, bool a_Visible = true,
-            bool a_RightJustify = false, bool a_IsInactive = false,
-            unsigned int a_ID = 0xFFFFFFFF, bool a_IsPicking = false,
-            bool a_IsHighlighted = false);
+  void Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX = -FLT_MAX,
+            bool a_Visible = true, bool a_RightJustify = false, bool a_IsInactive = false,
+            unsigned int a_ID = 0xFFFFFFFF, bool a_IsPicking = false, bool a_IsHighlighted = false);
 
   void SetSize(const Vec2& a_Size) {
     m_Size = a_Size;
@@ -78,15 +76,11 @@ class TextBox {
     }
     timer_info_ = timer_info;
   }
-  const orbit_client_protos::TimerInfo& GetTimerInfo() const {
-    return timer_info_;
-  }
+  const orbit_client_protos::TimerInfo& GetTimerInfo() const { return timer_info_; }
 
   void SetTextY(float a_Y) { m_TextY = a_Y; }
 
-  void SetElapsedTimeTextLength(size_t a_Length) {
-    m_ElapsedTimeTextLength = a_Length;
-  }
+  void SetElapsedTimeTextLength(size_t a_Length) { m_ElapsedTimeTextLength = a_Length; }
   size_t GetElapsedTimeTextLength() const { return m_ElapsedTimeTextLength; }
 
   inline void SetColor(Color& a_Color) { m_Color = a_Color; }

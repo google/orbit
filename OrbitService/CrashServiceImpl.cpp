@@ -13,8 +13,7 @@ using grpc::ServerContext;
 using grpc::Status;
 using orbit_grpc_protos::CrashOrbitServiceRequest;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
-using orbit_grpc_protos::
-    CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 using orbit_grpc_protos::CrashOrbitServiceResponse;
 
@@ -25,9 +24,8 @@ static void InfiniteRecursion(int num) {
   LOG("%i", num);
 }
 
-Status CrashServiceImpl::CrashOrbitService(
-    ServerContext*, const CrashOrbitServiceRequest* request,
-    CrashOrbitServiceResponse*) {
+Status CrashServiceImpl::CrashOrbitService(ServerContext*, const CrashOrbitServiceRequest* request,
+                                           CrashOrbitServiceResponse*) {
   switch (request->crash_type()) {
     case CrashOrbitServiceRequest_CrashType_CHECK_FALSE: {
       CHECK(false);

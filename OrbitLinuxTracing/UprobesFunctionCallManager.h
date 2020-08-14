@@ -22,21 +22,20 @@ class UprobesFunctionCallManager {
   UprobesFunctionCallManager() = default;
 
   UprobesFunctionCallManager(const UprobesFunctionCallManager&) = delete;
-  UprobesFunctionCallManager& operator=(const UprobesFunctionCallManager&) =
-      delete;
+  UprobesFunctionCallManager& operator=(const UprobesFunctionCallManager&) = delete;
 
   UprobesFunctionCallManager(UprobesFunctionCallManager&&) = default;
   UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
 
-  void ProcessUprobes(pid_t tid, uint64_t function_address,
-                      uint64_t begin_timestamp,
+  void ProcessUprobes(pid_t tid, uint64_t function_address, uint64_t begin_timestamp,
                       const perf_event_sample_regs_user_sp_ip_arguments& regs) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
     tid_uprobes_stack.emplace(function_address, begin_timestamp, regs);
   }
 
-  std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(
-      pid_t tid, uint64_t end_timestamp, uint64_t return_value) {
+  std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(pid_t tid,
+                                                                   uint64_t end_timestamp,
+                                                                   uint64_t return_value) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return std::optional<orbit_grpc_protos::FunctionCall>{};
     }
@@ -72,9 +71,7 @@ class UprobesFunctionCallManager {
   struct OpenUprobes {
     OpenUprobes(uint64_t function_address, uint64_t begin_timestamp,
                 const perf_event_sample_regs_user_sp_ip_arguments& regs)
-        : function_address{function_address},
-          begin_timestamp{begin_timestamp},
-          registers(regs) {}
+        : function_address{function_address}, begin_timestamp{begin_timestamp}, registers(regs) {}
     uint64_t function_address;
     uint64_t begin_timestamp;
     perf_event_sample_regs_user_sp_ip_arguments registers;

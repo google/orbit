@@ -53,12 +53,10 @@ ABSL_FLAG(uint16_t, grpc_port, 44765,
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
-ABSL_FLAG(uint16_t, sampling_rate, 1000,
-          "Frequency of callstack sampling in samples per second");
+ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
-ABSL_FLAG(bool, frame_pointer_unwinding, false,
-          "Use frame pointers for unwinding");
+ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
@@ -75,24 +73,19 @@ static outcome::result<GrpcPort> DeployOrbitService(
     const SshCredentials& ssh_credentials, const GrpcPort& remote_ports) {
   QProgressDialog progress_dialog{};
 
-  service_deploy_manager.emplace(deployment_configuration, context,
-                                 ssh_credentials, remote_ports);
-  QObject::connect(&progress_dialog, &QProgressDialog::canceled,
-                   &service_deploy_manager.value(),
+  service_deploy_manager.emplace(deployment_configuration, context, ssh_credentials, remote_ports);
+  QObject::connect(&progress_dialog, &QProgressDialog::canceled, &service_deploy_manager.value(),
                    &ServiceDeployManager::Cancel);
-  QObject::connect(&service_deploy_manager.value(),
-                   &ServiceDeployManager::statusMessage, &progress_dialog,
-                   &QProgressDialog::setLabelText);
-  QObject::connect(
-      &service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
-      [](const QString& msg) { LOG("Status message: %s", msg.toStdString()); });
+  QObject::connect(&service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
+                   &progress_dialog, &QProgressDialog::setLabelText);
+  QObject::connect(&service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
+                   [](const QString& msg) { LOG("Status message: %s", msg.toStdString()); });
 
   return service_deploy_manager->Exec();
 }
 
 static outcome::result<void> RunUiInstance(
-    QApplication* app,
-    std::optional<DeploymentConfiguration> deployment_configuration,
+    QApplication* app, std::optional<DeploymentConfiguration> deployment_configuration,
     Context* context) {
   std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
 
@@ -114,16 +107,14 @@ static outcome::result<void> RunUiInstance(
 
     // The user chose a remote profiling target.
     OUTCOME_TRY(tunnel_ports,
-                DeployOrbitService(
-                    service_deploy_manager, deployment_configuration.value(),
-                    context, std::get<SshCredentials>(result), remote_ports));
+                DeployOrbitService(service_deploy_manager, deployment_configuration.value(),
+                                   context, std::get<SshCredentials>(result), remote_ports));
     return std::make_tuple(tunnel_ports, QString{});
   }());
   const auto& [ports, capture_path] = result;
 
   ApplicationOptions options;
-  options.grpc_server_address =
-      absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
+  options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
   ServiceDeployManager* service_deploy_manager_ptr = nullptr;
 
@@ -143,8 +134,7 @@ static outcome::result<void> RunUiInstance(
     }
 
     return OrbitSshQt::ScopedConnection{QObject::connect(
-        &service_deploy_manager.value(),
-        &ServiceDeployManager::socketErrorOccurred,
+        &service_deploy_manager.value(), &ServiceDeployManager::socketErrorOccurred,
         &service_deploy_manager.value(), [&](std::error_code e) {
           error = e;
           w.close();
@@ -205,8 +195,7 @@ static void StyleOrbit(QApplication& app) {
       "solid white; }");
 }
 
-static std::optional<OrbitQt::DeploymentConfiguration>
-FigureOutDeploymentConfiguration() {
+static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
   if (absl::GetFlag(FLAGS_local)) {
     return std::nullopt;
   }
@@ -221,12 +210,10 @@ FigureOutDeploymentConfiguration() {
 
   if (env.contains(kEnvExecutablePath) && env.contains(kEnvRootPassword)) {
     return OrbitQt::BareExecutableAndRootPasswordDeployment{
-        env.value(kEnvExecutablePath).toStdString(),
-        env.value(kEnvRootPassword).toStdString()};
+        env.value(kEnvExecutablePath).toStdString(), env.value(kEnvRootPassword).toStdString()};
   } else if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
-    return OrbitQt::SignedDebianPackageDeployment{
-        env.value(kEnvPackagePath).toStdString(),
-        env.value(kEnvSignaturePath).toStdString()};
+    return OrbitQt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
+                                                  env.value(kEnvSignaturePath).toStdString()};
   } else if (env.contains(kEnvNoDeployment)) {
     return OrbitQt::NoDeployment{};
   } else {
@@ -254,8 +241,7 @@ int main(int argc, char* argv[]) {
 
   {
     absl::SetProgramUsageMessage("CPU Profiler");
-    absl::SetFlagsUsageConfig(
-        absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
+    absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
 
     const std::string log_file_path = Path::GetLogFilePath();
@@ -267,8 +253,7 @@ int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
-    QCoreApplication::setApplicationVersion(
-        QString::fromStdString(OrbitCore::GetVersion()));
+    QCoreApplication::setApplicationVersion(QString::fromStdString(OrbitCore::GetVersion()));
     path_to_executable = QCoreApplication::applicationFilePath();
 
 #ifdef ORBIT_CRASH_HANDLING
@@ -279,14 +264,11 @@ int main(int argc, char* argv[]) {
     const char* handler_name = "crashpad_handler";
 #endif
     const std::string handler_path =
-        QDir(QCoreApplication::applicationDirPath())
-            .absoluteFilePath(handler_name)
-            .toStdString();
+        QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
     const std::string crash_server_url = CrashServerOptions::GetUrl();
     const std::vector<std::string> attachments = {Path::GetLogFilePath()};
 
-    CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
-                               attachments);
+    CrashHandler crash_handler(dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING
 
     StyleOrbit(app);
@@ -303,47 +285,38 @@ int main(int argc, char* argv[]) {
       return -1;
     }
 
-    LOG("Detected OpenGL version: %i.%i", open_gl_version->major,
-        open_gl_version->minor);
+    LOG("Detected OpenGL version: %i.%i", open_gl_version->major, open_gl_version->minor);
 
     if (open_gl_version->major < 2) {
-      DisplayErrorToUser(
-          QString(
-              "The minimum required version of OpenGL is 2.0. But this machine "
-              "only supports up to version %1.%2. Please make sure you're not "
-              "trying to start Orbit in a remote session and make sure you "
-              "have a recent graphics driver installed. Then try again!")
-              .arg(open_gl_version->major)
-              .arg(open_gl_version->minor));
+      DisplayErrorToUser(QString("The minimum required version of OpenGL is 2.0. But this machine "
+                                 "only supports up to version %1.%2. Please make sure you're not "
+                                 "trying to start Orbit in a remote session and make sure you "
+                                 "have a recent graphics driver installed. Then try again!")
+                             .arg(open_gl_version->major)
+                             .arg(open_gl_version->minor));
       return -1;
     }
 
     auto context = Context::Create();
     if (!context) {
-      DisplayErrorToUser(
-          QString("An error occurred while initializing ssh: %1")
-              .arg(QString::fromStdString(context.error().message())));
+      DisplayErrorToUser(QString("An error occurred while initializing ssh: %1")
+                             .arg(QString::fromStdString(context.error().message())));
       return -1;
     }
 
     while (true) {
-      const auto result =
-          RunUiInstance(&app, deployment_configuration, &(context.value()));
-      if (result ||
-          result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
+      const auto result = RunUiInstance(&app, deployment_configuration, &(context.value()));
+      if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
           !deployment_configuration) {
         // It was either a clean shutdown or the deliberately closed the
         // dialog, or we started with the --local flag.
         return 0;
-      } else if (result.error() ==
-                 make_error_code(OrbitGgp::Error::kCouldNotUseGgpCli)) {
+      } else if (result.error() == make_error_code(OrbitGgp::Error::kCouldNotUseGgpCli)) {
         DisplayErrorToUser(QString::fromStdString(result.error().message()));
         return 1;
-      } else if (result.error() !=
-                 make_error_code(Error::kUserCanceledServiceDeployment)) {
+      } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
         DisplayErrorToUser(
-            QString("An error occurred: %1")
-                .arg(QString::fromStdString(result.error().message())));
+            QString("An error occurred: %1").arg(QString::fromStdString(result.error().message())));
         break;
       }
     }

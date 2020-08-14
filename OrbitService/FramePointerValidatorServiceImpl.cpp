@@ -27,25 +27,21 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
 
   if (!elf_file_result) {
     return grpc::Status(grpc::StatusCode::INTERNAL,
-                        absl::StrFormat("Unable to load module \"%s\": %s",
-                                        request->module_path(),
+                        absl::StrFormat("Unable to load module \"%s\": %s", request->module_path(),
                                         elf_file_result.error().message()));
   }
 
   bool is_64_bit = elf_file_result.value()->Is64Bit();
 
-  std::vector<CodeBlock> function_infos(request->functions().begin(),
-                                        request->functions().end());
+  std::vector<CodeBlock> function_infos(request->functions().begin(), request->functions().end());
 
   std::optional<std::vector<CodeBlock>> functions =
-      FramePointerValidator::GetFpoFunctions(function_infos,
-                                             request->module_path(), is_64_bit);
+      FramePointerValidator::GetFpoFunctions(function_infos, request->module_path(), is_64_bit);
 
   if (!functions.has_value()) {
     return grpc::Status(
         grpc::StatusCode::INTERNAL,
-        absl::StrFormat("Unable to verify functions of module %s",
-                        request->module_path()));
+        absl::StrFormat("Unable to verify functions of module %s", request->module_path()));
   }
 
   for (const auto& function : functions.value()) {

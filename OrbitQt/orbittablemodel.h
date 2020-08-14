@@ -21,15 +21,12 @@ class OrbitTableModel : public QAbstractTableModel {
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
-  QVariant data(const QModelIndex& index,
-                int role = Qt::DisplayRole) const override;
+  QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
   void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
   int GetUpdatePeriodMs() { return m_DataView->GetUpdatePeriodMs(); }
   int GetSelectedIndex() { return m_DataView->GetSelectedIndex(); }
-  QModelIndex CreateIndex(int a_Row, int a_Column) {
-    return createIndex(a_Row, a_Column);
-  }
+  QModelIndex CreateIndex(int a_Row, int a_Column) { return createIndex(a_Row, a_Column); }
   DataView* GetDataView() { return m_DataView; }
   void SetDataView(DataView* model) { m_DataView = model; }
   bool IsSortingAllowed() { return GetDataView()->IsSortingAllowed(); }

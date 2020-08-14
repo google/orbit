@@ -32,8 +32,7 @@ namespace LinuxTracing {
 
 class TracerThread {
  public:
-  explicit TracerThread(
-      const orbit_grpc_protos::CaptureOptions& capture_options);
+  explicit TracerThread(const orbit_grpc_protos::CaptureOptions& capture_options);
 
   TracerThread(const TracerThread&) = delete;
   TracerThread& operator=(const TracerThread&) = delete;
@@ -45,12 +44,10 @@ class TracerThread {
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
-  static std::optional<uint64_t> ComputeSamplingPeriodNs(
-      double sampling_frequency) {
+  static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency) {
     double period_ns_dbl = 1'000'000'000 / sampling_frequency;
     if (period_ns_dbl > 0 &&
-        period_ns_dbl <=
-            static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+        period_ns_dbl <= static_cast<double>(std::numeric_limits<uint64_t>::max())) {
       return std::optional<uint64_t>(period_ns_dbl);
     } else {
       return std::nullopt;
@@ -60,30 +57,26 @@ class TracerThread {
   bool OpenContextSwitches(const std::vector<int32_t>& cpus);
   void InitUprobesEventProcessor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
-  bool OpenUprobes(const LinuxTracing::Function& function,
-                   const std::vector<int32_t>& cpus,
+  bool OpenUprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
                    absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenUretprobes(const LinuxTracing::Function& function,
-                      const std::vector<int32_t>& cpus,
+  bool OpenUretprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
-  void AddUprobesFileDescriptors(
-      const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-      const LinuxTracing::Function& function);
+  void AddUprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
+                                 const LinuxTracing::Function& function);
 
-  void AddUretprobesFileDescriptors(
-      const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-      const LinuxTracing::Function& function);
+  void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
+                                    const LinuxTracing::Function& function);
 
   void OpenUserSpaceProbesRingBuffers();
 
   static void OpenRingBuffersOrRedirectOnExisting(
       const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
       absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
-      std::vector<PerfEventRingBuffer>* ring_buffers,
-      uint64_t ring_buffer_size_kb, std::string_view buffer_name_prefix);
+      std::vector<PerfEventRingBuffer>* ring_buffers, uint64_t ring_buffer_size_kb,
+      std::string_view buffer_name_prefix);
 
   static bool OpenRingBuffersForTracepoint(
       const char* tracepoint_category, const char* tracepoint_name,
@@ -98,16 +91,11 @@ class TracerThread {
 
   void ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
                                         PerfEventRingBuffer* ring_buffer);
-  void ProcessForkEvent(const perf_event_header& header,
-                        PerfEventRingBuffer* ring_buffer);
-  void ProcessExitEvent(const perf_event_header& header,
-                        PerfEventRingBuffer* ring_buffer);
-  void ProcessMmapEvent(const perf_event_header& header,
-                        PerfEventRingBuffer* ring_buffer);
-  void ProcessSampleEvent(const perf_event_header& header,
-                          PerfEventRingBuffer* ring_buffer);
-  void ProcessLostEvent(const perf_event_header& header,
-                        PerfEventRingBuffer* ring_buffer);
+  void ProcessForkEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
+  void ProcessExitEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
+  void ProcessMmapEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
+  void ProcessSampleEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
+  void ProcessLostEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
 
   void DeferEvent(std::unique_ptr<PerfEvent> event);
   std::vector<std::unique_ptr<PerfEvent>> ConsumeDeferredEvents();
@@ -149,8 +137,7 @@ class TracerThread {
   absl::flat_hash_map<int32_t, std::vector<int>> fds_per_cpu_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
 
-  absl::flat_hash_map<uint64_t, const Function*>
-      uprobes_uretprobes_ids_to_function_;
+  absl::flat_hash_map<uint64_t, const Function*> uprobes_uretprobes_ids_to_function_;
   absl::flat_hash_set<uint64_t> uprobes_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_ids_;
   absl::flat_hash_set<uint64_t> stack_sampling_ids_;
@@ -190,9 +177,8 @@ class TracerThread {
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
     std::shared_ptr<std::atomic<uint64_t>> unwind_error_count =
         std::make_unique<std::atomic<uint64_t>>(0);
-    std::shared_ptr<std::atomic<uint64_t>>
-        discarded_samples_in_uretprobes_count =
-            std::make_unique<std::atomic<uint64_t>>(0);
+    std::shared_ptr<std::atomic<uint64_t>> discarded_samples_in_uretprobes_count =
+        std::make_unique<std::atomic<uint64_t>>(0);
   };
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;

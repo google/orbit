@@ -86,17 +86,12 @@ TEST(InstanceItemModelTests, headerData) {
   EXPECT_FALSE(model.headerData(6, Qt::Horizontal).isValid());
 
   // Section correct
-  EXPECT_EQ(model.headerData(0, Qt::Horizontal).toString().toStdString(),
-            "Display Name");
+  EXPECT_EQ(model.headerData(0, Qt::Horizontal).toString().toStdString(), "Display Name");
   EXPECT_EQ(model.headerData(1, Qt::Horizontal).toString().toStdString(), "ID");
-  EXPECT_EQ(model.headerData(2, Qt::Horizontal).toString().toStdString(),
-            "IP Address");
-  EXPECT_EQ(model.headerData(3, Qt::Horizontal).toString().toStdString(),
-            "Last Updated");
-  EXPECT_EQ(model.headerData(4, Qt::Horizontal).toString().toStdString(),
-            "Owner");
-  EXPECT_EQ(model.headerData(5, Qt::Horizontal).toString().toStdString(),
-            "Pool");
+  EXPECT_EQ(model.headerData(2, Qt::Horizontal).toString().toStdString(), "IP Address");
+  EXPECT_EQ(model.headerData(3, Qt::Horizontal).toString().toStdString(), "Last Updated");
+  EXPECT_EQ(model.headerData(4, Qt::Horizontal).toString().toStdString(), "Owner");
+  EXPECT_EQ(model.headerData(5, Qt::Horizontal).toString().toStdString(), "Pool");
 }
 
 TEST(InstanceItemModelTests, data) {
@@ -105,8 +100,7 @@ TEST(InstanceItemModelTests, data) {
   test_instance_0.display_name = "displayName1";
   test_instance_0.id = "id1";
   test_instance_0.ip_address = "10.10.0.1";
-  test_instance_0.last_updated =
-      QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
+  test_instance_0.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_0.owner = "hebecker@";
   test_instance_0.pool = "foo-gen1-anything";
 
@@ -114,8 +108,7 @@ TEST(InstanceItemModelTests, data) {
   test_instance_1.display_name = "displayName2";
   test_instance_1.id = "id2";
   test_instance_1.ip_address = "10.10.0.2";
-  test_instance_1.last_updated =
-      QDateTime::fromString("2020-02-02T00:42:42Z", Qt::ISODate);
+  test_instance_1.last_updated = QDateTime::fromString("2020-02-02T00:42:42Z", Qt::ISODate);
   test_instance_1.owner = "programmer@";
   test_instance_1.pool = "foo-gen42-anything";
 
@@ -145,8 +138,7 @@ TEST(InstanceItemModelTests, data) {
   EXPECT_EQ(model.index(0, 0).data().toString(), test_instance_0.display_name);
   EXPECT_EQ(model.index(0, 1).data().toString(), test_instance_0.id);
   EXPECT_EQ(model.index(0, 2).data().toString(), test_instance_0.ip_address);
-  EXPECT_EQ(model.index(0, 3).data().toString(),
-            test_instance_0.last_updated.toString());
+  EXPECT_EQ(model.index(0, 3).data().toString(), test_instance_0.last_updated.toString());
   EXPECT_EQ(model.index(0, 4).data().toString(), test_instance_0.owner);
   EXPECT_EQ(model.index(0, 5).data().toString(), test_instance_0.pool);
 
@@ -154,8 +146,7 @@ TEST(InstanceItemModelTests, data) {
   EXPECT_EQ(model.index(1, 0).data().toString(), test_instance_1.display_name);
   EXPECT_EQ(model.index(1, 1).data().toString(), test_instance_1.id);
   EXPECT_EQ(model.index(1, 2).data().toString(), test_instance_1.ip_address);
-  EXPECT_EQ(model.index(1, 3).data().toString(),
-            test_instance_1.last_updated.toString());
+  EXPECT_EQ(model.index(1, 3).data().toString(), test_instance_1.last_updated.toString());
   EXPECT_EQ(model.index(1, 4).data().toString(), test_instance_1.owner);
   EXPECT_EQ(model.index(1, 5).data().toString(), test_instance_1.pool);
 }
@@ -215,8 +206,7 @@ TEST(InstanceItemModelTests, SetInstances) {
   // change all properties except id
   test_instances[0].display_name = "changed again";
   test_instances[0].ip_address = "10.10.0.1";
-  test_instances[0].last_updated =
-      QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
+  test_instances[0].last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instances[0].owner = "owner@";
   test_instances[0].pool = "foo-gen1-anything";
   reset_counters();

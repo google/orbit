@@ -22,20 +22,17 @@ using orbit_grpc_protos::ProcessInfo;
 ErrorMessageOr<void> ProcessList::Refresh() {
   auto cpu_result = LinuxUtils::GetCpuUtilization();
   if (!cpu_result) {
-    return outcome::failure(
-        absl::StrFormat("Unable to retrieve cpu usage of processes: %s",
-                        cpu_result.error().message()));
+    return outcome::failure(absl::StrFormat("Unable to retrieve cpu usage of processes: %s",
+                                            cpu_result.error().message()));
   }
-  std::unordered_map<int32_t, double> cpu_usage_map =
-      std::move(cpu_result.value());
+  std::unordered_map<int32_t, double> cpu_usage_map = std::move(cpu_result.value());
 
   std::vector<ProcessInfo> updated_processes;
 
   // TODO(b/161423785): This for loop should be refactored. For example, when
   //  parts are in a separate function, OUTCOME_TRY could be used to simplify
   //  error handling. Also use ErrorMessageOr
-  for (const auto& directory_entry :
-       std::filesystem::directory_iterator("/proc")) {
+  for (const auto& directory_entry : std::filesystem::directory_iterator("/proc")) {
     if (!directory_entry.is_directory()) continue;
 
     const std::filesystem::path& path = directory_entry.path();
@@ -55,8 +52,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     const std::filesystem::path name_file_path = path / "comm";
     auto name_file_result = OrbitUtils::FileToString(name_file_path);
     if (!name_file_result) {
-      ERROR("Failed to read %s: %s", name_file_path.string(),
-            name_file_result.error().message());
+      ERROR("Failed to read %s: %s", name_file_path.string(), name_file_result.error().message());
       continue;
     }
     std::string name = std::move(name_file_result.value());
@@ -71,8 +67,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
 
     // "The command-line arguments appear [...] as a set of strings
     // separated by null bytes ('\0')".
-    const std::filesystem::path cmdline_file_path =
-        directory_entry.path() / "cmdline";
+    const std::filesystem::path cmdline_file_path = directory_entry.path() / "cmdline";
     auto cmdline_file_result = OrbitUtils::FileToString(cmdline_file_path);
     if (!cmdline_file_result) {
       ERROR("Failed to read %s: %s", cmdline_file_path.string(),
@@ -85,8 +80,8 @@ ErrorMessageOr<void> ProcessList::Refresh() {
 
     const auto& is_64_bit_result = LinuxUtils::Is64Bit(pid);
     if (!is_64_bit_result) {
-      ERROR("Failed to get if process \"%s\" (pid %d) is 64 bit: %s",
-            name.c_str(), pid, is_64_bit_result.error().message().c_str());
+      ERROR("Failed to get if process \"%s\" (pid %d) is 64 bit: %s", name.c_str(), pid,
+            is_64_bit_result.error().message().c_str());
       continue;
     }
     process.set_is_64_bit(is_64_bit_result.value());

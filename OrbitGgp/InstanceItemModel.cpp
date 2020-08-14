@@ -5,21 +5,12 @@
 #include "OrbitGgp/InstanceItemModel.h"
 
 namespace {
-enum class Columns {
-  DisplayName,
-  ID,
-  IPAddress,
-  LastUpdated,
-  Owner,
-  Pool,
-  NumberOfColumns
-};
+enum class Columns { DisplayName, ID, IPAddress, LastUpdated, Owner, Pool, NumberOfColumns };
 }  // namespace
 
 namespace OrbitGgp {
 
-InstanceItemModel::InstanceItemModel(QVector<Instance> instances,
-                                     QObject* parent)
+InstanceItemModel::InstanceItemModel(QVector<Instance> instances, QObject* parent)
     : QAbstractItemModel(parent), instances_(std::move(instances)) {
   std::sort(instances_.begin(), instances_.end(), &Instance::CmpById);
 }
@@ -61,8 +52,7 @@ QVariant InstanceItemModel::data(const QModelIndex& index, int role) const {
   return {};
 }
 
-QModelIndex InstanceItemModel::index(int row, int col,
-                                     const QModelIndex& parent) const {
+QModelIndex InstanceItemModel::index(int row, int col, const QModelIndex& parent) const {
   if (parent.isValid()) return {};
   if (row < 0 || row >= instances_.size()) return {};
   if (col < 0 || col >= static_cast<int>(Columns::NumberOfColumns)) return {};
@@ -70,8 +60,7 @@ QModelIndex InstanceItemModel::index(int row, int col,
   return createIndex(row, col, nullptr);
 }
 
-QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation,
-                                       int role) const {
+QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (role != Qt::DisplayRole) return {};
   if (orientation != Qt::Horizontal) return {};
   if (section < 0 || section >= static_cast<int>(Columns::NumberOfColumns)) {
@@ -100,9 +89,7 @@ QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation,
   return {};
 }
 
-QModelIndex InstanceItemModel::parent(const QModelIndex& /*child*/) const {
-  return {};
-}
+QModelIndex InstanceItemModel::parent(const QModelIndex& /*child*/) const { return {}; }
 
 int InstanceItemModel::rowCount(const QModelIndex& parent) const {
   return parent.isValid() ? 0 : instances_.size();
@@ -117,16 +104,13 @@ void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
   QVector<Instance>::iterator new_iter = new_instances.begin();
 
   while (old_iter != old_instances.end() && new_iter != new_instances.end()) {
-    const int current_row =
-        static_cast<int>(std::distance(old_instances.begin(), old_iter));
+    const int current_row = static_cast<int>(std::distance(old_instances.begin(), old_iter));
 
     if (old_iter->id == new_iter->id) {
       if (*old_iter != *new_iter) {
         *old_iter = *new_iter;
-        emit dataChanged(
-            index(current_row, 0, {}),
-            index(current_row, static_cast<int>(Columns::NumberOfColumns) - 1,
-                  {}));
+        emit dataChanged(index(current_row, 0, {}),
+                         index(current_row, static_cast<int>(Columns::NumberOfColumns) - 1, {}));
       }
       ++old_iter;
       ++new_iter;
@@ -148,8 +132,7 @@ void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
     std::copy(new_iter, new_instances.end(), std::back_inserter(old_instances));
     CHECK(old_instances.size() == new_instances.size());
     endInsertRows();
-  } else if (old_iter != old_instances.end() &&
-             new_iter == new_instances.end()) {
+  } else if (old_iter != old_instances.end() && new_iter == new_instances.end()) {
     beginRemoveRows({}, new_instances.size(), old_instances.size() - 1);
     old_instances.erase(old_iter, old_instances.end());
     CHECK(old_instances.size() == new_instances.size());

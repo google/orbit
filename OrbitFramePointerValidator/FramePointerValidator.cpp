@@ -13,8 +13,7 @@
 using orbit_grpc_protos::CodeBlock;
 
 std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
-    const std::vector<CodeBlock>& functions, const std::string& file_name,
-    bool is_64_bit) {
+    const std::vector<CodeBlock>& functions, const std::string& file_name, bool is_64_bit) {
   std::vector<CodeBlock> result;
 
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
@@ -23,8 +22,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     ERROR("Unable to open capstone.");
     return {};
   }
-  OrbitBase::unique_resource handle{std::move(temp_handle),
-                                    [](csh handle) { cs_close(&handle); }};
+  OrbitBase::unique_resource handle{std::move(temp_handle), [](csh handle) { cs_close(&handle); }};
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
@@ -38,8 +36,8 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
       continue;
     }
 
-    FunctionFramePointerValidator validator{
-        handle, binary.data() + function.offset(), static_cast<size_t>(function.size())};
+    FunctionFramePointerValidator validator{handle, binary.data() + function.offset(),
+                                            static_cast<size_t>(function.size())};
 
     if (!validator.Validate()) {
       result.push_back(function);

@@ -148,8 +148,7 @@ class StateMachineHelper : public QObject {
   using QObject::QObject;
 
   void OnEvent() {
-    if (self()->CurrentState() > State::kInitial &&
-        self()->CurrentState() < State::kStarted) {
+    if (self()->CurrentState() > State::kInitial && self()->CurrentState() < State::kStarted) {
       const auto result = self()->startup();
 
       if (result) {
@@ -164,8 +163,7 @@ class StateMachineHelper : public QObject {
       }
     }
 
-    if (self()->CurrentState() >= State::kStarted &&
-        self()->CurrentState() < State::kShutdown) {
+    if (self()->CurrentState() >= State::kStarted && self()->CurrentState() < State::kShutdown) {
       const auto result = self()->run();
 
       if (!result) {
@@ -178,8 +176,7 @@ class StateMachineHelper : public QObject {
       }
     }
 
-    if (self()->CurrentState() >= State::kShutdown &&
-        self()->CurrentState() < State::kError) {
+    if (self()->CurrentState() >= State::kShutdown && self()->CurrentState() < State::kError) {
       const auto result = self()->shutdown();
 
       if (result) {
@@ -208,8 +205,7 @@ class StateMachineHelper : public QObject {
   void SetState(State state) {
     if (state_ != state) {
       self()->SetStateHook(state);
-      if (state != State::kError && state >= State::kShutdown &&
-          state_ < State::kShutdown) {
+      if (state != State::kError && state >= State::kShutdown && state_ < State::kShutdown) {
         self()->aboutToShutdown();
       }
       state_ = state;

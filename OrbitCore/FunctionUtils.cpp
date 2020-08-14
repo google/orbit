@@ -21,24 +21,18 @@ std::string GetLoadedModuleName(const FunctionInfo& func) {
   return Path::GetFileName(func.loaded_module_path());
 }
 
-uint64_t GetHash(const FunctionInfo& func) {
-  return StringHash(func.pretty_name());
-}
+uint64_t GetHash(const FunctionInfo& func) { return StringHash(func.pretty_name()); }
 
-uint64_t Offset(const FunctionInfo& func) {
-  return func.address() - func.load_bias();
-}
+uint64_t Offset(const FunctionInfo& func) { return func.address() - func.load_bias(); }
 
-bool IsOrbitFunc(const FunctionInfo& func) {
-  return func.type() != FunctionInfo::kNone;
-}
+bool IsOrbitFunc(const FunctionInfo& func) { return func.type() != FunctionInfo::kNone; }
 
-std::shared_ptr<FunctionInfo> CreateFunctionInfo(
-    std::string name, std::string pretty_name, uint64_t address,
-    uint64_t load_bias, uint64_t size, std::string file, uint32_t line,
-    std::string loaded_module_path, uint64_t module_base_address) {
-  std::shared_ptr<FunctionInfo> function_info =
-      std::make_shared<FunctionInfo>();
+std::shared_ptr<FunctionInfo> CreateFunctionInfo(std::string name, std::string pretty_name,
+                                                 uint64_t address, uint64_t load_bias,
+                                                 uint64_t size, std::string file, uint32_t line,
+                                                 std::string loaded_module_path,
+                                                 uint64_t module_base_address) {
+  std::shared_ptr<FunctionInfo> function_info = std::make_shared<FunctionInfo>();
   function_info->set_name(std::move(name));
   function_info->set_pretty_name(std::move(pretty_name));
   function_info->set_address(address);
@@ -53,23 +47,21 @@ std::shared_ptr<FunctionInfo> CreateFunctionInfo(
   return function_info;
 }
 
-const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>&
-GetFunctionNameToOrbitTypeMap() {
-  static absl::flat_hash_map<const char*, FunctionInfo::OrbitType>
-      function_name_to_type_map{
-          {"Start(", FunctionInfo::kOrbitTimerStart},
-          {"Stop(", FunctionInfo::kOrbitTimerStop},
-          {"StartAsync(", FunctionInfo::kOrbitTimerStartAsync},
-          {"StopAsync(", FunctionInfo::kOrbitTimerStopAsync},
-          {"TrackInt(", FunctionInfo::kOrbitTrackInt},
-          {"TrackInt64(", FunctionInfo::kOrbitTrackInt64},
-          {"TrackUint(", FunctionInfo::kOrbitTrackUint},
-          {"TrackUint64(", FunctionInfo::kOrbitTrackUint64},
-          {"TrackFloat(", FunctionInfo::kOrbitTrackFloat},
-          {"TrackDouble(", FunctionInfo::kOrbitTrackDouble},
-          {"TrackFloatAsInt(", FunctionInfo::kOrbitTrackFloatAsInt},
-          {"TrackDoubleAsInt64(", FunctionInfo::kOrbitTrackDoubleAsInt64},
-      };
+const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
+  static absl::flat_hash_map<const char*, FunctionInfo::OrbitType> function_name_to_type_map{
+      {"Start(", FunctionInfo::kOrbitTimerStart},
+      {"Stop(", FunctionInfo::kOrbitTimerStop},
+      {"StartAsync(", FunctionInfo::kOrbitTimerStartAsync},
+      {"StopAsync(", FunctionInfo::kOrbitTimerStopAsync},
+      {"TrackInt(", FunctionInfo::kOrbitTrackInt},
+      {"TrackInt64(", FunctionInfo::kOrbitTrackInt64},
+      {"TrackUint(", FunctionInfo::kOrbitTrackUint},
+      {"TrackUint64(", FunctionInfo::kOrbitTrackUint64},
+      {"TrackFloat(", FunctionInfo::kOrbitTrackFloat},
+      {"TrackDouble(", FunctionInfo::kOrbitTrackDouble},
+      {"TrackFloatAsInt(", FunctionInfo::kOrbitTrackFloatAsInt},
+      {"TrackDoubleAsInt64(", FunctionInfo::kOrbitTrackDoubleAsInt64},
+  };
   return function_name_to_type_map;
 }
 

@@ -24,16 +24,13 @@ class TextRenderer {
 
   void Init();
   void Display(Batcher* batcher);
-  void AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
-               const Color& a_Color, float a_MaxSize = -1.f,
-               bool a_RightJustified = false);
-  void AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y,
-                                       float a_Z, const Color& a_Color,
-                                       size_t a_TrailingCharsLength,
+  void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
+               float a_MaxSize = -1.f, bool a_RightJustified = false);
+  void AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y, float a_Z,
+                                       const Color& a_Color, size_t a_TrailingCharsLength,
                                        float a_MaxSize);
-  int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
-                const Color& a_Color, float a_MaxSize = -1.f,
-                bool a_RightJustified = false, bool a_InvertY = true);
+  int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
+                float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
   void GetStringSize(const char* a_Text, int& a_Width, int& a_Height);
   int GetStringHeight(const char* a_Text);
@@ -48,9 +45,8 @@ class TextRenderer {
   int GetFontSize();
 
  protected:
-  void AddTextInternal(texture_font_t* font, const char* text,
-                       const vec4& color, vec2* pen, float a_MaxSize = -1.f,
-                       float a_Z = -0.01f, bool a_Static = false);
+  void AddTextInternal(texture_font_t* font, const char* text, const vec4& color, vec2* pen,
+                       float a_MaxSize = -1.f, float a_Z = -0.01f, bool a_Static = false);
   void ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y);
   float ToScreenSpace(float a_Size);
   void DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer);

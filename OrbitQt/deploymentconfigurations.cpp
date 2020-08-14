@@ -23,11 +23,10 @@ SignedDebianPackageDeployment::SignedDebianPackageDeployment() {
   }();
 
   const auto collector_directory =
-      QDir{QDir{QCoreApplication::applicationDirPath()}.absoluteFilePath(
-          kCollectorSubdirectory)};
+      QDir{QDir{QCoreApplication::applicationDirPath()}.absoluteFilePath(kCollectorSubdirectory)};
 
-  const auto deb_path = collector_directory.absoluteFilePath(
-      QString(kPackageNameTemplate).arg(version));
+  const auto deb_path =
+      collector_directory.absoluteFilePath(QString(kPackageNameTemplate).arg(version));
 
   path_to_package = deb_path.toStdString();
   path_to_signature = (deb_path + kSignatureExtension).toStdString();

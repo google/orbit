@@ -15,17 +15,14 @@ class CaptureData {
  public:
   explicit CaptureData(
       int32_t process_id, std::string process_name,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-          selected_functions)
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions)
       : process_id_{process_id},
         process_name_{std::move(process_name)},
         selected_functions_{std::move(selected_functions)} {}
   explicit CaptureData(
       int32_t process_id, std::string process_name,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-          selected_functions,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>
-          functions_stats)
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats)
       : process_id_{process_id},
         process_name_{std::move(process_name)},
         selected_functions_{std::move(selected_functions)},
@@ -37,8 +34,7 @@ class CaptureData {
   CaptureData(CaptureData&& other) = default;
   CaptureData& operator=(CaptureData&& other) = default;
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t,
-                                          orbit_client_protos::FunctionInfo>&
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
   selected_functions() const {
     return selected_functions_;
   }
@@ -48,32 +44,25 @@ class CaptureData {
 
   [[nodiscard]] int32_t process_id() const { return process_id_; }
 
-  [[nodiscard]] const std::string& process_name() const {
-    return process_name_;
-  }
+  [[nodiscard]] const std::string& process_name() const { return process_name_; }
 
-  [[nodiscard]] const std::chrono::system_clock::time_point&
-  capture_start_time() const {
+  [[nodiscard]] const std::chrono::system_clock::time_point& capture_start_time() const {
     return capture_start_time_;
   }
 
-  [[nodiscard]] const absl::flat_hash_map<
-      uint64_t, orbit_client_protos::LinuxAddressInfo>&
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>&
   address_infos() const {
     return address_infos_;
   }
 
   void set_address_infos(
-      absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
-          address_infos) {
+      absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos) {
     address_infos_ = std::move(address_infos);
   }
 
-  [[nodiscard]] orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
-      uint64_t address);
+  [[nodiscard]] orbit_client_protos::LinuxAddressInfo* GetAddressInfo(uint64_t address);
 
-  [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>& thread_names()
-      const {
+  [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>& thread_names() const {
     return thread_names_;
   }
 
@@ -83,8 +72,7 @@ class CaptureData {
     return it != thread_names_.end() ? it->second : kEmptyString;
   }
 
-  void set_thread_names(
-      absl::flat_hash_map<int32_t, std::string> thread_names) {
+  void set_thread_names(absl::flat_hash_map<int32_t, std::string> thread_names) {
     thread_names_ = std::move(thread_names);
   }
 
@@ -92,32 +80,26 @@ class CaptureData {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
-  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
-  functions_stats() {
+  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>& functions_stats() {
     return functions_stats_;
   }
 
-  const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
-      uint64_t function_address);
+  const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(uint64_t function_address);
 
   void UpdateFunctionStats(orbit_client_protos::FunctionInfo* func,
                            const orbit_client_protos::TimerInfo& timer_info);
 
  private:
-  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
-      address_infos_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
   int32_t process_id_ = -1;
   std::string process_name_;
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-      selected_functions_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
 
   absl::flat_hash_map<int32_t, std::string> thread_names_;
 
-  std::chrono::system_clock::time_point capture_start_time_ =
-      std::chrono::system_clock::now();
+  std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>
-      functions_stats_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_DATA_H_

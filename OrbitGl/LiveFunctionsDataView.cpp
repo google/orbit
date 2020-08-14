@@ -18,8 +18,7 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
-LiveFunctionsDataView::LiveFunctionsDataView(
-    LiveFunctionsController* live_functions)
+LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions)
     : DataView(DataViewType::kLiveFunctions), live_functions_(live_functions) {
   update_period_ms_ = 300;
   OnDataChanged();
@@ -49,8 +48,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 
   const FunctionInfo& function = *GetFunction(row);
-  const FunctionStats& stats =
-      Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
+  const FunctionStats& stats = Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
 
   switch (column) {
     case kColumnSelected:
@@ -70,32 +68,27 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnModule:
       return function.loaded_module_path();
     case kColumnAddress:
-      return absl::StrFormat("0x%llx",
-                             FunctionUtils::GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
     default:
       return "";
   }
 }
 
-#define ORBIT_FUNC_SORT(Member)                                          \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(functions[a].Member, functions[b].Member, \
-                               ascending);                               \
+#define ORBIT_FUNC_SORT(Member)                                                      \
+  [&](int a, int b) {                                                                \
+    return OrbitUtils::Compare(functions[a].Member, functions[b].Member, ascending); \
   }
-#define ORBIT_STAT_SORT(Member)                                            \
-  [&](int a, int b) {                                                      \
-    const FunctionStats& stats_a =                                         \
-        Capture::capture_data_.GetFunctionStatsOrDefault(                  \
-            functions[a].address());                                       \
-    const FunctionStats& stats_b =                                         \
-        Capture::capture_data_.GetFunctionStatsOrDefault(                  \
-            functions[b].address());                                       \
-    return OrbitUtils::Compare(stats_a.Member, stats_b.Member, ascending); \
+#define ORBIT_STAT_SORT(Member)                                                   \
+  [&](int a, int b) {                                                             \
+    const FunctionStats& stats_a =                                                \
+        Capture::capture_data_.GetFunctionStatsOrDefault(functions[a].address()); \
+    const FunctionStats& stats_b =                                                \
+        Capture::capture_data_.GetFunctionStatsOrDefault(functions[b].address()); \
+    return OrbitUtils::Compare(stats_a.Member, stats_b.Member, ascending);        \
   }
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                   \
-  [&](int a, int b) {                                                  \
-    return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), \
-                               ascending);                             \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
+  [&](int a, int b) {                                                              \
+    return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), ascending); \
   }
 
 void LiveFunctionsDataView::DoSort() {
@@ -143,13 +136,11 @@ void LiveFunctionsDataView::DoSort() {
 
 const std::string LiveFunctionsDataView::kMenuActionSelect = "Hook";
 const std::string LiveFunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string LiveFunctionsDataView::kMenuActionJumpToFirst =
-    "Jump to first";
+const std::string LiveFunctionsDataView::kMenuActionJumpToFirst = "Jump to first";
 const std::string LiveFunctionsDataView::kMenuActionJumpToLast = "Jump to last";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
-const std::string LiveFunctionsDataView::kMenuActionDisassembly =
-    "Go to Disassembly";
+const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
 const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
 
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
@@ -183,17 +174,16 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const FunctionStats& stats =
         Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
     if (stats.count() > 0) {
-      menu.insert(menu.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast,
-                               kMenuActionJumpToMin, kMenuActionJumpToMax});
+      menu.insert(menu.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast, kMenuActionJumpToMin,
+                               kMenuActionJumpToMax});
     }
   }
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
-void LiveFunctionsDataView::OnContextMenu(
-    const std::string& action, int menu_index,
-    const std::vector<int>& item_indices) {
+void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
+                                          const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (int i : item_indices) {
       FunctionInfo* function = GetFunction(i);
@@ -212,8 +202,7 @@ void LiveFunctionsDataView::OnContextMenu(
     }
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
-    auto function_address =
-        FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
+    auto function_address = FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
         function_address, std::numeric_limits<TickType>::lowest());
     if (first_box != nullptr) {
@@ -221,8 +210,7 @@ void LiveFunctionsDataView::OnContextMenu(
     }
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
-    auto function_address =
-        FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
+    auto function_address = FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
         function_address, std::numeric_limits<TickType>::max());
     if (last_box != nullptr) {
@@ -287,8 +275,7 @@ void LiveFunctionsDataView::DoFilter() {
   Capture::GVisibleFunctionsMap.clear();
   for (size_t i = 0; i < indices_.size(); ++i) {
     FunctionInfo* func = GetFunction(i);
-    Capture::GVisibleFunctionsMap[FunctionUtils::GetAbsoluteAddress(*func)] =
-        *func;
+    Capture::GVisibleFunctionsMap[FunctionUtils::GetAbsoluteAddress(*func)] = *func;
   }
 
   GOrbitApp->NeedsRedraw();
@@ -296,8 +283,8 @@ void LiveFunctionsDataView::DoFilter() {
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
-  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
-      selected_functions = Capture::capture_data_.selected_functions();
+  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
+      Capture::capture_data_.selected_functions();
   size_t functions_count = selected_functions.size();
   indices_.resize(functions_count);
   size_t i = 0;
@@ -321,8 +308,7 @@ FunctionInfo* LiveFunctionsDataView::GetFunction(unsigned int row) {
   return &(functions_[indices_[row]]);
 }
 
-std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
-    const FunctionInfo& function) const {
+std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInfo& function) const {
   auto function_address = FunctionUtils::GetAbsoluteAddress(function);
   TextBox* min_box = nullptr;
   TextBox* max_box = nullptr;
@@ -334,18 +320,16 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
       for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         if (box.GetTimerInfo().function_address() == function_address) {
-          uint64_t elapsed_nanos = TicksToNanoseconds(
-              box.GetTimerInfo().start(), box.GetTimerInfo().end());
+          uint64_t elapsed_nanos =
+              TicksToNanoseconds(box.GetTimerInfo().start(), box.GetTimerInfo().end());
           if (min_box == nullptr ||
-              elapsed_nanos <
-                  TicksToNanoseconds(min_box->GetTimerInfo().start(),
-                                     min_box->GetTimerInfo().end())) {
+              elapsed_nanos < TicksToNanoseconds(min_box->GetTimerInfo().start(),
+                                                 min_box->GetTimerInfo().end())) {
             min_box = &box;
           }
           if (max_box == nullptr ||
-              elapsed_nanos >
-                  TicksToNanoseconds(max_box->GetTimerInfo().start(),
-                                     max_box->GetTimerInfo().end())) {
+              elapsed_nanos > TicksToNanoseconds(max_box->GetTimerInfo().start(),
+                                                 max_box->GetTimerInfo().end())) {
             max_box = &box;
           }
         }

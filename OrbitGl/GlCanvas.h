@@ -26,10 +26,8 @@ class GlCanvas : public GlPanel {
   int getWidth() const;
   int getHeight() const;
 
-  void prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
-                         int bottomrigth_y);
-  void prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
-                         int bottomrigth_y);
+  void prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y);
+  void prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y);
   void prepareScreenSpaceViewport();
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
   void WorldToScreen(float wx, float wy, int& x, int& y) const;
@@ -38,8 +36,7 @@ class GlCanvas : public GlPanel {
   float ScreenToworldWidth(int a_Width) const;
 
   // events
-  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right,
-                  bool a_Middle) override;
+  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right, bool a_Middle) override;
   void LeftDown(int a_X, int a_Y) override;
   void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
   void LeftUp() override;
@@ -48,10 +45,8 @@ class GlCanvas : public GlPanel {
   bool RightUp() override;
   virtual void mouseLeftWindow();
   void CharEvent(unsigned int a_Char) override;
-  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                  bool a_Alt) override;
-  void KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                   bool a_Alt) override;
+  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) override;
+  void KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) override;
   virtual void UpdateSpecialKeys(bool a_Ctrl, bool a_Shift, bool a_Alt);
   virtual bool ControlPressed();
   virtual bool ShiftPressed();
@@ -84,12 +79,10 @@ class GlCanvas : public GlPanel {
   Vec2 ToScreenSpace(const Vec2& a_Point);
   Vec2 ToWorldSpace(const Vec2& a_Point);
 
-  void AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
-               const Color& a_Color, float a_MaxSize = -1.f,
-               bool a_RightJustified = false);
-  int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
-                const Color& a_Color, float a_MaxSize = -1.f,
-                bool a_RightJustified = false, bool a_InvertY = true);
+  void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
+               float a_MaxSize = -1.f, bool a_RightJustified = false);
+  int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
+                float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
   void ResetHoverTimer();
 

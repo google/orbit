@@ -16,8 +16,7 @@
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
 
-const std::string executable_directory =
-    Path::GetExecutablePath() + "testdata/";
+const std::string executable_directory = Path::GetExecutablePath() + "testdata/";
 
 using ElfUtils::ElfFile;
 using orbit_client_protos::FunctionInfo;
@@ -53,8 +52,7 @@ TEST(OrbitModule, LoadFunctions) {
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
   {
-    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
-        ElfFile::Create(file_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(file_path);
     ASSERT_TRUE(elf_file) << elf_file.error().message();
     const auto symbols = elf_file.value()->LoadSymbols();
     ASSERT_TRUE(symbols) << symbols.error().message();
@@ -94,11 +92,9 @@ TEST(OrbitModule, LoadFunctions) {
 TEST(OrbitModule, GetFunctionFromExactAddress) {
   const std::string file_path = executable_directory + "hello_world_static_elf";
 
-  std::shared_ptr<Module> module =
-      std::make_shared<Module>(file_path, 0x400000, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x400000, 0);
   {
-    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
-        ElfFile::Create(file_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(file_path);
     ASSERT_TRUE(elf_file) << elf_file.error().message();
     const auto symbols = elf_file.value()->LoadSymbols();
     ASSERT_TRUE(symbols) << symbols.error().message();
@@ -126,11 +122,9 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
 TEST(OrbitModule, GetFunctionFromProgramCounter) {
   const std::string file_path = executable_directory + "hello_world_static_elf";
 
-  std::shared_ptr<Module> module =
-      std::make_shared<Module>(file_path, 0x400000, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x400000, 0);
   {
-    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
-        ElfFile::Create(file_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(file_path);
     ASSERT_TRUE(elf_file) << elf_file.error().message();
     const auto symbols = elf_file.value()->LoadSymbols();
     ASSERT_TRUE(symbols) << symbols.error().message();
@@ -150,8 +144,7 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   constexpr const uint64_t __free_start_addr = 0x41b840;
   constexpr const uint64_t __free_pc_addr = 0x41b854;
 
-  const FunctionInfo* function =
-      pdb.GetFunctionFromProgramCounter(__free_start_addr);
+  const FunctionInfo* function = pdb.GetFunctionFromProgramCounter(__free_start_addr);
   ASSERT_NE(function, nullptr);
   EXPECT_EQ(function->name(), "__free");
 
@@ -172,8 +165,7 @@ TEST(SymbolHelper, LoadSymbols) {
   symbol_info->set_source_file("file name");
   symbol_info->set_source_line(70);
 
-  std::shared_ptr<Module> module =
-      std::make_shared<Module>("module name", 0x40, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>("module name", 0x40, 0);
   module->LoadSymbols(module_symbols);
 
   ASSERT_NE(module->m_Pdb, nullptr);

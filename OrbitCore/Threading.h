@@ -47,8 +47,7 @@ typedef struct tagTHREADNAME_INFO {
 } THREADNAME_INFO;
 #pragma pack(pop)
 
-inline void SetThreadNameFallback(HANDLE thread,
-                                  const std::string& threadName) {
+inline void SetThreadNameFallback(HANDLE thread, const std::string& threadName) {
   THREADNAME_INFO info;
   info.dwType = 0x1000;
   info.szName = threadName.c_str();
@@ -57,8 +56,7 @@ inline void SetThreadNameFallback(HANDLE thread,
 #pragma warning(push)
 #pragma warning(disable : 6320 6322)
   __try {
-    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR),
-                   (ULONG_PTR*)&info);
+    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
   } __except (EXCEPTION_EXECUTE_HANDLER) {
   }
 #pragma warning(pop)
@@ -118,9 +116,7 @@ inline std::string GetThreadName(HANDLE thread) {
   return name;
 }
 
-inline std::string GetCurrentThreadName() {
-  return GetThreadName(GetCurrentThread());
-}
+inline std::string GetCurrentThreadName() { return GetThreadName(GetCurrentThread()); }
 
 #endif
 

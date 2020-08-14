@@ -17,17 +17,13 @@ class DisassemblyReport : public CodeReport {
                     std::shared_ptr<SamplingProfiler> profiler)
       : disasm_{std::move(disasm)},
         profiler_{std::move(profiler)},
-        function_count_{(profiler_ == nullptr)
-                            ? 0
-                            : profiler_->GetCountOfFunction(function_address)} {
-  }
+        function_count_{(profiler_ == nullptr) ? 0
+                                               : profiler_->GetCountOfFunction(function_address)} {}
 
   explicit DisassemblyReport(Disassembler disasm)
       : disasm_{std::move(disasm)}, profiler_{nullptr}, function_count_{0} {};
 
-  [[nodiscard]] uint32_t GetNumSamplesInFunction() const override {
-    return function_count_;
-  }
+  [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return function_count_; }
   [[nodiscard]] uint32_t GetNumSamples() const override {
     if (profiler_ == nullptr) {
       return 0;

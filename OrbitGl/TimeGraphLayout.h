@@ -29,14 +29,10 @@ class TimeGraphLayout {
   float GetBottomMargin() const;
   float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetVerticalMargin() const { return m_VerticalMargin; }
-  float GetSchedulerTrackOffset() const {
-    return m_SchedulerTrackOffset * scale_;
-  }
+  float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset * scale_; }
   float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks * scale_; }
   float GetSpaceBetweenCores() const { return m_SpaceBetweenCores * scale_; }
-  float GetSpaceBetweenTracksAndThread() const {
-    return m_SpaceBetweenTracksAndThread * scale_;
-  }
+  float GetSpaceBetweenTracksAndThread() const { return m_SpaceBetweenTracksAndThread * scale_; }
   float GetTextZ() const { return m_TextZ; }
   float GetTrackZ() const { return m_TrackZ; }
   float GetToolbarIconHeight() const { return m_ToolbarIconHeight; }

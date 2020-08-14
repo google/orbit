@@ -11,8 +11,7 @@ namespace LinuxTracing {
 
 using orbit_grpc_protos::CaptureOptions;
 
-void Tracer::Run(const CaptureOptions& capture_options,
-                 TracerListener* listener,
+void Tracer::Run(const CaptureOptions& capture_options, TracerListener* listener,
                  const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   pthread_setname_np(pthread_self(), "Tracer::Run");
   TracerThread session{capture_options};

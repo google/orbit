@@ -7,11 +7,10 @@
 
 #include <functional>
 
-#include "absl/container/flat_hash_map.h"
-
 #include "LiveFunctionsDataView.h"
 #include "Profiling.h"
 #include "TextBox.h"
+#include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
 class LiveFunctionsController {
@@ -31,8 +30,7 @@ class LiveFunctionsController {
   void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
 
   void SetAddIteratorCallback(
-      std::function<void(uint64_t, orbit_client_protos::FunctionInfo*)>
-          callback) {
+      std::function<void(uint64_t, orbit_client_protos::FunctionInfo*)> callback) {
     add_iterator_callback_ = callback;
   }
 
@@ -47,12 +45,10 @@ class LiveFunctionsController {
 
   LiveFunctionsDataView live_functions_data_view_;
 
-  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>
-      function_iterators_;
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> function_iterators_;
   absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
 
-  std::function<void(uint64_t, orbit_client_protos::FunctionInfo*)>
-      add_iterator_callback_;
+  std::function<void(uint64_t, orbit_client_protos::FunctionInfo*)> add_iterator_callback_;
 
   uint64_t next_iterator_id_ = 0;
 

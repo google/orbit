@@ -92,15 +92,13 @@ inline T ToLower(const T& a_Str) {
 
 namespace OrbitUtils {
 
-inline outcome::result<std::string> FileToString(
-    const std::filesystem::path& file_name) {
+inline outcome::result<std::string> FileToString(const std::filesystem::path& file_name) {
   std::ifstream file_stream(file_name);
   if (file_stream.fail()) {
     return outcome::failure(static_cast<std::errc>(errno));
   }
   return outcome::success(
-      std::string{std::istreambuf_iterator<char>{file_stream},
-                  std::istreambuf_iterator<char>{}});
+      std::string{std::istreambuf_iterator<char>{file_stream}, std::istreambuf_iterator<char>{}});
 }
 
 }  // namespace OrbitUtils
@@ -110,8 +108,7 @@ inline void Append(std::vector<T>& a_Dest, const std::vector<T>& a_Source) {
   a_Dest.insert(std::end(a_Dest), std::begin(a_Source), std::end(a_Source));
 }
 
-inline std::string Replace(const std::string& a_Subject,
-                           const std::string& search,
+inline std::string Replace(const std::string& a_Subject, const std::string& search,
                            const std::string& replace) {
   std::string subject = a_Subject;
   size_t pos = 0;
@@ -129,13 +126,11 @@ inline bool IsBlank(const std::string& a_Str) {
 
 std::string GetLastErrorAsString();
 
-inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size,
-                        uint32_t a_Width = 16) {
+inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16) {
   const auto* buffer = static_cast<const uint8_t*>(a_Buffer);
   std::stringstream buffer_string;
   for (size_t i = 0; i < a_Size; ++i) {
-    buffer_string << std::hex << std::setfill('0') << std::setw(2) << buffer[i]
-                  << " ";
+    buffer_string << std::hex << std::setfill('0') << std::setw(2) << buffer[i] << " ";
 
     if ((i + 1) % a_Width == 0) {
       buffer_string << std::endl;
@@ -163,8 +158,7 @@ inline std::string ToHexString(T a_Value) {
   return l_StringStream.str();
 }
 
-inline LONGLONG FileTimeDiffInMillis(const FILETIME& a_T0,
-                                     const FILETIME& a_T1) {
+inline LONGLONG FileTimeDiffInMillis(const FILETIME& a_T0, const FILETIME& a_T1) {
   __int64 i0 = (__int64(a_T0.dwHighDateTime) << 32) + a_T0.dwLowDateTime;
   __int64 i1 = (__int64(a_T1.dwHighDateTime) << 32) + a_T1.dwLowDateTime;
   return (i1 - i0) / 10000;
@@ -178,9 +172,8 @@ class CWindowsMessageToString {
 
 enum class EllipsisPosition { kMiddle };
 
-inline std::string ShortenStringWithEllipsis(
-    std::string_view text, size_t max_len,
-    EllipsisPosition pos = EllipsisPosition::kMiddle) {
+inline std::string ShortenStringWithEllipsis(std::string_view text, size_t max_len,
+                                             EllipsisPosition pos = EllipsisPosition::kMiddle) {
   // Parameter is mainly here to indicate how the util works,
   // and to be potentially extended later
   UNUSED(pos);
@@ -268,8 +261,7 @@ inline bool CompareDesc(const T& a, const T& b) {
 }
 
 template <>
-inline bool Compare<std::string>(const std::string& a, const std::string& b,
-                                 bool asc) {
+inline bool Compare<std::string>(const std::string& a, const std::string& b, bool asc) {
   return asc ? a < b : a > b;
 }
 
@@ -286,23 +278,19 @@ std::vector<std::pair<Key, Val> > ValueSort(
   }
 
   if (a_SortFunc)
-    std::sort(vec.begin(), vec.end(),
-              [&a_SortFunc](const PairType& a, const PairType& b) {
-                return a_SortFunc(a.second, b.second);
-              });
+    std::sort(vec.begin(), vec.end(), [&a_SortFunc](const PairType& a, const PairType& b) {
+      return a_SortFunc(a.second, b.second);
+    });
   else
     std::sort(vec.begin(), vec.end(),
-              [&a_SortFunc](const PairType& a, const PairType& b) {
-                return a.second < b.second;
-              });
+              [&a_SortFunc](const PairType& a, const PairType& b) { return a.second < b.second; });
 
   return vec;
 }
 
 template <class Key, class Val>
 std::vector<std::pair<Key, Val> > ValueSort(
-    std::map<Key, Val>& a_Map,
-    std::function<bool(const Val&, const Val&)> a_SortFunc = nullptr) {
+    std::map<Key, Val>& a_Map, std::function<bool(const Val&, const Val&)> a_SortFunc = nullptr) {
   typedef std::pair<Key, Val> PairType;
   std::vector<PairType> vec;
   vec.reserve(a_Map.size());
@@ -312,35 +300,34 @@ std::vector<std::pair<Key, Val> > ValueSort(
   }
 
   if (a_SortFunc)
-    std::sort(vec.begin(), vec.end(),
-              [&a_SortFunc](const PairType& a, const PairType& b) {
-                return a_SortFunc(a.second, b.second);
-              });
-  else
-    std::sort(vec.begin(), vec.end(), [](const PairType& a, const PairType& b) {
-      return a.second < b.second;
+    std::sort(vec.begin(), vec.end(), [&a_SortFunc](const PairType& a, const PairType& b) {
+      return a_SortFunc(a.second, b.second);
     });
+  else
+    std::sort(vec.begin(), vec.end(),
+              [](const PairType& a, const PairType& b) { return a.second < b.second; });
 
   return vec;
 }
 
 template <class Key, class Val>
-std::vector<std::pair<Key, Val> > ReverseValueSort(
-    std::unordered_map<Key, Val>& a_Map) {
-  std::function<bool(const Val&, const Val&)> sortFunc =
-      [](const Val& a, const Val& b) { return a > b; };
+std::vector<std::pair<Key, Val> > ReverseValueSort(std::unordered_map<Key, Val>& a_Map) {
+  std::function<bool(const Val&, const Val&)> sortFunc = [](const Val& a, const Val& b) {
+    return a > b;
+  };
   return ValueSort(a_Map, sortFunc);
 }
 
 template <class Key, class Val>
 std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
-  std::function<bool(const Val&, const Val&)> sortFunc =
-      [](const Val& a, const Val& b) { return a > b; };
+  std::function<bool(const Val&, const Val&)> sortFunc = [](const Val& a, const Val& b) {
+    return a > b;
+  };
   return ValueSort(a_Map, sortFunc);
 }
 
 std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
 
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
-                       uint64_t size, uint64_t* num_bytes_read);
+bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
+                       uint64_t* num_bytes_read);

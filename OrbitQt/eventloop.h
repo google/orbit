@@ -30,8 +30,7 @@ class EventLoop : public QObject {
   using ProcessEventsFlag = QEventLoop::ProcessEventsFlag;
   using ProcessEventsFlags = QEventLoop::ProcessEventsFlags;
 
-  outcome::result<int> exec(
-      ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
+  outcome::result<int> exec(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
     if (error_) {
       auto error = error_.value();
       error_ = std::nullopt;
@@ -61,9 +60,7 @@ class EventLoop : public QObject {
   bool processEvents(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
     return loop_.processEvents(flags);
   }
-  void processEvents(ProcessEventsFlags flags, int maxTime) {
-    loop_.processEvents(flags, maxTime);
-  }
+  void processEvents(ProcessEventsFlags flags, int maxTime) { loop_.processEvents(flags, maxTime); }
 
  private:
   std::optional<std::error_code> error_;

@@ -12,15 +12,13 @@
 class TimeGraph;
 class GlCanvas;
 
-class TriangleToggle : public Pickable,
-                       public std::enable_shared_from_this<TriangleToggle> {
+class TriangleToggle : public Pickable, public std::enable_shared_from_this<TriangleToggle> {
  public:
   enum class State { kInactive, kExpanded, kCollapsed };
   enum class InitialStateUpdate { kKeepInitialState, kReplaceInitialState };
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
-  explicit TriangleToggle(State initial_state, StateChangeHandler handler,
-                          TimeGraph* time_graph);
+  explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph);
   virtual ~TriangleToggle() = default;
 
   TriangleToggle() = delete;
@@ -35,8 +33,8 @@ class TriangleToggle : public Pickable,
   void OnRelease() override;
 
   State GetState() const { return state_; }
-  void SetState(State state, InitialStateUpdate update_initial_state =
-                                 InitialStateUpdate::kKeepInitialState);
+  void SetState(State state,
+                InitialStateUpdate update_initial_state = InitialStateUpdate::kKeepInitialState);
   void ResetToInitialState() { state_ = initial_state_; }
   bool IsCollapsed() const { return state_ == State::kCollapsed; }
   bool IsExpanded() const { return state_ == State::kExpanded; }

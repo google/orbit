@@ -16,8 +16,7 @@ namespace orbit_service {
 class ProcessList {
  public:
   [[nodiscard]] ErrorMessageOr<void> Refresh();
-  [[nodiscard]] const std::vector<orbit_grpc_protos::ProcessInfo>&
-  GetProcesses() {
+  [[nodiscard]] const std::vector<orbit_grpc_protos::ProcessInfo>& GetProcesses() {
     return processes_;
   }
 

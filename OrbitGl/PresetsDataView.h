@@ -16,8 +16,8 @@ class PresetsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnSessionName; }
-  std::vector<std::string> GetContextMenu(
-      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::vector<std::string> GetContextMenu(int clicked_index,
+                                          const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Presets"; }
@@ -26,15 +26,12 @@ class PresetsDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
 
-  void SetPresets(
-      const std::vector<std::shared_ptr<orbit_client_protos::PresetFile>>&
-          presets);
+  void SetPresets(const std::vector<std::shared_ptr<orbit_client_protos::PresetFile>>& presets);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  const std::shared_ptr<orbit_client_protos::PresetFile>& GetPreset(
-      unsigned int row) const;
+  const std::shared_ptr<orbit_client_protos::PresetFile>& GetPreset(unsigned int row) const;
 
   std::vector<std::shared_ptr<orbit_client_protos::PresetFile>> presets_;
 

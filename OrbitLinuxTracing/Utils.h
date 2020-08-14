@@ -31,8 +31,7 @@ std::string GetThreadName(pid_t tid);
 
 int GetNumCores();
 
-std::optional<std::string> ExtractCpusetFromCgroup(
-    const std::string& cgroup_content);
+std::optional<std::string> ExtractCpusetFromCgroup(const std::string& cgroup_content);
 
 std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content);
 
@@ -41,8 +40,7 @@ std::vector<int> GetCpusetCpus(pid_t pid);
 // Looks up the tracepoint id for the given category (example: "sched")
 // and name (example: "sched_waking"). Returns the tracepoint id or
 // -1 in case of any errors.
-int GetTracepointId(const char* tracepoint_category,
-                    const char* tracepoint_name);
+int GetTracepointId(const char* tracepoint_category, const char* tracepoint_name);
 
 uint64_t GetMaxOpenFilesHardLimit();
 

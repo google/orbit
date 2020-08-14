@@ -18,9 +18,7 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
   m_Color = Color(0, 255, 0, 255);
 }
 
-std::string EventTrack::GetTooltip() const {
-  return "Left-click and drag to select samples";
-}
+std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
 
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
@@ -29,9 +27,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // have a tooltip. For picking, we want to draw the event bar over them if
   // handling a click, and underneath otherwise.
   // This simulates "click-through" behavior.
-  const float eventBarZ = picking_mode == PickingMode::kClick
-                              ? GlCanvas::Z_VALUE_EVENT_BAR_PICKING
-                              : GlCanvas::Z_VALUE_EVENT_BAR;
+  const float eventBarZ = picking_mode == PickingMode::kClick ? GlCanvas::Z_VALUE_EVENT_BAR_PICKING
+                                                              : GlCanvas::Z_VALUE_EVENT_BAR;
   Color color = m_Color;
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
   batcher->AddBox(box, color, shared_from_this());
@@ -45,10 +42,9 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color,
+  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color, shared_from_this());
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR, color,
                    shared_from_this());
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR,
-                   color, shared_from_this());
 
   if (m_Picked) {
     Vec2& from = m_MousePos[0];
@@ -67,8 +63,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   m_Canvas = canvas;
 }
 
-void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                  PickingMode picking_mode) {
+void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::Z_VALUE_EVENT;
@@ -95,8 +90,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
     // Draw selected events
     Color selectedColor[2];
     Fill(selectedColor, kGreenSelection);
-    for (const CallstackEvent& event :
-         time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
+    for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), m_Pos[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
     }
@@ -113,11 +107,9 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                  m_Pos[1] - track_height + 1);
         Vec2 size(kPickingBoxWidth, track_height);
         auto user_data = std::make_unique<PickingUserData>(
-            nullptr,
-            [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+            nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
         user_data->custom_data_ = &pair.second;
-        batcher->AddShadedBox(pos, size, z, kGreenSelection,
-                              std::move(user_data));
+        batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
       }
     }
   }
@@ -129,9 +121,7 @@ void EventTrack::SetPos(float a_X, float a_Y) {
   m_ThreadName.SetSize(Vec2(m_Size[0] * 0.3f, m_Size[1]));
 }
 
-void EventTrack::SetSize(float a_SizeX, float a_SizeY) {
-  m_Size = Vec2(a_SizeX, a_SizeY);
-}
+void EventTrack::SetSize(float a_SizeX, float a_SizeY) { m_Size = Vec2(a_SizeX, a_SizeY); }
 
 void EventTrack::OnPick(int a_X, int a_Y) {
   Capture::GSelectedThreadId = m_ThreadId;
@@ -168,18 +158,15 @@ bool EventTrack::IsEmpty() const {
   return callstacks.empty();
 }
 
-static std::string SafeGetFormattedFunctionName(uint64_t addr,
-                                                int max_line_length) {
-  const std::string& function_name =
-      Capture::GSamplingProfiler->GetFunctionNameByAddress(addr);
+static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
+  const std::string& function_name = Capture::GSamplingProfiler->GetFunctionNameByAddress(addr);
   if (function_name == SamplingProfiler::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
   }
 
   std::string fn_name =
       max_line_length >= 0
-          ? ShortenStringWithEllipsis(function_name,
-                                      static_cast<size_t>(max_line_length))
+          ? ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_line_length))
           : function_name;
   // Simple HTML escaping
   fn_name = Replace(fn_name, "&", "&amp;");
@@ -188,9 +175,9 @@ static std::string SafeGetFormattedFunctionName(uint64_t addr,
   return fn_name;
 };
 
-static std::string FormatCallstackForTooltip(
-    std::shared_ptr<CallStack> callstack, int max_line_length = 80,
-    int max_lines = 20, int bottom_n_lines = 5) {
+static std::string FormatCallstackForTooltip(std::shared_ptr<CallStack> callstack,
+                                             int max_line_length = 80, int max_lines = 20,
+                                             int bottom_n_lines = 5) {
   std::string result;
   int size = static_cast<int>(callstack->GetFramesCount());
   if (max_lines <= 0) {
@@ -201,44 +188,37 @@ static std::string FormatCallstackForTooltip(
 
   for (int i = 0; i < top_n; ++i) {
     result =
-        result + "<br/>" +
-        SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
+        result + "<br/>" + SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
     result =
-        result + "<br/>" +
-        SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
+        result + "<br/>" + SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
   }
 
   return result;
 }
 
 std::string EventTrack::GetSampleTooltip(PickingId id) const {
-  static const std::string unknown_return_text =
-      "Function call information missing";
+  static const std::string unknown_return_text = "Function call information missing";
 
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
   if (!user_data || !user_data->custom_data_) {
     return unknown_return_text;
   }
 
-  CallstackEvent* callstack_event =
-      static_cast<CallstackEvent*>(user_data->custom_data_);
-  auto callstack = Capture::GSamplingProfiler->GetCallStack(
-      callstack_event->callstack_hash());
+  CallstackEvent* callstack_event = static_cast<CallstackEvent*>(user_data->custom_data_);
+  auto callstack = Capture::GSamplingProfiler->GetCallStack(callstack_event->callstack_hash());
 
   if (!callstack) {
     return unknown_return_text;
   }
 
-  std::string function_name =
-      SafeGetFormattedFunctionName(callstack->GetFrame(0), -1);
+  std::string function_name = SafeGetFormattedFunctionName(callstack->GetFrame(0), -1);
   std::string result = absl::StrFormat(
-      "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>",
-      function_name.c_str());
+      "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>", function_name.c_str());
   result += FormatCallstackForTooltip(callstack);
   return result +
          "<br/><br/><i>To select samples, click the bar & drag across multiple "

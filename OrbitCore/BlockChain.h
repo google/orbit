@@ -19,8 +19,7 @@ class BlockIterator;
 template <class T, uint32_t Size>
 class Block final {
  public:
-  explicit Block(Block<T, Size>* prev)
-      : prev_(prev), next_(nullptr), size_(0) {}
+  explicit Block(Block<T, Size>* prev) : prev_(prev), next_(nullptr), size_(0) {}
 
   [[nodiscard]] bool HasNext() const { return next_ != nullptr; }
   [[nodiscard]] const Block<T, Size>* next() const { return next_; }
@@ -110,9 +109,7 @@ class BlockIterator final {
 template <class T, uint32_t BlockSize>
 class BlockChain final {
  public:
-  BlockChain() : size_(0) {
-    root_ = current_ = new Block<T, BlockSize>(nullptr);
-  }
+  BlockChain() : size_(0) { root_ = current_ = new Block<T, BlockSize>(nullptr); }
 
   ~BlockChain() {
     // Find last block in chain

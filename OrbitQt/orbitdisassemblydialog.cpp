@@ -20,6 +20,5 @@ void OrbitDisassemblyDialog::SetText(std::string a_Text) {
 }
 
 void OrbitDisassemblyDialog::SetDisassemblyReport(DisassemblyReport report) {
-  ui->plainTextEdit->SetReport(
-      std::make_unique<DisassemblyReport>(std::move(report)));
+  ui->plainTextEdit->SetReport(std::make_unique<DisassemblyReport>(std::move(report)));
 }

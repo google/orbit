@@ -56,9 +56,7 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   void ConnectToServer(OrbitSsh::Credentials creds);
   void Disconnect();
 
-  OrbitSsh::Session* GetRawSession() {
-    return session_ ? &session_.value() : nullptr;
-  }
+  OrbitSsh::Session* GetRawSession() { return session_ ? &session_.value() : nullptr; }
 
   void HandleEagain();
 
@@ -82,8 +80,7 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
     QSocketNotifier write;
 
     explicit NotifierSet(qintptr socket)
-        : read(socket, QSocketNotifier::Read),
-          write(socket, QSocketNotifier::Write) {}
+        : read(socket, QSocketNotifier::Read), write(socket, QSocketNotifier::Write) {}
   };
 
   std::optional<NotifierSet> notifiers_;

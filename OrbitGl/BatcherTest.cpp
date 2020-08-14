@@ -20,15 +20,9 @@ class MockBatcher : public Batcher {
     drawn_box_colors_.clear();
   }
 
-  const std::vector<Color>& GetDrawnLineColors() const {
-    return drawn_line_colors_;
-  }
-  const std::vector<Color>& GetDrawnTriangleColors() const {
-    return drawn_triangle_colors_;
-  }
-  const std::vector<Color>& GetDrawnBoxColors() const {
-    return drawn_box_colors_;
-  }
+  const std::vector<Color>& GetDrawnLineColors() const { return drawn_line_colors_; }
+  const std::vector<Color>& GetDrawnTriangleColors() const { return drawn_triangle_colors_; }
+  const std::vector<Color>& GetDrawnBoxColors() const { return drawn_box_colors_; }
 
   // Simulate drawing by simple appending all colors to internal
   // buffers. Only a single color per element will be appended
@@ -57,21 +51,18 @@ class MockBatcher : public Batcher {
         ++it;
       }
     } else {
-      for (auto it = line_buffer_.colors_.begin();
-           it != line_buffer_.colors_.end();) {
+      for (auto it = line_buffer_.colors_.begin(); it != line_buffer_.colors_.end();) {
         drawn_line_colors_.push_back(*it);
         ++it;
         ++it;
       }
-      for (auto it = triangle_buffer_.colors_.begin();
-           it != triangle_buffer_.colors_.end();) {
+      for (auto it = triangle_buffer_.colors_.begin(); it != triangle_buffer_.colors_.end();) {
         drawn_triangle_colors_.push_back(*it);
         ++it;
         ++it;
         ++it;
       }
-      for (auto it = box_buffer_.colors_.begin();
-           it != box_buffer_.colors_.end();) {
+      for (auto it = box_buffer_.colors_.begin(); it != box_buffer_.colors_.end();) {
         drawn_box_colors_.push_back(*it);
         ++it;
         ++it;
@@ -87,8 +78,8 @@ class MockBatcher : public Batcher {
   mutable std::vector<Color> drawn_box_colors_;
 };
 
-void ExpectDraw(MockBatcher& batcher, uint32_t line_count,
-                uint32_t triangle_count, uint32_t box_count) {
+void ExpectDraw(MockBatcher& batcher, uint32_t line_count, uint32_t triangle_count,
+                uint32_t box_count) {
   batcher.ResetMockDrawCounts();
   batcher.Draw();
   EXPECT_EQ(batcher.GetDrawnLineColors().size(), line_count);
@@ -103,8 +94,7 @@ TEST(Batcher, SimpleElementsDrawing) {
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
   ExpectDraw(batcher, 1, 0, 0);
   EXPECT_EQ(batcher.GetDrawnLineColors()[0], Color(255, 255, 255, 255));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                      Color(0, 255, 0, 255));
+  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255));
   ExpectDraw(batcher, 1, 1, 0);
   EXPECT_EQ(batcher.GetDrawnTriangleColors()[0], Color(0, 255, 0, 255));
   batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
@@ -120,20 +110,17 @@ TEST(Batcher, PickingElementsDrawing) {
   PickingManager pm;
 
   ExpectDraw(batcher, 0, 0, 0);
-  EXPECT_DEATH(batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0,
-                               Color(255, 255, 255, 255), pickable),
+  EXPECT_DEATH(batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable),
                "nullptr");
   batcher.SetPickingManager(&pm);
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
-                  pickable);
+  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable);
   ExpectDraw(batcher, 1, 0, 0);
   batcher.Reset();
   ExpectDraw(batcher, 0, 0, 0);
 }
 
 template <typename T>
-void ExpectCustomDataEq(const MockBatcher& batcher, const Color& rendered_color,
-                        const T& value) {
+void ExpectCustomDataEq(const MockBatcher& batcher, const Color& rendered_color, const T& value) {
   PickingId id = MockRenderPickingColor(rendered_color);
   const PickingUserData* rendered_data = batcher.GetUserData(id);
   EXPECT_NE(rendered_data, nullptr);
@@ -156,23 +143,18 @@ TEST(Batcher, PickingSimpleElements) {
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
-                  std::move(line_user_data));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                      Color(0, 255, 0, 255), std::move(triangle_user_data));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
-                 std::move(box_user_data));
+  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
+  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
+                      std::move(triangle_user_data));
+  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
 
   batcher.Draw(true);
-  ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0],
-                     line_custom_data);
-  ExpectCustomDataEq(batcher, batcher.GetDrawnTriangleColors()[0],
-                     triangle_custom_data);
+  ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0], line_custom_data);
+  ExpectCustomDataEq(batcher, batcher.GetDrawnTriangleColors()[0], triangle_custom_data);
   ExpectCustomDataEq(batcher, batcher.GetDrawnBoxColors()[0], box_custom_data);
 }
 
-void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color,
-                      PickingManager& pm,
+void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color, PickingManager& pm,
                       std::shared_ptr<const Pickable> pickable) {
   PickingId id = MockRenderPickingColor(rendered_color);
   const PickingUserData* rendered_data = batcher.GetUserData(id);
@@ -184,23 +166,18 @@ void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color,
 TEST(Batcher, PickingPickables) {
   PickingManager pm;
   MockBatcher batcher(BatcherId::kUi, &pm);
-  std::shared_ptr<PickableMock> line_pickable =
-      std::make_shared<PickableMock>();
-  std::shared_ptr<PickableMock> triangle_pickable =
-      std::make_shared<PickableMock>();
+  std::shared_ptr<PickableMock> line_pickable = std::make_shared<PickableMock>();
+  std::shared_ptr<PickableMock> triangle_pickable = std::make_shared<PickableMock>();
   std::shared_ptr<PickableMock> box_pickable = std::make_shared<PickableMock>();
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
-                  line_pickable);
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                      Color(0, 255, 0, 255), triangle_pickable);
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
-                 box_pickable);
+  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), line_pickable);
+  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
+                      triangle_pickable);
+  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), box_pickable);
 
   batcher.Draw(true);
   ExpectPickableEq(batcher, batcher.GetDrawnLineColors()[0], pm, line_pickable);
-  ExpectPickableEq(batcher, batcher.GetDrawnTriangleColors()[0], pm,
-                   triangle_pickable);
+  ExpectPickableEq(batcher, batcher.GetDrawnTriangleColors()[0], pm, triangle_pickable);
   ExpectPickableEq(batcher, batcher.GetDrawnBoxColors()[0], pm, box_pickable);
 }
 

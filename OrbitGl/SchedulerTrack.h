@@ -23,10 +23,9 @@ class SchedulerTrack : public TimerTrack {
   [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 
  protected:
-  [[nodiscard]] bool IsTimerActive(
-      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
-                      bool is_selected) const override;
+                                    bool is_selected) const override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 };
 

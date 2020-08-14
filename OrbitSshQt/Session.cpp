@@ -21,10 +21,8 @@ outcome::result<void> Session::startup() {
       OUTCOME_TRY(socket, OrbitSsh::Socket::Create());
       socket_ = std::move(socket);
       notifiers_.emplace(socket_->GetFileDescriptor());
-      QObject::connect(&notifiers_->read, &QSocketNotifier::activated, this,
-                       &Session::OnEvent);
-      QObject::connect(&notifiers_->write, &QSocketNotifier::activated, this,
-                       &Session::OnEvent);
+      QObject::connect(&notifiers_->read, &QSocketNotifier::activated, this, &Session::OnEvent);
+      QObject::connect(&notifiers_->write, &QSocketNotifier::activated, this, &Session::OnEvent);
       SetState(State::kSocketCreated);
       ABSL_FALLTHROUGH_INTENDED;
     }
@@ -46,14 +44,13 @@ outcome::result<void> Session::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kHandshaked: {
-      OUTCOME_TRY(session_->MatchKnownHosts(credentials_.addr_and_port,
-                                            credentials_.known_hosts_path));
+      OUTCOME_TRY(
+          session_->MatchKnownHosts(credentials_.addr_and_port, credentials_.known_hosts_path));
       SetState(State::kMatchedKnownHosts);
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kMatchedKnownHosts: {
-      OUTCOME_TRY(
-          session_->Authenticate(credentials_.user, credentials_.key_path));
+      OUTCOME_TRY(session_->Authenticate(credentials_.user, credentials_.key_path));
       SetState(State::kConnected);
       break;
     }
@@ -106,8 +103,7 @@ outcome::result<void> Session::run() {
 
 void Session::HandleEagain() {
   if (notifiers_) {
-    const int flags =
-        libssh2_session_block_directions(session_->GetRawSessionPtr());
+    const int flags = libssh2_session_block_directions(session_->GetRawSessionPtr());
 
     // When any of libssh2 functions return LIBSSH2_ERROR_EAGAIN an application
     // should wait for the socket to have data available for reading or writing.

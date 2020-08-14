@@ -30,16 +30,14 @@ class ServiceDeployManager : public QObject {
     uint16_t grpc_port;
   };
 
-  explicit ServiceDeployManager(
-      DeploymentConfiguration deployment_configuration,
-      OrbitSsh::Context* context, OrbitSsh::Credentials creds,
-      const GrpcPort& grpc_port, QObject* parent = nullptr);
+  explicit ServiceDeployManager(DeploymentConfiguration deployment_configuration,
+                                OrbitSsh::Context* context, OrbitSsh::Credentials creds,
+                                const GrpcPort& grpc_port, QObject* parent = nullptr);
 
   outcome::result<GrpcPort> Exec();
 
   // This method copies remote source file to local destination.
-  ErrorMessageOr<void> CopyFileToLocal(std::string_view source,
-                                       std::string_view destination);
+  ErrorMessageOr<void> CopyFileToLocal(std::string_view source, std::string_view destination);
 
   void Shutdown();
   void Cancel();
@@ -68,15 +66,11 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> InstallOrbitServicePackage();
   outcome::result<void> StartOrbitService();
   outcome::result<void> StartOrbitServicePrivileged();
-  outcome::result<uint16_t> StartTunnel(
-      std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port);
-  outcome::result<std::unique_ptr<OrbitSshQt::SftpChannel>> StartSftpChannel(
-      EventLoop* loop);
-  outcome::result<void> StopSftpChannel(EventLoop* loop,
-                                        OrbitSshQt::SftpChannel* sftp_channel);
-  outcome::result<void> CopyFileToRemote(
-      const std::string& source, const std::string& dest,
-      OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode);
+  outcome::result<uint16_t> StartTunnel(std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port);
+  outcome::result<std::unique_ptr<OrbitSshQt::SftpChannel>> StartSftpChannel(EventLoop* loop);
+  outcome::result<void> StopSftpChannel(EventLoop* loop, OrbitSshQt::SftpChannel* sftp_channel);
+  outcome::result<void> CopyFileToRemote(const std::string& source, const std::string& dest,
+                                         OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode);
 
   void StartWatchdog();
   void StopSftpChannel();
@@ -88,34 +82,28 @@ class ServiceDeployManager : public QObject {
 
   template <typename Func>
   [[nodiscard]] OrbitSshQt::ScopedConnection ConnectQuitHandler(
-      const typename QtPrivate::FunctionPointer<Func>::Object* sender,
-      Func signal) {
+      const typename QtPrivate::FunctionPointer<Func>::Object* sender, Func signal) {
     return ConnectQuitHandler(&loop_, sender, signal);
   }
 
   template <typename Func>
   [[nodiscard]] OrbitSshQt::ScopedConnection ConnectQuitHandler(
-      EventLoop* loop,
-      const typename QtPrivate::FunctionPointer<Func>::Object* sender,
+      EventLoop* loop, const typename QtPrivate::FunctionPointer<Func>::Object* sender,
       Func signal) {
-    return OrbitSshQt::ScopedConnection{
-        QObject::connect(sender, signal, loop, &EventLoop::quit)};
+    return OrbitSshQt::ScopedConnection{QObject::connect(sender, signal, loop, &EventLoop::quit)};
   }
 
   template <typename Func>
   [[nodiscard]] OrbitSshQt::ScopedConnection ConnectErrorHandler(
-      const typename QtPrivate::FunctionPointer<Func>::Object* sender,
-      Func signal) {
+      const typename QtPrivate::FunctionPointer<Func>::Object* sender, Func signal) {
     return ConnectErrorHandler(&loop_, sender, signal);
   }
 
   template <typename Func>
   [[nodiscard]] OrbitSshQt::ScopedConnection ConnectErrorHandler(
-      EventLoop* loop,
-      const typename QtPrivate::FunctionPointer<Func>::Object* sender,
+      EventLoop* loop, const typename QtPrivate::FunctionPointer<Func>::Object* sender,
       Func signal) {
-    return OrbitSshQt::ScopedConnection{
-        QObject::connect(sender, signal, loop, &EventLoop::error)};
+    return OrbitSshQt::ScopedConnection{QObject::connect(sender, signal, loop, &EventLoop::error)};
   }
 };
 

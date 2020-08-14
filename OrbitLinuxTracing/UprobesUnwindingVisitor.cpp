@@ -20,13 +20,11 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
     return;
   }
 
-  return_address_manager_.PatchSample(
-      event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
-      event->GetStackData(), event->GetStackSize());
+  return_address_manager_.PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
+                                      event->GetStackData(), event->GetStackSize());
 
-  const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
-      unwinder_.Unwind(current_maps_.get(), event->GetRegisters(),
-                       event->GetStackData(), event->GetStackSize());
+  const std::vector<unwindstack::FrameData>& libunwindstack_callstack = unwinder_.Unwind(
+      current_maps_.get(), event->GetRegisters(), event->GetStackData(), event->GetStackSize());
 
   if (libunwindstack_callstack.empty()) {
     if (unwind_error_counter_ != nullptr) {
@@ -49,8 +47,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   sample.set_timestamp_ns(event->GetTimestamp());
 
   Callstack* callstack = sample.mutable_callstack();
-  for (const unwindstack::FrameData& libunwindstack_frame :
-       libunwindstack_callstack) {
+  for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_callstack) {
     AddressInfo address_info;
     address_info.set_absolute_address(libunwindstack_frame.pc);
     address_info.set_function_name(libunwindstack_frame.function_name);
@@ -71,9 +68,8 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  if (!return_address_manager_.PatchCallchain(
-          event->GetTid(), event->GetCallchain(), event->GetCallchainSize(),
-          current_maps_.get())) {
+  if (!return_address_manager_.PatchCallchain(event->GetTid(), event->GetCallchain(),
+                                              event->GetCallchainSize(), current_maps_.get())) {
     return;
   }
 
@@ -109,8 +105,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   // As we don't know the size of the call instruction, we subtract 1 from the
   // return address. This way we fall into the range of the call instruction.
   // Note: This is also done the same way in Libunwindstack.
-  for (uint64_t frame_index = 2; frame_index < event->GetCallchainSize();
-       ++frame_index) {
+  for (uint64_t frame_index = 2; frame_index < event->GetCallchainSize(); ++frame_index) {
     callstack->add_pcs(raw_callchain[frame_index] - 1);
   }
 
@@ -151,9 +146,8 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
   }
   uprobe_sps_ips_cpus.emplace_back(uprobe_sp, uprobe_ip, uprobe_cpu);
 
-  function_call_manager_.ProcessUprobes(
-      event->GetTid(), event->GetFunction()->VirtualAddress(),
-      event->GetTimestamp(), event->ring_buffer_record.regs);
+  function_call_manager_.ProcessUprobes(event->GetTid(), event->GetFunction()->VirtualAddress(),
+                                        event->GetTimestamp(), event->ring_buffer_record.regs);
 
   return_address_manager_.ProcessUprobes(event->GetTid(), event->GetSp(),
                                          event->GetReturnAddress());
@@ -169,9 +163,8 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
     uprobe_sps_ips_cpus.pop_back();
   }
 
-  std::optional<FunctionCall> function_call =
-      function_call_manager_.ProcessUretprobes(
-          event->GetTid(), event->GetTimestamp(), event->GetAx());
+  std::optional<FunctionCall> function_call = function_call_manager_.ProcessUretprobes(
+      event->GetTid(), event->GetTimestamp(), event->GetAx());
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }

@@ -89,7 +89,7 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip_arguments {
 struct __attribute__((__packed__)) perf_event_sample_stack_user {
   uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
   char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
-  uint64_t dyn_size; /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */
 };
 
 struct __attribute__((__packed__)) perf_event_sample_stack_user_8bytes {

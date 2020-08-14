@@ -85,14 +85,10 @@ OrbitCodeEditor::OrbitCodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
   //(QTextOption::NoWrap);
   this->setWordWrapMode(QTextOption::NoWrap);
 
-  connect(this, SIGNAL(blockCountChanged(int)), this,
-          SLOT(updateLineNumberAreaWidth(int)));
-  connect(this, SIGNAL(updateRequest(QRect, int)), this,
-          SLOT(updateLineNumberArea(QRect, int)));
-  connect(this, SIGNAL(updateRequest(QRect, int)), this,
-          SLOT(UpdateHeatMapArea(QRect, int)));
-  connect(this, SIGNAL(cursorPositionChanged()), this,
-          SLOT(highlightCurrentLine()));
+  connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
+  connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(updateLineNumberArea(QRect, int)));
+  connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(UpdateHeatMapArea(QRect, int)));
+  connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
 
   updateLineNumberAreaWidth(0);
   highlightCurrentLine();
@@ -184,8 +180,8 @@ bool OrbitCodeEditor::loadCode(std::string a_Msg) {
       int lineNumber = atoi(tokens[2].c_str());
       gotoLine(lineNumber);
     } else {
-      std::string msg = absl::StrFormat("Could not find %s (%s)\n",
-                                        tokens[1].c_str(), tokens[2].c_str());
+      std::string msg =
+          absl::StrFormat("Could not find %s (%s)\n", tokens[1].c_str(), tokens[2].c_str());
       msg +=
           "Please modify FileMapping.txt shown below if the source code is "
           "available at another location.";
@@ -259,10 +255,9 @@ void OrbitCodeEditor::resizeEvent(QResizeEvent* e) {
   QPlainTextEdit::resizeEvent(e);
 
   QRect cr = contentsRect();
-  lineNumberArea->setGeometry(QRect(cr.left() + HeatMapAreaWidth(), cr.top(),
-                                    lineNumberAreaWidth(), cr.height()));
-  heatMapArea->setGeometry(
-      QRect(cr.left(), cr.top(), HeatMapAreaWidth(), cr.height()));
+  lineNumberArea->setGeometry(
+      QRect(cr.left() + HeatMapAreaWidth(), cr.top(), lineNumberAreaWidth(), cr.height()));
+  heatMapArea->setGeometry(QRect(cr.left(), cr.top(), HeatMapAreaWidth(), cr.height()));
 }
 
 bool OrbitCodeEditor::eventFilter(QObject* object, QEvent* event) {
@@ -337,9 +332,8 @@ void OrbitCodeEditor::saveFileMap() {
   }
 }
 
-void OrbitCodeEditor::HighlightWord(
-    const std::string& a_Text, const QColor& a_Color,
-    QList<QTextEdit::ExtraSelection>& extraSelections) {
+void OrbitCodeEditor::HighlightWord(const std::string& a_Text, const QColor& a_Color,
+                                    QList<QTextEdit::ExtraSelection>& extraSelections) {
   QString searchString(QString::fromStdString(a_Text));
   QTextDocument* document = this->document();
   QTextCursor highlightCursor(document);
@@ -348,8 +342,7 @@ void OrbitCodeEditor::HighlightWord(
   QTextCharFormat plainFormat(highlightCursor.charFormat());
 
   while (!highlightCursor.isNull() && !highlightCursor.atEnd()) {
-    highlightCursor = document->find(searchString, highlightCursor,
-                                     QTextDocument::FindWholeWords);
+    highlightCursor = document->find(searchString, highlightCursor, QTextDocument::FindWholeWords);
 
     if (!highlightCursor.isNull()) {
       QTextEdit::ExtraSelection wordSelection;
@@ -401,8 +394,7 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
   //![extraAreaPaintEvent_1]
   QTextBlock block = firstVisibleBlock();
   int blockNumber = block.blockNumber();
-  int top = static_cast<int>(
-      blockBoundingGeometry(block).translated(contentOffset()).top());
+  int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
   int bottom = top + static_cast<int>(blockBoundingRect(block).height());
   //![extraAreaPaintEvent_1]
 
@@ -411,8 +403,8 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
     if (block.isVisible() && bottom >= event->rect().top()) {
       QString number = QString::number(blockNumber + 1);
       painter.setPen(QColor(43, 145, 175));
-      painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(),
-                       Qt::AlignRight, number);
+      painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight,
+                       number);
     }
 
     block = block.next();
@@ -438,8 +430,7 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
   //![extraAreaPaintEvent_1]
   QTextBlock block = firstVisibleBlock();
   int blockNumber = block.blockNumber();
-  int top = static_cast<int>(
-      blockBoundingGeometry(block).translated(contentOffset()).top());
+  int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
   int bottom = top + static_cast<int>(blockBoundingRect(block).height());
   //![extraAreaPaintEvent_1]
 
@@ -448,8 +439,7 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
     if (block.isVisible() && bottom >= event->rect().top()) {
       // % of hits in this function from 0.0 to 1.0
       const double hit_ratio =
-          static_cast<double>(report_->GetNumSamplesAtLine(blockNumber)) /
-          function_sample_count;
+          static_cast<double>(report_->GetNumSamplesAtLine(blockNumber)) / function_sample_count;
       // The sqrt maps 0.0 to 0.0 and 1.0 to 1.0 but makes small rations larger,
       // such that in the ui you can still see that the instruction was actually
       // hit in the sampling.
@@ -574,8 +564,7 @@ void Highlighter::highlightBlock(const QString& text) {
 
   //! [9]
   int startIndex = 0;
-  if (previousBlockState() != 1)
-    startIndex = commentStartExpression.indexIn(text);
+  if (previousBlockState() != 1) startIndex = commentStartExpression.indexIn(text);
 
   //! [9] //! [10]
   while (startIndex >= 0) {
@@ -586,11 +575,9 @@ void Highlighter::highlightBlock(const QString& text) {
       setCurrentBlockState(1);
       commentLength = text.length() - startIndex;
     } else {
-      commentLength =
-          endIndex - startIndex + commentEndExpression.matchedLength();
+      commentLength = endIndex - startIndex + commentEndExpression.matchedLength();
     }
     setFormat(startIndex, commentLength, multiLineCommentFormat);
-    startIndex =
-        commentStartExpression.indexIn(text, startIndex + commentLength);
+    startIndex = commentStartExpression.indexIn(text, startIndex + commentLength);
   }
 }

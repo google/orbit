@@ -4,8 +4,7 @@
 
 #include "TopDownView.h"
 
-TopDownFunction* TopDownInternalNode::GetFunctionOrNull(
-    uint64_t function_absolute_address) {
+TopDownFunction* TopDownInternalNode::GetFunctionOrNull(uint64_t function_absolute_address) {
   auto top_down_function_it = function_nodes_.find(function_absolute_address);
   if (top_down_function_it == function_nodes_.end()) {
     return nullptr;
@@ -13,12 +12,11 @@ TopDownFunction* TopDownInternalNode::GetFunctionOrNull(
   return &top_down_function_it->second;
 }
 
-TopDownFunction* TopDownInternalNode::AddAndGetFunction(
-    uint64_t function_absolute_address, std::string function_name) {
+TopDownFunction* TopDownInternalNode::AddAndGetFunction(uint64_t function_absolute_address,
+                                                        std::string function_name) {
   function_nodes_.insert_or_assign(
       function_absolute_address,
-      TopDownFunction{function_absolute_address, std::move(function_name),
-                      this});
+      TopDownFunction{function_absolute_address, std::move(function_name), this});
   return &function_nodes_.at(function_absolute_address);
 }
 
@@ -30,18 +28,15 @@ TopDownThread* TopDownView::GetThreadOrNull(int32_t thread_id) {
   return &top_down_thread_it->second;
 }
 
-TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id,
-                                            std::string thread_name) {
-  thread_nodes_.insert_or_assign(
-      thread_id, TopDownThread{thread_id, std::move(thread_name), this});
+TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id, std::string thread_name) {
+  thread_nodes_.insert_or_assign(thread_id, TopDownThread{thread_id, std::move(thread_name), this});
   return &thread_nodes_.at(thread_id);
 }
 
 [[nodiscard]] static TopDownFunction* GetOrCreateFunctionNode(
     TopDownInternalNode* current_thread_or_function, uint64_t frame,
     const std::string& function_name) {
-  TopDownFunction* function_node =
-      current_thread_or_function->GetFunctionOrNull(frame);
+  TopDownFunction* function_node = current_thread_or_function->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
     std::string formatted_function_name;
     if (function_name != SamplingProfiler::kUnknownFunctionOrModuleName) {
@@ -49,24 +44,23 @@ TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id,
     } else {
       formatted_function_name = absl::StrFormat("[unknown@%#llx]", frame);
     }
-    function_node = current_thread_or_function->AddAndGetFunction(
-        frame, std::move(formatted_function_name));
+    function_node =
+        current_thread_or_function->AddAndGetFunction(frame, std::move(formatted_function_name));
   }
   return function_node;
 }
 
-static void AddCallstackToTopDownThread(
-    TopDownThread* thread_node, const CallStack& resolved_callstack,
-    uint64_t callstack_sample_count,
-    const SamplingProfiler& sampling_profiler) {
+static void AddCallstackToTopDownThread(TopDownThread* thread_node,
+                                        const CallStack& resolved_callstack,
+                                        uint64_t callstack_sample_count,
+                                        const SamplingProfiler& sampling_profiler) {
   TopDownInternalNode* current_thread_or_function = thread_node;
   for (auto frame_it = resolved_callstack.GetFrames().crbegin();
        frame_it != resolved_callstack.GetFrames().crend(); ++frame_it) {
     uint64_t frame = *frame_it;
-    const std::string& function_name =
-        sampling_profiler.GetFunctionNameByAddress(frame);
-    TopDownFunction* function_node = GetOrCreateFunctionNode(
-        current_thread_or_function, frame, function_name);
+    const std::string& function_name = sampling_profiler.GetFunctionNameByAddress(frame);
+    TopDownFunction* function_node =
+        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
@@ -80,8 +74,7 @@ static void AddCallstackToTopDownThread(
     std::string thread_name;
     if (tid == SamplingProfiler::kAllThreadsFakeTid) {
       thread_name = process_name;
-    } else if (auto thread_name_it = thread_names.find(tid);
-               thread_name_it != thread_names.end()) {
+    } else if (auto thread_name_it = thread_names.find(tid); thread_name_it != thread_names.end()) {
       thread_name = thread_name_it->second;
     }
     thread_node = top_down_view->AddAndGetThread(tid, std::move(thread_name));
@@ -93,14 +86,12 @@ std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
     const SamplingProfiler& sampling_profiler, const std::string& process_name,
     const absl::flat_hash_map<int32_t, std::string>& thread_names) {
   auto top_down_view = std::make_unique<TopDownView>();
-  for (const ThreadSampleData* thread_sample_data :
-       sampling_profiler.GetThreadSampleData()) {
+  for (const ThreadSampleData* thread_sample_data : sampling_profiler.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data->thread_id;
-    TopDownThread* thread_node = GetOrCreateThreadNode(
-        top_down_view.get(), tid, process_name, thread_names);
+    TopDownThread* thread_node =
+        GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
 
-    for (const auto& callstack_id_and_count :
-         thread_sample_data->callstack_count) {
+    for (const auto& callstack_id_and_count : thread_sample_data->callstack_count) {
       const CallStack& resolved_callstack =
           sampling_profiler.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
@@ -110,8 +101,7 @@ std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
       }
       thread_node->IncreaseSampleCount(sample_count);
 
-      AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count,
-                                  sampling_profiler);
+      AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count, sampling_profiler);
     }
   }
   return top_down_view;

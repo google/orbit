@@ -36,8 +36,7 @@ std::optional<OpenGlVersion> DetectOpenGlVersion() {
     return std::nullopt;
   }
 
-  return OpenGlVersion{gl_context.format().majorVersion(),
-                       gl_context.format().minorVersion()};
+  return OpenGlVersion{gl_context.format().majorVersion(), gl_context.format().minorVersion()};
 }
 
 }  // namespace OrbitQt
