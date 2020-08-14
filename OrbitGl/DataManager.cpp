@@ -42,7 +42,7 @@ void DataManager::SelectFunction(uint64_t function_address) {
   selected_functions_.insert(function_address);
 }
 
-void DataManager::UnSelectFunction(uint64_t function_address) {
+void DataManager::DeselectFunction(uint64_t function_address) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(selected_functions_.contains(function_address));
   selected_functions_.erase(function_address);

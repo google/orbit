@@ -202,7 +202,7 @@ void LiveFunctionsDataView::OnContextMenu(
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
       FunctionInfo* function = GetFunction(i);
-      GOrbitApp->UnSelectFunction(*function);
+      GOrbitApp->DeselectFunction(*function);
     }
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::GTargetProcess->GetID();
@@ -304,7 +304,7 @@ void LiveFunctionsDataView::OnDataChanged() {
   for (const auto& pair : selected_functions) {
     functions_.push_back(pair.second);
     indices_[i] = i;
-    i++;
+    ++i;
   }
 
   DataView::OnDataChanged();

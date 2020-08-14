@@ -25,7 +25,7 @@ class DataManager final {
                          const std::vector<ModuleInfo>& module_infos);
 
   void SelectFunction(uint64_t function_address);
-  void UnSelectFunction(uint64_t function_address);
+  void DeselectFunction(uint64_t function_address);
   void ClearSelectedFunctions();
   void set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions);
 

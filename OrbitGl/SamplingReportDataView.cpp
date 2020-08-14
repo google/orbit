@@ -204,7 +204,7 @@ void SamplingReportDataView::OnContextMenu(
     }
   } else if (action == kMenuActionUnselect) {
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      GOrbitApp->UnSelectFunction(*function);
+      GOrbitApp->DeselectFunction(*function);
     }
   } else if (action == kMenuActionLoadSymbols) {
     std::vector<std::shared_ptr<Module>> modules;

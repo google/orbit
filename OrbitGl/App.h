@@ -224,7 +224,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   // TODO(kuebler): Move them to a separate controler at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
-  void UnSelectFunction(const orbit_client_protos::FunctionInfo& func);
+  void DeselectFunction(const orbit_client_protos::FunctionInfo& func);
   void ClearSelectedFunctions();
   [[nodiscard]] bool IsFunctionSelected(
       const orbit_client_protos::FunctionInfo& func) const;

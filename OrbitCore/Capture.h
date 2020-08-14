@@ -28,7 +28,7 @@ class Capture {
   static ErrorMessageOr<void> StartCapture(
       uint64_t process_id, std::string process_name,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-          selectedFunctions);
+          selected_functions);
   static void FinalizeCapture();
   static void ClearCaptureData();
   static void PreSave();

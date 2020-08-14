@@ -35,7 +35,8 @@ class Pdb {
   void PopulateFunctionMap();
   void PopulateStringFunctionMap();
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo*>
-  FunctionsToSelect(const orbit_client_protos::PresetFile& preset) const;
+  GetSelectedFunctionsFromPreset(
+      const orbit_client_protos::PresetFile& preset) const;
 
   orbit_client_protos::FunctionInfo* GetFunctionFromExactAddress(
       uint64_t a_Address);

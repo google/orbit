@@ -150,7 +150,7 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
     }
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
-      GOrbitApp->UnSelectFunction(GetFunction(i));
+      GOrbitApp->DeselectFunction(GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::GTargetProcess->GetID();

@@ -137,7 +137,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       FunctionInfo* function = frame.function;
-      GOrbitApp->UnSelectFunction(*function);
+      GOrbitApp->DeselectFunction(*function);
     }
 
   } else if (action == kMenuActionDisassembly) {
