@@ -13,55 +13,55 @@ class SamplingReportDataView : public DataView {
   SamplingReportDataView();
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_INCLUSIVE; }
+  int GetDefaultSortingColumn() override { return kColumnInclusive; }
   std::vector<std::string> GetContextMenu(
-      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
-  std::string GetValue(int a_Row, int a_Column) override;
-  const std::string& GetName() { return m_Name; }
+      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::string GetValue(int row, int column) override;
+  const std::string& GetName() { return name_; }
 
-  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
-                     const std::vector<int>& a_ItemIndices) override;
-  void OnSelect(int a_Index) override;
+  void OnContextMenu(const std::string& action, int menu_index,
+                     const std::vector<int>& item_indices) override;
+  void OnSelect(int index) override;
 
-  void LinkDataView(DataView* a_DataView) override;
-  void SetSamplingReport(class SamplingReport* a_SamplingReport) {
-    m_SamplingReport = a_SamplingReport;
+  void LinkDataView(DataView* data_view) override;
+  void SetSamplingReport(class SamplingReport* sampling_report) {
+    sampling_report_ = sampling_report;
   }
-  void SetSampledFunctions(const std::vector<SampledFunction>& a_Functions);
-  void SetThreadID(ThreadID a_TID);
-  ThreadID GetThreadID() const { return m_TID; }
+  void SetSampledFunctions(const std::vector<SampledFunction>& functions);
+  void SetThreadID(ThreadID tid);
+  ThreadID GetThreadID() const { return tid_; }
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  const SampledFunction& GetSampledFunction(unsigned int a_Row) const;
-  SampledFunction& GetSampledFunction(unsigned int a_Row);
+  const SampledFunction& GetSampledFunction(unsigned int row) const;
+  SampledFunction& GetSampledFunction(unsigned int row);
   std::vector<orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
-      const std::vector<int>& a_Indices);
+      const std::vector<int>& indices);
   std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
-      const std::vector<int>& a_Indices);
+      const std::vector<int>& indices);
 
  private:
-  std::vector<SampledFunction> m_Functions;
-  ThreadID m_TID = -1;
-  std::string m_Name;
-  CallStackDataView* m_CallstackDataView;
-  SamplingReport* m_SamplingReport = nullptr;
+  std::vector<SampledFunction> functions_;
+  ThreadID tid_ = -1;
+  std::string name_;
+  CallStackDataView* callstack_data_view_;
+  SamplingReport* sampling_report_ = nullptr;
 
   enum ColumnIndex {
-    COLUMN_SELECTED,
-    COLUMN_FUNCTION_NAME,
-    COLUMN_EXCLUSIVE,
-    COLUMN_INCLUSIVE,
-    COLUMN_MODULE_NAME,
-    COLUMN_FILE,
-    COLUMN_LINE,
-    COLUMN_ADDRESS,
-    COLUMN_NUM
+    kColumnSelected,
+    kColumnFunctionName,
+    kColumnExclusive,
+    kColumnInclusive,
+    kColumnModuleName,
+    kColumnFile,
+    kColumnLine,
+    kColumnAddress,
+    kNumColumns
   };
 
-  static const std::string MENU_ACTION_SELECT;
-  static const std::string MENU_ACTION_UNSELECT;
-  static const std::string MENU_ACTION_MODULES_LOAD;
-  static const std::string MENU_ACTION_DISASSEMBLY;
+  static const std::string kMenuActionSelect;
+  static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionLoadSymbols;
+  static const std::string kMenuActionDisassembly;
 };

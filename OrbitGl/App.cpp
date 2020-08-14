@@ -230,7 +230,7 @@ void OrbitApp::PostInit() {
           processes_data_view_->SelectProcess(
               processes_data_view_->GetFirstProcessId());
         }
-        FireRefreshCallbacks(DataViewType::PROCESSES);
+        FireRefreshCallbacks(DataViewType::kProcesses);
       });
     };
 
@@ -402,7 +402,7 @@ void OrbitApp::AddSamplingReport(
 
   if (sampling_reports_callback_) {
     DataView* callstack_data_view =
-        GetOrCreateDataView(DataViewType::CALLSTACK);
+        GetOrCreateDataView(DataViewType::kCallstack);
     sampling_reports_callback_(callstack_data_view, report);
   }
 
@@ -415,7 +415,7 @@ void OrbitApp::AddSelectionReport(
 
   if (selection_report_callback_) {
     DataView* callstack_data_view =
-        GetOrCreateDataView(DataViewType::CALLSTACK);
+        GetOrCreateDataView(DataViewType::kCallstack);
     selection_report_callback_(callstack_data_view, report);
   }
 
@@ -467,7 +467,7 @@ void OrbitApp::SetClipboard(const std::string& text) {
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   OUTCOME_TRY(Capture::SavePreset(filename));
   ListPresets();
-  Refresh(DataViewType::PRESETS);
+  Refresh(DataViewType::kPresets);
   return outcome::success();
 }
 
@@ -539,7 +539,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   for (DataView* panel : m_Panels) {
-    if (type == DataViewType::ALL || type == panel->GetType()) {
+    if (type == DataViewType::kAll || type == panel->GetType()) {
       panel->OnDataChanged();
     }
   }
@@ -589,7 +589,7 @@ void OrbitApp::ClearCapture() {
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }
-  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
+  GOrbitApp->FireRefreshCallbacks(DataViewType::kLiveFunctions);
 
   if (capture_cleared_callback_) {
     capture_cleared_callback_();
@@ -889,28 +889,28 @@ void OrbitApp::UpdateSamplingReport() {
 
 DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
-    case DataViewType::FUNCTIONS:
+    case DataViewType::kFunctions:
       if (!functions_data_view_) {
         functions_data_view_ = std::make_unique<FunctionsDataView>();
         m_Panels.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
-    case DataViewType::CALLSTACK:
+    case DataViewType::kCallstack:
       if (!callstack_data_view_) {
         callstack_data_view_ = std::make_unique<CallStackDataView>();
         m_Panels.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
-    case DataViewType::MODULES:
+    case DataViewType::kModules:
       if (!modules_data_view_) {
         modules_data_view_ = std::make_unique<ModulesDataView>();
         m_Panels.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
 
-    case DataViewType::PROCESSES:
+    case DataViewType::kProcesses:
       if (!processes_data_view_) {
         processes_data_view_ = std::make_unique<ProcessesDataView>();
         processes_data_view_->SetSelectionListener(
@@ -919,26 +919,26 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       }
       return processes_data_view_.get();
 
-    case DataViewType::PRESETS:
+    case DataViewType::kPresets:
       if (!presets_data_view_) {
         presets_data_view_ = std::make_unique<PresetsDataView>();
         m_Panels.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();
 
-    case DataViewType::SAMPLING:
+    case DataViewType::kSampling:
       FATAL(
-          "DataViewType::SAMPLING Data View construction is not supported by"
+          "DataViewType::kSampling Data View construction is not supported by"
           "the factory.");
-    case DataViewType::LIVE_FUNCTIONS:
+    case DataViewType::kLiveFunctions:
       FATAL(
-          "DataViewType::LIVE_FUNCTIONS should not be used with the factory.");
+          "DataViewType::kLiveFunctions should not be used with the factory.");
 
-    case DataViewType::ALL:
-      FATAL("DataViewType::ALL should not be used with the factory.");
+    case DataViewType::kAll:
+      FATAL("DataViewType::kAll should not be used with the factory.");
 
-    case DataViewType::INVALID:
-      FATAL("DataViewType::INVALID should not be used with the factory.");
+    case DataViewType::kInvalid:
+      FATAL("DataViewType::kInvalid should not be used with the factory.");
   }
 
   FATAL("Unreachable");

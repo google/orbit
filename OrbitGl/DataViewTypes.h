@@ -2,16 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_DATA_VIEW_TYPES_H_
+#define ORBIT_GL_DATA_VIEW_TYPES_H_
 
 enum class DataViewType {
-  FUNCTIONS,
-  LIVE_FUNCTIONS,
-  CALLSTACK,
-  PROCESSES,
-  MODULES,
-  SAMPLING,
-  PRESETS,
-  ALL,
-  INVALID
+  kInvalid,
+  kFunctions,
+  kLiveFunctions,
+  kCallstack,
+  kProcesses,
+  kModules,
+  kSampling,
+  kPresets,
+  kAll,
 };
+
+#endif  // ORBIT_GL_DATA_VIEW_TYPES_H_

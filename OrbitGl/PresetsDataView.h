@@ -15,16 +15,16 @@ class PresetsDataView : public DataView {
   PresetsDataView();
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_SESSION_NAME; }
+  int GetDefaultSortingColumn() override { return kColumnSessionName; }
   std::vector<std::string> GetContextMenu(
-      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
-  std::string GetValue(int a_Row, int a_Column) override;
-  std::string GetToolTip(int a_Row, int a_Column) override;
+      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::string GetValue(int row, int column) override;
+  std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Presets"; }
 
   void OnDataChanged() override;
-  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
-                     const std::vector<int>& a_ItemIndices) override;
+  void OnContextMenu(const std::string& action, int menu_index,
+                     const std::vector<int>& item_indices) override;
 
   void SetPresets(
       const std::vector<std::shared_ptr<orbit_client_protos::PresetFile>>&
@@ -34,14 +34,14 @@ class PresetsDataView : public DataView {
   void DoSort() override;
   void DoFilter() override;
   const std::shared_ptr<orbit_client_protos::PresetFile>& GetPreset(
-      unsigned int a_Row) const;
+      unsigned int row) const;
 
   std::vector<std::shared_ptr<orbit_client_protos::PresetFile>> presets_;
 
-  enum ColumnIndex { COLUMN_SESSION_NAME, COLUMN_PROCESS_NAME, COLUMN_NUM };
+  enum ColumnIndex { kColumnSessionName, kColumnProcessName, kNumColumns };
 
-  static const std::string MENU_ACTION_LOAD;
-  static const std::string MENU_ACTION_DELETE;
+  static const std::string kMenuActionLoad;
+  static const std::string kMenuActionDelete;
 };
 
 #endif  // ORBIT_GL_PRESET_DATA_VIEW_H_

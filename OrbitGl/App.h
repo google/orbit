@@ -175,8 +175,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSaveFileCallback(SaveFileCallback callback) {
     save_file_callback_ = std::move(callback);
   }
-  void FireRefreshCallbacks(DataViewType type = DataViewType::ALL);
-  void Refresh(DataViewType type = DataViewType::ALL) {
+  void FireRefreshCallbacks(DataViewType type = DataViewType::kAll);
+  void Refresh(DataViewType type = DataViewType::kAll) {
     FireRefreshCallbacks(type);
   }
   using ClipboardCallback = std::function<void(const std::string&)>;

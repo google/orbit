@@ -16,20 +16,20 @@ class LiveFunctionsDataView : public DataView {
   LiveFunctionsDataView(LiveFunctionsController* live_functions);
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_COUNT; }
+  int GetDefaultSortingColumn() override { return kColumnCount; }
   std::vector<std::string> GetContextMenu(
-      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
-  std::string GetValue(int a_Row, int a_Column) override;
+      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
-                     const std::vector<int>& a_ItemIndices) override;
+  void OnContextMenu(const std::string& action, int menu_index,
+                     const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void OnTimer() override;
 
  protected:
   void DoFilter() override;
   void DoSort() override;
-  orbit_client_protos::FunctionInfo* GetFunction(unsigned int a_Row) const;
+  orbit_client_protos::FunctionInfo* GetFunction(unsigned int row) const;
   std::pair<TextBox*, TextBox*> GetMinMax(
       const orbit_client_protos::FunctionInfo& function) const;
 
@@ -38,26 +38,26 @@ class LiveFunctionsDataView : public DataView {
   LiveFunctionsController* live_functions_;
 
   enum ColumnIndex {
-    COLUMN_SELECTED,
-    COLUMN_NAME,
-    COLUMN_COUNT,
-    COLUMN_TIME_TOTAL,
-    COLUMN_TIME_AVG,
-    COLUMN_TIME_MIN,
-    COLUMN_TIME_MAX,
-    COLUMN_MODULE,
-    COLUMN_ADDRESS,
-    COLUMN_NUM
+    kColumnSelected,
+    kColumnName,
+    kColumnCount,
+    kColumnTimeTotal,
+    kColumnTimeAvg,
+    kColumnTimeMin,
+    kColumnTimeMax,
+    kColumnModule,
+    kColumnAddress,
+    kNumColumns
   };
 
-  static const std::string MENU_ACTION_SELECT;
-  static const std::string MENU_ACTION_UNSELECT;
-  static const std::string MENU_ACTION_JUMP_TO_FIRST;
-  static const std::string MENU_ACTION_JUMP_TO_LAST;
-  static const std::string MENU_ACTION_JUMP_TO_MIN;
-  static const std::string MENU_ACTION_JUMP_TO_MAX;
-  static const std::string MENU_ACTION_DISASSEMBLY;
-  static const std::string MENU_ACTION_ITERATE;
+  static const std::string kMenuActionSelect;
+  static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionJumpToFirst;
+  static const std::string kMenuActionJumpToLast;
+  static const std::string kMenuActionJumpToMin;
+  static const std::string kMenuActionJumpToMax;
+  static const std::string kMenuActionDisassembly;
+  static const std::string kMenuActionIterate;
 };
 
 #endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_

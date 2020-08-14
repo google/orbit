@@ -111,7 +111,7 @@ void OrbitTreeView::OnTimer() {
 void OrbitTreeView::Refresh() {
   QModelIndexList list = selectionModel()->selectedIndexes();
 
-  if (model_->GetDataView()->GetType() == DataViewType::LIVE_FUNCTIONS) {
+  if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions) {
     model_->layoutAboutToBeChanged();
     model_->layoutChanged();
     return;

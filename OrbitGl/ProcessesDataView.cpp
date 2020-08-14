@@ -14,15 +14,15 @@
 #include "absl/strings/str_format.h"
 
 ProcessesDataView::ProcessesDataView()
-    : DataView(DataViewType::PROCESSES), selected_process_id_(-1) {}
+    : DataView(DataViewType::kProcesses), selected_process_id_(-1) {}
 
 const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
-    columns.resize(COLUMN_NUM);
-    columns[COLUMN_PID] = {"PID", .2f, SortingOrder::Ascending};
-    columns[COLUMN_NAME] = {"Name", .6f, SortingOrder::Ascending};
-    columns[COLUMN_CPU] = {"CPU", .0f, SortingOrder::Descending};
+    columns.resize(kNumColumns);
+    columns[kColumnPid] = {"PID", .2f, SortingOrder::kAscending};
+    columns[kColumnName] = {"Name", .6f, SortingOrder::kAscending};
+    columns[kColumnCpu] = {"CPU", .0f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;
@@ -32,11 +32,11 @@ std::string ProcessesDataView::GetValue(int row, int col) {
   const ProcessInfo& process = GetProcess(row);
 
   switch (col) {
-    case COLUMN_PID:
+    case kColumnPid:
       return std::to_string(process.pid());
-    case COLUMN_NAME:
+    case kColumnName:
       return process.name();
-    case COLUMN_CPU:
+    case kColumnCpu:
       return absl::StrFormat("%.1f", process.cpu_usage());
     default:
       return "";
@@ -54,19 +54,19 @@ std::string ProcessesDataView::GetToolTip(int row, int /*column*/) {
   }
 
 void ProcessesDataView::DoSort() {
-  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   const std::vector<ProcessInfo>& processes = process_list_;
 
-  switch (m_SortingColumn) {
-    case COLUMN_PID:
+  switch (sorting_column_) {
+    case kColumnPid:
       sorter = ORBIT_PROC_SORT(pid());
       break;
-    case COLUMN_NAME:
+    case kColumnName:
       sorter = ORBIT_PROC_SORT(name());
       break;
-    case COLUMN_CPU:
+    case kColumnCpu:
       sorter = ORBIT_PROC_SORT(cpu_usage());
       break;
     default:
@@ -107,13 +107,13 @@ int32_t ProcessesDataView::GetFirstProcessId() const {
 void ProcessesDataView::SetSelectedItem() {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     if (GetProcess(i).pid() == selected_process_id_) {
-      m_SelectedIndex = i;
+      selected_index_ = i;
       return;
     }
   }
 
   // This happens when selected process disappears from the list.
-  m_SelectedIndex = -1;
+  selected_index_ = -1;
 }
 
 bool ProcessesDataView::SelectProcess(const std::string& process_name) {
@@ -145,7 +145,7 @@ void ProcessesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   const std::vector<ProcessInfo>& processes = process_list_;
 
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < processes.size(); ++i) {
     const ProcessInfo& process = processes[i];
@@ -154,9 +154,9 @@ void ProcessesDataView::DoFilter() {
 
     bool match = true;
 
-    for (std::string& filterToken : tokens) {
-      if (!(name.find(filterToken) != std::string::npos ||
-            type.find(filterToken) != std::string::npos)) {
+    for (std::string& filter_token : tokens) {
+      if (!(name.find(filter_token) != std::string::npos ||
+            type.find(filter_token) != std::string::npos)) {
         match = false;
         break;
       }
@@ -169,13 +169,13 @@ void ProcessesDataView::DoFilter() {
 
   indices_ = indices;
 
-  OnSort(m_SortingColumn, {});
+  OnSort(sorting_column_, {});
 }
 
 void ProcessesDataView::UpdateProcessList() {
-  size_t numProcesses = process_list_.size();
-  indices_.resize(numProcesses);
-  for (size_t i = 0; i < numProcesses; ++i) {
+  size_t num_processes = process_list_.size();
+  indices_.resize(num_processes);
+  for (size_t i = 0; i < num_processes; ++i) {
     indices_[i] = i;
   }
 }
@@ -184,8 +184,8 @@ void ProcessesDataView::SetProcessList(
     const std::vector<ProcessInfo>& process_list) {
   process_list_ = process_list;
   UpdateProcessList();
-  OnSort(m_SortingColumn, {});
-  OnFilter(m_Filter);
+  OnSort(sorting_column_, {});
+  OnFilter(filter_);
   SetSelectedItem();
 }
 

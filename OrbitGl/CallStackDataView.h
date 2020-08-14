@@ -18,14 +18,14 @@ class CallStackDataView : public DataView {
 
   void SetAsMainInstance() override;
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_ADDRESS; }
+  int GetDefaultSortingColumn() override { return kColumnAddress; }
   bool IsSortingAllowed() override { return false; }
   std::vector<std::string> GetContextMenu(
-      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
-  std::string GetValue(int a_Row, int a_Column) override;
+      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
-                     const std::vector<int>& a_ItemIndices) override;
+  void OnContextMenu(const std::string& action, int menu_index,
+                     const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void SetCallStack(std::shared_ptr<CallStack> callstack) {
     callstack_ = std::move(callstack);
@@ -59,20 +59,20 @@ class CallStackDataView : public DataView {
   CallStackDataViewFrame GetFrameFromIndex(int index_in_callstack);
 
   enum ColumnIndex {
-    COLUMN_SELECTED,
-    COLUMN_NAME,
-    COLUMN_SIZE,
-    COLUMN_FILE,
-    COLUMN_LINE,
-    COLUMN_MODULE,
-    COLUMN_ADDRESS,
-    COLUMN_NUM
+    kColumnSelected,
+    kColumnName,
+    kColumnSize,
+    kColumnFile,
+    kColumnLine,
+    kColumnModule,
+    kColumnAddress,
+    kNumColumns
   };
 
-  static const std::string MENU_ACTION_MODULES_LOAD;
-  static const std::string MENU_ACTION_SELECT;
-  static const std::string MENU_ACTION_UNSELECT;
-  static const std::string MENU_ACTION_DISASSEMBLY;
+  static const std::string kMenuActionLoadSymbols;
+  static const std::string kMenuActionSelect;
+  static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionDisassembly;
 };
 
 #endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_

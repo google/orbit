@@ -13,7 +13,7 @@ class ModulesDataView : public DataView {
   ModulesDataView();
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_FILE_SIZE; }
+  int GetDefaultSortingColumn() override { return kColumnFileSize; }
   std::vector<std::string> GetContextMenu(
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
@@ -36,20 +36,20 @@ class ModulesDataView : public DataView {
  private:
   const ModuleData* GetModule(uint32_t row) const;
 
-  int32_t process_id_;
+  int32_t process_id_ = -1;
   std::vector<ModuleData*> modules_;
 
   enum ColumnIndex {
-    COLUMN_NAME,
-    COLUMN_PATH,
-    COLUMN_ADDRESS_RANGE,
-    COLUMN_FILE_SIZE,
-    COLUMN_LOADED,
-    COLUMN_NUM
+    kColumnName,
+    kColumnPath,
+    kColumnAddressRange,
+    kColumnFileSize,
+    kColumnLoaded,
+    kNumColumns
   };
 
-  static const std::string MENU_ACTION_MODULES_LOAD;
-  static const std::string MENU_ACTION_MODULES_VERIFY;
+  static const std::string kMenuActionLoadSymbols;
+  static const std::string kMenuActionVerifyFramePointers;
 };
 
 #endif  // ORBIT_GL_MODULES_DATA_VIEW_H_
