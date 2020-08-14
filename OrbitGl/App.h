@@ -16,6 +16,7 @@
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
 #include "Callstack.h"
+#include "CaptureWindow.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
@@ -95,13 +96,13 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnValidateFramePointers(
       std::vector<std::shared_ptr<Module>> modules_to_validate);
 
-  void RegisterCaptureWindow(class CaptureWindow* a_Capture);
+  void RegisterCaptureWindow(CaptureWindow* capture);
 
   void AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
-  void AddSelectionReport(std::shared_ptr<SamplingProfiler> a_SamplingProfiler);
+  void AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
   void AddTopDownView(const SamplingProfiler& sampling_profiler);
 
-  bool SelectProcess(const std::string& a_Process);
+  bool SelectProcess(const std::string& process);
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
@@ -175,10 +176,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     save_file_callback_ = std::move(callback);
   }
   void FireRefreshCallbacks(DataViewType type = DataViewType::ALL);
-  void Refresh(DataViewType a_Type = DataViewType::ALL) {
-    FireRefreshCallbacks(a_Type);
+  void Refresh(DataViewType type = DataViewType::ALL) {
+    FireRefreshCallbacks(type);
   }
-  typedef std::function<void(const std::string&)> ClipboardCallback;
+  using ClipboardCallback = std::function<void(const std::string&)>;
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
@@ -186,7 +187,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   using SecureCopyCallback =
       std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
   void SetSecureCopyCallback(SecureCopyCallback callback) {
-    secure_copy_callback_ = callback;
+    secure_copy_callback_ = std::move(callback);
   }
 
   void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
@@ -257,20 +258,18 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;
 
-  std::unique_ptr<ProcessesDataView> m_ProcessesDataView;
-  std::unique_ptr<ModulesDataView> m_ModulesDataView;
-  std::unique_ptr<FunctionsDataView> m_FunctionsDataView;
-  std::unique_ptr<LiveFunctionsDataView> m_LiveFunctionsDataView;
-  std::unique_ptr<CallStackDataView> m_CallStackDataView;
-  std::unique_ptr<PresetsDataView> m_PresetsDataView;
+  std::unique_ptr<ProcessesDataView> processes_data_view_;
+  std::unique_ptr<ModulesDataView> modules_data_view_;
+  std::unique_ptr<FunctionsDataView> functions_data_view_;
+  std::unique_ptr<LiveFunctionsDataView> live_functions_data_view_;
+  std::unique_ptr<CallStackDataView> callstack_data_view_;
+  std::unique_ptr<PresetsDataView> presets_data_view_;
 
-  CaptureWindow* m_CaptureWindow = nullptr;
+  CaptureWindow* capture_window_ = nullptr;
 
   std::shared_ptr<class SamplingReport> sampling_report_;
   std::shared_ptr<class SamplingReport> selection_report_;
-  std::map<std::string, std::string> m_FileMapping;
-
-  int m_NumTicks = 0;
+  std::map<std::string, std::string> file_mapping_;
 
   absl::flat_hash_set<std::string> modules_currently_loading_;
 
