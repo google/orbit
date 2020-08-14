@@ -9,8 +9,6 @@
 #include "GlSlider.h"
 #include "TextBox.h"
 
-struct ContextSwitch;
-
 class CaptureWindow : public GlCanvas {
  public:
   CaptureWindow();

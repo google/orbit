@@ -204,7 +204,7 @@ void OrbitApp::PostInit() {
         const std::vector<ProcessInfo>& process_infos =
             process_manager->GetProcessList();
         data_manager_->UpdateProcessInfos(process_infos);
-        m_ProcessesDataView->SetProcessList(process_infos);
+        processes_data_view_->SetProcessList(process_infos);
         {
           // TODO: remove this part when client stops using Process class
           absl::MutexLock lock(&process_map_mutex_);
@@ -225,10 +225,10 @@ void OrbitApp::PostInit() {
           }
         }
 
-        if (m_ProcessesDataView->GetSelectedProcessId() == -1 &&
-            m_ProcessesDataView->GetFirstProcessId() != -1) {
-          m_ProcessesDataView->SelectProcess(
-              m_ProcessesDataView->GetFirstProcessId());
+        if (processes_data_view_->GetSelectedProcessId() == -1 &&
+            processes_data_view_->GetFirstProcessId() != -1) {
+          processes_data_view_->SelectProcess(
+              processes_data_view_->GetFirstProcessId());
         }
         FireRefreshCallbacks(DataViewType::PROCESSES);
       });
@@ -251,49 +251,49 @@ void OrbitApp::PostInit() {
 }
 
 void OrbitApp::LoadFileMapping() {
-  m_FileMapping.clear();
-  std::string fileName = Path::GetFileMappingFileName();
-  if (!std::filesystem::exists(fileName)) {
-    std::ofstream outfile(fileName);
+  file_mapping_.clear();
+  std::string file_name = Path::GetFileMappingFileName();
+  if (!std::filesystem::exists(file_name)) {
+    std::ofstream outfile(file_name);
     outfile << "//-------------------" << std::endl
             << "// Orbit File Mapping" << std::endl
             << "//-------------------" << std::endl
-            << "// If the file path in the pdb is \"D:\\NoAccess\\File.cpp\""
+            << R"(// If the file path in the pdb is "D:\NoAccess\File.cpp")"
             << std::endl
-            << "// and File.cpp is locally available in \"C:\\Available\\\""
+            << R"(// and File.cpp is locally available in "C:\Available\")"
             << std::endl
             << "// then enter a file mapping on its own line like so:"
             << std::endl
-            << "// \"D:\\NoAccess\\File.cpp\" \"C:\\Available\\\"" << std::endl
+            << R"(// "D:\NoAccess\File.cpp" "C:\Available\")" << std::endl
             << std::endl
-            << "\"D:\\NoAccess\" \"C:\\Available\"" << std::endl;
+            << R"("D:\NoAccess" "C:\Available")" << std::endl;
 
     outfile.close();
   }
 
-  std::fstream infile(fileName);
+  std::fstream infile(file_name);
   if (!infile.fail()) {
     std::string line;
     while (std::getline(infile, line)) {
       if (absl::StartsWith(line, "//")) continue;
 
-      bool containsQuotes = absl::StrContains(line, "\"");
+      bool contains_quotes = absl::StrContains(line, "\"");
 
       std::vector<std::string> tokens = absl::StrSplit(line, ' ');
 
-      if (tokens.size() == 2 && !containsQuotes) {
-        m_FileMapping[ToLower(tokens[0])] = ToLower(tokens[1]);
+      if (tokens.size() == 2 && !contains_quotes) {
+        file_mapping_[ToLower(tokens[0])] = ToLower(tokens[1]);
       } else {
-        std::vector<std::string> validTokens;
-        std::vector<std::string> tokens = absl::StrSplit(line, '"');
-        for (const std::string& token : tokens) {
-          if (!IsBlank(token)) {
-            validTokens.push_back(token);
+        std::vector<std::string> valid_tokens;
+        std::vector<std::string> subtokens = absl::StrSplit(line, '"');
+        for (const std::string& subtoken : subtokens) {
+          if (!IsBlank(subtoken)) {
+            valid_tokens.push_back(subtoken);
           }
         }
 
-        if (validTokens.size() > 1) {
-          m_FileMapping[ToLower(validTokens[0])] = ToLower(validTokens[1]);
+        if (valid_tokens.size() > 1) {
+          file_mapping_[ToLower(valid_tokens[0])] = ToLower(valid_tokens[1]);
         }
       }
     }
@@ -318,7 +318,7 @@ void OrbitApp::ListPresets() {
     presets.push_back(preset);
   }
 
-  m_PresetsDataView->SetPresets(presets);
+  presets_data_view_->SetPresets(presets);
 }
 
 void OrbitApp::RefreshCaptureView() {
@@ -377,24 +377,22 @@ void OrbitApp::MainTick() {
 
   GMainTimer.Reset();
 
-  ++GOrbitApp->m_NumTicks;
-
   if (DoZoom) {
     GCurrentTimeGraph->SortTracks();
-    GOrbitApp->m_CaptureWindow->ZoomAll();
+    GOrbitApp->capture_window_->ZoomAll();
     GOrbitApp->NeedsRedraw();
     DoZoom = false;
   }
 }
 
-void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
-  CHECK(m_CaptureWindow == nullptr);
-  m_CaptureWindow = a_Capture;
+void OrbitApp::RegisterCaptureWindow(CaptureWindow* capture) {
+  CHECK(capture_window_ == nullptr);
+  capture_window_ = capture;
 }
 
 void OrbitApp::NeedsRedraw() {
-  if (m_CaptureWindow != nullptr) {
-    m_CaptureWindow->NeedsUpdate();
+  if (capture_window_ != nullptr) {
+    capture_window_->NeedsUpdate();
   }
 }
 
@@ -412,8 +410,8 @@ void OrbitApp::AddSamplingReport(
 }
 
 void OrbitApp::AddSelectionReport(
-    std::shared_ptr<SamplingProfiler> a_SamplingProfiler) {
-  auto report = std::make_shared<SamplingReport>(std::move(a_SamplingProfiler));
+    std::shared_ptr<SamplingProfiler> sampling_profiler) {
+  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
 
   if (selection_report_callback_) {
     DataView* callstack_data_view =
@@ -447,8 +445,9 @@ std::string OrbitApp::GetCaptureFileName() {
 }
 
 std::string OrbitApp::GetCaptureTime() {
-  double time =
-      GCurrentTimeGraph ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0;
+  double time = GCurrentTimeGraph != nullptr
+                    ? GCurrentTimeGraph->GetCaptureTimeSpanUs()
+                    : 0;
   return GetPrettyTime(absl::Microseconds(time));
 }
 
@@ -587,7 +586,7 @@ void OrbitApp::StopCapture() {
 void OrbitApp::ClearCapture() {
   Capture::ClearCaptureData();
 
-  if (GCurrentTimeGraph) {
+  if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }
   GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
@@ -598,8 +597,8 @@ void OrbitApp::ClearCapture() {
 }
 
 void OrbitApp::ToggleDrawHelp() {
-  if (m_CaptureWindow) {
-    m_CaptureWindow->ToggleDrawHelp();
+  if (capture_window_ != nullptr) {
+    capture_window_->ToggleDrawHelp();
   }
 }
 
@@ -611,9 +610,9 @@ void OrbitApp::ToggleCapture() {
   }
 }
 
-bool OrbitApp::SelectProcess(const std::string& a_Process) {
-  if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(a_Process);
+bool OrbitApp::SelectProcess(const std::string& process) {
+  if (processes_data_view_) {
+    return processes_data_view_->SelectProcess(process);
   }
 
   return false;
@@ -780,7 +779,7 @@ void OrbitApp::LoadModulesFromPreset(
   std::vector<std::string> modules_not_found;
   for (const auto& pair : preset->preset_info().path_to_module()) {
     const std::string& module_path = pair.first;
-    const auto& module = process->GetModuleFromPath(module_path);
+    std::shared_ptr<Module> module = process->GetModuleFromPath(module_path);
     if (module == nullptr) {
       modules_not_found.push_back(module_path);
       continue;
@@ -806,7 +805,7 @@ void OrbitApp::LoadModulesFromPreset(
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
-  CHECK(m_ProcessesDataView->GetSelectedProcessId() == pid);
+  CHECK(processes_data_view_->GetSelectedProcessId() == pid);
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result =
         process_manager_->LoadModuleList(pid);
@@ -822,11 +821,11 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // the moment we arrive here. If not - ignore the result.
       const std::vector<ModuleInfo>& module_infos = result.value();
       data_manager_->UpdateModuleInfos(pid, module_infos);
-      if (pid != m_ProcessesDataView->GetSelectedProcessId()) {
+      if (pid != processes_data_view_->GetSelectedProcessId()) {
         return;
       }
 
-      m_ModulesDataView->SetModules(pid, data_manager_->GetModules(pid));
+      modules_data_view_->SetModules(pid, data_manager_->GetModules(pid));
 
       // TODO: remove this part when all client code is moved to
       // new data model.
@@ -891,41 +890,41 @@ void OrbitApp::UpdateSamplingReport() {
 DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::FUNCTIONS:
-      if (!m_FunctionsDataView) {
-        m_FunctionsDataView = std::make_unique<FunctionsDataView>();
-        m_Panels.push_back(m_FunctionsDataView.get());
+      if (!functions_data_view_) {
+        functions_data_view_ = std::make_unique<FunctionsDataView>();
+        m_Panels.push_back(functions_data_view_.get());
       }
-      return m_FunctionsDataView.get();
+      return functions_data_view_.get();
 
     case DataViewType::CALLSTACK:
-      if (!m_CallStackDataView) {
-        m_CallStackDataView = std::make_unique<CallStackDataView>();
-        m_Panels.push_back(m_CallStackDataView.get());
+      if (!callstack_data_view_) {
+        callstack_data_view_ = std::make_unique<CallStackDataView>();
+        m_Panels.push_back(callstack_data_view_.get());
       }
-      return m_CallStackDataView.get();
+      return callstack_data_view_.get();
 
     case DataViewType::MODULES:
-      if (!m_ModulesDataView) {
-        m_ModulesDataView = std::make_unique<ModulesDataView>();
-        m_Panels.push_back(m_ModulesDataView.get());
+      if (!modules_data_view_) {
+        modules_data_view_ = std::make_unique<ModulesDataView>();
+        m_Panels.push_back(modules_data_view_.get());
       }
-      return m_ModulesDataView.get();
+      return modules_data_view_.get();
 
     case DataViewType::PROCESSES:
-      if (!m_ProcessesDataView) {
-        m_ProcessesDataView = std::make_unique<ProcessesDataView>();
-        m_ProcessesDataView->SetSelectionListener(
+      if (!processes_data_view_) {
+        processes_data_view_ = std::make_unique<ProcessesDataView>();
+        processes_data_view_->SetSelectionListener(
             [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
-        m_Panels.push_back(m_ProcessesDataView.get());
+        m_Panels.push_back(processes_data_view_.get());
       }
-      return m_ProcessesDataView.get();
+      return processes_data_view_.get();
 
     case DataViewType::PRESETS:
-      if (!m_PresetsDataView) {
-        m_PresetsDataView = std::make_unique<PresetsDataView>();
-        m_Panels.push_back(m_PresetsDataView.get());
+      if (!presets_data_view_) {
+        presets_data_view_ = std::make_unique<PresetsDataView>();
+        m_Panels.push_back(presets_data_view_.get());
       }
-      return m_PresetsDataView.get();
+      return presets_data_view_.get();
 
     case DataViewType::SAMPLING:
       FATAL(
