@@ -12,6 +12,9 @@
 #include "Geometry.h"
 #include "PickingManager.h"
 
+// TODO: Remove cyclic reference
+class TextBox;
+
 using TooltipCallback = std::function<std::string(PickingId)>;
 
 struct PickingUserData {
