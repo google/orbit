@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_BATCHER_H_
 #define ORBIT_GL_BATCHER_H_
 
+#include <utility>
 #include <vector>
 
 #include "BlockChain.h"
@@ -18,9 +19,9 @@ struct PickingUserData {
   TooltipCallback generate_tooltip_;
   void* custom_data_ = nullptr;
 
-  PickingUserData(TextBox* text_box = nullptr,
-                  TooltipCallback generate_tooltip = nullptr)
-      : text_box_(text_box), generate_tooltip_(generate_tooltip) {}
+  explicit PickingUserData(TextBox* text_box = nullptr,
+                           TooltipCallback generate_tooltip = nullptr)
+      : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
 };
 
 struct LineBuffer {
@@ -73,7 +74,8 @@ class Batcher {
   explicit Batcher(BatcherId batcher_id) : batcher_id_(batcher_id) {}
   Batcher() : batcher_id_(BatcherId::kTimeGraph) {}
 
-  void AddLine(const Line& line, const Color* colors, PickingType picking_type,
+  void AddLine(const Line& line, const std::array<Color, 2>& colors,
+               PickingType picking_type,
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddLine(const Line& line, Color color, PickingType picking_type,
                std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -84,22 +86,23 @@ class Batcher {
                        PickingType picking_type,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void AddBox(const Box& box, const Color* colors, PickingType picking_type,
+  void AddBox(const Box& box, const std::array<Color, 4>& colors,
+              PickingType picking_type,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Box& box, Color color, PickingType picking_type,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
-                    PickingType picking_type,
+  void AddShadedBox(const Vec2& pos, const Vec2& size, float z,
+                    const Color& color, PickingType picking_type,
                     std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void AddTriangle(const Triangle& triangle, Color color,
+  void AddTriangle(const Triangle& triangle, const Color& color,
                    PickingType picking_type,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
-                   PickingType picking_type,
+  void AddTriangle(const Vec3& v0, const Vec3& v1, const Vec3& v2,
+                   const Color& color, PickingType picking_type,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void GetBoxGradientColors(Color color, Color* colors);
+  void GetBoxGradientColors(Color color, std::array<Color, 4>* colors);
 
   void Draw(bool picking = false);
 
