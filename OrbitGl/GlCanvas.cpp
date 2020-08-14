@@ -74,8 +74,6 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_IsHovering = false;
   ResetHoverTimer();
 
-  UpdateSceneBox();
-
   m_ImGuiContext = ImGui::CreateContext();
   ScopeImguiContext state(m_ImGuiContext);
   Orbit_ImGui_Init();
@@ -118,7 +116,6 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, bool 
   if (a_Left && !m_ImguiActive) {
     m_WorldTopLeftX = m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
     m_WorldTopLeftY = m_WorldClickY + static_cast<float>(mousey) / getHeight() * m_WorldHeight;
-    UpdateSceneBox();
   }
 
   if (m_IsSelecting) {
@@ -298,8 +295,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x
   m_WorldWidth = m_Width;
   m_WorldHeight = m_Height;
 
-  UpdateSceneBox();
-
   // TRACE_VAR( m_ScreenClickY );
   // TRACE_VAR( GPdbDbg->GetFunctions().size() );
   // TRACE_VAR( GPdbDbg->GetTypes().size() );
@@ -427,16 +422,6 @@ void GlCanvas::Resize(int a_Width, int a_Height) {
   m_Width = a_Width;
   m_Height = a_Height;
   NeedsRedraw();
-}
-
-void GlCanvas::UpdateSceneBox() {
-  Vec2 pos;
-  pos[0] = m_WorldTopLeftX;
-  pos[1] = m_WorldTopLeftY - m_WorldHeight;
-
-  Vec2 size(m_WorldWidth, m_WorldHeight);
-
-  m_SceneBox = TextBox(pos, size);
 }
 
 Vec2 GlCanvas::ToScreenSpace(const Vec2& a_Point) {

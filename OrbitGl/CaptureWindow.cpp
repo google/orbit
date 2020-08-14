@@ -86,7 +86,6 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, 
     m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
     m_WorldTopLeftY =
         clamp(m_WorldTopLeftY, m_WorldHeight - time_graph_.GetThreadTotalHeight(), m_WorldMaxY);
-    UpdateSceneBox();
 
     time_graph_.PanTime(m_ScreenClickX, a_X, getWidth(), static_cast<double>(m_RefTimeClick));
     UpdateVerticalSlider();
@@ -316,7 +315,6 @@ void CaptureWindow::Pan(float a_Ratio) {
   double refTime = time_graph_.GetTime(static_cast<double>(m_MousePosX) / getWidth());
   time_graph_.PanTime(m_MousePosX, m_MousePosX + static_cast<int>(a_Ratio * getWidth()), getWidth(),
                       refTime);
-  UpdateSceneBox();
   NeedsUpdate();
 }
 

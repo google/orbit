@@ -62,12 +62,9 @@ class GlCanvas : public GlPanel {
   void SetWorldTopLeftY(float val) { m_WorldTopLeftY = val; }
 
   TextRenderer& GetTextRenderer() { return m_TextRenderer; }
-  const TextBox& GetSceneBox() { return m_SceneBox; }
-  void SetSceneBox(const TextBox& a_TextBox) { m_SceneBox = a_TextBox; }
   void SetBackgroundColor(const Vec4& a_Color) { m_BackgroundColor = a_Color; }
 
   virtual void UpdateWheelMomentum(float a_DeltaTime);
-  void UpdateSceneBox();
   virtual void OnTimer();
 
   float GetMouseX() const { return m_MouseX; }
@@ -158,7 +155,6 @@ class GlCanvas : public GlPanel {
   TickType m_RefTimeClick;
   TickType m_SelectedInterval;
   TextRenderer m_TextRenderer;
-  TextBox m_SceneBox;
   Timer m_UpdateTimer;
   PickingManager m_PickingManager;
   bool m_Picking;
