@@ -60,7 +60,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
     ERROR("Error starting capture: %s", result.error().message());
     return false;
   }
-  int32_t pid = target_process->GetID();
+  int32_t pid = target_process_->GetID();
   LOG("Capture pid %d", pid);
 
   // TODO: selected_functions available when UploadSymbols is included
@@ -81,10 +81,10 @@ bool ClientGgp::StopCapture() {
 
 void ClientGgp::InitCapture() {
   Capture::Init();
-  target_process = GetOrbitProcessByPid(options_.capture_pid);
-  CHECK(target_process != nullptr);
+  target_process_ = GetOrbitProcessByPid(options_.capture_pid);
+  CHECK(target_process_ != nullptr);
   // TODO: remove this line when GTargetProcess is deprecated in Capture
-  Capture::SetTargetProcess(target_process);
+  Capture::SetTargetProcess(target_process_);
 }
 
 // CaptureListener implementation
