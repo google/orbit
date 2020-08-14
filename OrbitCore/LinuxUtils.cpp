@@ -24,6 +24,7 @@
 #include "absl/strings/strip.h"
 
 namespace LinuxUtils {
+namespace fs = std::filesystem;
 
 using ::ElfUtils::ElfFile;
 
@@ -120,6 +121,18 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     module_info.set_build_id(elf_file.value()->GetBuildId());
 
     result.push_back(module_info);
+  }
+
+  return result;
+}
+
+ErrorMessageOr<std::vector<TracepointInfo>> ListTracepoints() {
+  std::vector<TracepointInfo> result;
+  std::string path = "/sys/kernel/debug/tracing/events";
+  for (const auto& entry : fs::directory_iterator(path)) {
+    TracepointInfo tracepoint_info;
+    tracepoint_info.set_name(fs::path(entry).filename());
+    result.emplace_back(tracepoint_info);
   }
 
   return result;

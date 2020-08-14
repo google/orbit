@@ -12,13 +12,15 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../../orbit/cmake-build-relwithdebinfo/protos/grpc_codegen/module.pb.h"
+#include "../cmake-build-relwithdebinfo/protos/grpc_codegen/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
-#include "module.pb.h"
 
 namespace LinuxUtils {
 outcome::result<std::string> ExecuteCommand(const std::string& cmd);
 outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid);
 ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid);
+ErrorMessageOr<std::vector<TracepointInfo>> ListTracepoints();
 outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization();
 outcome::result<bool> Is64Bit(pid_t pid);
 ErrorMessageOr<std::string> GetExecutablePath(int32_t pid);

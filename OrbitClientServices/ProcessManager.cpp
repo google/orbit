@@ -29,6 +29,8 @@ class ProcessManagerImpl final : public ProcessManager {
   std::vector<ProcessInfo> GetProcessList() const override;
   ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(int32_t pid) override;
 
+  ErrorMessageOr<std::vector<TracepointInfo>> LoadTracepointList() override;
+
   ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
                                                 uint64_t size) override;
 
@@ -97,6 +99,27 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(
 std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   absl::MutexLock lock(&mutex_);
   return process_list_;
+}
+
+ErrorMessageOr<std::vector<TracepointInfo>>
+ProcessManagerImpl::LoadTracepointList() {
+  GetTracepointListRequest request;
+  GetTracepointListResponse response;
+
+  std::unique_ptr<grpc::ClientContext> context =
+      CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  grpc::Status status =
+      process_service_->GetTracepointList(context.get(), request, &response);
+
+  if (!status.ok()) {
+    ERROR("Grpc call failed: code=%d, message=%s", status.error_code(),
+          status.error_message());
+    return ErrorMessage(status.error_message());
+  }
+
+  const auto& tracepoints = response.tracepoints();
+
+  return std::vector<TracepointInfo>(tracepoints.begin(), tracepoints.end());
 }
 
 ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(

@@ -9,6 +9,7 @@ import "code_block.proto";
 import "module.proto";
 import "process.proto";
 import "symbol.proto";
+import "tracepoint.proto";
 
 message CaptureRequest {
   CaptureOptions capture_options = 1;
@@ -36,6 +37,12 @@ message GetModuleListResponse {
   repeated ModuleInfo modules = 1;
 }
 
+message GetTracepointListRequest {}
+
+message GetTracepointListResponse {
+  repeated TracepointInfo tracepoints = 1;
+}
+
 message GetProcessMemoryRequest {
   int32 pid = 1;
   uint64 address = 2;
@@ -59,6 +66,9 @@ service ProcessService {
   rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
 
   rpc GetModuleList(GetModuleListRequest) returns (GetModuleListResponse) {}
+
+  rpc GetTracepointList(GetTracepointListRequest)
+      returns (GetTracepointListResponse) {}
 
   rpc GetProcessMemory(GetProcessMemoryRequest)
       returns (GetProcessMemoryResponse) {}

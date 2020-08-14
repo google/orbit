@@ -60,6 +60,23 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   return Status::OK;
 }
 
+Status ProcessServiceImpl::GetTracepointList(
+    grpc::ServerContext*, const GetTracepointListRequest*,
+    GetTracepointListResponse* response) {
+  LOG("Sending tracepoints");
+
+  const auto tracepoint_infos = LinuxUtils::ListTracepoints();
+  if (!tracepoint_infos) {
+    return Status(StatusCode::NOT_FOUND, tracepoint_infos.error().message());
+  }
+
+  for (const auto& tracepoint_info : tracepoint_infos.value()) {
+    *(response->add_tracepoints()) = tracepoint_info;
+  }
+
+  return Status::OK;
+}
+
 Status ProcessServiceImpl::GetProcessMemory(
     ServerContext*, const GetProcessMemoryRequest* request,
     GetProcessMemoryResponse* response) {

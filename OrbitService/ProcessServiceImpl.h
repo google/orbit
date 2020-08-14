@@ -25,6 +25,10 @@ class ProcessServiceImpl final : public ProcessService::Service {
       grpc::ServerContext* context, const GetModuleListRequest* request,
       GetModuleListResponse* response) override;
 
+  [[nodiscard]] grpc::Status GetTracepointList(
+      grpc::ServerContext* context, const GetTracepointListRequest* request,
+      GetTracepointListResponse* response) override;
+
   [[nodiscard]] grpc::Status GetProcessMemory(
       grpc::ServerContext* context, const GetProcessMemoryRequest* request,
       GetProcessMemoryResponse* response) override;

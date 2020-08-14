@@ -5,6 +5,8 @@
 #ifndef ORBIT_CLIENT_SERVICES_PROCESS_MANAGER_H_
 #define ORBIT_CLIENT_SERVICES_PROCESS_MANAGER_H_
 
+#include <tracepoint.pb.h>
+
 #include <memory>
 #include <string>
 #include <thread>
@@ -43,6 +45,8 @@ class ProcessManager {
 
   virtual ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(
       int32_t pid) = 0;
+
+  virtual ErrorMessageOr<std::vector<TracepointInfo>> LoadTracepointList() = 0;
 
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
