@@ -77,7 +77,7 @@ void TimeGraph::SetFontSize(int a_FontSize) {
 void TimeGraph::Clear() {
   ScopeLock lock(m_Mutex);
 
-  m_Batcher.Reset();
+  m_Batcher.StartNewFrame();
   capture_min_timestamp_ = std::numeric_limits<TickType>::max();
   capture_max_timestamp_ = 0;
   m_ThreadCountMap.clear();
@@ -564,7 +564,7 @@ void TimeGraph::NeedsUpdate() {
 void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   CHECK(string_manager_);
 
-  m_Batcher.Reset();
+  m_Batcher.StartNewFrame();
   m_TextRendererStatic.Clear();
 
   UpdateMaxTimeStamp(GEventTracer.GetEventBuffer().GetMaxTime());

@@ -10,7 +10,7 @@
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color =
-      PickingId::ToColor(PickingType::kLine, line_buffer_.lines_.size(), batcher_id_);
+      PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
 
   AddLine(from, to, z, color, picking_color, std::move(user_data));
 }
@@ -38,13 +38,13 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Col
   line_buffer_.lines_.push_back(line);
   line_buffer_.colors_.push_back_n(color, 2);
   line_buffer_.picking_colors_.push_back_n(picking_color, 2);
-  line_buffer_.user_data_.push_back(std::move(user_data));
+  user_data_.push_back(std::move(user_data));
 }
 
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color =
-      PickingId::ToColor(PickingType::kBox, box_buffer_.boxes_.size(), batcher_id_);
+      PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
   AddBox(box, colors, picking_color, std::move(user_data));
 }
 
@@ -78,13 +78,13 @@ void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const C
   box_buffer_.boxes_.push_back(box);
   box_buffer_.colors_.push_back(colors);
   box_buffer_.picking_colors_.push_back_n(picking_color, 4);
-  box_buffer_.user_data_.push_back(std::move(user_data));
+  user_data_.push_back(std::move(user_data));
 }
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
                           std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color =
-      PickingId::ToColor(PickingType::kTriangle, triangle_buffer_.triangles_.size(), batcher_id_);
+  Color picking_color = PickingId::ToColor(PickingType::kTriangle,
+                                           user_data_.size(), batcher_id_);
 
   AddTriangle(triangle, color, picking_color, std::move(user_data));
 }
@@ -103,7 +103,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Co
   triangle_buffer_.triangles_.push_back(triangle);
   triangle_buffer_.colors_.push_back_n(color, 3);
   triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);
-  triangle_buffer_.user_data_.push_back(std::move(user_data));
+  user_data_.push_back(std::move(user_data));
 }
 
 const PickingUserData* Batcher::GetUserData(PickingId id) const {
@@ -114,14 +114,10 @@ const PickingUserData* Batcher::GetUserData(PickingId id) const {
     case PickingType::kInvalid:
       return nullptr;
     case PickingType::kBox:
-      CHECK(id.element_id < box_buffer_.user_data_.size());
-      return box_buffer_.user_data_[id.element_id].get();
-    case PickingType::kLine:
-      CHECK(id.element_id < line_buffer_.user_data_.size());
-      return line_buffer_.user_data_[id.element_id].get();
     case PickingType::kTriangle:
-      CHECK(id.element_id < triangle_buffer_.user_data_.size());
-      return triangle_buffer_.user_data_[id.element_id].get();
+    case PickingType::kLine:
+      CHECK(id.element_id < user_data_.size());
+      return user_data_[id.element_id].get();
     case PickingType::kPickable:
       return nullptr;
   }
@@ -153,10 +149,15 @@ void Batcher::GetBoxGradientColors(const Color& color, std::array<Color, 4>* col
   (*colors)[3] = color;
 }
 
-void Batcher::Reset() {
+void Batcher::ResetElements() {
   line_buffer_.Reset();
   box_buffer_.Reset();
   triangle_buffer_.Reset();
+}
+
+void Batcher::StartNewFrame() {
+  ResetElements();
+  user_data_.clear();
 }
 
 void Batcher::Draw(bool picking) const {

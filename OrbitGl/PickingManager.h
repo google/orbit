@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "CoreMath.h"
+#include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
 #include "absl/synchronization/mutex.h"
 
@@ -61,6 +62,7 @@ struct PickingId {
 
   [[nodiscard]] inline static PickingId Create(PickingType type, uint32_t element_id,
                                                BatcherId batcher_id = BatcherId::kTimeGraph) {
+    CHECK(element_id >> kElementIDBitSize == 0);
     PickingId result;
     result.type = type;
     result.element_id = element_id;
