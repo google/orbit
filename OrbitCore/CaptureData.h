@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "CallstackData.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -18,7 +19,9 @@ class CaptureData {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions)
       : process_id_{process_id},
         process_name_{std::move(process_name)},
-        selected_functions_{std::move(selected_functions)} {}
+        selected_functions_{std::move(selected_functions)},
+        callstack_data_(std::make_unique<CallstackData>()),
+        selection_callstack_data_(std::make_unique<CallstackData>()) {}
   explicit CaptureData(
       int32_t process_id, std::string process_name,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
@@ -26,9 +29,13 @@ class CaptureData {
       : process_id_{process_id},
         process_name_{std::move(process_name)},
         selected_functions_{std::move(selected_functions)},
-        functions_stats_{std::move(functions_stats)} {}
+        functions_stats_{std::move(functions_stats)},
+        callstack_data_(std::make_unique<CallstackData>()),
+        selection_callstack_data_(std::make_unique<CallstackData>()) {}
 
-  explicit CaptureData() = default;
+  explicit CaptureData()
+      : callstack_data_(std::make_unique<CallstackData>()),
+        selection_callstack_data_(std::make_unique<CallstackData>()){};
   CaptureData(const CaptureData& other) = default;
   CaptureData& operator=(const CaptureData& other) = default;
   CaptureData(CaptureData&& other) = default;
@@ -89,6 +96,32 @@ class CaptureData {
   void UpdateFunctionStats(orbit_client_protos::FunctionInfo* func,
                            const orbit_client_protos::TimerInfo& timer_info);
 
+  [[nodiscard]] const CallstackData* GetCallstackData() const { return callstack_data_.get(); };
+
+  void AddUniqueCallStack(CallStack call_stack) {
+    callstack_data_->AddUniqueCallStack(std::move(call_stack));
+  }
+
+  void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) {
+    callstack_data_->AddCallstackEvent(std::move(callstack_event));
+  }
+
+  [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {
+    return selection_callstack_data_.get();
+  };
+
+  void AddSelectionCallStack(CallStack call_stack) {
+    selection_callstack_data_->AddUniqueCallStack(std::move(call_stack));
+  }
+
+  void AddSelectionCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) {
+    selection_callstack_data_->AddCallstackEvent(std::move(callstack_event));
+  }
+
+  void AddSelectionCallstackFromCallstackData(const orbit_client_protos::CallstackEvent& event) {
+    selection_callstack_data_->AddCallStackFromKnownCallstackData(event, *callstack_data_);
+  }
+
  private:
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
   int32_t process_id_ = -1;
@@ -100,6 +133,12 @@ class CaptureData {
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
+
+  // std::unique_ptr<> allows to move and copy CallstackData easier
+  // (as CallstackData stores an absl::Mutex inside)
+  std::unique_ptr<CallstackData> callstack_data_;
+  // selection_callstack_data_ is subset of callstack_data_
+  std::unique_ptr<CallstackData> selection_callstack_data_;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_DATA_H_

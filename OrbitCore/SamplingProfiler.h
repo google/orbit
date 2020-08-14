@@ -12,13 +12,12 @@
 #include <set>
 #include <vector>
 
-#include "BlockChain.h"
 #include "Callstack.h"
+#include "CallstackData.h"
 #include "CallstackTypes.h"
 #include "OrbitProcess.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
 struct SampledFunction {
@@ -67,37 +66,12 @@ class SamplingProfiler {
   explicit SamplingProfiler(std::shared_ptr<Process> a_Process) : process_{std::move(a_Process)} {}
   SamplingProfiler() : SamplingProfiler{std::make_shared<Process>()} {}
 
-  int GetNumSamples() const { return samples_count_; }
-
-  void AddCallStack(orbit_client_protos::CallstackEvent&& callstack_event);
-  void AddUniqueCallStack(CallStack call_stack);
-
-  std::shared_ptr<CallStack> GetCallStack(CallstackID callstack_id) {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    return unique_callstacks_.at(callstack_id);
-  }
-  bool HasCallStack(CallstackID callstack_id) {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    return unique_callstacks_.count(callstack_id) > 0;
-  }
-
   const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(uint64_t address, ThreadID thread_id,
                                                            int* callstacks_count);
   std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(uint64_t address,
                                                                         ThreadID thread_id);
-
-  BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024>* GetCallstacks() {
-    return &callstack_events_;
-  }
-
-  void ForEachUniqueCallstack(const std::function<void(const CallStack&)>& action) {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    for (const auto& it : unique_callstacks_) {
-      action(*it.second);
-    }
-  }
 
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;
@@ -111,19 +85,13 @@ class SamplingProfiler {
     return &it->second;
   }
 
-  void SetGenerateSummary(bool a_Value) { generate_summary_ = a_Value; }
+  void SetGenerateSummary(bool value) { generate_summary_ = value; }
   bool GetGenerateSummary() const { return generate_summary_; }
   void SortByThreadUsage();
-  void ProcessSamples();
+  void ProcessSamples(const CallstackData& callstack_data);
   void UpdateAddressInfo(uint64_t address);
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
-
-  void ClearCallstacks() {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    unique_callstacks_.clear();
-    callstack_events_.clear();
-  }
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t address) const;
   [[nodiscard]] const std::string& GetModuleNameByAddress(uint64_t address) const;
@@ -132,18 +100,12 @@ class SamplingProfiler {
   static const std::string kUnknownFunctionOrModuleName;
 
  protected:
-  void ResolveCallstacks();
+  void ResolveCallstacks(const CallstackData& callstack_data);
   void FillThreadSampleDataSampleReports();
 
  protected:
   std::shared_ptr<Process> process_;
   bool generate_summary_ = true;
-  int samples_count_ = 0;
-
-  // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
-  BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024> callstack_events_;
-  absl::Mutex unique_callstacks_mutex_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;

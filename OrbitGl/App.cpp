@@ -104,7 +104,7 @@ void OrbitApp::OnCaptureComplete() {
 
     RefreshCaptureView();
 
-    AddSamplingReport(Capture::GSamplingProfiler);
+    AddSamplingReport(Capture::GSamplingProfiler, Capture::capture_data_.GetCallstackData());
     AddTopDownView(*Capture::GSamplingProfiler);
 
     if (capture_stopped_callback_) {
@@ -121,8 +121,8 @@ void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
 }
 
-void OrbitApp::OnCallstack(CallStack callstack) {
-  Capture::GSamplingProfiler->AddUniqueCallStack(callstack);
+void OrbitApp::OnUniqueCallStack(CallStack callstack) {
+  Capture::capture_data_.AddUniqueCallStack(std::move(callstack));
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
@@ -132,7 +132,7 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
   }
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
-  Capture::GSamplingProfiler->AddCallStack(std::move(callstack_event));
+  Capture::capture_data_.AddCallstackEvent(std::move(callstack_event));
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
@@ -332,7 +332,8 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     }
     std::shared_ptr<SamplingProfiler> profiler = sampling_report_->GetProfiler();
 
-    DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler);
+    DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler,
+                             Capture::capture_data_.GetCallstackData()->GetCallstackEventsSize());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }
@@ -374,9 +375,9 @@ void OrbitApp::NeedsRedraw() {
   }
 }
 
-void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler) {
-  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
-
+void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+                                 const CallstackData* callstack_data) {
+  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
   if (sampling_reports_callback_) {
     DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
     sampling_reports_callback_(callstack_data_view, report);
@@ -385,8 +386,9 @@ void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_prof
   sampling_report_ = report;
 }
 
-void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler) {
-  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
+void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+                                  const CallstackData* callstack_data) {
+  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
 
   if (selection_report_callback_) {
     DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
@@ -601,7 +603,7 @@ void OrbitApp::ClearCapture() {
 
   // Trigger deallocation of previous sampling related data.
   auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
-  AddSamplingReport(empty_sampling_profiler);
+  AddSamplingReport(empty_sampling_profiler, nullptr);
   AddTopDownView(*empty_sampling_profiler);
   Capture::GSamplingProfiler = empty_sampling_profiler;
 

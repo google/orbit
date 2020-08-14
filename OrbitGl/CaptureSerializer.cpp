@@ -83,14 +83,15 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
   // is not under the same mutex lock we could end up having list of callstacks
   // inconsistent with unique_callstacks. Revisit sampling profiler data
   // thread-safety.
-  Capture::GSamplingProfiler->ForEachUniqueCallstack([&capture_info](const CallStack& call_stack) {
-    CallstackInfo* callstack = capture_info->add_callstacks();
-    *callstack->mutable_data() = {call_stack.GetFrames().begin(), call_stack.GetFrames().end()};
-  });
+  Capture::capture_data_.GetCallstackData()->ForEachUniqueCallstack(
+      [&capture_info](const CallStack& call_stack) {
+        CallstackInfo* callstack = capture_info->add_callstacks();
+        *callstack->mutable_data() = {call_stack.GetFrames().begin(), call_stack.GetFrames().end()};
+      });
 
-  auto callstacks = Capture::GSamplingProfiler->GetCallstacks();
-  capture_info->mutable_callstack_events()->Reserve(callstacks->size());
-  for (const auto& callstack : *callstacks) {
+  const auto& callstacks = Capture::capture_data_.GetCallstackData()->callstack_events();
+  capture_info->mutable_callstack_events()->Reserve(callstacks.size());
+  for (const auto& callstack : callstacks) {
     capture_info->add_callstack_events()->CopyFrom(callstack);
   }
 
@@ -159,7 +160,8 @@ bool ReadMessage(google::protobuf::Message* message,
 
 void FillEventBuffer() {
   GEventTracer.GetEventBuffer().Reset();
-  for (const CallstackEvent& callstack_event : *Capture::GSamplingProfiler->GetCallstacks()) {
+  for (const CallstackEvent& callstack_event :
+       Capture::capture_data_.GetCallstackData()->callstack_events()) {
     GEventTracer.GetEventBuffer().AddCallstackEvent(
         callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
   }
@@ -195,12 +197,12 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
 
   for (CallstackInfo callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
-    Capture::GSamplingProfiler->AddUniqueCallStack(unique_callstack);
+    Capture::capture_data_.AddUniqueCallStack(std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
-    Capture::GSamplingProfiler->AddCallStack(std::move(callstack_event));
+    Capture::capture_data_.AddCallstackEvent(std::move(callstack_event));
   }
-  Capture::GSamplingProfiler->ProcessSamples();
+  Capture::GSamplingProfiler->ProcessSamples(*Capture::capture_data_.GetCallstackData());
 
   time_graph_->Clear();
   StringManager* string_manager = time_graph_->GetStringManager();
@@ -247,7 +249,8 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
     time_graph_->ProcessTimer(timer_info);
   }
 
-  GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
+  GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler,
+                               Capture::capture_data_.GetCallstackData());
   GOrbitApp->AddTopDownView(*Capture::GSamplingProfiler);
   GOrbitApp->FireRefreshCallbacks();
   return outcome::success();

@@ -176,11 +176,10 @@ static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_leng
   return fn_name;
 };
 
-static std::string FormatCallstackForTooltip(std::shared_ptr<CallStack> callstack,
-                                             int max_line_length = 80, int max_lines = 20,
-                                             int bottom_n_lines = 5) {
+static std::string FormatCallstackForTooltip(const CallStack& callstack, int max_line_length = 80,
+                                             int max_lines = 20, int bottom_n_lines = 5) {
   std::string result;
-  int size = static_cast<int>(callstack->GetFramesCount());
+  int size = static_cast<int>(callstack.GetFramesCount());
   if (max_lines <= 0) {
     max_lines = size;
   }
@@ -189,14 +188,14 @@ static std::string FormatCallstackForTooltip(std::shared_ptr<CallStack> callstac
 
   for (int i = 0; i < top_n; ++i) {
     result =
-        result + "<br/>" + SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
+        result + "<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length);
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
     result =
-        result + "<br/>" + SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
+        result + "<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length);
   }
 
   return result;
@@ -210,17 +209,19 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
     return unknown_return_text;
   }
 
+  const CallstackData* callstack_data = Capture::capture_data_.GetCallstackData();
   CallstackEvent* callstack_event = static_cast<CallstackEvent*>(user_data->custom_data_);
-  auto callstack = Capture::GSamplingProfiler->GetCallStack(callstack_event->callstack_hash());
 
-  if (!callstack) {
+  uint64_t callstack_hash = callstack_event->callstack_hash();
+  const CallStack* callstack = callstack_data->GetCallStack(callstack_hash);
+  if (callstack == nullptr) {
     return unknown_return_text;
   }
 
   std::string function_name = SafeGetFormattedFunctionName(callstack->GetFrame(0), -1);
   std::string result = absl::StrFormat(
       "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>", function_name.c_str());
-  result += FormatCallstackForTooltip(callstack);
+  result += FormatCallstackForTooltip(*callstack);
   return result +
          "<br/><br/><i>To select samples, click the bar & drag across multiple "
          "samples</i>";

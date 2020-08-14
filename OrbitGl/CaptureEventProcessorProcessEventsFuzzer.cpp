@@ -25,7 +25,7 @@ class MyCaptureListener : public CaptureListener {
   void OnCaptureComplete() override {}
   void OnTimer(const TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
-  void OnCallstack(CallStack) override {}
+  void OnUniqueCallStack(CallStack) override {}
   void OnCallstackEvent(CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
   void OnAddressInfo(LinuxAddressInfo) override {}

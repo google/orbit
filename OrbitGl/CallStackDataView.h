@@ -27,15 +27,17 @@ class CallStackDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
-  void SetCallStack(std::shared_ptr<CallStack> callstack) {
-    callstack_ = std::move(callstack);
+  void SetCallStack(const CallStack& callstack) {
+    callstack_ = std::make_unique<CallStack>(callstack);
     OnDataChanged();
   }
+
+  void ClearCallstack() { callstack_ = nullptr; }
 
  protected:
   void DoFilter() override;
 
-  std::shared_ptr<CallStack> callstack_;
+  std::unique_ptr<CallStack> callstack_;
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame() = default;
