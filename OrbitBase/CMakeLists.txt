@@ -20,6 +20,7 @@ target_include_directories(OrbitBase PRIVATE
 
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
+        include/OrbitBase/DebugUtils.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/UniqueResource.h
