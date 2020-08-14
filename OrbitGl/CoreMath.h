@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include <math.h>
-
 #include <algorithm>
+#include <cmath>
 
 #include "GteVector2.h"
 #include "GteVector3.h"
@@ -14,12 +13,11 @@
 
 constexpr float kPiFloat = 3.14159265358979f;
 
-typedef gte::Vector2<float> Vec2;
-typedef gte::Vector3<float> Vec3;
-typedef gte::Vector4<float> Vec4;
-typedef gte::Vector2<int> Vec2i;
+using Vec2 = gte::Vector2<float>;
+using Vec3 = gte::Vector3<float>;
+using Vec4 = gte::Vector4<float>;
 
-typedef gte::Vector4<unsigned char> Color;
+using Color = gte::Vector4<unsigned char>;
 
 template <class T>
 constexpr const T& clamp(const T& v, const T& lo, const T& hi) {

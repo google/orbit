@@ -134,7 +134,8 @@ class BlockChain final {
     ++size_;
   }
 
-  void push_back(const T* array, uint32_t size) {
+  template <size_t size>
+  void push_back(const std::array<T, size>& array) {
     for (uint32_t i = 0; i < size; ++i) {
       push_back(array[i]);
     }
