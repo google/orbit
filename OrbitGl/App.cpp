@@ -474,7 +474,7 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
 
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
-  const int32_t pid = m_ProcessesDataView->GetSelectedProcessId();
+  const int32_t pid = processes_data_view_->GetSelectedProcessId();
   const std::shared_ptr<Process>& process = FindProcessByPid(pid);
   preset.set_process_full_path(
       data_manager_->GetProcessByPid(pid)->full_path());
@@ -586,7 +586,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  int32_t pid = m_ProcessesDataView->GetSelectedProcessId();
+  int32_t pid = processes_data_view_->GetSelectedProcessId();
   std::string process_name = data_manager_->GetProcessByPid(pid)->name();
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
