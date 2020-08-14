@@ -153,7 +153,6 @@ class TimeGraph {
   TextRenderer m_TextRendererStatic;
   TextRenderer* m_TextRenderer = nullptr;
   GlCanvas* m_Canvas = nullptr;
-  TextBox m_SceneBox;
   int m_NumDrawnTextBoxes = 0;
 
   // First member is id.

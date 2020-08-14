@@ -68,9 +68,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
-  const TextBox& scene_box = canvas->GetSceneBox();
 
-  float min_x = scene_box.GetPosX();
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
@@ -133,7 +131,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         if (is_visible_width) {
           if (!is_collapsed) {
-            SetTimesliceText(timer_info, elapsed_us, min_x, &text_box);
+            SetTimesliceText(timer_info, elapsed_us, world_start_x, &text_box);
           }
           batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
         } else {

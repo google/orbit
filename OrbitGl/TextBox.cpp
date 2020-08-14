@@ -17,57 +17,30 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 TextBox::TextBox()
-    : m_Pos(Vec2::Zero()),
-      m_Size(Vec2(100.f, 10.f)),
-      m_MainFrameCounter(-1),
-      m_Selected(false),
-      m_TextY(FLT_MAX),
-      m_ElapsedTimeTextLength(0) {
-  Update();
-}
+    : pos_(Vec2::Zero()),
+      size_(Vec2(100.f, 10.f)),
+      main_frame_counter_(-1),
+      text_y_(FLT_MAX),
+      elapsed_time_text_length_(0) {}
 
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size, const std::string& a_Text,
                  const Color& a_Color)
-    : m_Pos(a_Pos),
-      m_Size(a_Size),
+    : pos_(a_Pos),
+      size_(a_Size),
       text_(a_Text),
-      m_Color(a_Color),
-      m_MainFrameCounter(-1),
-      m_Selected(false),
-      m_ElapsedTimeTextLength(0) {
-  Update();
-}
+      color_(a_Color),
+      main_frame_counter_(-1),
+      elapsed_time_text_length_(0) {}
 
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color)
-    : m_Pos(a_Pos),
-      m_Size(a_Size),
-      m_Color(a_Color),
-      m_MainFrameCounter(-1),
-      m_Selected(false),
-      m_ElapsedTimeTextLength(0) {
-  Update();
-}
+    : pos_(a_Pos),
+      size_(a_Size),
+      color_(a_Color),
+      main_frame_counter_(-1),
+      elapsed_time_text_length_(0) {}
 
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size)
-    : m_Pos(a_Pos),
-      m_Size(a_Size),
-      m_MainFrameCounter(-1),
-      m_Selected(false),
-      m_ElapsedTimeTextLength(0) {
-  Update();
-}
-
-void TextBox::Update() {
-  m_Min = m_Pos;
-  m_Max = m_Pos + Vec2(std::abs(m_Size[0]), std::abs(m_Size[1]));
-}
-
-float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
-  float worldWidth = a_TextRenderer.GetSceneBox().m_Size[0];
-  float screenSize = a_TextRenderer.GetCanvas()->getWidth();
-
-  return (m_Size[0] / worldWidth) * screenSize;
-}
+    : pos_(a_Pos), size_(a_Size), main_frame_counter_(-1), elapsed_time_text_length_(0) {}
 
 void TextBox::Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x, bool visible,
                    bool right_justify, bool is_inactive, unsigned int id, bool is_picking,
@@ -101,7 +74,7 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x, b
   }
 
   if (visible) {
-    Box box(m_Pos, m_Size, z);
+    Box box(pos_, size_, z);
     // TODO: This should be pickable??
     batcher->AddBox(box, color);
 
@@ -126,5 +99,5 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x, b
   }
 
   // TODO: This should be pickable??
-  batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey);
+  batcher->AddVerticalLine(pos_, size_[1], z, grey);
 }

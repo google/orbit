@@ -27,48 +27,15 @@ class TextBox {
             bool visible = true, bool right_justify = false, bool is_inactive = false,
             unsigned int id = 0xFFFFFFFF, bool is_picking = false, bool is_highlighted = false);
 
-  void SetSize(const Vec2& a_Size) {
-    m_Size = a_Size;
-    Update();
-  }
-  void SetSizeX(float X) {
-    m_Size[0] = X;
-    Update();
-  }
-  void SetSizeY(float Y) {
-    m_Size[1] = Y;
-    Update();
-  }
+  void SetSize(const Vec2& a_Size) { size_ = a_Size; }
 
-  void SetPos(const Vec2& a_Pos) {
-    m_Pos = a_Pos;
-    Update();
-  }
-  void SetPosX(float X) {
-    m_Pos[0] = X;
-    Update();
-  }
-  void SetPosY(float Y) {
-    m_Pos[1] = Y;
-    Update();
-  }
+  void SetPos(const Vec2& a_Pos) { pos_ = a_Pos; }
 
-  const Vec2& GetSize() const { return m_Size; }
-  float GetSizeX() const { return m_Size[0]; }
-  float GetSizeY() const { return m_Size[1]; }
-
-  const Vec2& GetPos() const { return m_Pos; }
-  float GetPosX() const { return m_Pos[0]; }
-  float GetPosY() const { return m_Pos[1]; }
-
-  float GetMaxX() const { return m_Max[0]; }
-  float GetMaxY() const { return m_Max[1]; }
-
-  Vec2 GetMin() const { return m_Min; }
-  Vec2 GetMax() const { return m_Max; }
+  const Vec2& GetSize() const { return size_; }
+  const Vec2& GetPos() const { return pos_; }
 
   const std::string& GetText() const { return text_; }
-  void SetText(const std::string& a_Text) { text_ = a_Text; }
+  void SetText(std::string_view text) { text_ = text; }
 
   void SetTimerInfo(const orbit_client_protos::TimerInfo& timer_info) {
     if (timer_info.end() == 0 && timer_info.start() == 0) {
@@ -78,67 +45,28 @@ class TextBox {
   }
   const orbit_client_protos::TimerInfo& GetTimerInfo() const { return timer_info_; }
 
-  void SetTextY(float a_Y) { m_TextY = a_Y; }
+  void SetTextY(float a_Y) { text_y_ = a_Y; }
 
-  void SetElapsedTimeTextLength(size_t a_Length) { m_ElapsedTimeTextLength = a_Length; }
-  size_t GetElapsedTimeTextLength() const { return m_ElapsedTimeTextLength; }
+  void SetElapsedTimeTextLength(size_t length) { elapsed_time_text_length_ = length; }
+  size_t GetElapsedTimeTextLength() const { return elapsed_time_text_length_; }
 
-  inline void SetColor(Color& a_Color) { m_Color = a_Color; }
-  inline void SetColor(uint8_t a_R, uint8_t a_G, uint8_t a_B) {
-    m_Color[0] = a_R;
-    m_Color[1] = a_G;
-    m_Color[2] = a_B;
+  inline void SetColor(Color& color) { color_ = color; }
+  inline void SetColor(uint8_t r, uint8_t g, uint8_t b) {
+    color_[0] = r;
+    color_[1] = g;
+    color_[2] = b;
   }
-  inline Color GetColor() { return m_Color; }
-
-  float GetScreenSize(const TextRenderer& a_TextRenderer);
-
-  inline bool Intersects(const TextBox& a_Box);
-  inline void Expand(const TextBox& a_Box);
-
-  int GetMainFrameCounter() const { return m_MainFrameCounter; }
-  void SetMainFrameCounter(int a_Counter) { m_MainFrameCounter = a_Counter; }
-
-  void ToggleSelect() { m_Selected = !m_Selected; }
-  void SetSelected(bool a_Select) { m_Selected = a_Select; }
+  inline Color GetColor() { return color_; }
 
  protected:
-  void Update();
-
- protected:
-  Vec2 m_Pos;
-  Vec2 m_Size;
-  Vec2 m_Min;
-  Vec2 m_Max;
+  Vec2 pos_;
+  Vec2 size_;
   std::string text_;
-  Color m_Color;
+  Color color_;
   orbit_client_protos::TimerInfo timer_info_;
-  int m_MainFrameCounter;
-  bool m_Selected;
-  float m_TextY;
-  size_t m_ElapsedTimeTextLength;
+  int main_frame_counter_;
+  float text_y_;
+  size_t elapsed_time_text_length_;
 };
-
-inline bool TextBox::Intersects(const TextBox& a_Box) {
-  for (int i = 0; i < 2; i++) {
-    if (m_Max[i] < a_Box.m_Min[i] || m_Min[i] > a_Box.m_Max[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-inline void TextBox::Expand(const TextBox& a_Box) {
-  for (int i = 0; i < 2; i++) {
-    if (a_Box.m_Min[i] < m_Min[i]) {
-      m_Min[i] = a_Box.m_Min[i];
-    }
-
-    if (a_Box.m_Max[i] > m_Max[i]) {
-      m_Max[i] = a_Box.m_Max[i];
-    }
-  }
-}
 
 #endif  // ORBIT_GL_TEXT_BOX_H_

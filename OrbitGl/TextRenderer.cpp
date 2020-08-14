@@ -360,6 +360,4 @@ void TextRenderer::Clear() {
   }
 }
 
-const TextBox& TextRenderer::GetSceneBox() const { return m_Canvas->GetSceneBox(); }
-
 int TextRenderer::GetNumCharacters() const { return int(m_Buffer->vertices->size) / 4; }

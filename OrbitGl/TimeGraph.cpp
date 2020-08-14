@@ -569,7 +569,6 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
 
   UpdateMaxTimeStamp(GEventTracer.GetEventBuffer().GetMaxTime());
 
-  m_SceneBox = m_Canvas->GetSceneBox();
   m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   m_WorldStartX = m_Canvas->GetWorldTopLeftX();
   m_WorldWidth = m_Canvas->GetWorldWidth();

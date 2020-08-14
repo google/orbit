@@ -38,7 +38,6 @@ class TextRenderer {
   void SetCanvas(class GlCanvas* a_Canvas) { m_Canvas = a_Canvas; }
   const GlCanvas* GetCanvas() const { return m_Canvas; }
   GlCanvas* GetCanvas() { return m_Canvas; }
-  const TextBox& GetSceneBox() const;
   int GetNumCharacters() const;
   void ToggleDrawOutline() { m_DrawOutline = !m_DrawOutline; }
   void SetFontSize(int a_Size);
