@@ -53,22 +53,6 @@ std::shared_ptr<FunctionInfo> CreateFunctionInfo(
   return function_info;
 }
 
-void Select(FunctionInfo* func) {
-  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
-      ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
-      func->pretty_name(), GetAbsoluteAddress(*func), func->address(),
-      func->load_bias(), func->module_base_address());
-  Capture::GSelectedFunctionsMap[GetAbsoluteAddress(*func)] = func;
-}
-
-void UnSelect(FunctionInfo* func) {
-  Capture::GSelectedFunctionsMap.erase(GetAbsoluteAddress(*func));
-}
-
-bool IsSelected(const FunctionInfo& func) {
-  return Capture::GSelectedFunctionsMap.count(GetAbsoluteAddress(func)) > 0;
-}
-
 const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>&
 GetFunctionNameToOrbitTypeMap() {
   static absl::flat_hash_map<const char*, FunctionInfo::OrbitType>
@@ -102,10 +86,6 @@ bool SetOrbitTypeFromName(FunctionInfo* func) {
     }
   }
   return false;
-}
-
-bool IsSelected(const SampledFunction& func) {
-  return Capture::GSelectedFunctionsMap.count(func.address) > 0;
 }
 
 }  // namespace FunctionUtils

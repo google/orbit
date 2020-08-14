@@ -29,11 +29,12 @@ class LiveFunctionsDataView : public DataView {
  protected:
   void DoFilter() override;
   void DoSort() override;
-  orbit_client_protos::FunctionInfo* GetFunction(unsigned int row) const;
-  std::pair<TextBox*, TextBox*> GetMinMax(
+  [[nodiscard]] orbit_client_protos::FunctionInfo* GetFunction(
+      unsigned int row);
+  [[nodiscard]] std::pair<TextBox*, TextBox*> GetMinMax(
       const orbit_client_protos::FunctionInfo& function) const;
 
-  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> functions_;
+  std::vector<orbit_client_protos::FunctionInfo> functions_;
 
   LiveFunctionsController* live_functions_;
 

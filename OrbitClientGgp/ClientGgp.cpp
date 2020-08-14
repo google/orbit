@@ -55,17 +55,20 @@ bool ClientGgp::InitClient() {
 
 // Client requests to start the capture
 bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
-  ErrorMessageOr<void> result = Capture::StartCapture();
-  if (result.has_error()) {
-    ERROR("Error starting capture: %s", result.error().message());
-    return false;
-  }
   int32_t pid = target_process_->GetID();
   LOG("Capture pid %d", pid);
 
   // TODO: selected_functions available when UploadSymbols is included
-  std::map<uint64_t, orbit_client_protos::FunctionInfo*> selected_functions =
-      Capture::GSelectedFunctionsMap;
+  // TODO(kuebler): right now selected_functions is only an empty placeholder,
+  //  it needs to be filled separately in each client and then passed.
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
+      selected_functions;
+  ErrorMessageOr<void> result = Capture::StartCapture(
+      pid, target_process_->GetName(), selected_functions);
+  if (result.has_error()) {
+    ERROR("Error starting capture: %s", result.error().message());
+    return false;
+  }
   result = capture_client_->StartCapture(thread_pool, pid, selected_functions);
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());

@@ -79,8 +79,9 @@ FunctionInfo* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
   return it->second;
 }
 
-void Pdb::ApplyPreset(const PresetFile& preset) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPreset - %s", m_Name.c_str()));
+std::vector<FunctionInfo*> Pdb::GetSelectedFunctionsFromPreset(
+    const PresetFile& preset) const {
+  std::vector<FunctionInfo*> functions_to_select;
 
   std::string module_name = m_LoadedModuleName;
   auto it = preset.preset_info().path_to_module().find(module_name);
@@ -90,9 +91,9 @@ void Pdb::ApplyPreset(const PresetFile& preset) {
     for (uint64_t hash : preset_module.function_hashes()) {
       auto fit = m_StringFunctionMap.find(hash);
       if (fit != m_StringFunctionMap.end()) {
-        FunctionInfo* function = fit->second;
-        FunctionUtils::Select(function);
+        functions_to_select.push_back(fit->second);
       }
     }
   }
+  return functions_to_select;
 }
