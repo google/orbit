@@ -5,6 +5,7 @@
 #include "Batcher.h"
 
 #include "OpenGl.h"
+#include "TextBox.h"
 #include "Utils.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
@@ -31,8 +32,8 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  line.m_Beg = Vec3(from[0], from[1], z);
-  line.m_End = Vec3(to[0], to[1], z);
+  line.start_point = Vec3(from[0], from[1], z);
+  line.end_point = Vec3(to[0], to[1], z);
 
   line_buffer_.lines_.push_back(line);
   line_buffer_.colors_.push_back_n(color, 2);
