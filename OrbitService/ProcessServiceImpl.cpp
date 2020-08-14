@@ -6,8 +6,8 @@
 
 #include <memory>
 
+#include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
-#include "SymbolHelper.h"
 #include "Utils.h"
 #include "symbol.pb.h"
 
@@ -103,18 +103,14 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
                                 request->address(), request->pid()));
 }
 
-Status ProcessServiceImpl::GetDebugInfoFile(::grpc::ServerContext*,
-                                            const GetDebugInfoFileRequest* request,
+Status ProcessServiceImpl::GetDebugInfoFile(ServerContext*, const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
-  const SymbolHelper symbol_helper;
-  ErrorMessageOr<std::string> result =
-      symbol_helper.FindDebugSymbolsFile(request->module_path(), request->build_id());
-  if (!result) {
-    return Status(StatusCode::NOT_FOUND, result.error().message());
+  const auto symbols_path = utils::FindSymbolsFilePath(request->module_path());
+  if (!symbols_path) {
+    return Status(StatusCode::NOT_FOUND, symbols_path.error().message());
   }
 
-  response->set_debug_info_file_path(result.value());
-
+  response->set_debug_info_file_path(symbols_path.value());
   return Status::OK;
 }
 

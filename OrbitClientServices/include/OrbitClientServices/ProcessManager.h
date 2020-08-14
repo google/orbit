@@ -55,8 +55,7 @@ class ProcessManager {
 
   virtual ErrorMessageOr<std::string> LoadNullTerminatedString(int32_t pid, uint64_t address) = 0;
 
-  virtual ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path,
-                                                        const std::string& build_id) = 0;
+  virtual ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.

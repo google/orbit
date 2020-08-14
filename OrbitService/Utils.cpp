@@ -5,6 +5,7 @@
 #include "Utils.h"
 
 #include <absl/base/casts.h>
+#include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <cxxabi.h>
 #include <sys/stat.h>
@@ -42,7 +43,7 @@ ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
     return ErrorMessage(absl::StrFormat("Unable to call stat with file \"%s\": %s", file_path,
                                         SafeStrerror(errno)));
   }
-  return outcome::success(stat_buf.st_size);
+  return stat_buf.st_size;
 }
 
 ErrorMessageOr<std::string> ExecuteCommand(const std::string& cmd) {
@@ -59,7 +60,7 @@ ErrorMessageOr<std::string> ExecuteCommand(const std::string& cmd) {
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
     result += buffer.data();
   }
-  return outcome::success(result);
+  return result;
 }
 }  // namespace
 
@@ -194,8 +195,83 @@ ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_n
     return ErrorMessage(
         absl::StrFormat("Unable to read file %s: %s", file_name, SafeStrerror(errno)));
   }
-  return outcome::success(
-      std::string{std::istreambuf_iterator<char>{file_stream}, std::istreambuf_iterator<char>{}});
+  return std::string{std::istreambuf_iterator<char>{file_stream}, std::istreambuf_iterator<char>{}};
+}
+
+ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
+                                         const std::vector<Path>& search_directories) {
+  OUTCOME_TRY(module_elf_file, ElfFile::Create(module_path.string()));
+  if (module_elf_file->HasSymtab()) {
+    return module_path;
+  }
+
+  if (module_elf_file->GetBuildId().empty()) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to find symbols for module \"%s\". Module does not contain a build id",
+        module_path));
+  }
+
+  const Path& filename = module_path.filename();
+  Path filename_dot_debug = filename;
+  filename_dot_debug.replace_extension(".debug");
+  Path filename_plus_debug = filename;
+  filename_plus_debug.replace_extension(filename.extension().string() + ".debug");
+
+  std::set<Path> search_paths;
+  for (const auto& directory : search_directories) {
+    search_paths.insert(directory / filename_dot_debug);
+    search_paths.insert(directory / filename_plus_debug);
+    search_paths.insert(directory / filename);
+  }
+
+  std::vector<std::string> error_messages;
+
+  for (const auto& symbols_path : search_paths) {
+    if (!std::filesystem::exists(symbols_path)) continue;
+
+    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file = ElfFile::Create(symbols_path.string());
+    if (!symbols_file) {
+      std::string error_message =
+          absl::StrFormat("Potential symbols file \"%s\" cannot be read as an elf file: %s",
+                          symbols_path, symbols_file.error().message());
+      LOG("%s", error_message);
+      error_messages.emplace_back("* " + std::move(error_message));
+      continue;
+    }
+    if (!symbols_file.value()->HasSymtab()) {
+      std::string error_message =
+          absl::StrFormat("Potential symbols file \"%s\" does not contain symbols.", symbols_path);
+      LOG("%s (It does not contain a .symtab section)", error_message);
+      error_messages.emplace_back("* " + std::move(error_message));
+      continue;
+    }
+    if (symbols_file.value()->GetBuildId().empty()) {
+      std::string error_message =
+          absl::StrFormat("Potential symbols file \"%s\" does not have a build id", symbols_path);
+      LOG("%s", error_message);
+      error_messages.emplace_back("* " + std::move(error_message));
+      continue;
+    }
+    const std::string& build_id = symbols_file.value()->GetBuildId();
+    if (build_id != module_elf_file->GetBuildId()) {
+      std::string error_message = absl::StrFormat(
+          "Potential symbols file \"%s\" has a different build id than the module requested by the "
+          "client. \"%s\" != \"%s\"",
+          symbols_path, build_id, module_elf_file->GetBuildId());
+      LOG("%s", error_message);
+      error_messages.emplace_back("* " + std::move(error_message));
+      continue;
+    }
+
+    return symbols_path;
+  }
+
+  std::string error_message_for_client{absl::StrFormat(
+      "Unable to find debug symbols on the instance for module \"%s\". ", module_path)};
+  if (!error_messages.empty()) {
+    absl::StrAppend(&error_message_for_client, "\nDetails:\n", absl::StrJoin(error_messages, "\n"));
+  }
+  return ErrorMessage(error_message_for_client);
 }
 
 bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,

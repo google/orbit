@@ -41,7 +41,7 @@ endif()
 target_include_directories(OrbitServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(OrbitServiceLib PUBLIC
-        OrbitCore
+        ElfUtils
         OrbitFramePointerValidator
         OrbitLinuxTracing
         OrbitProtos
@@ -68,9 +68,7 @@ target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp)
 
 target_link_libraries(OrbitServiceTests PRIVATE 
-        ElfUtils
-        OrbitBase
-        OrbitProtos
+        OrbitServiceLib
         GTest::Main)
 
 add_custom_command(TARGET OrbitServiceTests POST_BUILD
@@ -78,3 +76,7 @@ add_custom_command(TARGET OrbitServiceTests POST_BUILD
         $<TARGET_FILE_DIR:OrbitServiceTests>/testdata)
 
 register_test(OrbitServiceTests)
+
+add_fuzzer(OrbitServiceUtilsFindSymbolsFilePathFuzzer
+           OrbitServiceUtilsFindSymbolsFilePathFuzzer.cpp)
+target_link_libraries(OrbitServiceUtilsFindSymbolsFilePathFuzzer PRIVATE OrbitServiceLib)

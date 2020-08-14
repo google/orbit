@@ -125,49 +125,11 @@ ErrorMessageOr<ModuleSymbols> FindSymbols(const std::string& module_path,
 
 }  // namespace
 
-SymbolHelper::SymbolHelper()
-    : collector_symbol_directories_{"/home/cloudcast/",  "/home/cloudcast/debug_symbols/",
-                                    "/mnt/developer/",   "/mnt/developer/debug_symbols/",
-                                    "/srv/game/assets/", "/srv/game/assets/debug_symbols/"},
-      symbols_file_directories_(ReadSymbolsFile()) {}
-
-ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
-    const std::string& module_path) const {
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result = ElfFile::Create(module_path);
-
-  if (!elf_file_result) {
-    return ErrorMessage(absl::StrFormat("Unable to load ELF file: \"%s\": %s", module_path,
-                                        elf_file_result.error().message()));
-  }
-
-  std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
-
-  if (elf_file->HasSymtab()) {
-    return elf_file->LoadSymbols();
-  }
-
-  if (elf_file->GetBuildId().empty()) {
-    return ErrorMessage(
-        absl::StrFormat("No symbols are contained in the module \"%s\". Symbols cannot be "
-                        "loaded from a separate symbols file, because module does not "
-                        "contain a build_id,",
-                        module_path));
-  }
-
-  std::vector<std::string> search_directories = collector_symbol_directories_;
-  search_directories.emplace_back(Path::GetDirectory(module_path));
-
-  return FindSymbols(module_path, elf_file->GetBuildId(), search_directories);
-}
+SymbolHelper::SymbolHelper() : symbols_file_directories_(ReadSymbolsFile()) {}
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadUsingSymbolsPathFile(
     const std::string& module_path, const std::string& build_id) const {
   return FindSymbols(module_path, build_id, symbols_file_directories_);
-}
-
-ErrorMessageOr<std::string> SymbolHelper::FindDebugSymbolsFile(const std::string& module_path,
-                                                               const std::string& build_id) const {
-  return FindSymbolsFile(module_path, collector_symbol_directories_, build_id);
 }
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const std::string& file_path,

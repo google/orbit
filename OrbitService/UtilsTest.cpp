@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 #include <unistd.h>
 
@@ -149,6 +150,53 @@ TEST(Utils, ReadFileToString) {
     const auto result = ReadFileToString(text_file);
     ASSERT_TRUE(result) << result.error().message();
     EXPECT_EQ(result.value(), "content\nnew line");
+  }
+}
+
+TEST(Utils, FindSymbolsFilePath) {
+  const auto executable_path = GetExecutablePath(getpid());
+  ASSERT_TRUE(executable_path) << executable_path.error().message();
+  const Path test_path = executable_path.value().parent_path() / "testdata";
+
+  {
+    // same file
+    const Path hello_world_path = test_path / "hello_world_elf";
+    const auto result = FindSymbolsFilePath(hello_world_path, {test_path});
+    ASSERT_TRUE(result) << result.error().message();
+    EXPECT_EQ(result.value(), hello_world_path);
+  }
+
+  {
+    // separate file
+    const Path no_symbols_path = test_path / "no_symbols_elf";
+    const Path symbols_path = test_path / "no_symbols_elf.debug";
+    const auto result = FindSymbolsFilePath(no_symbols_path, {test_path});
+    ASSERT_TRUE(result) << result.error().message();
+    EXPECT_EQ(result.value(), symbols_path);
+  }
+
+  {
+    // non exising elf_file
+    const Path not_existing_file = test_path / "not_existing_file";
+    const auto result = FindSymbolsFilePath(not_existing_file, {test_path});
+    ASSERT_FALSE(result);
+    EXPECT_THAT(result.error().message(), testing::HasSubstr("Unable to load ELF file"));
+  }
+
+  {
+    // no build id, but does include symbols
+    const Path hello_world_elf_no_build_id = test_path / "hello_world_elf_no_build_id";
+    const auto result = FindSymbolsFilePath(hello_world_elf_no_build_id, {test_path});
+    ASSERT_TRUE(result) << result.error().message();
+    EXPECT_EQ(result.value(), hello_world_elf_no_build_id);
+  }
+
+  {
+    // no build id, no symbols
+    const Path no_symbols_no_build_id = test_path / "no_symbols_no_build_id";
+    const auto result = FindSymbolsFilePath(no_symbols_no_build_id, {test_path});
+    ASSERT_FALSE(result);
+    EXPECT_THAT(result.error().message(), testing::HasSubstr("Module does not contain a build id"));
   }
 }
 
