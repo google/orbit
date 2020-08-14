@@ -497,14 +497,12 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   std::ofstream file(filename_with_ext, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving preset in \"%s\": %s", filename_with_ext, "file.fail()");
-    return ErrorMessage(absl::StrFormat("Error opening the file %s for writing",
-                                        filename_with_ext));
+    return ErrorMessage(absl::StrFormat(
+        "Error opening the file \"%s\" for writing", filename_with_ext));
   }
 
-  {
-    LOG("Saving preset in \"%s\"", filename_with_ext);
-    preset.SerializeToOstream(&file);
-  }
+  LOG("Saving preset in \"%s\"", filename_with_ext);
+  preset.SerializeToOstream(&file);
 
   return outcome::success();
 }
@@ -616,7 +614,7 @@ OrbitApp::GetSelectedFunctionsAndOrbitFunctions() const {
   for (const auto& func : Capture::GTargetProcess->GetFunctions()) {
     if (IsFunctionSelected(*func) || FunctionUtils::IsOrbitFunc(*func)) {
       uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
-      selected_functions[address] = *(func.get());
+      selected_functions[address] = *func;
     }
   }
   return selected_functions;

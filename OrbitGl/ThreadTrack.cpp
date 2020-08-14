@@ -131,7 +131,6 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
         timer_info.function_address());
-    CHECK(func != nullptr);
 
     text_box->SetElapsedTimeTextLength(time.length());
 
