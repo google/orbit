@@ -4,27 +4,9 @@
 
 #include "Disassembler.h"
 
+#include <absl/strings/str_replace.h>
 #include <capstone/capstone.h>
 #include <capstone/platform.h>
-
-#define LOGF(format, ...)                                   \
-  {                                                         \
-    std::string log = absl::StrFormat(format, __VA_ARGS__); \
-    result_ += log;                                         \
-  }
-
-#define LOG(str) \
-  { result_ += str; }
-
-void Disassembler::LogHex(const uint8_t* str, size_t len) {
-  const unsigned char* c;
-
-  LOGF("%s", "Code: ");
-  for (c = str; c < str + len; c++) {
-    LOGF("0x%02x ", *c & 0xff);
-  }
-  LOGF("%s", "\n");
-}
 
 void Disassembler::Disassemble(const void* machine_code, size_t size,
                                uint64_t address, bool is_64bit) {
@@ -35,14 +17,12 @@ void Disassembler::Disassemble(const void* machine_code, size_t size,
   cs_err err;
   cs_mode mode = is_64bit ? CS_MODE_64 : CS_MODE_32;
 
-  LOG("\n");
-  line_to_address_.push_back(0);
-  LOGF("Platform: %s\n",
-       is_64bit ? "X86 64 (Intel syntax)" : "X86 32 (Intel syntax)");
-  line_to_address_.push_back(0);
+  AddLine(absl::StrFormat("Platform: %s", is_64bit ? "X86 64 (Intel syntax)"
+                                                   : "X86 32 (Intel syntax)"));
   err = cs_open(arch, mode, &handle);
   if (err) {
-    LOGF("Failed on cs_open() with error returned: %u\n", err);
+    AddLine(
+        absl::StrFormat("Failed on cs_open() with error returned: %u", err));
     return;
   }
 
@@ -53,27 +33,33 @@ void Disassembler::Disassemble(const void* machine_code, size_t size,
     size_t j;
 
     for (j = 0; j < count; j++) {
-      LOGF("0x%" PRIx64 ":\t%-12s %s\n", insn[j].address, insn[j].mnemonic,
-           insn[j].op_str);
-      line_to_address_.push_back(insn[j].address);
+      AddLine(absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address,
+                              insn[j].mnemonic, insn[j].op_str),
+              insn[j].address);
     }
 
-    // print out the next offset, after the last insn
-    LOGF("0x%" PRIx64 ":\n", insn[j - 1].address + insn[j - 1].size);
+    // Print out the next offset, after the last instruction.
+    AddLine(absl::StrFormat("0x%llx:", insn[j - 1].address + insn[j - 1].size));
 
-    // free memory allocated by cs_disasm()
+    // Free memory allocated by cs_disasm().
     cs_free(insn, count);
   } else {
-    LOG("****************\n");
-    LOG("ERROR: Failed to disasm given code!\n");
+    AddLine("****************");
+    AddLine("ERROR: Failed to disasm given code!");
   }
 
-  LOG("\n");
-
+  AddLine("");
   cs_close(&handle);
 }
 
 uint64_t Disassembler::GetAddressAtLine(size_t line) const {
   if (line >= line_to_address_.size()) return 0;
   return line_to_address_[line];
+}
+
+void Disassembler::AddLine(std::string line, uint64_t address) {
+  // Remove any new line character.
+  line = absl::StrReplaceAll(line, {{"\n", ""}});
+  line_to_address_.push_back(address);
+  result_ += absl::StrFormat("%s\n", line);
 }
