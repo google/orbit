@@ -6,6 +6,11 @@
 
 #include "llvm/Demangle/Demangle.h"
 
+#include "Introspection.h"
+#include <OrbitLinuxTracing/OrbitTracing.h>
+
+#define LOG_VAR(x) LOG("%s = %s", #x, std::to_string(x))
+
 namespace orbit_service {
 
 using orbit_grpc_protos::AddressInfo;
@@ -23,6 +28,7 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());
 
+
   {
     // Protect tracer_ with event_buffer_mutex_ so that we can use tracer_ in
     // Conditions for Await/LockWhen (specifically, in SenderThread).
@@ -33,17 +39,28 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   tracer_->Start();
 
   sender_thread_ = std::thread{[this] { SenderThread(); }};
+
+  auto handler = std::make_unique<orbit::introspection::Handler>(
+      [](orbit::introspection::Scope scope) {
+        LOG("%s", scope.name_);
+        LOG("on callback");
+      });
+  LinuxTracing::SetOrbitTracingHandler(std::move(handler));
+  LOG_VAR(this);
 }
 
 void LinuxTracingGrpcHandler::Stop() {
   CHECK(tracer_ != nullptr);
   CHECK(sender_thread_.joinable());
+  LOG_VAR(this);
 
   tracer_->Stop();
   {
     absl::MutexLock lock{&event_buffer_mutex_};
     tracer_.reset();
   }
+
+  LOG("STOPPING LINUXTRACINGGRPCHANDLER");
 
   sender_thread_.join();
 }

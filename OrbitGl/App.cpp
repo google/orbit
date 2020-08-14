@@ -29,7 +29,6 @@
 #include "ImGuiOrbit.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"
@@ -356,8 +355,6 @@ Timer GMainTimer;
 
 // TODO: make it non-static
 void OrbitApp::MainTick() {
-  ORBIT_SCOPE_FUNC;
-
   GMainTimer.Reset();
 
   if (DoZoom) {

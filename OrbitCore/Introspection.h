@@ -15,7 +15,9 @@ namespace orbit::introspection {
 
 class Handler : public orbit::tracing::Handler {
  public:
-  explicit Handler(LinuxTracingBuffer* tracing_buffer);
+  using ScopeCallback = std::function<void(const struct Scope&)>;
+
+  explicit Handler(ScopeCallback callback);
 
   void Begin(const char* name) final;
   void End() final;
@@ -23,7 +25,7 @@ class Handler : public orbit::tracing::Handler {
   void Track(const char* name, float) final;
 
  private:
-  LinuxTracingBuffer* tracing_buffer_;
+  ScopeCallback callback_;
 };
 
 struct Scope {

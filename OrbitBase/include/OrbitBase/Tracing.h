@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#define ORBIT_TRACING_ENABLED 0
+#define ORBIT_TRACING_ENABLED 1
 
 #if ORBIT_TRACING_ENABLED
 

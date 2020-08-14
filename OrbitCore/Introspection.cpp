@@ -25,7 +25,8 @@ namespace orbit::introspection {
 
 thread_local std::vector<Scope> scopes;
 
-Handler::Handler(LinuxTracingBuffer* tracing_buffer) : tracing_buffer_(tracing_buffer) {}
+Handler::Handler(ScopeCallback callback)
+    : callback_(callback) {}
 
 void Handler::Begin(const char* name) {
   scopes.emplace_back(Scope{Timer(), name});
@@ -40,10 +41,12 @@ void Handler::End() {
   scope.timer_.m_Depth = scopes.size() - 1;
 
   uint64_t hash = StringHash(scope.name_);
-  tracing_buffer_->RecordKeyAndString(hash, scope.name_);
+  //tracing_buffer_->RecordKeyAndString(hash, scope.name_);
   scope.timer_.m_UserData[0] = hash;
 
-  tracing_buffer_->RecordTimer(std::move(scope.timer_));
+  if(callback_)
+    callback_(std::move(scope));
+  LOG("intro timer");
 
   scopes.pop_back();
 }
