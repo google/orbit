@@ -17,11 +17,11 @@ void Disassembler::Disassemble(const void* machine_code, size_t size,
   cs_err err;
   cs_mode mode = is_64bit ? CS_MODE_64 : CS_MODE_32;
 
-  LogLine(absl::StrFormat("Platform: %s", is_64bit ? "X86 64 (Intel syntax)"
+  AddLine(absl::StrFormat("Platform: %s", is_64bit ? "X86 64 (Intel syntax)"
                                                    : "X86 32 (Intel syntax)"));
   err = cs_open(arch, mode, &handle);
   if (err) {
-    LogLine(
+    AddLine(
         absl::StrFormat("Failed on cs_open() with error returned: %u", err));
     return;
   }
@@ -33,22 +33,22 @@ void Disassembler::Disassemble(const void* machine_code, size_t size,
     size_t j;
 
     for (j = 0; j < count; j++) {
-      LogLine(absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address,
+      AddLine(absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address,
                               insn[j].mnemonic, insn[j].op_str),
               insn[j].address);
     }
 
     // Print out the next offset, after the last instruction.
-    LogLine(absl::StrFormat("0x%llx:", insn[j - 1].address + insn[j - 1].size));
+    AddLine(absl::StrFormat("0x%llx:", insn[j - 1].address + insn[j - 1].size));
 
     // Free memory allocated by cs_disasm().
     cs_free(insn, count);
   } else {
-    LogLine("****************");
-    LogLine("ERROR: Failed to disasm given code!");
+    AddLine("****************");
+    AddLine("ERROR: Failed to disasm given code!");
   }
 
-  LogLine("");
+  AddLine("");
   cs_close(&handle);
 }
 
@@ -57,7 +57,7 @@ uint64_t Disassembler::GetAddressAtLine(size_t line) const {
   return line_to_address_[line];
 }
 
-void Disassembler::LogLine(std::string line, uint64_t address) {
+void Disassembler::AddLine(std::string line, uint64_t address) {
   // Remove any new line character.
   line = absl::StrReplaceAll(line, {{"\n", ""}});
   line_to_address_.push_back(address);

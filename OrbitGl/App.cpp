@@ -340,7 +340,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.LogLine(absl::StrFormat("asm: /* %s */",
+    disasm.AddLine(absl::StrFormat("asm: /* %s */",
                                    FunctionUtils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(),
                        FunctionUtils::GetAbsoluteAddress(function),
