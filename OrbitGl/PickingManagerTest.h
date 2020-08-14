@@ -32,7 +32,9 @@ class PickableMock : public Pickable {
 
 // Simulate "rendering" the picking color into a uint32_t target
 inline PickingId MockRenderPickingColor(const Color& col_vec) {
-  uint32_t col = absl::bit_cast<uint32_t, Color>(col_vec);
+  std::array<uint8_t, 4> color_values{col_vec[0], col_vec[1], col_vec[2],
+                                      col_vec[3]};
+  uint32_t col = absl::bit_cast<uint32_t>(color_values);
   PickingId picking_id = PickingId::FromPixelValue(col);
   return picking_id;
 }

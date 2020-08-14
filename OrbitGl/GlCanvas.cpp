@@ -374,7 +374,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   }
 
   m_NeedsRedraw = false;
-  ui_batcher_.Reset();
+  ui_batcher_.StartNewFrame();
 
   ScopeImguiContext state(m_ImGuiContext);
 
@@ -398,7 +398,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   // We have to draw everything collected in the batcher at this point,
   // as prepareScreenSpaceViewport() changes the coordinate system.
   ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
-  ui_batcher_.Reset();
+  ui_batcher_.ResetElements();
 
   prepareScreenSpaceViewport();
 
@@ -410,7 +410,6 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   // Draw remaining elements collected with the batcher.
   ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
-  ui_batcher_.Reset();
 
   glFlush();
 

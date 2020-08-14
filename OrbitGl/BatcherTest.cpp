@@ -100,7 +100,7 @@ TEST(Batcher, SimpleElementsDrawing) {
   batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
   ExpectDraw(batcher, 1, 1, 1);
   EXPECT_EQ(batcher.GetDrawnBoxColors()[0], Color(255, 0, 0, 255));
-  batcher.Reset();
+  batcher.StartNewFrame();
   ExpectDraw(batcher, 0, 0, 0);
 }
 
@@ -115,7 +115,7 @@ TEST(Batcher, PickingElementsDrawing) {
   batcher.SetPickingManager(&pm);
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable);
   ExpectDraw(batcher, 1, 0, 0);
-  batcher.Reset();
+  batcher.StartNewFrame();
   ExpectDraw(batcher, 0, 0, 0);
 }
 
@@ -179,6 +179,53 @@ TEST(Batcher, PickingPickables) {
   ExpectPickableEq(batcher, batcher.GetDrawnLineColors()[0], pm, line_pickable);
   ExpectPickableEq(batcher, batcher.GetDrawnTriangleColors()[0], pm, triangle_pickable);
   ExpectPickableEq(batcher, batcher.GetDrawnBoxColors()[0], pm, box_pickable);
+}
+
+TEST(Batcher, MultipleDrawCalls) {
+  MockBatcher batcher(BatcherId::kUi);
+
+  std::string line_custom_data = "line custom data";
+  auto line_user_data = std::make_unique<PickingUserData>();
+  line_user_data->custom_data_ = &line_custom_data;
+
+  std::string triangle_custom_data = "triangle custom data";
+  auto triangle_user_data = std::make_unique<PickingUserData>();
+  triangle_user_data->custom_data_ = &triangle_custom_data;
+
+  std::string box_custom_data = "box custom data";
+  auto box_user_data = std::make_unique<PickingUserData>();
+  box_user_data->custom_data_ = &box_custom_data;
+
+  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                  std::move(line_user_data));
+  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                      Color(0, 255, 0, 255), std::move(triangle_user_data));
+  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                 std::move(box_user_data));
+
+  batcher.Draw(true);
+
+  auto line_color = batcher.GetDrawnLineColors()[0];
+  auto triangle_color = batcher.GetDrawnTriangleColors()[0];
+  auto box_color = batcher.GetDrawnBoxColors()[0];
+  ExpectCustomDataEq(batcher, line_color, line_custom_data);
+  ExpectCustomDataEq(batcher, triangle_color, triangle_custom_data);
+  ExpectCustomDataEq(batcher, box_color, box_custom_data);
+
+  batcher.ResetElements();
+  ExpectCustomDataEq(batcher, line_color, line_custom_data);
+  ExpectCustomDataEq(batcher, triangle_color, triangle_custom_data);
+  ExpectCustomDataEq(batcher, box_color, box_custom_data);
+
+  batcher.StartNewFrame();
+  PickingId id = MockRenderPickingColor(line_color);
+  const PickingUserData* rendered_data = nullptr;
+  EXPECT_DEATH(rendered_data = batcher.GetUserData(id), "size");
+  id = MockRenderPickingColor(triangle_color);
+  EXPECT_DEATH(rendered_data = batcher.GetUserData(id), "size");
+  id = MockRenderPickingColor(box_color);
+  EXPECT_DEATH(rendered_data = batcher.GetUserData(id), "size");
+  UNUSED(rendered_data);
 }
 
 }  // namespace
