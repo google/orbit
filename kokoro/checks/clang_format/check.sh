@@ -16,7 +16,7 @@ if [ "$0" == "$SCRIPT" ]; then
   echo -e "> but changes outside of the scope of your PR won't affect the outcome"
   echo -e "> of this presubmit check.\n"
   while read line; do
-    clang-format --output-replacements-xml $line | grep '<replacement ' > /dev/null
+    clang-format --output-replacements-xml $line --style=file| grep '<replacement ' > /dev/null
     if [ $? -eq 0 ]; then
       echo $line
     fi
@@ -28,7 +28,7 @@ if [ "$0" == "$SCRIPT" ]; then
   cd "$DIR"
   REFERENCE="origin/master"
   MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
-  FORMATTING_DIFF="$(git diff -U0 --no-color --relative $MERGE_BASE | clang-format-diff-9 -p1)"
+  FORMATTING_DIFF="$(git diff -U0 --no-color --relative $MERGE_BASE | clang-format-diff-9 --style=file -p1)"
 
   if [ -n "$FORMATTING_DIFF" ]; then
     echo "clang-format determined the following necessary changes to your PR:"
