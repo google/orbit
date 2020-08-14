@@ -340,8 +340,8 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.LOGF(absl::StrFormat("asm: /* %s */\n",
-                                FunctionUtils::GetDisplayName(function)));
+    disasm.LogLine(absl::StrFormat("asm: /* %s */",
+                                   FunctionUtils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(),
                        FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
