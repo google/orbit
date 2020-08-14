@@ -53,9 +53,12 @@ enum class PickingType : uint32_t {
 enum class BatcherId : uint32_t { kTimeGraph, kUi };
 
 struct PickingId {
-  static constexpr const uint32_t kElementIDBitSize = 28;
-  static constexpr const uint32_t kPickingTypeBitSize = 3;
-  static constexpr const uint32_t kBatcherIDBitSize = 1;
+  static constexpr uint32_t kElementIDBitSize = 28;
+  static constexpr uint32_t kPickingTypeBitSize = 3;
+  static constexpr uint32_t kBatcherIDBitSize = 1;
+
+  static_assert(kElementIDBitSize + kPickingTypeBitSize + kBatcherIDBitSize ==
+                32);
 
   [[nodiscard]] inline static PickingId Create(
       PickingType type, uint32_t element_id,
@@ -107,7 +110,7 @@ class PickingManager {
   [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  [[nodiscard]] PickingId CreateOrGetPickableId(
+  [[nodiscard]] PickingId GetOrCreatePickableId(
       std::weak_ptr<Pickable> pickable, BatcherId batcher_id);
   [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
 

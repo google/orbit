@@ -7,17 +7,21 @@
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 
-PickingId PickingManager::CreateOrGetPickableId(
+PickingId PickingManager::GetOrCreatePickableId(
     std::weak_ptr<Pickable> pickable, BatcherId batcher_id) {
+  auto locked_pickable = pickable.lock();
+  CHECK(locked_pickable != nullptr);
+
   absl::MutexLock lock(&mutex_);
   uint32_t pickable_id = 0;
-  auto it = pickable_pid_map_.find(pickable.lock().get());
+
+  auto it = pickable_pid_map_.find(locked_pickable.get());
   if (it != pickable_pid_map_.end()) {
     pickable_id = it->second;
   } else {
     pickable_id = ++pickable_id_counter_;
     pid_pickable_map_[pickable_id] = pickable;
-    pickable_pid_map_[pickable.lock().get()] = pickable_id;
+    pickable_pid_map_[locked_pickable.get()] = pickable_id;
   }
 
   PickingId id = PickingId::Create(PickingType::kPickable, pickable_id_counter_,
@@ -82,7 +86,7 @@ bool PickingManager::IsDragging() const {
 
 Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
                                        BatcherId batcher_id) {
-  PickingId id = CreateOrGetPickableId(pickable, batcher_id);
+  PickingId id = GetOrCreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }
 
