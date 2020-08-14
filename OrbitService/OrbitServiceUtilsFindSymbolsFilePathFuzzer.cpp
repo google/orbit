@@ -4,10 +4,10 @@
 
 #include <string>
 
-#include "SymbolHelper.h"
+#include "Utils.h"
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
-  const SymbolHelper symbol_helper;
-  (void)symbol_helper.LoadSymbolsCollector(std::string{reinterpret_cast<const char*>(buf), len});
+  (void)orbit_service::utils::FindSymbolsFilePath(
+      std::string{reinterpret_cast<const char*>(buf), len});
   return 0;
 }

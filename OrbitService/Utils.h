@@ -28,6 +28,12 @@ ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization();
 ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization(std::string_view top_data);
 ErrorMessageOr<Path> GetExecutablePath(int32_t pid);
 ErrorMessageOr<std::string> ReadFileToString(const Path& file_name);
+ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
+                                         const std::vector<Path>& search_directories = {
+                                             "/home/cloudcast/", "/home/cloudcast/debug_symbols/",
+                                             "/mnt/developer/", "/mnt/developer/debug_symbols/",
+                                             "/srv/game/assets/",
+                                             "/srv/game/assets/debug_symbols/"});
 bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
                        uint64_t* num_bytes_read);
 }  // namespace orbit_service::utils

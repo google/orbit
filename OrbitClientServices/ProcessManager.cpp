@@ -50,8 +50,7 @@ class ProcessManagerImpl final : public ProcessManager {
 
   ErrorMessageOr<std::string> LoadNullTerminatedString(int32_t pid, uint64_t address) override;
 
-  ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path,
-                                                const std::string& build_id) override;
+  ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path) override;
 
   void Start();
   void Shutdown() override;
@@ -125,13 +124,11 @@ std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   return process_list_;
 }
 
-ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(const std::string& module_path,
-                                                                  const std::string& build_id) {
+ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(const std::string& module_path) {
   GetDebugInfoFileRequest request;
   GetDebugInfoFileResponse response;
 
   request.set_module_path(module_path);
-  request.set_build_id(build_id);
 
   std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
 

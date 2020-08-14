@@ -683,12 +683,11 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
   thread_pool_->Schedule([this, process_id, module, preset,
                           scoped_status = std::move(scoped_status)]() mutable {
     const std::string& module_path = module->m_FullName;
-    const std::string& build_id = module->m_DebugSignature;
 
     scoped_status.UpdateMessage(
         absl::StrFormat("Looking for debug info file for \"%s\"...", module_path));
 
-    const auto result = process_manager_->FindDebugInfoFile(module_path, build_id);
+    const auto result = process_manager_->FindDebugInfoFile(module_path);
 
     if (!result) {
       SendErrorToUi("Error loading symbols",
@@ -703,8 +702,7 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
 
     LOG("Found file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-    main_thread_executor_->Schedule([this, module, module_path, build_id, process_id, preset,
-                                     debug_file_path,
+    main_thread_executor_->Schedule([this, module, module_path, process_id, preset, debug_file_path,
                                      scoped_status = std::move(scoped_status)]() mutable {
       const std::string local_debug_file_path = symbol_helper_.GenerateCachedFileName(module_path);
 
@@ -724,7 +722,8 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
 
       scoped_status.UpdateMessage(
           absl::StrFormat(R"(Loading symbols from "%s"...)", debug_file_path));
-      const auto result = symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, build_id);
+      const auto result =
+          symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, module->m_DebugSignature);
       if (!result) {
         SendErrorToUi(
             "Error loading symbols",

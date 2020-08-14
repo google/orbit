@@ -56,8 +56,8 @@ message GetProcessMemoryResponse {
 }
 
 message GetDebugInfoFileRequest {
+  reserved 2;
   string module_path = 1;
-  string build_id = 2;
 }
 
 message GetDebugInfoFileResponse {

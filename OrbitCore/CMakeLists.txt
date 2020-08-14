@@ -113,7 +113,3 @@ add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
 target_link_libraries(
   ModuleLoadSymbolsFuzzer PRIVATE OrbitCore
                                   libprotobuf-mutator::libprotobuf-mutator)
-
-add_fuzzer(SymbolHelperLoadSymbolsCollectorFuzzer
-           SymbolHelperLoadSymbolsCollectorFuzzer.cpp)
-target_link_libraries(SymbolHelperLoadSymbolsCollectorFuzzer PRIVATE OrbitCore)
