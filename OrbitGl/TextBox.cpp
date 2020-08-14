@@ -92,8 +92,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
   }
 
   float z = a_IsHighlighted ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
-            : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                            : GlCanvas::Z_VALUE_BOX_ACTIVE;
+                            : isInactive ? GlCanvas::Z_VALUE_BOX_INACTIVE
+                                         : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
   Color color = col;
   if (a_IsPicking) {
