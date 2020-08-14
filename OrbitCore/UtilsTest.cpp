@@ -17,4 +17,3 @@ TEST(Utils, TestEllipsis) {
   EXPECT_EQ(ShortenStringWithEllipsis("abc", 1), "abc");
   EXPECT_EQ(ShortenStringWithEllipsis("abc", 0), "abc");
 }
-

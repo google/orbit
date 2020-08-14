@@ -17,8 +17,7 @@ class FramePointerValidatorServiceImpl final
     : public orbit_grpc_protos::FramePointerValidatorService::Service {
  public:
   [[nodiscard]] grpc::Status ValidateFramePointers(
-      grpc::ServerContext* context,
-      const orbit_grpc_protos::ValidateFramePointersRequest* request,
+      grpc::ServerContext* context, const orbit_grpc_protos::ValidateFramePointersRequest* request,
       orbit_grpc_protos::ValidateFramePointersResponse* response) override;
 };
 

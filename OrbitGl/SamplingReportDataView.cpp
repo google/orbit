@@ -62,16 +62,14 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                          \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(functions[a].Member, functions[b].Member, \
-                               ascending);                               \
+#define ORBIT_PROC_SORT(Member)                                                      \
+  [&](int a, int b) {                                                                \
+    return OrbitUtils::Compare(functions[a].Member, functions[b].Member, ascending); \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                   \
-  [&](int a, int b) {                                                  \
-    return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), \
-                               ascending);                             \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
+  [&](int a, int b) {                                                              \
+    return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), ascending); \
   }
 
 void SamplingReportDataView::DoSort() {
@@ -122,8 +120,7 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
       SampledFunction& sampled_function = GetSampledFunction(index);
       if (sampled_function.function == nullptr) {
         sampled_function.function =
-            Capture::GTargetProcess->GetFunctionFromAddress(
-                sampled_function.address, false);
+            Capture::GTargetProcess->GetFunctionFromAddress(sampled_function.address, false);
       }
 
       FunctionInfo* function = sampled_function.function;
@@ -136,8 +133,8 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
   return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
-std::vector<std::shared_ptr<Module>>
-SamplingReportDataView::GetModulesFromIndices(const std::vector<int>& indices) {
+std::vector<std::shared_ptr<Module>> SamplingReportDataView::GetModulesFromIndices(
+    const std::vector<int>& indices) {
   std::vector<std::shared_ptr<Module>> modules;
   if (Capture::GTargetProcess != nullptr) {
     std::set<std::string> module_names;
@@ -159,18 +156,15 @@ SamplingReportDataView::GetModulesFromIndices(const std::vector<int>& indices) {
 
 const std::string SamplingReportDataView::kMenuActionSelect = "Hook";
 const std::string SamplingReportDataView::kMenuActionUnselect = "Unhook";
-const std::string SamplingReportDataView::kMenuActionLoadSymbols =
-    "Load Symbols";
-const std::string SamplingReportDataView::kMenuActionDisassembly =
-    "Go to Disassembly";
+const std::string SamplingReportDataView::kMenuActionLoadSymbols = "Load Symbols";
+const std::string SamplingReportDataView::kMenuActionDisassembly = "Go to Disassembly";
 
 std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
 
-  std::vector<FunctionInfo*> selected_functions =
-      GetFunctionsFromIndices(selected_indices);
+  std::vector<FunctionInfo*> selected_functions = GetFunctionsFromIndices(selected_indices);
 
   bool enable_disassembly = !selected_functions.empty();
 
@@ -195,9 +189,8 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   return menu;
 }
 
-void SamplingReportDataView::OnContextMenu(
-    const std::string& action, int menu_index,
-    const std::vector<int>& item_indices) {
+void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_index,
+                                           const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->SelectFunction(*function);
@@ -236,8 +229,7 @@ void SamplingReportDataView::LinkDataView(DataView* data_view) {
   }
 }
 
-void SamplingReportDataView::SetSampledFunctions(
-    const std::vector<SampledFunction>& functions) {
+void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFunction>& functions) {
   functions_ = functions;
 
   size_t num_functions = functions_.size();
@@ -288,8 +280,7 @@ void SamplingReportDataView::DoFilter() {
   OnSort(sorting_column_, {});
 }
 
-const SampledFunction& SamplingReportDataView::GetSampledFunction(
-    unsigned int row) const {
+const SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) const {
   return functions_[indices_[row]];
 }
 

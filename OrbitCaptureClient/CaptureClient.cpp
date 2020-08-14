@@ -17,8 +17,8 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 
-static CaptureOptions::InstrumentedFunction::FunctionType
-IntrumentedFunctionTypeFromOrbitType(FunctionInfo::OrbitType orbit_type) {
+static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTypeFromOrbitType(
+    FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
     case FunctionInfo::kOrbitTimerStart:
       return CaptureOptions::InstrumentedFunction::kTimerStart;
@@ -40,15 +40,13 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   }
 
   state_ = State::kStarting;
-  thread_pool->Schedule(
-      [this, pid, selected_functions]() { Capture(pid, selected_functions); });
+  thread_pool->Schedule([this, pid, selected_functions]() { Capture(pid, selected_functions); });
 
   return outcome::success();
 }
 
-void CaptureClient::Capture(
-    int32_t pid,
-    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
+void CaptureClient::Capture(int32_t pid,
+                            const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
   CHECK(reader_writer_ == nullptr);
 
   event_processor_.emplace(capture_listener_);
@@ -79,10 +77,8 @@ void CaptureClient::Capture(
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
     instrumented_function->set_file_offset(FunctionUtils::Offset(function));
-    instrumented_function->set_absolute_address(
-        FunctionUtils::GetAbsoluteAddress(function));
-    instrumented_function->set_function_type(
-        IntrumentedFunctionTypeFromOrbitType(function.type()));
+    instrumented_function->set_absolute_address(FunctionUtils::GetAbsoluteAddress(function));
+    instrumented_function->set_function_type(IntrumentedFunctionTypeFromOrbitType(function.type()));
   }
 
   if (!reader_writer_->Write(request)) {
@@ -115,9 +111,7 @@ bool CaptureClient::StopCapture() {
   absl::MutexLock lock(&state_mutex_);
   if (state_ == State::kStarting) {
     // Block and wait until the state is not kStarting
-    bool (*IsNotStarting)(State * state) = [](State* state) {
-      return *state != State::kStarting;
-    };
+    bool (*IsNotStarting)(State * state) = [](State* state) { return *state != State::kStarting; };
     state_mutex_.Await(absl::Condition(IsNotStarting, &state_));
   }
 

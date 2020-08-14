@@ -24,6 +24,4 @@ OrbitGlWidgetWithHeader::~OrbitGlWidgetWithHeader() { delete ui; }
 
 OrbitTreeView* OrbitGlWidgetWithHeader::GetTreeView() { return ui->treeView; }
 
-OrbitGLWidget* OrbitGlWidgetWithHeader::GetGLWidget() {
-  return ui->openGLWidget;
-}
+OrbitGLWidget* OrbitGlWidgetWithHeader::GetGLWidget() { return ui->openGLWidget; }

@@ -62,8 +62,7 @@ TEST(FunctionFramePointerValidator, validateWithoutFP) {
   size_t code_size = sizeof(kFunctionWithoutFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramePointerValidator validator(handle, kFunctionWithoutFP,
-                                          code_size);
+  FunctionFramePointerValidator validator(handle, kFunctionWithoutFP, code_size);
   EXPECT_FALSE(validator.Validate());
   cs_close(&handle);
 }
@@ -83,8 +82,7 @@ TEST(FunctionFramePointerValidator, validateEnterLeave) {
   size_t code_size = sizeof(kFunctionWithEnterLeaveWithFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramePointerValidator validator(handle, kFunctionWithEnterLeaveWithFP,
-                                          code_size);
+  FunctionFramePointerValidator validator(handle, kFunctionWithEnterLeaveWithFP, code_size);
   EXPECT_TRUE(validator.Validate());
   cs_close(&handle);
 }
@@ -94,8 +92,7 @@ TEST(FunctionFramePointerValidator, validateTailFunction) {
   size_t code_size = sizeof(kTailFunctionWithFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramePointerValidator validator(handle, kTailFunctionWithFP,
-                                          code_size);
+  FunctionFramePointerValidator validator(handle, kTailFunctionWithFP, code_size);
   EXPECT_TRUE(validator.Validate());
   cs_close(&handle);
 }

@@ -12,9 +12,9 @@ namespace LinuxTracing {
 
 using orbit_grpc_protos::GpuJob;
 
-int GpuTracepointEventProcessor::ComputeDepthForEvent(
-    const std::string& timeline, uint64_t start_timestamp,
-    uint64_t end_timestamp) {
+int GpuTracepointEventProcessor::ComputeDepthForEvent(const std::string& timeline,
+                                                      uint64_t start_timestamp,
+                                                      uint64_t end_timestamp) {
   if (timeline_to_latest_timestamp_per_depth_.count(timeline) == 0) {
     std::vector<uint64_t> vec;
     timeline_to_latest_timestamp_per_depth_.emplace(timeline, vec);
@@ -39,8 +39,7 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
   return static_cast<int>(vec.size() - 1);
 }
 
-void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
-    const Key& key) {
+void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(const Key& key) {
   auto cs_it = amdgpu_cs_ioctl_events_.find(key);
   auto sched_it = amdgpu_sched_run_job_events_.find(key);
   auto dma_it = dma_fence_signaled_events_.find(key);
@@ -48,8 +47,7 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
   // First check if we have received all three events that are needed
   // to complete a full GPU execution event. Otherwise, we need to
   // keep waiting for events for this context, seqno, and timeline.
-  if (cs_it == amdgpu_cs_ioctl_events_.end() ||
-      sched_it == amdgpu_sched_run_job_events_.end() ||
+  if (cs_it == amdgpu_cs_ioctl_events_.end() || sched_it == amdgpu_sched_run_job_events_.end() ||
       dma_it == dma_fence_signaled_events_.end()) {
     return;
   }
@@ -65,8 +63,7 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
   // at the timestamp of scheduling the current job, we push the start
   // time for starting on the hardware back.
   if (timeline_to_latest_dma_signal_.count(timeline) == 0) {
-    timeline_to_latest_dma_signal_.emplace(timeline,
-                                           dma_it->second.timestamp_ns);
+    timeline_to_latest_dma_signal_.emplace(timeline, dma_it->second.timestamp_ns);
   }
   auto it = timeline_to_latest_dma_signal_.find(timeline);
   // We do not have an explicit event for the following timestamp. We
@@ -80,8 +77,8 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
     hw_start_time = it->second;
   }
 
-  int depth = ComputeDepthForEvent(timeline, cs_it->second.timestamp_ns,
-                                   dma_it->second.timestamp_ns);
+  int depth =
+      ComputeDepthForEvent(timeline, cs_it->second.timestamp_ns, dma_it->second.timestamp_ns);
   GpuJob gpu_job;
   gpu_job.set_tid(tid);
   gpu_job.set_context(cs_it->second.context);
@@ -114,44 +111,33 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 // GPU execution event. This event is only created when all three types of GPU
 // events have been received.
 
-void GpuTracepointEventProcessor::PushEvent(
-    const AmdgpuCsIoctlPerfEvent& sample) {
-  AmdgpuCsIoctlEvent event{sample.GetTid(), sample.GetTimestamp(),
-                           sample.GetContext(), sample.GetSeqno(),
-                           sample.ExtractTimelineString()};
-  Key key = std::make_tuple(sample.GetContext(), sample.GetSeqno(),
-                            sample.ExtractTimelineString());
+void GpuTracepointEventProcessor::PushEvent(const AmdgpuCsIoctlPerfEvent& sample) {
+  AmdgpuCsIoctlEvent event{sample.GetTid(), sample.GetTimestamp(), sample.GetContext(),
+                           sample.GetSeqno(), sample.ExtractTimelineString()};
+  Key key = std::make_tuple(sample.GetContext(), sample.GetSeqno(), sample.ExtractTimelineString());
 
   amdgpu_cs_ioctl_events_.emplace(key, std::move(event));
   CreateGpuExecutionEventIfComplete(key);
 }
 
-void GpuTracepointEventProcessor::PushEvent(
-    const AmdgpuSchedRunJobPerfEvent& sample) {
-  AmdgpuSchedRunJobEvent event{sample.GetTimestamp(), sample.GetContext(),
-                               sample.GetSeqno(),
+void GpuTracepointEventProcessor::PushEvent(const AmdgpuSchedRunJobPerfEvent& sample) {
+  AmdgpuSchedRunJobEvent event{sample.GetTimestamp(), sample.GetContext(), sample.GetSeqno(),
                                sample.ExtractTimelineString()};
-  Key key = std::make_tuple(sample.GetContext(), sample.GetSeqno(),
-                            sample.ExtractTimelineString());
+  Key key = std::make_tuple(sample.GetContext(), sample.GetSeqno(), sample.ExtractTimelineString());
 
   amdgpu_sched_run_job_events_.emplace(key, std::move(event));
   CreateGpuExecutionEventIfComplete(key);
 }
 
-void GpuTracepointEventProcessor::PushEvent(
-    const DmaFenceSignaledPerfEvent& sample) {
-  DmaFenceSignaledEvent event{sample.GetTimestamp(), sample.GetContext(),
-                              sample.GetSeqno(),
+void GpuTracepointEventProcessor::PushEvent(const DmaFenceSignaledPerfEvent& sample) {
+  DmaFenceSignaledEvent event{sample.GetTimestamp(), sample.GetContext(), sample.GetSeqno(),
                               sample.ExtractTimelineString()};
-  Key key = std::make_tuple(sample.GetContext(), sample.GetSeqno(),
-                            sample.ExtractTimelineString());
+  Key key = std::make_tuple(sample.GetContext(), sample.GetSeqno(), sample.ExtractTimelineString());
 
   dma_fence_signaled_events_.emplace(key, std::move(event));
   CreateGpuExecutionEventIfComplete(key);
 }
 
-void GpuTracepointEventProcessor::SetListener(TracerListener* listener) {
-  listener_ = listener;
-}
+void GpuTracepointEventProcessor::SetListener(TracerListener* listener) { listener_ = listener; }
 
 }  // namespace LinuxTracing

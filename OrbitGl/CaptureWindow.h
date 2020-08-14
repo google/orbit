@@ -20,8 +20,7 @@ class CaptureWindow : public GlCanvas {
   void Pan(float a_Ratio);
 
   void UpdateWheelMomentum(float a_DeltaTime) override;
-  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right,
-                  bool a_Middle) override;
+  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right, bool a_Middle) override;
   void LeftDoubleClick() override;
   void LeftDown(int a_X, int a_Y) override;
   void LeftUp() override;
@@ -35,10 +34,8 @@ class CaptureWindow : public GlCanvas {
   void MiddleDown(int a_X, int a_Y) override;
   void MiddleUp(int a_X, int a_Y) override;
   void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
-  void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta,
-                                   bool a_Ctrl) override;
-  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                  bool a_Alt) override;
+  void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
+  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) override;
   void OnTimer() override;
   void Draw() override;
   void DrawScreenSpace() override;

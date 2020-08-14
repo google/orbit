@@ -19,8 +19,7 @@ struct PickingUserData {
   TooltipCallback generate_tooltip_;
   void* custom_data_ = nullptr;
 
-  explicit PickingUserData(TextBox* text_box = nullptr,
-                           TooltipCallback generate_tooltip = nullptr)
+  explicit PickingUserData(TextBox* text_box = nullptr, TooltipCallback generate_tooltip = nullptr)
       : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
 };
 
@@ -71,8 +70,7 @@ struct TriangleBuffer {
 
 class Batcher {
  public:
-  explicit Batcher(BatcherId batcher_id,
-                   PickingManager* picking_manager = nullptr)
+  explicit Batcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
       : batcher_id_(batcher_id), picking_manager_(picking_manager) {}
 
   Batcher() = delete;
@@ -83,8 +81,7 @@ class Batcher {
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
-               std::weak_ptr<Pickable> pickable);
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, std::weak_ptr<Pickable> pickable);
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::weak_ptr<Pickable> pickable);
 
@@ -92,24 +89,20 @@ class Batcher {
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Box& box, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const Color& color,
-              std::weak_ptr<Pickable> pickable);
+  void AddBox(const Box& box, const Color& color, std::weak_ptr<Pickable> pickable);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                     std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, const Color& color,
-                   std::weak_ptr<Pickable> pickable);
+  void AddTriangle(const Triangle& triangle, const Color& color, std::weak_ptr<Pickable> pickable);
 
   virtual void Draw(bool picking = false) const;
 
   void Reset();
 
   [[nodiscard]] PickingManager* GetPickingManager() { return picking_manager_; }
-  void SetPickingManager(PickingManager* picking_manager) {
-    picking_manager_ = picking_manager;
-  }
+  void SetPickingManager(PickingManager* picking_manager) { picking_manager_ = picking_manager; }
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);
@@ -123,14 +116,11 @@ class Batcher {
 
   void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors);
 
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
-               const Color& picking_color,
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const std::array<Color, 4>& colors,
-              const Color& picking_color,
+  void AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, const Color& color,
-                   const Color& picking_color,
+  void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
   BatcherId batcher_id_;

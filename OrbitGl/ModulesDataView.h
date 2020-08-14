@@ -14,15 +14,15 @@ class ModulesDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
-  std::vector<std::string> GetContextMenu(
-      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::vector<std::string> GetContextMenu(int clicked_index,
+                                          const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   bool WantsDisplayColor() override { return true; }
-  bool GetDisplayColor(int row, int column, unsigned char& red,
-                       unsigned char& green, unsigned char& blue) override;
+  bool GetDisplayColor(int row, int column, unsigned char& red, unsigned char& green,
+                       unsigned char& blue) override;
   std::string GetLabel() override { return "Modules"; }
   bool HasRefreshButton() const override { return true; }
   void OnRefreshButtonClicked() override;

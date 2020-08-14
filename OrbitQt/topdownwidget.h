@@ -37,15 +37,12 @@ class TopDownWidget : public QWidget {
   static const QString kActionExpandAll;
   static const QString kActionCollapseAll;
 
-  class HighlightCustomFilterSortFilterProxyModel
-      : public QSortFilterProxyModel {
+  class HighlightCustomFilterSortFilterProxyModel : public QSortFilterProxyModel {
    public:
     explicit HighlightCustomFilterSortFilterProxyModel(QObject* parent)
         : QSortFilterProxyModel{parent} {}
 
-    void SetFilter(std::string_view filter) {
-      lowercase_filter_ = absl::AsciiStrToLower(filter);
-    }
+    void SetFilter(std::string_view filter) { lowercase_filter_ = absl::AsciiStrToLower(filter); }
 
     static const int kMatchesCustomFilterRole = Qt::UserRole;
 

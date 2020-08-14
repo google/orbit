@@ -57,12 +57,10 @@ struct PickingId {
   static constexpr uint32_t kPickingTypeBitSize = 3;
   static constexpr uint32_t kBatcherIDBitSize = 1;
 
-  static_assert(kElementIDBitSize + kPickingTypeBitSize + kBatcherIDBitSize ==
-                32);
+  static_assert(kElementIDBitSize + kPickingTypeBitSize + kBatcherIDBitSize == 32);
 
-  [[nodiscard]] inline static PickingId Create(
-      PickingType type, uint32_t element_id,
-      BatcherId batcher_id = BatcherId::kTimeGraph) {
+  [[nodiscard]] inline static PickingId Create(PickingType type, uint32_t element_id,
+                                               BatcherId batcher_id = BatcherId::kTimeGraph) {
     PickingId result;
     result.type = type;
     result.element_id = element_id;
@@ -75,14 +73,12 @@ struct PickingId {
     return id;
   }
 
-  [[nodiscard]] static Color ToColor(
-      PickingType type, uint32_t element_id,
-      BatcherId batcher_id = BatcherId::kTimeGraph) {
+  [[nodiscard]] static Color ToColor(PickingType type, uint32_t element_id,
+                                     BatcherId batcher_id = BatcherId::kTimeGraph) {
     PickingId result_id = Create(type, element_id, batcher_id);
     std::array<uint8_t, 4> color_values;
     color_values = absl::bit_cast<std::array<uint8_t, 4>, PickingId>(result_id);
-    return Color(color_values[0], color_values[1], color_values[2],
-                 color_values[3]);
+    return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
   }
 
   uint32_t element_id : kElementIDBitSize;
@@ -104,14 +100,13 @@ class PickingManager {
   [[nodiscard]] std::weak_ptr<Pickable> GetPickableFromId(PickingId id) const;
   [[nodiscard]] bool IsDragging() const;
 
-  [[nodiscard]] Color GetPickableColor(std::weak_ptr<Pickable> pickable,
-                                       BatcherId batcher_id);
+  [[nodiscard]] Color GetPickableColor(std::weak_ptr<Pickable> pickable, BatcherId batcher_id);
 
   [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  [[nodiscard]] PickingId GetOrCreatePickableId(
-      std::weak_ptr<Pickable> pickable, BatcherId batcher_id);
+  [[nodiscard]] PickingId GetOrCreatePickableId(std::weak_ptr<Pickable> pickable,
+                                                BatcherId batcher_id);
   [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
 
  private:

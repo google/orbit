@@ -24,21 +24,17 @@ class UprobesReturnAddressManager {
   UprobesReturnAddressManager() = default;
 
   UprobesReturnAddressManager(const UprobesReturnAddressManager&) = delete;
-  UprobesReturnAddressManager& operator=(const UprobesReturnAddressManager&) =
-      delete;
+  UprobesReturnAddressManager& operator=(const UprobesReturnAddressManager&) = delete;
 
   UprobesReturnAddressManager(UprobesReturnAddressManager&&) = default;
-  UprobesReturnAddressManager& operator=(UprobesReturnAddressManager&&) =
-      default;
+  UprobesReturnAddressManager& operator=(UprobesReturnAddressManager&&) = default;
 
-  void ProcessUprobes(pid_t tid, uint64_t stack_pointer,
-                      uint64_t return_address) {
+  void ProcessUprobes(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
     tid_uprobes_stack.emplace_back(stack_pointer, return_address);
   }
 
-  void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data,
-                   uint64_t stack_size) {
+  void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data, uint64_t stack_size) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;
     }
@@ -50,8 +46,7 @@ class UprobesReturnAddressManager {
     // function. In case two uretprobes hijacked an address at the same stack
     // pointer (e.g., in case of tail-call optimization), this results in the
     // correct original return address to end up in the patched stack.
-    for (auto it = tid_uprobes_stack.rbegin(); it != tid_uprobes_stack.rend();
-         it++) {
+    for (auto it = tid_uprobes_stack.rbegin(); it != tid_uprobes_stack.rend(); it++) {
       const OpenUprobes& uprobes = *it;
       if (uprobes.stack_pointer < stack_pointer) {
         continue;
@@ -61,8 +56,8 @@ class UprobesReturnAddressManager {
         continue;
       }
 
-      memcpy(static_cast<uint8_t*>(stack_data) + offset,
-             &uprobes.return_address, sizeof(uprobes.return_address));
+      memcpy(static_cast<uint8_t*>(stack_data) + offset, &uprobes.return_address,
+             sizeof(uprobes.return_address));
     }
   }
 
@@ -119,8 +114,7 @@ class UprobesReturnAddressManager {
     // This is the same situation as above, but we have at least some uprobe
     // records.
     if (num_unique_uprobes < frames_to_patch.size()) {
-      ERROR(
-          "Discarding sample in a uprobe as some uprobe records are missing.");
+      ERROR("Discarding sample in a uprobe as some uprobe records are missing.");
       return false;
     }
     // In cases of lost events, or out of order processing, there might be wrong
@@ -153,8 +147,7 @@ class UprobesReturnAddressManager {
     for (size_t uprobe_i = 0; uprobe_i < uprobes_size; uprobe_i++) {
       // If the innermost frame does not need to be patched (see above), we are
       // done and can skip that last uprobes.
-      if (skip_last_uprobes &&
-          unique_uprobes_so_far + 1 == num_unique_uprobes) {
+      if (skip_last_uprobes && unique_uprobes_so_far + 1 == num_unique_uprobes) {
         break;
       }
       const OpenUprobes& uprobe = tid_uprobes_stack[uprobe_i];

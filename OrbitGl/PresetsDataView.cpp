@@ -50,10 +50,9 @@ std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
   return preset.file_name();
 }
 
-#define ORBIT_PRESET_SORT(Member)                                        \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(presets_[a]->Member, presets_[b]->Member, \
-                               ascending);                               \
+#define ORBIT_PRESET_SORT(Member)                                                    \
+  [&](int a, int b) {                                                                \
+    return OrbitUtils::Compare(presets_[a]->Member, presets_[b]->Member, ascending); \
   }
 
 void PresetsDataView::DoSort() {
@@ -79,8 +78,8 @@ void PresetsDataView::DoSort() {
 const std::string PresetsDataView::kMenuActionLoad = "Load Preset";
 const std::string PresetsDataView::kMenuActionDelete = "Delete Preset";
 
-std::vector<std::string> PresetsDataView::GetContextMenu(
-    int clicked_index, const std::vector<int>& selected_indices) {
+std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
+                                                         const std::vector<int>& selected_indices) {
   std::vector<std::string> menu;
   // Note that the UI already enforces a single selection.
   if (selected_indices.size() == 1) {
@@ -113,9 +112,8 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       OnDataChanged();
     } else {
       ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
-      GOrbitApp->SendErrorToUi(
-          "Error deleting preset",
-          absl::StrFormat("Could not delete preset \"%s\".", filename));
+      GOrbitApp->SendErrorToUi("Error deleting preset",
+                               absl::StrFormat("Could not delete preset \"%s\".", filename));
     }
 
   } else {
@@ -162,13 +160,11 @@ void PresetsDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
-void PresetsDataView::SetPresets(
-    const std::vector<std::shared_ptr<PresetFile> >& presets) {
+void PresetsDataView::SetPresets(const std::vector<std::shared_ptr<PresetFile> >& presets) {
   presets_ = presets;
   OnDataChanged();
 }
 
-const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(
-    unsigned int row) const {
+const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(unsigned int row) const {
   return presets_[indices_[row]];
 }

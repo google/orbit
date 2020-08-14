@@ -18,8 +18,7 @@ Process::Process() {
   m_Is64Bit = false;
 }
 
-FunctionInfo* Process::GetFunctionFromAddress(uint64_t address,
-                                              bool a_IsExact) {
+FunctionInfo* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {
   if (m_Modules.empty()) {
     return nullptr;
   }
@@ -75,8 +74,7 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
   return nullptr;
 }
 
-std::shared_ptr<Module> Process::GetModuleFromPath(
-    const std::string& module_path) {
+std::shared_ptr<Module> Process::GetModuleFromPath(const std::string& module_path) {
   auto iter = path_to_module_map_.find(module_path);
   if (iter != path_to_module_map_.end()) {
     return iter->second;

@@ -35,8 +35,7 @@ class unique_resource {
   unique_resource& operator=(const unique_resource&) = delete;
 
   unique_resource(unique_resource&& other)
-      : resource_(std::move(other.resource_)),
-        deleter_(std::move(other.deleter_)) {
+      : resource_(std::move(other.resource_)), deleter_(std::move(other.deleter_)) {
     other.resource_ = std::nullopt;
   }
   unique_resource& operator=(unique_resource&& other) noexcept {

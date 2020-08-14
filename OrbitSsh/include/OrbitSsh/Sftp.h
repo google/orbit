@@ -22,15 +22,12 @@ class Sftp {
 
   outcome::result<void> Shutdown();
 
-  [[nodiscard]] LIBSSH2_SFTP* GetRawSftpPtr() const noexcept {
-    return raw_sftp_ptr_.get();
-  }
+  [[nodiscard]] LIBSSH2_SFTP* GetRawSftpPtr() const noexcept { return raw_sftp_ptr_.get(); }
   [[nodiscard]] Session* GetSession() const noexcept { return session_; }
 
  private:
   explicit Sftp(LIBSSH2_SFTP* raw_sftp_ptr, Session* session)
-      : raw_sftp_ptr_(raw_sftp_ptr, &libssh2_sftp_shutdown),
-        session_(session) {}
+      : raw_sftp_ptr_(raw_sftp_ptr, &libssh2_sftp_shutdown), session_(session) {}
 
   std::unique_ptr<LIBSSH2_SFTP, decltype(&libssh2_sftp_shutdown)> raw_sftp_ptr_;
   Session* session_ = nullptr;

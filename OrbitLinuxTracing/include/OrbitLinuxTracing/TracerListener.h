@@ -12,12 +12,9 @@ namespace LinuxTracing {
 class TracerListener {
  public:
   virtual ~TracerListener() = default;
-  virtual void OnSchedulingSlice(
-      orbit_grpc_protos::SchedulingSlice scheduling_slice) = 0;
-  virtual void OnCallstackSample(
-      orbit_grpc_protos::CallstackSample callstack_sample) = 0;
-  virtual void OnFunctionCall(
-      orbit_grpc_protos::FunctionCall function_call) = 0;
+  virtual void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) = 0;
+  virtual void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) = 0;
+  virtual void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) = 0;
   virtual void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) = 0;
   virtual void OnThreadName(orbit_grpc_protos::ThreadName thread_name) = 0;
   virtual void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) = 0;

@@ -64,8 +64,7 @@ struct SortedCallstackReport {
 
 class SamplingProfiler {
  public:
-  explicit SamplingProfiler(std::shared_ptr<Process> a_Process)
-      : process_{std::move(a_Process)} {}
+  explicit SamplingProfiler(std::shared_ptr<Process> a_Process) : process_{std::move(a_Process)} {}
   SamplingProfiler() : SamplingProfiler{std::make_shared<Process>()} {}
 
   int GetNumSamples() const { return samples_count_; }
@@ -84,17 +83,16 @@ class SamplingProfiler {
 
   const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
-  std::multimap<int, CallstackID> GetCallstacksFromAddress(
-      uint64_t address, ThreadID thread_id, int* callstacks_count);
-  std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
-      uint64_t address, ThreadID thread_id);
+  std::multimap<int, CallstackID> GetCallstacksFromAddress(uint64_t address, ThreadID thread_id,
+                                                           int* callstacks_count);
+  std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(uint64_t address,
+                                                                        ThreadID thread_id);
 
   BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024>* GetCallstacks() {
     return &callstack_events_;
   }
 
-  void ForEachUniqueCallstack(
-      const std::function<void(const CallStack&)>& action) {
+  void ForEachUniqueCallstack(const std::function<void(const CallStack&)>& action) {
     absl::MutexLock lock(&unique_callstacks_mutex_);
     for (const auto& it : unique_callstacks_) {
       action(*it.second);
@@ -104,8 +102,7 @@ class SamplingProfiler {
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;
   }
-  const ThreadSampleData* GetThreadSampleDataByThreadId(
-      int32_t thread_id) const {
+  const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t thread_id) const {
     auto it = thread_id_to_sample_data_.find(thread_id);
     if (it == thread_id_to_sample_data_.end()) {
       return nullptr;
@@ -128,10 +125,8 @@ class SamplingProfiler {
     callstack_events_.clear();
   }
 
-  [[nodiscard]] const std::string& GetFunctionNameByAddress(
-      uint64_t address) const;
-  [[nodiscard]] const std::string& GetModuleNameByAddress(
-      uint64_t address) const;
+  [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t address) const;
+  [[nodiscard]] const std::string& GetModuleNameByAddress(uint64_t address) const;
 
   static const int32_t kAllThreadsFakeTid;
   static const std::string kUnknownFunctionOrModuleName;
@@ -148,19 +143,15 @@ class SamplingProfiler {
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
   BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024> callstack_events_;
   absl::Mutex unique_callstacks_mutex_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
-      unique_callstacks_;
+  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
-      unique_resolved_callstacks_;
+  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks_;
   absl::flat_hash_map<CallstackID, CallstackID> original_to_resolved_callstack_;
-  absl::flat_hash_map<uint64_t, std::set<CallstackID>>
-      function_address_to_callstack_;
+  absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack_;
   absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
-  absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
-      function_address_to_exact_addresses_;
+  absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
   std::vector<ThreadSampleData*> sorted_thread_sample_data_;
 
   absl::flat_hash_map<uint64_t, std::string> address_to_function_name_;

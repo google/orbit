@@ -40,8 +40,7 @@ class Socket {
 
   ~Socket() noexcept;
 
-  static outcome::result<Socket> Create(int domain = AF_INET,
-                                        int type = SOCK_STREAM,
+  static outcome::result<Socket> Create(int domain = AF_INET, int type = SOCK_STREAM,
                                         int protocol = IPPROTO_TCP);
   static void PrintWithLastError(const std::string& message);
 
@@ -50,8 +49,7 @@ class Socket {
   [[nodiscard]] outcome::result<void> Bind(const AddrAndPort& addr_and_port,
                                            int domain = AF_INET) const;
   [[nodiscard]] outcome::result<void> Listen() const;
-  [[nodiscard]] outcome::result<std::string> Receive(
-      size_t buffer_size = 0x400) const;
+  [[nodiscard]] outcome::result<std::string> Receive(size_t buffer_size = 0x400) const;
   [[nodiscard]] outcome::result<void> SendBlocking(std::string_view data);
   [[nodiscard]] outcome::result<AddrAndPort> GetSocketAddrAndPort() const;
   [[nodiscard]] outcome::result<Socket> Accept() const;

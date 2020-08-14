@@ -47,15 +47,11 @@ class SftpCopyToRemoteOperation
   friend StateMachineHelper;
 
  public:
-  enum class FileMode : int {
-    kUserWritable = 0644,
-    kUserWritableAllExecutable = 0755
-  };
+  enum class FileMode : int { kUserWritable = 0644, kUserWritableAllExecutable = 0755 };
 
   explicit SftpCopyToRemoteOperation(Session* session, SftpChannel* channel);
 
-  void CopyFileToRemote(std::filesystem::path source,
-                        std::filesystem::path destination,
+  void CopyFileToRemote(std::filesystem::path source, std::filesystem::path destination,
                         FileMode destination_mode);
 
  signals:

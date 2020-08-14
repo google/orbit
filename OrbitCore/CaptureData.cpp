@@ -10,8 +10,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
-orbit_client_protos::LinuxAddressInfo* CaptureData::GetAddressInfo(
-    uint64_t address) {
+orbit_client_protos::LinuxAddressInfo* CaptureData::GetAddressInfo(uint64_t address) {
   auto address_info_it = address_infos_.find(address);
   if (address_info_it == address_infos_.end()) {
     return nullptr;
@@ -19,8 +18,7 @@ orbit_client_protos::LinuxAddressInfo* CaptureData::GetAddressInfo(
   return &address_info_it->second;
 }
 
-const FunctionStats& CaptureData::GetFunctionStatsOrDefault(
-    uint64_t function_address) {
+const FunctionStats& CaptureData::GetFunctionStatsOrDefault(uint64_t function_address) {
   static const FunctionStats kDefaultFunctionStats;
   auto function_stats_it = functions_stats_.find(function_address);
   if (function_stats_it == functions_stats_.end()) {
@@ -29,13 +27,11 @@ const FunctionStats& CaptureData::GetFunctionStatsOrDefault(
   return function_stats_it->second;
 }
 
-void CaptureData::UpdateFunctionStats(FunctionInfo* func,
-                                      const TimerInfo& timer_info) {
+void CaptureData::UpdateFunctionStats(FunctionInfo* func, const TimerInfo& timer_info) {
   const uint64_t function_address = func->address();
   FunctionStats& stats = functions_stats_[function_address];
   stats.set_count(stats.count() + 1);
-  uint64_t elapsed_nanos =
-      TicksToNanoseconds(timer_info.start(), timer_info.end());
+  uint64_t elapsed_nanos = TicksToNanoseconds(timer_info.start(), timer_info.end());
   stats.set_total_time_ns(stats.total_time_ns() + elapsed_nanos);
   stats.set_average_time_ns(stats.total_time_ns() / stats.count());
 
@@ -48,8 +44,7 @@ void CaptureData::UpdateFunctionStats(FunctionInfo* func,
   }
 }
 
-const FunctionInfo* CaptureData::GetSelectedFunction(
-    uint64_t function_address) const {
+const FunctionInfo* CaptureData::GetSelectedFunction(uint64_t function_address) const {
   auto selected_functions_it = selected_functions_.find(function_address);
   if (selected_functions_it == selected_functions_.end()) {
     return nullptr;

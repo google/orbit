@@ -15,8 +15,7 @@ namespace {
 
 class ThreadPoolImpl : public ThreadPool {
  public:
-  explicit ThreadPoolImpl(size_t thread_pool_min_size,
-                          size_t thread_pool_max_size,
+  explicit ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
                           absl::Duration thread_ttl);
 
   size_t GetPoolSize() override;
@@ -43,8 +42,7 @@ class ThreadPoolImpl : public ThreadPool {
   bool shutdown_initiated_;
 };
 
-ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size,
-                               size_t thread_pool_max_size,
+ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
                                absl::Duration thread_ttl)
     : thread_pool_min_size_(thread_pool_min_size),
       thread_pool_max_size_(thread_pool_max_size),
@@ -76,8 +74,7 @@ void ThreadPoolImpl::Schedule(std::unique_ptr<Action> action) {
   CHECK(!shutdown_initiated_);
 
   scheduled_actions_.push_back(std::move(action));
-  if (idle_threads_ < scheduled_actions_.size() &&
-      worker_threads_.size() < thread_pool_max_size_) {
+  if (idle_threads_ < scheduled_actions_.size() && worker_threads_.size() < thread_pool_max_size_) {
     CreateWorker();
   }
 
@@ -107,9 +104,8 @@ void ThreadPoolImpl::Wait() {
   CHECK(shutdown_initiated_);
   // First wait until all worker threads finished their work
   // and moved to finished_threads_ list.
-  mutex_.Await(absl::Condition(
-      &worker_threads_,
-      &absl::flat_hash_map<std::thread::id, std::thread>::empty));
+  mutex_.Await(
+      absl::Condition(&worker_threads_, &absl::flat_hash_map<std::thread::id, std::thread>::empty));
 
   CleanupFinishedThreads();
 }
@@ -121,8 +117,7 @@ bool ThreadPoolImpl::ActionsAvailableOrShutdownInitiated() {
 std::unique_ptr<Action> ThreadPoolImpl::TakeAction() {
   while (true) {
     if (mutex_.AwaitWithTimeout(
-            absl::Condition(
-                this, &ThreadPoolImpl::ActionsAvailableOrShutdownInitiated),
+            absl::Condition(this, &ThreadPoolImpl::ActionsAvailableOrShutdownInitiated),
             thread_ttl_)) {
       break;
     }
@@ -173,6 +168,5 @@ void ThreadPoolImpl::WorkerFunction() {
 std::unique_ptr<ThreadPool> ThreadPool::Create(size_t thread_pool_min_size,
                                                size_t thread_pool_max_size,
                                                absl::Duration thread_ttl) {
-  return std::make_unique<ThreadPoolImpl>(thread_pool_min_size,
-                                          thread_pool_max_size, thread_ttl);
+  return std::make_unique<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl);
 }

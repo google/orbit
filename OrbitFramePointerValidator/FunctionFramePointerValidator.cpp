@@ -10,28 +10,25 @@
 
 #include "OrbitBase/Logging.h"
 
-FunctionFramePointerValidator::FunctionFramePointerValidator(
-    csh handle, const uint8_t* code, size_t code_size) {
+FunctionFramePointerValidator::FunctionFramePointerValidator(csh handle, const uint8_t* code,
+                                                             size_t code_size) {
   handle_ = handle;
   instructions_ = nullptr;
-  instructions_count_ =
-      cs_disasm(handle, code, code_size, 0, 0, &instructions_);
+  instructions_count_ = cs_disasm(handle, code, code_size, 0, 0, &instructions_);
 }
 
 FunctionFramePointerValidator::~FunctionFramePointerValidator() {
   cs_free(instructions_, instructions_count_);
 }
 
-bool FunctionFramePointerValidator::IsCallInstruction(
-    const cs_insn& instruction) {
+bool FunctionFramePointerValidator::IsCallInstruction(const cs_insn& instruction) {
   for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
     if (instruction.detail->groups[i] == X86_GRP_CALL) return true;
   }
   return false;
 }
 
-bool FunctionFramePointerValidator::IsRetOrJumpInstruction(
-    const cs_insn& instruction) {
+bool FunctionFramePointerValidator::IsRetOrJumpInstruction(const cs_insn& instruction) {
   for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
     if (instruction.detail->groups[i] == X86_GRP_RET ||
         instruction.detail->groups[i] == X86_GRP_JUMP)
@@ -40,8 +37,7 @@ bool FunctionFramePointerValidator::IsRetOrJumpInstruction(
   return false;
 }
 
-bool FunctionFramePointerValidator::IsMovInstruction(
-    const cs_insn& instruction) {
+bool FunctionFramePointerValidator::IsMovInstruction(const cs_insn& instruction) {
   return instruction.id == X86_INS_MOV || instruction.id == X86_INS_MOVQ;
 }
 
@@ -58,24 +54,23 @@ bool FunctionFramePointerValidator::ValidatePrologue() {
   uint8_t read_count, write_count;
 
   // check the first instruction: it must be "push ebp" or "enter"
-  if (cs_regs_access(handle_, &instructions_[0], regs_read, &read_count,
-                     regs_write, &write_count) == 0) {
+  if (cs_regs_access(handle_, &instructions_[0], regs_read, &read_count, regs_write,
+                     &write_count) == 0) {
     if (instructions_[0].id == X86_INS_ENTER) {
       return true;
     }
 
-    if (instructions_[0].id != X86_INS_PUSH || read_count != 2 ||
-        !IsStackPointer(regs_read[0]) || !IsBasePointer(regs_read[1])) {
+    if (instructions_[0].id != X86_INS_PUSH || read_count != 2 || !IsStackPointer(regs_read[0]) ||
+        !IsBasePointer(regs_read[1])) {
       return false;
     }
   }
 
   // check the second instruction: it must be "mov ebp, esp"
-  if (cs_regs_access(handle_, &instructions_[1], regs_read, &read_count,
-                     regs_write, &write_count) == 0) {
-    if (!IsMovInstruction(instructions_[1]) || read_count != 1 ||
-        !IsStackPointer(regs_read[0]) || write_count != 1 ||
-        !IsBasePointer(regs_write[0])) {
+  if (cs_regs_access(handle_, &instructions_[1], regs_read, &read_count, regs_write,
+                     &write_count) == 0) {
+    if (!IsMovInstruction(instructions_[1]) || read_count != 1 || !IsStackPointer(regs_read[0]) ||
+        write_count != 1 || !IsBasePointer(regs_write[0])) {
       return false;
     }
   }
@@ -95,8 +90,7 @@ bool FunctionFramePointerValidator::ValidatePrologue() {
 bool FunctionFramePointerValidator::ValidateEpilogue() {
   // check for a "leave" "ret" sequence
   for (size_t i = 0; i < instructions_count_ - 1; i++) {
-    if (instructions_[i].id == X86_INS_LEAVE &&
-        IsRetOrJumpInstruction(instructions_[i + 1])) {
+    if (instructions_[i].id == X86_INS_LEAVE && IsRetOrJumpInstruction(instructions_[i + 1])) {
       return true;
     }
   }
@@ -118,8 +112,8 @@ bool FunctionFramePointerValidator::ValidateEpilogue() {
 
     // Check first instruction to be "mov esp, ebp".
     // 1. try to get which registers has been accessed.
-    if (cs_regs_access(handle_, &instructions_[i], regs_read, &read_count,
-                       regs_write, &write_count) != 0) {
+    if (cs_regs_access(handle_, &instructions_[i], regs_read, &read_count, regs_write,
+                       &write_count) != 0) {
       continue;
     }
     // 2. Is there one read (base pointer) and one write (stack pointer).
@@ -133,8 +127,8 @@ bool FunctionFramePointerValidator::ValidateEpilogue() {
 
     // Check second instruction to be "pop ebp".
     // 1. try to get which registers has been accessed.
-    if (cs_regs_access(handle_, &instructions_[i + 1], regs_read, &read_count,
-                       regs_write, &write_count) != 0) {
+    if (cs_regs_access(handle_, &instructions_[i + 1], regs_read, &read_count, regs_write,
+                       &write_count) != 0) {
       continue;
     }
     // 2. Is there one read (stack pointer) and two writes
@@ -171,8 +165,7 @@ bool FunctionFramePointerValidator::Validate() {
     ERROR("Failed to disassemble given code!");
     return false;
   }
-  bool validated =
-      IsLeafFunction() || (instructions_count_ >= 4 && ValidateFramePointers());
+  bool validated = IsLeafFunction() || (instructions_count_ >= 4 && ValidateFramePointers());
 
   return validated;
 }

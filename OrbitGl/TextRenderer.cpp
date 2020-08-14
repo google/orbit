@@ -63,8 +63,7 @@ void TextRenderer::Init() {
   m_Font = texture_font_new_from_file(m_Atlas, fsize, fontFileName.c_str());
   current_font_size_ = static_cast<int>(fsize);
   for (int i = 10; i <= 100; i += 1) {
-    m_FontsBySize[i] =
-        texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
+    m_FontsBySize[i] = texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }
 
   m_Pen.x = 0;
@@ -74,8 +73,7 @@ void TextRenderer::Init() {
 
   const auto vertShaderFileName = exePath + "shaders/v3f-t2f-c4f.vert";
   const auto fragShaderFileName = exePath + "shaders/v3f-t2f-c4f.frag";
-  m_Shader =
-      shader_load(vertShaderFileName.c_str(), fragShaderFileName.c_str());
+  m_Shader = shader_load(vertShaderFileName.c_str(), fragShaderFileName.c_str());
 
   mat4_set_identity(&m_Proj);
   mat4_set_identity(&m_Model);
@@ -111,8 +109,7 @@ void TextRenderer::Display(Batcher* batcher) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, static_cast<GLsizei>(m_Atlas->width),
-               static_cast<GLsizei>(m_Atlas->height), 0, GL_RED,
-               GL_UNSIGNED_BYTE, m_Atlas->data);
+               static_cast<GLsizei>(m_Atlas->height), 0, GL_RED, GL_UNSIGNED_BYTE, m_Atlas->data);
 
   // Get current projection matrix
   GLfloat matrix[16];
@@ -120,18 +117,14 @@ void TextRenderer::Display(Batcher* batcher) {
   mat4* proj = reinterpret_cast<mat4*>(&matrix[0]);
   m_Proj = *proj;
 
-  mat4_set_orthographic(&m_Proj, 0, m_Canvas->getWidth(), 0,
-                        m_Canvas->getHeight(), -1, 1);
+  mat4_set_orthographic(&m_Proj, 0, m_Canvas->getWidth(), 0, m_Canvas->getHeight(), -1, 1);
 
   glUseProgram(m_Shader);
   {
     glUniform1i(glGetUniformLocation(m_Shader, "texture"), 0);
-    glUniformMatrix4fv(glGetUniformLocation(m_Shader, "model"), 1, 0,
-                       m_Model.data);
-    glUniformMatrix4fv(glGetUniformLocation(m_Shader, "view"), 1, 0,
-                       m_View.data);
-    glUniformMatrix4fv(glGetUniformLocation(m_Shader, "projection"), 1, 0,
-                       m_Proj.data);
+    glUniformMatrix4fv(glGetUniformLocation(m_Shader, "model"), 1, 0, m_Model.data);
+    glUniformMatrix4fv(glGetUniformLocation(m_Shader, "view"), 1, 0, m_View.data);
+    glUniformMatrix4fv(glGetUniformLocation(m_Shader, "projection"), 1, 0, m_Proj.data);
     vertex_buffer_render(m_Buffer, GL_TRIANGLES);
 
     /*PRINT_VAR(m_Model);
@@ -148,19 +141,13 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
   Color color(255, 255, 255, 255);
 
   for (size_t i = 0; i < a_Buffer->indices->size; i += 3) {
-    GLuint i0 =
-        *static_cast<const GLuint*>(vector_get(a_Buffer->indices, i + 0));
-    GLuint i1 =
-        *static_cast<const GLuint*>(vector_get(a_Buffer->indices, i + 1));
-    GLuint i2 =
-        *static_cast<const GLuint*>(vector_get(a_Buffer->indices, i + 2));
+    GLuint i0 = *static_cast<const GLuint*>(vector_get(a_Buffer->indices, i + 0));
+    GLuint i1 = *static_cast<const GLuint*>(vector_get(a_Buffer->indices, i + 1));
+    GLuint i2 = *static_cast<const GLuint*>(vector_get(a_Buffer->indices, i + 2));
 
-    vertex_t v0 =
-        *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i0));
-    vertex_t v1 =
-        *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i1));
-    vertex_t v2 =
-        *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i2));
+    vertex_t v0 = *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i0));
+    vertex_t v1 = *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i1));
+    vertex_t v2 = *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i2));
 
     // TODO: This should be pickable??
     batcher->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), v0.z, color);
@@ -169,9 +156,8 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
   }
 }
 
-void TextRenderer::AddTextInternal(texture_font_t* font, const char* text,
-                                   const vec4& color, vec2* pen,
-                                   float a_MaxSize, float a_Z, bool) {
+void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const vec4& color,
+                                   vec2* pen, float a_MaxSize, float a_Z, bool) {
   size_t i;
   float r = color.red, g = color.green, b = color.blue, a = color.alpha;
   float textZ = a_Z;
@@ -222,8 +208,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text,
 }
 
 void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
-                           const Color& a_Color, float a_MaxSize,
-                           bool a_RightJustified) {
+                           const Color& a_Color, float a_MaxSize, bool a_RightJustified) {
   ToScreenSpace(a_X, a_Y, m_Pen.x, m_Pen.y);
 
   if (a_RightJustified) {
@@ -236,9 +221,9 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
   AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z);
 }
 
-void TextRenderer::AddTextTrailingCharsPrioritized(
-    const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
-    size_t a_TrailingCharsLength, float a_MaxSize) {
+void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y,
+                                                   float a_Z, const Color& a_Color,
+                                                   size_t a_TrailingCharsLength, float a_MaxSize) {
   if (!m_Initialized) {
     Init();
   }
@@ -287,18 +272,15 @@ void TextRenderer::AddTextTrailingCharsPrioritized(
   static const char* ELLIPSIS_TEXT = "... ";
   static const size_t ELLIPSIS_TEXT_LEN = strlen(ELLIPSIS_TEXT);
   static const size_t LEADING_CHARS_COUNT = 1;
-  static const size_t ELLIPSIS_BUFFER_SIZE =
-      ELLIPSIS_TEXT_LEN + LEADING_CHARS_COUNT;
+  static const size_t ELLIPSIS_BUFFER_SIZE = ELLIPSIS_TEXT_LEN + LEADING_CHARS_COUNT;
 
-  bool useEllipsisText =
-      (fittingCharsCount < textLen) &&
-      (fittingCharsCount > (a_TrailingCharsLength + ELLIPSIS_BUFFER_SIZE));
+  bool useEllipsisText = (fittingCharsCount < textLen) &&
+                         (fittingCharsCount > (a_TrailingCharsLength + ELLIPSIS_BUFFER_SIZE));
 
   if (!useEllipsisText) {
     AddText(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize);
   } else {
-    auto leadingCharCount =
-        fittingCharsCount - (a_TrailingCharsLength + ELLIPSIS_TEXT_LEN);
+    auto leadingCharCount = fittingCharsCount - (a_TrailingCharsLength + ELLIPSIS_TEXT_LEN);
 
     std::string modifiedText(a_Text, leadingCharCount);
     modifiedText.append(ELLIPSIS_TEXT);
@@ -310,9 +292,8 @@ void TextRenderer::AddTextTrailingCharsPrioritized(
   }
 }
 
-int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
-                            const Color& a_Color, float a_MaxSize,
-                            bool a_RightJustified, bool a_InvertY) {
+int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
+                            float a_MaxSize, bool a_RightJustified, bool a_InvertY) {
   if (a_RightJustified) {
     int stringWidth, stringHeight;
     GetStringSize(a_Text, stringWidth, stringHeight);
@@ -327,8 +308,7 @@ int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
   return a_X;
 }
 
-void TextRenderer::GetStringSize(const char* a_Text, int& a_Width,
-                                 int& a_Height) {
+void TextRenderer::GetStringSize(const char* a_Text, int& a_Width, int& a_Height) {
   float stringWidth = 0;
   float stringHeight = 0;
 
@@ -380,10 +360,6 @@ void TextRenderer::Clear() {
   }
 }
 
-const TextBox& TextRenderer::GetSceneBox() const {
-  return m_Canvas->GetSceneBox();
-}
+const TextBox& TextRenderer::GetSceneBox() const { return m_Canvas->GetSceneBox(); }
 
-int TextRenderer::GetNumCharacters() const {
-  return int(m_Buffer->vertices->size) / 4;
-}
+int TextRenderer::GetNumCharacters() const { return int(m_Buffer->vertices->size) / 4; }

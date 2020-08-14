@@ -10,10 +10,8 @@
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");
 ABSL_FLAG(uint32_t, capture_length, 10, "duration of capture in seconds");
-ABSL_FLAG(uint16_t, sampling_rate, 1000,
-          "Frequency of callstack sampling in samples per second");
-ABSL_FLAG(bool, frame_pointer_unwinding, false,
-          "Use frame pointers for unwinding");
+ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
+ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
@@ -35,8 +33,7 @@ int main(int argc, char** argv) {
 
   // The request is done in a separate thread to avoid blocking main()
   // It is needed to provide a thread pool
-  std::unique_ptr<ThreadPool> thread_pool =
-      ThreadPool::Create(1, 1, absl::Seconds(1));
+  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
   if (!client_ggp.RequestStartCapture(thread_pool.get())) {
     thread_pool->ShutdownAndWait();
     FATAL("Not possible to start the capture; exiting program");

@@ -8,12 +8,11 @@
 #include "OrbitBase/Logging.h"
 
 namespace OrbitSsh {
-outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp,
-                                         std::string_view filepath,
+outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp, std::string_view filepath,
                                          FxfFlags flags, int64_t mode) {
-  auto* const result = libssh2_sftp_open_ex(
-      sftp->GetRawSftpPtr(), filepath.data(), filepath.size(),
-      static_cast<uint64_t>(flags), mode, LIBSSH2_SFTP_OPENFILE);
+  auto* const result =
+      libssh2_sftp_open_ex(sftp->GetRawSftpPtr(), filepath.data(), filepath.size(),
+                           static_cast<uint64_t>(flags), mode, LIBSSH2_SFTP_OPENFILE);
 
   if (result == nullptr) {
     int last_errno = libssh2_session_last_errno(session->GetRawSessionPtr());
@@ -31,8 +30,7 @@ outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp,
 
 outcome::result<std::string> SftpFile::Read(size_t max_length_in_bytes) {
   std::string buffer(max_length_in_bytes, '\0');
-  const auto result =
-      libssh2_sftp_read(file_ptr_.get(), buffer.data(), buffer.size());
+  const auto result = libssh2_sftp_read(file_ptr_.get(), buffer.data(), buffer.size());
 
   if (result < 0) {
     if (result != LIBSSH2_ERROR_EAGAIN) {
@@ -64,8 +62,7 @@ outcome::result<void> SftpFile::Close() {
 }
 
 outcome::result<size_t> SftpFile::Write(std::string_view data) {
-  const auto result =
-      libssh2_sftp_write(file_ptr_.get(), data.data(), data.size());
+  const auto result = libssh2_sftp_write(file_ptr_.get(), data.data(), data.size());
 
   if (result < 0) {
     if (result != LIBSSH2_ERROR_EAGAIN) {

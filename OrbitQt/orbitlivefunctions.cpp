@@ -13,9 +13,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
   ui->setupUi(this);
 
   live_functions_.SetAddIteratorCallback(
-      [this](size_t id, FunctionInfo* function) {
-        this->AddIterator(id, function);
-      });
+      [this](size_t id, FunctionInfo* function) { this->AddIterator(id, function); });
 
   all_events_iterator_ = new OrbitEventIterator(this);
   all_events_iterator_->SetNextButtonCallback([this]() {
@@ -24,8 +22,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     }
     for (auto& iterator_ui : iterator_uis) {
       uint64_t index = iterator_ui.first;
-      iterator_ui.second->SetCurrentTime(
-          this->live_functions_.GetStartTime(index));
+      iterator_ui.second->SetCurrentTime(this->live_functions_.GetStartTime(index));
     }
   });
   all_events_iterator_->SetPreviousButtonCallback([this]() {
@@ -34,8 +31,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     }
     for (auto& iterator_ui : iterator_uis) {
       uint64_t index = iterator_ui.first;
-      iterator_ui.second->SetCurrentTime(
-          this->live_functions_.GetStartTime(index));
+      iterator_ui.second->SetCurrentTime(this->live_functions_.GetStartTime(index));
     }
   });
   all_events_iterator_->SetFunctionName("All functions");
@@ -46,11 +42,10 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
 
 OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui; }
 
-void OrbitLiveFunctions::Initialize(SelectionType selection_type,
-                                    FontType font_type, bool is_main_instance) {
+void OrbitLiveFunctions::Initialize(SelectionType selection_type, FontType font_type,
+                                    bool is_main_instance) {
   DataView* data_view = &live_functions_.GetDataView();
-  ui->data_view_panel_->Initialize(data_view, selection_type, font_type,
-                                   is_main_instance);
+  ui->data_view_panel_->Initialize(data_view, selection_type, font_type, is_main_instance);
 }
 
 void OrbitLiveFunctions::SetFilter(const QString& a_Filter) {
@@ -86,8 +81,7 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
   });
   iterator_ui->SetFunctionName(function->pretty_name());
 
-  iterator_ui->SetMinMaxTime(live_functions_.GetCaptureMin(),
-                             live_functions_.GetCaptureMax());
+  iterator_ui->SetMinMaxTime(live_functions_.GetCaptureMin(), live_functions_.GetCaptureMax());
   iterator_ui->SetCurrentTime(live_functions_.GetStartTime(id));
 
   iterator_uis.insert(std::make_pair(id, iterator_ui));

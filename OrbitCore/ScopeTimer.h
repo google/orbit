@@ -83,14 +83,10 @@ class LocalScopeTimer {
   std::string message_;
 };
 
-inline double Timer::ElapsedMicros() const {
-  return TicksToMicroseconds(m_Start, m_End);
-}
+inline double Timer::ElapsedMicros() const { return TicksToMicroseconds(m_Start, m_End); }
 
 inline double Timer::ElapsedMillis() const { return ElapsedMicros() * 0.001; }
 
-inline double Timer::ElapsedSeconds() const {
-  return ElapsedMicros() * 0.000001;
-}
+inline double Timer::ElapsedSeconds() const { return ElapsedMicros() * 0.000001; }
 
 #endif  // ORBIT_CORE_SCOPE_TIMER_H_

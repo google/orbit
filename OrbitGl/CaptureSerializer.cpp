@@ -67,31 +67,26 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
   capture_info->set_process_id(Capture::capture_data_.process_id());
   capture_info->set_process_name(Capture::capture_data_.process_name());
 
-  capture_info->mutable_thread_names()->insert(
-      Capture::capture_data_.thread_names().begin(),
-      Capture::capture_data_.thread_names().end());
+  capture_info->mutable_thread_names()->insert(Capture::capture_data_.thread_names().begin(),
+                                               Capture::capture_data_.thread_names().end());
 
-  capture_info->mutable_address_infos()->Reserve(
-      Capture::capture_data_.address_infos().size());
+  capture_info->mutable_address_infos()->Reserve(Capture::capture_data_.address_infos().size());
   for (const auto& address_info : Capture::capture_data_.address_infos()) {
     capture_info->add_address_infos()->CopyFrom(address_info.second);
   }
 
   const absl::flat_hash_map<uint64_t, FunctionStats>& functions_stats =
       Capture::capture_data_.functions_stats();
-  capture_info->mutable_function_stats()->insert(functions_stats.begin(),
-                                                 functions_stats.end());
+  capture_info->mutable_function_stats()->insert(functions_stats.begin(), functions_stats.end());
 
   // TODO: this is not really synchronized, since GetCallstacks processing below
   // is not under the same mutex lock we could end up having list of callstacks
   // inconsistent with unique_callstacks. Revisit sampling profiler data
   // thread-safety.
-  Capture::GSamplingProfiler->ForEachUniqueCallstack(
-      [&capture_info](const CallStack& call_stack) {
-        CallstackInfo* callstack = capture_info->add_callstacks();
-        *callstack->mutable_data() = {call_stack.GetFrames().begin(),
-                                      call_stack.GetFrames().end()};
-      });
+  Capture::GSamplingProfiler->ForEachUniqueCallstack([&capture_info](const CallStack& call_stack) {
+    CallstackInfo* callstack = capture_info->add_callstacks();
+    *callstack->mutable_data() = {call_stack.GetFrames().begin(), call_stack.GetFrames().end()};
+  });
 
   auto callstacks = Capture::GSamplingProfiler->GetCallstacks();
   capture_info->mutable_callstack_events()->Reserve(callstacks->size());
@@ -99,10 +94,8 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
     capture_info->add_callstack_events()->CopyFrom(callstack);
   }
 
-  const auto& key_to_string_map =
-      time_graph_->GetStringManager()->GetKeyToStringMap();
-  capture_info->mutable_key_to_string()->insert(key_to_string_map.begin(),
-                                                key_to_string_map.end());
+  const auto& key_to_string_map = time_graph_->GetStringManager()->GetKeyToStringMap();
+  capture_info->mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 }
 
 void CaptureSerializer::Save(std::ostream& stream) {
@@ -120,8 +113,7 @@ void CaptureSerializer::Save(std::ostream& stream) {
 
   // Timers
   int writes_count = 0;
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      time_graph_->GetAllTimerChains();
+  std::vector<std::shared_ptr<TimerChain>> chains = time_graph_->GetAllTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
@@ -156,8 +148,7 @@ bool ReadMessage(google::protobuf::Message* message,
     return false;
   }
 
-  std::unique_ptr<char[]> buffer =
-      make_unique_for_overwrite<char[]>(message_size);
+  std::unique_ptr<char[]> buffer = make_unique_for_overwrite<char[]>(message_size);
   if (!input->ReadRaw(buffer.get(), message_size)) {
     return false;
   }
@@ -168,19 +159,16 @@ bool ReadMessage(google::protobuf::Message* message,
 
 void FillEventBuffer() {
   GEventTracer.GetEventBuffer().Reset();
-  for (const CallstackEvent& callstack_event :
-       *Capture::GSamplingProfiler->GetCallstacks()) {
+  for (const CallstackEvent& callstack_event : *Capture::GSamplingProfiler->GetCallstacks()) {
     GEventTracer.GetEventBuffer().AddCallstackEvent(
-        callstack_event.time(), callstack_event.callstack_hash(),
-        callstack_event.thread_id());
+        callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
   }
 }
 
 void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   // Clear the old capture
   GOrbitApp->ClearSelectedFunctions();
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-      selected_functions;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
     selected_functions[address] = function;
@@ -188,21 +176,18 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   Capture::GVisibleFunctionsMap = selected_functions;
 
   absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
-      capture_info.function_stats().begin(),
-      capture_info.function_stats().end()};
-  CaptureData capture_data(
-      capture_info.process_id(), capture_info.process_name(),
-      std::move(selected_functions), std::move(functions_stats));
+      capture_info.function_stats().begin(), capture_info.function_stats().end()};
+  CaptureData capture_data(capture_info.process_id(), capture_info.process_name(),
+                           std::move(selected_functions), std::move(functions_stats));
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
-      address_infos;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos;
   address_infos.reserve(capture_info.address_infos_size());
   for (const auto& address_info : capture_info.address_infos()) {
     address_infos[address_info.absolute_address()] = address_info;
   }
   capture_data.set_address_infos(std::move(address_infos));
-  absl::flat_hash_map<int32_t, std::string> thread_names{
-      capture_info.thread_names().begin(), capture_info.thread_names().end()};
+  absl::flat_hash_map<int32_t, std::string> thread_names{capture_info.thread_names().begin(),
+                                                         capture_info.thread_names().end()};
   capture_data.set_thread_names(thread_names);
   Capture::capture_data_ = std::move(capture_data);
 
@@ -211,8 +196,7 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   }
   Capture::GSamplingProfiler->ClearCallstacks();
   for (CallstackInfo callstack : capture_info.callstacks()) {
-    CallStack unique_callstack(
-        {callstack.data().begin(), callstack.data().end()});
+    CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     Capture::GSamplingProfiler->AddUniqueCallStack(unique_callstack);
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {

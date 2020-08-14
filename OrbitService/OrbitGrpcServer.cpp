@@ -45,8 +45,7 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
 
   grpc::ServerBuilder builder;
 
-  builder.AddListeningPort(std::string(server_address),
-                           grpc::InsecureServerCredentials());
+  builder.AddListeningPort(std::string(server_address), grpc::InsecureServerCredentials());
   builder.RegisterService(&capture_service_);
   builder.RegisterService(&process_service_);
   builder.RegisterService(&frame_pointer_validator_service_);
@@ -63,10 +62,8 @@ void OrbitGrpcServerImpl::Wait() { server_->Wait(); }
 
 }  // namespace
 
-std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(
-    std::string_view server_address) {
-  std::unique_ptr<OrbitGrpcServerImpl> server_impl =
-      std::make_unique<OrbitGrpcServerImpl>();
+std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(std::string_view server_address) {
+  std::unique_ptr<OrbitGrpcServerImpl> server_impl = std::make_unique<OrbitGrpcServerImpl>();
 
   server_impl->Init(server_address);
 

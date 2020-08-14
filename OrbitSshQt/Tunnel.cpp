@@ -30,12 +30,9 @@ static void deleteByEventLoop(P* parent, std::optional<T>* opt) {
 
 namespace OrbitSshQt {
 Tunnel::Tunnel(Session* session, std::string remote_host, uint16_t remote_port)
-    : session_(session),
-      remote_host_(std::move(remote_host)),
-      remote_port_(remote_port) {
+    : session_(session), remote_host_(std::move(remote_host)), remote_port_(remote_port) {
   about_to_shutdown_connection_.emplace(
-      QObject::connect(session_, &Session::aboutToShutdown, this,
-                       &Tunnel::HandleSessionShutdown));
+      QObject::connect(session_, &Session::aboutToShutdown, this, &Tunnel::HandleSessionShutdown));
 }
 
 void Tunnel::Start() {
@@ -64,16 +61,15 @@ void Tunnel::Stop() {
 
 outcome::result<void> Tunnel::startup() {
   if (!data_event_connection_) {
-    data_event_connection_.emplace(QObject::connect(
-        session_, &Session::dataEvent, this, &Tunnel::OnEvent));
+    data_event_connection_.emplace(
+        QObject::connect(session_, &Session::dataEvent, this, &Tunnel::OnEvent));
   }
 
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoChannel: {
-      OUTCOME_TRY(channel,
-                  OrbitSsh::Channel::OpenTcpIpTunnel(
-                      session_->GetRawSession(), remote_host_, remote_port_));
+      OUTCOME_TRY(channel, OrbitSsh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
+                                                              remote_host_, remote_port_));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;
@@ -86,17 +82,15 @@ outcome::result<void> Tunnel::startup() {
         return Error::kCouldNotListen;
       }
 
-      QObject::connect(
-          &local_server_.value(), &QTcpServer::newConnection, this, [&]() {
-            if (!local_socket_) {
-              local_socket_ = local_server_->nextPendingConnection();
-              local_server_->pauseAccepting();
-              QObject::connect(local_socket_, &QTcpSocket::readyRead, this,
-                               &Tunnel::HandleIncomingDataLocalSocket);
-              QObject::connect(local_socket_, &QTcpSocket::disconnected, this,
-                               [&]() { Stop(); });
-            }
-          });
+      QObject::connect(&local_server_.value(), &QTcpServer::newConnection, this, [&]() {
+        if (!local_socket_) {
+          local_socket_ = local_server_->nextPendingConnection();
+          local_server_->pauseAccepting();
+          QObject::connect(local_socket_, &QTcpSocket::readyRead, this,
+                           &Tunnel::HandleIncomingDataLocalSocket);
+          QObject::connect(local_socket_, &QTcpSocket::disconnected, this, [&]() { Stop(); });
+        }
+      });
 
       SetState(State::kServerListening);
       emit tunnelOpened(GetListenPort());
@@ -180,8 +174,7 @@ outcome::result<void> Tunnel::readFromChannel() {
   }
 
   if (local_socket_ && !read_buffer_.empty()) {
-    const auto bytes_written =
-        local_socket_->write(read_buffer_.data(), read_buffer_.size());
+    const auto bytes_written = local_socket_->write(read_buffer_.data(), read_buffer_.size());
 
     if (bytes_written == -1) {
       SetError(Error::kLocalSocketClosed);
@@ -234,8 +227,7 @@ void Tunnel::HandleIncomingDataLocalSocket() {
 }
 
 void Tunnel::HandleSessionShutdown() {
-  if (CurrentState() >= State::kChannelInitialized &&
-      CurrentState() < State::kDone) {
+  if (CurrentState() >= State::kChannelInitialized && CurrentState() < State::kDone) {
     SetError(Error::kUncleanSessionShutdown);
   }
 }

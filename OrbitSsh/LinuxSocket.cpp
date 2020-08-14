@@ -53,8 +53,6 @@ outcome::result<void> Socket::Shutdown() const {
   return GetLastError();
 }
 
-std::error_code Socket::GetLastError() {
-  return std::error_code{errno, std::system_category()};
-}
+std::error_code Socket::GetLastError() { return std::error_code{errno, std::system_category()}; }
 
 }  // namespace OrbitSsh

@@ -16,8 +16,7 @@ class CallStack {
   CallStack() = default;
   explicit CallStack(std::vector<uint64_t>&& addresses) {
     frames_ = std::move(addresses);
-    hash_ =
-        XXH64(frames_.data(), frames_.size() * sizeof(uint64_t), 0xca1157ac);
+    hash_ = XXH64(frames_.data(), frames_.size() * sizeof(uint64_t), 0xca1157ac);
   };
 
   CallstackID GetHash() const { return hash_; }

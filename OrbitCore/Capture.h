@@ -27,8 +27,7 @@ class Capture {
   static void SetTargetProcess(std::shared_ptr<Process> process);
   static ErrorMessageOr<void> StartCapture(
       uint64_t process_id, std::string process_name,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-          selected_functions);
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions);
   static void FinalizeCapture();
   static void ClearCaptureData();
   static void PreSave();
@@ -38,8 +37,7 @@ class Capture {
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
-  static absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-      GVisibleFunctionsMap;
+  static absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> GVisibleFunctionsMap;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
 };

@@ -49,10 +49,9 @@ std::string ProcessesDataView::GetToolTip(int row, int /*column*/) {
   return GetProcess(row).command_line();
 }
 
-#define ORBIT_PROC_SORT(Member)                                          \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(processes[a].Member, processes[b].Member, \
-                               ascending);                               \
+#define ORBIT_PROC_SORT(Member)                                                      \
+  [&](int a, int b) {                                                                \
+    return OrbitUtils::Compare(processes[a].Member, processes[b].Member, ascending); \
   }
 
 void ProcessesDataView::DoSort() {
@@ -95,9 +94,7 @@ void ProcessesDataView::OnSelect(int index) {
   }
 }
 
-int32_t ProcessesDataView::GetSelectedProcessId() const {
-  return selected_process_id_;
-}
+int32_t ProcessesDataView::GetSelectedProcessId() const { return selected_process_id_; }
 
 int32_t ProcessesDataView::GetFirstProcessId() const {
   if (indices_.empty()) {
@@ -182,8 +179,7 @@ void ProcessesDataView::UpdateProcessList() {
   }
 }
 
-void ProcessesDataView::SetProcessList(
-    const std::vector<ProcessInfo>& process_list) {
+void ProcessesDataView::SetProcessList(const std::vector<ProcessInfo>& process_list) {
   process_list_ = process_list;
   UpdateProcessList();
   OnSort(sorting_column_, {});

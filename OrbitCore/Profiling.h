@@ -24,9 +24,7 @@ inline TickType OrbitTicks(uint32_t a_Clock = 1 /*CLOCK_MONOTONIC*/) {
   return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 }
 
-inline uint64_t TicksToNanoseconds(TickType start, TickType end) {
-  return end - start;
-}
+inline uint64_t TicksToNanoseconds(TickType start, TickType end) { return end - start; }
 
 inline absl::Duration TicksToDuration(TickType start, TickType end) {
   return absl::Nanoseconds(TicksToNanoseconds(start, end));

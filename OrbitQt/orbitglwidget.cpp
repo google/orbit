@@ -36,8 +36,7 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   return false;
 }
 
-void OrbitGLWidget::Initialize(GlPanel::Type a_Type,
-                               OrbitMainWindow* a_MainWindow) {
+void OrbitGLWidget::Initialize(GlPanel::Type a_Type, OrbitMainWindow* a_MainWindow) {
   m_OrbitPanel = GlPanel::Create(a_Type);
 
   if (a_MainWindow) {
@@ -86,8 +85,7 @@ void OrbitGLWidget::PrintContextInformation() {
     CASE(CompatibilityProfile);
   }
 #undef CASE
-  LOG(R"(glType="%s", glVersion="%s", glProfile="%s")", glType, glVersion,
-      glProfile);
+  LOG(R"(glType="%s", glVersion="%s", glProfile="%s")", glType, glVersion, glProfile);
 }
 
 void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
@@ -166,8 +164,7 @@ void OrbitGLWidget::resizeGL(int w, int h) {
     QPoint localPoint(0, 0);
     QPoint windowPoint = this->mapTo(this->window(), localPoint);
     m_OrbitPanel->SetWindowOffset(windowPoint.x(), windowPoint.y());
-    m_OrbitPanel->SetMainWindowSize(this->geometry().width(),
-                                    this->geometry().height());
+    m_OrbitPanel->SetMainWindowSize(this->geometry().width(), this->geometry().height());
   }
 }
 
@@ -263,8 +260,7 @@ void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
 
 void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   if (m_OrbitPanel) {
-    m_OrbitPanel->MouseMoved(event->x(), event->y(),
-                             event->buttons() & Qt::LeftButton,
+    m_OrbitPanel->MouseMoved(event->x(), event->y(), event->buttons() & Qt::LeftButton,
                              event->buttons() & Qt::RightButton,
                              event->buttons() & Qt::MiddleButton);
   }
@@ -272,13 +268,9 @@ void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   update();
 }
 
-void OrbitGLWidget::enterEvent(QEvent*) {
-  m_OrbitPanel->SetIsMouseOver(true);
-}
+void OrbitGLWidget::enterEvent(QEvent*) { m_OrbitPanel->SetIsMouseOver(true); }
 
-void OrbitGLWidget::leaveEvent(QEvent*) {
-  m_OrbitPanel->SetIsMouseOver(false);
-}
+void OrbitGLWidget::leaveEvent(QEvent*) { m_OrbitPanel->SetIsMouseOver(false); }
 
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   if (m_OrbitPanel) {
@@ -313,9 +305,8 @@ void OrbitGLWidget::wheelEvent(QWheelEvent* event) {
       m_OrbitPanel->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
                                     event->modifiers() & Qt::ControlModifier);
     } else {
-      m_OrbitPanel->MouseWheelMovedHorizontally(
-          event->x(), event->y(), event->delta() / 8,
-          event->modifiers() & Qt::ControlModifier);
+      m_OrbitPanel->MouseWheelMovedHorizontally(event->x(), event->y(), event->delta() / 8,
+                                                event->modifiers() & Qt::ControlModifier);
     }
   }
 

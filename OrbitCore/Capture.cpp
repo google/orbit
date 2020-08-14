@@ -41,15 +41,12 @@ ErrorMessageOr<void> Capture::StartCapture(
     uint64_t process_id, std::string process_name,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
   if (GTargetProcess->GetID() == 0) {
-    return ErrorMessage(
-        "No process selected. Please choose a target process for the capture.");
+    return ErrorMessage("No process selected. Please choose a target process for the capture.");
   }
 
-  capture_data_ = CaptureData(process_id, std::move(process_name),
-                              std::move(selected_functions));
+  capture_data_ = CaptureData(process_id, std::move(process_name), std::move(selected_functions));
 
-  Capture::GSamplingProfiler =
-      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+  Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
   return outcome::success();
 }

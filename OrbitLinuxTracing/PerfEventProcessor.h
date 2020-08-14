@@ -45,24 +45,18 @@ class PerfEventQueue {
   // originated.
   struct QueueFrontTimestampReverseCompare {
     bool operator()(
-        const std::pair<
-            int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>& lhs,
-        const std::pair<
-            int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>&
-            rhs) {
-      return lhs.second->front()->GetTimestamp() >
-             rhs.second->front()->GetTimestamp();
+        const std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>& lhs,
+        const std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>& rhs) {
+      return lhs.second->front()->GetTimestamp() > rhs.second->front()->GetTimestamp();
     }
   };
 
   std::priority_queue<
       std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>,
-      std::vector<std::pair<
-          int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>>,
+      std::vector<std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>>,
       QueueFrontTimestampReverseCompare>
       event_queues_queue_{};
-  absl::flat_hash_map<int,
-                      std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
+  absl::flat_hash_map<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
       fd_event_queues_{};
 };
 

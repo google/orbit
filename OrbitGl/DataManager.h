@@ -20,11 +20,9 @@ class DataManager final {
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
       : main_thread_id_(thread_id) {}
 
-  void UpdateProcessInfos(
-      const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos);
-  void UpdateModuleInfos(
-      int32_t process_id,
-      const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
+  void UpdateProcessInfos(const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos);
+  void UpdateModuleInfos(int32_t process_id,
+                         const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
 
   void SelectFunction(uint64_t function_address);
   void DeselectFunction(uint64_t function_address);
@@ -32,10 +30,9 @@ class DataManager final {
   void set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions);
 
   [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
-  [[nodiscard]] const std::vector<ModuleData*>& GetModules(
-      int32_t process_id) const;
-  [[nodiscard]] ModuleData* FindModuleByAddressStart(
-      int32_t process_id, uint64_t address_start) const;
+  [[nodiscard]] const std::vector<ModuleData*>& GetModules(int32_t process_id) const;
+  [[nodiscard]] ModuleData* FindModuleByAddressStart(int32_t process_id,
+                                                     uint64_t address_start) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t function_address) const;
   [[nodiscard]] const absl::flat_hash_set<uint64_t>& selected_functions() const;
 

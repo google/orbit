@@ -41,13 +41,12 @@ const TextBox* ThreadTrack::GetRight(TextBox* text_box) const {
 
 std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
-  if (!text_box ||
-      text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
+  if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }
 
-  const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
-      text_box->GetTimerInfo().function_address());
+  const FunctionInfo* func =
+      Capture::capture_data_.GetSelectedFunction(text_box->GetTimerInfo().function_address());
   CHECK(func != nullptr);
 
   if (!func) {
@@ -60,10 +59,9 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
       "<br/><br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      FunctionUtils::GetDisplayName(*func),
-      FunctionUtils::GetLoadedModuleName(*func),
-      GetPrettyTime(TicksToDuration(text_box->GetTimerInfo().start(),
-                                    text_box->GetTimerInfo().end())));
+      FunctionUtils::GetDisplayName(*func), FunctionUtils::GetLoadedModuleName(*func),
+      GetPrettyTime(
+          TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -71,8 +69,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
          Capture::GVisibleFunctionsMap.end();
 }
 
-Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info,
-                                 bool is_selected) const {
+Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
@@ -98,9 +95,7 @@ void ThreadTrack::UpdateBoxHeight() {
   }
 }
 
-bool ThreadTrack::IsEmpty() const {
-  return (GetNumTimers() == 0) && (event_track_->IsEmpty());
-}
+bool ThreadTrack::IsEmpty() const { return (GetNumTimers() == 0) && (event_track_->IsEmpty()); }
 
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
@@ -111,8 +106,7 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   event_track_->Draw(canvas, picking_mode);
 }
 
-void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                   PickingMode picking_mode) {
+void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
   event_track_->SetPos(m_Pos[0], m_Pos[1]);
   event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
@@ -123,14 +117,13 @@ void ThreadTrack::SetEventTrackColor(Color color) {
   event_track_->SetColor(color);
 }
 
-void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
-                                   double elapsed_us, float min_x,
+void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
                                    TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
-    const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
-        timer_info.function_address());
+    const FunctionInfo* func =
+        Capture::capture_data_.GetSelectedFunction(timer_info.function_address());
 
     text_box->SetElapsedTimeTextLength(time.length());
 
@@ -138,8 +131,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;
       if (func->type() == FunctionInfo::kOrbitTimerStart) {
-        name = time_graph_->GetManualInstrumentationString(
-            timer_info.registers(0));
+        name = time_graph_->GetManualInstrumentationString(timer_info.registers(0));
         if (name.empty()) {
           // The remote string hasn't been retrieved yet,
           // early out and try again on next update.
@@ -149,16 +141,13 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
         name = FunctionUtils::GetDisplayName(*func);
       }
 
-      std::string text =
-          absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
+      std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
 
       text_box->SetText(text);
     } else if (timer_info.type() == TimerInfo::kIntrospection) {
-      std::string text = absl::StrFormat("%s %s",
-                                         time_graph_->GetStringManager()
-                                             ->Get(timer_info.user_data_key())
-                                             .value_or(""),
-                                         time.c_str());
+      std::string text = absl::StrFormat(
+          "%s %s", time_graph_->GetStringManager()->Get(timer_info.user_data_key()).value_or(""),
+          time.c_str());
       text_box->SetText(text);
     } else {
       ERROR(
@@ -174,9 +163,8 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x,
-      text_box->GetPosY() + layout.GetTextOffset(), GlCanvas::Z_VALUE_TEXT,
-      kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
+      text_box->GetText().c_str(), pos_x, text_box->GetPosY() + layout.GetTextOffset(),
+      GlCanvas::Z_VALUE_TEXT, kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
 }
 
 std::string ThreadTrack::GetTooltip() const {

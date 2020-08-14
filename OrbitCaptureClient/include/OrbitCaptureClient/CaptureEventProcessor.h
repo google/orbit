@@ -25,21 +25,16 @@ class CaptureEventProcessor {
   }
 
  private:
-  void ProcessSchedulingSlice(
-      const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
-  void ProcessInternedCallstack(
-      orbit_grpc_protos::InternedCallstack interned_callstack);
-  void ProcessCallstackSample(
-      const orbit_grpc_protos::CallstackSample& callstack_sample);
-  void ProcessFunctionCall(
-      const orbit_grpc_protos::FunctionCall& function_call);
+  void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
+  void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
+  void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
+  void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
   void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
 
-  absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack>
-      callstack_intern_pool;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
   absl::flat_hash_map<uint64_t, std::string> string_intern_pool;
   CaptureListener* capture_listener_ = nullptr;
 

@@ -27,7 +27,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-
 ImFont* GOrbitImguiFont;
 
 namespace {
@@ -46,32 +45,29 @@ static const char g_GlslVersionString[32] = "#version 100\n";
 static unsigned int g_VboHandle = 0, g_ElementsHandle = 0;
 static GLuint g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
 static int g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
-static int g_AttribLocationPosition = 0, g_AttribLocationUV = 0,
-           g_AttribLocationColor = 0;
+static int g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 
 void Orbit_ImGui_InvalidateDeviceObjects() {
-	if (g_VboHandle) glDeleteBuffers(1, &g_VboHandle);
-	if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
-	g_VboHandle = g_ElementsHandle = 0;
+  if (g_VboHandle) glDeleteBuffers(1, &g_VboHandle);
+  if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
+  g_VboHandle = g_ElementsHandle = 0;
 
-	if (g_ShaderHandle && g_VertHandle)
-		glDetachShader(g_ShaderHandle, g_VertHandle);
-	if (g_VertHandle) glDeleteShader(g_VertHandle);
-	g_VertHandle = 0;
+  if (g_ShaderHandle && g_VertHandle) glDetachShader(g_ShaderHandle, g_VertHandle);
+  if (g_VertHandle) glDeleteShader(g_VertHandle);
+  g_VertHandle = 0;
 
-	if (g_ShaderHandle && g_FragHandle)
-		glDetachShader(g_ShaderHandle, g_FragHandle);
-	if (g_FragHandle) glDeleteShader(g_FragHandle);
-	g_FragHandle = 0;
+  if (g_ShaderHandle && g_FragHandle) glDetachShader(g_ShaderHandle, g_FragHandle);
+  if (g_FragHandle) glDeleteShader(g_FragHandle);
+  g_FragHandle = 0;
 
-	if (g_ShaderHandle) glDeleteProgram(g_ShaderHandle);
-	g_ShaderHandle = 0;
+  if (g_ShaderHandle) glDeleteProgram(g_ShaderHandle);
+  g_ShaderHandle = 0;
 
-	if (g_FontTexture) {
-		glDeleteTextures(1, &g_FontTexture);
-		ImGui::GetIO().Fonts->TexID = 0;
-		g_FontTexture = 0;
-	}
+  if (g_FontTexture) {
+    glDeleteTextures(1, &g_FontTexture);
+    ImGui::GetIO().Fonts->TexID = 0;
+    g_FontTexture = 0;
+  }
 }
 
 // If you get an error please report on github. You may try different GL context
@@ -83,8 +79,7 @@ static bool CheckShader(GLuint handle, const char* desc) {
   if (log_length > 1) {
     ImVector<char> buf;
     buf.resize(static_cast<int>(log_length + 1));
-    glGetShaderInfoLog(handle, log_length, NULL,
-                       static_cast<GLchar*>(buf.begin()));
+    glGetShaderInfoLog(handle, log_length, NULL, static_cast<GLchar*>(buf.begin()));
     LOG("Log from shader compilation: %s", buf.begin());
   }
   if (static_cast<GLboolean>(status) == GL_FALSE) {
@@ -102,8 +97,7 @@ static bool CheckProgram(GLuint handle, const char* desc) {
   if (log_length > 1) {
     ImVector<char> buf;
     buf.resize(static_cast<int>(log_length + 1));
-    glGetProgramInfoLog(handle, log_length, NULL,
-                        static_cast<GLchar*>(buf.begin()));
+    glGetProgramInfoLog(handle, log_length, NULL, static_cast<GLchar*>(buf.begin()));
     LOG("Log from shader program linking: %s", buf.begin());
   }
   if (static_cast<GLboolean>(status) == GL_FALSE) {
@@ -117,7 +111,7 @@ bool Orbit_ImGui_CreateTextures() {
   ImGuiIO& io = ImGui::GetIO();
   unsigned char* pixels;
   int width, height;
-  io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);  
+  io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
   // Upload texture to graphics system
   GLint last_texture;
@@ -131,8 +125,7 @@ bool Orbit_ImGui_CreateTextures() {
 #ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, pixels);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   glGenTextures(1, &GTextureInjected);
   glBindTexture(GL_TEXTURE_2D, GTextureInjected);
@@ -141,9 +134,8 @@ bool Orbit_ImGui_CreateTextures() {
 #ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inject_image.width,
-               inject_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               inject_image.pixel_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inject_image.width, inject_image.height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, inject_image.pixel_data);
 
   glGenTextures(1, &GTextureTimer);
   glBindTexture(GL_TEXTURE_2D, GTextureTimer);
@@ -152,9 +144,8 @@ bool Orbit_ImGui_CreateTextures() {
 #ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inject_image.width,
-               inject_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               timer_image.pixel_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inject_image.width, inject_image.height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, timer_image.pixel_data);
 
   glGenTextures(1, &GTextureHelp);
   glBindTexture(GL_TEXTURE_2D, GTextureHelp);
@@ -163,8 +154,8 @@ bool Orbit_ImGui_CreateTextures() {
 #ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, help_image.width, help_image.height,
-               0, GL_RGBA, GL_UNSIGNED_BYTE, help_image.pixel_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, help_image.width, help_image.height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, help_image.pixel_data);
 
   glGenTextures(1, &GTextureRecord);
   glBindTexture(GL_TEXTURE_2D, GTextureRecord);
@@ -173,13 +164,11 @@ bool Orbit_ImGui_CreateTextures() {
 #ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, record_image.width,
-               record_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               record_image.pixel_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, record_image.width, record_image.height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, record_image.pixel_data);
 
   // Store our identifier
-  io.Fonts->TexID =
-      absl::bit_cast<ImTextureID>(static_cast<intptr_t>(g_FontTexture));
+  io.Fonts->TexID = absl::bit_cast<ImTextureID>(static_cast<intptr_t>(g_FontTexture));
 
   // Restore state
   glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -222,15 +211,13 @@ bool Orbit_ImGui_CreateDeviceObjects() {
       "    gl_FragColor = Frag_Color * texture2D(Texture, Frag_UV.st);\n"
       "}\n";
   // Create shaders
-  const GLchar* vertex_shader_with_version[2] = {g_GlslVersionString,
-                                                 vertex_shader};
+  const GLchar* vertex_shader_with_version[2] = {g_GlslVersionString, vertex_shader};
   g_VertHandle = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(g_VertHandle, 2, vertex_shader_with_version, NULL);
   glCompileShader(g_VertHandle);
   CheckShader(g_VertHandle, "vertex shader");
 
-  const GLchar* fragment_shader_with_version[2] = {g_GlslVersionString,
-                                                   fragment_shader};
+  const GLchar* fragment_shader_with_version[2] = {g_GlslVersionString, fragment_shader};
   g_FragHandle = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(g_FragHandle, 2, fragment_shader_with_version, NULL);
   glCompileShader(g_FragHandle);
@@ -253,8 +240,8 @@ bool Orbit_ImGui_CreateDeviceObjects() {
   glGenBuffers(1, &g_ElementsHandle);
 
   Orbit_ImGui_CreateTextures();
-  
-   // Restore modified GL state
+
+  // Restore modified GL state
   glBindTexture(GL_TEXTURE_2D, last_texture);
   glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
 #ifndef IMGUI_IMPL_OPENGL_ES2
@@ -266,16 +253,15 @@ bool Orbit_ImGui_CreateDeviceObjects() {
 
 // Simple helper function to load an image into a OpenGL texture with common
 // settings
-bool LoadTextureFromFile(const char* filename, uint32_t* out_texture,
-                         int* out_width, int* out_height) {
+bool LoadTextureFromFile(const char* filename, uint32_t* out_texture, int* out_width,
+                         int* out_height) {
   GLint last_texture;
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 
   // Load from file
   int image_width = 0;
   int image_height = 0;
-  unsigned char* image_data =
-      stbi_load(filename, &image_width, &image_height, nullptr, 4);
+  unsigned char* image_data = stbi_load(filename, &image_width, &image_height, nullptr, 4);
   if (image_data == nullptr) return false;
 
   // Create an OpenGL texture identifier
@@ -291,8 +277,8 @@ bool LoadTextureFromFile(const char* filename, uint32_t* out_texture,
 #ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, image_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+               image_data);
   stbi_image_free(image_data);
 
   *out_texture = image_texture;
@@ -328,10 +314,8 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
   style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
   style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
   style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
-  style.Colors[ImGuiCol_ScrollbarGrabHovered] =
-      ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-  style.Colors[ImGuiCol_ScrollbarGrabActive] =
-      ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
+  style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
+  style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
   // style.Colors[ImGuiCol_ComboBg] = ImVec4( 0.86f, 0.86f, 0.86f, 0.99f );
   style.Colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
   style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
@@ -355,11 +339,9 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
   style.Colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
   style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
   style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-  style.Colors[ImGuiCol_PlotHistogramHovered] =
-      ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+  style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
   style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-  style.Colors[ImGuiCol_ModalWindowDarkening] =
-      ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+  style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
   if (bStyleDark_) {
     for (int i = 0; i <= ImGuiCol_COUNT; i++) {
@@ -391,10 +373,8 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
 void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Avoid rendering when minimized, scale coordinates for retina displays
   // (screen coordinates != framebuffer coordinates)
-  int fb_width = static_cast<int>(draw_data->DisplaySize.x *
-                                  draw_data->FramebufferScale.x);
-  int fb_height = static_cast<int>(draw_data->DisplaySize.y *
-                                   draw_data->FramebufferScale.y);
+  int fb_width = static_cast<int>(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
+  int fb_height = static_cast<int>(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
   if (fb_width <= 0 || fb_height <= 0) return;
 
   // Backup GL state
@@ -464,8 +444,7 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Our visible imgui space lies from draw_data->DisplayPos (top left) to
   // draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayMin is
   // typically (0,0) for single viewport apps.
-  glViewport(0, 0, static_cast<GLsizei>(fb_width),
-             static_cast<GLsizei>(fb_height));
+  glViewport(0, 0, static_cast<GLsizei>(fb_width), static_cast<GLsizei>(fb_height));
   float L = draw_data->DisplayPos.x;
   float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
   float T = draw_data->DisplayPos.y;
@@ -478,8 +457,7 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   };
   glUseProgram(g_ShaderHandle);
   glUniform1i(g_AttribLocationTex, 0);
-  glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE,
-                     &ortho_projection[0][0]);
+  glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
 #ifdef GL_SAMPLER_BINDING
   glBindSampler(0, 0);  // We use combined texture/sampler state. Applications
                         // using GL 3.3 may set that otherwise.
@@ -498,39 +476,32 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glEnableVertexAttribArray(g_AttribLocationPosition);
   glEnableVertexAttribArray(g_AttribLocationUV);
   glEnableVertexAttribArray(g_AttribLocationColor);
-  glVertexAttribPointer(
-      g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-      reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, pos)));
-  glVertexAttribPointer(g_AttribLocationUV, 2, GL_FLOAT, GL_FALSE,
-                        sizeof(ImDrawVert),
+  glVertexAttribPointer(g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
+                        reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, pos)));
+  glVertexAttribPointer(g_AttribLocationUV, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
                         reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, uv)));
-  glVertexAttribPointer(
-      g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
-      reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, col)));
+  glVertexAttribPointer(g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
+                        reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, col)));
 
   // Will project scissor/clipping rectangles into framebuffer space
-  ImVec2 clip_off =
-      draw_data->DisplayPos;  // (0,0) unless using multi-viewports
-  ImVec2 clip_scale =
-      draw_data->FramebufferScale;  // (1,1) unless using retina display which
-                                    // are often (2,2)
+  ImVec2 clip_off = draw_data->DisplayPos;          // (0,0) unless using multi-viewports
+  ImVec2 clip_scale = draw_data->FramebufferScale;  // (1,1) unless using retina display which
+                                                    // are often (2,2)
 
-    // Render command lists
+  // Render command lists
   for (int n = 0; n < draw_data->CmdListsCount; n++) {
     const ImDrawList* cmd_list = draw_data->CmdLists[n];
     size_t idx_buffer_offset = 0;
 
     glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
     glBufferData(GL_ARRAY_BUFFER,
-        static_cast<GLsizeiptr>(cmd_list->VtxBuffer.Size * sizeof(ImDrawVert)),
-        reinterpret_cast<const GLvoid*>(cmd_list->VtxBuffer.Data),
-        GL_STREAM_DRAW);
+                 static_cast<GLsizeiptr>(cmd_list->VtxBuffer.Size * sizeof(ImDrawVert)),
+                 reinterpret_cast<const GLvoid*>(cmd_list->VtxBuffer.Data), GL_STREAM_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        static_cast<GLsizeiptr>(cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx)),
-        reinterpret_cast<const GLvoid*>(cmd_list->IdxBuffer.Data),
-        GL_STREAM_DRAW);
+                 static_cast<GLsizeiptr>(cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx)),
+                 reinterpret_cast<const GLvoid*>(cmd_list->IdxBuffer.Data), GL_STREAM_DRAW);
 
     for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
       const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
@@ -545,28 +516,24 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
         clip_rect.z = (pcmd->ClipRect.z - clip_off.x) * clip_scale.x;
         clip_rect.w = (pcmd->ClipRect.w - clip_off.y) * clip_scale.y;
 
-        if (clip_rect.x < fb_width && clip_rect.y < fb_height &&
-            clip_rect.z >= 0.0f && clip_rect.w >= 0.0f) {
+        if (clip_rect.x < fb_width && clip_rect.y < fb_height && clip_rect.z >= 0.0f &&
+            clip_rect.w >= 0.0f) {
           // Apply scissor/clipping rectangle
           if (clip_origin_lower_left)
-            glScissor(static_cast<int>(clip_rect.x),
-                      static_cast<int>(fb_height - clip_rect.w),
+            glScissor(static_cast<int>(clip_rect.x), static_cast<int>(fb_height - clip_rect.w),
                       static_cast<int>(clip_rect.z - clip_rect.x),
                       static_cast<int>(clip_rect.w - clip_rect.y));
           else {
             // Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
-            glScissor(
-                static_cast<int>(clip_rect.x), static_cast<int>(clip_rect.y),
-                static_cast<int>(clip_rect.z), static_cast<int>(clip_rect.w));
+            glScissor(static_cast<int>(clip_rect.x), static_cast<int>(clip_rect.y),
+                      static_cast<int>(clip_rect.z), static_cast<int>(clip_rect.w));
           }
           // Bind texture, Draw
-          glBindTexture(
-              GL_TEXTURE_2D,
-              static_cast<GLuint>(absl::bit_cast<intptr_t>(pcmd->TextureId)));
-          glDrawElements(
-              GL_TRIANGLES, static_cast<GLsizei>(pcmd->ElemCount),
-              sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-              absl::bit_cast<void*>(idx_buffer_offset));
+          glBindTexture(GL_TEXTURE_2D,
+                        static_cast<GLuint>(absl::bit_cast<intptr_t>(pcmd->TextureId)));
+          glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(pcmd->ElemCount),
+                         sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+                         absl::bit_cast<void*>(idx_buffer_offset));
         }
       }
       idx_buffer_offset += pcmd->ElemCount * sizeof(ImDrawIdx);
@@ -587,8 +554,8 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
 #endif
   glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
   glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
-  glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb,
-                      last_blend_src_alpha, last_blend_dst_alpha);
+  glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha,
+                      last_blend_dst_alpha);
   if (last_enable_blend)
     glEnable(GL_BLEND);
   else
@@ -608,26 +575,21 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
 #ifdef GL_POLYGON_MODE
   glPolygonMode(GL_FRONT_AND_BACK, static_cast<GLenum>(last_polygon_mode[0]));
 #endif
-  glViewport(last_viewport[0], last_viewport[1],
-             static_cast<GLsizei>(last_viewport[2]),
+  glViewport(last_viewport[0], last_viewport[1], static_cast<GLsizei>(last_viewport[2]),
              static_cast<GLsizei>(last_viewport[3]));
-  glScissor(last_scissor_box[0], last_scissor_box[1],
-            static_cast<GLsizei>(last_scissor_box[2]),
+  glScissor(last_scissor_box[0], last_scissor_box[1], static_cast<GLsizei>(last_scissor_box[2]),
             static_cast<GLsizei>(last_scissor_box[3]));
 }
 
 ImFont* AddOrbitFont(float pixel_size) {
   const auto exe_path = Path::GetExecutablePath();
   const auto font_file_name = exe_path + "fonts/Vera.ttf";
-  return ImGui::GetIO().Fonts->AddFontFromFileTTF(font_file_name.c_str(),
-                                                  pixel_size);
+  return ImGui::GetIO().Fonts->AddFontFromFileTTF(font_file_name.c_str(), pixel_size);
 }
 
 }  // namespace
 
-
-void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_GlCanvas, int button,
-                                     bool down) {
+void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_GlCanvas, int button, bool down) {
   ScopeImguiContext state(a_GlCanvas->GetImGuiContext());
   if (button >= 0 && button < 3) {
     g_MousePressed[button] = down;
@@ -660,8 +622,7 @@ uint32_t LoadTextureFromFile(const char* file_name) {
   uint32_t texture_id = 0;
   int image_width = 0;
   int image_height = 0;
-  if (!LoadTextureFromFile(file_name, &texture_id, &image_width,
-                           &image_height)) {
+  if (!LoadTextureFromFile(file_name, &texture_id, &image_width, &image_height)) {
     LOG("ERROR, could not load texture %s", file_name);
   }
 
@@ -673,9 +634,8 @@ bool Orbit_ImGui_Init() {
 
   // http://doc.qt.io/qt-4.8/qt.html#Key-enum
 
-  io.KeyMap[ImGuiKey_Tab] =
-      0x00000001;  // Keyboard mapping. ImGui will use those indices to peek
-                   // into the io.KeyDown[] array.
+  io.KeyMap[ImGuiKey_Tab] = 0x00000001;  // Keyboard mapping. ImGui will use those indices to peek
+                                         // into the io.KeyDown[] array.
   io.KeyMap[ImGuiKey_LeftArrow] = 0x00000012;
   io.KeyMap[ImGuiKey_RightArrow] = 0x00000014;
   io.KeyMap[ImGuiKey_UpArrow] = 0x00000013;
@@ -695,11 +655,10 @@ bool Orbit_ImGui_Init() {
   io.KeyMap[ImGuiKey_Y] = 89;
   io.KeyMap[ImGuiKey_Z] = 90;
 
-  io.RenderDrawListsFn =
-      Orbit_ImGui_RenderDrawLists;  // Alternatively you can set this to NULL
-                                    // and call ImGui::GetDrawData() after
-                                    // ImGui::Render() to get the same
-                                    // ImDrawData pointer.
+  io.RenderDrawListsFn = Orbit_ImGui_RenderDrawLists;  // Alternatively you can set this to NULL
+                                                       // and call ImGui::GetDrawData() after
+                                                       // ImGui::Render() to get the same
+                                                       // ImDrawData pointer.
 
   SetupImGuiStyle(true, 1.f);
 
@@ -729,11 +688,9 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   }
 
   // Setup inputs
-  io.MousePos = ImVec2(
-      a_Canvas->GetMousePosX(),
-      a_Canvas
-          ->GetMousePosY());  // Mouse position in screen coordinates (set to
-                              // -1,-1 if no mouse / on another screen, etc.)
+  io.MousePos = ImVec2(a_Canvas->GetMousePosX(),
+                       a_Canvas->GetMousePosY());  // Mouse position in screen coordinates (set to
+                                                   // -1,-1 if no mouse / on another screen, etc.)
 
   for (int i = 0; i < 3; i++) {
     io.MouseDown[i] = g_MousePressed[i];

@@ -40,16 +40,14 @@ enum class SftpCopyToLocalOperationState {
   This operation implements remote -> local copying.
 */
 class SftpCopyToLocalOperation
-    : public StateMachineHelper<SftpCopyToLocalOperation,
-                                details::SftpCopyToLocalOperationState> {
+    : public StateMachineHelper<SftpCopyToLocalOperation, details::SftpCopyToLocalOperationState> {
   Q_OBJECT
   friend StateMachineHelper;
 
  public:
   explicit SftpCopyToLocalOperation(Session* session, SftpChannel* channel);
 
-  void CopyFileToLocal(std::filesystem::path source,
-                       std::filesystem::path destination);
+  void CopyFileToLocal(std::filesystem::path source, std::filesystem::path destination);
 
  signals:
   void started();

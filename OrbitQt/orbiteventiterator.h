@@ -11,8 +11,8 @@
 #include <QPainter>
 #include <QTextLayout>
 
-#include "absl/container/flat_hash_map.h"
 #include "Profiling.h"
+#include "absl/container/flat_hash_map.h"
 #include "types.h"
 
 namespace Ui {

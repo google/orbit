@@ -94,8 +94,7 @@ TEST(Socket, Connect) {
   // connection should be possible
   auto connect_socket = Socket::Create();
   ASSERT_TRUE(connect_socket);
-  const auto connected_addr_and_port =
-      connect_socket.value().Connect(localhost_and_port.value());
+  const auto connected_addr_and_port = connect_socket.value().Connect(localhost_and_port.value());
   ASSERT_TRUE(connected_addr_and_port);
 
   // can't listen when already in use
@@ -111,8 +110,7 @@ TEST(Socket, Accept) {
   ASSERT_TRUE(listen_socket);
   ASSERT_TRUE(listen_socket.value().Bind(AddrAndPort{"127.0.0.1", 0}));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto listen_addr_and_port =
-      listen_socket.value().GetSocketAddrAndPort();
+  const auto listen_addr_and_port = listen_socket.value().GetSocketAddrAndPort();
   ASSERT_TRUE(listen_addr_and_port);
 
   // setup connect socket
@@ -131,8 +129,7 @@ TEST(Socket, SendAndReceive) {
   ASSERT_TRUE(listen_socket);
   ASSERT_TRUE(listen_socket.value().Bind(AddrAndPort{"127.0.0.1", 0}));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto listen_addr_and_port =
-      listen_socket.value().GetSocketAddrAndPort();
+  const auto listen_addr_and_port = listen_socket.value().GetSocketAddrAndPort();
   ASSERT_TRUE(listen_addr_and_port);
 
   // setup client socket
@@ -190,8 +187,7 @@ TEST(Socket, Shutdown) {
   ASSERT_TRUE(listen_socket);
   ASSERT_TRUE(listen_socket.value().Bind(AddrAndPort{"127.0.0.1", 0}));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto listen_addr_and_port =
-      listen_socket.value().GetSocketAddrAndPort();
+  const auto listen_addr_and_port = listen_socket.value().GetSocketAddrAndPort();
   ASSERT_TRUE(listen_addr_and_port);
 
   // setup client socket

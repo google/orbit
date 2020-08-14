@@ -7,8 +7,8 @@
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 
-PickingId PickingManager::GetOrCreatePickableId(
-    std::weak_ptr<Pickable> pickable, BatcherId batcher_id) {
+PickingId PickingManager::GetOrCreatePickableId(std::weak_ptr<Pickable> pickable,
+                                                BatcherId batcher_id) {
   auto locked_pickable = pickable.lock();
   CHECK(locked_pickable != nullptr);
 
@@ -24,8 +24,7 @@ PickingId PickingManager::GetOrCreatePickableId(
     pickable_pid_map_[locked_pickable.get()] = pickable_id;
   }
 
-  PickingId id = PickingId::Create(PickingType::kPickable, pickable_id_counter_,
-                                   batcher_id);
+  PickingId id = PickingId::Create(PickingType::kPickable, pickable_id_counter_, batcher_id);
   return id;
 }
 
@@ -84,8 +83,7 @@ bool PickingManager::IsDragging() const {
   return picked && picked->Draggable();
 }
 
-Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
-                                       BatcherId batcher_id) {
+Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable, BatcherId batcher_id) {
   PickingId id = GetOrCreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }
@@ -100,6 +98,5 @@ Color PickingManager::ColorFromPickingID(PickingId id) const {
                 "PickingId should be same size as 4 * uint8_t");
   std::array<uint8_t, 4> color_values;
   std::memcpy(&color_values[0], &id, sizeof(PickingId));
-  return Color(color_values[0], color_values[1], color_values[2],
-               color_values[3]);
+  return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
 }

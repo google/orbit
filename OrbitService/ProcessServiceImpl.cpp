@@ -28,8 +28,7 @@ using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
 using orbit_grpc_protos::ProcessInfo;
 
-Status ProcessServiceImpl::GetProcessList(ServerContext*,
-                                          const GetProcessListRequest*,
+Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRequest*,
                                           GetProcessListResponse* response) {
   {
     absl::MutexLock lock(&mutex_);
@@ -70,34 +69,31 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   return Status::OK;
 }
 
-Status ProcessServiceImpl::GetProcessMemory(
-    ServerContext*, const GetProcessMemoryRequest* request,
-    GetProcessMemoryResponse* response) {
+Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemoryRequest* request,
+                                            GetProcessMemoryResponse* response) {
   uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
   response->mutable_memory()->resize(size);
   uint64_t num_bytes_read = 0;
-  if (ReadProcessMemory(request->pid(), request->address(),
-                        response->mutable_memory()->data(), size,
-                        &num_bytes_read)) {
+  if (ReadProcessMemory(request->pid(), request->address(), response->mutable_memory()->data(),
+                        size, &num_bytes_read)) {
     response->mutable_memory()->resize(num_bytes_read);
     return Status::OK;
   }
 
   response->mutable_memory()->resize(0);
-  ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u",
-        size, request->address(), request->pid());
+  ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u", size,
+        request->address(), request->pid());
   return Status(StatusCode::PERMISSION_DENIED,
-                absl::StrFormat(
-                    "Could not read %lu bytes from address %#lx of process %u",
-                    size, request->address(), request->pid()));
+                absl::StrFormat("Could not read %lu bytes from address %#lx of process %u", size,
+                                request->address(), request->pid()));
 }
 
-Status ProcessServiceImpl::GetDebugInfoFile(
-    ::grpc::ServerContext*, const GetDebugInfoFileRequest* request,
-    GetDebugInfoFileResponse* response) {
+Status ProcessServiceImpl::GetDebugInfoFile(::grpc::ServerContext*,
+                                            const GetDebugInfoFileRequest* request,
+                                            GetDebugInfoFileResponse* response) {
   const SymbolHelper symbol_helper;
-  ErrorMessageOr<std::string> result = symbol_helper.FindDebugSymbolsFile(
-      request->module_path(), request->build_id());
+  ErrorMessageOr<std::string> result =
+      symbol_helper.FindDebugSymbolsFile(request->module_path(), request->build_id());
   if (!result) {
     return Status(StatusCode::NOT_FOUND, result.error().message());
   }

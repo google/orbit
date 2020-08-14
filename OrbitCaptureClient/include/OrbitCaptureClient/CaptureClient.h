@@ -31,8 +31,7 @@ class CaptureClient {
 
   [[nodiscard]] ErrorMessageOr<void> StartCapture(
       ThreadPool* thread_pool, int32_t pid,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-          selected_functions);
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -55,8 +54,7 @@ class CaptureClient {
  private:
   void Capture(
       int32_t pid,
-      const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
-          selected_functions);
+      const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions);
 
   void FinishCapture();
 

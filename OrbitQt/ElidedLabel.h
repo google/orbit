@@ -15,8 +15,7 @@ class ElidedLabel : public QLabel {
 
  public:
   explicit ElidedLabel(QWidget* parent) : QLabel(parent) {}
-  void setTextWithElision(const QString& text,
-                          Qt::TextElideMode mode = Qt::ElideMiddle);
+  void setTextWithElision(const QString& text, Qt::TextElideMode mode = Qt::ElideMiddle);
 
  protected:
   void paintEvent(QPaintEvent* event) override;

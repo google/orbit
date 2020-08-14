@@ -39,8 +39,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
 
   // Pickable
   void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode) override;
-  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                PickingMode picking_mode);
+  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void OnPick(int a_X, int a_Y) override;
   void OnRelease() override;
   void OnDrag(int a_X, int a_Y) override;
@@ -57,13 +56,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] TickType GetMinTime() const { return min_time_; }
   [[nodiscard]] TickType GetMaxTime() const { return max_time_; }
 
-  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() {
-    return {};
-  }
-  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>>
-  GetAllChains() {
-    return {};
-  }
+  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() { return {}; }
+  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() { return {}; }
 
   [[nodiscard]] bool IsMoving() const { return m_Moving; }
   [[nodiscard]] Vec2 GetMoveDelta() const {
@@ -86,9 +80,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] virtual bool IsCollapsable() const { return false; }
 
  protected:
-  void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
-                       const Vec2& pos, const Color& color, float rotation,
-                       float z);
+  void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
+                       const Color& color, float rotation, float z);
 
   GlCanvas* m_Canvas;
   TimeGraph* time_graph_;

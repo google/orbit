@@ -32,11 +32,8 @@ void SetThreadName(const std::string& a_Name) {
 #endif
 }
 
-OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth,
-                     uint32_t sleep_us)
-    : num_threads_(num_threads),
-      recurse_depth_(recurse_depth),
-      sleep_us_(sleep_us) {}
+OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t sleep_us)
+    : num_threads_(num_threads), recurse_depth_(recurse_depth), sleep_us_(sleep_us) {}
 
 OrbitTest::~OrbitTest() {
   m_ExitRequested = true;
@@ -48,15 +45,14 @@ OrbitTest::~OrbitTest() {
 
 void OrbitTest::Start() {
   std::cout << "Starting OrbitTest num_threads: " << num_threads_
-            << " recurse_depth: " << recurse_depth_
-            << " sleep_us: " << sleep_us_ << std::endl;
+            << " recurse_depth: " << recurse_depth_ << " sleep_us: " << sleep_us_ << std::endl;
   for (uint32_t i = 0; i < num_threads_; ++i) {
     auto thread = std::make_shared<std::thread>(&OrbitTest::Loop, this);
     m_Threads.push_back(thread);
   }
 
-  m_Threads.push_back(std::make_shared<std::thread>(
-      &OrbitTest::ManualInstrumentationApiTest, this));
+  m_Threads.push_back(
+      std::make_shared<std::thread>(&OrbitTest::ManualInstrumentationApiTest, this));
 }
 
 void OrbitTest::Loop() {
@@ -83,16 +79,12 @@ void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
   auto start = std::chrono::system_clock::now();
   while (true) {
     auto end = std::chrono::system_clock::now();
-    uint64_t us =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-            .count();
+    uint64_t us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     if (us > microseconds) break;
   }
 }
 
-void NO_INLINE SleepFor1Ms() {
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
-}
+void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
 
 void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");

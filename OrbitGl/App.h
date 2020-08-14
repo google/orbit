@@ -51,8 +51,7 @@ class Process;
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  OrbitApp(ApplicationOptions&& options,
-           std::unique_ptr<MainThreadExecutor> main_thread_executor);
+  OrbitApp(ApplicationOptions&& options, std::unique_ptr<MainThreadExecutor> main_thread_executor);
   ~OrbitApp() override;
 
   static bool Init(ApplicationOptions&& options,
@@ -78,22 +77,18 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView();
-  void Disassemble(int32_t pid,
-                   const orbit_client_protos::FunctionInfo& function);
+  void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted() override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnCallstack(CallStack callstack) override;
-  void OnCallstackEvent(
-      orbit_client_protos::CallstackEvent callstack_event) override;
+  void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
-  void OnAddressInfo(
-      orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
 
-  void OnValidateFramePointers(
-      std::vector<std::shared_ptr<Module>> modules_to_validate);
+  void OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate);
 
   void RegisterCaptureWindow(CaptureWindow* capture);
 
@@ -134,31 +129,23 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
   }
-  using DisassemblyCallback =
-      std::function<void(std::string, DisassemblyReport)>;
+  using DisassemblyCallback = std::function<void(std::string, DisassemblyReport)>;
   void SetDisassemblyCallback(DisassemblyCallback callback) {
     disassembly_callback_ = std::move(callback);
   }
-  using ErrorMessageCallback =
-      std::function<void(const std::string&, const std::string&)>;
+  using ErrorMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetErrorMessageCallback(ErrorMessageCallback callback) {
     error_message_callback_ = std::move(callback);
   }
-  using InfoMessageCallback =
-      std::function<void(const std::string&, const std::string&)>;
+  using InfoMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetInfoMessageCallback(InfoMessageCallback callback) {
     info_message_callback_ = std::move(callback);
   }
   using TooltipCallback = std::function<void(const std::string&)>;
-  void SetTooltipCallback(TooltipCallback callback) {
-    tooltip_callback_ = std::move(callback);
-  }
+  void SetTooltipCallback(TooltipCallback callback) { tooltip_callback_ = std::move(callback); }
   using RefreshCallback = std::function<void(DataViewType type)>;
-  void SetRefreshCallback(RefreshCallback callback) {
-    refresh_callback_ = std::move(callback);
-  }
-  using SamplingReportCallback =
-      std::function<void(DataView*, std::shared_ptr<SamplingReport>)>;
+  void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
+  using SamplingReportCallback = std::function<void(DataView*, std::shared_ptr<SamplingReport>)>;
   void SetSamplingReportCallback(SamplingReportCallback callback) {
     sampling_reports_callback_ = std::move(callback);
   }
@@ -169,15 +156,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetTopDownViewCallback(TopDownViewCallback callback) {
     top_down_view_callback_ = std::move(callback);
   }
-  using SaveFileCallback =
-      std::function<std::string(const std::string& extension)>;
-  void SetSaveFileCallback(SaveFileCallback callback) {
-    save_file_callback_ = std::move(callback);
-  }
+  using SaveFileCallback = std::function<std::string(const std::string& extension)>;
+  void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
   void FireRefreshCallbacks(DataViewType type = DataViewType::kAll);
-  void Refresh(DataViewType type = DataViewType::kAll) {
-    FireRefreshCallbacks(type);
-  }
+  void Refresh(DataViewType type = DataViewType::kAll) { FireRefreshCallbacks(type); }
   using ClipboardCallback = std::function<void(const std::string&)>;
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
@@ -195,51 +177,39 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  void LoadModules(
-      int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
-      const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
-  void LoadModulesFromPreset(
-      const std::shared_ptr<Process>& process,
-      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void LoadModules(int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
+                   const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
+  void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
+                             const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateSamplingReport();
-  void LoadPreset(
-      const std::shared_ptr<orbit_client_protos::PresetFile>& session);
+  void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& session);
   void FilterTracks(const std::string& filter);
 
-  void CrashOrbitService(
-      orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
+  void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
-  [[nodiscard]] ProcessManager* GetProcessManager() {
-    return process_manager_.get();
-  }
+  [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
-  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() {
-    return main_thread_executor_.get();
-  }
+  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
   [[nodiscard]] std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
   // TODO(kuebler): Move them to a separate controler at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
   void DeselectFunction(const orbit_client_protos::FunctionInfo& func);
   void ClearSelectedFunctions();
-  [[nodiscard]] bool IsFunctionSelected(
-      const orbit_client_protos::FunctionInfo& func) const;
+  [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
   [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
 
  private:
-  void LoadModuleOnRemote(
-      int32_t process_id, const std::shared_ptr<Module>& module,
-      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  void SymbolLoadingFinished(
-      uint32_t process_id, const std::shared_ptr<Module>& module,
-      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
+                          const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<Module>& module,
+                             const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
 
-  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
-      const std::string& filename);
+  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(const std::string& filename);
 
   [[nodiscard]] absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
   GetSelectedFunctionsAndOrbitFunctions() const;
@@ -300,8 +270,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
   // Temporary objects used by CaptureListener implementation
-  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
-      captured_address_infos_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> captured_address_infos_;
 };
 
 extern std::unique_ptr<OrbitApp> GOrbitApp;

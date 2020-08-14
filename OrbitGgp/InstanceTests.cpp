@@ -51,18 +51,16 @@ TEST(InstanceTests, GetListFromJson) {
     //   },
     //  }
     // ]
-    const auto json =
-        QString(
-            "[{\"displayName\":\"a display name\",\"id\":\"instance "
-            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:"
-            "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
-            "key\":\"other value\",\"other complex object\":{\"object "
-            "key\":\"object value\"}}]")
-            .toUtf8();
+    const auto json = QString(
+                          "[{\"displayName\":\"a display name\",\"id\":\"instance "
+                          "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:"
+                          "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
+                          "key\":\"other value\",\"other complex object\":{\"object "
+                          "key\":\"object value\"}}]")
+                          .toUtf8();
     const auto result = Instance::GetListFromJson(json);
     ASSERT_FALSE(result);
-    EXPECT_EQ(result.error().value(),
-              static_cast<int>(OrbitGgp::Error::kUnableToParseJson));
+    EXPECT_EQ(result.error().value(), static_cast<int>(OrbitGgp::Error::kUnableToParseJson));
   }
 
   {
@@ -82,14 +80,13 @@ TEST(InstanceTests, GetListFromJson) {
     //   },
     //  }
     // ]
-    const auto json =
-        QString(
-            "[{\"displayName\":\"a display name\",\"id\":\"instance "
-            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:"
-            "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
-            "key\":\"other value\",\"other complex object\":{\"object "
-            "key\":\"object value\"}}]")
-            .toUtf8();
+    const auto json = QString(
+                          "[{\"displayName\":\"a display name\",\"id\":\"instance "
+                          "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:"
+                          "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
+                          "key\":\"other value\",\"other complex object\":{\"object "
+                          "key\":\"object value\"}}]")
+                          .toUtf8();
     const auto result = Instance::GetListFromJson(json);
     ASSERT_TRUE(result);
     const QVector<Instance> instances = std::move(result.value());
@@ -98,9 +95,8 @@ TEST(InstanceTests, GetListFromJson) {
     EXPECT_EQ(instance.display_name, QString{"a display name"});
     EXPECT_EQ(instance.id, QString{"instance id"});
     EXPECT_EQ(instance.ip_address, QString{"1.1.0.1"});
-    EXPECT_EQ(
-        instance.last_updated,
-        QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate));
+    EXPECT_EQ(instance.last_updated,
+              QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate));
     EXPECT_EQ(instance.owner, QString{"a username"});
     EXPECT_EQ(instance.pool, QString{"a pool"});
   }
@@ -138,8 +134,7 @@ TEST(InstanceTests, EqualToOperator) {
   test_instance_0.display_name = "a display name";
   test_instance_0.id = "a id";
   test_instance_0.ip_address = "1.1.0.1";
-  test_instance_0.last_updated =
-      QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
+  test_instance_0.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_0.owner = "a username";
   test_instance_0.pool = "a pool";
 
@@ -148,8 +143,7 @@ TEST(InstanceTests, EqualToOperator) {
   test_instance_1.display_name = "a display name";
   test_instance_1.id = "a id";
   test_instance_1.ip_address = "1.1.0.1";
-  test_instance_1.last_updated =
-      QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
+  test_instance_1.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_1.owner = "a username";
   test_instance_1.pool = "a pool";
 
@@ -165,8 +159,7 @@ TEST(InstanceTests, NotEqualToOperator) {
   test_instance_0.display_name = "a display name";
   test_instance_0.id = "a id";
   test_instance_0.ip_address = "1.1.0.1";
-  test_instance_0.last_updated =
-      QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
+  test_instance_0.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_0.owner = "a username";
   test_instance_0.pool = "a pool";
 
@@ -175,8 +168,7 @@ TEST(InstanceTests, NotEqualToOperator) {
   test_instance_1.display_name = "a display name";
   test_instance_1.id = "a id";
   test_instance_1.ip_address = "1.1.0.1";
-  test_instance_1.last_updated =
-      QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
+  test_instance_1.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_1.owner = "a username";
   test_instance_1.pool = "a pool";
 
@@ -184,8 +176,7 @@ TEST(InstanceTests, NotEqualToOperator) {
 }
 
 TEST(InstanceTests, QMetaTypeId) {
-  EXPECT_STREQ("OrbitGgp::Instance",
-               QMetaType::typeName(qMetaTypeId<Instance>()));
+  EXPECT_STREQ("OrbitGgp::Instance", QMetaType::typeName(qMetaTypeId<Instance>()));
 }
 
 }  // namespace OrbitGgp

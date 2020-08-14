@@ -23,8 +23,7 @@ class StringManager {
   [[nodiscard]] bool Contains(uint64_t key) const;
   void Clear();
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, std::string>&
-  GetKeyToStringMap() const {
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, std::string>& GetKeyToStringMap() const {
     return key_to_string_;
   }
 

@@ -5,13 +5,12 @@
 #ifndef ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 #define ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 
-#include "absl/container/flat_hash_map.h"
-
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QWidget>
 
 #include "LiveFunctionsController.h"
+#include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "orbiteventiterator.h"
 #include "types.h"
@@ -27,8 +26,7 @@ class OrbitLiveFunctions : public QWidget {
   explicit OrbitLiveFunctions(QWidget* parent = nullptr);
   ~OrbitLiveFunctions() override;
 
-  void Initialize(SelectionType selection_type, FontType font_type,
-                  bool is_main_instance = true);
+  void Initialize(SelectionType selection_type, FontType font_type, bool is_main_instance = true);
   void Refresh();
   void OnDataChanged();
   void Reset();

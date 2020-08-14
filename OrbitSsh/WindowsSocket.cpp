@@ -48,11 +48,10 @@ outcome::result<Socket> Socket::Accept() const {
 
 void Socket::PrintWithLastError(const std::string& message) {
   LPWSTR error_string = nullptr;
-  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                    FORMAT_MESSAGE_IGNORE_INSERTS,
-                nullptr, WSAGetLastError(),
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                reinterpret_cast<LPWSTR>(&error_string), 0, nullptr);
+  FormatMessage(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+      nullptr, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      reinterpret_cast<LPWSTR>(&error_string), 0, nullptr);
   ERROR("%s: %s", message.c_str(), error_string);
   LocalFree(error_string);
 }

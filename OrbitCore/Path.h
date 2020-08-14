@@ -45,9 +45,8 @@ class Path {
   static bool DirExists(const std::string& a_Dir);
 
   static std::vector<std::string> ListFiles(
-      const std::string& directory,
-      const std::function<bool(const std::string&)>& filter =
-          [](const std::string&) { return true; });
+      const std::string& directory, const std::function<bool(const std::string&)>& filter =
+                                        [](const std::string&) { return true; });
   static std::vector<std::string> ListFiles(const std::string& directory,
                                             const std::string& filter);
 

@@ -21,9 +21,7 @@ enum class KnownHostsError {
 struct KnownHostsErrorCategory : std::error_category {
   using std::error_category::error_category;
 
-  [[nodiscard]] const char* name() const noexcept override {
-    return "libssh2_known_hosts";
-  }
+  [[nodiscard]] const char* name() const noexcept override { return "libssh2_known_hosts"; }
   [[nodiscard]] std::string message(int condition) const override;
 };
 

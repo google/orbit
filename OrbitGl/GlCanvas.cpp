@@ -97,14 +97,12 @@ void GlCanvas::Initialize() {
       FATAL("Problem: glewInit failed, something is seriously wrong: %s",
             reinterpret_cast<const char*>(glewGetErrorString(err)));
     }
-    LOG("Using GLEW %s",
-        reinterpret_cast<const char*>(glewGetString(GLEW_VERSION)));
+    LOG("Using GLEW %s", reinterpret_cast<const char*>(glewGetString(GLEW_VERSION)));
     firstInit = false;
   }
 }
 
-void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
-                          bool /*a_Middle*/) {
+void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, bool /*a_Middle*/) {
   int mousex = a_X;
   int mousey = a_Y;
 
@@ -118,10 +116,8 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
 
   // Pan
   if (a_Left && !m_ImguiActive) {
-    m_WorldTopLeftX =
-        m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
-    m_WorldTopLeftY = m_WorldClickY +
-                      static_cast<float>(mousey) / getHeight() * m_WorldHeight;
+    m_WorldTopLeftX = m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
+    m_WorldTopLeftY = m_WorldClickY + static_cast<float>(mousey) / getHeight() * m_WorldHeight;
     UpdateSceneBox();
   }
 
@@ -161,9 +157,8 @@ void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
 
   bool zoomWidth = !a_Ctrl;
   if (zoomWidth) {
-    m_WheelMomentum = delta * m_WheelMomentum < 0
-                          ? 0.f
-                          : static_cast<float>(m_WheelMomentum + delta);
+    m_WheelMomentum =
+        delta * m_WheelMomentum < 0 ? 0.f : static_cast<float>(m_WheelMomentum + delta);
   } else {
     // TODO: scale track height.
   }
@@ -206,12 +201,9 @@ bool GlCanvas::RightUp() {
 
 void GlCanvas::mouseLeftWindow() {}
 
-void GlCanvas::CharEvent(unsigned int a_Char) {
-  Orbit_ImGui_CharCallback(this, a_Char);
-}
+void GlCanvas::CharEvent(unsigned int a_Char) { Orbit_ImGui_CharCallback(this, a_Char); }
 
-void GlCanvas::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                          bool a_Alt) {
+void GlCanvas::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) {
   UpdateSpecialKeys(a_Ctrl, a_Shift, a_Alt);
   ScopeImguiContext state(m_ImGuiContext);
   ImGuiIO& io = ImGui::GetIO();
@@ -223,8 +215,7 @@ void GlCanvas::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
   NeedsRedraw();
 }
 
-void GlCanvas::KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                           bool a_Alt) {
+void GlCanvas::KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) {
   UpdateSpecialKeys(a_Ctrl, a_Shift, a_Alt);
   Orbit_ImGui_KeyCallback(this, a_KeyCode, false);
   NeedsRedraw();
@@ -258,8 +249,8 @@ void GlCanvas::OnTimer() {
 }
 
 /** Inits the OpenGL viewport for drawing in 3D. */
-void GlCanvas::prepare3DViewport(int topleft_x, int topleft_y,
-                                 int bottomrigth_x, int bottomrigth_y) {
+void GlCanvas::prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
+                                 int bottomrigth_y) {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  // Black Background
   glClearDepth(1.0f);                    // Depth Buffer Setup
   glEnable(GL_DEPTH_TEST);               // Enables Depth Testing
@@ -268,22 +259,19 @@ void GlCanvas::prepare3DViewport(int topleft_x, int topleft_y,
 
   glEnable(GL_COLOR_MATERIAL);
 
-  glViewport(topleft_x, topleft_y, bottomrigth_x - topleft_x,
-             bottomrigth_y - topleft_y);
+  glViewport(topleft_x, topleft_y, bottomrigth_x - topleft_x, bottomrigth_y - topleft_y);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  float ratio_w_h =
-      static_cast<float>(bottomrigth_x - topleft_x) / bottomrigth_y - topleft_y;
-  gluPerspective(45 /*view angle*/, ratio_w_h, 0.1 /*clip close*/,
-                 200 /*clip far*/);
+  float ratio_w_h = static_cast<float>(bottomrigth_x - topleft_x) / bottomrigth_y - topleft_y;
+  gluPerspective(45 /*view angle*/, ratio_w_h, 0.1 /*clip close*/, 200 /*clip far*/);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
 
 /** Inits the OpenGL viewport for drawing in 2D. */
-void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
-                                 int bottomrigth_x, int bottomrigth_y) {
+void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
+                                 int bottomrigth_y) {
   glClearColor(m_BackgroundColor[0], m_BackgroundColor[1], m_BackgroundColor[2],
                m_BackgroundColor[3]);
   if (m_Picking) glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -299,8 +287,7 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-  glViewport(topleft_x, topleft_y, bottomrigth_x - topleft_x,
-             bottomrigth_y - topleft_y);
+  glViewport(topleft_x, topleft_y, bottomrigth_x - topleft_x, bottomrigth_y - topleft_y);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
@@ -335,8 +322,8 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
   if (m_WorldWidth <= 0) m_WorldWidth = 1.f;
   if (m_WorldHeight <= 0) m_WorldHeight = 1.f;
 
-  gluOrtho2D(m_WorldTopLeftX, m_WorldTopLeftX + m_WorldWidth,
-             m_WorldTopLeftY - m_WorldHeight, m_WorldTopLeftY);
+  gluOrtho2D(m_WorldTopLeftX, m_WorldTopLeftX + m_WorldWidth, m_WorldTopLeftY - m_WorldHeight,
+             m_WorldTopLeftY);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -467,18 +454,15 @@ Vec2 GlCanvas::ToWorldSpace(const Vec2& a_Point) {
   return Vec2(x, y);
 }
 
-void GlCanvas::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
-                       const Color& a_Color, float a_MaxSize,
-                       bool a_RightJustified) {
-  m_TextRenderer.AddText(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize,
-                         a_RightJustified);
+void GlCanvas::AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
+                       float a_MaxSize, bool a_RightJustified) {
+  m_TextRenderer.AddText(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize, a_RightJustified);
 }
 
-int GlCanvas::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
-                        const Color& a_Color, float a_MaxSize,
-                        bool a_RightJustified, bool a_InvertY) {
-  return m_TextRenderer.AddText2D(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize,
-                                  a_RightJustified, a_InvertY);
+int GlCanvas::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
+                        float a_MaxSize, bool a_RightJustified, bool a_InvertY) {
+  return m_TextRenderer.AddText2D(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize, a_RightJustified,
+                                  a_InvertY);
 }
 
 void GlCanvas::ResetHoverTimer() {

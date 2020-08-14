@@ -37,19 +37,17 @@ class Process {
   void SetIs64Bit(bool value) { m_Is64Bit = value; }
   bool GetIs64Bit() const { return m_Is64Bit; }
 
-  orbit_client_protos::FunctionInfo* GetFunctionFromAddress(
-      uint64_t address, bool a_IsExact = true);
+  orbit_client_protos::FunctionInfo* GetFunctionFromAddress(uint64_t address,
+                                                            bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(uint64_t a_Address);
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
   std::shared_ptr<Module> GetModuleFromPath(const std::string& module_path);
 
-  void AddFunction(
-      const std::shared_ptr<orbit_client_protos::FunctionInfo>& function) {
+  void AddFunction(const std::shared_ptr<orbit_client_protos::FunctionInfo>& function) {
     m_Functions.push_back(function);
   }
 
-  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
-  GetFunctions() const {
+  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>& GetFunctions() const {
     return m_Functions;
   }
 

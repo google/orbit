@@ -26,8 +26,8 @@ TextBox::TextBox()
   Update();
 }
 
-TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
-                 const std::string& a_Text, const Color& a_Color)
+TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size, const std::string& a_Text,
+                 const Color& a_Color)
     : m_Pos(a_Pos),
       m_Size(a_Size),
       text_(a_Text),
@@ -69,15 +69,14 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
   return (m_Size[0] / worldWidth) * screenSize;
 }
 
-void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
-                   bool a_Visible, bool a_RightJustify, bool isInactive,
-                   unsigned int a_ID, bool a_IsPicking, bool a_IsHighlighted) {
+void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
+                   bool a_RightJustify, bool isInactive, unsigned int a_ID, bool a_IsPicking,
+                   bool a_IsHighlighted) {
   bool isCoreActivity = timer_info_.type() == TimerInfo::kCoreActivity;
   bool isSameThreadIdAsSelected =
       isCoreActivity && timer_info_.thread_id() == Capture::GSelectedThreadId;
 
-  if (Capture::GSelectedThreadId != 0 && isCoreActivity &&
-      !isSameThreadIdAsSelected) {
+  if (Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected) {
     isInactive = true;
   }
 
@@ -92,8 +91,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
   }
 
   float z = a_IsHighlighted ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
-                            : isInactive ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                                         : GlCanvas::Z_VALUE_BOX_ACTIVE;
+            : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
+                            : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
   Color color = col;
   if (a_IsPicking) {
@@ -115,16 +114,14 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     float maxSize = m_Pos[0] + m_Size[0] - posX;
 
-    const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
-        timer_info_.function_address());
-    std::string function_name =
-        func != nullptr ? FunctionUtils::GetDisplayName(*func) : "";
+    const FunctionInfo* func =
+        Capture::capture_data_.GetSelectedFunction(timer_info_.function_address());
+    std::string function_name = func != nullptr ? FunctionUtils::GetDisplayName(*func) : "";
     std::string text = absl::StrFormat("%s %s", function_name, text_.c_str());
 
     if (!a_IsPicking && !isCoreActivity) {
-      a_TextRenderer.AddText(
-          text.c_str(), posX, m_TextY == FLT_MAX ? m_Pos[1] + 1.f : m_TextY,
-          GlCanvas::Z_VALUE_TEXT, s_Color, maxSize, a_RightJustify);
+      a_TextRenderer.AddText(text.c_str(), posX, m_TextY == FLT_MAX ? m_Pos[1] + 1.f : m_TextY,
+                             GlCanvas::Z_VALUE_TEXT, s_Color, maxSize, a_RightJustify);
     }
   }
 

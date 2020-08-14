@@ -14,8 +14,7 @@
 
 namespace LinuxTracing {
 
-void PerfEventQueue::PushEvent(int origin_fd,
-                               std::unique_ptr<PerfEvent> event) {
+void PerfEventQueue::PushEvent(int origin_fd, std::unique_ptr<PerfEvent> event) {
   if (fd_event_queues_.count(origin_fd) > 0) {
     std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>> event_queue =
         fd_event_queues_.at(origin_fd);
@@ -25,8 +24,7 @@ void PerfEventQueue::PushEvent(int origin_fd,
     CHECK(event->GetTimestamp() >= event_queue->front()->GetTimestamp());
     event_queue->push(std::move(event));
   } else {
-    auto event_queue =
-        std::make_shared<std::queue<std::unique_ptr<PerfEvent>>>();
+    auto event_queue = std::make_shared<std::queue<std::unique_ptr<PerfEvent>>>();
     fd_event_queues_.insert(std::make_pair(origin_fd, event_queue));
     event_queue->push(std::move(event));
     event_queues_queue_.push(std::make_pair(origin_fd, event_queue));
@@ -35,17 +33,14 @@ void PerfEventQueue::PushEvent(int origin_fd,
 
 bool PerfEventQueue::HasEvent() { return !event_queues_queue_.empty(); }
 
-PerfEvent* PerfEventQueue::TopEvent() {
-  return event_queues_queue_.top().second->front().get();
-}
+PerfEvent* PerfEventQueue::TopEvent() { return event_queues_queue_.top().second->front().get(); }
 
 std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
-  std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
-      top_fd_queue = event_queues_queue_.top();
+  std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>> top_fd_queue =
+      event_queues_queue_.top();
   event_queues_queue_.pop();
   const int& top_fd = top_fd_queue.first;
-  std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>& top_queue =
-      top_fd_queue.second;
+  std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>& top_queue = top_fd_queue.second;
 
   std::unique_ptr<PerfEvent> top_event = std::move(top_queue->front());
   top_queue->pop();
@@ -60,12 +55,10 @@ std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
   return top_event;
 }
 
-void PerfEventProcessor::AddEvent(int origin_fd,
-                                  std::unique_ptr<PerfEvent> event) {
+void PerfEventProcessor::AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&
-      event->GetTimestamp() <
-          last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
+      event->GetTimestamp() < last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
     ERROR("Processed an event out of order");
   }
 #endif
@@ -89,8 +82,7 @@ void PerfEventProcessor::ProcessOldEvents() {
     PerfEvent* event = event_queue_.TopEvent();
 
     // Do not read the most recent events as out-of-order events could arrive.
-    if (event->GetTimestamp() + PROCESSING_DELAY_MS * 1'000'000 >=
-        max_timestamp) {
+    if (event->GetTimestamp() + PROCESSING_DELAY_MS * 1'000'000 >= max_timestamp) {
       break;
     }
 

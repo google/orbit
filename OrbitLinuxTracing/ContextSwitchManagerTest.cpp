@@ -43,8 +43,7 @@ TEST(ContextSwitchManager, OneCoreThreadExit) {
 
   context_switch_manager.ProcessContextSwitchIn(kPid, kTid, kCore, 100);
 
-  processed_scheduling_slice =
-      context_switch_manager.ProcessContextSwitchOut(-1, -1, kCore, 101);
+  processed_scheduling_slice = context_switch_manager.ProcessContextSwitchOut(-1, -1, kCore, 101);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
@@ -78,8 +77,7 @@ TEST(ContextSwitchManager, OneCoreMismatch) {
 
   context_switch_manager.ProcessContextSwitchIn(kPid, kTid, kCore, 100);
 
-  processed_scheduling_slice =
-      context_switch_manager.ProcessContextSwitchOut(kPid, 77, kCore, 101);
+  processed_scheduling_slice = context_switch_manager.ProcessContextSwitchOut(kPid, 77, kCore, 101);
   ASSERT_FALSE(processed_scheduling_slice.has_value());
 }
 
@@ -159,8 +157,7 @@ TEST(ContextSwitchManager, TwoCoresMatches) {
       context_switch_manager.ProcessContextSwitchOut(kPid2, kTid2, kCore2, 105);
   ASSERT_FALSE(processed_scheduling_slice.has_value());
 
-  processed_scheduling_slice =
-      context_switch_manager.ProcessContextSwitchOut(62, 63, 3, 106);
+  processed_scheduling_slice = context_switch_manager.ProcessContextSwitchOut(62, 63, 3, 106);
   ASSERT_FALSE(processed_scheduling_slice.has_value());
 }
 
@@ -173,8 +170,7 @@ TEST(ContextSwitchManager, TwoCoresOutOnDifferentCore) {
 
   context_switch_manager.ProcessContextSwitchIn(kPid, kTid, kCore, 100);
 
-  processed_scheduling_slice =
-      context_switch_manager.ProcessContextSwitchOut(kPid, kTid, 2, 101);
+  processed_scheduling_slice = context_switch_manager.ProcessContextSwitchOut(kPid, kTid, 2, 101);
 }
 
 TEST(ContextSwitchManager, OneCoreOutOfOrder) {
@@ -186,8 +182,7 @@ TEST(ContextSwitchManager, OneCoreOutOfOrder) {
 
   context_switch_manager.ProcessContextSwitchIn(kPid, kTid, kCore, 100);
 
-  EXPECT_DEATH(
-      context_switch_manager.ProcessContextSwitchOut(52, 53, kCore, 99), "");
+  EXPECT_DEATH(context_switch_manager.ProcessContextSwitchOut(52, 53, kCore, 99), "");
 }
 
 }  // namespace LinuxTracing

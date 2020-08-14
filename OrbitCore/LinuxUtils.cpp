@@ -39,11 +39,9 @@ outcome::result<std::string> ExecuteCommand(const std::string& cmd) {
   //  return failure
   std::array<char, 128> buffer;
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-                                                pclose);
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
   if (!pipe) {
-    ERROR("Failed to execute command \"%s\": %s", cmd.c_str(),
-          SafeStrerror(errno));
+    ERROR("Failed to execute command \"%s\": %s", cmd.c_str(), SafeStrerror(errno));
     return outcome::failure(static_cast<std::errc>(errno));
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
@@ -63,13 +61,12 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
 
   const auto proc_maps = ReadProcMaps(pid);
   if (!proc_maps) {
-    return ErrorMessage(absl::StrFormat("Unable to read /proc/%d/maps: %s", pid,
-                                        proc_maps.error().message()));
+    return ErrorMessage(
+        absl::StrFormat("Unable to read /proc/%d/maps: %s", pid, proc_maps.error().message()));
   }
 
   for (const std::string& line : proc_maps.value()) {
-    std::vector<std::string> tokens =
-        absl::StrSplit(line, ' ', absl::SkipEmpty());
+    std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     // tokens[4] is the inode column. If inode equals 0, then the memory is not
     // mapped to a file (might be heap, stack or something else)
     if (tokens.size() != 6 || tokens[4] == "0") continue;
@@ -88,8 +85,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
       address_map[module_path] = {start, end, is_executable};
     } else {
       AddressRange& address_range = iter->second;
-      address_range.start_address =
-          std::min(address_range.start_address, start);
+      address_range.start_address = std::min(address_range.start_address, start);
       address_range.end_address = std::max(address_range.end_address, end);
       address_range.is_executable |= is_executable;
     }
@@ -103,8 +99,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     uint64_t file_size = Path::FileSize(module_path);
     if (file_size == 0) continue;
 
-    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
-        ElfFile::Create(module_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(module_path);
     if (!elf_file) {
       // TODO: Shouldn't this result in ErrorMessage?
       ERROR("Unable to load module \"%s\": %s - will ignore.", module_path,
@@ -127,8 +122,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
 }
 
 outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization() {
-  const std::string cmd =
-      "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
+  const std::string cmd = "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
   OUTCOME_TRY(result, ExecuteCommand(cmd));
 
   std::unordered_map<pid_t, double> process_map;
@@ -148,20 +142,17 @@ outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization() {
 outcome::result<bool> Is64Bit(pid_t pid) {
   // TODO(161196904): Do this in a more reliable way. It does not work for a lot
   //  of processes.
-  OUTCOME_TRY(result,
-              ExecuteCommand(absl::StrFormat("file -L /proc/%d/exe", pid)));
+  OUTCOME_TRY(result, ExecuteCommand(absl::StrFormat("file -L /proc/%d/exe", pid)));
   return absl::StrContains(result, "64-bit");
 }
 
 ErrorMessageOr<std::string> GetExecutablePath(int32_t pid) {
   char buffer[PATH_MAX];
 
-  ssize_t length = readlink(absl::StrFormat("/proc/%d/exe", pid).c_str(),
-                            buffer, sizeof(buffer));
+  ssize_t length = readlink(absl::StrFormat("/proc/%d/exe", pid).c_str(), buffer, sizeof(buffer));
   if (length == -1) {
-    return ErrorMessage(absl::StrFormat(
-        "Unable to get executable path of process with pid %d: %s", pid,
-        SafeStrerror(errno)));
+    return ErrorMessage(absl::StrFormat("Unable to get executable path of process with pid %d: %s",
+                                        pid, SafeStrerror(errno)));
   }
 
   return std::string(buffer, length);

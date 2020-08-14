@@ -8,17 +8,16 @@
 
 namespace OrbitSshQt {
 
-SftpCopyToRemoteOperation::SftpCopyToRemoteOperation(Session* session,
-                                                     SftpChannel* channel)
+SftpCopyToRemoteOperation::SftpCopyToRemoteOperation(Session* session, SftpChannel* channel)
     : session_(session), channel_(channel) {
   about_to_shutdown_connection_.emplace(
       QObject::connect(channel_, &SftpChannel::aboutToShutdown, this,
                        &SftpCopyToRemoteOperation::HandleChannelShutdown));
 }
 
-void SftpCopyToRemoteOperation::CopyFileToRemote(
-    std::filesystem::path source, std::filesystem::path destination,
-    FileMode destination_mode) {
+void SftpCopyToRemoteOperation::CopyFileToRemote(std::filesystem::path source,
+                                                 std::filesystem::path destination,
+                                                 FileMode destination_mode) {
   source_ = std::move(source);
   destination_ = std::move(destination);
   destination_mode_ = destination_mode;
@@ -36,9 +35,8 @@ outcome::result<void> SftpCopyToRemoteOperation::run() { return startup(); }
 
 outcome::result<void> SftpCopyToRemoteOperation::startup() {
   if (!data_event_connection_) {
-    data_event_connection_.emplace(
-        QObject::connect(channel_, &SftpChannel::dataEvent, this,
-                         &SftpCopyToRemoteOperation::OnEvent));
+    data_event_connection_.emplace(QObject::connect(channel_, &SftpChannel::dataEvent, this,
+                                                    &SftpCopyToRemoteOperation::OnEvent));
   }
 
   switch (CurrentState()) {
@@ -54,13 +52,12 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
     }
     case State::kStarted:
     case State::kLocalFileOpened: {
-      OUTCOME_TRY(sftp_file,
-                  OrbitSsh::SftpFile::Open(
-                      session_->GetRawSession(), channel_->GetRawSftp(),
-                      destination_.string(),
-                      OrbitSsh::FxfFlags::kWrite | OrbitSsh::FxfFlags::kCreate |
-                          OrbitSsh::FxfFlags::kTruncate,
-                      static_cast<int>(destination_mode_)));
+      OUTCOME_TRY(sftp_file, OrbitSsh::SftpFile::Open(session_->GetRawSession(),
+                                                      channel_->GetRawSftp(), destination_.string(),
+                                                      OrbitSsh::FxfFlags::kWrite |
+                                                          OrbitSsh::FxfFlags::kCreate |
+                                                          OrbitSsh::FxfFlags::kTruncate,
+                                                      static_cast<int>(destination_mode_)));
       sftp_file_ = std::move(sftp_file);
       SetState(State::kRemoteFileOpened);
       ABSL_FALLTHROUGH_INTENDED;
@@ -72,9 +69,8 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
         }
 
         OUTCOME_TRY(bytes_written,
-                    sftp_file_->Write(std::string_view{
-                        write_buffer_.constData(),
-                        static_cast<size_t>(write_buffer_.size())}));
+                    sftp_file_->Write(std::string_view{write_buffer_.constData(),
+                                                       static_cast<size_t>(write_buffer_.size())}));
 
         write_buffer_.remove(0, bytes_written);
 

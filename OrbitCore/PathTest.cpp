@@ -48,8 +48,7 @@ TEST(Path, JoinPathPartsRelativeSlash) {
 }
 
 TEST(Path, JoinPathPartsAbsoluteSlash) {
-  std::string actual =
-      Path::JoinPath({"/dir1/dir2", "dir3/dir4/", "dir5/dir6"});
+  std::string actual = Path::JoinPath({"/dir1/dir2", "dir3/dir4/", "dir5/dir6"});
 #ifdef _WIN32
   std::string expected = "/dir1/dir2\\dir3/dir4/dir5/dir6";
 #else
@@ -69,8 +68,7 @@ TEST(Path, JoinPathPartsAbsoluteRootSlash) {
 }
 
 TEST(Path, JoinPathPartsRelativeBackslash) {
-  std::string actual =
-      Path::JoinPath({"dir1\\dir2", "dir3\\dir4\\", "dir5\\dir6"});
+  std::string actual = Path::JoinPath({"dir1\\dir2", "dir3\\dir4\\", "dir5\\dir6"});
 #ifdef _WIN32
   std::string expected = "dir1\\dir2\\dir3\\dir4\\dir5\\dir6";
 #else
@@ -80,8 +78,7 @@ TEST(Path, JoinPathPartsRelativeBackslash) {
 }
 
 TEST(Path, JoinPathPartsAbsoluteBackslash) {
-  std::string actual =
-      Path::JoinPath({"C:\\dir1\\dir2", "dir3\\dir4\\", "dir5\\dir6"});
+  std::string actual = Path::JoinPath({"C:\\dir1\\dir2", "dir3\\dir4\\", "dir5\\dir6"});
 #ifdef _WIN32
   std::string expected = "C:\\dir1\\dir2\\dir3\\dir4\\dir5\\dir6";
 #else

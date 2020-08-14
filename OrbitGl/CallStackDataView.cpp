@@ -13,8 +13,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-CallStackDataView::CallStackDataView()
-    : DataView(DataViewType::kCallstack), callstack_(nullptr) {}
+CallStackDataView::CallStackDataView() : DataView(DataViewType::kCallstack), callstack_(nullptr) {}
 
 void CallStackDataView::SetAsMainInstance() {}
 
@@ -28,8 +27,7 @@ const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
     columns[kColumnFile] = {"File", .0f, SortingOrder::kAscending};
     columns[kColumnLine] = {"Line", .0f, SortingOrder::kAscending};
     columns[kColumnModule] = {"Module", .0f, SortingOrder::kAscending};
-    columns[kColumnAddress] = {"Sampled Address", .0f,
-                               SortingOrder::kAscending};
+    columns[kColumnAddress] = {"Sampled Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -46,30 +44,24 @@ std::string CallStackDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return (function != nullptr && GOrbitApp->IsFunctionSelected(*function))
-                 ? "X"
-                 : "-";
+      return (function != nullptr && GOrbitApp->IsFunctionSelected(*function)) ? "X" : "-";
     case kColumnName:
-      return function != nullptr ? FunctionUtils::GetDisplayName(*function)
-                                 : frame.fallback_name;
+      return function != nullptr ? FunctionUtils::GetDisplayName(*function) : frame.fallback_name;
     case kColumnSize:
-      return function != nullptr ? absl::StrFormat("%lu", function->size())
-                                 : "";
+      return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
     case kColumnFile:
       return function != nullptr ? function->file() : "";
     case kColumnLine:
       return function != nullptr ? absl::StrFormat("%d", function->line()) : "";
     case kColumnModule:
-      if (function != nullptr &&
-          !FunctionUtils::GetLoadedModuleName(*function).empty()) {
+      if (function != nullptr && !FunctionUtils::GetLoadedModuleName(*function).empty()) {
         return FunctionUtils::GetLoadedModuleName(*function);
       }
       if (module != nullptr) {
         return module->m_Name;
       }
       if (Capture::GSamplingProfiler != nullptr) {
-        return Capture::GSamplingProfiler->GetModuleNameByAddress(
-            frame.address);
+        return Capture::GSamplingProfiler->GetModuleNameByAddress(frame.address);
       }
       return "";
     case kColumnAddress:
@@ -82,8 +74,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
 const std::string CallStackDataView::kMenuActionLoadSymbols = "Load Symbols";
 const std::string CallStackDataView::kMenuActionSelect = "Hook";
 const std::string CallStackDataView::kMenuActionUnselect = "Unhook";
-const std::string CallStackDataView::kMenuActionDisassembly =
-    "Go to Disassembly";
+const std::string CallStackDataView::kMenuActionDisassembly = "Go to Disassembly";
 
 std::vector<std::string> CallStackDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -100,8 +91,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
       enable_select |= !GOrbitApp->IsFunctionSelected(*function);
       enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
       enable_disassembly = true;
-    } else if (module != nullptr && module->IsLoadable() &&
-               !module->IsLoaded()) {
+    } else if (module != nullptr && module->IsLoadable() && !module->IsLoaded()) {
       enable_load = true;
     }
   }
@@ -160,9 +150,8 @@ void CallStackDataView::DoFilter() {
   for (size_t i = 0; i < callstack_->GetFramesCount(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     FunctionInfo* function = frame.function;
-    std::string name =
-        ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
-                                    : frame.fallback_name);
+    std::string name = ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
+                                                   : frame.fallback_name);
     bool match = true;
 
     for (std::string& filter_token : tokens) {
@@ -190,8 +179,7 @@ void CallStackDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
-CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(
-    int row) {
+CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(int row) {
   return GetFrameFromIndex(indices_[row]);
 }
 
@@ -217,8 +205,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   } else {
     std::string fallback_name;
     if (Capture::GSamplingProfiler != nullptr) {
-      fallback_name =
-          Capture::GSamplingProfiler->GetFunctionNameByAddress(address);
+      fallback_name = Capture::GSamplingProfiler->GetFunctionNameByAddress(address);
     }
     return CallStackDataViewFrame(address, fallback_name, module);
   }

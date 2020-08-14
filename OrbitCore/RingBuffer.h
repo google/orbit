@@ -33,17 +33,13 @@ class RingBuffer {
     return false;
   }
 
-  inline size_t Size() const {
-    return m_CurrentSize > BUFFER_SIZE ? BUFFER_SIZE : m_CurrentSize;
-  }
+  inline size_t Size() const { return m_CurrentSize > BUFFER_SIZE ? BUFFER_SIZE : m_CurrentSize; }
 
   inline size_t GetCurrentIndex() const { return m_CurrentIndex; }
 
   inline T* Data() { return m_Data; }
 
-  inline size_t IndexOfOldest() const {
-    return m_CurrentSize > BUFFER_SIZE ? m_CurrentIndex : 0;
-  }
+  inline size_t IndexOfOldest() const { return m_CurrentSize > BUFFER_SIZE ? m_CurrentIndex : 0; }
 
   T& operator[](size_t a_Index) {
     size_t index = (IndexOfOldest() + a_Index) % BUFFER_SIZE;

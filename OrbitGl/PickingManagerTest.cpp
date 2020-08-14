@@ -33,10 +33,8 @@ TEST(PickingManager, BasicFunctionality) {
 
   Color col_vec1 = pm.GetPickableColor(pickable1, BatcherId::kUi);
   Color col_vec2 = pm.GetPickableColor(pickable2, BatcherId::kUi);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).lock(),
-            pickable1);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)).lock(),
-            pickable2);
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).lock(), pickable1);
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)).lock(), pickable2);
 
   PickingId invalid_id;
   invalid_id.type = PickingType::kPickable;
@@ -44,8 +42,7 @@ TEST(PickingManager, BasicFunctionality) {
   ASSERT_TRUE(pm.GetPickableFromId(invalid_id).expired());
 
   invalid_id.type = PickingType::kLine;
-  ASSERT_DEATH(auto pickable = pm.GetPickableFromId(invalid_id),
-               "PickingType::kPickable");
+  ASSERT_DEATH(auto pickable = pm.GetPickableFromId(invalid_id), "PickingType::kPickable");
 
   pm.Reset();
   ASSERT_TRUE(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).expired());

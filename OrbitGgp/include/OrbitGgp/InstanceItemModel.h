@@ -18,18 +18,15 @@ namespace OrbitGgp {
 
 class InstanceItemModel : public QAbstractItemModel {
  public:
-  explicit InstanceItemModel(QVector<Instance> instances = {},
-                             QObject* parent = nullptr);
+  explicit InstanceItemModel(QVector<Instance> instances = {}, QObject* parent = nullptr);
 
   void SetInstances(QVector<Instance> instances);
 
   int columnCount(const QModelIndex& parent = {}) const override;
-  QVariant data(const QModelIndex& index,
-                int role = Qt::DisplayRole) const override;
+  QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
-  QModelIndex index(int row, int col,
-                    const QModelIndex& parent = {}) const override;
+  QModelIndex index(int row, int col, const QModelIndex& parent = {}) const override;
   QModelIndex parent(const QModelIndex& parent) const override;
   int rowCount(const QModelIndex& parent = {}) const override;
 

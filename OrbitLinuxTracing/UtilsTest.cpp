@@ -18,8 +18,7 @@ TEST(ReadFile, ProcPidCommOfOrbitLinuxTracingTests) {
   std::string filename = absl::StrFormat("/proc/%d/comm", getpid());
   std::optional<std::string> returned_comm = ReadFile(filename);
   // Comm values have a size limit of 15 characters.
-  std::string expected_comm =
-      std::string{"OrbitLinuxTracingTests"}.substr(0, 15).append("\n");
+  std::string expected_comm = std::string{"OrbitLinuxTracingTests"}.substr(0, 15).append("\n");
   ASSERT_TRUE(returned_comm.has_value());
   EXPECT_EQ(returned_comm.value(), expected_comm);
 }
@@ -64,8 +63,7 @@ TEST(ListThreads, OrbitLinuxTracingTestsMainAndAnother) {
 
 TEST(GetThreadName, OrbitLinuxTracingTests) {
   // Thread names have a length limit of 15 characters.
-  std::string expected_name =
-      std::string{"OrbitLinuxTracingTests"}.substr(0, 15);
+  std::string expected_name = std::string{"OrbitLinuxTracingTests"}.substr(0, 15);
   std::string returned_name = GetThreadName(getpid());
   EXPECT_EQ(returned_name, expected_name);
 }
@@ -74,8 +72,7 @@ TEST(ExtractCpusetFromCgroup, NoCpuset) {
   std::string cgroup_content =
       "11:memory:/groupname/foo\n"
       "6:cpu,cpuacct:/groupname/foo";
-  std::optional<std::string> returned_cpuset =
-      ExtractCpusetFromCgroup(cgroup_content);
+  std::optional<std::string> returned_cpuset = ExtractCpusetFromCgroup(cgroup_content);
   ASSERT_FALSE(returned_cpuset.has_value());
 }
 
@@ -84,8 +81,7 @@ TEST(ExtractCpusetFromCgroup, OnlyCpusetInLine) {
       "11:memory:/groupname/foo\n"
       "8:cpuset:/groupname/foo\n"
       "6:cpu,cpuacct:/groupname/foo";
-  std::optional<std::string> returned_cpuset =
-      ExtractCpusetFromCgroup(cgroup_content);
+  std::optional<std::string> returned_cpuset = ExtractCpusetFromCgroup(cgroup_content);
   std::string expected_cpuset = "/groupname/foo";
   ASSERT_TRUE(returned_cpuset.has_value());
   EXPECT_EQ(returned_cpuset.value(), expected_cpuset);
@@ -95,8 +91,7 @@ TEST(ExtractCpusetFromCgroup, CpusetLastInLine) {
   std::string cgroup_content =
       "11:memory:/groupname/foo\n"
       "6:cpu,cpuacct,cpuset:/groupname/foo";
-  std::optional<std::string> returned_cpuset =
-      ExtractCpusetFromCgroup(cgroup_content);
+  std::optional<std::string> returned_cpuset = ExtractCpusetFromCgroup(cgroup_content);
   std::string expected_cpuset = "/groupname/foo";
   ASSERT_TRUE(returned_cpuset.has_value());
   EXPECT_EQ(returned_cpuset.value(), expected_cpuset);
@@ -106,8 +101,7 @@ TEST(ExtractCpusetFromCgroup, CpusetMiddleInLine) {
   std::string cgroup_content =
       "11:memory:/groupname/foo\n"
       "6:cpu,cpuset,cpuacct:/groupname/foo";
-  std::optional<std::string> returned_cpuset =
-      ExtractCpusetFromCgroup(cgroup_content);
+  std::optional<std::string> returned_cpuset = ExtractCpusetFromCgroup(cgroup_content);
   std::string expected_cpuset = "/groupname/foo";
   ASSERT_TRUE(returned_cpuset.has_value());
   EXPECT_EQ(returned_cpuset.value(), expected_cpuset);

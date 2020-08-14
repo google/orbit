@@ -33,8 +33,7 @@ uint64_t AbsDiff(uint64_t a, uint64_t b) {
   }
 }
 
-const TextBox* ClosestTo(TickType point, const TextBox* box_a,
-                         const TextBox* box_b) {
+const TextBox* ClosestTo(TickType point, const TextBox* box_a, const TextBox* box_b) {
   uint64_t a_diff = AbsDiff(point, box_a->GetTimerInfo().start());
   uint64_t b_diff = AbsDiff(point, box_b->GetTimerInfo().start());
   if (a_diff <= b_diff) {
@@ -53,14 +52,13 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
   // after center - 1 (we use center - 1 to make sure that center itself is
   // included in the timerange that we search). Note that FindNextFunctionCall
   // uses the end marker of the timer as a timestamp.
-  const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
-      absolute_function_address, center - 1);
+  const TextBox* box =
+      GCurrentTimeGraph->FindNextFunctionCall(absolute_function_address, center - 1);
 
   // If we cannot find a next function call, then the closest one is the first
   // call we find before center.
   if (!box) {
-    return GCurrentTimeGraph->FindPreviousFunctionCall(
-        absolute_function_address, center);
+    return GCurrentTimeGraph->FindPreviousFunctionCall(absolute_function_address, center);
   }
 
   // We have to consider the case where center falls to the right of the start
@@ -68,8 +66,8 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
   // 'box' or the next one. It cannot be any box before 'box' because we are
   // using the start marker to measure the distance.
   if (box->GetTimerInfo().start() <= center) {
-    const TextBox* next_box = GCurrentTimeGraph->FindNextFunctionCall(
-        absolute_function_address, box->GetTimerInfo().end());
+    const TextBox* next_box = GCurrentTimeGraph->FindNextFunctionCall(absolute_function_address,
+                                                                      box->GetTimerInfo().end());
     return ClosestTo(center, box, next_box);
   }
 
@@ -90,9 +88,8 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
 void LiveFunctionsController::Move() {
   if (!current_textboxes_.empty()) {
     auto min_max = ComputeMinMaxTime(current_textboxes_);
-    GCurrentTimeGraph->HorizontallyMoveIntoView(
-        TimeGraph::VisibilityType::kFullyVisible, min_max.first, min_max.second,
-        0.5);
+    GCurrentTimeGraph->HorizontallyMoveIntoView(TimeGraph::VisibilityType::kFullyVisible,
+                                                min_max.first, min_max.second, 0.5);
   }
   GCurrentTimeGraph->SetIteratorOverlayData(current_textboxes_, function_iterators_);
 }
@@ -105,8 +102,8 @@ bool LiveFunctionsController::OnAllNextButton() {
     const FunctionInfo* function = it.second;
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
-    const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
-        function_address, current_box->GetTimerInfo().end());
+    const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(function_address,
+                                                                 current_box->GetTimerInfo().end());
     if (box == nullptr) {
       return false;
     }
@@ -152,8 +149,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  auto function_address =
-      FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
+  auto function_address = FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
       function_address, current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
@@ -164,8 +160,7 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  auto function_address =
-      FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
+  auto function_address = FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
       function_address, current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
@@ -220,12 +215,8 @@ TickType LiveFunctionsController::GetStartTime(uint64_t index) {
   return GetCaptureMin();
 }
 
-TickType LiveFunctionsController::GetCaptureMin() {
-  return GCurrentTimeGraph->GetCaptureMin();
-}
-TickType LiveFunctionsController::GetCaptureMax() {
-  return GCurrentTimeGraph->GetCaptureMax();
-}
+TickType LiveFunctionsController::GetCaptureMin() { return GCurrentTimeGraph->GetCaptureMin(); }
+TickType LiveFunctionsController::GetCaptureMax() { return GCurrentTimeGraph->GetCaptureMax(); }
 
 void LiveFunctionsController::Reset() {
   function_iterators_.clear();

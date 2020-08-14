@@ -18,8 +18,7 @@ class OrbitTreeView : public QTreeView {
   Q_OBJECT
  public:
   explicit OrbitTreeView(QWidget* parent = nullptr);
-  void Initialize(DataView* data_view, SelectionType selection_type,
-                  FontType font_type);
+  void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type);
   void SetDataModel(DataView* model);
   void OnFilter(const QString& a_Filter);
   void Refresh();
@@ -27,8 +26,7 @@ class OrbitTreeView : public QTreeView {
   void SetGlWidget(OrbitGLWidget* a_Link);
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
-  void selectionChanged(const QItemSelection& selected,
-                        const QItemSelection& deselected) override;
+  void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) override;
   OrbitTableModel* GetModel() { return model_.get(); }
   std::string GetLabel();
   bool HasRefreshButton() const;

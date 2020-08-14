@@ -19,12 +19,10 @@ class ScopedConnection {
 
  public:
   ScopedConnection() = default;
-  explicit ScopedConnection(QMetaObject::Connection&& conn)
-      : connection_(std::move(conn)) {}
+  explicit ScopedConnection(QMetaObject::Connection&& conn) : connection_(std::move(conn)) {}
   ScopedConnection(const ScopedConnection&) = delete;
   ScopedConnection& operator=(const ScopedConnection&) = delete;
-  ScopedConnection(ScopedConnection&& other)
-      : connection_(std::move(other.connection_)) {
+  ScopedConnection(ScopedConnection&& other) : connection_(std::move(other.connection_)) {
     other.connection_ = QMetaObject::Connection{};
   }
   ScopedConnection& operator=(ScopedConnection&& other) {

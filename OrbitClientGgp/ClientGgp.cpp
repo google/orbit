@@ -24,8 +24,7 @@ std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid) {
 }
 }  // namespace
 
-ClientGgp::ClientGgp(ClientGgpOptions&& options)
-    : options_(std::move(options)) {}
+ClientGgp::ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
 
 bool ClientGgp::InitClient() {
   if (options_.grpc_server_address.empty()) {
@@ -35,12 +34,10 @@ bool ClientGgp::InitClient() {
 
   // Create channel
   grpc::ChannelArguments channel_arguments;
-  channel_arguments.SetMaxReceiveMessageSize(
-      std::numeric_limits<int32_t>::max());
+  channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
 
   grpc_channel_ = grpc::CreateCustomChannel(options_.grpc_server_address,
-                                            grpc::InsecureChannelCredentials(),
-                                            channel_arguments);
+                                            grpc::InsecureChannelCredentials(), channel_arguments);
   if (!grpc_channel_) {
     ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
     return false;
@@ -61,10 +58,9 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   // TODO: selected_functions available when UploadSymbols is included
   // TODO(kuebler): right now selected_functions is only an empty placeholder,
   //  it needs to be filled separately in each client and then passed.
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-      selected_functions;
-  ErrorMessageOr<void> result = Capture::StartCapture(
-      pid, target_process_->GetName(), selected_functions);
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
+  ErrorMessageOr<void> result =
+      Capture::StartCapture(pid, target_process_->GetName(), selected_functions);
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
     return false;

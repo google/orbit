@@ -4,12 +4,11 @@
 
 #include "TopDownViewItemModel.h"
 
-TopDownViewItemModel::TopDownViewItemModel(
-    std::unique_ptr<TopDownView> top_down_view, QObject* parent)
+TopDownViewItemModel::TopDownViewItemModel(std::unique_ptr<TopDownView> top_down_view,
+                                           QObject* parent)
     : QAbstractItemModel{parent}, top_down_view_{std::move(top_down_view)} {}
 
-QVariant TopDownViewItemModel::GetDisplayRoleData(
-    const QModelIndex& index) const {
+QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) const {
   auto* item = static_cast<TopDownNode*>(index.internalPointer());
   auto thread_item = dynamic_cast<TopDownThread*>(item);
   auto function_item = dynamic_cast<TopDownFunction*>(item);
@@ -20,23 +19,19 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(
           return QString::fromStdString(
               thread_item->thread_name().empty()
                   ? "(all threads)"
-                  : absl::StrFormat("%s (all threads)",
-                                    thread_item->thread_name()));
+                  : absl::StrFormat("%s (all threads)", thread_item->thread_name()));
         } else {
-          return QString::fromStdString(
-              thread_item->thread_name().empty()
-                  ? std::to_string(thread_item->thread_id())
-                  : absl::StrFormat("%s [%d]", thread_item->thread_name(),
-                                    thread_item->thread_id()));
+          return QString::fromStdString(thread_item->thread_name().empty()
+                                            ? std::to_string(thread_item->thread_id())
+                                            : absl::StrFormat("%s [%d]", thread_item->thread_name(),
+                                                              thread_item->thread_id()));
         }
       case kInclusive:
         return QString::fromStdString(absl::StrFormat(
-            "%.2f%% (%llu)",
-            thread_item->GetInclusivePercent(top_down_view_->sample_count()),
+            "%.2f%% (%llu)", thread_item->GetInclusivePercent(top_down_view_->sample_count()),
             thread_item->sample_count()));
       case kOfParent:
-        return QString::fromStdString(
-            absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
+        return QString::fromStdString(absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
@@ -44,20 +39,18 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(
         return QString::fromStdString(function_item->function_name());
       case kInclusive:
         return QString::fromStdString(absl::StrFormat(
-            "%.2f%% (%llu)",
-            function_item->GetInclusivePercent(top_down_view_->sample_count()),
+            "%.2f%% (%llu)", function_item->GetInclusivePercent(top_down_view_->sample_count()),
             function_item->sample_count()));
       case kExclusive:
         return QString::fromStdString(absl::StrFormat(
-            "%.2f%% (%llu)",
-            function_item->GetExclusivePercent(top_down_view_->sample_count()),
+            "%.2f%% (%llu)", function_item->GetExclusivePercent(top_down_view_->sample_count()),
             function_item->GetExclusiveSampleCount()));
       case kOfParent:
         return QString::fromStdString(
             absl::StrFormat("%.2f%%", function_item->GetPercentOfParent()));
       case kFunctionAddress:
-        return QString::fromStdString(absl::StrFormat(
-            "%#llx", function_item->function_absolute_address()));
+        return QString::fromStdString(
+            absl::StrFormat("%#llx", function_item->function_absolute_address()));
     }
   }
   return QVariant();
@@ -83,13 +76,11 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
       case kInclusive:
         return static_cast<qulonglong>(function_item->sample_count());
       case kExclusive:
-        return static_cast<qulonglong>(
-            function_item->GetExclusiveSampleCount());
+        return static_cast<qulonglong>(function_item->GetExclusiveSampleCount());
       case kOfParent:
         return static_cast<qulonglong>(function_item->GetPercentOfParent());
       case kFunctionAddress:
-        return static_cast<qulonglong>(
-            function_item->function_absolute_address());
+        return static_cast<qulonglong>(function_item->function_absolute_address());
     }
   }
   return QVariant();
@@ -116,8 +107,7 @@ Qt::ItemFlags TopDownViewItemModel::flags(const QModelIndex& index) const {
   return QAbstractItemModel::flags(index);
 }
 
-QVariant TopDownViewItemModel::headerData(int section,
-                                          Qt::Orientation orientation,
+QVariant TopDownViewItemModel::headerData(int section, Qt::Orientation orientation,
                                           int role) const {
   if (orientation != Qt::Horizontal) {
     return QVariant();
@@ -155,8 +145,7 @@ QVariant TopDownViewItemModel::headerData(int section,
   return QVariant();
 }
 
-QModelIndex TopDownViewItemModel::index(int row, int column,
-                                        const QModelIndex& parent) const {
+QModelIndex TopDownViewItemModel::index(int row, int column, const QModelIndex& parent) const {
   if (!hasIndex(row, column, parent)) {
     return QModelIndex();
   }
@@ -193,8 +182,8 @@ QModelIndex TopDownViewItemModel::parent(const QModelIndex& index) const {
   }
 
   const std::vector<const TopDownNode*>& siblings = parent_item->children();
-  int row = static_cast<int>(std::distance(
-      siblings.begin(), std::find(siblings.begin(), siblings.end(), item)));
+  int row = static_cast<int>(
+      std::distance(siblings.begin(), std::find(siblings.begin(), siblings.end(), item)));
   return createIndex(row, 0, const_cast<TopDownNode*>(item));
 }
 
@@ -209,6 +198,4 @@ int TopDownViewItemModel::rowCount(const QModelIndex& parent) const {
   return item->child_count();
 }
 
-int TopDownViewItemModel::columnCount(const QModelIndex& /*parent*/) const {
-  return kColumnCount;
-}
+int TopDownViewItemModel::columnCount(const QModelIndex& /*parent*/) const { return kColumnCount; }

@@ -58,10 +58,8 @@ bool DoZoom = false;
 
 OrbitApp::OrbitApp(ApplicationOptions&& options,
                    std::unique_ptr<MainThreadExecutor> main_thread_executor)
-    : options_(std::move(options)),
-      main_thread_executor_(std::move(main_thread_executor)) {
-  thread_pool_ =
-      ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
+    : options_(std::move(options)), main_thread_executor_(std::move(main_thread_executor)) {
+  thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
 }
 
@@ -86,8 +84,7 @@ void OrbitApp::OnCaptureStarted() {
       capture_started_callback_();
     }
 
-    if (!Capture::capture_data_.selected_functions().empty() &&
-        select_live_tab_callback_) {
+    if (!Capture::capture_data_.selected_functions().empty() && select_live_tab_callback_) {
       select_live_tab_callback_();
     }
 
@@ -101,8 +98,7 @@ void OrbitApp::OnCaptureStarted() {
 
 void OrbitApp::OnCaptureComplete() {
   main_thread_executor_->Schedule([this] {
-    Capture::capture_data_.set_address_infos(
-        std::move(captured_address_infos_));
+    Capture::capture_data_.set_address_infos(std::move(captured_address_infos_));
     Capture::FinalizeCapture();
 
     RefreshCaptureView();
@@ -118,9 +114,7 @@ void OrbitApp::OnCaptureComplete() {
   });
 }
 
-void OrbitApp::OnTimer(const TimerInfo& timer_info) {
-  GCurrentTimeGraph->ProcessTimer(timer_info);
-}
+void OrbitApp::OnTimer(const TimerInfo& timer_info) { GCurrentTimeGraph->ProcessTimer(timer_info); }
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
@@ -136,17 +130,14 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
     return;
   }
   GEventTracer.GetEventBuffer().AddCallstackEvent(
-      callstack_event.time(), callstack_event.callstack_hash(),
-      callstack_event.thread_id());
+      callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
   Capture::GSamplingProfiler->AddCallStack(std::move(callstack_event));
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  main_thread_executor_->Schedule(
-      [thread_id, thread_name = std::move(thread_name)]() mutable {
-        Capture::capture_data_.AddOrAssignThreadName(thread_id,
-                                                     std::move(thread_name));
-      });
+  main_thread_executor_->Schedule([thread_id, thread_name = std::move(thread_name)]() mutable {
+    Capture::capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
+  });
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
@@ -154,18 +145,15 @@ void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   captured_address_infos_.emplace(address, std::move(address_info));
 }
 
-void OrbitApp::OnValidateFramePointers(
-    std::vector<std::shared_ptr<Module>> modules_to_validate) {
-  thread_pool_->Schedule(
-      [modules_to_validate = std::move(modules_to_validate), this] {
-        frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
-      });
+void OrbitApp::OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate) {
+  thread_pool_->Schedule([modules_to_validate = std::move(modules_to_validate), this] {
+    frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
+  });
 }
 
 bool OrbitApp::Init(ApplicationOptions&& options,
                     std::unique_ptr<MainThreadExecutor> main_thread_executor) {
-  GOrbitApp = std::make_unique<OrbitApp>(std::move(options),
-                                         std::move(main_thread_executor));
+  GOrbitApp = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
 
   Path::Init();
 
@@ -188,26 +176,21 @@ void OrbitApp::PostInit() {
     // than this. This is set to an arbitrary size of 2gb (numeric max), which
     // seems to be enough and leaves some headroom. As an example, a 1.1gb
     // .debug symbols file results in a message size of 88mb.
-    channel_arguments.SetMaxReceiveMessageSize(
-        std::numeric_limits<int32_t>::max());
+    channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
     grpc_channel_ = grpc::CreateCustomChannel(
-        options_.grpc_server_address, grpc::InsecureChannelCredentials(),
-        channel_arguments);
+        options_.grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
     if (!grpc_channel_) {
-      ERROR("Unable to create GRPC channel to %s",
-            options_.grpc_server_address);
+      ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
     }
 
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
-    process_manager_ =
-        ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
+    process_manager_ = ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
     auto callback = [this](ProcessManager* process_manager) {
       main_thread_executor_->Schedule([this, process_manager]() {
-        const std::vector<ProcessInfo>& process_infos =
-            process_manager->GetProcessList();
+        const std::vector<ProcessInfo>& process_infos = process_manager->GetProcessList();
         data_manager_->UpdateProcessInfos(process_infos);
         processes_data_view_->SetProcessList(process_infos);
         {
@@ -232,8 +215,7 @@ void OrbitApp::PostInit() {
 
         if (processes_data_view_->GetSelectedProcessId() == -1 &&
             processes_data_view_->GetFirstProcessId() != -1) {
-          processes_data_view_->SelectProcess(
-              processes_data_view_->GetFirstProcessId());
+          processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
         }
         FireRefreshCallbacks(DataViewType::kProcesses);
       });
@@ -263,12 +245,9 @@ void OrbitApp::LoadFileMapping() {
     outfile << "//-------------------" << std::endl
             << "// Orbit File Mapping" << std::endl
             << "//-------------------" << std::endl
-            << R"(// If the file path in the pdb is "D:\NoAccess\File.cpp")"
-            << std::endl
-            << R"(// and File.cpp is locally available in "C:\Available\")"
-            << std::endl
-            << "// then enter a file mapping on its own line like so:"
-            << std::endl
+            << R"(// If the file path in the pdb is "D:\NoAccess\File.cpp")" << std::endl
+            << R"(// and File.cpp is locally available in "C:\Available\")" << std::endl
+            << "// then enter a file mapping on its own line like so:" << std::endl
             << R"(// "D:\NoAccess\File.cpp" "C:\Available\")" << std::endl
             << std::endl
             << R"("D:\NoAccess" "C:\Available")" << std::endl;
@@ -306,14 +285,12 @@ void OrbitApp::LoadFileMapping() {
 }
 
 void OrbitApp::ListPresets() {
-  std::vector<std::string> preset_filenames =
-      Path::ListFiles(Path::GetPresetPath(), ".opr");
+  std::vector<std::string> preset_filenames = Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<PresetFile>> presets;
   for (std::string& filename : preset_filenames) {
     ErrorMessageOr<PresetInfo> preset_result = ReadPresetFromFile(filename);
     if (preset_result.has_error()) {
-      ERROR("Loading preset from \"%s\" failed: %s", filename,
-            preset_result.error().message());
+      ERROR("Loading preset from \"%s\" failed: %s", filename, preset_result.error().message());
       continue;
     }
 
@@ -337,29 +314,24 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     auto result = process_manager_->LoadProcessMemory(
         pid, FunctionUtils::GetAbsoluteAddress(function), function.size());
     if (!result.has_value()) {
-      SendErrorToUi("Error reading memory",
-                    absl::StrFormat("Could not read process memory: %s.",
-                                    result.error().message()));
+      SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
+                                                            result.error().message()));
       return;
     }
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.AddLine(absl::StrFormat("asm: /* %s */",
-                                   FunctionUtils::GetDisplayName(function)));
-    disasm.Disassemble(memory.data(), memory.size(),
-                       FunctionUtils::GetAbsoluteAddress(function),
+    disasm.AddLine(absl::StrFormat("asm: /* %s */", FunctionUtils::GetDisplayName(function)));
+    disasm.Disassemble(memory.data(), memory.size(), FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
       DisassemblyReport empty_report(disasm);
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
     }
-    std::shared_ptr<SamplingProfiler> profiler =
-        sampling_report_->GetProfiler();
+    std::shared_ptr<SamplingProfiler> profiler = sampling_report_->GetProfiler();
 
-    DisassemblyReport report(
-        disasm, FunctionUtils::GetAbsoluteAddress(function), profiler);
+    DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler);
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }
@@ -401,26 +373,22 @@ void OrbitApp::NeedsRedraw() {
   }
 }
 
-void OrbitApp::AddSamplingReport(
-    std::shared_ptr<SamplingProfiler> sampling_profiler) {
+void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler) {
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
 
   if (sampling_reports_callback_) {
-    DataView* callstack_data_view =
-        GetOrCreateDataView(DataViewType::kCallstack);
+    DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
     sampling_reports_callback_(callstack_data_view, report);
   }
 
   sampling_report_ = report;
 }
 
-void OrbitApp::AddSelectionReport(
-    std::shared_ptr<SamplingProfiler> sampling_profiler) {
+void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler) {
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
 
   if (selection_report_callback_) {
-    DataView* callstack_data_view =
-        GetOrCreateDataView(DataViewType::kCallstack);
+    DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
     selection_report_callback_(callstack_data_view, report);
   }
 
@@ -431,16 +399,15 @@ void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
   if (!top_down_view_callback_) {
     return;
   }
-  std::unique_ptr<TopDownView> top_down_view =
-      TopDownView::CreateFromSamplingProfiler(
-          sampling_profiler, Capture::capture_data_.process_name(),
-          Capture::capture_data_.thread_names());
+  std::unique_ptr<TopDownView> top_down_view = TopDownView::CreateFromSamplingProfiler(
+      sampling_profiler, Capture::capture_data_.process_name(),
+      Capture::capture_data_.thread_names());
   top_down_view_callback_(std::move(top_down_view));
 }
 
 std::string OrbitApp::GetCaptureFileName() {
-  time_t timestamp = std::chrono::system_clock::to_time_t(
-      Capture::capture_data_.capture_start_time());
+  time_t timestamp =
+      std::chrono::system_clock::to_time_t(Capture::capture_data_.capture_start_time());
   std::string result;
   result.append(Path::StripExtension(Capture::capture_data_.process_name()));
   result.append("_");
@@ -450,9 +417,7 @@ std::string OrbitApp::GetCaptureFileName() {
 }
 
 std::string OrbitApp::GetCaptureTime() {
-  double time = GCurrentTimeGraph != nullptr
-                    ? GCurrentTimeGraph->GetCaptureTimeSpanUs()
-                    : 0;
+  double time = GCurrentTimeGraph != nullptr ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0;
   return GetPrettyTime(absl::Microseconds(time));
 }
 
@@ -480,16 +445,14 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
   const int32_t pid = processes_data_view_->GetSelectedProcessId();
   const std::shared_ptr<Process>& process = FindProcessByPid(pid);
-  preset.set_process_full_path(
-      data_manager_->GetProcessByPid(pid)->full_path());
+  preset.set_process_full_path(data_manager_->GetProcessByPid(pid)->full_path());
 
   for (uint64_t function_address : data_manager_->selected_functions()) {
     FunctionInfo* func = process->GetFunctionFromAddress(function_address);
     // No need to store the manually instrumented functions
     if (!FunctionUtils::IsOrbitFunc(*func)) {
       uint64_t hash = FunctionUtils::GetHash(*func);
-      (*preset.mutable_path_to_module())[func->loaded_module_path()]
-          .add_function_hashes(hash);
+      (*preset.mutable_path_to_module())[func->loaded_module_path()].add_function_hashes(hash);
     }
   }
 
@@ -501,8 +464,8 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   std::ofstream file(filename_with_ext, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving preset in \"%s\": %s", filename_with_ext, "file.fail()");
-    return ErrorMessage(absl::StrFormat(
-        "Error opening the file \"%s\" for writing", filename_with_ext));
+    return ErrorMessage(
+        absl::StrFormat("Error opening the file \"%s\" for writing", filename_with_ext));
   }
 
   LOG("Saving preset in \"%s\"", filename_with_ext);
@@ -511,8 +474,7 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   return outcome::success();
 }
 
-ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(
-    const std::string& filename) {
+ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::string& filename) {
   std::string file_path = filename;
 
   if (Path::GetDirectory(filename).empty()) {
@@ -544,8 +506,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
-  const std::string& process_full_path =
-      preset->preset_info().process_full_path();
+  const std::string& process_full_path = preset->preset_info().process_full_path();
   if (Capture::GTargetProcess->GetFullPath() == process_full_path) {
     // In case we already have the correct process selected
     GOrbitApp->LoadModulesFromPreset(Capture::GTargetProcess, preset);
@@ -553,8 +514,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
   }
   if (!SelectProcess(Path::GetFileName(process_full_path))) {
     SendErrorToUi("Preset loading failed",
-                  absl::StrFormat("The process \"%s\" is not running.",
-                                  process_full_path));
+                  absl::StrFormat("The process \"%s\" is not running.", process_full_path));
     return;
   }
   Capture::GSessionPresets = preset;
@@ -594,15 +554,13 @@ bool OrbitApp::StartCapture() {
   std::string process_name = data_manager_->GetProcessByPid(pid)->name();
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
-  ErrorMessageOr<void> result =
-      Capture::StartCapture(pid, process_name, selected_functions);
+  ErrorMessageOr<void> result = Capture::StartCapture(pid, process_name, selected_functions);
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
     return false;
   }
 
-  result = capture_client_->StartCapture(thread_pool_.get(), pid,
-                                         selected_functions);
+  result = capture_client_->StartCapture(thread_pool_.get(), pid, selected_functions);
 
   if (!result) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -612,8 +570,8 @@ bool OrbitApp::StartCapture() {
   return true;
 }
 
-absl::flat_hash_map<uint64_t, FunctionInfo>
-OrbitApp::GetSelectedFunctionsAndOrbitFunctions() const {
+absl::flat_hash_map<uint64_t, FunctionInfo> OrbitApp::GetSelectedFunctionsAndOrbitFunctions()
+    const {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
   for (const auto& func : Capture::GTargetProcess->GetFunctions()) {
     if (IsFunctionSelected(*func) || FunctionUtils::IsOrbitFunc(*func)) {
@@ -671,14 +629,13 @@ bool OrbitApp::SelectProcess(const std::string& process) {
   return false;
 }
 
-void OrbitApp::SendDisassemblyToUi(std::string disassembly,
-                                   DisassemblyReport report) {
-  main_thread_executor_->Schedule([this, disassembly = std::move(disassembly),
-                                   report = std::move(report)]() mutable {
-    if (disassembly_callback_) {
-      disassembly_callback_(std::move(disassembly), std::move(report));
-    }
-  });
+void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport report) {
+  main_thread_executor_->Schedule(
+      [this, disassembly = std::move(disassembly), report = std::move(report)]() mutable {
+        if (disassembly_callback_) {
+          disassembly_callback_(std::move(disassembly), std::move(report));
+        }
+      });
 }
 
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
@@ -697,8 +654,7 @@ void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   });
 }
 
-void OrbitApp::SendErrorToUi(const std::string& title,
-                             const std::string& text) {
+void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
     if (error_message_callback_) {
       error_message_callback_(title, text);
@@ -706,59 +662,48 @@ void OrbitApp::SendErrorToUi(const std::string& title,
   });
 }
 
-void OrbitApp::LoadModuleOnRemote(int32_t process_id,
-                                  const std::shared_ptr<Module>& module,
+void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
                                   const std::shared_ptr<PresetFile>& preset) {
   thread_pool_->Schedule([this, process_id, module, preset]() {
     const std::string& module_path = module->m_FullName;
     const std::string& build_id = module->m_DebugSignature;
 
-    const auto result =
-        process_manager_->FindDebugInfoFile(module_path, build_id);
+    const auto result = process_manager_->FindDebugInfoFile(module_path, build_id);
 
     if (!result) {
       SendErrorToUi("Error loading symbols",
-                    absl::StrFormat(
-                        "Did not find symbols on remote for module \"%s\": %s",
-                        module_path, result.error().message()));
-      main_thread_executor_->Schedule([this, module]() {
-        modules_currently_loading_.erase(module->m_FullName);
-      });
+                    absl::StrFormat("Did not find symbols on remote for module \"%s\": %s",
+                                    module_path, result.error().message()));
+      main_thread_executor_->Schedule(
+          [this, module]() { modules_currently_loading_.erase(module->m_FullName); });
       return;
     }
 
     const std::string& debug_file_path = result.value();
 
-    LOG("Found file on the remote: \"%s\" - loading it using scp...",
-        debug_file_path);
+    LOG("Found file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-    main_thread_executor_->Schedule([this, module, module_path, build_id,
-                                     process_id, preset, debug_file_path]() {
-      const std::string local_debug_file_path =
-          symbol_helper_.GenerateCachedFileName(module_path);
+    main_thread_executor_->Schedule([this, module, module_path, build_id, process_id, preset,
+                                     debug_file_path]() {
+      const std::string local_debug_file_path = symbol_helper_.GenerateCachedFileName(module_path);
 
       {
         SCOPE_TIMER_LOG(absl::StrFormat("Copying %s", debug_file_path));
-        auto scp_result =
-            secure_copy_callback_(debug_file_path, local_debug_file_path);
+        auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path);
         if (!scp_result) {
-          SendErrorToUi(
-              "Error loading symbols",
-              absl::StrFormat(
-                  "Could not copy debug info file from the remote: %s",
-                  scp_result.error().message()));
+          SendErrorToUi("Error loading symbols",
+                        absl::StrFormat("Could not copy debug info file from the remote: %s",
+                                        scp_result.error().message()));
           return;
         }
       }
 
-      const auto result =
-          symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, build_id);
+      const auto result = symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, build_id);
       if (!result) {
         SendErrorToUi(
             "Error loading symbols",
-            absl::StrFormat(
-                R"(Did not load symbols for module "%s" (debug info file "%s"): %s)",
-                module_path, local_debug_file_path, result.error().message()));
+            absl::StrFormat(R"(Did not load symbols for module "%s" (debug info file "%s"): %s)",
+                            module_path, local_debug_file_path, result.error().message()));
         return;
       }
       module->LoadSymbols(result.value());
@@ -770,21 +715,18 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
   });
 }
 
-void OrbitApp::SymbolLoadingFinished(
-    uint32_t process_id, const std::shared_ptr<Module>& module,
-    const std::shared_ptr<PresetFile>& preset) {
+void OrbitApp::SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<Module>& module,
+                                     const std::shared_ptr<PresetFile>& preset) {
   if (preset != nullptr) {
     auto it = preset->preset_info().path_to_module().find(module->m_FullName);
     if (it != preset->preset_info().path_to_module().end()) {
-      for (const FunctionInfo* func :
-           module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
+      for (const FunctionInfo* func : module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
         SelectFunction(*func);
       }
     }
   }
 
-  data_manager_->FindModuleByAddressStart(process_id, module->m_AddressStart)
-      ->set_loaded(true);
+  data_manager_->FindModuleByAddressStart(process_id, module->m_AddressStart)->set_loaded(true);
 
   modules_currently_loading_.erase(module->m_FullName);
 
@@ -793,8 +735,7 @@ void OrbitApp::SymbolLoadingFinished(
   GOrbitApp->FireRefreshCallbacks();
 }
 
-void OrbitApp::LoadModules(int32_t process_id,
-                           const std::vector<std::shared_ptr<Module>>& modules,
+void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
                            const std::shared_ptr<PresetFile>& preset) {
   // TODO(159868905) use ModuleData instead of Module
   for (const auto& module : modules) {
@@ -806,13 +747,11 @@ void OrbitApp::LoadModules(int32_t process_id,
     // TODO (159889010) Move symbol loading off the main thread.
     const std::string& module_path = module->m_FullName;
     const std::string& build_id = module->m_DebugSignature;
-    auto symbols =
-        symbol_helper_.LoadUsingSymbolsPathFile(module_path, build_id);
+    auto symbols = symbol_helper_.LoadUsingSymbolsPathFile(module_path, build_id);
 
     // Try loading from the cache
     if (!symbols) {
-      const std::string cached_file_name =
-          symbol_helper_.GenerateCachedFileName(module_path);
+      const std::string cached_file_name = symbol_helper_.GenerateCachedFileName(module_path);
       symbols = symbol_helper_.LoadSymbolsFromFile(cached_file_name, build_id);
     }
 
@@ -828,9 +767,8 @@ void OrbitApp::LoadModules(int32_t process_id,
   }
 }
 
-void OrbitApp::LoadModulesFromPreset(
-    const std::shared_ptr<Process>& process,
-    const std::shared_ptr<PresetFile>& preset) {
+void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
+                                     const std::shared_ptr<PresetFile>& preset) {
   std::vector<std::shared_ptr<Module>> modules_to_load;
   std::vector<std::string> modules_not_found;
   for (const auto& pair : preset->preset_info().path_to_module()) {
@@ -842,8 +780,7 @@ void OrbitApp::LoadModulesFromPreset(
     }
     if (module->IsLoaded()) {
       CHECK(module->m_Pdb != nullptr);
-      for (const FunctionInfo* func :
-           module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
+      for (const FunctionInfo* func : module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
         SelectFunction(*func);
       }
       continue;
@@ -853,10 +790,9 @@ void OrbitApp::LoadModulesFromPreset(
   if (!modules_not_found.empty()) {
     SendErrorToUi(
         "Preset loading incomplete",
-        absl::StrFormat(
-            "Unable to load the preset for the following modules:\n\"%s\"\nThe "
-            "modules are not loaded by process \"%s\".",
-            absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
+        absl::StrFormat("Unable to load the preset for the following modules:\n\"%s\"\nThe "
+                        "modules are not loaded by process \"%s\".",
+                        absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
   }
   if (!modules_to_load.empty()) {
     LoadModules(process->GetID(), modules_to_load, preset);
@@ -866,8 +802,7 @@ void OrbitApp::LoadModulesFromPreset(
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
   CHECK(processes_data_view_->GetSelectedProcessId() == pid);
   thread_pool_->Schedule([pid, this] {
-    ErrorMessageOr<std::vector<ModuleInfo>> result =
-        process_manager_->LoadModuleList(pid);
+    ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
 
     if (result.has_error()) {
       ERROR("Error retrieving modules: %s", result.error().message());
@@ -939,8 +874,8 @@ std::shared_ptr<Process> OrbitApp::FindProcessByPid(int32_t pid) {
 
 void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
   uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
-  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
-      ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
+  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64 ", load_bias_= 0x%" PRIx64
+      ", base_address=0x%" PRIx64 ")",
       func.pretty_name(), absolute_address, func.address(), func.load_bias(),
       func.module_base_address());
   data_manager_->SelectFunction(absolute_address);
@@ -951,9 +886,7 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   data_manager_->DeselectFunction(absolute_address);
 }
 
-void OrbitApp::ClearSelectedFunctions() {
-  data_manager_->ClearSelectedFunctions();
-}
+void OrbitApp::ClearSelectedFunctions() { data_manager_->ClearSelectedFunctions(); }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(
     const orbit_client_protos::FunctionInfo& func) const {
@@ -961,8 +894,7 @@ void OrbitApp::ClearSelectedFunctions() {
   return data_manager_->IsFunctionSelected(absolute_address);
 }
 
-[[nodiscard]] bool OrbitApp::IsFunctionSelected(
-    const SampledFunction& func) const {
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(const SampledFunction& func) const {
   return data_manager_->IsFunctionSelected(func.address);
 }
 
@@ -1020,8 +952,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
           "DataViewType::kSampling Data View construction is not supported by"
           "the factory.");
     case DataViewType::kLiveFunctions:
-      FATAL(
-          "DataViewType::kLiveFunctions should not be used with the factory.");
+      FATAL("DataViewType::kLiveFunctions should not be used with the factory.");
 
     case DataViewType::kAll:
       FATAL("DataViewType::kAll should not be used with the factory.");
@@ -1037,11 +968,9 @@ void OrbitApp::FilterTracks(const std::string& filter) {
   GCurrentTimeGraph->SetThreadFilter(filter);
 }
 
-void OrbitApp::CrashOrbitService(
-    CrashOrbitServiceRequest_CrashType crash_type) {
+void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
   if (absl::GetFlag(FLAGS_devmode)) {
-    thread_pool_->Schedule(
-        [crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
+    thread_pool_->Schedule([crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
   }
 }
 

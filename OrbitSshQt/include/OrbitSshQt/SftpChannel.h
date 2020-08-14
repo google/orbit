@@ -39,8 +39,7 @@ enum class SftpChannelState {
   SftpCopyToRemoteOperation. The user needs to keep the channel alive as long as
   SftpOperations are still running.
 */
-class SftpChannel
-    : public StateMachineHelper<SftpChannel, details::SftpChannelState> {
+class SftpChannel : public StateMachineHelper<SftpChannel, details::SftpChannelState> {
   Q_OBJECT
   friend StateMachineHelper;
 

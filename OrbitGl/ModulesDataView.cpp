@@ -11,8 +11,7 @@
 #include "absl/flags/flag.h"
 
 // TODO(kuebler): remove this once we have the validator complete
-ABSL_FLAG(bool, enable_frame_pointer_validator, false,
-          "Enable validation of frame pointers");
+ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
 
 ModulesDataView::ModulesDataView() : DataView(DataViewType::kModules) {}
 
@@ -22,8 +21,7 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
     columns.resize(kNumColumns);
     columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
     columns[kColumnPath] = {"Path", .5f, SortingOrder::kAscending};
-    columns[kColumnAddressRange] = {"Address Range", .15f,
-                                    SortingOrder::kAscending};
+    columns[kColumnAddressRange] = {"Address Range", .15f, SortingOrder::kAscending};
     columns[kColumnFileSize] = {"File Size", .0f, SortingOrder::kDescending};
     columns[kColumnLoaded] = {"Loaded", .0f, SortingOrder::kDescending};
     return columns;
@@ -50,10 +48,9 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                          \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(modules_[a]->Member, modules_[b]->Member, \
-                               ascending);                               \
+#define ORBIT_PROC_SORT(Member)                                                      \
+  [&](int a, int b) {                                                                \
+    return OrbitUtils::Compare(modules_[a]->Member, modules_[b]->Member, ascending); \
   }
 
 void ModulesDataView::DoSort() {
@@ -86,11 +83,10 @@ void ModulesDataView::DoSort() {
 }
 
 const std::string ModulesDataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string ModulesDataView::kMenuActionVerifyFramePointers =
-    "Verify Frame Pointers";
+const std::string ModulesDataView::kMenuActionVerifyFramePointers = "Verify Frame Pointers";
 
-std::vector<std::string> ModulesDataView::GetContextMenu(
-    int clicked_index, const std::vector<int>& selected_indices) {
+std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
+                                                         const std::vector<int>& selected_indices) {
   bool enable_load = false;
   bool enable_verify = false;
   for (int index : selected_indices) {
@@ -122,8 +118,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int index : item_indices) {
       const ModuleData* module_data = GetModule(index);
       if (!module_data->is_loaded()) {
-        modules.push_back(Capture::GTargetProcess->GetModuleFromPath(
-            module_data->file_path()));
+        modules.push_back(Capture::GTargetProcess->GetModuleFromPath(module_data->file_path()));
       }
     }
     GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
@@ -132,8 +127,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
       const ModuleData* module = GetModule(index);
-      modules_to_validate.push_back(
-          Capture::GTargetProcess->GetModuleFromName(module->name()));
+      modules_to_validate.push_back(Capture::GTargetProcess->GetModuleFromName(module->name()));
     }
 
     if (!modules_to_validate.empty()) {
@@ -150,9 +144,8 @@ void ModulesDataView::DoFilter() {
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
-    std::string module_string =
-        absl::StrFormat("%s %s", module->address_range(),
-                        absl::AsciiStrToLower(module->file_path()));
+    std::string module_string = absl::StrFormat("%s %s", module->address_range(),
+                                                absl::AsciiStrToLower(module->file_path()));
 
     bool match = true;
 
@@ -173,8 +166,7 @@ void ModulesDataView::DoFilter() {
   OnSort(sorting_column_, {});
 }
 
-void ModulesDataView::SetModules(int32_t process_id,
-                                 const std::vector<ModuleData*>& modules) {
+void ModulesDataView::SetModules(int32_t process_id, const std::vector<ModuleData*>& modules) {
   process_id_ = process_id;
   modules_ = modules;
 
@@ -190,13 +182,10 @@ void ModulesDataView::OnRefreshButtonClicked() {
   GOrbitApp->UpdateProcessAndModuleList(Capture::GTargetProcess->GetID());
 }
 
-const ModuleData* ModulesDataView::GetModule(uint32_t row) const {
-  return modules_[indices_[row]];
-}
+const ModuleData* ModulesDataView::GetModule(uint32_t row) const { return modules_[indices_[row]]; }
 
-bool ModulesDataView::GetDisplayColor(int row, int /*column*/,
-                                      unsigned char& red, unsigned char& green,
-                                      unsigned char& blue) {
+bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
+                                      unsigned char& green, unsigned char& blue) {
   const ModuleData* module = GetModule(row);
   if (module->is_loaded()) {
     red = 42;

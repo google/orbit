@@ -31,11 +31,10 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
 
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui; }
 
-void OrbitSamplingReport::Initialize(
-    DataView* callstack_data_view,
-    const std::shared_ptr<SamplingReport>& report) {
-  ui->CallstackTreeView->Initialize(
-      callstack_data_view, SelectionType::kExtended, FontType::kDefault, false);
+void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
+                                     const std::shared_ptr<SamplingReport>& report) {
+  ui->CallstackTreeView->Initialize(callstack_data_view, SelectionType::kExtended,
+                                    FontType::kDefault, false);
   m_SamplingReport = report;
 
   if (!report) return;
@@ -56,8 +55,7 @@ void OrbitSamplingReport::Initialize(
     } else {
       int column = report_data_view.GetDefaultSortingColumn();
       Qt::SortOrder order =
-          report_data_view.GetColumns()[column].initial_order ==
-                  DataView::SortingOrder::kAscending
+          report_data_view.GetColumns()[column].initial_order == DataView::SortingOrder::kAscending
               ? Qt::AscendingOrder
               : Qt::DescendingOrder;
       treeView->GetTreeView()->sortByColumn(column, order);
@@ -66,8 +64,7 @@ void OrbitSamplingReport::Initialize(
     treeView->setObjectName(QStringLiteral("treeView"));
     gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
     treeView->GetTreeView()->setSelectionMode(OrbitTreeView::ExtendedSelection);
-    treeView->GetTreeView()->header()->resizeSections(
-        QHeaderView::ResizeToContents);
+    treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
     treeView->GetTreeView()->setAlternatingRowColors(true);
 
     treeView->Link(ui->CallstackTreeView);

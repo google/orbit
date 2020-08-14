@@ -29,19 +29,18 @@ struct MakeUniqueForOverwriteIf<T[Bound]> {
 };
 
 template <typename T>
-inline typename MakeUniqueForOverwriteIf<T>::SingleObject
-make_unique_for_overwrite() {
+inline typename MakeUniqueForOverwriteIf<T>::SingleObject make_unique_for_overwrite() {
   return std::unique_ptr<T>(new T);
 }
 
 template <typename T>
-inline typename MakeUniqueForOverwriteIf<T>::UnknownBoundArray
-make_unique_for_overwrite(std::size_t size) {
+inline typename MakeUniqueForOverwriteIf<T>::UnknownBoundArray make_unique_for_overwrite(
+    std::size_t size) {
   return std::unique_ptr<T>(new typename std::remove_extent<T>::type[size]);
 }
 
 template <typename T, typename... Args>
-inline typename MakeUniqueForOverwriteIf<T>::KnownBoundArray
-make_unique_for_overwrite(Args&&...) = delete;
+inline typename MakeUniqueForOverwriteIf<T>::KnownBoundArray make_unique_for_overwrite(Args&&...) =
+    delete;
 
 #endif  // ORBIT_BASE_MAKE_UNIQUE_FOR_OVERWRITE_H_

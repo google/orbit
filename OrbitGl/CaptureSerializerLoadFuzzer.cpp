@@ -19,10 +19,8 @@ ABSL_FLAG(bool, enable_stale_features, false,
           "Enable obsolete features that are not working or are not "
           "implemented in the client's UI");
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
-ABSL_FLAG(uint16_t, sampling_rate, 1000,
-          "Frequency of callstack sampling in samples per second");
-ABSL_FLAG(bool, frame_pointer_unwinding, false,
-          "Use frame pointers for unwinding");
+ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
+ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
 std::string capture_file;
 
@@ -35,8 +33,7 @@ int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
   time_graph.SetStringManager(string_manager);
   serializer.time_graph_ = &time_graph;
 
-  std::istringstream stream(
-      std::string(reinterpret_cast<const char*>(buf), len));
+  std::istringstream stream(std::string(reinterpret_cast<const char*>(buf), len));
   try {
     (void)serializer.Load(stream);
   } catch (...) {

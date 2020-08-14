@@ -20,8 +20,8 @@ class CallStackDataView : public DataView {
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }
   bool IsSortingAllowed() override { return false; }
-  std::vector<std::string> GetContextMenu(
-      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::vector<std::string> GetContextMenu(int clicked_index,
+                                          const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
   void OnContextMenu(const std::string& action, int menu_index,
@@ -39,15 +39,12 @@ class CallStackDataView : public DataView {
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame() = default;
-    CallStackDataViewFrame(uint64_t address,
-                           orbit_client_protos::FunctionInfo* function,
+    CallStackDataViewFrame(uint64_t address, orbit_client_protos::FunctionInfo* function,
                            std::shared_ptr<Module> module)
         : address(address), function(function), module(std::move(module)) {}
     CallStackDataViewFrame(uint64_t address, std::string fallback_name,
                            std::shared_ptr<Module> module)
-        : address(address),
-          fallback_name(std::move(fallback_name)),
-          module(std::move(module)) {}
+        : address(address), fallback_name(std::move(fallback_name)), module(std::move(module)) {}
 
     uint64_t address = 0;
     orbit_client_protos::FunctionInfo* function = nullptr;

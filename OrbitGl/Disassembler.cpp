@@ -8,8 +8,8 @@
 #include <capstone/capstone.h>
 #include <capstone/platform.h>
 
-void Disassembler::Disassemble(const void* machine_code, size_t size,
-                               uint64_t address, bool is_64bit) {
+void Disassembler::Disassemble(const void* machine_code, size_t size, uint64_t address,
+                               bool is_64bit) {
   csh handle = 0;
   cs_arch arch = CS_ARCH_X86;
   cs_insn* insn = nullptr;
@@ -17,25 +17,23 @@ void Disassembler::Disassemble(const void* machine_code, size_t size,
   cs_err err;
   cs_mode mode = is_64bit ? CS_MODE_64 : CS_MODE_32;
 
-  AddLine(absl::StrFormat("Platform: %s", is_64bit ? "X86 64 (Intel syntax)"
-                                                   : "X86 32 (Intel syntax)"));
+  AddLine(absl::StrFormat("Platform: %s",
+                          is_64bit ? "X86 64 (Intel syntax)" : "X86 32 (Intel syntax)"));
   err = cs_open(arch, mode, &handle);
   if (err) {
-    AddLine(
-        absl::StrFormat("Failed on cs_open() with error returned: %u", err));
+    AddLine(absl::StrFormat("Failed on cs_open() with error returned: %u", err));
     return;
   }
 
-  count = cs_disasm(handle, static_cast<const uint8_t*>(machine_code), size,
-                    address, 0, &insn);
+  count = cs_disasm(handle, static_cast<const uint8_t*>(machine_code), size, address, 0, &insn);
 
   if (count) {
     size_t j;
 
     for (j = 0; j < count; j++) {
-      AddLine(absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address,
-                              insn[j].mnemonic, insn[j].op_str),
-              insn[j].address);
+      AddLine(
+          absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address, insn[j].mnemonic, insn[j].op_str),
+          insn[j].address);
     }
 
     // Print out the next offset, after the last instruction.

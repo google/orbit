@@ -22,9 +22,9 @@ class Channel {
   // This creates a tcp/ip channel to a third party via the remote ssh
   // server. In most cases this third party is a program running on the remote
   // server and therefore third_party_host is 127.0.0.1
-  static outcome::result<Channel> OpenTcpIpTunnel(
-      Session* session_ptr, const std::string& third_party_host,
-      int third_party_port);
+  static outcome::result<Channel> OpenTcpIpTunnel(Session* session_ptr,
+                                                  const std::string& third_party_host,
+                                                  int third_party_port);
   static outcome::result<Channel> OpenChannel(Session* session_ptr);
 
   outcome::result<std::string> ReadStdOut(int buffer_size = 0x400);
@@ -42,8 +42,7 @@ class Channel {
 
  private:
   explicit Channel(LIBSSH2_CHANNEL* raw_channel_ptr);
-  std::unique_ptr<LIBSSH2_CHANNEL, decltype(&libssh2_channel_free)>
-      raw_channel_ptr_;
+  std::unique_ptr<LIBSSH2_CHANNEL, decltype(&libssh2_channel_free)> raw_channel_ptr_;
 };
 
 }  // namespace OrbitSsh

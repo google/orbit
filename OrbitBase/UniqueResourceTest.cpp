@@ -14,8 +14,7 @@ TEST(UniqueResource, Construct) {
 
   size_t was_deleted = 0;
   {
-    OrbitBase::unique_resource ur{123,
-                                  [&was_deleted](size_t) { was_deleted++; }};
+    OrbitBase::unique_resource ur{123, [&was_deleted](size_t) { was_deleted++; }};
     ASSERT_TRUE(static_cast<bool>(ur));
     ASSERT_TRUE(static_cast<size_t>(ur) == 123);
   }
@@ -25,8 +24,7 @@ TEST(UniqueResource, Construct) {
 TEST(UniqueResource, Move) {
   size_t was_deleted = 0;
   {
-    OrbitBase::unique_resource ur1{123,
-                                   [&was_deleted](size_t) { was_deleted++; }};
+    OrbitBase::unique_resource ur1{123, [&was_deleted](size_t) { was_deleted++; }};
     ASSERT_TRUE(static_cast<bool>(ur1));
 
     {
@@ -43,8 +41,7 @@ TEST(UniqueResource, Move) {
 TEST(UniqueResource, Release) {
   size_t was_deleted = 0;
   {
-    OrbitBase::unique_resource ur1{123,
-                                   [&was_deleted](size_t) { was_deleted++; }};
+    OrbitBase::unique_resource ur1{123, [&was_deleted](size_t) { was_deleted++; }};
     ur1.release();
   }
   ASSERT_EQ(was_deleted, 0);

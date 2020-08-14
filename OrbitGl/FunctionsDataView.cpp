@@ -55,23 +55,20 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnModule:
       return FunctionUtils::GetLoadedModuleName(function);
     case kColumnAddress:
-      return absl::StrFormat("0x%llx",
-                             FunctionUtils::GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
     default:
       return "";
   }
 }
 
-#define ORBIT_FUNC_SORT(Member)                                            \
-  [&](int a, int b) {                                                      \
-    return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, \
-                               ascending);                                 \
+#define ORBIT_FUNC_SORT(Member)                                                        \
+  [&](int a, int b) {                                                                  \
+    return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, ascending); \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                     \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(Func(*functions[a]), Func(*functions[b]), \
-                               ascending);                               \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                 \
+  [&](int a, int b) {                                                                \
+    return OrbitUtils::Compare(Func(*functions[a]), Func(*functions[b]), ascending); \
   }
 
 void FunctionsDataView::DoSort() {
@@ -121,8 +118,7 @@ void FunctionsDataView::DoSort() {
 
 const std::string FunctionsDataView::kMenuActionSelect = "Hook";
 const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string FunctionsDataView::kMenuActionDisassembly =
-    "Go to Disassembly";
+const std::string FunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
 
 std::vector<std::string> FunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -214,23 +210,22 @@ void FunctionsDataView::ParallelFilter() {
   std::vector<std::vector<int>> indicesArray;
   indicesArray.resize(numWorkers);
 
-  oqpi_tk::parallel_for(
-      "FunctionsDataViewParallelFor", functions.size(),
-      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-        std::vector<int>& result = indicesArray[a_BlockIndex];
-        const std::string& name =
-            ToLower(FunctionUtils::GetDisplayName(*functions[a_ElementIndex]));
-        const std::string& file = functions[a_ElementIndex]->file();
+  oqpi_tk::parallel_for("FunctionsDataViewParallelFor", functions.size(),
+                        [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
+                          std::vector<int>& result = indicesArray[a_BlockIndex];
+                          const std::string& name =
+                              ToLower(FunctionUtils::GetDisplayName(*functions[a_ElementIndex]));
+                          const std::string& file = functions[a_ElementIndex]->file();
 
-        for (std::string& filterToken : m_FilterTokens) {
-          if (name.find(filterToken) == std::string::npos &&
-              file.find(filterToken) == std::string::npos) {
-            return;
-          }
-        }
+                          for (std::string& filterToken : m_FilterTokens) {
+                            if (name.find(filterToken) == std::string::npos &&
+                                file.find(filterToken) == std::string::npos) {
+                              return;
+                            }
+                          }
 
-        result.push_back(a_ElementIndex);
-      });
+                          result.push_back(a_ElementIndex);
+                        });
 
   std::set<int> indicesSet;
   for (std::vector<int>& results : indicesArray) {

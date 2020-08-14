@@ -24,8 +24,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
   return *this;
 }
 
-outcome::result<void> Socket::Connect(const AddrAndPort& addr_and_port,
-                                      int domain) const {
+outcome::result<void> Socket::Connect(const AddrAndPort& addr_and_port, int domain) const {
   sockaddr_in sin{};
   sin.sin_family = domain;
   sin.sin_port = htons(addr_and_port.port);
@@ -35,16 +34,14 @@ outcome::result<void> Socket::Connect(const AddrAndPort& addr_and_port,
     return Error::kInvalidIP;
   }
 
-  const int rc = connect(descriptor_, reinterpret_cast<sockaddr*>(&sin),
-                         sizeof(sockaddr_in));
+  const int rc = connect(descriptor_, reinterpret_cast<sockaddr*>(&sin), sizeof(sockaddr_in));
 
   if (rc != 0) return GetLastError();
 
   return outcome::success();
 }
 
-outcome::result<void> Socket::Bind(const AddrAndPort& addr_and_port,
-                                   int domain) const {
+outcome::result<void> Socket::Bind(const AddrAndPort& addr_and_port, int domain) const {
   sockaddr_in sin{};
   sin.sin_family = domain;
   sin.sin_port = htons(addr_and_port.port);
@@ -53,8 +50,7 @@ outcome::result<void> Socket::Bind(const AddrAndPort& addr_and_port,
     return outcome::failure(Error::kInvalidIP);
   }
 
-  const int result =
-      bind(descriptor_, reinterpret_cast<sockaddr*>(&sin), sizeof(sockaddr_in));
+  const int result = bind(descriptor_, reinterpret_cast<sockaddr*>(&sin), sizeof(sockaddr_in));
 
   if (result != 0) return GetLastError();
 
@@ -65,8 +61,7 @@ outcome::result<AddrAndPort> Socket::GetSocketAddrAndPort() const {
   struct sockaddr_in sin {};
   socklen_t len = sizeof(sin);
   if (getsockname(descriptor_, reinterpret_cast<sockaddr*>(&sin), &len) == 0) {
-    return outcome::success(
-        AddrAndPort{std::string{inet_ntoa(sin.sin_addr)}, ntohs(sin.sin_port)});
+    return outcome::success(AddrAndPort{std::string{inet_ntoa(sin.sin_addr)}, ntohs(sin.sin_port)});
   }
 
   return GetLastError();
@@ -89,8 +84,7 @@ outcome::result<void> Socket::CanBeRead() const {
   FD_ZERO(&socket_set);
   FD_SET(descriptor_, &socket_set);
 
-  const int result =
-      select(descriptor_ + 1, &socket_set, nullptr, nullptr, &select_timeout);
+  const int result = select(descriptor_ + 1, &socket_set, nullptr, nullptr, &select_timeout);
 
   if (result < 0) return GetLastError();
 
@@ -139,8 +133,7 @@ outcome::result<void> Socket::WaitDisconnect() {
 
   if (data.empty()) return outcome::success();
 
-  LOG("Received data after sending shutdown on socket (%d bytes)",
-      data.length());
+  LOG("Received data after sending shutdown on socket (%d bytes)", data.length());
   return GetLastError();
 }
 

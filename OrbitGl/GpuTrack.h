@@ -38,15 +38,12 @@ class GpuTrack : public TimerTrack {
   [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 
  protected:
-  [[nodiscard]] bool IsTimerActive(
-      const orbit_client_protos::TimerInfo& timer) const override;
+  [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
                                     bool is_selected) const override;
-  [[nodiscard]] bool TimerFilter(
-      const orbit_client_protos::TimerInfo& timer) const override;
-  void SetTimesliceText(
-      const orbit_client_protos::TimerInfo& timer, double elapsed_us,
-      float min_x, TextBox* text_box) override;
+  [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
+                        TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
  private:

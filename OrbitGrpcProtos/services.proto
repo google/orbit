@@ -95,5 +95,6 @@ message CrashOrbitServiceRequest {
 message CrashOrbitServiceResponse {}
 
 service CrashService {
-  rpc CrashOrbitService(CrashOrbitServiceRequest) returns (CrashOrbitServiceResponse) {}
+  rpc CrashOrbitService(CrashOrbitServiceRequest)
+      returns (CrashOrbitServiceResponse) {}
 }

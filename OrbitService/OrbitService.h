@@ -22,14 +22,12 @@ class OrbitService {
   void Run(std::atomic<bool>* exit_requested);
 
  private:
-  [[nodiscard]] bool IsSshWatchdogActive() {
-    return last_stdin_message_ != std::nullopt;
-  }
+  [[nodiscard]] bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
 
   uint16_t grpc_port_;
 
-  std::optional<std::chrono::time_point<std::chrono::steady_clock>>
-      last_stdin_message_ = std::nullopt;
+  std::optional<std::chrono::time_point<std::chrono::steady_clock>> last_stdin_message_ =
+      std::nullopt;
   const std::string_view kStartWatchdogPassphrase = "start_watchdog";
   // TODO(antonrohr): The main thread can currently be blocked by slow functions
   //  like FunctionsDataView::DoSort and FunctionsDataView::DoFilter. The

@@ -29,9 +29,8 @@ struct BareExecutableAndRootPasswordDeployment {
 
 struct NoDeployment {};
 
-using DeploymentConfiguration =
-    std::variant<SignedDebianPackageDeployment,
-                 BareExecutableAndRootPasswordDeployment, NoDeployment>;
+using DeploymentConfiguration = std::variant<SignedDebianPackageDeployment,
+                                             BareExecutableAndRootPasswordDeployment, NoDeployment>;
 
 }  // namespace OrbitQt
 

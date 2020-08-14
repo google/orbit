@@ -14,8 +14,7 @@ Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); },
-          time_graph)) {
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)) {
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Pos = Vec2(0, 0);
   m_Size = Vec2(0, 0);
@@ -35,16 +34,14 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   float increment_radians = 0.5f * kPiFloat / static_cast<float>(num_sides);
   for (uint32_t i = 1; i < num_sides; ++i) {
     float angle = kPiFloat + static_cast<float>(i) * increment_radians;
-    points.emplace_back(radius * cosf(angle) + radius,
-                        radius * sinf(angle) + radius);
+    points.emplace_back(radius * cosf(angle) + radius, radius * sinf(angle) + radius);
   }
 
   points.emplace_back(radius, 0.f);
   return points;
 }
 
-std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
-                               float rotation) {
+std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) {
   float cos_r = cosf(kPiFloat * rotation / 180.f);
   float sin_r = sinf(kPiFloat * rotation / 180.f);
   std::vector<Vec2> result;
@@ -56,9 +53,8 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
   return result;
 }
 
-void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
-                            const Vec2& pos, const Color& color, float rotation,
-                            float z) {
+void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
+                            const Color& color, float rotation, float z) {
   if (points.size() < 3) {
     return;
   }
@@ -71,8 +67,7 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
   vertices[0] = position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
 
   for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
-    vertices[i % 2] =
-        position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
+    vertices[i % 2] = position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
     batcher->AddTriangle(triangle, color, shared_from_this());
   }
@@ -96,8 +91,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // Draw track background.
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
-      Box box(Vec2(x0, y0 + top_margin),
-              Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
+      Box box(Vec2(x0, y0 + top_margin), Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
       batcher->AddBox(box, kTabColor, shared_from_this());
     }
   }
@@ -130,17 +124,12 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float z = GlCanvas::Z_VALUE_BOX_ACTIVE + 0.001f;
 
     glColor4ubv(&kTabColor[0]);
-    DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0,
-                    z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0, z);
     DrawTriangleFan(batcher, rounded_corner, bottom_right, kTabColor, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f,
-                    z);
-    DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f,
-                    z);
-    DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f,
-                    z);
-    DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f,
-                    z);
+    DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f, z);
+    DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
+    DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f, z);
   }
 
   // Collapse toggle state management.
@@ -161,9 +150,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float label_offset_x = layout.GetTrackLabelOffsetX();
     float label_offset_y = layout.GetTrackLabelOffsetY();
     const Color kTextWhite(255, 255, 255, 255);
-    canvas->AddText(label_.c_str(), tab_x0 + label_offset_x,
-                    y1 + label_offset_y + m_Size[1], text_z, kTextWhite,
-                    label_width - label_offset_x);
+    canvas->AddText(label_.c_str(), tab_x0 + label_offset_x, y1 + label_offset_y + m_Size[1],
+                    text_z, kTextWhite, label_width - label_offset_x);
   }
 
   m_Canvas = canvas;
@@ -184,9 +172,7 @@ void Track::SetY(float y) {
   }
 }
 
-void Track::SetSize(float a_SizeX, float a_SizeY) {
-  m_Size = Vec2(a_SizeX, a_SizeY);
-}
+void Track::SetSize(float a_SizeX, float a_SizeY) { m_Size = Vec2(a_SizeX, a_SizeY); }
 
 void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
   time_graph_->NeedsUpdate();

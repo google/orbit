@@ -16,53 +16,31 @@ void ForkPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void ExitPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void ContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void ContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void CallchainSamplePerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void CallchainSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void UretprobesPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void UretprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void LostPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void MapsPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void TaskNewtaskPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void TaskNewtaskPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
+void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void SchedSwitchPerfEvent::Accept(PerfEventVisitor*) {}
 

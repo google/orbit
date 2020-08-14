@@ -15,9 +15,9 @@ using orbit_client_protos::LinuxAddressInfo;
 
 namespace {
 
-std::multimap<int, CallstackID> SortCallstacks(
-    const ThreadSampleData& data, const std::set<CallstackID>& callstacks,
-    int* callstacks_total_count) {
+std::multimap<int, CallstackID> SortCallstacks(const ThreadSampleData& data,
+                                               const std::set<CallstackID>& callstacks,
+                                               int* callstacks_total_count) {
   std::multimap<int, CallstackID> sorted_callstacks;
   int callstacks_count = 0;
   for (CallstackID id : callstacks) {
@@ -55,19 +55,17 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
   return (*res).second;
 }
 
-std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
-    uint64_t address, ThreadID thread_id, int* callstacks_count) {
-  const std::set<CallstackID>& callstacks =
-      function_address_to_callstack_[address];
-  return SortCallstacks(thread_id_to_sample_data_[thread_id], callstacks,
-                        callstacks_count);
+std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(uint64_t address,
+                                                                           ThreadID thread_id,
+                                                                           int* callstacks_count) {
+  const std::set<CallstackID>& callstacks = function_address_to_callstack_[address];
+  return SortCallstacks(thread_id_to_sample_data_[thread_id], callstacks, callstacks_count);
 }
 
 void SamplingProfiler::AddCallStack(CallstackEvent&& callstack_event) {
   CallstackID hash = callstack_event.callstack_hash();
   if (!HasCallStack(hash)) {
-    std::shared_ptr<CallStack> callstack =
-        Capture::GSamplingProfiler->GetCallStack(hash);
+    std::shared_ptr<CallStack> callstack = Capture::GSamplingProfiler->GetCallStack(hash);
     AddUniqueCallStack(*callstack);
   }
 
@@ -80,24 +78,19 @@ void SamplingProfiler::AddUniqueCallStack(CallStack call_stack) {
   unique_callstacks_[key] = std::make_shared<CallStack>(std::move(call_stack));
 }
 
-const CallStack& SamplingProfiler::GetResolvedCallstack(
-    CallstackID raw_callstack_id) const {
-  auto resolved_callstack_id_it =
-      original_to_resolved_callstack_.find(raw_callstack_id);
+const CallStack& SamplingProfiler::GetResolvedCallstack(CallstackID raw_callstack_id) const {
+  auto resolved_callstack_id_it = original_to_resolved_callstack_.find(raw_callstack_id);
   CHECK(resolved_callstack_id_it != original_to_resolved_callstack_.end());
-  auto resolved_callstack_it =
-      unique_resolved_callstacks_.find(resolved_callstack_id_it->second);
+  auto resolved_callstack_it = unique_resolved_callstacks_.find(resolved_callstack_id_it->second);
   CHECK(resolved_callstack_it != unique_resolved_callstacks_.end());
   return *resolved_callstack_it->second;
 }
 
-std::shared_ptr<SortedCallstackReport>
-SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t address,
-                                                 ThreadID thread_id) {
-  std::shared_ptr<SortedCallstackReport> report =
-      std::make_shared<SortedCallstackReport>();
-  std::multimap<int, CallstackID> multi_map = GetCallstacksFromAddress(
-      address, thread_id, &report->callstacks_total_count);
+std::shared_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFromAddress(
+    uint64_t address, ThreadID thread_id) {
+  std::shared_ptr<SortedCallstackReport> report = std::make_shared<SortedCallstackReport>();
+  std::multimap<int, CallstackID> multi_map =
+      GetCallstacksFromAddress(address, thread_id, &report->callstacks_total_count);
   size_t unique_callstacks_count = multi_map.size();
   report->callstacks_count.resize(unique_callstacks_count);
   size_t index = unique_callstacks_count;
@@ -151,24 +144,20 @@ void SamplingProfiler::ProcessSamples() {
       continue;
     }
 
-    ThreadSampleData* thread_sample_data =
-        &thread_id_to_sample_data_[callstack.thread_id()];
+    ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[callstack.thread_id()];
     thread_sample_data->samples_count++;
     thread_sample_data->callstack_count[callstack.callstack_hash()]++;
 
     absl::MutexLock lock(&unique_callstacks_mutex_);
-    for (uint64_t address :
-         unique_callstacks_[callstack.callstack_hash()]->GetFrames()) {
+    for (uint64_t address : unique_callstacks_[callstack.callstack_hash()]->GetFrames()) {
       thread_sample_data->raw_address_count[address]++;
     }
 
     if (generate_summary_) {
-      ThreadSampleData* all_thread_sample_data =
-          &thread_id_to_sample_data_[kAllThreadsFakeTid];
+      ThreadSampleData* all_thread_sample_data = &thread_id_to_sample_data_[kAllThreadsFakeTid];
       all_thread_sample_data->samples_count++;
       all_thread_sample_data->callstack_count[callstack.callstack_hash()]++;
-      for (uint64_t address :
-           unique_callstacks_[callstack.callstack_hash()]->GetFrames()) {
+      for (uint64_t address : unique_callstacks_[callstack.callstack_hash()]->GetFrames()) {
         all_thread_sample_data->raw_address_count[address]++;
       }
     }
@@ -186,14 +175,12 @@ void SamplingProfiler::ProcessSamples() {
       const CallstackID callstack_id = callstack_count_it.first;
       const uint32_t callstack_count = callstack_count_it.second;
 
-      CallstackID resolved_callstack_id =
-          original_to_resolved_callstack_[callstack_id];
+      CallstackID resolved_callstack_id = original_to_resolved_callstack_[callstack_id];
       std::shared_ptr<CallStack>& resolved_callstack =
           unique_resolved_callstacks_[resolved_callstack_id];
 
       // exclusive stat
-      thread_sample_data->exclusive_count[resolved_callstack->GetFrame(0)] +=
-          callstack_count;
+      thread_sample_data->exclusive_count[resolved_callstack->GetFrame(0)] += callstack_count;
 
       std::set<uint64_t> unique_addresses;
       for (uint64_t address : resolved_callstack->GetFrames()) {
@@ -209,8 +196,7 @@ void SamplingProfiler::ProcessSamples() {
     for (const auto& address_count_it : thread_sample_data->address_count) {
       const uint64_t address = address_count_it.first;
       const uint32_t count = address_count_it.second;
-      thread_sample_data->address_count_sorted.insert(
-          std::make_pair(count, address));
+      thread_sample_data->address_count_sorted.insert(std::make_pair(count, address));
     }
   }
 
@@ -244,8 +230,7 @@ void SamplingProfiler::ResolveCallstacks() {
       if (address_it != exact_address_to_function_address_.end()) {
         const uint64_t& function_address = address_it->second;
         resolved_callstack_data.push_back(function_address);
-        function_address_to_callstack_[function_address].insert(
-            raw_callstack_id);
+        function_address_to_callstack_[function_address].insert(raw_callstack_id);
       } else {
         resolved_callstack_data.push_back(address);
       }
@@ -273,10 +258,8 @@ const ThreadSampleData* SamplingProfiler::GetSummary() const {
 }
 
 uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
-  auto addresses_of_functions_itr =
-      function_address_to_exact_addresses_.find(function_address);
-  if (addresses_of_functions_itr ==
-      function_address_to_exact_addresses_.end()) {
+  auto addresses_of_functions_itr = function_address_to_exact_addresses_.find(function_address);
+  if (addresses_of_functions_itr == function_address_to_exact_addresses_.end()) {
     return 0;
   }
   uint32_t result = 0;
@@ -297,8 +280,7 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
 const std::string SamplingProfiler::kUnknownFunctionOrModuleName{"???"};
 
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
-  LinuxAddressInfo* address_info =
-      Capture::capture_data_.GetAddressInfo(address);
+  LinuxAddressInfo* address_info = Capture::capture_data_.GetAddressInfo(address);
   FunctionInfo* function = process_->GetFunctionFromAddress(address, false);
 
   // Find the start address of the function this address falls inside.
@@ -347,16 +329,13 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
 void SamplingProfiler::FillThreadSampleDataSampleReports() {
   for (auto& data : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &data.second;
-    std::vector<SampledFunction>* sampled_functions =
-        &thread_sample_data->sampled_function;
+    std::vector<SampledFunction>* sampled_functions = &thread_sample_data->sampled_function;
 
     for (auto sortedIt = thread_sample_data->address_count_sorted.rbegin();
-         sortedIt != thread_sample_data->address_count_sorted.rend();
-         ++sortedIt) {
+         sortedIt != thread_sample_data->address_count_sorted.rend(); ++sortedIt) {
       uint32_t numOccurences = sortedIt->first;
       uint64_t address = sortedIt->second;
-      float inclusive_percent =
-          100.f * numOccurences / thread_sample_data->samples_count;
+      float inclusive_percent = 100.f * numOccurences / thread_sample_data->samples_count;
 
       SampledFunction function;
       // GAddressToFunctionName and GAddressToModuleName should be filled in
@@ -367,8 +346,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       function.exclusive = 0.f;
       auto it = thread_sample_data->exclusive_count.find(address);
       if (it != thread_sample_data->exclusive_count.end()) {
-        function.exclusive =
-            100.f * it->second / thread_sample_data->samples_count;
+        function.exclusive = 100.f * it->second / thread_sample_data->samples_count;
       }
       function.address = address;
       CHECK(address_to_module_name_.count(address) > 0);
@@ -379,8 +357,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
   }
 }
 
-const std::string& SamplingProfiler::GetFunctionNameByAddress(
-    uint64_t address) const {
+const std::string& SamplingProfiler::GetFunctionNameByAddress(uint64_t address) const {
   auto it = address_to_function_name_.find(address);
   if (it != address_to_function_name_.end()) {
     return it->second;
@@ -388,8 +365,7 @@ const std::string& SamplingProfiler::GetFunctionNameByAddress(
   return kUnknownFunctionOrModuleName;
 }
 
-const std::string& SamplingProfiler::GetModuleNameByAddress(
-    uint64_t address) const {
+const std::string& SamplingProfiler::GetModuleNameByAddress(uint64_t address) const {
   auto it = address_to_module_name_.find(address);
   if (it != address_to_module_name_.end()) {
     return it->second;

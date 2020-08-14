@@ -17,8 +17,8 @@ class LiveFunctionsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCount; }
-  std::vector<std::string> GetContextMenu(
-      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::vector<std::string> GetContextMenu(int clicked_index,
+                                          const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
   void OnContextMenu(const std::string& action, int menu_index,
@@ -29,8 +29,7 @@ class LiveFunctionsDataView : public DataView {
  protected:
   void DoFilter() override;
   void DoSort() override;
-  [[nodiscard]] orbit_client_protos::FunctionInfo* GetFunction(
-      unsigned int row);
+  [[nodiscard]] orbit_client_protos::FunctionInfo* GetFunction(unsigned int row);
   [[nodiscard]] std::pair<TextBox*, TextBox*> GetMinMax(
       const orbit_client_protos::FunctionInfo& function) const;
 

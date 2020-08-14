@@ -20,8 +20,8 @@
 #include <cstring>
 #include <ctime>
 
-inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
-                           int group_fd, unsigned long flags) {
+inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu, int group_fd,
+                           unsigned long flags) {
   return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);
 }
 
@@ -68,23 +68,19 @@ inline uint64_t perf_event_get_id(int file_descriptor) {
 // This must be in sync with struct perf_event_sample_id_tid_time_streamid_cpu
 // in PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_TYPE_TID_TIME_STREAMID_CPU =
-    PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_STREAM_ID |
-    PERF_SAMPLE_CPU;
+    PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_STREAM_ID | PERF_SAMPLE_CPU;
 
 // Sample all registers: they might all be necessary for DWARF-based stack
 // unwinding.
 // This must be in sync with struct perf_event_sample_regs_user_all in
 // PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_ALL =
-    (1lu << PERF_REG_X86_AX) | (1lu << PERF_REG_X86_BX) |
-    (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) |
-    (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
-    (1lu << PERF_REG_X86_BP) | (1lu << PERF_REG_X86_SP) |
-    (1lu << PERF_REG_X86_IP) | (1lu << PERF_REG_X86_FLAGS) |
-    (1lu << PERF_REG_X86_CS) | (1lu << PERF_REG_X86_SS) |
-    (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9) |
-    (1lu << PERF_REG_X86_R10) | (1lu << PERF_REG_X86_R11) |
-    (1lu << PERF_REG_X86_R12) | (1lu << PERF_REG_X86_R13) |
+    (1lu << PERF_REG_X86_AX) | (1lu << PERF_REG_X86_BX) | (1lu << PERF_REG_X86_CX) |
+    (1lu << PERF_REG_X86_DX) | (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
+    (1lu << PERF_REG_X86_BP) | (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
+    (1lu << PERF_REG_X86_FLAGS) | (1lu << PERF_REG_X86_CS) | (1lu << PERF_REG_X86_SS) |
+    (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9) | (1lu << PERF_REG_X86_R10) |
+    (1lu << PERF_REG_X86_R11) | (1lu << PERF_REG_X86_R12) | (1lu << PERF_REG_X86_R13) |
     (1lu << PERF_REG_X86_R14) | (1lu << PERF_REG_X86_R15);
 
 // This must be in sync with struct perf_event_ax_sample in
@@ -94,9 +90,8 @@ static constexpr uint64_t SAMPLE_REGS_USER_AX = (1lu << PERF_REG_X86_AX);
 // This must be in sync with struct perf_event_sample_regs_user_sp_ip_arguments
 // in PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
-    (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) |
-    (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
-    (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
+    (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) | (1lu << PERF_REG_X86_SI) |
+    (1lu << PERF_REG_X86_DI) | (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
     (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9);
 
 // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
@@ -127,11 +122,10 @@ int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for uprobes and uretprobes.
-int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
-                               pid_t pid, int32_t cpu);
+int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                               int32_t cpu);
 
-int uretprobes_event_open(const char* module, uint64_t function_offset,
-                          pid_t pid, int32_t cpu);
+int uretprobes_event_open(const char* module, uint64_t function_offset, pid_t pid, int32_t cpu);
 
 // Create the ring buffer to use perf_event_open in sampled mode.
 void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
@@ -140,8 +134,8 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
 // tracepoint given by the category (for example, "sched") and the name
 // (for example, "sched_waking"). Returns the file descriptor for the
 // perf event or -1 in case of any errors.
-int tracepoint_event_open(const char* tracepoint_category,
-                          const char* tracepoint_name, pid_t pid, int32_t cpu);
+int tracepoint_event_open(const char* tracepoint_category, const char* tracepoint_name, pid_t pid,
+                          int32_t cpu);
 
 }  // namespace LinuxTracing
 

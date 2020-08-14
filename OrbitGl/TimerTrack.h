@@ -37,8 +37,7 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
-  [[nodiscard]] std::string GetExtraInfo(
-      const orbit_client_protos::TimerInfo& timer);
+  [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
 
   [[nodiscard]] Color GetColor() const;
   [[nodiscard]] static Color GetColor(ThreadID a_TID);
@@ -46,25 +45,18 @@ class TimerTrack : public Track {
   [[nodiscard]] TickType GetMinTime() const { return min_time_; }
   [[nodiscard]] TickType GetMaxTime() const { return max_time_; }
 
-  [[nodiscard]] const TextBox* GetFirstAfterTime(TickType time,
-                                                 uint32_t depth) const;
-  [[nodiscard]] const TextBox* GetFirstBeforeTime(TickType time,
-                                                  uint32_t depth) const;
+  [[nodiscard]] const TextBox* GetFirstAfterTime(TickType time, uint32_t depth) const;
+  [[nodiscard]] const TextBox* GetFirstBeforeTime(TickType time, uint32_t depth) const;
 
   // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const TextBox* GetLeft(TextBox* textbox) const {
-    return textbox;
-  };
+  [[nodiscard]] virtual const TextBox* GetLeft(TextBox* textbox) const { return textbox; };
   // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const TextBox* GetRight(TextBox* textbox) const {
-    return textbox;
-  };
+  [[nodiscard]] virtual const TextBox* GetRight(TextBox* textbox) const { return textbox; };
 
   [[nodiscard]] virtual const TextBox* GetUp(TextBox* textbox) const;
   [[nodiscard]] virtual const TextBox* GetDown(TextBox* textbox) const;
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains()
-      override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
   [[nodiscard]] virtual bool IsEmpty() const;
 
   [[nodiscard]] bool IsCollapsable() const override { return depth_ > 1; }
@@ -79,9 +71,8 @@ class TimerTrack : public Track {
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return true;
   }
-  [[nodiscard]] virtual Color GetTimerColor(
-      const orbit_client_protos::TimerInfo& timer_info,
-      bool is_selected) const = 0;
+  [[nodiscard]] virtual Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
+                                            bool is_selected) const = 0;
   [[nodiscard]] virtual bool TimerFilter(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return true;
@@ -93,8 +84,7 @@ class TimerTrack : public Track {
   [[nodiscard]] std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
   virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/,
-                                double /*elapsed_us*/, float /*min_x*/,
-                                TextBox* /*text_box*/) {}
+                                double /*elapsed_us*/, float /*min_x*/, TextBox* /*text_box*/) {}
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
   mutable Mutex mutex_;

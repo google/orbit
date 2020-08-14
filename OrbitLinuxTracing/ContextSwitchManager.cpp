@@ -8,8 +8,7 @@ namespace LinuxTracing {
 
 using orbit_grpc_protos::SchedulingSlice;
 
-void ContextSwitchManager::ProcessContextSwitchIn(pid_t pid, pid_t tid,
-                                                  uint16_t core,
+void ContextSwitchManager::ProcessContextSwitchIn(pid_t pid, pid_t tid, uint16_t core,
                                                   uint64_t timestamp_ns) {
   // In case of lost out switches, a previous OpenSwitchIn for this core can
   // be present. Simply overwrite it.

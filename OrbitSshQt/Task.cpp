@@ -9,10 +9,9 @@
 
 namespace OrbitSshQt {
 
-Task::Task(Session* session, std::string command)
-    : session_(session), command_(command) {
-  about_to_shutdown_connection_.emplace(QObject::connect(
-      session_, &Session::aboutToShutdown, this, &Task::HandleSessionShutdown));
+Task::Task(Session* session, std::string command) : session_(session), command_(command) {
+  about_to_shutdown_connection_.emplace(
+      QObject::connect(session_, &Session::aboutToShutdown, this, &Task::HandleSessionShutdown));
 }
 
 void Task::Start() {
@@ -131,8 +130,7 @@ outcome::result<void> Task::startup() {
         return OrbitSsh::Error::kEagain;
       }
 
-      OUTCOME_TRY(channel,
-                  OrbitSsh::Channel::OpenChannel(session_->GetRawSession()));
+      OUTCOME_TRY(channel, OrbitSsh::Channel::OpenChannel(session_->GetRawSession()));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;

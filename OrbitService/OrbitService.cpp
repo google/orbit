@@ -32,8 +32,8 @@ static std::string ReadStdIn() {
 static bool IsSshConnectionAlive(
     std::chrono::time_point<std::chrono::steady_clock> last_ssh_message,
     const int timeout_in_seconds) {
-  return std::chrono::duration_cast<std::chrono::seconds>(
-             std::chrono::steady_clock::now() - last_ssh_message)
+  return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() -
+                                                          last_ssh_message)
              .count() < timeout_in_seconds;
 }
 }  // namespace
@@ -55,14 +55,12 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
     // If ssh sends EOF, end main loop.
     if (feof(stdin) != 0) break;
 
-    if (IsSshWatchdogActive() ||
-        absl::StrContains(stdin_data, kStartWatchdogPassphrase)) {
+    if (IsSshWatchdogActive() || absl::StrContains(stdin_data, kStartWatchdogPassphrase)) {
       if (!stdin_data.empty()) {
         last_stdin_message_ = std::chrono::steady_clock::now();
       }
 
-      if (!IsSshConnectionAlive(last_stdin_message_.value(),
-                                kWatchdogTimeoutInSeconds)) {
+      if (!IsSshConnectionAlive(last_stdin_message_.value(), kWatchdogTimeoutInSeconds)) {
         break;
       }
     }

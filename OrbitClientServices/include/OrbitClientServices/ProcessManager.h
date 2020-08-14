@@ -41,31 +41,27 @@ class ProcessManager {
   virtual void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) = 0;
 
-  virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>>
-  LoadModuleList(int32_t pid) = 0;
+  virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
+      int32_t pid) = 0;
 
   // Get a copy of process list.
-  virtual std::vector<orbit_grpc_protos::ProcessInfo> GetProcessList()
-      const = 0;
+  virtual std::vector<orbit_grpc_protos::ProcessInfo> GetProcessList() const = 0;
 
-  virtual ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid,
-                                                        uint64_t address,
+  virtual ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
                                                         uint64_t size) = 0;
 
-  virtual ErrorMessageOr<std::string> LoadNullTerminatedString(
-      int32_t pid, uint64_t address) = 0;
+  virtual ErrorMessageOr<std::string> LoadNullTerminatedString(int32_t pid, uint64_t address) = 0;
 
-  virtual ErrorMessageOr<std::string> FindDebugInfoFile(
-      const std::string& module_path, const std::string& build_id) = 0;
+  virtual ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path,
+                                                        const std::string& build_id) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.
   virtual void Shutdown() = 0;
 
   // Create ProcessManager with specified duration
-  static std::unique_ptr<ProcessManager> Create(
-      const std::shared_ptr<grpc::Channel>& channel,
-      absl::Duration refresh_timeout);
+  static std::unique_ptr<ProcessManager> Create(const std::shared_ptr<grpc::Channel>& channel,
+                                                absl::Duration refresh_timeout);
 };
 
 #endif  // ORBIT_CLIENT_SERVICES_PROCESS_MANAGER_H_
