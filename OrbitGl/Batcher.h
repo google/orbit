@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_BATCHER_H_
 #define ORBIT_GL_BATCHER_H_
 
+#include <utility>
 #include <vector>
 
 #include "BlockChain.h"
@@ -18,9 +19,9 @@ struct PickingUserData {
   TooltipCallback generate_tooltip_;
   void* custom_data_ = nullptr;
 
-  PickingUserData(TextBox* text_box = nullptr,
-                  TooltipCallback generate_tooltip = nullptr)
-      : text_box_(text_box), generate_tooltip_(generate_tooltip) {}
+  explicit PickingUserData(TextBox* text_box = nullptr,
+                           TooltipCallback generate_tooltip = nullptr)
+      : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
 };
 
 struct LineBuffer {
@@ -78,26 +79,27 @@ class Batcher {
   Batcher(const Batcher&) = delete;
   Batcher(Batcher&&) = delete;
 
-  void AddLine(Vec2 from, Vec2 to, float z, Color color,
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddVerticalLine(Vec2 pos, float size, float z, Color color,
+  void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddLine(Vec2 from, Vec2 to, float z, Color color,
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                std::weak_ptr<Pickable> pickable);
-  void AddVerticalLine(Vec2 pos, float size, float z, Color color,
+  void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::weak_ptr<Pickable> pickable);
 
-  void AddBox(const Box& box, const Color* colors,
+  void AddBox(const Box& box, const std::array<Color, 4>& colors,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, Color color,
+  void AddBox(const Box& box, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, Color color, std::weak_ptr<Pickable> pickable);
-  void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
+  void AddBox(const Box& box, const Color& color,
+              std::weak_ptr<Pickable> pickable);
+  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                     std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void AddTriangle(const Triangle& triangle, Color color,
+  void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, Color color,
+  void AddTriangle(const Triangle& triangle, const Color& color,
                    std::weak_ptr<Pickable> pickable);
 
   virtual void Draw(bool picking = false) const;
@@ -117,13 +119,16 @@ class Batcher {
   void DrawBoxBuffer(bool picking) const;
   void DrawTriangleBuffer(bool picking) const;
 
-  void GetBoxGradientColors(Color color, Color* colors);
+  void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors);
 
-  void AddLine(Vec2 from, Vec2 to, float z, Color color, Color picking_color,
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
+               const Color& picking_color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const Color* colors, Color picking_color,
+  void AddBox(const Box& box, const std::array<Color, 4>& colors,
+              const Color& picking_color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, Color color, Color picking_color,
+  void AddTriangle(const Triangle& triangle, const Color& color,
+                   const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
   BatcherId batcher_id_;
