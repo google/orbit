@@ -29,7 +29,8 @@ class LiveFunctionsDataView : public DataView {
  protected:
   void DoFilter() override;
   void DoSort() override;
-  [[nodiscard]] orbit_client_protos::FunctionInfo* GetFunction(unsigned int row);
+  [[nodiscard]] orbit_client_protos::FunctionInfo* GetFunction(
+      unsigned int row);
   [[nodiscard]] std::pair<TextBox*, TextBox*> GetMinMax(
       const orbit_client_protos::FunctionInfo& function) const;
 
