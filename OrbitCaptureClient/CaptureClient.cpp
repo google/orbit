@@ -37,16 +37,14 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   state_ = State::kStarting;
   thread_pool->Schedule(
-      [this, pid, selected_functions{std::move(selected_functions)}]() {
-        Capture(pid, selected_functions);
-      });
+      [this, pid, selected_functions]() { Capture(pid, selected_functions); });
 
   return outcome::success();
 }
 
 void CaptureClient::Capture(
     int32_t pid,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
+    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
   CHECK(reader_writer_ == nullptr);
 
   event_processor_.emplace(capture_listener_);

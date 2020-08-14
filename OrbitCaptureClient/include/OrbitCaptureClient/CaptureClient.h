@@ -53,9 +53,10 @@ class CaptureClient {
   }
 
  private:
-  void Capture(int32_t pid,
-               absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-                   selected_functions);
+  void Capture(
+      int32_t pid,
+      const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
+          selected_functions);
 
   void FinishCapture();
 
