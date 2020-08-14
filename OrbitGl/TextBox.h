@@ -69,10 +69,13 @@ class TextBox {
   Vec2 GetMin() const { return m_Min; }
   Vec2 GetMax() const { return m_Max; }
 
-  const std::string& GetText() const { return m_Text; }
-  void SetText(const std::string& a_Text) { m_Text = a_Text; }
+  const std::string& GetText() const { return text_; }
+  void SetText(const std::string& a_Text) { text_ = a_Text; }
 
   void SetTimerInfo(const orbit_client_protos::TimerInfo& timer_info) {
+    if (timer_info.end() == 0 && timer_info.start() == 0) {
+      return;
+    }
     timer_info_ = timer_info;
   }
   const orbit_client_protos::TimerInfo& GetTimerInfo() const {
@@ -113,7 +116,7 @@ class TextBox {
   Vec2 m_Size;
   Vec2 m_Min;
   Vec2 m_Max;
-  std::string m_Text;
+  std::string text_;
   Color m_Color;
   orbit_client_protos::TimerInfo timer_info_;
   int m_MainFrameCounter;

@@ -30,7 +30,7 @@ TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
                  const std::string& a_Text, const Color& a_Color)
     : m_Pos(a_Pos),
       m_Size(a_Size),
-      m_Text(a_Text),
+      text_(a_Text),
       m_Color(a_Color),
       m_MainFrameCounter(-1),
       m_Selected(false),
@@ -117,10 +117,9 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     const FunctionInfo* func = Capture::capture_data_.GetSelectedFunction(
         timer_info_.function_address());
-    CHECK(func != nullptr);
-    std::string text = absl::StrFormat(
-        "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "",
-        m_Text.c_str());
+    std::string function_name =
+        func != nullptr ? FunctionUtils::GetDisplayName(*func) : "";
+    std::string text = absl::StrFormat("%s %s", function_name, text_.c_str());
 
     if (!a_IsPicking && !isCoreActivity) {
       a_TextRenderer.AddText(
