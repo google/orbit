@@ -7,7 +7,6 @@
 
 #include "Callstack.h"
 #include "EventBuffer.h"
-#include "KeyAndString.h"
 #include "ScopeTimer.h"
 #include "capture_data.pb.h"
 

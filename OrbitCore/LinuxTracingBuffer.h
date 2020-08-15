@@ -7,7 +7,6 @@
 
 #include "EventBuffer.h"
 #include "KeyAndString.h"
-#include "LinuxCallstackEvent.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TidAndThreadName.h"

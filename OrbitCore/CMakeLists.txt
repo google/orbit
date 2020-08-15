@@ -19,8 +19,6 @@ target_sources(
          EventBuffer.h
          FunctionUtils.h
          Introspection.h
-         LinuxCallstackEvent.h
-         LinuxTracingBuffer.h
          OrbitModule.h
          OrbitProcess.h
          Params.h
@@ -33,7 +31,6 @@ target_sources(
          StringManager.h
          SymbolHelper.h
          Threading.h
-         TidAndThreadName.h
          Utils.h)
 
 target_sources(
@@ -43,7 +40,6 @@ target_sources(
           EventBuffer.cpp
           FunctionUtils.cpp
           Introspection.cpp
-          LinuxTracingBuffer.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           Params.cpp
@@ -101,7 +97,6 @@ target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCoreTests PRIVATE
     BlockChainTest.cpp
-    LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
     StringManagerTest.cpp
