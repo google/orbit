@@ -16,6 +16,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
                            -Werror=old-style-cast
                            -Werror=unused-parameter
                            -Werror=unused-variable
+                           -Werror=writable-strings
                            -Werror=sign-compare)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
