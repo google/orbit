@@ -21,8 +21,7 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbols()
-      const = 0;
+  virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbols() const = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some
@@ -44,13 +43,11 @@ class ElfFile {
   virtual std::string GetBuildId() const = 0;
   virtual std::string GetFilePath() const = 0;
 
+  static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(std::string_view file_path);
   static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
-      std::string_view file_path);
-  static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
-      std::string_view file_path,
-      llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
-  static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(
-      std::string_view file_path, const void* buf, size_t len);
+      std::string_view file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
+  static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(std::string_view file_path,
+                                                                   const void* buf, size_t len);
 };
 
 }  // namespace ElfUtils
