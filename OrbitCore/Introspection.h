@@ -5,7 +5,6 @@
 #ifndef ORBIT_CORE_INTROSPECTION_H_
 #define ORBIT_CORE_INTROSPECTION_H_
 
-#include "LinuxTracingBuffer.h"
 #include "OrbitBase/Tracing.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
