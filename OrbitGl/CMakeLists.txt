@@ -44,6 +44,7 @@ target_sources(
          SamplingReport.h
          SamplingReportDataView.h
          SchedulerTrack.h
+         StatusListener.h
          TextBox.h
          TextRenderer.h
          ThreadTrack.h
