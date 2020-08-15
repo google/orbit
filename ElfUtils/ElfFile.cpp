@@ -26,9 +26,8 @@ using orbit_grpc_protos::SymbolInfo;
 template <typename ElfT>
 class ElfFileImpl : public ElfFile {
  public:
-  ElfFileImpl(
-      std::string_view file_path,
-      llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
+  ElfFileImpl(std::string_view file_path,
+              llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
   ErrorMessageOr<ModuleSymbols> LoadSymbols() const override;
   ErrorMessageOr<uint64_t> GetLoadBias() const override;
@@ -50,14 +49,10 @@ class ElfFileImpl : public ElfFile {
 };
 
 template <typename ElfT>
-ElfFileImpl<ElfT>::ElfFileImpl(
-    std::string_view file_path,
-    llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
-    : file_path_(file_path),
-      owning_binary_(std::move(owning_binary)),
-      has_symtab_section_(false) {
-  object_file_ = llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(
-      owning_binary_.getBinary());
+ElfFileImpl<ElfT>::ElfFileImpl(std::string_view file_path,
+                               llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
+    : file_path_(file_path), owning_binary_(std::move(owning_binary)), has_symtab_section_(false) {
+  object_file_ = llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(owning_binary_.getBinary());
   InitSections();
 }
 
@@ -65,16 +60,14 @@ template <typename ElfT>
 void ElfFileImpl<ElfT>::InitSections() {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
-  llvm::Expected<typename ElfT::ShdrRange> sections_or_err =
-      elf_file->sections();
+  llvm::Expected<typename ElfT::ShdrRange> sections_or_err = elf_file->sections();
   if (!sections_or_err) {
     LOG("Unable to load sections");
     return;
   }
 
   for (const typename ElfT::Shdr& section : sections_or_err.get()) {
-    llvm::Expected<llvm::StringRef> name_or_error =
-        elf_file->getSectionName(&section);
+    llvm::Expected<llvm::StringRef> name_or_error = elf_file->getSectionName(&section);
     if (!name_or_error) {
       LOG("Unable to get section name");
       continue;
@@ -89,8 +82,7 @@ void ElfFileImpl<ElfT>::InitSections() {
       has_symtab_section_ = true;
     }
 
-    if (name.str() == ".note.gnu.build-id" &&
-        section.sh_type == llvm::ELF::SHT_NOTE) {
+    if (name.str() == ".note.gnu.build-id" && section.sh_type == llvm::ELF::SHT_NOTE) {
       llvm::Error error = llvm::Error::success();
       for (const typename ElfT::Note& note : elf_file->notes(section, error)) {
         if (note.getType() != llvm::ELF::NT_GNU_BUILD_ID) continue;
@@ -136,8 +128,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
   module_symbols.set_symbols_file_path(file_path_);
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) !=
-        0) {
+    if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
       continue;
     }
     std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
@@ -145,8 +136,8 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
 
     // Unknown type - skip and generate a warning
     if (!symbol_ref.getType()) {
-      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.",
-          name.c_str(), file_path_.c_str());
+      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name.c_str(),
+          file_path_.c_str());
       continue;
     }
 
@@ -239,51 +230,42 @@ bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
 
 }  // namespace
 
-ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(
-    std::string_view file_path, const void* buf, size_t len) {
+ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(std::string_view file_path,
+                                                                   const void* buf, size_t len) {
   std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBuffer(
-      llvm::StringRef(static_cast<const char*>(buf), len),
-      llvm::StringRef("buffer name"), false);
-  llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>>
-      object_file_or_error =
-          llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
+      llvm::StringRef(static_cast<const char*>(buf), len), llvm::StringRef("buffer name"), false);
+  llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>> object_file_or_error =
+      llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
 
   if (!object_file_or_error) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path,
-                        llvm::toString(object_file_or_error.takeError())));
+    return ErrorMessage(absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path,
+                                        llvm::toString(object_file_or_error.takeError())));
   }
 
-  return ElfFile::Create(
-      file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>(
-                     std::move(object_file_or_error.get()), std::move(buffer)));
+  return ElfFile::Create(file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>(
+                                        std::move(object_file_or_error.get()), std::move(buffer)));
 }
 
-ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
-    std::string_view file_path) {
+ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(std::string_view file_path) {
   // TODO(hebecker): Remove this explicit construction of StringRef when we
   // switch to LLVM10.
   const llvm::StringRef file_path_llvm{file_path.data(), file_path.size()};
 
-  llvm::Expected<llvm::object::OwningBinary<llvm::object::ObjectFile>>
-      object_file_or_error =
-          llvm::object::ObjectFile::createObjectFile(file_path_llvm);
+  llvm::Expected<llvm::object::OwningBinary<llvm::object::ObjectFile>> object_file_or_error =
+      llvm::object::ObjectFile::createObjectFile(file_path_llvm);
 
   if (!object_file_or_error) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path,
-                        llvm::toString(object_file_or_error.takeError())));
+    return ErrorMessage(absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path,
+                                        llvm::toString(object_file_or_error.takeError())));
   }
 
-  llvm::object::OwningBinary<llvm::object::ObjectFile>& file =
-      object_file_or_error.get();
+  llvm::object::OwningBinary<llvm::object::ObjectFile>& file = object_file_or_error.get();
 
   return ElfFile::Create(file_path, std::move(file));
 }
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
-    std::string_view file_path,
-    llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
+    std::string_view file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
   llvm::object::ObjectFile* object_file = file.getBinary();
 
   std::unique_ptr<ElfFile> result;
@@ -292,14 +274,12 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
   if (llvm::dyn_cast<llvm::object::ELF32LEObjectFile>(object_file) != nullptr) {
     result = std::unique_ptr<ElfFile>(
         new ElfFileImpl<llvm::object::ELF32LE>(file_path, std::move(file)));
-  } else if (llvm::dyn_cast<llvm::object::ELF64LEObjectFile>(object_file) !=
-             nullptr) {
+  } else if (llvm::dyn_cast<llvm::object::ELF64LEObjectFile>(object_file) != nullptr) {
     result = std::unique_ptr<ElfFile>(
         new ElfFileImpl<llvm::object::ELF64LE>(file_path, std::move(file)));
   } else {
     return ErrorMessage(absl::StrFormat(
-        "Unable to load \"%s\": Big-endian architectures are not supported.",
-        file_path));
+        "Unable to load \"%s\": Big-endian architectures are not supported.", file_path));
   }
 
   return result;
