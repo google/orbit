@@ -39,6 +39,7 @@ target_sources(
   PRIVATE Error.cpp
           ElidedLabel.cpp
           MainThreadExecutorImpl.cpp
+          StatusListenerImpl.cpp
           deploymentconfigurations.cpp
           main.cpp
           orbitaboutdialog.cpp
@@ -116,3 +117,20 @@ set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 strip_symbols(OrbitQt)
+
+add_executable(OrbitQtTests)
+
+target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitQtTests
+        PRIVATE StatusListenerImplTest.cpp
+                StatusListenerImpl.cpp)
+
+target_link_libraries(
+  OrbitQtTests
+  PRIVATE OrbitGl
+          Qt5::Widgets
+          Qt5::Core
+          GTest::Main)
+
+register_test(OrbitGlTests)
