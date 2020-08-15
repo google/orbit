@@ -1,0 +1,7 @@
+# This list contains commits for git blame to ignore
+# These are usually commits with bulk changes like
+# clang-format.
+
+7e1ae51539672920f3cb2441bce184658dae4e1e  # Initial clang-format
+cea9ffd533106b59e79cc9a2e80c595691b24576  # Bulk clang-format after ColumnLimit change
+748d5b126b19690a5d20d8e1aff375e4d4e35564  # Bulk clang-format after ColumnLimit change
