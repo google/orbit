@@ -148,7 +148,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   PickingId pickId = PickingId::FromPixelValue(value);
 
   Capture::GSelectedTextBox = nullptr;
-  Capture::GSelectedThreadId = 0;
+  GOrbitApp->set_selected_thread_id(-1);
 
   Pick(pickId, a_X, a_Y);
 
@@ -170,7 +170,7 @@ void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
 void CaptureWindow::SelectTextBox(class TextBox* text_box) {
   if (text_box == nullptr) return;
   Capture::GSelectedTextBox = text_box;
-  Capture::GSelectedThreadId = text_box->GetTimerInfo().thread_id();
+  GOrbitApp->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t address = timer_info.function_address();

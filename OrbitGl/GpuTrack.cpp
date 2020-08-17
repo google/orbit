@@ -4,6 +4,7 @@
 
 #include "GpuTrack.h"
 
+#include "App.h"
 #include "Capture.h"
 #include "GlCanvas.h"
 #include "Profiling.h"
@@ -55,11 +56,11 @@ GpuTrack::GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_
 }
 
 bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  bool is_same_tid_as_selected = timer_info.thread_id() == Capture::GSelectedThreadId;
+  bool is_same_tid_as_selected = timer_info.thread_id() == GOrbitApp->selected_thread_id();
   // We do not properly track the PID for GPU jobs and we still want to show
   // all jobs as active when no thread is selected, so this logic is a bit
   // different than SchedulerTrack::IsTimerActive.
-  bool no_thread_selected = Capture::GSelectedThreadId == 0;
+  bool no_thread_selected = GOrbitApp->selected_thread_id() == -1;
 
   return is_same_tid_as_selected || no_thread_selected;
 }

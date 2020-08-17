@@ -69,59 +69,59 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
   return (m_Size[0] / worldWidth) * screenSize;
 }
 
-void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
-                   bool a_RightJustify, bool isInactive, unsigned int a_ID, bool a_IsPicking,
-                   bool a_IsHighlighted) {
-  bool isCoreActivity = timer_info_.type() == TimerInfo::kCoreActivity;
-  bool isSameThreadIdAsSelected =
-      isCoreActivity && timer_info_.thread_id() == Capture::GSelectedThreadId;
+void TextBox::Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x, bool visible,
+                   bool right_justify, bool is_inactive, unsigned int id, bool is_picking,
+                   bool is_highlighted) {
+  bool is_core_activity = timer_info_.type() == TimerInfo::kCoreActivity;
+  bool is_same_thread_id_as_selected =
+      is_core_activity && timer_info_.thread_id() == GOrbitApp->selected_thread_id();
 
-  if (Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected) {
-    isInactive = true;
+  if (GOrbitApp->selected_thread_id() != -1 && is_core_activity && !is_same_thread_id_as_selected) {
+    is_inactive = true;
   }
 
   static unsigned char g = 100;
   Color grey(g, g, g, 255);
-  static Color selectionColor(0, 128, 255, 255);
+  static Color selection_color(0, 128, 255, 255);
 
-  Color col = isSameThreadIdAsSelected ? m_Color : isInactive ? grey : m_Color;
+  Color col = is_same_thread_id_as_selected ? m_Color : is_inactive ? grey : m_Color;
 
   if (this == Capture::GSelectedTextBox) {
-    col = selectionColor;
+    col = selection_color;
   }
 
-  float z = a_IsHighlighted ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
-            : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                            : GlCanvas::Z_VALUE_BOX_ACTIVE;
+  float z = is_highlighted
+                ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
+                : is_inactive ? GlCanvas::Z_VALUE_BOX_INACTIVE : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
   Color color = col;
-  if (a_IsPicking) {
-    memcpy(&color[0], &a_ID, sizeof(unsigned int));
+  if (is_picking) {
+    memcpy(&color[0], &id, sizeof(unsigned int));
     color[3] = 255;
   }
 
-  if (a_Visible) {
+  if (visible) {
     Box box(m_Pos, m_Size, z);
     // TODO: This should be pickable??
     batcher->AddBox(box, color);
 
-    static Color s_Color(255, 255, 255, 255);
+    static Color a_color(255, 255, 255, 255);
 
-    float posX = std::max(m_Pos[0], a_MinX);
-    if (a_RightJustify) {
-      posX += m_Size[0];
+    float pos_x = std::max(m_Pos[0], min_x);
+    if (right_justify) {
+      pos_x += m_Size[0];
     }
 
-    float maxSize = m_Pos[0] + m_Size[0] - posX;
+    float max_size = m_Pos[0] + m_Size[0] - pos_x;
 
     const FunctionInfo* func =
         Capture::capture_data_.GetSelectedFunction(timer_info_.function_address());
     std::string function_name = func != nullptr ? FunctionUtils::GetDisplayName(*func) : "";
     std::string text = absl::StrFormat("%s %s", function_name, text_.c_str());
 
-    if (!a_IsPicking && !isCoreActivity) {
-      a_TextRenderer.AddText(text.c_str(), posX, m_TextY == FLT_MAX ? m_Pos[1] + 1.f : m_TextY,
-                             GlCanvas::Z_VALUE_TEXT, s_Color, maxSize, a_RightJustify);
+    if (!is_picking && !is_core_activity) {
+      text_renderer.AddText(text.c_str(), pos_x, m_TextY == FLT_MAX ? m_Pos[1] + 1.f : m_TextY,
+                            GlCanvas::Z_VALUE_TEXT, a_color, max_size, right_justify);
     }
   }
 
