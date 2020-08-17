@@ -38,5 +38,13 @@ RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --n
     --add Microsoft.VisualStudio.Component.Windows10SDK.17763 `
     --installPath C:\BuildTools
 
+ADD https://downloads.fdossena.com/Projects/Mesa3D/Builds/MesaForWindows-x64-20.1.5.7z C:\TEMP\MesaForWindows.7z
+
+RUN choco install --no-progress --yes --ignorepackagecodes 7zip.commandline --version=16.02.0.20170209; `
+    7z x -oC:\TEMP\ C:\TEMP\MesaForWindows.7z opengl32.dll; `
+    Copy-Item -Path C:\TEMP\opengl32.dll -Destination C:\Windows\system32\opengl32.dll; `
+    Remove-Item -Path C:\TEMP\MesaForWindows.7z; `
+    Remove-Item -Path C:\TEMP\opengl32.dll
+
 
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
