@@ -30,23 +30,20 @@ using ::ElfUtils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
-uint64_t FileSize(const std::string& file) {
-  struct stat stat_buf;
-  int ret = stat(file.c_str(), &stat_buf);
-  return ret == 0 ? stat_buf.st_size : 0;
-}
-}  // namespace
-
-ErrorMessageOr<std::vector<std::string>> ReadProcMaps(pid_t pid) {
-  std::filesystem::path maps_path{absl::StrFormat("/proc/%d/maps", pid)};
-  OUTCOME_TRY(maps_string, ReadFileToString(maps_path));
-  return absl::StrSplit(maps_string, '\n');
+ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
+  struct stat stat_buf {};
+  int ret = stat(file_path.c_str(), &stat_buf);
+  if (ret != 0) {
+    return ErrorMessage(absl::StrFormat("Unable to call stat with file \"%s\": %s", file_path,
+                                        SafeStrerror(errno)));
+  }
+  return outcome::success(stat_buf.st_size);
 }
 
 ErrorMessageOr<std::string> ExecuteCommand(const std::string& cmd) {
   // TODO (antonrohr): check exit code of executed cmd. If exit code is not 0,
   //  return failure
-  std::array<char, 128> buffer;
+  std::array<char, 128> buffer{};
   std::string result;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
   if (!pipe) {
@@ -59,23 +56,25 @@ ErrorMessageOr<std::string> ExecuteCommand(const std::string& cmd) {
   }
   return outcome::success(result);
 }
+}  // namespace
 
-ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
+ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
+  std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%d/maps", pid)};
+  OUTCOME_TRY(proc_maps_data, ReadFileToString(proc_maps_path));
+  return ParseMaps(proc_maps_data);
+}
+
+ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_data) {
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
     bool is_executable;
   };
 
+  const std::vector<std::string> proc_maps = absl::StrSplit(proc_maps_data, '\n');
+
   std::map<std::string, AddressRange> address_map;
-
-  const auto proc_maps = ReadProcMaps(pid);
-  if (!proc_maps) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to read /proc/%d/maps: %s", pid, proc_maps.error().message()));
-  }
-
-  for (const std::string& line : proc_maps.value()) {
+  for (const std::string& line : proc_maps) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     // tokens[4] is the inode column. If inode equals 0, then the memory is not
     // mapped to a file (might be heap, stack or something else)
@@ -106,8 +105,8 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
     if (!std::filesystem::exists(module_path)) continue;
-    uint64_t file_size = FileSize(module_path);
-    if (file_size == 0) continue;
+    ErrorMessageOr<uint64_t> file_size = FileSize(module_path);
+    if (!file_size) continue;
 
     ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(module_path);
     if (!elf_file) {
@@ -120,7 +119,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     ModuleInfo module_info;
     module_info.set_name(std::filesystem::path{module_path}.filename());
     module_info.set_file_path(module_path);
-    module_info.set_file_size(file_size);
+    module_info.set_file_size(file_size.value());
     module_info.set_address_start(address_range.start_address);
     module_info.set_address_end(address_range.end_address);
     module_info.set_build_id(elf_file.value()->GetBuildId());
@@ -132,24 +131,31 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
 }
 
 ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization() {
-  const std::string cmd = "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
-  OUTCOME_TRY(result, ExecuteCommand(cmd));
+  const std::string cmd = "top -b -n 1 -w512 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
+  OUTCOME_TRY(top_data, ExecuteCommand(cmd));
+  return GetCpuUtilization(top_data);
+}
 
+ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization(std::string_view top_data) {
   std::unordered_map<pid_t, double> process_map;
-
-  for (const auto& line : absl::StrSplit(result, '\n')) {
+  for (const auto& line : absl::StrSplit(top_data, '\n')) {
+    if (line.empty()) continue;
     std::vector<std::string> tokens = absl::StrSplit(line, ',');
-    if (tokens.size() > 8) {
-      pid_t pid = strtol(tokens[0].c_str(), nullptr, 10);
-      double cpu = strtod(tokens[8].c_str(), nullptr);
-      process_map[pid] = cpu;
+    if (tokens.size() != 12) {
+      return ErrorMessage(
+          "Unable to determine cpu utilization, wrong format from top "
+          "command.");
     }
+
+    pid_t pid = strtol(tokens[0].c_str(), nullptr, 10);
+    double cpu = strtod(tokens[8].c_str(), nullptr);
+    process_map[pid] = cpu;
   }
 
   return process_map;
 }
 
-ErrorMessageOr<std::string> GetExecutablePath(int32_t pid) {
+ErrorMessageOr<Path> GetExecutablePath(int32_t pid) {
   char buffer[PATH_MAX];
 
   ssize_t length = readlink(absl::StrFormat("/proc/%d/exe", pid).c_str(), buffer, sizeof(buffer));
@@ -158,7 +164,7 @@ ErrorMessageOr<std::string> GetExecutablePath(int32_t pid) {
                                         pid, SafeStrerror(errno)));
   }
 
-  return std::string(buffer, length);
+  return Path{std::string(buffer, length)};
 }
 
 ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) {

@@ -61,3 +61,20 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 strip_symbols(OrbitService)
+
+add_executable(OrbitServiceTests)
+target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp)
+
+target_link_libraries(OrbitServiceTests PRIVATE 
+        ElfUtils
+        OrbitBase
+        OrbitProtos
+        GTest::Main)
+
+add_custom_command(TARGET OrbitServiceTests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
+        $<TARGET_FILE_DIR:OrbitServiceTests>/testdata)
+
+register_test(OrbitServiceTests)
