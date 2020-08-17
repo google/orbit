@@ -38,6 +38,8 @@ if [ -n "$1" ]; then
   readonly MOUNT_POINT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" >/dev/null 2>&1 && pwd )"
   readonly KEYSTORE_PATH="${MOUNT_POINT}/keystore"
 
+  export QT_QPA_PLATFORM=offscreen
+
   if [ -z "$BUILD_TYPE" ]; then
     readonly BUILD_TYPE="$(basename "$KOKORO_JOB_NAME")"
   fi
