@@ -66,9 +66,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   ui->HomeHorizontalSplitter->setSizes(sizes);
   ui->splitter_2->setSizes(sizes);
 
-  QStatusBar* status_bar = new QStatusBar(this);
-  setStatusBar(status_bar);
-  status_listener_ = StatusListenerImpl::Create(status_bar);
+  status_listener_ = StatusListenerImpl::Create(statusBar());
 
   GOrbitApp->SetStatusListener(status_listener_.get());
 
