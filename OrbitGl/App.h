@@ -203,6 +203,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
   [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
 
+  void SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions);
+  [[nodiscard]] bool IsFunctionVisible(uint64_t function_address);
+
  private:
   void LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
                           const std::shared_ptr<orbit_client_protos::PresetFile>& preset);

@@ -169,11 +169,13 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   // Clear the old capture
   GOrbitApp->ClearSelectedFunctions();
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
+  absl::flat_hash_set<uint64_t> visible_functions;
   for (const auto& function : capture_info.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
     selected_functions[address] = function;
+    visible_functions.insert(address);
   }
-  Capture::GVisibleFunctionsMap = selected_functions;
+  GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
 
   absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
       capture_info.function_stats().begin(), capture_info.function_stats().end()};
