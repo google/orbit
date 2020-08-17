@@ -41,7 +41,7 @@
 #define FATAL(format, ...)                \
   do {                                    \
     LOG("Fatal: " format, ##__VA_ARGS__); \
-    abort();                              \
+    PLATFORM_ABORT();                     \
   } while (0)
 
 #define UNREACHABLE() FATAL("Unreachable code")
