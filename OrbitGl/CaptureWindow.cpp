@@ -148,7 +148,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   PickingId pickId = PickingId::FromPixelValue(value);
 
   Capture::GSelectedTextBox = nullptr;
-  GOrbitApp->set_selected_thread_id(0);
+  GOrbitApp->set_selected_thread_id(-1);
 
   Pick(pickId, a_X, a_Y);
 

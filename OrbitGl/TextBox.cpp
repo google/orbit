@@ -76,7 +76,7 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x, b
   bool is_same_thread_id_as_selected =
       is_core_activity && timer_info_.thread_id() == GOrbitApp->selected_thread_id();
 
-  if (GOrbitApp->selected_thread_id() != 0 && is_core_activity && !is_same_thread_id_as_selected) {
+  if (GOrbitApp->selected_thread_id() != -1 && is_core_activity && !is_same_thread_id_as_selected) {
     is_inactive = true;
   }
 

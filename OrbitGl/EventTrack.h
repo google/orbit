@@ -41,7 +41,7 @@ class EventTrack : public Track {
  protected:
   TextBox m_ThreadName;
   GlCanvas* m_Canvas;
-  ThreadID thread_id_;
+  int32_t thread_id_;
   Vec2 m_Pos;
   Vec2 m_Size;
   Vec2 m_MousePos[2];

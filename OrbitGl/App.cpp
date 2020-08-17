@@ -595,7 +595,7 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
-  set_selected_thread_id(0);
+  set_selected_thread_id(-1);
   Capture::ClearCaptureData();
 
   if (GCurrentTimeGraph != nullptr) {

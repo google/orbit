@@ -32,7 +32,8 @@ bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
 
-  return is_same_tid_as_selected || (GOrbitApp->selected_thread_id() == 0 && is_same_pid_as_target);
+  return is_same_tid_as_selected ||
+         (GOrbitApp->selected_thread_id() == -1 && is_same_pid_as_target);
 }
 
 Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
