@@ -56,7 +56,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   int32_t pid = request->process_id();
   LOG("Sending modules for process %d", pid);
 
-  const auto module_infos = utils::ListModules(pid);
+  const auto module_infos = utils::ReadModules(pid);
   if (!module_infos) {
     return Status(StatusCode::NOT_FOUND, module_infos.error().message());
   }

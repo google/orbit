@@ -82,7 +82,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     if (file_path_result) {
       process.set_full_path(std::move(file_path_result.value()));
 
-      const auto& elf_file = ElfUtils::ElfFile::Create(file_path_result.value());
+      const auto& elf_file = ElfUtils::ElfFile::Create(file_path_result.value().string());
       if (elf_file) {
         process.set_is_64_bit(elf_file.value()->Is64Bit());
       } else {

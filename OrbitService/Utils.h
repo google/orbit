@@ -18,12 +18,14 @@
 #include "module.pb.h"
 
 namespace orbit_service::utils {
-ErrorMessageOr<std::string> ExecuteCommand(const std::string& cmd);
-ErrorMessageOr<std::vector<std::string>> ReadProcMaps(pid_t pid);
-ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ListModules(int32_t pid);
+using Path = std::filesystem::path;
+ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t pid);
+ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
+    std::string_view proc_maps_data);
 ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization();
-ErrorMessageOr<std::string> GetExecutablePath(int32_t pid);
-ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name);
+ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization(std::string_view top_data);
+ErrorMessageOr<Path> GetExecutablePath(int32_t pid);
+ErrorMessageOr<std::string> ReadFileToString(const Path& file_name);
 bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
                        uint64_t* num_bytes_read);
 }  // namespace orbit_service::utils
