@@ -338,8 +338,9 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
   ui->samplingReport->Initialize(callstack_data_view, std::move(sampling_report));
   ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
-  // Automatically switch to sampling tab if not already in live tab.
-  if (ui->RightTabWidget->currentWidget() != ui->liveTab) {
+  // Switch to sampling tab if sampling report is not empty and if not already in live tab.
+  bool has_samples = sampling_report->HasSamples();
+  if (has_samples && (ui->RightTabWidget->currentWidget() != ui->liveTab)) {
     ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
   }
 }

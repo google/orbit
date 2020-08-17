@@ -602,7 +602,6 @@ void OrbitApp::ClearCapture() {
   // Trigger deallocation of previous sampling related data.
   sampling_report_ = nullptr;
   auto empty_sampling_profiler = std::make_shared<SamplingProfiler>();
-  Capture::GSamplingProfiler = empty_sampling_profiler;
   AddSamplingReport(empty_sampling_profiler);
   AddTopDownView(*empty_sampling_profiler);
 

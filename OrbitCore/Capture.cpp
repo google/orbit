@@ -60,7 +60,6 @@ void Capture::FinalizeCapture() {
 void Capture::ClearCaptureData() {
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
-  capture_data_ = CaptureData();
 }
 
 void Capture::PreSave() {
