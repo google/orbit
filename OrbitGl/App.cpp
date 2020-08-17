@@ -60,7 +60,8 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
                    std::unique_ptr<MainThreadExecutor> main_thread_executor)
     : options_(std::move(options)), main_thread_executor_(std::move(main_thread_executor)) {
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
-  data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
+  main_thread_id_ = std::this_thread::get_id();
+  data_manager_ = std::make_unique<DataManager>(main_thread_id_);
 }
 
 OrbitApp::~OrbitApp() {
@@ -664,9 +665,15 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
 
 void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
                                   const std::shared_ptr<PresetFile>& preset) {
-  thread_pool_->Schedule([this, process_id, module, preset]() {
+  ScopedStatus scoped_status =
+      CreateScopedStatus(absl::StrFormat("Loading symbols for \"%s\"...", module->m_FullName));
+  thread_pool_->Schedule([this, process_id, module, preset,
+                          scoped_status = std::move(scoped_status)]() mutable {
     const std::string& module_path = module->m_FullName;
     const std::string& build_id = module->m_DebugSignature;
+
+    scoped_status.UpdateMessage(
+        absl::StrFormat("Looking for debug info file for \"%s\"...", module_path));
 
     const auto result = process_manager_->FindDebugInfoFile(module_path, build_id);
 
@@ -684,10 +691,14 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
     LOG("Found file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
     main_thread_executor_->Schedule([this, module, module_path, build_id, process_id, preset,
-                                     debug_file_path]() {
+                                     debug_file_path,
+                                     scoped_status = std::move(scoped_status)]() mutable {
       const std::string local_debug_file_path = symbol_helper_.GenerateCachedFileName(module_path);
 
       {
+        scoped_status.UpdateMessage(
+            absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)", module_path,
+                            debug_file_path));
         SCOPE_TIMER_LOG(absl::StrFormat("Copying %s", debug_file_path));
         auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path);
         if (!scp_result) {
@@ -698,6 +709,8 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
         }
       }
 
+      scoped_status.UpdateMessage(
+          absl::StrFormat(R"(Loading symbols from "%s"...)", debug_file_path));
       const auto result = symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, build_id);
       if (!result) {
         SendErrorToUi(
@@ -747,6 +760,8 @@ void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr
     // TODO (159889010) Move symbol loading off the main thread.
     const std::string& module_path = module->m_FullName;
     const std::string& build_id = module->m_DebugSignature;
+    auto scoped_status = CreateScopedStatus(
+        absl::StrFormat("Trying to find symbols for \"%s\" on local machine...", module_path));
     auto symbols = symbol_helper_.LoadUsingSymbolsPathFile(module_path, build_id);
 
     // Try loading from the cache
@@ -984,3 +999,9 @@ void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) 
 }
 
 bool OrbitApp::IsCapturing() const { return capture_client_->IsCapturing(); }
+
+ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(status_listener_ != nullptr);
+  return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
+}

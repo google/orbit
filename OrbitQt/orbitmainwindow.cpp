@@ -15,6 +15,7 @@
 #include <QMouseEvent>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QStatusBar>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -24,6 +25,7 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "SamplingReport.h"
+#include "StatusListenerImpl.h"
 #include "TopDownViewItemModel.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
@@ -63,6 +65,12 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   ui->HomeVerticalSplitter->setSizes(sizes);
   ui->HomeHorizontalSplitter->setSizes(sizes);
   ui->splitter_2->setSizes(sizes);
+
+  QStatusBar* status_bar = new QStatusBar(this);
+  setStatusBar(status_bar);
+  status_listener_ = StatusListenerImpl::Create(status_bar);
+
+  GOrbitApp->SetStatusListener(status_listener_.get());
 
   GOrbitApp->SetCaptureStartedCallback([this] {
     ui->actionToggle_Capture->setIcon(icon_stop_capture_);
@@ -251,7 +259,7 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   // Filter functions.
   toolbar->addWidget(CreateSpacer(toolbar));
   toolbar->addAction(CreateDummyAction(icon_search, toolbar));
-  filter_functions_line_edit_ = new QLineEdit();
+  filter_functions_line_edit_ = new QLineEdit(toolbar);
   filter_functions_line_edit_->setClearButtonEnabled(true);
   filter_functions_line_edit_->setPlaceholderText("filter functions");
   SetFontSize(filter_functions_line_edit_, kFontSize);
