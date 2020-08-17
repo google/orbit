@@ -131,8 +131,9 @@ target_sources(OrbitGlTests PRIVATE
                PickingManagerTest.h)
 
 target_sources(OrbitGlTests PRIVATE
+               BatcherTest.cpp
                PickingManagerTest.cpp
-               BatcherTest.cpp)
+               ScopedStatusTest.cpp)
 
 target_link_libraries(
   OrbitGlTests
