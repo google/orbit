@@ -55,6 +55,16 @@ void DataManager::set_selected_functions(absl::flat_hash_set<uint64_t> selected_
   selected_functions_ = std::move(selected_functions);
 }
 
+void DataManager::set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  visible_functions_ = std::move(visible_functions);
+}
+
+bool DataManager::IsFunctionVisible(uint64_t function_address) const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  return visible_functions_.contains(function_address);
+}
+
 void DataManager::ClearSelectedFunctions() {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_functions_ = absl::flat_hash_set<uint64_t>();

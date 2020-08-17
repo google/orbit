@@ -37,7 +37,6 @@ class Capture {
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
-  static absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> GVisibleFunctionsMap;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
 };

@@ -898,6 +898,15 @@ void OrbitApp::ClearSelectedFunctions() { data_manager_->ClearSelectedFunctions(
   return data_manager_->IsFunctionSelected(func.address);
 }
 
+void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions) {
+  data_manager_->set_visible_functions(std::move(visible_functions));
+  NeedsRedraw();
+}
+
+[[nodiscard]] bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
+  return data_manager_->IsFunctionVisible(function_address);
+}
+
 void OrbitApp::UpdateSamplingReport() {
   if (sampling_report_ != nullptr) {
     sampling_report_->UpdateReport();

@@ -15,12 +15,9 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetFile;
-using orbit_client_protos::PresetInfo;
 
 CaptureData Capture::capture_data_;
-absl::flat_hash_map<uint64_t, FunctionInfo> Capture::GVisibleFunctionsMap;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
 

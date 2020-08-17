@@ -272,13 +272,12 @@ void LiveFunctionsDataView::DoFilter() {
   OnSort(sorting_column_, {});
 
   // Filter drawn textboxes
-  Capture::GVisibleFunctionsMap.clear();
+  absl::flat_hash_set<uint64_t> visible_functions;
   for (size_t i = 0; i < indices_.size(); ++i) {
     FunctionInfo* func = GetFunction(i);
-    Capture::GVisibleFunctionsMap[FunctionUtils::GetAbsoluteAddress(*func)] = *func;
+    visible_functions.insert(FunctionUtils::GetAbsoluteAddress(*func));
   }
-
-  GOrbitApp->NeedsRedraw();
+  GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
 }
 
 void LiveFunctionsDataView::OnDataChanged() {

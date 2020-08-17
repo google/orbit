@@ -65,8 +65,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  return Capture::GVisibleFunctionsMap.find(timer_info.function_address()) !=
-         Capture::GVisibleFunctionsMap.end();
+  return GOrbitApp->IsFunctionVisible(timer_info.function_address());
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
