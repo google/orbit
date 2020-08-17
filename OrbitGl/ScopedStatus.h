@@ -37,12 +37,11 @@ class ScopedStatus final {
  public:
   ScopedStatus() = default;
   explicit ScopedStatus(MainThreadExecutor* main_thread_executor, StatusListener* status_listener,
-                        const std::string& status_message,
-                        std::thread::id main_thread_id = std::this_thread::get_id()) {
+                        const std::string& status_message) {
     data_ = std::make_unique<Data>();
     data_->main_thread_executor = main_thread_executor;
     data_->status_listener = status_listener;
-    data_->main_thread_id = main_thread_id;
+    data_->main_thread_id = std::this_thread::get_id();
     data_->status_id = status_listener->AddStatus(status_message);
   }
 
