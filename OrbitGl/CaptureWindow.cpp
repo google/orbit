@@ -147,7 +147,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   std::memcpy(&value, &pixels[0], sizeof(uint32_t));
   PickingId pickId = PickingId::FromPixelValue(value);
 
-  Capture::GSelectedTextBox = nullptr;
+  GOrbitApp->SelectTextBox(nullptr);
   GOrbitApp->set_selected_thread_id(-1);
 
   Pick(pickId, a_X, a_Y);
@@ -159,7 +159,7 @@ void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
   PickingType type = a_PickingID.type;
 
   Batcher& batcher = GetBatcherById(a_PickingID.batcher_id);
-  TextBox* text_box = batcher.GetTextBox(a_PickingID);
+  const TextBox* text_box = batcher.GetTextBox(a_PickingID);
   if (text_box) {
     SelectTextBox(text_box);
   } else if (type == PickingType::kPickable) {
@@ -167,9 +167,9 @@ void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
   }
 }
 
-void CaptureWindow::SelectTextBox(class TextBox* text_box) {
+void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   if (text_box == nullptr) return;
-  Capture::GSelectedTextBox = text_box;
+  GOrbitApp->SelectTextBox(text_box);
   GOrbitApp->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
@@ -417,37 +417,42 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift
         break;
       case 18:  // Left
         if (a_Shift) {
-          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameFunction);
         } else if (a_Alt) {
-          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
-          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameDepth);
         }
         break;
       case 20:  // Right
         if (a_Shift) {
-          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox, TimeGraph::JumpDirection::kNext,
+          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+                                        TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameFunction);
         } else if (a_Alt) {
-          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox, TimeGraph::JumpDirection::kNext,
+          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+                                        TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
-          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox, TimeGraph::JumpDirection::kNext,
+          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+                                        TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameDepth);
         }
         break;
       case 19:  // Up
-        time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox, TimeGraph::JumpDirection::kTop,
+        time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+                                      TimeGraph::JumpDirection::kTop,
                                       TimeGraph::JumpScope::kSameThread);
         break;
       case 21:  // Down
-        time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox, TimeGraph::JumpDirection::kDown,
+        time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+                                      TimeGraph::JumpDirection::kDown,
                                       TimeGraph::JumpScope::kSameThread);
         break;
     }

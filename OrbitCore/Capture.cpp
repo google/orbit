@@ -18,7 +18,6 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::PresetFile;
 
 CaptureData Capture::capture_data_;
-TextBox* Capture::GSelectedTextBox = nullptr;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
@@ -52,8 +51,6 @@ void Capture::FinalizeCapture() {
     Capture::GSamplingProfiler->ProcessSamples();
   }
 }
-
-void Capture::ClearCaptureData() { GSelectedTextBox = nullptr; }
 
 void Capture::PreSave() {
   // Add selected functions' exact address to sampling profiler

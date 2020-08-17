@@ -6,6 +6,7 @@
 
 #include <limits>
 
+#include "App.h"
 #include "Capture.h"
 #include "EventTrack.h"
 #include "FunctionUtils.h"
@@ -118,7 +119,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         float world_timer_y = GetYFromDepth(timer_info.depth());
 
         bool is_visible_width = normalized_length * canvas->getWidth() > 1;
-        bool is_selected = &text_box == Capture::GSelectedTextBox;
+        bool is_selected = &text_box == GOrbitApp->selected_text_box();
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, box_height_);
@@ -240,12 +241,12 @@ std::shared_ptr<TimerChain> TimerTrack::GetTimers(uint32_t depth) const {
   return nullptr;
 }
 
-const TextBox* TimerTrack::GetUp(TextBox* text_box) const {
+const TextBox* TimerTrack::GetUp(const TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   return GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
 }
 
-const TextBox* TimerTrack::GetDown(TextBox* text_box) const {
+const TextBox* TimerTrack::GetDown(const TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }

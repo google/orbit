@@ -107,7 +107,7 @@ class Batcher {
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);
 
-  [[nodiscard]] TextBox* GetTextBox(PickingId id);
+  [[nodiscard]] const TextBox* GetTextBox(PickingId id);
 
  protected:
   void DrawLineBuffer(bool picking) const;

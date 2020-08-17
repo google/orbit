@@ -159,7 +159,7 @@ float GpuTrack::GetHeight() const {
   return layout.GetTextBoxHeight() * depth + layout.GetTrackBottomMargin();
 }
 
-const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
+const TextBox* GpuTrack::GetLeft(const TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
@@ -169,7 +169,7 @@ const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
   return nullptr;
 }
 
-const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
+const TextBox* GpuTrack::GetRight(const TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
@@ -180,7 +180,7 @@ const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
 }
 
 std::string GpuTrack::GetBoxTooltip(PickingId id) const {
-  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }

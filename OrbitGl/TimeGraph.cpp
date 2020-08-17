@@ -499,11 +499,10 @@ void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
   a_Max = GetWorldFromTick(capture_max_timestamp_);
 }
 
-void TimeGraph::Select(const TextBox* a_TextBox) {
-  TextBox* text_box = const_cast<TextBox*>(a_TextBox);
-  Capture::GSelectedTextBox = text_box;
-  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, a_TextBox);
-  VerticallyMoveIntoView(a_TextBox);
+void TimeGraph::Select(const TextBox* text_box) {
+  GOrbitApp->SelectTextBox(text_box);
+  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, text_box);
+  VerticallyMoveIntoView(text_box);
 }
 
 const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, TickType current_time,
@@ -984,7 +983,7 @@ void TimeGraph::SelectAndZoom(const TextBox* text_box) {
   Select(text_box);
 }
 
-void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
+void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction,
                                   JumpScope jump_scope) {
   const TextBox* goal = nullptr;
   if (!from) {
@@ -1037,7 +1036,7 @@ void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
   }
 }
 
-const TextBox* TimeGraph::FindPrevious(TextBox* from) {
+const TextBox* TimeGraph::FindPrevious(const TextBox* from) {
   CHECK(from);
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
@@ -1048,7 +1047,7 @@ const TextBox* TimeGraph::FindPrevious(TextBox* from) {
   return nullptr;
 }
 
-const TextBox* TimeGraph::FindNext(TextBox* from) {
+const TextBox* TimeGraph::FindNext(const TextBox* from) {
   CHECK(from);
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
@@ -1059,7 +1058,7 @@ const TextBox* TimeGraph::FindNext(TextBox* from) {
   return nullptr;
 }
 
-const TextBox* TimeGraph::FindTop(TextBox* from) {
+const TextBox* TimeGraph::FindTop(const TextBox* from) {
   CHECK(from);
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
@@ -1070,7 +1069,7 @@ const TextBox* TimeGraph::FindTop(TextBox* from) {
   return nullptr;
 }
 
-const TextBox* TimeGraph::FindDown(TextBox* from) {
+const TextBox* TimeGraph::FindDown(const TextBox* from) {
   CHECK(from);
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {

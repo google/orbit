@@ -61,7 +61,7 @@ void SchedulerTrack::UpdateBoxHeight() {
 }
 
 std::string SchedulerTrack::GetBoxTooltip(PickingId id) const {
-  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (!text_box) {
     return "";
   }

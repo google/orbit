@@ -29,7 +29,6 @@ class Capture {
       uint64_t process_id, std::string process_name,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions);
   static void FinalizeCapture();
-  static void ClearCaptureData();
   static void PreSave();
 
   static CaptureData capture_data_;
@@ -37,7 +36,6 @@ class Capture {
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
-  static class TextBox* GSelectedTextBox;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_H_

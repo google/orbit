@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "ProcessData.h"
+#include "TextBox.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 
@@ -30,6 +31,7 @@ class DataManager final {
   void set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions);
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
   void set_selected_thread_id(int32_t thread_id);
+  void set_selected_text_box(const TextBox* text_box);
 
   [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
   [[nodiscard]] const std::vector<ModuleData*>& GetModules(int32_t process_id) const;
@@ -39,6 +41,7 @@ class DataManager final {
   [[nodiscard]] const absl::flat_hash_set<uint64_t>& selected_functions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] int32_t selected_thread_id() const;
+  [[nodiscard]] const TextBox* selected_text_box() const;
 
  private:
   const std::thread::id main_thread_id_;
@@ -46,6 +49,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
   int32_t selected_thread_id_ = -1;
+  const TextBox* selected_text_box_ = nullptr;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_
