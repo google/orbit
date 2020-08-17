@@ -193,10 +193,6 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   capture_data.set_thread_names(thread_names);
   Capture::capture_data_ = std::move(capture_data);
 
-  if (Capture::GSamplingProfiler == nullptr) {
-    Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
-  }
-  Capture::GSamplingProfiler->ClearCallstacks();
   for (CallstackInfo callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     Capture::GSamplingProfiler->AddUniqueCallStack(unique_callstack);

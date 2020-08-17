@@ -45,9 +45,6 @@ ErrorMessageOr<void> Capture::StartCapture(
   }
 
   capture_data_ = CaptureData(process_id, std::move(process_name), std::move(selected_functions));
-
-  Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
-
   return outcome::success();
 }
 

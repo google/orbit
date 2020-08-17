@@ -99,6 +99,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
     finalizing_capture_dialog->close();
     ui->actionToggle_Capture->setDisabled(false);
     ui->actionToggle_Capture->setIcon(icon_start_capture_);
+    ui->actionClear_Capture->setDisabled(false);
+    ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
     ui->actionSave_Preset_As->setDisabled(false);
