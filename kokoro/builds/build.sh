@@ -199,5 +199,5 @@ else
     --isolation=process --storage-opt 'size=50GB' \
     ${CONTAINER} \
     'C:/Program Files/Git/bin/bash.exe' -c \
-    "/c/mnt/github/orbitprofiler/kokoro/builds/build.sh in_docker" | tr -d '\r'
+    "/c/mnt/github/orbitprofiler/kokoro/builds/build.sh in_docker"
 fi
