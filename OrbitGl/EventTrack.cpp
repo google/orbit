@@ -4,6 +4,7 @@
 
 #include "EventTrack.h"
 
+#include "App.h"
 #include "Capture.h"
 #include "EventTracer.h"
 #include "GlCanvas.h"
@@ -72,7 +73,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
 
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
+      GEventTracer.GetEventBuffer().GetCallstacks()[thread_id_];
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
@@ -90,7 +91,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     // Draw selected events
     Color selectedColor[2];
     Fill(selectedColor, kGreenSelection);
-    for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
+    for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(thread_id_)) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), m_Pos[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
     }
@@ -123,10 +124,10 @@ void EventTrack::SetPos(float a_X, float a_Y) {
 
 void EventTrack::SetSize(float a_SizeX, float a_SizeY) { m_Size = Vec2(a_SizeX, a_SizeY); }
 
-void EventTrack::OnPick(int a_X, int a_Y) {
-  Capture::GSelectedThreadId = m_ThreadId;
-  Vec2& mousePos = m_MousePos[0];
-  m_Canvas->ScreenToWorld(a_X, a_Y, mousePos[0], mousePos[1]);
+void EventTrack::OnPick(int x, int y) {
+  GOrbitApp->set_selected_thread_id(thread_id_);
+  Vec2& mouse_pos = m_MousePos[0];
+  m_Canvas->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
   m_MousePos[1] = m_MousePos[0];
   m_Picked = true;
 }
@@ -148,13 +149,13 @@ void EventTrack::SelectEvents() {
   Vec2& from = m_MousePos[0];
   Vec2& to = m_MousePos[1];
 
-  time_graph_->SelectEvents(from[0], to[0], m_ThreadId);
+  time_graph_->SelectEvents(from[0], to[0], thread_id_);
 }
 
 bool EventTrack::IsEmpty() const {
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   const std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
+      GEventTracer.GetEventBuffer().GetCallstacks()[thread_id_];
   return callstacks.empty();
 }
 

@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_DATA_MANAGER_H_
 #define ORBIT_GL_DATA_MANAGER_H_
 
+#include <CallstackTypes.h>
+
 #include <thread>
 
 #include "ProcessData.h"
@@ -29,6 +31,7 @@ class DataManager final {
   void ClearSelectedFunctions();
   void set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions);
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
+  void set_selected_thread_id(ThreadID thread_id);
 
   [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
   [[nodiscard]] const std::vector<ModuleData*>& GetModules(int32_t process_id) const;
@@ -37,12 +40,14 @@ class DataManager final {
   [[nodiscard]] bool IsFunctionSelected(uint64_t function_address) const;
   [[nodiscard]] const absl::flat_hash_set<uint64_t>& selected_functions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
+  [[nodiscard]] ThreadID selected_thread_id() const;
 
  private:
   const std::thread::id main_thread_id_;
   absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
+  ThreadID selected_thread_id_ = 0;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

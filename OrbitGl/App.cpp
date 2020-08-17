@@ -595,6 +595,7 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
+  set_selected_thread_id(0);
   Capture::ClearCaptureData();
 
   if (GCurrentTimeGraph != nullptr) {
@@ -905,6 +906,12 @@ void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functio
 
 [[nodiscard]] bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
   return data_manager_->IsFunctionVisible(function_address);
+}
+
+ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_thread_id(); }
+
+void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
+  return data_manager_->set_selected_thread_id(thread_id);
 }
 
 void OrbitApp::UpdateSamplingReport() {

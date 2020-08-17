@@ -4,6 +4,7 @@
 
 #include "SchedulerTrack.h"
 
+#include "App.h"
 #include "Capture.h"
 #include "EventTrack.h"
 #include "FunctionUtils.h"
@@ -26,12 +27,12 @@ float SchedulerTrack::GetHeight() const {
 }
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  bool is_same_tid_as_selected = timer_info.thread_id() == Capture::GSelectedThreadId;
+  bool is_same_tid_as_selected = timer_info.thread_id() == GOrbitApp->selected_thread_id();
   int32_t capture_process_id = Capture::capture_data_.process_id();
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
 
-  return is_same_tid_as_selected || (Capture::GSelectedThreadId == 0 && is_same_pid_as_target);
+  return is_same_tid_as_selected || (GOrbitApp->selected_thread_id() == 0 && is_same_pid_as_target);
 }
 
 Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
