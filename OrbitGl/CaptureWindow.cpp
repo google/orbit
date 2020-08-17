@@ -183,7 +183,7 @@ void CaptureWindow::SelectTextBox(class TextBox* text_box) {
 
 void CaptureWindow::Hover(int a_X, int a_Y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
-  uint8_t pixels[1 * 1 * 4];
+  uint8_t pixels[1 * 1 * 4] = {0, 0, 0, 0};
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
 
   PickingId pickId = absl::bit_cast<PickingId>(pixels);
