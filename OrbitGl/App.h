@@ -260,8 +260,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   CaptureWindow* capture_window_ = nullptr;
 
-  std::shared_ptr<class SamplingReport> sampling_report_;
-  std::shared_ptr<class SamplingReport> selection_report_;
+  std::shared_ptr<SamplingReport> sampling_report_;
+  std::shared_ptr<SamplingReport> selection_report_;
   std::map<std::string, std::string> file_mapping_;
 
   absl::flat_hash_set<std::string> modules_currently_loading_;
