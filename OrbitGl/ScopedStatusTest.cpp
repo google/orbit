@@ -91,6 +91,23 @@ TEST(ScopedStatus, MoveAssignment) {
   }
 }
 
+TEST(ScopedStatus, SelfMoveAssign) {
+  MockStatusListener status_listener{};
+  MockMainThreadExecutor main_thread_executor{};
+  EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
+  EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
+  EXPECT_CALL(status_listener, ClearStatus).Times(1);
+
+  {
+    ScopedStatus status1(&main_thread_executor, &status_listener, "Initial message");
+    status1.UpdateMessage("Updated message");
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wself-move"
+    status1 = std::move(status1);
+#pragma GCC diagnostic pop
+  }
+}
+
 TEST(ScopedStatus, Unitialized) { ScopedStatus status{}; }
 
 TEST(ScopedStatus, UpdateUnutialized) {
