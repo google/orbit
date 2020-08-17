@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include "absl/base/casts.h"
+#include <cstring>
 
 // Orbit API (header-only)
 //
@@ -92,10 +92,16 @@ ORBIT_STUB void TrackDoubleAsInt64(const char*, int64_t) { ORBIT_NOOP(); }
 // Convert floating point arguments to integer arguments as we can't access
 // XMM registers with our current dynamic instrumentation on Linux (uprobes).
 inline void TrackFloat(const char* name, float value) {
-  TrackFloatAsInt(name, absl::bit_cast<int32_t>(value));
+  int int_value;
+  static_assert(sizeof(value) == sizeof(int_value));
+  std::memcpy(&int_value, &value, sizeof(value));
+  TrackFloatAsInt(name, int_value);
 }
 inline void TrackDouble(const char* name, double value) {
-  TrackDoubleAsInt64(name, absl::bit_cast<int64_t>(value));
+  int64_t int_value;
+  static_assert(sizeof(value) == sizeof(int_value));
+  std::memcpy(&int_value, &value, sizeof(value));
+  TrackDoubleAsInt64(name, int_value);
 }
 
 struct Scope {
