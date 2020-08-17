@@ -15,10 +15,14 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetFile;
+using orbit_client_protos::PresetInfo;
 
 CaptureData Capture::capture_data_;
+absl::flat_hash_map<uint64_t, FunctionInfo> Capture::GVisibleFunctionsMap;
 TextBox* Capture::GSelectedTextBox = nullptr;
+ThreadID Capture::GSelectedThreadId;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
@@ -53,7 +57,11 @@ void Capture::FinalizeCapture() {
   }
 }
 
-void Capture::ClearCaptureData() { GSelectedTextBox = nullptr; }
+void Capture::ClearCaptureData() {
+  GSelectedTextBox = nullptr;
+  GSelectedThreadId = 0;
+  capture_data_ = CaptureData();
+}
 
 void Capture::PreSave() {
   // Add selected functions' exact address to sampling profiler
