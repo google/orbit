@@ -166,7 +166,8 @@ void ProcessManagerImpl::WorkerFunction() {
 
     grpc::Status status = process_service_->GetProcessList(context.get(), request, &response);
     if (!status.ok()) {
-      ERROR("gRPC call to GetProcessList failed: %s", status.error_message());
+      ERROR("gRPC call to GetProcessList failed: %s (error_code=%d)", status.error_message(),
+            status.error_code());
       continue;
     }
 

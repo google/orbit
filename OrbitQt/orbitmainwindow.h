@@ -20,6 +20,7 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
+#include "StatusListener.h"
 #include "TopDownView.h"
 #include "servicedeploymanager.h"
 
@@ -98,7 +99,8 @@ class OrbitMainWindow : public QMainWindow {
   QIcon icon_start_capture_;
   QIcon icon_stop_capture_;
 
-  std::string m_CurrentPdbName;
+  // Status listener
+  std::unique_ptr<StatusListener> status_listener_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

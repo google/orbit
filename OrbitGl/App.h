@@ -35,6 +35,8 @@
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
 #include "SamplingReportDataView.h"
+#include "ScopedStatus.h"
+#include "StatusListener.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
@@ -171,6 +173,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     secure_copy_callback_ = std::move(callback);
   }
 
+  void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
+
   void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
@@ -220,6 +224,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
   GetSelectedFunctionsAndOrbitFunctions() const;
   ErrorMessageOr<void> SavePreset(const std::string& filename);
+  [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
   ApplicationOptions options_;
 
@@ -265,6 +270,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
+  std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
@@ -277,6 +283,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   // Temporary objects used by CaptureListener implementation
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> captured_address_infos_;
+  StatusListener* status_listener_ = nullptr;
 };
 
 extern std::unique_ptr<OrbitApp> GOrbitApp;
