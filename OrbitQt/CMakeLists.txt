@@ -133,4 +133,4 @@ target_link_libraries(
           Qt5::Core
           GTest::Main)
 
-register_test(OrbitGlTests)
+register_test(OrbitQtTests)
