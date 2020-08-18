@@ -487,22 +487,7 @@ void CaptureWindow::Draw() {
 
   time_graph_.Draw(this, GetPickingMode());
 
-  if (!m_Picking && m_SelectStart[0] != m_SelectStop[0]) {
-    TickType minTime = std::min(m_TimeStart, m_TimeStop);
-    TickType maxTime = std::max(m_TimeStart, m_TimeStop);
-
-    float from = time_graph_.GetWorldFromTick(minTime);
-    float to = time_graph_.GetWorldFromTick(maxTime);
-
-    float sizex = to - from;
-    Vec2 pos(from, m_WorldTopLeftY - m_WorldHeight);
-    Vec2 size(sizex, m_WorldHeight);
-
-    std::string time = GetPrettyTime(TicksToDuration(minTime, maxTime));
-    TextBox box(pos, size, time, Color(0, 128, 0, 128));
-    box.SetTextY(m_SelectStop[1]);
-    box.Draw(&ui_batcher_, m_TextRenderer, -FLT_MAX, true, true);
-  }
+  RenderSelectionOverlay();
 
   if (GetPickingMode() == PickingMode::kNone) {
     RenderTimeBar();
@@ -800,6 +785,36 @@ void CaptureWindow::RenderTimeBar() {
       Vec2 pos(worldX, worldY);
       ui_batcher_.AddVerticalLine(pos, height, GlCanvas::Z_VALUE_UI, Color(255, 255, 255, 255));
     }
+  }
+}
+
+void CaptureWindow::RenderSelectionOverlay() {
+  if (!m_Picking && m_SelectStart[0] != m_SelectStop[0]) {
+    TickType minTime = std::min(m_TimeStart, m_TimeStop);
+    TickType maxTime = std::max(m_TimeStart, m_TimeStop);
+
+    float from = time_graph_.GetWorldFromTick(minTime);
+    float to = time_graph_.GetWorldFromTick(maxTime);
+
+    float sizex = to - from;
+    Vec2 pos(from, m_WorldTopLeftY - m_WorldHeight);
+    Vec2 size(sizex, m_WorldHeight);
+
+    std::string text = GetPrettyTime(TicksToDuration(minTime, maxTime));
+    const Color color(0, 128, 0, 128);
+
+    Box box(pos, size, GlCanvas::Z_VALUE_BOX_ACTIVE);
+    ui_batcher_.AddBox(box, color);
+
+    static Color text_color(255, 255, 255, 255);
+    float pos_x = pos[0] + size[0];
+
+    m_TextRenderer.AddText(text.c_str(), pos_x, m_SelectStop[1], GlCanvas::Z_VALUE_TEXT, text_color,
+                           size[0], true);
+
+    static unsigned char g = 100;
+    Color grey(g, g, g, 255);
+    ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::Z_VALUE_BOX_ACTIVE, grey);
   }
 }
 

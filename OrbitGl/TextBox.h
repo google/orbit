@@ -23,10 +23,6 @@ class TextBox {
   TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color);
   TextBox(const Vec2& a_Pos, const Vec2& a_Size);
 
-  void Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x = -FLT_MAX,
-            bool visible = true, bool right_justify = false, bool is_inactive = false,
-            unsigned int id = 0xFFFFFFFF, bool is_picking = false, bool is_highlighted = false);
-
   void SetSize(const Vec2& a_Size) { size_ = a_Size; }
 
   void SetPos(const Vec2& a_Pos) { pos_ = a_Pos; }
@@ -45,18 +41,8 @@ class TextBox {
   }
   const orbit_client_protos::TimerInfo& GetTimerInfo() const { return timer_info_; }
 
-  void SetTextY(float a_Y) { text_y_ = a_Y; }
-
   void SetElapsedTimeTextLength(size_t length) { elapsed_time_text_length_ = length; }
   size_t GetElapsedTimeTextLength() const { return elapsed_time_text_length_; }
-
-  inline void SetColor(Color& color) { color_ = color; }
-  inline void SetColor(uint8_t r, uint8_t g, uint8_t b) {
-    color_[0] = r;
-    color_[1] = g;
-    color_[2] = b;
-  }
-  inline Color GetColor() { return color_; }
 
  protected:
   Vec2 pos_;

@@ -46,6 +46,7 @@ class CaptureWindow : public GlCanvas {
   void Resize(int a_Width, int a_Height) override;
   void RenderHelpUi();
   void RenderTimeBar();
+  void RenderSelectionOverlay();
   void SelectTextBox(const TextBox* text_box);
   void OnDrag(float a_Ratio);
   void OnVerticalDrag(float a_Ratio);
