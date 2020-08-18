@@ -93,6 +93,7 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, 
   }
 
   if (m_IsSelecting) {
+    ScreenToWorld(std::max(a_X, 0), std::max(a_Y, 0), worldx, worldy);
     m_SelectStop = Vec2(worldx, worldy);
     m_TimeStop = time_graph_.GetTickFromWorld(worldx);
   }
