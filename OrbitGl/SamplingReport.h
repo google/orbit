@@ -20,6 +20,7 @@ class SamplingReport {
  public:
   explicit SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
                           const CallstackData* callstack_data);
+  ~SamplingReport();
 
   void UpdateReport();
   [[nodiscard]] std::shared_ptr<SamplingProfiler> GetProfiler() const { return profiler_; };
@@ -38,6 +39,7 @@ class SamplingReport {
  protected:
   void FillReport();
   void OnCallstackIndexChanged(size_t index);
+  void ClearReport();
 
  protected:
   std::shared_ptr<SamplingProfiler> profiler_;
