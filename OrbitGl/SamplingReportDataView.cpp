@@ -206,9 +206,9 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
+    GOrbitApp->LoadModules(Capture::capture_data_.process_id(), modules);
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = Capture::GTargetProcess->GetID();
+    int32_t pid = Capture::capture_data_.process_id();
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->Disassemble(pid, *function);
     }

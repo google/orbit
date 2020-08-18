@@ -203,6 +203,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
   [[nodiscard]] std::shared_ptr<Process> FindProcessByPid(int32_t pid);
+  [[nodiscard]] int32_t GetSelectedProcessID() const {
+    return processes_data_view_->GetSelectedProcessId();
+  }
 
   // TODO(kuebler): Move them to a separate controler at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);

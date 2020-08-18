@@ -121,7 +121,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
         modules.push_back(Capture::GTargetProcess->GetModuleFromPath(module_data->file_path()));
       }
     }
-    GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
+    GOrbitApp->LoadModules(GOrbitApp->GetSelectedProcessID(), modules);
 
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
@@ -179,7 +179,7 @@ void ModulesDataView::SetModules(int32_t process_id, const std::vector<ModuleDat
 }
 
 void ModulesDataView::OnRefreshButtonClicked() {
-  GOrbitApp->UpdateProcessAndModuleList(Capture::GTargetProcess->GetID());
+  GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessID());
 }
 
 const ModuleData* ModulesDataView::GetModule(uint32_t row) const { return modules_[indices_[row]]; }

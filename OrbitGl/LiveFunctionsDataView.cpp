@@ -195,7 +195,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       GOrbitApp->DeselectFunction(*function);
     }
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = Capture::GTargetProcess->GetID();
+    int32_t pid = Capture::capture_data_.process_id();
     for (int i : item_indices) {
       const FunctionInfo& function = *GetFunction(i);
       GOrbitApp->Disassemble(pid, function);

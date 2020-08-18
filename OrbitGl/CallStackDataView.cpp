@@ -112,7 +112,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
       if (module != nullptr && module->IsLoadable() && !module->IsLoaded()) {
-        GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), {module});
+        GOrbitApp->LoadModules(Capture::capture_data_.process_id(), {module});
       }
     }
 
@@ -131,7 +131,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
     }
 
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = Capture::GTargetProcess->GetID();
+    int32_t pid = Capture::capture_data_.process_id();
     for (int i : item_indices) {
       GOrbitApp->Disassemble(pid, *GetFrameFromRow(i).function);
     }
