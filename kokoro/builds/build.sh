@@ -42,6 +42,43 @@ if [ -n "$1" ]; then
     readonly BUILD_TYPE="$(basename "$KOKORO_JOB_NAME")"
   fi
 
+  function cleanup {
+    # Delete all unnecessary files from the src/-directory.
+    # Kokoro would copy them otherwise before applying the artifacts regex
+
+    set +e # This is allowed to fail when deleting
+    if [ "${BUILD_TYPE}" == "presubmit" ]; then
+      # In the presubmit case we only spare the test-results and this script.
+      find "$MOUNT_POINT" -depth -mindepth 1 | \
+        grep -v 'orbitprofiler/kokoro' | \
+        grep -v 'testresults/' | \
+        while read file; do
+          if [[ -d $file ]]; then
+            # That might give an error message when the directory is not empty.
+            # That's okay.
+            rmdir --ignore-fail-on-non-empty "$file"
+          elif [[ -e $file ]]; then
+            rm "$file"
+          fi
+        done
+    else
+      # In the non-presubmit case we spare the whole build dir and this script.
+      find "$MOUNT_POINT" -depth -mindepth 1 | \
+        grep -v 'orbitprofiler/kokoro' | \
+        grep -v 'orbitprofiler/build' | \
+        while read file; do
+          if [[ -d $file ]]; then
+            # That might give an error message when the directory is not empty.
+            # That's okay.
+            rmdir --ignore-fail-on-non-empty "$file"
+          elif [[ -e $file ]]; then
+            rm "$file"
+          fi
+        done
+    fi
+  }
+  trap cleanup EXIT
+
   echo "Using conan profile ${CONAN_PROFILE} and performing a ${BUILD_TYPE} build."
 
   set +e
