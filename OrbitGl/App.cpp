@@ -767,6 +767,14 @@ void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr
     // TODO (159889010) Move symbol loading off the main thread.
     const std::string& module_path = module->m_FullName;
     const std::string& build_id = module->m_DebugSignature;
+    if (build_id.empty()) {
+      LOG("Warning: Module \"%s\" does not contain a build id. Orbit cannot use local symbol files "
+          "or cache symbols without a build id.",
+          module_path);
+      LoadModuleOnRemote(process_id, module, preset);
+      continue;
+    }
+
     auto scoped_status = CreateScopedStatus(
         absl::StrFormat("Trying to find symbols for \"%s\" on local machine...", module_path));
     auto symbols = symbol_helper_.LoadUsingSymbolsPathFile(module_path, build_id);
