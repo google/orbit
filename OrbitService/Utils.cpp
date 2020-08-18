@@ -28,8 +28,13 @@ namespace orbit_service::utils {
 
 using ::ElfUtils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::TracepointInfo;
 
 namespace {
+
+namespace fs = std::filesystem;
+const char* kLinuxTracingEvents = "/sys/kernel/debug/tracing/events/";
+
 ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
   struct stat stat_buf {};
   int ret = stat(file_path.c_str(), &stat_buf);
@@ -127,6 +132,22 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     result.push_back(module_info);
   }
 
+  return result;
+}
+
+ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
+  std::vector<TracepointInfo> result;
+
+  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents)) {
+    if (fs::is_directory(category)) {
+      for (const auto& name : fs::directory_iterator(category)) {
+        TracepointInfo tracepoint_info;
+        tracepoint_info.set_name(fs::path(name).filename());
+        tracepoint_info.set_category(fs::path(category).filename());
+        result.emplace_back(tracepoint_info);
+      }
+    }
+  }
   return result;
 }
 

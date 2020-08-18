@@ -15,6 +15,7 @@
 #include "module.pb.h"
 #include "process.pb.h"
 #include "symbol.pb.h"
+#include "tracepoint.pb.h"
 
 // This class is responsible for maintaining
 // process list. It periodically updates it
@@ -43,6 +44,8 @@ class ProcessManager {
 
   virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
       int32_t pid) = 0;
+
+  virtual ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> LoadTracepointList() = 0;
 
   // Get a copy of process list.
   virtual std::vector<orbit_grpc_protos::ProcessInfo> GetProcessList() const = 0;

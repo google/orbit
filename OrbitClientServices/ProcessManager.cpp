@@ -24,9 +24,12 @@ using orbit_grpc_protos::GetProcessListRequest;
 using orbit_grpc_protos::GetProcessListResponse;
 using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
+using orbit_grpc_protos::GetTracepointListRequest;
+using orbit_grpc_protos::GetTracepointListResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::ProcessService;
+using orbit_grpc_protos::TracepointInfo;
 
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
 
@@ -39,6 +42,8 @@ class ProcessManagerImpl final : public ProcessManager {
 
   std::vector<ProcessInfo> GetProcessList() const override;
   ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(int32_t pid) override;
+
+  ErrorMessageOr<std::vector<TracepointInfo>> LoadTracepointList() override;
 
   ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
                                                 uint64_t size) override;
@@ -96,6 +101,23 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(int32
   const auto& modules = response.modules();
 
   return std::vector<ModuleInfo>(modules.begin(), modules.end());
+}
+
+ErrorMessageOr<std::vector<TracepointInfo>> ProcessManagerImpl::LoadTracepointList() {
+  GetTracepointListRequest request;
+  GetTracepointListResponse response;
+
+  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  grpc::Status status = process_service_->GetTracepointList(context.get(), request, &response);
+
+  if (!status.ok()) {
+    ERROR("Grpc call failed: code=%d, message=%s", status.error_code(), status.error_message());
+    return ErrorMessage(status.error_message());
+  }
+
+  const auto& tracepoints = response.tracepoints();
+
+  return std::vector<TracepointInfo>(tracepoints.begin(), tracepoints.end());
 }
 
 std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
