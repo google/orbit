@@ -13,6 +13,9 @@
 #include "Capture.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitClientServices/ProcessManager.h"
+#include "absl/time/time.h"
 #include "capture_data.pb.h"
 
 namespace {
@@ -44,11 +47,15 @@ bool ClientGgp::InitClient() {
   }
   LOG("Created GRPC channel to %s", options_.grpc_server_address);
 
+  process_manager_ = ProcessManager::Create(grpc_channel_, options_.process_refresh_timeout);
+
   // Initialisations needed for capture to work
   InitCapture();
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
   return true;
 }
+
+void ClientGgp::ShutdownClient() { process_manager_->Shutdown(); }
 
 // Client requests to start the capture
 bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {

@@ -6,10 +6,13 @@
 #include "OrbitBase/ThreadPool.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/time/time.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");
 ABSL_FLAG(uint32_t, capture_length, 10, "duration of capture in seconds");
+ABSL_FLAG(uint16_t, refresh_timeout, 1000,
+          "Refresh timeout for process manager in miliseconds; 1000 by default");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
@@ -22,8 +25,10 @@ int main(int argc, char** argv) {
     FATAL("pid to capture not provided; set using -pid");
   }
 
+  uint16_t refresh_timeout = absl::GetFlag(FLAGS_refresh_timeout);
   ClientGgpOptions options;
   options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
+  options.process_refresh_timeout = absl::Milliseconds(refresh_timeout);
   options.capture_pid = absl::GetFlag(FLAGS_pid);
 
   ClientGgp client_ggp(std::move(options));
@@ -36,6 +41,7 @@ int main(int argc, char** argv) {
   std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
   if (!client_ggp.RequestStartCapture(thread_pool.get())) {
     thread_pool->ShutdownAndWait();
+    client_ggp.ShutdownClient();
     FATAL("Not possible to start the capture; exiting program");
   }
 
@@ -47,6 +53,7 @@ int main(int argc, char** argv) {
   // Requests to stop the capture and waits for thread to finish
   if (!client_ggp.StopCapture()) {
     thread_pool->ShutdownAndWait();
+    client_ggp.ShutdownClient();
     FATAL("Not possible to stop the capture; exiting program");
   }
   LOG("Shut down the thread and wait for it to finish");
@@ -54,6 +61,7 @@ int main(int argc, char** argv) {
 
   // TODO: process/save capture data
 
+  client_ggp.ShutdownClient();
   LOG("All done");
   return 0;
 }
