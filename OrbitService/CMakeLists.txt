@@ -65,7 +65,7 @@ strip_symbols(OrbitService)
 add_executable(OrbitServiceTests)
 target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp)
+target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp OrbitTracepointTest.cpp)
 
 target_link_libraries(OrbitServiceTests PRIVATE 
         ElfUtils
