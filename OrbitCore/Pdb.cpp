@@ -27,16 +27,8 @@ void Pdb::AddFunction(const std::shared_ptr<FunctionInfo>& function) {
   functions_.push_back(function);
 }
 
-void Pdb::ProcessData(class Process* process) {
-  if (process == nullptr) return;
-
+void Pdb::ProcessData() {
   SCOPE_TIMER_LOG("ProcessData");
-  ScopeLock lock(process->GetDataMutex());
-
-  for (auto& func : functions_) {
-    process->AddFunction(func);
-  }
-
   PopulateFunctionMap();
   PopulateStringFunctionMap();
 }

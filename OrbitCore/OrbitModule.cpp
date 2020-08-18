@@ -35,7 +35,7 @@ Module::Module(const std::string& file_name, uint64_t address_start, uint64_t ad
   loadable_ = true;  // necessary, because it toggles "Load Symbols" option
 }
 
-void Module::LoadSymbols(const ModuleSymbols& module_symbols, class Process* process) {
+void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
   if (m_Pdb != nullptr) {
     LOG("Warning: Module \"%s\" already contained symbols, will override now", m_Name);
   }
@@ -51,6 +51,6 @@ void Module::LoadSymbols(const ModuleSymbols& module_symbols, class Process* pro
     m_Pdb->AddFunction(function);
   }
 
-  m_Pdb->ProcessData(process);
+  m_Pdb->ProcessData();
   SetLoaded(true);
 }

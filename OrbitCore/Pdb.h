@@ -38,7 +38,7 @@ class Pdb {
   orbit_client_protos::FunctionInfo* GetFunctionFromExactAddress(uint64_t a_Address);
   orbit_client_protos::FunctionInfo* GetFunctionFromProgramCounter(uint64_t a_Address);
 
-  void ProcessData(class Process* process);
+  void ProcessData();
 
  private:
   uint64_t m_MainModule = 0;

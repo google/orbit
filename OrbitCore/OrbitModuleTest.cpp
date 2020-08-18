@@ -56,7 +56,7 @@ TEST(OrbitModule, LoadFunctions) {
     ASSERT_TRUE(elf_file) << elf_file.error().message();
     const auto symbols = elf_file.value()->LoadSymbols();
     ASSERT_TRUE(symbols) << symbols.error().message();
-    module->LoadSymbols(symbols.value(), nullptr);
+    module->LoadSymbols(symbols.value());
   }
 
   ASSERT_TRUE(module->m_Pdb != nullptr);
@@ -98,7 +98,7 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
     ASSERT_TRUE(elf_file) << elf_file.error().message();
     const auto symbols = elf_file.value()->LoadSymbols();
     ASSERT_TRUE(symbols) << symbols.error().message();
-    module->LoadSymbols(symbols.value(), nullptr);
+    module->LoadSymbols(symbols.value());
   }
 
   ASSERT_TRUE(module->m_Pdb != nullptr);
@@ -128,7 +128,7 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
     ASSERT_TRUE(elf_file) << elf_file.error().message();
     const auto symbols = elf_file.value()->LoadSymbols();
     ASSERT_TRUE(symbols) << symbols.error().message();
-    module->LoadSymbols(symbols.value(), nullptr);
+    module->LoadSymbols(symbols.value());
   }
 
   ASSERT_TRUE(module->m_Pdb != nullptr);
@@ -166,7 +166,7 @@ TEST(SymbolHelper, LoadSymbols) {
   symbol_info->set_source_line(70);
 
   std::shared_ptr<Module> module = std::make_shared<Module>("module name", 0x40, 0);
-  module->LoadSymbols(module_symbols, nullptr);
+  module->LoadSymbols(module_symbols);
 
   ASSERT_NE(module->m_Pdb, nullptr);
   EXPECT_TRUE(module->IsLoaded());

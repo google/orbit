@@ -83,6 +83,14 @@ std::shared_ptr<Module> Process::GetModuleFromPath(const std::string& module_pat
   return nullptr;
 }
 
+void Process::AddFunctions(
+    const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>& functions) {
+  ScopeLock lock(data_mutex_);
+  for (const auto& function : functions) {
+    AddFunction(function);
+  }
+}
+
 void Process::AddModule(std::shared_ptr<Module>& a_Module) {
   m_Modules[a_Module->m_AddressStart] = a_Module;
   m_NameToModuleMap[absl::AsciiStrToLower(a_Module->m_Name)] = a_Module;

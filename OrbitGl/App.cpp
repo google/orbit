@@ -728,7 +728,8 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
                             module_path, local_debug_file_path, result.error().message()));
         return;
       }
-      module->LoadSymbols(result.value(), Capture::GTargetProcess.get());
+      module->LoadSymbols(result.value());
+      Capture::GTargetProcess->AddFunctions(module->m_Pdb->GetFunctions());
       LOG("Received and loaded %lu function symbols from remote service "
           "for module %s",
           module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
@@ -780,7 +781,8 @@ void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr
     }
 
     if (symbols) {
-      module->LoadSymbols(symbols.value(), Capture::GTargetProcess.get());
+      module->LoadSymbols(symbols.value());
+      Capture::GTargetProcess->AddFunctions(module->m_Pdb->GetFunctions());
       LOG("Loaded %lu function symbols locally for module \"%s\"",
           symbols.value().symbol_infos().size(), module->m_FullName);
       SymbolLoadingFinished(process_id, module, preset);

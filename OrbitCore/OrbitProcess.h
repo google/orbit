@@ -44,14 +44,17 @@ class Process {
   std::shared_ptr<Module> GetModuleFromPath(const std::string& module_path);
 
   void AddFunction(const std::shared_ptr<orbit_client_protos::FunctionInfo>& function) {
-    m_Functions.push_back(function);
+    functions_.push_back(function);
+  }
+  void AddFunctions(
+      const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>& functions);
+
+  [[nodiscard]] const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
+  GetFunctions() const {
+    return functions_;
   }
 
-  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>& GetFunctions() const {
-    return m_Functions;
-  }
-
-  Mutex& GetDataMutex() { return m_DataMutex; }
+  Mutex& GetDataMutex() { return data_mutex_; }
 
  private:
   int32_t m_ID;
@@ -60,7 +63,7 @@ class Process {
   std::string m_FullPath;
 
   bool m_Is64Bit;
-  Mutex m_DataMutex;
+  Mutex data_mutex_;
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
   // TODO(antonrohr): Change the usage of m_NameToModuleMap to
@@ -70,7 +73,7 @@ class Process {
   std::map<std::string, std::shared_ptr<Module>> path_to_module_map_;
 
   // Transients
-  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> m_Functions;
+  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> functions_;
 };
 
 #endif  // ORBIT_CORE_ORBIT_PROCESS_H_
