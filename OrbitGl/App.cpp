@@ -89,6 +89,8 @@ void OrbitApp::OnCaptureStarted() {
       select_live_tab_callback_();
     }
 
+    FireRefreshCallbacks();
+
     absl::MutexLock lock(&mutex);
     initialization_complete = true;
   });
@@ -593,8 +595,6 @@ void OrbitApp::StopCapture() {
   if (capture_stop_requested_callback_) {
     capture_stop_requested_callback_();
   }
-
-  FireRefreshCallbacks();
 }
 
 void OrbitApp::ClearCapture() {
@@ -607,14 +607,19 @@ void OrbitApp::ClearCapture() {
   AddTopDownView(*empty_sampling_profiler);
   Capture::GSamplingProfiler = empty_sampling_profiler;
 
+  if (selection_report_) {
+    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+    AddSelectionReport(empty_selection_profiler, nullptr);
+  }
+
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }
-  GOrbitApp->FireRefreshCallbacks(DataViewType::kLiveFunctions);
 
   if (capture_cleared_callback_) {
     capture_cleared_callback_();
   }
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::ToggleDrawHelp() {
