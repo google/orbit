@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "App.h"
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "TimeGraph.h"
@@ -190,7 +191,7 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
   ++next_iterator_id_;
 
   auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
-  const TextBox* box = Capture::GSelectedTextBox;
+  const TextBox* box = GOrbitApp->selected_text_box();
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
   // screen.

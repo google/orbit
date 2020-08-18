@@ -49,12 +49,12 @@ class TimerTrack : public Track {
   [[nodiscard]] const TextBox* GetFirstBeforeTime(TickType time, uint32_t depth) const;
 
   // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const TextBox* GetLeft(TextBox* textbox) const { return textbox; };
+  [[nodiscard]] virtual const TextBox* GetLeft(const TextBox* textbox) const { return textbox; };
   // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const TextBox* GetRight(TextBox* textbox) const { return textbox; };
+  [[nodiscard]] virtual const TextBox* GetRight(const TextBox* textbox) const { return textbox; };
 
-  [[nodiscard]] virtual const TextBox* GetUp(TextBox* textbox) const;
-  [[nodiscard]] virtual const TextBox* GetDown(TextBox* textbox) const;
+  [[nodiscard]] virtual const TextBox* GetUp(const TextBox* textbox) const;
+  [[nodiscard]] virtual const TextBox* GetDown(const TextBox* textbox) const;
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
   [[nodiscard]] virtual bool IsEmpty() const;

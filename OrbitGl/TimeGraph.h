@@ -77,10 +77,10 @@ class TimeGraph {
   void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
-  void Select(const TextBox* a_TextBox);
+  void Select(const TextBox* text_box);
   enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
-  void JumpToNeighborBox(TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
+  void JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
   const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time,
                                           std::optional<int32_t> thread_ID = std::nullopt) const;
   const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time,
@@ -119,10 +119,10 @@ class TimeGraph {
   float GetVerticalMargin() const { return vertical_margin_; }
   void SetVerticalMargin(float margin) { vertical_margin_ = margin; }
 
-  const TextBox* FindPrevious(TextBox* from);
-  const TextBox* FindNext(TextBox* from);
-  const TextBox* FindTop(TextBox* from);
-  const TextBox* FindDown(TextBox* from);
+  const TextBox* FindPrevious(const TextBox* from);
+  const TextBox* FindNext(const TextBox* from);
+  const TextBox* FindTop(const TextBox* from);
+  const TextBox* FindDown(const TextBox* from);
 
   Color GetThreadColor(ThreadID tid) const;
   [[nodiscard]] std::string GetManualInstrumentationString(uint64_t string_address) const;

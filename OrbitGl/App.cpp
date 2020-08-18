@@ -597,7 +597,7 @@ void OrbitApp::StopCapture() {
 
 void OrbitApp::ClearCapture() {
   set_selected_thread_id(-1);
-  Capture::ClearCaptureData();
+  SelectTextBox(nullptr);
 
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
@@ -927,6 +927,11 @@ ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_t
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   return data_manager_->set_selected_thread_id(thread_id);
+}
+
+const TextBox* OrbitApp::selected_text_box() const { return data_manager_->selected_text_box(); }
+void OrbitApp::SelectTextBox(const TextBox* text_box) {
+  data_manager_->set_selected_text_box(text_box);
 }
 
 void OrbitApp::UpdateSamplingReport() {

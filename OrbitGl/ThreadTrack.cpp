@@ -21,7 +21,7 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id)
   event_track_->SetThreadId(thread_id);
 }
 
-const TextBox* ThreadTrack::GetLeft(TextBox* text_box) const {
+const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
@@ -30,7 +30,7 @@ const TextBox* ThreadTrack::GetLeft(TextBox* text_box) const {
   return nullptr;
 }
 
-const TextBox* ThreadTrack::GetRight(TextBox* text_box) const {
+const TextBox* ThreadTrack::GetRight(const TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
@@ -40,7 +40,7 @@ const TextBox* ThreadTrack::GetRight(TextBox* text_box) const {
 }
 
 std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
-  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }

@@ -213,6 +213,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ThreadID selected_thread_id() const;
   void set_selected_thread_id(ThreadID thread_id);
 
+  [[nodiscard]] const TextBox* selected_text_box() const;
+  void SelectTextBox(const TextBox* text_box);
+
  private:
   void LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
                           const std::shared_ptr<orbit_client_protos::PresetFile>& preset);

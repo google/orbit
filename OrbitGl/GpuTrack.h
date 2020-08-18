@@ -32,8 +32,8 @@ class GpuTrack : public TimerTrack {
   [[nodiscard]] Type GetType() const override { return kGpuTrack; }
   [[nodiscard]] float GetHeight() const override;
 
-  [[nodiscard]] const TextBox* GetLeft(TextBox* text_box) const override;
-  [[nodiscard]] const TextBox* GetRight(TextBox* text_box) const override;
+  [[nodiscard]] const TextBox* GetLeft(const TextBox* text_box) const override;
+  [[nodiscard]] const TextBox* GetRight(const TextBox* text_box) const override;
 
   [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 

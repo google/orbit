@@ -20,8 +20,8 @@ class ThreadTrack : public TimerTrack {
   [[nodiscard]] Type GetType() const override { return kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 
-  [[nodiscard]] const TextBox* GetLeft(TextBox* textbox) const override;
-  [[nodiscard]] const TextBox* GetRight(TextBox* textbox) const override;
+  [[nodiscard]] const TextBox* GetLeft(const TextBox* textbox) const override;
+  [[nodiscard]] const TextBox* GetRight(const TextBox* textbox) const override;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 

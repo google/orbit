@@ -86,7 +86,7 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& text_renderer, float min_x, b
 
   Color col = is_same_thread_id_as_selected ? m_Color : is_inactive ? grey : m_Color;
 
-  if (this == Capture::GSelectedTextBox) {
+  if (this == GOrbitApp->selected_text_box()) {
     col = selection_color;
   }
 
