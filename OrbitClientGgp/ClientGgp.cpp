@@ -53,19 +53,21 @@ bool ClientGgp::InitClient() {
 // Client requests to start the capture
 bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   int32_t pid = target_process_->GetID();
+  if (pid == -1) {
+    ERROR(
+        "Error starting capture: "
+        "No process selected. Please choose a target process for the capture.");
+    return false;
+  }
   LOG("Capture pid %d", pid);
 
   // TODO: selected_functions available when UploadSymbols is included
   // TODO(kuebler): right now selected_functions is only an empty placeholder,
   //  it needs to be filled separately in each client and then passed.
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-  ErrorMessageOr<void> result =
-      Capture::StartCapture(pid, target_process_->GetName(), selected_functions);
-  if (result.has_error()) {
-    ERROR("Error starting capture: %s", result.error().message());
-    return false;
-  }
-  result = capture_client_->StartCapture(thread_pool, pid, selected_functions);
+  Capture::capture_data_ = CaptureData(pid, target_process_->GetName(), selected_functions);
+
+  ErrorMessageOr<void> result = capture_client_->StartCapture(thread_pool, pid, selected_functions);
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
     return false;
