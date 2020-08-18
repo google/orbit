@@ -28,16 +28,7 @@ void Pdb::AddFunction(const std::shared_ptr<FunctionInfo>& function) {
 }
 
 void Pdb::ProcessData() {
-  std::shared_ptr<Process> process = Capture::GTargetProcess;
-  if (process == nullptr) return;
-
   SCOPE_TIMER_LOG("ProcessData");
-  ScopeLock lock(process->GetDataMutex());
-
-  for (auto& func : functions_) {
-    process->AddFunction(func);
-  }
-
   PopulateFunctionMap();
   PopulateStringFunctionMap();
 }

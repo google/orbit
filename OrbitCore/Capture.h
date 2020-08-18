@@ -25,9 +25,6 @@ class Capture {
  public:
   static void Init();
   static void SetTargetProcess(std::shared_ptr<Process> process);
-  static ErrorMessageOr<void> StartCapture(
-      uint64_t process_id, std::string process_name,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions);
   static void FinalizeCapture();
   static void PreSave();
 

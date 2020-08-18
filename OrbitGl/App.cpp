@@ -554,18 +554,20 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 
 bool OrbitApp::StartCapture() {
   int32_t pid = processes_data_view_->GetSelectedProcessId();
+  if (pid == -1) {
+    SendErrorToUi("Error starting capture",
+                  "No process selected. Please choose a target process for the capture.");
+    return false;
+  }
   std::string process_name = data_manager_->GetProcessByPid(pid)->name();
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
-  ErrorMessageOr<void> result = Capture::StartCapture(pid, process_name, selected_functions);
+  Capture::capture_data_ = CaptureData(pid, std::move(process_name), selected_functions);
+
+  ErrorMessageOr<void> result =
+      capture_client_->StartCapture(thread_pool_.get(), pid, selected_functions);
+
   if (result.has_error()) {
-    SendErrorToUi("Error starting capture", result.error().message());
-    return false;
-  }
-
-  result = capture_client_->StartCapture(thread_pool_.get(), pid, selected_functions);
-
-  if (!result) {
     SendErrorToUi("Error starting capture", result.error().message());
     return false;
   }
@@ -729,6 +731,9 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
         return;
       }
       module->LoadSymbols(result.value());
+      if (Capture::GTargetProcess != nullptr) {
+        Capture::GTargetProcess->AddFunctions(module->m_Pdb->GetFunctions());
+      }
       LOG("Received and loaded %lu function symbols from remote service "
           "for module %s",
           module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
@@ -789,6 +794,9 @@ void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr
 
     if (symbols) {
       module->LoadSymbols(symbols.value());
+      if (Capture::GTargetProcess != nullptr) {
+        Capture::GTargetProcess->AddFunctions(module->m_Pdb->GetFunctions());
+      }
       LOG("Loaded %lu function symbols locally for module \"%s\"",
           symbols.value().symbol_infos().size(), module->m_FullName);
       SymbolLoadingFinished(process_id, module, preset);
