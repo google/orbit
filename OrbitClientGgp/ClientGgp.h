@@ -12,6 +12,7 @@
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "OrbitClientServices/ProcessManager.h"
 #include "OrbitProcess.h"
 #include "grpcpp/grpcpp.h"
 
@@ -19,6 +20,7 @@ class ClientGgp final : public CaptureListener {
  public:
   ClientGgp(ClientGgpOptions&& options);
   bool InitClient();
+  void ShutdownClient();
   bool RequestStartCapture(ThreadPool* thread_pool);
   bool StopCapture();
   void SaveCapture();
@@ -40,6 +42,7 @@ class ClientGgp final : public CaptureListener {
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::shared_ptr<Process> target_process_;
   std::unique_ptr<CaptureClient> capture_client_;
+  std::unique_ptr<ProcessManager> process_manager_;
 
   void InitCapture();
 };

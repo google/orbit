@@ -20,5 +20,6 @@ target_sources(OrbitClientGgp PRIVATE
 target_link_libraries(OrbitClientGgp PUBLIC 
     OrbitBase
     OrbitCaptureClient
+    OrbitClientServices
     OrbitProtos)
     
