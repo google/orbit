@@ -86,7 +86,6 @@ target_sources(
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
-          TextBox.cpp
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp

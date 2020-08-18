@@ -5,10 +5,6 @@
 #ifndef ORBIT_GL_TEXT_BOX_H_
 #define ORBIT_GL_TEXT_BOX_H_
 
-#include <cfloat>
-#include <cstdint>
-
-#include "Batcher.h"
 #include "CoreMath.h"
 #include "capture_data.pb.h"
 
@@ -16,16 +12,12 @@ class TextRenderer;
 
 class TextBox {
  public:
-  TextBox();
-  TextBox(const Vec2& a_Pos, const Vec2& a_Size, const std::string& a_Text,
-          const Color& a_Color = Color(128, 128, 128, 128));
+  TextBox() : pos_(Vec2::Zero()), size_(Vec2(100.f, 10.f)), elapsed_time_text_length_(0){};
+  TextBox(const Vec2& pos, const Vec2& size, const std::string& text = "")
+      : pos_(pos), size_(size), text_(text), elapsed_time_text_length_(0) {}
 
-  TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color);
-  TextBox(const Vec2& a_Pos, const Vec2& a_Size);
-
-  void SetSize(const Vec2& a_Size) { size_ = a_Size; }
-
-  void SetPos(const Vec2& a_Pos) { pos_ = a_Pos; }
+  void SetSize(const Vec2& size) { size_ = size; }
+  void SetPos(const Vec2& pos) { pos_ = pos; }
 
   const Vec2& GetSize() const { return size_; }
   const Vec2& GetPos() const { return pos_; }
@@ -48,10 +40,7 @@ class TextBox {
   Vec2 pos_;
   Vec2 size_;
   std::string text_;
-  Color color_;
   orbit_client_protos::TimerInfo timer_info_;
-  int main_frame_counter_;
-  float text_y_;
   size_t elapsed_time_text_length_;
 };
 

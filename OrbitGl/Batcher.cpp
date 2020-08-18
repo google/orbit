@@ -5,7 +5,6 @@
 #include "Batcher.h"
 
 #include "OpenGl.h"
-#include "TextBox.h"
 #include "Utils.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
