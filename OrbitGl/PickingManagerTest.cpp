@@ -125,8 +125,7 @@ TEST(PickingManager, RobustnessOnReset) {
 
 TEST(PickingManager, Overflow) {
   PickingId id;
-  ASSERT_DEATH(id = PickingId::Create(PickingType::kLine,
-                                      1 << PickingId::kElementIDBitSize),
+  ASSERT_DEATH(id = PickingId::Create(PickingType::kLine, 1 << PickingId::kElementIDBitSize),
                "kElementIDBitSize");
   UNUSED(id);
 }

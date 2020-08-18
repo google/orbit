@@ -9,8 +9,7 @@
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color =
-      PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
+  Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
 
   AddLine(from, to, z, color, picking_color, std::move(user_data));
 }
@@ -43,8 +42,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Col
 
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
                      std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color =
-      PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
+  Color picking_color = PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
   AddBox(box, colors, picking_color, std::move(user_data));
 }
 
@@ -83,8 +81,7 @@ void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const C
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
                           std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingId::ToColor(PickingType::kTriangle,
-                                           user_data_.size(), batcher_id_);
+  Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
 
   AddTriangle(triangle, color, picking_color, std::move(user_data));
 }
