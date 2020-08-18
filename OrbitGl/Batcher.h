@@ -11,9 +11,7 @@
 #include "BlockChain.h"
 #include "Geometry.h"
 #include "PickingManager.h"
-
-// TODO: Remove cyclic reference
-class TextBox;
+#include "TextBox.h"
 
 using TooltipCallback = std::function<std::string(PickingId)>;
 

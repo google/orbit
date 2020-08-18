@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "OrbitBase/Logging.h"
+
 void TimerBlock::Add(const TextBox& item) {
   if (size_ == kBlockSize) {
     if (next_ == nullptr) {

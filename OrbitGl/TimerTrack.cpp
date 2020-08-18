@@ -158,7 +158,7 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     UpdateDepth(timer_info.depth() + 1);
   }
 
-  TextBox text_box(Vec2(0, 0), Vec2(0, 0), "", Color(255, 0, 0, 255));
+  TextBox text_box(Vec2(0, 0), Vec2(0, 0), "");
   text_box.SetTimerInfo(timer_info);
 
   std::shared_ptr<TimerChain> timer_chain = timers_[timer_info.depth()];
