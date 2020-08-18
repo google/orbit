@@ -15,13 +15,11 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::PresetFile;
 
 CaptureData Capture::capture_data_;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
-std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 

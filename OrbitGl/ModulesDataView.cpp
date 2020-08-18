@@ -179,7 +179,7 @@ void ModulesDataView::SetModules(int32_t process_id, const std::vector<ModuleDat
 }
 
 void ModulesDataView::OnRefreshButtonClicked() {
-  GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessID());
+  GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessID(), nullptr);
 }
 
 const ModuleData* ModulesDataView::GetModule(uint32_t row) const { return modules_[indices_[row]]; }
