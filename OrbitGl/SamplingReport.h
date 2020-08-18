@@ -29,6 +29,7 @@ class SamplingReport {
   [[nodiscard]] std::string GetSelectedCallstackString() const;
   void SetUiRefreshFunc(std::function<void()> func) { ui_refresh_func_ = std::move(func); };
   [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
+  [[nodiscard]] bool HasSamples() const { return profiler_->GetNumSamples() > 0; }
 
  protected:
   void FillReport();

@@ -599,6 +599,12 @@ void OrbitApp::ClearCapture() {
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
+  // Trigger deallocation of previous sampling related data.
+  auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+  AddSamplingReport(empty_sampling_profiler);
+  AddTopDownView(*empty_sampling_profiler);
+  Capture::GSamplingProfiler = empty_sampling_profiler;
+
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }

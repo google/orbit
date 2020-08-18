@@ -10,12 +10,12 @@
 #include "TopDownViewItemModel.h"
 
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
-  auto* model = new TopDownViewItemModel{std::move(top_down_view), ui_->topDownTreeView};
-  proxy_model_ = new HighlightCustomFilterSortFilterProxyModel{ui_->topDownTreeView};
-  proxy_model_->setSourceModel(model);
+  model_ = std::make_unique<TopDownViewItemModel>(std::move(top_down_view));
+  proxy_model_ = std::make_unique<HighlightCustomFilterSortFilterProxyModel>(nullptr);
+  proxy_model_->setSourceModel(model_.get());
   proxy_model_->setSortRole(Qt::EditRole);
 
-  ui_->topDownTreeView->setModel(proxy_model_);
+  ui_->topDownTreeView->setModel(proxy_model_.get());
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive, Qt::DescendingOrder);
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
 

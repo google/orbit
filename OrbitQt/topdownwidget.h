@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "TopDownView.h"
+#include "TopDownViewItemModel.h"
 #include "ui_topdownwidget.h"
 
 class TopDownWidget : public QWidget {
@@ -55,7 +56,8 @@ class TopDownWidget : public QWidget {
   };
 
   std::unique_ptr<Ui::TopDownWidget> ui_;
-  HighlightCustomFilterSortFilterProxyModel* proxy_model_ = nullptr;
+  std::unique_ptr<TopDownViewItemModel> model_;
+  std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> proxy_model_;
 };
 
 #endif  // ORBIT_QT_TOP_DOWN_WIDGET_H_
