@@ -53,13 +53,25 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     return text_box->GetText();
   }
 
+  std::string function_name;
+  bool is_manual = func->type() == orbit_client_protos::FunctionInfo::kOrbitTimerStart;
+  if (is_manual) {
+    constexpr int kStringArgumentIndex = 0;
+    const TimerInfo& timer_info = text_box->GetTimerInfo();
+    CHECK(timer_info.registers_size() > kStringArgumentIndex);
+    uint64_t string_address = timer_info.registers(kStringArgumentIndex);
+    function_name = time_graph_->GetManualInstrumentationString(string_address);
+  } else {
+    function_name = FunctionUtils::GetDisplayName(*func);
+  }
+
   return absl::StrFormat(
       "<b>%s</b><br/>"
-      "<i>Timing measured through dynamic instrumentation</i>"
+      "<i>Timing measured through %s instrumentation</i>"
       "<br/><br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      FunctionUtils::GetDisplayName(*func), FunctionUtils::GetLoadedModuleName(*func),
+      function_name, is_manual ? "manual" : "dynamic", FunctionUtils::GetLoadedModuleName(*func),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
