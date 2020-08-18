@@ -23,7 +23,7 @@ class TextBox {
   const Vec2& GetPos() const { return pos_; }
 
   const std::string& GetText() const { return text_; }
-  void SetText(std::string_view text) { text_ = text; }
+  void SetText(std::string text) { text_ = std::move(text); }
 
   void SetTimerInfo(const orbit_client_protos::TimerInfo& timer_info) {
     if (timer_info.end() == 0 && timer_info.start() == 0) {

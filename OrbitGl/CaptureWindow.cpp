@@ -807,13 +807,13 @@ void CaptureWindow::RenderSelectionOverlay() {
     Box box(pos, size, GlCanvas::Z_VALUE_BOX_ACTIVE);
     ui_batcher_.AddBox(box, color);
 
-    static Color text_color(255, 255, 255, 255);
+    const Color text_color(255, 255, 255, 255);
     float pos_x = pos[0] + size[0];
 
     m_TextRenderer.AddText(text.c_str(), pos_x, m_SelectStop[1], GlCanvas::Z_VALUE_TEXT, text_color,
                            size[0], true);
 
-    static unsigned char g = 100;
+    const unsigned char g = 100;
     Color grey(g, g, g, 255);
     ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::Z_VALUE_BOX_ACTIVE, grey);
   }
