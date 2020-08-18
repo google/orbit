@@ -134,3 +134,11 @@ target_link_libraries(
           GTest::Main)
 
 register_test(OrbitQtTests)
+
+# QT_QPA_PLATFORM=offscreen is currently not supported under Windows.
+# So if requested we disable the test all the way.
+# This is mainly a work-around for the CI, especially the presubmit checks.
+if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
+  message(STATUS "Disabling OrbitQt-tests since they don't work in a headless setup")
+  set_tests_properties(OrbitQt PROPERTIES DISABLED TRUE)
+endif()
