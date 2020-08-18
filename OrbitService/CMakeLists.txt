@@ -67,6 +67,10 @@ target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp OrbitTracepointTest.cpp)
 
+if(NOT WIN32)
+  target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp OrbitTracepointTest.cpp)
+endif()
+
 target_link_libraries(OrbitServiceTests PRIVATE 
         OrbitServiceLib
         GTest::Main)
