@@ -196,12 +196,10 @@ TEST(Batcher, MultipleDrawCalls) {
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
-                  std::move(line_user_data));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                      Color(0, 255, 0, 255), std::move(triangle_user_data));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
-                 std::move(box_user_data));
+  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
+  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
+                      std::move(triangle_user_data));
+  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
 
   batcher.Draw(true);
 
