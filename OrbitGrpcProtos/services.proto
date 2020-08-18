@@ -11,6 +11,7 @@ import "code_block.proto";
 import "module.proto";
 import "process.proto";
 import "symbol.proto";
+import "tracepoint.proto";
 
 message CaptureRequest {
   CaptureOptions capture_options = 1;
@@ -36,6 +37,12 @@ message GetModuleListRequest {
 
 message GetModuleListResponse {
   repeated ModuleInfo modules = 1;
+}
+
+message GetTracepointListRequest {}
+
+message GetTracepointListResponse {
+  repeated TracepointInfo tracepoints = 1;
 }
 
 message GetProcessMemoryRequest {
@@ -64,6 +71,9 @@ service ProcessService {
 
   rpc GetProcessMemory(GetProcessMemoryRequest)
       returns (GetProcessMemoryResponse) {}
+
+  rpc GetTracepointList(GetTracepointListRequest)
+      returns (GetTracepointListResponse) {}
 
   rpc GetDebugInfoFile(GetDebugInfoFileRequest)
       returns (GetDebugInfoFileResponse) {}

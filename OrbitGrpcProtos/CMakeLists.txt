@@ -17,6 +17,7 @@ target_sources(OrbitProtos PRIVATE
         module.proto
         process.proto
         services.proto
-        symbol.proto)
+        symbol.proto
+        tracepoint.proto)
 
 grpc_helper(OrbitProtos)
