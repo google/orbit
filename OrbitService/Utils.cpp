@@ -150,10 +150,11 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ListTracepoints() {
   std::vector<TracepointInfo> result;
 
-  for (const auto& category : fs::directory_iterator(
-           kLinuxTracingEvents, std::filesystem::directory_options::skip_permission_denied)) {
+  std::error_code error_code_category, error_code_name;
+
+  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents, error_code_category)) {
     if (fs::is_directory(category)) {
-      for (const auto& name : fs::directory_iterator(category)) {
+      for (const auto& name : fs::directory_iterator(category, error_code_name)) {
         TracepointInfo tracepoint_info;
         tracepoint_info.set_name(fs::path(name).filename());
         tracepoint_info.set_category(fs::path(category).filename());
