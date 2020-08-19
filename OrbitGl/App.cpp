@@ -906,7 +906,7 @@ void OrbitApp::UpdateProcessAndModuleList(
       // To this point all data is ready. We can set the Process and then
       // propagate the changes to the UI.
 
-      if (pid != GetSelectedProcessID()) {
+      if (pid != GetSelectedProcess()->GetID()) {
         data_manager_->ClearSelectedFunctions();
         // TODO(kuebler): Move as soon as Capture is gone.
         data_manager_->set_selected_process(process);
