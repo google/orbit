@@ -187,6 +187,13 @@ There is a [Conan Extension for Visual Studio](https://marketplace.visualstudio.
 which is currently under development, but should be able to help you, when you develop on
 Visual Studio.
 
+### How do I integrate with Visual Studio Code?
+
+Visual Studio Code uses configuration files to specify tasks that can be executed. These files are provided in the `contrib/.vscode` folder. To enable building from Visual Studio Code, simply copy the whole folder into the root directory:
+```bash
+cp contrib/.vscode .
+```
+
 ### The build worked fine, but when I try to call cmake manually I get `cmake not found!`
 
 Conan installs cmake as a build dependency automatically, but won't make it available in the PATH.
