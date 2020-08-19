@@ -4,3 +4,4 @@ build*/
 .clangd/
 compile_commands.json
 corpora/
+/.vscode/
