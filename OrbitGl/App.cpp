@@ -89,6 +89,8 @@ void OrbitApp::OnCaptureStarted() {
       select_live_tab_callback_();
     }
 
+    FireRefreshCallbacks();
+
     absl::MutexLock lock(&mutex);
     initialization_complete = true;
   });
@@ -383,6 +385,10 @@ void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_prof
     sampling_reports_callback_(callstack_data_view, report);
   }
 
+  // clear old sampling report
+  if (sampling_report_ != nullptr) {
+    sampling_report_->ClearReport();
+  }
   sampling_report_ = report;
 }
 
@@ -395,6 +401,10 @@ void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_pro
     selection_report_callback_(callstack_data_view, report);
   }
 
+  // clear old selection report
+  if (selection_report_ != nullptr) {
+    selection_report_->ClearReport();
+  }
   selection_report_ = report;
 }
 
@@ -596,8 +606,6 @@ void OrbitApp::StopCapture() {
   if (capture_stop_requested_callback_) {
     capture_stop_requested_callback_();
   }
-
-  FireRefreshCallbacks();
 }
 
 void OrbitApp::ClearCapture() {
@@ -610,14 +618,19 @@ void OrbitApp::ClearCapture() {
   AddTopDownView(*empty_sampling_profiler);
   Capture::GSamplingProfiler = empty_sampling_profiler;
 
+  if (selection_report_) {
+    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+    AddSelectionReport(empty_selection_profiler, nullptr);
+  }
+
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }
-  GOrbitApp->FireRefreshCallbacks(DataViewType::kLiveFunctions);
 
   if (capture_cleared_callback_) {
     capture_cleared_callback_();
   }
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::ToggleDrawHelp() {

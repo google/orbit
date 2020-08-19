@@ -34,6 +34,7 @@ class SamplingReport {
   [[nodiscard]] bool HasSamples() const {
     return callstack_data_ != nullptr && callstack_data_->GetCallstackEventsSize() > 0;
   }
+  void ClearReport();
 
  protected:
   void FillReport();
