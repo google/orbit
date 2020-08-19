@@ -37,7 +37,12 @@
       <widget class="QLineEdit" name="FilterLineEdit"/>
      </item>
      <item>
-      <widget class="QPushButton" name="refreshButton"/>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="icon">
+        <iconset resource="../icons/orbiticons.qrc">
+         <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -60,6 +65,8 @@
    <header>orbittreeview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../icons/orbiticons.qrc"/>
+ </resources>
  <connections/>
 </ui>

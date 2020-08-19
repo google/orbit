@@ -30,7 +30,6 @@ void OrbitDataViewPanel::Initialize(DataView* data_view, SelectionType selection
     this->ui->label->show();
   }
 
-  ui->refreshButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
   if (ui->treeView->HasRefreshButton()) {
     ui->refreshButton->show();
   } else {
