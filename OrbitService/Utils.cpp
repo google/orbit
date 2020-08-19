@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <system_error>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
@@ -150,7 +151,8 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
   std::vector<TracepointInfo> result;
 
-  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents)) {
+  for (const auto& category : fs::directory_iterator(
+           kLinuxTracingEvents, std::filesystem::directory_options::skip_permission_denied)) {
     if (fs::is_directory(category)) {
       for (const auto& name : fs::directory_iterator(category)) {
         TracepointInfo tracepoint_info;
@@ -160,6 +162,7 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
       }
     }
   }
+
   return result;
 }
 
