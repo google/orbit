@@ -6,26 +6,78 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-echo "Installing required system dependencies..."
-sudo add-apt-repository universe
-if [ $? -ne 0 ]; then
-  sudo apt-get install -y software-properties-common
-  sudo add-apt-repository universe
-fi
+OPTIONS=$(getopt -o "" -l "force-public-remotes,assume-linux,assume-windows,ignore-system-requirements,dont-compile" -- "$@")
+eval set -- "$OPTIONS"
 
-sudo apt-get update
-sudo apt-get install -y build-essential
-sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
-sudo apt-get install -y libopengl0
-sudo apt-get install -y qt5-default
-sudo apt-get install -y libxxf86vm-dev
-sudo apt-get install -y python3-pip
+CONFIG_INSTALL_OPTIONS=""
+IGNORE_SYS_REQUIREMENTS=""
+DONT_COMPILE=""
+
+while true; do
+  case "$1" in
+    --force-public-remotes|--assume-linux|--assume-windows)
+      CONFIG_INSTALL_OPTIONS="${CONFIG_INSTALL_OPTIONS} $1"; shift;;
+    --ignore-system-requirements) IGNORE_SYS_REQUIREMENTS="yes"; shift;;
+    --dont-compile) DONT_COMPILE="yes"; shift;;
+    --) shift; break;;
+  esac
+done
+
+readonly REQUIRED_PACKAGES=( build-essential libglu1-mesa-dev mesa-common-dev \
+                             libxmu-dev libxi-dev libopengl0 qt5-default \
+                             libxxf86vm-dev python3-pip )
+function add_ubuntu_universe_repo {
+  sudo add-apt-repository universe
+  if [ $? -ne 0 ]; then
+    sudo apt-get install -y software-properties-common
+    sudo add-apt-repository universe
+  fi
+}
+
+function install_required_packages {
+  sudo apt-get update || exit $?
+  sudo apt-get install -y ${REQUIRED_PACKAGES[@]} || exit $?
+}
+
+
+if [[ $IGNORE_SYS_REQUIREMENTS != "yes" ]]; then
+  if which dpkg-query >/dev/null; then
+    readonly installed="$(dpkg-query --show -f'${Package}\n')"
+    PACKAGES_MISSING="no"
+    for package in ${REQUIRED_PACKAGES[@]}; do
+      if ! egrep "^${package}$" <<<"$installed" > /dev/null; then
+        PACKAGES_MISSING="yes"
+        break
+      fi
+    done
+
+    if [[ $PACKAGES_MISSING == "yes" ]]; then
+      echo "Installing required system dependencies..."
+
+      # That only works on Ubuntu!
+      if [[ "$(lsb_release -si)" == "Ubuntu" ]]; then
+        add_ubuntu_universe_repo
+      fi
+
+      install_required_packages
+    fi
+  else
+    cat <<EOF
+We detected you're not on a debian-based system. Orbit requires some system
+packages to be installed. Please make sure that you have those installed.
+Here are Debian package names: $PACKAGE[@].
+
+On other Linux distributions the package names might be similar but not exactly
+the same!
+EOF
+  fi # which dpkg-query
+fi # IGNORE_SYS_REQ
 
 echo "Checking if conan is available..."
 which conan >/dev/null
 if [ $? -ne 0 ]; then
   echo "Couldn't find conan. Trying to install via pip..."
-  pip3 install --user conan || exit $?
+  pip3 install --user conan==1.27.1 || exit $?
 
   which conan >/dev/null
   if [ $? -ne 0 ]; then
@@ -62,16 +114,18 @@ else
 fi
 
 echo "Installing conan configuration (profiles, settings, etc.)..."
-$DIR/third_party/conan/configs/install.sh || exit $?
+$DIR/third_party/conan/configs/install.sh $CONFIG_INSTALL_OPTIONS || exit $?
 
-if [ -n "$1" ] ; then
-  exec $DIR/build.sh "$@"
-else
-  conan remote list | grep -v 'Disabled:' | grep -e '^artifactory:' > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    exec $DIR/build.sh default_relwithdebinfo ggp_relwithdebinfo
+if [[ $DONT_COMPILE != "yes" ]]; then
+  if [ -n "$1" ] ; then
+    exec $DIR/build.sh "$@"
   else
-    exec $DIR/build.sh
+    conan remote list | grep -v 'Disabled:' | grep -e '^artifactory:' > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      exec $DIR/build.sh default_relwithdebinfo ggp_relwithdebinfo
+    else
+      exec $DIR/build.sh
+    fi
   fi
 fi
 
