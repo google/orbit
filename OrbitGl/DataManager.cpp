@@ -129,3 +129,14 @@ const absl::flat_hash_set<uint64_t>& DataManager::selected_functions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_functions_;
 }
+
+void DataManager::set_selected_process(std::shared_ptr<Process> process) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(process != nullptr);
+  selected_process_ = std::move(process);
+}
+
+const std::shared_ptr<Process>& DataManager::selected_process() const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  return selected_process_;
+}

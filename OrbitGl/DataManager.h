@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_DATA_MANAGER_H_
 #define ORBIT_GL_DATA_MANAGER_H_
 
+#include <OrbitProcess.h>
+
 #include <thread>
 
 #include "ProcessData.h"
@@ -32,6 +34,7 @@ class DataManager final {
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
   void set_selected_thread_id(int32_t thread_id);
   void set_selected_text_box(const TextBox* text_box);
+  void set_selected_process(std::shared_ptr<Process> process);
 
   [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
   [[nodiscard]] const std::vector<ModuleData*>& GetModules(int32_t process_id) const;
@@ -42,6 +45,7 @@ class DataManager final {
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] int32_t selected_thread_id() const;
   [[nodiscard]] const TextBox* selected_text_box() const;
+  [[nodiscard]] const std::shared_ptr<Process>& selected_process() const;
 
  private:
   const std::thread::id main_thread_id_;
@@ -50,6 +54,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> visible_functions_;
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
+  std::shared_ptr<Process> selected_process_ = std::make_shared<Process>();
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

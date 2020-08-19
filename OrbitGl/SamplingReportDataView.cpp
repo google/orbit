@@ -115,18 +115,17 @@ void SamplingReportDataView::DoSort() {
 std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
     const std::vector<int>& indices) {
   std::set<FunctionInfo*> functions_set;
-  if (Capture::GTargetProcess != nullptr) {
-    for (int index : indices) {
-      SampledFunction& sampled_function = GetSampledFunction(index);
-      if (sampled_function.function == nullptr) {
-        sampled_function.function =
-            Capture::GTargetProcess->GetFunctionFromAddress(sampled_function.address, false);
-      }
+  const std::shared_ptr<Process>& process = Capture::capture_data_.process();
+  CHECK(process != nullptr);
+  for (int index : indices) {
+    SampledFunction& sampled_function = GetSampledFunction(index);
+    if (sampled_function.function == nullptr) {
+      sampled_function.function = process->GetFunctionFromAddress(sampled_function.address, false);
+    }
 
-      FunctionInfo* function = sampled_function.function;
-      if (function != nullptr) {
-        functions_set.insert(function);
-      }
+    FunctionInfo* function = sampled_function.function;
+    if (function != nullptr) {
+      functions_set.insert(function);
     }
   }
 
@@ -136,21 +135,22 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
 std::vector<std::shared_ptr<Module>> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) {
   std::vector<std::shared_ptr<Module>> modules;
-  if (Capture::GTargetProcess != nullptr) {
-    std::set<std::string> module_names;
-    for (int index : indices) {
-      SampledFunction& sampled_function = GetSampledFunction(index);
-      module_names.emplace(sampled_function.module);
-    }
+  std::shared_ptr<Process> process = Capture::capture_data_.process();
+  CHECK(process != nullptr);
+  std::set<std::string> module_names;
+  for (int index : indices) {
+    SampledFunction& sampled_function = GetSampledFunction(index);
+    module_names.emplace(sampled_function.module);
+  }
 
-    auto& module_map = Capture::GTargetProcess->GetNameToModulesMap();
-    for (const std::string& module_name : module_names) {
-      auto module_it = module_map.find(ToLower(module_name));
-      if (module_it != module_map.end()) {
-        modules.push_back(module_it->second);
-      }
+  auto& module_map = process->GetNameToModulesMap();
+  for (const std::string& module_name : module_names) {
+    auto module_it = module_map.find(ToLower(module_name));
+    if (module_it != module_map.end()) {
+      modules.push_back(module_it->second);
     }
   }
+
   return modules;
 }
 
@@ -206,7 +206,8 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(Capture::capture_data_.process_id(), modules);
+    GOrbitApp->LoadModules(Capture::capture_data_.process(), Capture::capture_data_.process_id(),
+                           modules);
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = Capture::capture_data_.process_id();
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {

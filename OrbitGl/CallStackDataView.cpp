@@ -112,7 +112,8 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
       if (module != nullptr && module->IsLoadable() && !module->IsLoaded()) {
-        GOrbitApp->LoadModules(Capture::capture_data_.process_id(), {module});
+        GOrbitApp->LoadModules(Capture::capture_data_.process(),
+                               Capture::capture_data_.process_id(), {module});
       }
     }
 
@@ -195,11 +196,12 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   FunctionInfo* function = nullptr;
   std::shared_ptr<Module> module = nullptr;
 
-  if (Capture::GTargetProcess != nullptr) {
-    ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
-    function = Capture::GTargetProcess->GetFunctionFromAddress(address, false);
-    module = Capture::GTargetProcess->GetModuleFromAddress(address);
-  }
+  const std::shared_ptr<Process> process = Capture::capture_data_.process();
+  CHECK(process != nullptr);
+  // TODO(kuebler): Get rid of locks on caller side
+  ScopeLock lock(process->GetDataMutex());
+  function = process->GetFunctionFromAddress(address, false);
+  module = process->GetModuleFromAddress(address);
 
   if (function != nullptr) {
     return CallStackDataViewFrame(address, function, module);
