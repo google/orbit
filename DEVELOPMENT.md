@@ -189,9 +189,9 @@ Visual Studio.
 
 ### How do I integrate with Visual Studio Code?
 
-Visual Studio Code uses configuration files to specify tasks that can be executed. These files are provided in the `contrib/.vscode` folder. To enable building from Visual Studio Code, simply copy the whole folder into the root directory:
+Visual Studio Code uses configuration files to specify tasks that can be executed. These files are provided in the `contrib/.vscode` folder. To enable building from Visual Studio Code, simply copy the whole folder into the root directory with the name `.vscode`:
 ```bash
-cp contrib/.vscode .
+cp -r contrib/vscode .vscode
 ```
 
 ### The build worked fine, but when I try to call cmake manually I get `cmake not found!`
