@@ -5,9 +5,11 @@
 #ifndef ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 #define ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
@@ -43,8 +45,11 @@ class ClientGgp final : public CaptureListener {
   std::shared_ptr<Process> target_process_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
+  std::mutex mutex_;
+  std::condition_variable process_manager_ready_;
 
-  void InitCapture();
+  std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
+  bool InitCapture();
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
