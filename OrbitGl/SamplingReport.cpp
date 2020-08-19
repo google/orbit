@@ -19,16 +19,6 @@ SamplingReport::SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profil
   FillReport();
 }
 
-SamplingReport::~SamplingReport() { ClearReport(); }
-
-void SamplingReport::ClearReport() {
-  selected_sorted_callstack_report_ = nullptr;
-  selected_callstack_index_ = 0;
-  if (callstack_data_view_ != nullptr) {
-    callstack_data_view_->ClearCallstack();
-  }
-}
-
 void SamplingReport::FillReport() {
   const auto& sample_data = profiler_->GetThreadSampleData();
 
@@ -67,7 +57,9 @@ void SamplingReport::UpdateReport() {
   selected_sorted_callstack_report_ =
       profiler_->GetSortedCallstacksFromAddress(selected_address_, selected_thread_id_);
   if (selected_sorted_callstack_report_->callstacks_count.empty()) {
-    ClearReport();
+    selected_sorted_callstack_report_ = nullptr;
+    selected_callstack_index_ = 0;
+    callstack_data_view_->ClearCallstack();
   } else {
     OnCallstackIndexChanged(selected_callstack_index_);
   }

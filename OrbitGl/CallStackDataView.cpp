@@ -13,7 +13,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-CallStackDataView::CallStackDataView() : DataView(DataViewType::kCallstack) {}
+CallStackDataView::CallStackDataView() : DataView(DataViewType::kCallstack), callstack_(nullptr) {}
 
 void CallStackDataView::SetAsMainInstance() {}
 
@@ -142,14 +142,12 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 void CallStackDataView::DoFilter() {
-  if (callstack_.GetFramesCount() == 0) {
-    return;
-  }
+  if (!callstack_) return;
 
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
-  for (size_t i = 0; i < callstack_.GetFramesCount(); ++i) {
+  for (size_t i = 0; i < callstack_->GetFramesCount(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     FunctionInfo* function = frame.function;
     std::string name = ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
@@ -172,7 +170,7 @@ void CallStackDataView::DoFilter() {
 }
 
 void CallStackDataView::OnDataChanged() {
-  size_t num_functions = callstack_.GetFramesCount();
+  size_t num_functions = callstack_ ? callstack_->GetFramesCount() : 0;
   indices_.resize(num_functions);
   for (size_t i = 0; i < num_functions; ++i) {
     indices_[i] = i;
@@ -187,11 +185,12 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(int
 
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
     int index_in_callstack) {
-  if (index_in_callstack >= static_cast<int>(callstack_.GetFramesCount())) {
+  if (callstack_ == nullptr ||
+      index_in_callstack >= static_cast<int>(callstack_->GetFramesCount())) {
     return CallStackDataViewFrame();
   }
 
-  uint64_t address = callstack_.GetFrame(index_in_callstack);
+  uint64_t address = callstack_->GetFrame(index_in_callstack);
   FunctionInfo* function = nullptr;
   std::shared_ptr<Module> module = nullptr;
 
