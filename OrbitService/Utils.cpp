@@ -8,6 +8,8 @@
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <cxxabi.h>
+#include <dirent.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -148,13 +150,9 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
   std::vector<TracepointInfo> result;
 
-  std::error_code error_code_category, error_code_name;
-  std::error_code no_err;
-  std::string error_category_message, error_name_message;
-
-  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents, error_code_category)) {
+  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents)) {
     if (fs::is_directory(category)) {
-      for (const auto& name : fs::directory_iterator(category, error_code_name)) {
+      for (const auto& name : fs::directory_iterator(category)) {
         TracepointInfo tracepoint_info;
         tracepoint_info.set_name(fs::path(name).filename());
         tracepoint_info.set_category(fs::path(category).filename());
@@ -162,16 +160,6 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
       }
     }
   }
-
-  error_category_message = error_code_category.message();
-  error_name_message = error_code_name.message();
-  if (error_category_message.compare(no_err.message()) != 0) {
-    return ErrorMessage(error_category_message.c_str());
-  }
-  if (error_name_message.compare(no_err.message()) != 0) {
-    return ErrorMessage(error_name_message.c_str());
-  }
-
   return result;
 }
 
