@@ -28,16 +28,16 @@ class CallStackDataView : public DataView {
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void SetCallStack(const CallStack& callstack) {
-    callstack_ = std::make_unique<CallStack>(callstack);
+    callstack_ = CallStack(callstack);
     OnDataChanged();
   }
 
-  void ClearCallstack() { callstack_ = nullptr; }
+  void ClearCallstack() { callstack_ = CallStack(); }
 
  protected:
   void DoFilter() override;
 
-  std::unique_ptr<CallStack> callstack_;
+  CallStack callstack_;
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame() = default;
