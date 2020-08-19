@@ -200,7 +200,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
-  DataView* GetOrCreateDataView(DataViewType type) override;
+  [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
+  [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
@@ -273,6 +274,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<FunctionsDataView> functions_data_view_;
   std::unique_ptr<LiveFunctionsDataView> live_functions_data_view_;
   std::unique_ptr<CallStackDataView> callstack_data_view_;
+  std::unique_ptr<CallStackDataView> selection_callstack_data_view_;
   std::unique_ptr<PresetsDataView> presets_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
