@@ -613,18 +613,16 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart, float a_
 
   sampling_profiler->SetGenerateSummary(a_TID == 0);
 
+  const CallstackData* callstack_data = Capture::capture_data_.GetCallstackData();
+  std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
-    Capture::capture_data_.AddSelectionCallstackFromCallstackData(event);
+    selection_callstack_data->AddCallStackFromKnownCallstackData(event, *callstack_data);
   }
 
-  const CallstackData* selection_callstack_data =
-      Capture::capture_data_.GetSelectionCallstackData();
   sampling_profiler->ProcessSamples(*selection_callstack_data);
 
-  int samples_count = selection_callstack_data->GetCallstackEventsSize();
-  if (samples_count > 0) {
-    GOrbitApp->AddSelectionReport(sampling_profiler, selection_callstack_data);
-  }
+  GOrbitApp->AddSelectionReport(sampling_profiler, selection_callstack_data.get());
+  Capture::capture_data_.SetSelectionCallstackData(std::move(selection_callstack_data));
 
   NeedsUpdate();
 
