@@ -1,0 +1,17 @@
+# This file is intended to be imported when building for oss-fuzz
+# Compiler and settings are auto-detected in that case, but we want to have
+# an upstream config file where settings can be changed.
+BASE_CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+BASE_CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+BASE_LDFLAGS=-Wl,-z,relro,-z,now,-z,noexecstack -pthread
+
+[options]
+OrbitProfiler:with_gui=False
+OrbitProfiler:with_orbitgl=True
+OrbitProfiler:run_tests=False
+llvm_object:allow_undefined_symbols=True
+llvm_symbolize:allow_undefined_symbols=True
+
+[build_requires]
+
+[env]
