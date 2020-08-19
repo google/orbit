@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_CAPTURE_SERIALIZER_H_
 #define ORBIT_GL_CAPTURE_SERIALIZER_H_
 
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/message.h>
+
 #include <iosfwd>
 #include <outcome.hpp>
 #include <string>
@@ -21,6 +24,11 @@ class CaptureSerializer {
   ErrorMessageOr<void> Load(const std::string& filename);
 
   class TimeGraph* time_graph_;
+
+  static bool ReadMessage(google::protobuf::Message* message,
+                          google::protobuf::io::CodedInputStream* input);
+  static void WriteMessage(const google::protobuf::Message* message,
+                           google::protobuf::io::CodedOutputStream* output);
 
  private:
   void FillCaptureData(orbit_client_protos::CaptureInfo* capture_info);
