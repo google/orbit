@@ -22,6 +22,7 @@ namespace orbit_service::utils {
 using Path = std::filesystem::path;
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t pid);
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints();
+ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ListTracepoints();
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
     std::string_view proc_maps_data);
 ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization();
