@@ -407,7 +407,7 @@ void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
     manual_instrumentation_string_manager_.AddOrReplace(string_address, "");
 
     GOrbitApp->GetThreadPool()->Schedule([this, string_address]() {
-      int32_t pid = Capture::GTargetProcess->GetID();
+      int32_t pid = Capture::capture_data_.process_id();
       const auto& process_manager = GOrbitApp->GetProcessManager();
       auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
 
@@ -857,7 +857,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
 static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track, uint64_t string_address,
                                          OrbitApp* app) {
   app->GetThreadPool()->Schedule([track, string_address, app]() {
-    int32_t pid = Capture::GTargetProcess->GetID();
+    int32_t pid = Capture::capture_data_.process_id();
     const auto& process_manager = app->GetProcessManager();
     auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
 

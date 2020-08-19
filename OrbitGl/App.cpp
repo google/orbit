@@ -214,8 +214,7 @@ void OrbitApp::PostInit() {
           }
         }
 
-        if (processes_data_view_->GetSelectedProcessId() == -1 &&
-            processes_data_view_->GetFirstProcessId() != -1) {
+        if (GetSelectedProcessID() == -1 && processes_data_view_->GetFirstProcessId() != -1) {
           processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
         }
         FireRefreshCallbacks(DataViewType::kProcesses);
@@ -311,7 +310,8 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
-  thread_pool_->Schedule([this, pid, function] {
+  const bool is_64_bit = data_manager_->GetProcessByPid(pid)->is_64_bit();
+  thread_pool_->Schedule([this, is_64_bit, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
         pid, FunctionUtils::GetAbsoluteAddress(function), function.size());
     if (!result.has_value()) {
@@ -324,7 +324,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     Disassembler disasm;
     disasm.AddLine(absl::StrFormat("asm: /* %s */", FunctionUtils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), FunctionUtils::GetAbsoluteAddress(function),
-                       Capture::GTargetProcess->GetIs64Bit());
+                       is_64_bit);
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
       DisassemblyReport empty_report(disasm);
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
@@ -446,7 +446,7 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
 
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
-  const int32_t pid = processes_data_view_->GetSelectedProcessId();
+  const int32_t pid = GetSelectedProcessID();
   const std::shared_ptr<Process>& process = FindProcessByPid(pid);
   preset.set_process_full_path(data_manager_->GetProcessByPid(pid)->full_path());
 
@@ -553,7 +553,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  int32_t pid = processes_data_view_->GetSelectedProcessId();
+  int32_t pid = GetSelectedProcessID();
   if (pid == -1) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please choose a target process for the capture.");
@@ -840,7 +840,7 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
-  CHECK(processes_data_view_->GetSelectedProcessId() == pid);
+  CHECK(GetSelectedProcessID() == pid);
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
 
@@ -855,7 +855,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // the moment we arrive here. If not - ignore the result.
       const std::vector<ModuleInfo>& module_infos = result.value();
       data_manager_->UpdateModuleInfos(pid, module_infos);
-      if (pid != processes_data_view_->GetSelectedProcessId()) {
+      if (pid != GetSelectedProcessID()) {
         return;
       }
 
@@ -892,7 +892,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // To this point all data is ready. We can set the Process and then
       // propagate the changes to the UI.
 
-      if (pid != Capture::GTargetProcess->GetID()) {
+      if (pid != GetSelectedProcessID()) {
         data_manager_->ClearSelectedFunctions();
         Capture::SetTargetProcess(std::move(process));
       }
