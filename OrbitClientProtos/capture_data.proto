@@ -100,3 +100,9 @@ message TimerInfo {
   uint64 timeline_hash = 11;
   repeated uint64 registers = 12;
 }
+
+// libprotobuf-mutator needs a single proto with all the data
+message CaptureSerializerFuzzerInfo {
+  CaptureInfo capture_info = 1;
+  repeated TimerInfo timers = 2;
+}

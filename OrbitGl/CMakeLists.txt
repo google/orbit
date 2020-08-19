@@ -142,7 +142,8 @@ target_link_libraries(
 register_test(OrbitGlTests)
 
 add_fuzzer(CaptureSerializerLoadFuzzer CaptureSerializerLoadFuzzer.cpp)
-target_link_libraries(CaptureSerializerLoadFuzzer PRIVATE OrbitGl)
+target_link_libraries(CaptureSerializerLoadFuzzer
+                      PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
 
 add_fuzzer(DataManagerUpdateModuleInfosFuzzer
            DataManagerUpdateModuleInfosFuzzer.cpp)
