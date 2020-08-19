@@ -395,7 +395,7 @@ void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_pro
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
 
   if (selection_report_callback_) {
-    DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
+    DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
     selection_report_callback_(callstack_data_view, report);
   }
 
@@ -404,6 +404,7 @@ void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_pro
     selection_report_->ClearReport();
   }
   selection_report_ = report;
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
@@ -1040,6 +1041,14 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   }
 
   FATAL("Unreachable");
+}
+
+DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
+  if (selection_callstack_data_view_ == nullptr) {
+    selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
+    m_Panels.push_back(selection_callstack_data_view_.get());
+  }
+  return selection_callstack_data_view_.get();
 }
 
 void OrbitApp::FilterTracks(const std::string& filter) {
