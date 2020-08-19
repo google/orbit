@@ -29,6 +29,8 @@
 
 namespace orbit_service::utils {
 
+namespace fs = std::filesystem;
+
 using ::ElfUtils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
@@ -140,31 +142,13 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
   std::vector<TracepointInfo> result;
 
-  struct stat info;
-  struct dirent* category = nullptr;
-  struct dirent* name = nullptr;
-  DIR* categories = nullptr;
-  DIR* names = nullptr;
-
-  categories = opendir(kLinuxTracingEvents);
-  if (categories != nullptr) {
-    while ((category = readdir(categories))) {
-      char* linuxTracingEventsPath = const_cast<char*>(kLinuxTracingEvents);
-      char* category_name = &category->d_name[0];
-      char* categoryTracingEventsPath =
-          static_cast<char*>(malloc(1 + strlen(linuxTracingEventsPath) + strlen(category_name)));
-      strcpy(categoryTracingEventsPath, linuxTracingEventsPath);
-      strcat(categoryTracingEventsPath, category_name);
-      if (stat(categoryTracingEventsPath, &info) == 0) {
-        if (info.st_mode & S_IFDIR) {
-          names = opendir(categoryTracingEventsPath);
-          while ((name = readdir(names))) {
-            TracepointInfo tracepoint_info;
-            tracepoint_info.set_name(name->d_name);
-            tracepoint_info.set_category(category->d_name);
-            result.emplace_back(tracepoint_info);
-          }
-        }
+  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents)) {
+    if (fs::is_directory(category)) {
+      for (const auto& name : fs::directory_iterator(category)) {
+        TracepointInfo tracepoint_info;
+        tracepoint_info.set_name(fs::path(name).filename());
+        tracepoint_info.set_category(fs::path(category).filename());
+        result.emplace_back(tracepoint_info);
       }
     }
   }
