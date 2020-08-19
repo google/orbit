@@ -10,7 +10,6 @@
 #include "absl/strings/str_format.h"
 #include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
-
 namespace orbit_service::utils {
 
 using Path = std::filesystem::path;

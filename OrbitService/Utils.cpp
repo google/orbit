@@ -139,7 +139,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
   return result;
 }
 
-ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
+ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ListTracepoints() {
   std::vector<TracepointInfo> result;
 
   for (const auto& category : fs::directory_iterator(
@@ -155,6 +155,11 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   }
 
   return result;
+}
+
+ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
+  OUTCOME_TRY(result, ListTracepoints());
+  return std::move(result);
 }
 
 ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization() {
