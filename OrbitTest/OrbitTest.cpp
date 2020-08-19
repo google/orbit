@@ -88,6 +88,8 @@ void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::millisec
 
 void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kTeal);
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kOrange);
   SleepFor1Ms();
   SleepFor1Ms();
 }

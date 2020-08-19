@@ -80,6 +80,25 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return GOrbitApp->IsFunctionVisible(timer_info.function_address());
 }
 
+[[nodiscard]] static inline Color ToColor(uint64_t val) {
+  return Color((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
+}
+
+[[nodiscard]] static inline std::optional<Color> GetUserColor(const TimerInfo& timer_info,
+                                                              const FunctionInfo& function_info) {
+  FunctionInfo::OrbitType type = function_info.type();
+  if (type != FunctionInfo::kOrbitTimerStart && type != FunctionInfo::kOrbitTimerStartAsync) {
+    return std::optional<Color>{};
+  }
+
+  // See Orbit.h for more information about the manual instrumentation API.
+  const int kColorArgumentIndex = type == FunctionInfo::kOrbitTimerStart ? 1 : 2;
+  constexpr uint64_t kColorAuto = 0x00000001;
+  CHECK(timer_info.registers_size() > kColorArgumentIndex);
+  uint64_t color_arg = timer_info.registers(kColorArgumentIndex);
+  return color_arg != kColorAuto ? ToColor(color_arg) : std::optional<Color>{};
+}
+
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
@@ -89,7 +108,13 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
     return kInactiveColor;
   }
 
-  Color color = time_graph_->GetThreadColor(timer_info.thread_id());
+  uint64_t address = timer_info.function_address();
+  const FunctionInfo* function_info = Capture::capture_data_.GetSelectedFunction(address);
+  CHECK(function_info);
+  std::optional<Color> user_color = GetUserColor(timer_info, *function_info);
+
+  Color color = user_color.has_value() ? user_color.value()
+                                       : time_graph_->GetThreadColor(timer_info.thread_id());
 
   constexpr uint8_t kOddAlpha = 210;
   if (!(timer_info.depth() & 0x1)) {
