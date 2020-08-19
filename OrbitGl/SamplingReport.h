@@ -39,6 +39,7 @@ class SamplingReport {
  protected:
   void FillReport();
   void OnCallstackIndexChanged(size_t index);
+  void UpdateDisplayedCallstack();
 
  protected:
   std::shared_ptr<SamplingProfiler> profiler_;
