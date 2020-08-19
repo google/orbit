@@ -509,8 +509,10 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
+  const int32_t selected_process_id = GetSelectedProcessID();
+  const ProcessData* selected_process = data_manager_->GetProcessByPid(selected_process_id);
   const std::string& process_full_path = preset->preset_info().process_full_path();
-  if (Capture::GTargetProcess->GetFullPath() == process_full_path) {
+  if (selected_process != nullptr && selected_process->full_path() == process_full_path) {
     // In case we already have the correct process selected
     GOrbitApp->LoadModulesFromPreset(Capture::GTargetProcess, preset);
     return;
