@@ -52,8 +52,8 @@ ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   return outcome::success();
 }
 
-void WriteMessage(const google::protobuf::Message* message,
-                  google::protobuf::io::CodedOutputStream* output) {
+void CaptureSerializer::WriteMessage(const google::protobuf::Message* message,
+                                     google::protobuf::io::CodedOutputStream* output) {
   uint32_t message_size = message->ByteSizeLong();
   output->WriteLittleEndian32(message_size);
   message->SerializeToCodedStream(output);
@@ -142,8 +142,8 @@ ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
   return Load(file);
 }
 
-bool ReadMessage(google::protobuf::Message* message,
-                 google::protobuf::io::CodedInputStream* input) {
+bool CaptureSerializer::ReadMessage(google::protobuf::Message* message,
+                                    google::protobuf::io::CodedInputStream* input) {
   uint32_t message_size;
   if (!input->ReadLittleEndian32(&message_size)) {
     return false;
@@ -158,7 +158,7 @@ bool ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-void FillEventBuffer() {
+static void FillEventBuffer() {
   GEventTracer.GetEventBuffer().Reset();
   for (const CallstackEvent& callstack_event :
        Capture::capture_data_.GetCallstackData()->callstack_events()) {
