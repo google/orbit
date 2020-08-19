@@ -110,16 +110,8 @@ class CaptureData {
     return selection_callstack_data_.get();
   };
 
-  void AddSelectionCallStack(CallStack call_stack) {
-    selection_callstack_data_->AddUniqueCallStack(std::move(call_stack));
-  }
-
-  void AddSelectionCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) {
-    selection_callstack_data_->AddCallstackEvent(std::move(callstack_event));
-  }
-
-  void AddSelectionCallstackFromCallstackData(const orbit_client_protos::CallstackEvent& event) {
-    selection_callstack_data_->AddCallStackFromKnownCallstackData(event, *callstack_data_);
+  void SetSelectionCallstackData(std::unique_ptr<CallstackData> selection_callstack_data) {
+    selection_callstack_data_ = std::move(selection_callstack_data);
   }
 
  private:
