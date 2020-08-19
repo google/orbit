@@ -63,9 +63,8 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
     treeView->setObjectName(QStringLiteral("treeView"));
     gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
-    treeView->GetTreeView()->setSelectionMode(OrbitTreeView::ExtendedSelection);
+    treeView->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
     treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
-    treeView->GetTreeView()->setAlternatingRowColors(true);
 
     treeView->Link(ui->CallstackTreeView);
 
