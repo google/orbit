@@ -1,3 +1,7 @@
+CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+SANITIZE_CFLAGS=-fsanitize=fuzzer-no-link,address
+SANITIZE_CXXFLAGS=-fsanitize=fuzzer-no-link,address
 [settings]
 os=Linux
 os_build=Linux
@@ -11,13 +15,20 @@ compiler.address_sanitizer=True
 compiler.fuzzer_sanitizer=True
 build_type=RelWithDebInfo
 [options]
-OrbitProfiler:with_crash_handling=False
+OrbitProfiler:with_gui=False
+OrbitProfiler:with_orbitgl=True
+OrbitProfiler:run_tests=False
 llvm_object:allow_undefined_symbols=True
+llvm_symbolize:allow_undefined_symbols=True
 [build_requires]
-cmake/3.16.4@
+cmake_installer/3.16.3@conan/stable
 [env]
 CC=clang-9
 CXX=clang++-9
-CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=fuzzer-no-link,address -fPIC
-CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=fuzzer-no-link,address -fPIC
+CFLAGS=$CFLAGS
+CXXFLAGS=$CXXFLAGS
+OrbitProfiler:CFLAGS= $CFLAGS $SANITIZE_CFLAGS
+OrbitProfiler:CXXFLAGS= $CXXFLAGS $SANITIZE_CXXFLAGS
+llvm:CFLAGS= $CFLAGS $SANITIZE_CFLAGS
+llvm:CXXFLAGS= $CXXFLAGS $SANITIZE_CXXFLAGS
 LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
