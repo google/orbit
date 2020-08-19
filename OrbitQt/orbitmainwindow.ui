@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>976</width>
-    <height>594</height>
+    <height>671</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
        </property>
        <widget class="QWidget" name="HomeTab">
         <attribute name="title">
-         <string>home</string>
+         <string>Home</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="0" column="1">
@@ -66,16 +66,16 @@
              <enum>Qt::Horizontal</enum>
             </property>
             <widget class="ProcessLauncherWidget" name="ProcessesList" native="true"/>
-            <widget class="OrbitDataViewPanel" name="SessionList"/>
+            <widget class="OrbitDataViewPanel" name="SessionList" native="true"/>
            </widget>
-           <widget class="OrbitDataViewPanel" name="ModulesList"/>
+           <widget class="OrbitDataViewPanel" name="ModulesList" native="true"/>
           </widget>
          </item>
         </layout>
        </widget>
        <widget class="QWidget" name="CaptureTab">
         <attribute name="title">
-         <string>capture</string>
+         <string>Capture</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
@@ -89,6 +89,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <addaction name="actionToggle_Capture"/>
+           <addaction name="actionClear_Capture"/>
+           <addaction name="actionOpen_Capture"/>
+           <addaction name="actionSave_Capture"/>
+           <addaction name="actionHelp"/>
           </widget>
          </item>
          <item>
@@ -105,27 +110,27 @@
        </property>
        <widget class="QWidget" name="FunctionsTab">
         <attribute name="title">
-         <string>functions</string>
+         <string>Functions</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="FunctionsList"/>
+          <widget class="OrbitDataViewPanel" name="FunctionsList" native="true"/>
          </item>
         </layout>
        </widget>
        <widget class="QWidget" name="CallStackTab">
         <attribute name="title">
-         <string>callstack</string>
+         <string>Callstack</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="CallStackView"/>
+          <widget class="OrbitDataViewPanel" name="CallStackView" native="true"/>
          </item>
         </layout>
        </widget>
        <widget class="QWidget" name="liveTab">
         <attribute name="title">
-         <string>live</string>
+         <string>Live</string>
         </attribute>
         <layout class="QGridLayout" name="liveGridLayout">
          <item row="0" column="0">
@@ -135,7 +140,7 @@
        </widget>
        <widget class="QWidget" name="samplingTab">
         <attribute name="title">
-         <string>sampling</string>
+         <string>Sampling</string>
         </attribute>
         <layout class="QGridLayout" name="samplingGridLayout">
          <item row="0" column="0">
@@ -145,17 +150,17 @@
        </widget>
        <widget class="QWidget" name="topDownTab">
         <attribute name="title">
-         <string>top-down</string>
+         <string>Top-Down</string>
         </attribute>
         <layout class="QGridLayout" name="topDownGridLayout">
          <item row="0" column="0">
-          <widget class="TopDownWidget" name="topDownWidget"/>
+          <widget class="TopDownWidget" name="topDownWidget" native="true"/>
          </item>
         </layout>
        </widget>
        <widget class="QWidget" name="selectionTab">
         <attribute name="title">
-         <string>selection</string>
+         <string>Selection</string>
         </attribute>
         <layout class="QGridLayout" name="selectionGridLayout">
          <item row="0" column="0">
@@ -165,7 +170,7 @@
        </widget>
        <widget class="QWidget" name="CodeTab">
         <attribute name="title">
-         <string>code</string>
+         <string>Code</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_10">
          <item row="0" column="0">
@@ -223,7 +228,7 @@
      <x>0</x>
      <y>0</y>
      <width>976</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -274,32 +279,47 @@
    <addaction name="menuFeedback"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionSave_Preset">
-   <property name="text">
-    <string>Save Preset</string>
-   </property>
-  </action>
   <action name="actionReport_Missing_Feature">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/feedback</normaloff>:/actions/feedback</iconset>
+   </property>
    <property name="text">
     <string>Report Missing Feature</string>
    </property>
   </action>
   <action name="actionReport_Bug">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/bug_report</normaloff>:/actions/bug_report</iconset>
+   </property>
    <property name="text">
     <string>Report Bug</string>
    </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/info</normaloff>:/actions/info</iconset>
+   </property>
    <property name="text">
     <string>About</string>
    </property>
   </action>
   <action name="actionOpen_Preset">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/bookmarks</normaloff>:/actions/bookmarks</iconset>
+   </property>
    <property name="text">
-    <string>Open Preset</string>
+    <string>Open Preset...</string>
    </property>
   </action>
   <action name="actionToggle_Capture">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/play_arrow</normaloff>:/actions/play_arrow</iconset>
+   </property>
    <property name="text">
     <string>Toggle Capture</string>
    </property>
@@ -308,6 +328,10 @@
    </property>
   </action>
   <action name="actionClear_Capture">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/clear</normaloff>:/actions/clear</iconset>
+   </property>
    <property name="text">
     <string>Clear Capture</string>
    </property>
@@ -316,6 +340,10 @@
    </property>
   </action>
   <action name="actionFilter_Tracks">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/filter_list</normaloff>:/actions/filter_list</iconset>
+   </property>
    <property name="text">
     <string>Filter Tracks</string>
    </property>
@@ -324,6 +352,10 @@
    </property>
   </action>
   <action name="actionFilter_Functions">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/search</normaloff>:/actions/search</iconset>
+   </property>
    <property name="text">
     <string>Search</string>
    </property>
@@ -332,6 +364,10 @@
    </property>
   </action>
   <action name="actionHelp">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/help</normaloff>:/actions/help</iconset>
+   </property>
    <property name="text">
     <string>Help</string>
    </property>
@@ -340,6 +376,10 @@
    </property>
   </action>
   <action name="actionQuit">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/exit_to_app</normaloff>:/actions/exit_to_app</iconset>
+   </property>
    <property name="text">
     <string>Quit</string>
    </property>
@@ -353,16 +393,28 @@
    </property>
   </action>
   <action name="actionSave_Preset_As">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/bookmark_border</normaloff>:/actions/bookmark_border</iconset>
+   </property>
    <property name="text">
     <string>Save Preset As...</string>
    </property>
   </action>
   <action name="actionOpen_Capture">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/folder</normaloff>:/actions/folder</iconset>
+   </property>
    <property name="text">
-    <string>Open Capture</string>
+    <string>Open Capture...</string>
    </property>
   </action>
   <action name="actionSave_Capture">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/save_alt</normaloff>:/actions/save_alt</iconset>
+   </property>
    <property name="text">
     <string>Save Capture</string>
    </property>
@@ -401,6 +453,11 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
+   <class>OrbitDataViewPanel</class>
+   <extends>QWidget</extends>
+   <header>orbitdataviewpanel.h</header>
+  </customwidget>
+  <customwidget>
    <class>OrbitCodeEditor</class>
    <extends>QPlainTextEdit</extends>
    <header>orbitcodeeditor.h</header>
@@ -409,11 +466,6 @@
    <class>OrbitGLWidget</class>
    <extends>QOpenGLWidget</extends>
    <header>orbitglwidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>OrbitDataViewPanel</class>
-   <extends>QTreeView</extends>
-   <header>orbitdataviewpanel.h</header>
   </customwidget>
   <customwidget>
    <class>ProcessLauncherWidget</class>
@@ -431,7 +483,14 @@
    <extends>QWidget</extends>
    <header>orbitsamplingreport.h</header>
   </customwidget>
+  <customwidget>
+   <class>TopDownWidget</class>
+   <extends>QWidget</extends>
+   <header>topdownwidget.h</header>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../icons/orbiticons.qrc"/>
+ </resources>
  <connections/>
 </ui>

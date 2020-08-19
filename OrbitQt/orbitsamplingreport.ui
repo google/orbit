@@ -85,7 +85,11 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>&lt;</string>
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="../icons/orbiticons.qrc">
+                <normaloff>:/actions/keyboard_arrow_left</normaloff>:/actions/keyboard_arrow_left</iconset>
               </property>
              </widget>
             </item>
@@ -98,7 +102,11 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>&gt;</string>
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="../icons/orbiticons.qrc">
+                <normaloff>:/actions/keyboard_arrow_right</normaloff>:/actions/keyboard_arrow_right</iconset>
               </property>
              </widget>
             </item>
@@ -137,6 +145,8 @@
    <header>orbitdataviewpanel.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../icons/orbiticons.qrc"/>
+ </resources>
  <connections/>
 </ui>
