@@ -33,7 +33,7 @@ class Process {
   void SetFullPath(std::string_view full_path) { m_FullPath = full_path; }
   const std::string& GetFullPath() const { return m_FullPath; }
   void SetID(int32_t id) { process_id_ = id; }
-  [[nodiscard]] int32_t GetID() const { return process_id_; }
+  [[nodiscard]] int32_t GetId() const { return process_id_; }
   void SetIs64Bit(bool value) { m_Is64Bit = value; }
   bool GetIs64Bit() const { return m_Is64Bit; }
 

@@ -210,11 +210,11 @@ void OrbitApp::PostInit() {
             process->SetIs64Bit(info.is_64_bit());
             // The other fields do not appear to be used at the moment.
 
-            process_map_.insert_or_assign(process->GetID(), process);
+            process_map_.insert_or_assign(process->GetId(), process);
           }
         }
 
-        if (GetSelectedProcessID() == -1 && processes_data_view_->GetFirstProcessId() != -1) {
+        if (GetSelectedProcessId() == -1 && processes_data_view_->GetFirstProcessId() != -1) {
           processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
         }
         FireRefreshCallbacks(DataViewType::kProcesses);
@@ -454,7 +454,7 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
 
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
-  const int32_t pid = GetSelectedProcessID();
+  const int32_t pid = GetSelectedProcessId();
   const std::shared_ptr<Process>& process = FindProcessByPid(pid);
   preset.set_process_full_path(data_manager_->GetProcessByPid(pid)->full_path());
 
@@ -517,7 +517,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
-  const int32_t selected_process_id = GetSelectedProcessID();
+  const int32_t selected_process_id = GetSelectedProcessId();
   const ProcessData* selected_process = data_manager_->GetProcessByPid(selected_process_id);
   const std::string& process_full_path = preset->preset_info().process_full_path();
   if (selected_process != nullptr && selected_process->full_path() == process_full_path) {
@@ -562,7 +562,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  int32_t pid = GetSelectedProcessID();
+  int32_t pid = GetSelectedProcessId();
   if (pid == -1) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please choose a target process for the capture.");
@@ -850,13 +850,13 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                         absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
   }
   if (!modules_to_load.empty()) {
-    LoadModules(process, process->GetID(), modules_to_load, preset);
+    LoadModules(process, process->GetId(), modules_to_load, preset);
   }
 }
 
 void OrbitApp::UpdateProcessAndModuleList(
     int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
-  CHECK(GetSelectedProcessID() == pid);
+  CHECK(processes_data_view_->GetSelectedProcessId() == pid);
   thread_pool_->Schedule([pid, preset, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
 
@@ -871,7 +871,7 @@ void OrbitApp::UpdateProcessAndModuleList(
       // the moment we arrive here. If not - ignore the result.
       const std::vector<ModuleInfo>& module_infos = result.value();
       data_manager_->UpdateModuleInfos(pid, module_infos);
-      if (pid != GetSelectedProcessID()) {
+      if (pid != processes_data_view_->GetSelectedProcessId()) {
         return;
       }
 
@@ -906,7 +906,7 @@ void OrbitApp::UpdateProcessAndModuleList(
       // To this point all data is ready. We can set the Process and then
       // propagate the changes to the UI.
 
-      if (pid != GetSelectedProcess()->GetID()) {
+      if (pid != GetSelectedProcessId()) {
         data_manager_->ClearSelectedFunctions();
         // TODO(kuebler): Move as soon as Capture is gone.
         data_manager_->set_selected_process(process);

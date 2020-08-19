@@ -206,8 +206,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
   [[nodiscard]] std::shared_ptr<Process> FindProcessByPid(int32_t pid);
-  [[nodiscard]] int32_t GetSelectedProcessID() const {
-    return processes_data_view_->GetSelectedProcessId();
+  [[nodiscard]] int32_t GetSelectedProcessId() const {
+    return data_manager_->selected_process()->GetId();
   }
   [[nodiscard]] const std::shared_ptr<Process>& GetSelectedProcess() const {
     return data_manager_->selected_process();

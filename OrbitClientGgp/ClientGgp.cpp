@@ -52,7 +52,7 @@ bool ClientGgp::InitClient() {
 
 // Client requests to start the capture
 bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
-  int32_t pid = target_process_->GetID();
+  int32_t pid = target_process_->GetId();
   if (pid == -1) {
     ERROR(
         "Error starting capture: "

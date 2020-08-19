@@ -148,7 +148,7 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
       GOrbitApp->DeselectFunction(GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = GOrbitApp->GetSelectedProcessID();
+    int32_t pid = GOrbitApp->GetSelectedProcessId();
     for (int i : item_indices) {
       GOrbitApp->Disassemble(pid, GetFunction(i));
     }
