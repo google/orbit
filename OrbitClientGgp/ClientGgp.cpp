@@ -84,8 +84,6 @@ bool ClientGgp::StopCapture() {
 void ClientGgp::InitCapture() {
   target_process_ = GetOrbitProcessByPid(options_.capture_pid);
   CHECK(target_process_ != nullptr);
-  // TODO: remove this line when GTargetProcess is deprecated in Capture
-  Capture::SetTargetProcess(target_process_);
 }
 
 // CaptureListener implementation
