@@ -61,7 +61,8 @@ target_sources(
           processlauncherwidget.cpp
           servicedeploymanager.cpp
           TopDownViewItemModel.cpp
-          topdownwidget.cpp)
+          topdownwidget.cpp
+          ../icons/orbiticons.qrc)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -116,6 +117,7 @@ add_custom_command(TARGET OrbitQt POST_BUILD COMMAND ${CMAKE_COMMAND}
 set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
+set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 strip_symbols(OrbitQt)
 
 add_executable(OrbitQtTests)

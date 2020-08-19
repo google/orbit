@@ -201,49 +201,27 @@ static QWidget* CreateSpacer(QWidget* parent) {
   return spacer;
 }
 
-static QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
+[[nodiscard]] static QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
   auto* action = new QAction(icon, "", parent);
   action->setDisabled(true);
   return action;
 }
 
-static QIcon GetIcon(const std::string& icon_name) {
+[[nodiscard]] static QIcon GetIcon(const std::string& icon_name) {
   return QIcon(Path::JoinPath({Path::GetIconsPath(), icon_name}).c_str());
 }
 
 void OrbitMainWindow::SetupCaptureToolbar() {
   // Sizes.
   uint32_t kFontSize = 10;
-  uint32_t kIconSize = 30;
   QToolBar* toolbar = ui->capture_toolbar;
-  toolbar->setIconSize(QSize(kIconSize, kIconSize));
 
-  // Create icons.
+  // Create missing icons
   icon_start_capture_ = GetIcon("outline_play_arrow_white_48dp.png");
   icon_stop_capture_ = GetIcon("outline_stop_white_48dp.png");
-  QIcon icon_clear = GetIcon("outline_clear_white_48dp.png");
-  QIcon icon_open = GetIcon("outline_folder_white_48dp.png");
-  QIcon icon_save = GetIcon("outline_save_alt_white_48dp.png");
-  QIcon icon_help = GetIcon("outline_help_outline_white_48dp.png");
   QIcon icon_search = GetIcon("outline_search_white_48dp.png");
   QIcon icon_filter = GetIcon("outline_filter_list_white_48dp.png");
   QIcon icon_timer = GetIcon("outline_access_time_white_48dp.png");
-
-  // Set action icons.
-  ui->actionToggle_Capture->setIcon(icon_start_capture_);
-  ui->actionClear_Capture->setIcon(icon_clear);
-  ui->actionOpen_Capture->setIcon(icon_open);
-  ui->actionSave_Capture->setIcon(icon_save);
-  ui->actionHelp->setIcon(icon_help);
-  ui->actionFilter_Functions->setIcon(icon_search);
-  ui->actionFilter_Tracks->setIcon(icon_filter);
-
-  // Add actions.
-  toolbar->addAction(ui->actionToggle_Capture);
-  toolbar->addAction(ui->actionClear_Capture);
-  toolbar->addAction(ui->actionOpen_Capture);
-  toolbar->addAction(ui->actionSave_Capture);
-  toolbar->addAction(ui->actionHelp);
 
   // Filter tracks.
   toolbar->addWidget(CreateSpacer(toolbar));

@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="/actions">
+    <file alias="bug_report">outline_bug_report_white_48dp.png</file>
+    <file alias="report">outline_report_white_48dp.png</file>
+    <file alias="exit_to_app">outline_exit_to_app_white_48dp.png</file>
+    <file alias="bookmark_border">outline_bookmark_border_white_48dp.png</file>
+    <file alias="bookmarks">outline_bookmarks_white_48dp.png</file>
+    <file alias="access_time">outline_access_time_white_48dp.png</file>
+    <file alias="adjust">outline_adjust_white_48dp.png</file>
+    <file alias="album">outline_album_white_48dp.png</file>
+    <file alias="clear">outline_clear_white_48dp.png</file>
+    <file alias="cloud">outline_cloud_white_48dp.png</file>
+    <file alias="feedback">outline_feedback_white_48dp.png</file>
+    <file alias="filter_list">outline_filter_list_white_48dp.png</file>
+    <file alias="folder">outline_folder_white_48dp.png</file>
+    <file alias="help">outline_help_outline_white_48dp.png</file>
+    <file alias="info">outline_info_white_48dp.png</file>
+    <file alias="keyboard_arrow_left">outline_keyboard_arrow_left_white_48dp.png</file>
+    <file alias="keyboard_arrow_right">outline_keyboard_arrow_right_white_48dp.png</file>
+    <file alias="play_arrow">outline_play_arrow_white_48dp.png</file>
+    <file alias="radio_button_checked">outline_radio_button_checked_white_48dp.png</file>
+    <file alias="radio_button_unchecked">outline_radio_button_unchecked_white_48dp.png</file>
+    <file alias="save_alt">outline_save_alt_white_48dp.png</file>
+    <file alias="save">outline_save_white_48dp.png</file>
+    <file alias="search">outline_search_white_48dp.png</file>
+    <file alias="share">outline_share_white_48dp.png</file>
+    <file alias="skip_next">outline_skip_next_white_48dp.png</file>
+    <file alias="stop">outline_stop_white_48dp.png</file>
+  </qresource>
+</RCC>
