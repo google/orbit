@@ -13,7 +13,9 @@ class ProcessesDataView final : public DataView {
  public:
   ProcessesDataView();
 
-  void SetSelectionListener(const std::function<void(int32_t)>& selection_listener);
+  void SetSelectionListener(
+      const std::function<void(int32_t, const std::shared_ptr<orbit_client_protos::PresetFile>&
+                                            preset)>& selection_listener);
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCpu; }
   std::string GetValue(int row, int column) override;
@@ -21,7 +23,9 @@ class ProcessesDataView final : public DataView {
   std::string GetLabel() override { return "Processes"; }
 
   void OnSelect(int index) override;
-  bool SelectProcess(const std::string& process_name);
+  void OnSelect(int index, const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  bool SelectProcess(const std::string& process_name,
+                     const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   bool SelectProcess(int32_t process_id);
   void SetProcessList(const std::vector<orbit_grpc_protos::ProcessInfo>& process_list);
   int32_t GetSelectedProcessId() const;
@@ -39,7 +43,8 @@ class ProcessesDataView final : public DataView {
 
   std::vector<orbit_grpc_protos::ProcessInfo> process_list_;
   int32_t selected_process_id_;
-  std::function<void(int32_t)> selection_listener_;
+  std::function<void(int32_t, const std::shared_ptr<orbit_client_protos::PresetFile>& preset)>
+      selection_listener_;
 
   enum ColumnIndex { kColumnPid, kColumnName, kColumnCpu, kNumColumns };
 };

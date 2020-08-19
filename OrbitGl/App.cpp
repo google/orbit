@@ -515,12 +515,11 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
     GOrbitApp->LoadModulesFromPreset(Capture::GTargetProcess, preset);
     return;
   }
-  if (!SelectProcess(Path::GetFileName(process_full_path))) {
+  if (!SelectProcess(Path::GetFileName(process_full_path), preset)) {
     SendErrorToUi("Preset loading failed",
                   absl::StrFormat("The process \"%s\" is not running.", process_full_path));
     return;
   }
-  Capture::GSessionPresets = preset;
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
@@ -633,9 +632,10 @@ void OrbitApp::ToggleCapture() {
   }
 }
 
-bool OrbitApp::SelectProcess(const std::string& process) {
+bool OrbitApp::SelectProcess(const std::string& process,
+                             const std::shared_ptr<PresetFile>& preset) {
   if (processes_data_view_) {
-    return processes_data_view_->SelectProcess(process);
+    return processes_data_view_->SelectProcess(process, preset);
   }
 
   return false;
@@ -839,9 +839,10 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
   }
 }
 
-void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
+void OrbitApp::UpdateProcessAndModuleList(
+    int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
   CHECK(GetSelectedProcessID() == pid);
-  thread_pool_->Schedule([pid, this] {
+  thread_pool_->Schedule([pid, preset, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
 
     if (result.has_error()) {
@@ -850,7 +851,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       return;
     }
 
-    main_thread_executor_->Schedule([pid, result, this] {
+    main_thread_executor_->Schedule([pid, result, preset, this] {
       // Make sure that pid is actually what user has selected at
       // the moment we arrive here. If not - ignore the result.
       const std::vector<ModuleInfo>& module_infos = result.value();
@@ -882,10 +883,8 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         process->AddModule(module);
       }
 
-      std::shared_ptr<PresetFile> preset = Capture::GSessionPresets;
       if (preset) {
         LoadModulesFromPreset(process, preset);
-        Capture::GSessionPresets = nullptr;
       }
       // To this point ----------------------------------
 
@@ -995,7 +994,9 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!processes_data_view_) {
         processes_data_view_ = std::make_unique<ProcessesDataView>();
         processes_data_view_->SetSelectionListener(
-            [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
+            [&](int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
+              UpdateProcessAndModuleList(pid, preset);
+            });
         m_Panels.push_back(processes_data_view_.get());
       }
       return processes_data_view_.get();

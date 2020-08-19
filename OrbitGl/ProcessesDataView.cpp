@@ -13,6 +13,7 @@
 #include "Params.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::PresetFile;
 using orbit_grpc_protos::ProcessInfo;
 
 ProcessesDataView::ProcessesDataView()
@@ -90,7 +91,18 @@ void ProcessesDataView::OnSelect(int index) {
   SetSelectedItem();
 
   if (selection_listener_) {
-    selection_listener_(selected_process_id_);
+    selection_listener_(selected_process_id_, nullptr);
+  }
+}
+
+void ProcessesDataView::OnSelect(int index, const std::shared_ptr<PresetFile>& preset) {
+  const ProcessInfo& selected_process = GetProcess(index);
+  selected_process_id_ = selected_process.pid();
+
+  SetSelectedItem();
+
+  if (selection_listener_) {
+    selection_listener_(selected_process_id_, preset);
   }
 }
 
@@ -115,12 +127,13 @@ void ProcessesDataView::SetSelectedItem() {
   selected_index_ = -1;
 }
 
-bool ProcessesDataView::SelectProcess(const std::string& process_name) {
+bool ProcessesDataView::SelectProcess(const std::string& process_name,
+                                      const std::shared_ptr<PresetFile>& preset) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     const ProcessInfo& process = GetProcess(i);
     // TODO: What if there are multiple processes with the same substring?
     if (process.full_path().find(process_name) != std::string::npos) {
-      OnSelect(i);
+      OnSelect(i, preset);
       return true;
     }
   }
@@ -192,6 +205,7 @@ const ProcessInfo& ProcessesDataView::GetProcess(uint32_t row) const {
 }
 
 void ProcessesDataView::SetSelectionListener(
-    const std::function<void(int32_t)>& selection_listener) {
+    const std::function<void(int32_t, const std::shared_ptr<PresetFile>& preset)>&
+        selection_listener) {
   selection_listener_ = selection_listener;
 }
