@@ -149,7 +149,3 @@ add_fuzzer(DataManagerUpdateModuleInfosFuzzer
 target_link_libraries(DataManagerUpdateModuleInfosFuzzer
                       PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
 
-add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
-target_link_libraries(
-  CaptureEventProcessorProcessEventsFuzzer
-  PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
