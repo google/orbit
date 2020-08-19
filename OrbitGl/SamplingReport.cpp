@@ -43,6 +43,16 @@ void SamplingReport::FillReport() {
   }
 }
 
+void SamplingReport::UpdateDisplayedCallstack() {
+  selected_sorted_callstack_report_ =
+      profiler_->GetSortedCallstacksFromAddress(selected_address_, selected_thread_id_);
+  if (selected_sorted_callstack_report_->callstacks_count.empty()) {
+    ClearReport();
+  } else {
+    OnCallstackIndexChanged(selected_callstack_index_);
+  }
+}
+
 void SamplingReport::UpdateReport() {
   if (callstack_data_ == nullptr) {
     return;
@@ -62,27 +72,15 @@ void SamplingReport::UpdateReport() {
   // for example the number of occurrences or of total callstacks might have
   // changed (OrbitSamplingReport::RefreshCallstackView will do the actual
   // update once OrbitApp::FireRefreshCallbacks is called).
-  selected_sorted_callstack_report_ =
-      profiler_->GetSortedCallstacksFromAddress(selected_address_, selected_thread_id_);
-  if (selected_sorted_callstack_report_->callstacks_count.empty()) {
-    ClearReport();
-  } else {
-    OnCallstackIndexChanged(selected_callstack_index_);
-  }
+  UpdateDisplayedCallstack();
 }
 
 void SamplingReport::OnSelectAddress(uint64_t address, ThreadID thread_id) {
   if (callstack_data_view_) {
     if (selected_address_ != address || selected_thread_id_ != thread_id) {
-      selected_sorted_callstack_report_ =
-          profiler_->GetSortedCallstacksFromAddress(address, thread_id);
       selected_address_ = address;
       selected_thread_id_ = thread_id;
-      if (selected_sorted_callstack_report_->callstacks_count.empty()) {
-        callstack_data_view_->ClearCallstack();
-      } else {
-        OnCallstackIndexChanged(0);
-      }
+      UpdateDisplayedCallstack();
     }
   }
 
