@@ -29,13 +29,13 @@ class ElfFileImpl : public ElfFile {
   ElfFileImpl(std::string_view file_path,
               llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  ErrorMessageOr<ModuleSymbols> LoadSymbols() const override;
-  ErrorMessageOr<uint64_t> GetLoadBias() const override;
-  bool IsAddressInTextSection(uint64_t address) const override;
-  bool HasSymtab() const override;
-  bool Is64Bit() const override;
-  std::string GetBuildId() const override;
-  std::string GetFilePath() const override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbols() const override;
+  [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
+  [[nodiscard]] bool IsAddressInTextSection(uint64_t address) const override;
+  [[nodiscard]] bool HasSymtab() const override;
+  [[nodiscard]] bool Is64Bit() const override;
+  [[nodiscard]] std::string GetBuildId() const override;
+  [[nodiscard]] std::string GetFilePath() const override;
 
  private:
   void InitSections();
