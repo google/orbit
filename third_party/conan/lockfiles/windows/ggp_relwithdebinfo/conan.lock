@@ -393,7 +393,7 @@
     ]
    },
    "26": {
-    "pref": "libprotobuf-mutator/20200506@orbitdeps/stable#4ed8fc67624c9a35b7b0227e93c9d3c4:8c8f5d4cdfbfe9467e8d1a6aa7269e5c6b2d1c0b",
+    "pref": "libprotobuf-mutator/20200506@orbitdeps/stable#90ce749ca62b40e9c061d20fae4410e0:8c8f5d4cdfbfe9467e8d1a6aa7269e5c6b2d1c0b",
     "options": "fPIC=True\nlzma_sdk:fPIC=True\nprotobuf:fPIC=True\nprotobuf:lite=False\nprotobuf:shared=False\nprotobuf:with_zlib=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
     "requires": [
      "24",

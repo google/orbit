@@ -70,7 +70,7 @@ class OrbitConan(ConanFile):
         self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
         self.requires("Outcome/3dae433e@orbitdeps/stable#0")
         self.requires(
-            "libprotobuf-mutator/20200506@{}#4ed8fc67624c9a35b7b0227e93c9d3c4".format(self._orbit_channel))
+            "libprotobuf-mutator/20200506@{}#90ce749ca62b40e9c061d20fae4410e0".format(self._orbit_channel))
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))

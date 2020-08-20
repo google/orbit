@@ -349,7 +349,7 @@
     ]
    },
    "26": {
-    "pref": "libprotobuf-mutator/20200506@orbitdeps/stable#4ed8fc67624c9a35b7b0227e93c9d3c4:709e345ce7ac46e4287c2d91296f30286149f06a",
+    "pref": "libprotobuf-mutator/20200506@orbitdeps/stable#90ce749ca62b40e9c061d20fae4410e0:709e345ce7ac46e4287c2d91296f30286149f06a",
     "options": "protobuf:lite=False\nprotobuf:shared=False\nprotobuf:with_zlib=False\nzlib:minizip=False\nzlib:shared=False",
     "requires": [
      "24",
