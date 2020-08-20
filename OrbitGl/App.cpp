@@ -109,7 +109,7 @@ void OrbitApp::OnCaptureComplete() {
 
     AddSamplingReport(Capture::capture_data_.sampling_profiler(),
                       Capture::capture_data_.GetCallstackData());
-    AddTopDownView(*Capture::capture_data_.sampling_profiler());
+    AddTopDownView(Capture::capture_data_.GetSamplingProfiler().);
 
     if (capture_stopped_callback_) {
       capture_stopped_callback_();
@@ -612,7 +612,7 @@ void OrbitApp::ClearCapture() {
 
   AddSamplingReport(Capture::capture_data_.sampling_profiler(), nullptr);
   // TODO(kuebler): This seems fishy. Probably, TopDownView does not update on new symbols.
-  AddTopDownView(*Capture::capture_data_.sampling_profiler());
+  AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
 
   if (selection_report_) {
     auto empty_selection_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
@@ -769,7 +769,7 @@ void OrbitApp::SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<
   modules_currently_loading_.erase(module->m_FullName);
 
   UpdateSamplingReport();
-  AddTopDownView(*Capture::capture_data_.sampling_profiler());
+  AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
   GOrbitApp->FireRefreshCallbacks();
 }
 

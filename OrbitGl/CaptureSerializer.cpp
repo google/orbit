@@ -35,7 +35,7 @@ using orbit_client_protos::TimerInfo;
 
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   // Add selected functions' exact address to sampling profiler
-  const std::shared_ptr<SamplingProfiler> profiler = Capture::capture_data_.sampling_profiler();
+  const std::shared_ptr<SamplingProfiler>& profiler = Capture::capture_data_.sampling_profiler();
   for (auto& pair : Capture::capture_data_.selected_functions()) {
     profiler->UpdateAddressInfo(pair.first);
   }
@@ -257,7 +257,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   GOrbitApp->AddSamplingReport(Capture::capture_data_.sampling_profiler(),
                                Capture::capture_data_.GetCallstackData());
-  GOrbitApp->AddTopDownView(*Capture::capture_data_.sampling_profiler());
+  GOrbitApp->AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
   GOrbitApp->FireRefreshCallbacks();
   return outcome::success();
 }

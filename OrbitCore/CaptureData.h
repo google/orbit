@@ -133,6 +133,8 @@ class CaptureData {
     return sampling_profiler_;
   }
 
+  [[nodiscard]] const SamplingProfiler& GetSamplingProfiler() const { return *sampling_profiler_; }
+
  private:
   int32_t process_id_ = -1;
   std::string process_name_;
