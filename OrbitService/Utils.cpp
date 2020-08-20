@@ -168,12 +168,10 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   error_category_message = error_code_category.message();
   error_name_message = error_code_name.message();
   if (error_category_message.compare(no_err.message()) != 0) {
-    if (error_name_message.compare(no_err.message()) != 0) {
-      std::string error_message = error_category_message + " " + error_name_message;
-      return ErrorMessage(error_message.c_str());
-    } else {
-      return ErrorMessage(error_category_message.c_str());
-    }
+    return ErrorMessage(error_category_message.c_str());
+  }
+  if (error_name_message.compare(no_err.message()) != 0) {
+    return ErrorMessage(error_name_message.c_str());
   }
 
   return result;
