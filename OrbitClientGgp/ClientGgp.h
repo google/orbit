@@ -16,6 +16,7 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "OrbitProcess.h"
+#include "SymbolHelper.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {
@@ -48,9 +49,11 @@ class ClientGgp final : public CaptureListener {
   std::mutex mutex_;
   std::condition_variable process_manager_ready_;
 
+  const SymbolHelper symbol_helper_;
+
   std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
-  bool LoadCaptureFunctions();
+  bool LoadModuleAndSymbols();
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
