@@ -27,6 +27,7 @@
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
 #include "TopDownViewItemModel.h"
+#include "TutorialOverlay.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
@@ -207,17 +208,13 @@ static QWidget* CreateSpacer(QWidget* parent) {
   return spacer;
 }
 
-[[nodiscard]] static QIcon GetIcon(const std::string& icon_name) {
-  return QIcon(Path::JoinPath({Path::GetIconsPath(), icon_name}).c_str());
-}
-
 void OrbitMainWindow::SetupCaptureToolbar() {
   // Sizes.
   QToolBar* toolbar = ui->capture_toolbar;
 
   // Create missing icons
-  icon_start_capture_ = GetIcon("outline_play_arrow_white_48dp.png");
-  icon_stop_capture_ = GetIcon("outline_stop_white_48dp.png");
+  icon_start_capture_ = QIcon(":/actions/outline_play_arrow_white_48dp.png");
+  icon_stop_capture_ = QIcon(":/actions/outline_stop_white_48dp.png");
 
   // Attach the filter panel to the toolbar
   toolbar->addWidget(CreateSpacer(toolbar));
