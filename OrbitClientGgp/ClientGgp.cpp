@@ -20,6 +20,7 @@
 #include "absl/time/time.h"
 #include "capture_data.pb.h"
 
+using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
 ClientGgp::ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
@@ -112,6 +113,46 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
     return process;
   }
   return nullptr;
+}
+
+bool ClientGgp::LoadCaptureFunctions() {
+  // Load modules for target_process_
+  ErrorMessageOr<std::vector<ModuleInfo>> result =
+      process_manager_->LoadModuleList(target_process_->GetId());
+  if (result.has_error()) {
+    ERROR("Error retrieving modules: %s", result.error().message());
+    return false;
+  }
+  // Find module that corresponds to the binary of target_process
+  const std::vector<ModuleInfo>& module_infos = result.value();
+  LOG("List of modules");
+  for (const ModuleInfo& info : module_infos) {
+    LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s", info.name(),
+        info.file_path(), info.file_size(), info.address_start(), info.address_end(),
+        info.build_id());
+  }
+  std::string_view target_name = target_process_->GetName();
+  auto module_it =
+      find_if(module_infos.begin(), module_infos.end(),
+              [&target_name](const ModuleInfo& info) { return info.name() == target_name; });
+  if (module_it != module_infos.end()) {
+    LOG("Found module correspondent to process binary");
+    std::shared_ptr<Module> module = std::make_shared<Module>();
+    module->m_Name = module_it->name();
+    module->m_FullName = module_it->file_path();
+    module->m_PdbSize = module_it->file_size();
+    module->m_AddressStart = module_it->address_start();
+    module->m_AddressEnd = module_it->address_end();
+    module->m_DebugSignature = module_it->build_id();
+    target_process_->AddModule(module);
+    LOG("Module info: name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s",
+        module->m_Name, module->m_FullName, module->m_PdbSize, module->m_AddressStart,
+        module->m_AddressEnd, module->m_DebugSignature);
+  }
+  // Load symbols for the module
+  // Find requested functions (contains string provided)
+  // Build selected_functions
+  return true;
 }
 
 bool ClientGgp::InitCapture() {
