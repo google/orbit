@@ -13,4 +13,5 @@ message ModuleInfo {
   uint64 address_start = 4;
   uint64 address_end = 5;
   string build_id = 6;
+  uint64 load_bias = 7;
 }

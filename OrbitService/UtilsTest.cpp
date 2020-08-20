@@ -81,6 +81,7 @@ TEST(Utils, ParseMaps) {
     EXPECT_EQ(hello_module_info->address_start(), 0x7f6874285000);
     EXPECT_EQ(hello_module_info->address_end(), 0x7f6874290000);
     EXPECT_EQ(hello_module_info->build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
+    EXPECT_EQ(hello_module_info->load_bias(), 0x0);
 
     EXPECT_EQ(no_symbols_module_info->name(), "no_symbols_elf");
     EXPECT_EQ(no_symbols_module_info->file_path(), no_symbols_path);
@@ -88,9 +89,9 @@ TEST(Utils, ParseMaps) {
     EXPECT_EQ(no_symbols_module_info->address_start(), 0x0);
     EXPECT_EQ(no_symbols_module_info->address_end(), 0x1000);
     EXPECT_EQ(no_symbols_module_info->build_id(), "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+    EXPECT_EQ(no_symbols_module_info->load_bias(), 0x400000);
   }
 
-  // Is this actually going to work?
 }  // namespace orbit_service::utils
 
 TEST(Utils, GetCpuUtilization) {
