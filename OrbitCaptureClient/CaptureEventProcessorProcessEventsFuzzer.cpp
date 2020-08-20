@@ -21,7 +21,10 @@ using orbit_client_protos::TimerInfo;
 
 class MyCaptureListener : public CaptureListener {
  private:
-  void OnCaptureStarted() override {}
+  void OnCaptureStarted(
+      int32_t /*process_id*/,
+      const absl::flat_hash_map<
+          uint64_t, orbit_client_protos::FunctionInfo>& /*selected_functions*/) override {}
   void OnCaptureComplete() override {}
   void OnTimer(const TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}

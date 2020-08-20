@@ -160,7 +160,8 @@ bool EventTrack::IsEmpty() const {
 }
 
 static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
-  const std::string& function_name = Capture::GSamplingProfiler->GetFunctionNameByAddress(addr);
+  const std::string& function_name =
+      Capture::capture_data_.GetSamplingProfiler().GetFunctionNameByAddress(addr);
   if (function_name == SamplingProfiler::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
   }

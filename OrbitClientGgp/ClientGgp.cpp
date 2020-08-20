@@ -65,8 +65,6 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   // TODO(kuebler): right now selected_functions is only an empty placeholder,
   //  it needs to be filled separately in each client and then passed.
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-  Capture::capture_data_ =
-      CaptureData(pid, target_process_->GetName(), target_process_, selected_functions);
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(thread_pool, pid, selected_functions);
   if (result.has_error()) {
@@ -87,7 +85,13 @@ void ClientGgp::InitCapture() {
 }
 
 // CaptureListener implementation
-void ClientGgp::OnCaptureStarted() { LOG("Capture started"); }
+void ClientGgp::OnCaptureStarted(
+    int32_t process_id,
+    const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions) {
+  Capture::capture_data_ =
+      CaptureData(process_id, target_process_->GetName(), target_process_, selected_functions);
+  LOG("Capture started");
+}
 
 void ClientGgp::OnCaptureComplete() { LOG("Capture completed"); }
 
