@@ -231,16 +231,6 @@ TEST(Path, AllAutoCreatedDirsExist) {
   }
 }
 
-TEST(Path, AllCopiedDirsExist) {
-  auto test_fns = {Path::GetIconsPath};
-
-  for (auto fn : test_fns) {
-    std::string path = fn();
-    LOG("Testing existence of \"%s\"", path.c_str());
-    EXPECT_TRUE(std::filesystem::is_directory(path));
-  }
-}
-
 TEST(Path, AllDirsOfFilesExist) {
   auto test_fns = {Path::GetLogFilePathAndCreateDir};
 

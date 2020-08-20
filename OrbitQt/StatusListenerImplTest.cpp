@@ -7,7 +7,7 @@
 #include "StatusListenerImpl.h"
 #include "gtest/gtest.h"
 
-int argc = 0;
+static int argc = 0;
 
 TEST(StatusListenerImpl, ShowAndClearOneMessage) {
   QApplication app(argc, nullptr);

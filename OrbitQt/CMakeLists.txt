@@ -11,6 +11,7 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   OrbitQt
   PRIVATE deploymentconfigurations.h
+          CutoutWidget.h
           ElidedLabel.h
           Error.h
           eventloop.h
@@ -32,6 +33,7 @@ target_sources(
           resource.h
           servicedeploymanager.h
           TopDownViewItemModel.h
+          TutorialOverlay.h
           topdownwidget.h)
 
 target_sources(
@@ -62,7 +64,10 @@ target_sources(
           servicedeploymanager.cpp
           TopDownViewItemModel.cpp
           topdownwidget.cpp
-          ../icons/orbiticons.qrc)
+          TutorialOverlay.cpp
+          TutorialOverlay.ui
+          ../icons/orbiticons.qrc
+          ../images/orbitimages.qrc)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -110,10 +115,6 @@ if(WIN32)
     COMMENT "Running windeployqt...")
 endif()
 
-add_custom_command(TARGET OrbitQt POST_BUILD COMMAND ${CMAKE_COMMAND}
-                   -E copy_directory ${CMAKE_SOURCE_DIR}/icons/
-                   $<TARGET_FILE_DIR:OrbitQt>/icons)
-
 set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
@@ -125,15 +126,30 @@ add_executable(OrbitQtTests)
 target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitQtTests
+        PRIVATE
+                CutoutWidget.h
+                TutorialOverlay.h)
+target_sources(OrbitQtTests
         PRIVATE StatusListenerImplTest.cpp
-                StatusListenerImpl.cpp)
+                StatusListenerImpl.cpp
+                TutorialOverlayTest.cpp
+                TutorialOverlay.cpp
+                TutorialOverlay.ui
+                ../images/orbitimages.qrc)
+				
+target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQtTests
-  PRIVATE OrbitGl
+  PRIVATE OrbitCore
+          OrbitGl
           Qt5::Widgets
           Qt5::Core
           GTest::Main)
+		  
+set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
+set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
+set_target_properties(OrbitQtTests PROPERTIES AUTORCC ON)
 
 register_test(OrbitQtTests)
 

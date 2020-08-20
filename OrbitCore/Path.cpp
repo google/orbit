@@ -167,10 +167,6 @@ std::string Path::GetLogFilePathAndCreateDir() {
   return Path::JoinPath({logs_dir, "Orbit.log"});
 }
 
-std::string Path::GetIconsPath() {
-  static std::string icons_path = JoinPath({GetExecutableDir(), "icons"});
-  return icons_path;
-}
 
 std::vector<std::string> Path::ListFiles(const std::string& directory,
                                          const std::function<bool(const std::string&)>& filter) {

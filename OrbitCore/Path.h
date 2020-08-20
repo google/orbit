@@ -19,7 +19,6 @@ namespace Path {
 [[nodiscard]] std::string CreateOrGetDumpDir();
 [[nodiscard]] std::string CreateOrGetOrbitAppDataDir();
 [[nodiscard]] std::string GetLogFilePathAndCreateDir();
-[[nodiscard]] std::string GetIconsPath();
 [[nodiscard]] std::string GetFileName(const std::string& file_path);
 [[nodiscard]] std::string StripExtension(const std::string& file_path);
 [[nodiscard]] std::string GetExtension(const std::string& file_path);
