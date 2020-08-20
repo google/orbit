@@ -10,7 +10,6 @@ GraphTrack::GraphTrack(TimeGraph* time_graph, uint64_t graph_id)
     : Track(time_graph), graph_id_(graph_id) {}
 
 void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  Track::Draw(canvas, picking_mode);
   Batcher* batcher = canvas->GetBatcher();
 
   TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -18,6 +17,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   m_Pos[0] = canvas->GetWorldTopLeftX();
   SetSize(trackWidth, GetHeight());
+  Track::Draw(canvas, picking_mode);
 
   float x0 = m_Pos[0];
   float x1 = x0 + m_Size[0];
@@ -53,8 +53,9 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   double time_range = static_cast<float>(max_ns - min_ns);
   if (values_.size() < 2 || time_range == 0) return;
 
-  auto it = values_.lower_bound(min_ns);
+  auto it = values_.upper_bound(min_ns);
   if (it == values_.end()) return;
+  if (it != values_.begin()) --it;
   uint64_t previous_time = it->first;
   double last_normalized_value = (it->second - min_) * inv_value_range_;
   for (++it; it != values_.end(); ++it) {
@@ -83,15 +84,12 @@ void GraphTrack::AddValue(double value, uint64_t time) {
 }
 
 double GraphTrack::GetValueAtTime(uint64_t time, double default_value) const {
-  auto iterator_lower = values_.lower_bound(time);
-  if (iterator_lower != values_.end()) {
-    return iterator_lower->second;
+  auto iterator_lower = values_.upper_bound(time);
+  if (iterator_lower == values_.end() || iterator_lower == values_.begin()) {
+    return default_value;
   }
-  auto iterator_upper = values_.upper_bound(time);
-  if (iterator_upper != values_.end()) {
-    return iterator_upper->second;
-  }
-  return default_value;
+  --iterator_lower;
+  return iterator_lower->second;
 }
 
 float GraphTrack::GetHeight() const {
