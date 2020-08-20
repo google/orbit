@@ -118,7 +118,11 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int index : item_indices) {
       const ModuleData* module_data = GetModule(index);
       if (!module_data->is_loaded()) {
-        modules.push_back(Capture::GTargetProcess->GetModuleFromPath(module_data->file_path()));
+        std::shared_ptr<Module> module =
+            Capture::GTargetProcess->GetModuleFromPath(module_data->file_path());
+        if (module != nullptr) {
+          modules.push_back(module);
+        }
       }
     }
     GOrbitApp->LoadModules(GOrbitApp->GetSelectedProcessID(), modules);
@@ -126,8 +130,12 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
-      const ModuleData* module = GetModule(index);
-      modules_to_validate.push_back(Capture::GTargetProcess->GetModuleFromName(module->name()));
+      const ModuleData* module_data = GetModule(index);
+      std::shared_ptr<Module> module =
+          Capture::GTargetProcess->GetModuleFromName(module_data->name());
+      if (module != nullptr) {
+        modules_to_validate.push_back(module);
+      }
     }
 
     if (!modules_to_validate.empty()) {
