@@ -613,7 +613,8 @@ void OrbitApp::ClearCapture() {
   SelectTextBox(nullptr);
 
   // Trigger deallocation of previous sampling related data.
-  auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(std::make_shared<Process>());
+  // TODO(kuebler): Investigate why selected process needs to be passed here.
+  auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
   AddSamplingReport(empty_sampling_profiler, nullptr);
   AddTopDownView(*empty_sampling_profiler);
   Capture::GSamplingProfiler = empty_sampling_profiler;
