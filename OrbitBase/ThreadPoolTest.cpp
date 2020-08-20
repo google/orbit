@@ -196,10 +196,14 @@ TEST(ThreadPool, ExtendThreadPool) {
         << "actions_executed=" << actions_executed << ", expected 12";
   }
 
-  // Wait for ttl+10 and check that ThreadPool has reduced
-  // number of worker threads
-  absl::SleepFor(absl::Milliseconds(kThreadTtlMillis + 10));
-  EXPECT_EQ(thread_pool->GetPoolSize(), kThreadPoolMinSize);
+  // Check that ThreadPool will reduce the number of worker threads.
+  int loops = 0;
+  constexpr int kMaxLoops = 1000;
+  while (thread_pool->GetPoolSize() > kThreadPoolMinSize && loops < kMaxLoops) {
+    absl::SleepFor(absl::Milliseconds(10));
+    loops++;
+  }
+  EXPECT_LT(loops, kMaxLoops);
 
   EXPECT_EQ(actions_started, 12);
   EXPECT_EQ(actions_executed, 12);
