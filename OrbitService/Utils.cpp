@@ -147,10 +147,12 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
   return result;
 }
 
-ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ListTracepoints() {
+ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
   std::vector<TracepointInfo> result;
 
   std::error_code error_code_category, error_code_name;
+  std::error_code no_err;
+  std::string error_category_message, error_name_message;
 
   for (const auto& category : fs::directory_iterator(kLinuxTracingEvents, error_code_category)) {
     if (fs::is_directory(category)) {
@@ -163,12 +165,18 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ListTracepoints()
     }
   }
 
-  return result;
-}
+  error_category_message = error_code_category.message();
+  error_name_message = error_code_name.message();
+  if (error_category_message.compare(no_err.message()) != 0) {
+    if (error_name_message.compare(no_err.message()) != 0) {
+      std::string error_message = error_category_message + " " + error_name_message;
+      return ErrorMessage(error_message.c_str());
+    } else {
+      return ErrorMessage(error_category_message.c_str());
+    }
+  }
 
-ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
-  OUTCOME_TRY(result, ListTracepoints());
-  return std::move(result);
+  return result;
 }
 
 ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization() {
