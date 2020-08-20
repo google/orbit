@@ -31,7 +31,6 @@ class ElfFileImpl : public ElfFile {
 
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbols() const override;
   [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
-  [[nodiscard]] bool IsAddressInTextSection(uint64_t address) const override;
   [[nodiscard]] bool HasSymtab() const override;
   [[nodiscard]] bool Is64Bit() const override;
   [[nodiscard]] std::string GetBuildId() const override;
@@ -43,7 +42,6 @@ class ElfFileImpl : public ElfFile {
   const std::string file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::ELFObjectFile<ElfT>* object_file_;
-  std::unique_ptr<typename ElfT::Shdr> text_section_;
   std::string build_id_;
   bool has_symtab_section_;
 };
@@ -74,10 +72,6 @@ void ElfFileImpl<ElfT>::InitSections() {
     }
     llvm::StringRef name = name_or_error.get();
 
-    if (name.str() == ".text") {
-      text_section_ = std::make_unique<typename ElfT::Shdr>(section);
-    }
-
     if (name.str() == ".symtab") {
       has_symtab_section_ = true;
     }
@@ -97,19 +91,6 @@ void ElfFileImpl<ElfT>::InitSections() {
       }
     }
   }
-}
-
-template <typename ElfT>
-bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
-  if (!text_section_) {
-    LOG(".text section was not found");
-    return false;
-  }
-
-  uint64_t section_begin_address = text_section_->sh_addr;
-  uint64_t section_end_address = section_begin_address + text_section_->sh_size;
-
-  return (address >= section_begin_address) && (address < section_end_address);
 }
 
 template <typename ElfT>
