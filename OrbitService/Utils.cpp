@@ -122,6 +122,13 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
       continue;
     }
 
+    ErrorMessageOr<uint64_t> load_bias = elf_file.value()->GetLoadBias();
+    // Every loadable module contains a load bias.
+    if (!load_bias) {
+      ERROR("No load bias found for module %s", module_path.c_str());
+      continue;
+    }
+
     ModuleInfo module_info;
     module_info.set_name(std::filesystem::path{module_path}.filename());
     module_info.set_file_path(module_path);
@@ -129,6 +136,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     module_info.set_address_start(address_range.start_address);
     module_info.set_address_end(address_range.end_address);
     module_info.set_build_id(elf_file.value()->GetBuildId());
+    module_info.set_load_bias(load_bias.value());
 
     result.push_back(module_info);
   }

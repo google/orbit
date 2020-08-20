@@ -25,6 +25,7 @@ class ModuleData final {
   const std::string& file_path() const { return module_info_.file_path(); }
   uint64_t file_size() const { return module_info_.file_size(); }
   uint64_t address_start() const { return module_info_.address_start(); }
+  uint64_t load_bias() const { return module_info_.load_bias(); }
 
   std::string address_range() const {
     return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]", module_info_.address_start(),
