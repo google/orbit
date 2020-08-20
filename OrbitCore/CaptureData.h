@@ -129,9 +129,7 @@ class CaptureData {
 
   [[nodiscard]] const std::shared_ptr<Process>& process() const { return process_; }
 
-  [[nodiscard]] std::shared_ptr<SamplingProfiler> sampling_profiler() const {
-    return sampling_profiler_;
-  }
+  [[nodiscard]] std::shared_ptr<SamplingProfiler> sampling_profiler() { return sampling_profiler_; }
 
   [[nodiscard]] const SamplingProfiler& GetSamplingProfiler() const { return *sampling_profiler_; }
 
