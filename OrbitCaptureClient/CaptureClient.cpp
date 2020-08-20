@@ -94,7 +94,7 @@ void CaptureClient::Capture(int32_t pid,
   state_ = State::kStarted;
   state_mutex_.Unlock();
 
-  capture_listener_->OnCaptureStarted();
+  capture_listener_->OnCaptureStarted(pid, selected_functions);
 
   CaptureResponse response;
   while (!force_stop_ && reader_writer_->Read(&response)) {

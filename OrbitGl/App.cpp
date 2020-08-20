@@ -70,7 +70,8 @@ OrbitApp::~OrbitApp() {
 #endif
 }
 
-void OrbitApp::OnCaptureStarted() {
+void OrbitApp::OnCaptureStarted(
+    int32_t process_id, const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -78,8 +79,14 @@ void OrbitApp::OnCaptureStarted() {
   bool initialization_complete = false;
   captured_address_infos_.clear();
 
-  main_thread_executor_->Schedule([this, &initialization_complete, &mutex] {
+  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, process_id,
+                                   &selected_functions] {
     ClearCapture();
+
+    std::string process_name = data_manager_->GetProcessByPid(process_id)->name();
+    std::shared_ptr<Process> process = FindProcessByPid(process_id);
+    Capture::capture_data_ =
+        CaptureData(process_id, std::move(process_name), std::move(process), selected_functions);
 
     if (capture_started_callback_) {
       capture_started_callback_();
@@ -109,7 +116,7 @@ void OrbitApp::OnCaptureComplete() {
 
     AddSamplingReport(Capture::capture_data_.sampling_profiler(),
                       Capture::capture_data_.GetCallstackData());
-    AddTopDownView(Capture::capture_data_.GetSamplingProfiler().);
+    AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
 
     if (capture_stopped_callback_) {
       capture_stopped_callback_();
@@ -566,12 +573,9 @@ bool OrbitApp::StartCapture() {
                   "No process selected. Please choose a target process for the capture.");
     return false;
   }
-  std::string process_name = data_manager_->GetProcessByPid(pid)->name();
+
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
-  std::shared_ptr<Process> process = GetSelectedProcess();
-  Capture::capture_data_ =
-      CaptureData(pid, std::move(process_name), std::move(process), selected_functions);
 
   ErrorMessageOr<void> result =
       capture_client_->StartCapture(thread_pool_.get(), pid, selected_functions);
@@ -607,6 +611,7 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
+  Capture::capture_data_ = CaptureData();
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
