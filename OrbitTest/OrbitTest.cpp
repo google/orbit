@@ -88,6 +88,8 @@ void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::millisec
 
 void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kTeal);
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kOrange);
   SleepFor1Ms();
   SleepFor1Ms();
 }
@@ -96,13 +98,14 @@ void OrbitTest::ManualInstrumentationApiTest() {
 #if ORBIT_API_ENABLED
   while (!m_ExitRequested) {
     ORBIT_SCOPE("ORBIT_SCOPE_TEST");
+    ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit::Color(0xff0000ff));
     SleepFor2Ms();
 
-    ORBIT_START("ORBIT_START_TEST");
+    ORBIT_START_WITH_COLOR("ORBIT_START_TEST", orbit::Color::kRed);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP();
 
-    ORBIT_START_ASYNC("ORBIT_START_ASYNC_TEST", 0);
+    ORBIT_START_ASYNC_WITH_COLOR("ORBIT_START_ASYNC_TEST", 0, orbit::Color::kLightBlue);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP_ASYNC(0);
 
@@ -120,15 +123,15 @@ void OrbitTest::ManualInstrumentationApiTest() {
 
     static uint64_t uint64_var = 0;
     if (++uint64_var > 100) uint64_var = 0;
-    ORBIT_UINT64("uint64_var", uint64_var);
+    ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, orbit::Color::kIndigo);
 
     static float float_var = 0.f;
     static volatile float sinf_coeff = 0.1f;
-    ORBIT_FLOAT("float_var", sinf((++float_var) * sinf_coeff));
+    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), orbit::Color::kPink);
 
     static double double_var = 0.0;
     static volatile double cos_coeff = 0.1;
-    ORBIT_DOUBLE("double_var", cos((++double_var) * cos_coeff));
+    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), orbit::Color::kPurple);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15));
   }
