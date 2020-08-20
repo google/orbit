@@ -620,7 +620,7 @@ void OrbitApp::ClearCapture() {
   Capture::GSamplingProfiler = empty_sampling_profiler;
 
   if (selection_report_) {
-    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
     AddSelectionReport(empty_selection_profiler, nullptr);
   }
 
