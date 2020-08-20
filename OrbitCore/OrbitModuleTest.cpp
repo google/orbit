@@ -23,34 +23,12 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
 
-TEST(OrbitModule, Constructor) {
-  const std::string executable_name = "hello_world_elf";
-  const std::string file_path = executable_directory + executable_name;
-  const uint64_t executable_size = 16616;
-
-  uint64_t address_start = 0x700;  // sample test data
-  uint64_t address_end = 0x1000;
-
-  Module module(file_path, address_start, address_end);
-
-  EXPECT_EQ(module.m_FullName, file_path);
-  EXPECT_EQ(module.m_Name, executable_name);
-  EXPECT_EQ(module.m_PdbSize, executable_size);
-
-  EXPECT_EQ(module.m_AddressStart, address_start);
-  EXPECT_EQ(module.m_AddressEnd, address_end);
-
-  EXPECT_TRUE(module.IsLoadable());
-
-  EXPECT_EQ(module.m_Pdb, nullptr);
-  EXPECT_FALSE(module.IsLoaded());
-}
-
 TEST(OrbitModule, LoadFunctions) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>();
+  module->m_FullName = file_path;
   {
     ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(file_path);
     ASSERT_TRUE(elf_file) << elf_file.error().message();
@@ -92,7 +70,9 @@ TEST(OrbitModule, LoadFunctions) {
 TEST(OrbitModule, GetFunctionFromExactAddress) {
   const std::string file_path = executable_directory + "hello_world_static_elf";
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x400000, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>();
+  module->m_FullName = file_path;
+  module->m_AddressStart = 0x400000;
   {
     ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(file_path);
     ASSERT_TRUE(elf_file) << elf_file.error().message();
@@ -122,7 +102,9 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
 TEST(OrbitModule, GetFunctionFromProgramCounter) {
   const std::string file_path = executable_directory + "hello_world_static_elf";
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x400000, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>();
+  module->m_FullName = file_path;
+  module->m_AddressStart = 0x400000;
   {
     ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(file_path);
     ASSERT_TRUE(elf_file) << elf_file.error().message();
@@ -165,7 +147,10 @@ TEST(SymbolHelper, LoadSymbols) {
   symbol_info->set_source_file("file name");
   symbol_info->set_source_line(70);
 
-  std::shared_ptr<Module> module = std::make_shared<Module>("module name", 0x40, 0);
+  std::shared_ptr<Module> module = std::make_shared<Module>();
+  module->m_FullName = "module name";
+  module->m_AddressStart = 0x40;
+
   module->LoadSymbols(module_symbols);
 
   ASSERT_NE(module->m_Pdb, nullptr);
@@ -173,8 +158,6 @@ TEST(SymbolHelper, LoadSymbols) {
 
   Pdb& pdb = *module->m_Pdb;
   EXPECT_EQ(pdb.GetLoadedModuleName(), "module name");
-  EXPECT_EQ(pdb.GetFileName(), "path/symbols_file_name");
-  EXPECT_EQ(pdb.GetName(), "symbols_file_name");
   EXPECT_EQ(pdb.GetHModule(), 0x40);
   EXPECT_EQ(pdb.GetLoadBias(), 0x400);
   ASSERT_EQ(pdb.GetFunctions().size(), 1);

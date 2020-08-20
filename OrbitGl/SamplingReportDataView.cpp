@@ -175,7 +175,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
 
   bool enable_load = false;
   for (const auto& module : GetModulesFromIndices(selected_indices)) {
-    if (module->IsLoadable() && !module->IsLoaded()) {
+    if (!module->IsLoaded()) {
       enable_load = true;
     }
   }
@@ -202,7 +202,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   } else if (action == kMenuActionLoadSymbols) {
     std::vector<std::shared_ptr<Module>> modules;
     for (const auto& module : GetModulesFromIndices(item_indices)) {
-      if (module->IsLoadable() && !module->IsLoaded()) {
+      if (!module->IsLoaded()) {
         modules.push_back(module);
       }
     }
