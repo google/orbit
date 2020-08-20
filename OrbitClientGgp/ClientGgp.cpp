@@ -115,16 +115,16 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   return nullptr;
 }
 
-bool ClientGgp::LoadCaptureFunctions() {
+bool ClientGgp::LoadModuleAndSymbols() {
   // Load modules for target_process_
-  ErrorMessageOr<std::vector<ModuleInfo>> result =
+  ErrorMessageOr<std::vector<ModuleInfo>> result_module_infos =
       process_manager_->LoadModuleList(target_process_->GetId());
-  if (result.has_error()) {
-    ERROR("Error retrieving modules: %s", result.error().message());
+  if (result_module_infos.has_error()) {
+    ERROR("Error retrieving modules: %s", result_module_infos.error().message());
     return false;
   }
   // Find module that corresponds to the binary of target_process
-  const std::vector<ModuleInfo>& module_infos = result.value();
+  const std::vector<ModuleInfo>& module_infos = result_module_infos.value();
   LOG("List of modules");
   for (const ModuleInfo& info : module_infos) {
     LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s", info.name(),
@@ -135,23 +135,42 @@ bool ClientGgp::LoadCaptureFunctions() {
   auto module_it =
       find_if(module_infos.begin(), module_infos.end(),
               [&target_name](const ModuleInfo& info) { return info.name() == target_name; });
-  if (module_it != module_infos.end()) {
-    LOG("Found module correspondent to process binary");
-    std::shared_ptr<Module> module = std::make_shared<Module>();
-    module->m_Name = module_it->name();
-    module->m_FullName = module_it->file_path();
-    module->m_PdbSize = module_it->file_size();
-    module->m_AddressStart = module_it->address_start();
-    module->m_AddressEnd = module_it->address_end();
-    module->m_DebugSignature = module_it->build_id();
-    target_process_->AddModule(module);
-    LOG("Module info: name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s",
-        module->m_Name, module->m_FullName, module->m_PdbSize, module->m_AddressStart,
-        module->m_AddressEnd, module->m_DebugSignature);
+  if (module_it == module_infos.end()) {
+    ERROR("Error: Module correspondent to process binary not found");
+    return false;
   }
+  LOG("Found module correspondent to process binary");
+  std::shared_ptr<Module> module = std::make_shared<Module>();
+  module->m_Name = module_it->name();
+  module->m_FullName = module_it->file_path();
+  module->m_PdbSize = module_it->file_size();
+  module->m_AddressStart = module_it->address_start();
+  module->m_AddressEnd = module_it->address_end();
+  module->m_DebugSignature = module_it->build_id();
+  target_process_->AddModule(module);
+  LOG("Module info: name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s",
+      module->m_Name, module->m_FullName, module->m_PdbSize, module->m_AddressStart,
+      module->m_AddressEnd, module->m_DebugSignature);
+
   // Load symbols for the module
-  // Find requested functions (contains string provided)
-  // Build selected_functions
+  const std::string& module_path = module->m_FullName;
+  LOG("Looking for debug info file for %s", module_path);
+  ErrorMessageOr<std::string> result_debug_file = process_manager_->FindDebugInfoFile(module_path);
+  if (result_debug_file.has_error()) {
+    ERROR("Error loading symbols: %s", result_debug_file.error().message());
+    return false;
+  }
+  const std::string& debug_file_path = result_debug_file.value();
+  LOG("Found file: %s", debug_file_path);
+  LOG("Loading symbols");
+  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> result_symbols =
+      symbol_helper_.LoadSymbolsFromFile(debug_file_path, module->m_DebugSignature);
+  if (result_symbols.has_error()) {
+    ERROR("Error loading symbols: %s", result_symbols.error().message());
+    return false;
+  }
+  module->LoadSymbols(result_symbols.value());
+  target_process_->AddFunctions(module->m_Pdb->GetFunctions());
   return true;
 }
 
@@ -159,6 +178,11 @@ bool ClientGgp::InitCapture() {
   target_process_ = GetOrbitProcessByPid(options_.capture_pid);
   if (target_process_ == nullptr) {
     ERROR("Error: not able to set target process");
+    return false;
+  }
+  // Load the module and symbols
+  if (!LoadModuleAndSymbols()) {
+    ERROR("Error: not possible to finish loading the module and symbols");
     return false;
   }
   return true;
