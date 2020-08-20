@@ -60,10 +60,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
       if (module != nullptr) {
         return module->m_Name;
       }
-      if (Capture::GSamplingProfiler != nullptr) {
-        return Capture::GSamplingProfiler->GetModuleNameByAddress(frame.address);
-      }
-      return "";
+      return Capture::capture_data_.sampling_profiler()->GetModuleNameByAddress(frame.address);
     case kColumnAddress:
       return absl::StrFormat("%#llx", frame.address);
     default:
@@ -207,9 +204,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
     return CallStackDataViewFrame(address, function, module);
   } else {
     std::string fallback_name;
-    if (Capture::GSamplingProfiler != nullptr) {
-      fallback_name = Capture::GSamplingProfiler->GetFunctionNameByAddress(address);
-    }
+    fallback_name = Capture::capture_data_.sampling_profiler()->GetFunctionNameByAddress(address);
     return CallStackDataViewFrame(address, fallback_name, module);
   }
 }

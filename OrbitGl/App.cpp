@@ -102,12 +102,14 @@ void OrbitApp::OnCaptureStarted() {
 void OrbitApp::OnCaptureComplete() {
   main_thread_executor_->Schedule([this] {
     Capture::capture_data_.set_address_infos(std::move(captured_address_infos_));
-    Capture::FinalizeCapture();
+    Capture::capture_data_.sampling_profiler()->ProcessSamples(
+        *Capture::capture_data_.GetCallstackData());
 
     RefreshCaptureView();
 
-    AddSamplingReport(Capture::GSamplingProfiler, Capture::capture_data_.GetCallstackData());
-    AddTopDownView(*Capture::GSamplingProfiler);
+    AddSamplingReport(Capture::capture_data_.sampling_profiler(),
+                      Capture::capture_data_.GetCallstackData());
+    AddTopDownView(*Capture::capture_data_.sampling_profiler());
 
     if (capture_stopped_callback_) {
       capture_stopped_callback_();
@@ -128,10 +130,6 @@ void OrbitApp::OnUniqueCallStack(CallStack callstack) {
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
-  if (Capture::GSamplingProfiler == nullptr) {
-    ERROR("GSamplingProfiler is null, ignoring callstack event.");
-    return;
-  }
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
   Capture::capture_data_.AddCallstackEvent(std::move(callstack_event));
@@ -612,12 +610,9 @@ void OrbitApp::ClearCapture() {
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
-  // Trigger deallocation of previous sampling related data.
-  // TODO(kuebler): Investigate why selected process needs to be passed here.
-  auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
-  AddSamplingReport(empty_sampling_profiler, nullptr);
-  AddTopDownView(*empty_sampling_profiler);
-  Capture::GSamplingProfiler = empty_sampling_profiler;
+  AddSamplingReport(Capture::capture_data_.sampling_profiler(), nullptr);
+  // TODO(kuebler): This seems fishy. Probably, TopDownView does not update on new symbols.
+  AddTopDownView(*Capture::capture_data_.sampling_profiler());
 
   if (selection_report_) {
     auto empty_selection_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
@@ -774,7 +769,7 @@ void OrbitApp::SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<
   modules_currently_loading_.erase(module->m_FullName);
 
   UpdateSamplingReport();
-  AddTopDownView(*Capture::GSamplingProfiler);
+  AddTopDownView(*Capture::capture_data_.sampling_profiler());
   GOrbitApp->FireRefreshCallbacks();
 }
 
@@ -909,9 +904,7 @@ void OrbitApp::UpdateProcessAndModuleList(
 
       if (pid != GetSelectedProcessId()) {
         data_manager_->ClearSelectedFunctions();
-        // TODO(kuebler): Move as soon as Capture is gone.
         data_manager_->set_selected_process(process);
-        Capture::SetTargetProcess(std::move(process));
       }
 
       FireRefreshCallbacks();
