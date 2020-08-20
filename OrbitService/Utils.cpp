@@ -8,7 +8,6 @@
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <cxxabi.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -18,7 +17,6 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
-#include <system_error>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
