@@ -21,7 +21,7 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbols() const = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbols() const = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some
@@ -36,18 +36,18 @@ class ElfFile {
   //
   // This method returns load bias for the elf-file if program headers are
   // available. This should be the case for all loadable elf-files.
-  virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
-  virtual bool IsAddressInTextSection(uint64_t address) const = 0;
-  virtual bool HasSymtab() const = 0;
-  virtual bool Is64Bit() const = 0;
-  virtual std::string GetBuildId() const = 0;
-  virtual std::string GetFilePath() const = 0;
+  [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
+  [[nodiscard]] virtual bool IsAddressInTextSection(uint64_t address) const = 0;
+  [[nodiscard]] virtual bool HasSymtab() const = 0;
+  [[nodiscard]] virtual bool Is64Bit() const = 0;
+  [[nodiscard]] virtual std::string GetBuildId() const = 0;
+  [[nodiscard]] virtual std::string GetFilePath() const = 0;
 
-  static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(std::string_view file_path);
-  static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(std::string_view file_path);
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
       std::string_view file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
-  static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(std::string_view file_path,
-                                                                   const void* buf, size_t len);
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(
+      std::string_view file_path, const void* buf, size_t len);
 };
 
 }  // namespace ElfUtils
