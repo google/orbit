@@ -13,6 +13,9 @@ REPO_ROOT_WIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&
 SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh"
 
 if [ "$1" ]; then
+  pip3 install conan==1.27.1
+  export QT_QPA_PLATFORM=offscreen
+
   $REPO_ROOT/third_party/conan/configs/install.sh || exit $?
   conan user -r artifactory $ARTIFACTORY_USERNAME -p $ARTIFACTORY_API_KEY || exit $?
   if [ -n "$BINTRAY_USERNAME" -a -n "$BINTRAY_API_KEY" ]; then
