@@ -14,13 +14,10 @@
 
 struct Module {
   Module() = default;
-  Module(const std::string& file_name, uint64_t address_start, uint64_t address_end);
 
   void LoadSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
 
   void SetLoaded(bool value) { loaded_ = value; }
-  void SetLoadable(bool value) { loadable_ = value; }
-  bool IsLoadable() const { return loadable_; }
   bool IsLoaded() const { return loaded_; }
 
   std::string m_Name;      // name of the file (without path)
@@ -35,7 +32,6 @@ struct Module {
   mutable std::shared_ptr<Pdb> m_Pdb;
 
  private:
-  bool loadable_ = false;
   bool loaded_ = false;
 };
 

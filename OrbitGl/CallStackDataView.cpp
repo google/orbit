@@ -91,7 +91,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
       enable_select |= !GOrbitApp->IsFunctionSelected(*function);
       enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
       enable_disassembly = true;
-    } else if (module != nullptr && module->IsLoadable() && !module->IsLoaded()) {
+    } else if (module != nullptr && !module->IsLoaded()) {
       enable_load = true;
     }
   }
@@ -111,7 +111,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
-      if (module != nullptr && module->IsLoadable() && !module->IsLoaded()) {
+      if (module != nullptr && !module->IsLoaded()) {
         GOrbitApp->LoadModules(Capture::capture_data_.process(),
                                Capture::capture_data_.process_id(), {module});
       }

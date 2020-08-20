@@ -14,14 +14,10 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetModule;
 
-Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
-         std::string module_file_name)
+Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name)
     : m_MainModule(module_address),
       load_bias_(load_bias),
-      m_FileName(std::move(file_name)),
-      m_LoadedModuleName(std::move(module_file_name)) {
-  m_Name = Path::GetFileName(m_FileName);
-}
+      m_LoadedModuleName(std::move(file_name)) {}
 
 void Pdb::AddFunction(const std::shared_ptr<FunctionInfo>& function) {
   functions_.push_back(function);

@@ -15,13 +15,10 @@
 
 class Pdb {
  public:
-  Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
-      std::string module_file_name);
+  Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
 
-  const std::string& GetName() const { return m_Name; }
-  const std::string& GetFileName() const { return m_FileName; }
   const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
   const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>& GetFunctions() {
     return functions_;
@@ -43,8 +40,6 @@ class Pdb {
  private:
   uint64_t m_MainModule = 0;
   uint64_t load_bias_ = 0;
-  std::string m_Name;              // name of the file containing the symbols
-  std::string m_FileName;          // full path of file containing the symbols
   std::string m_LoadedModuleName;  // full path of the module
   std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> functions_;
   std::map<uint64_t, orbit_client_protos::FunctionInfo*> m_FunctionMap;

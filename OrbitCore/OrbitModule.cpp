@@ -20,28 +20,12 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
 
-Module::Module(const std::string& file_name, uint64_t address_start, uint64_t address_end) {
-  if (!std::filesystem::exists(file_name)) {
-    ERROR("Creating Module from path \"%s\": file does not exist", file_name);
-  }
-
-  m_FullName = file_name;
-  m_Name = Path::GetFileName(file_name);
-  m_PdbSize = Path::FileSize(file_name);
-
-  m_AddressStart = address_start;
-  m_AddressEnd = address_end;
-
-  loadable_ = true;  // necessary, because it toggles "Load Symbols" option
-}
-
 void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
   if (m_Pdb != nullptr) {
     LOG("Warning: Module \"%s\" already contained symbols, will override now", m_Name);
   }
 
-  m_Pdb = std::make_shared<Pdb>(m_AddressStart, module_symbols.load_bias(),
-                                module_symbols.symbols_file_path(), m_FullName);
+  m_Pdb = std::make_shared<Pdb>(m_AddressStart, module_symbols.load_bias(), m_FullName);
 
   for (const SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     std::shared_ptr<FunctionInfo> function = FunctionUtils::CreateFunctionInfo(
