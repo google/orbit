@@ -19,6 +19,7 @@
 #include "CallstackData.h"
 #include "CaptureWindow.h"
 #include "DataManager.h"
+#include "DataView.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
 #include "DisassemblyReport.h"
@@ -264,7 +265,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;
   TopDownViewCallback top_down_view_callback_;
-  std::vector<class DataView*> m_Panels;
+  std::vector<DataView*> panels_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;

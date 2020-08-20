@@ -551,7 +551,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
 }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
-  for (DataView* panel : m_Panels) {
+  for (DataView* panel : panels_) {
     if (type == DataViewType::kAll || type == panel->GetType()) {
       panel->OnDataChanged();
     }
@@ -990,21 +990,21 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
         functions_data_view_ = std::make_unique<FunctionsDataView>();
-        m_Panels.push_back(functions_data_view_.get());
+        panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
         callstack_data_view_ = std::make_unique<CallStackDataView>();
-        m_Panels.push_back(callstack_data_view_.get());
+        panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
         modules_data_view_ = std::make_unique<ModulesDataView>();
-        m_Panels.push_back(modules_data_view_.get());
+        panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
 
@@ -1015,14 +1015,14 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
             [&](int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
               UpdateProcessAndModuleList(pid, preset);
             });
-        m_Panels.push_back(processes_data_view_.get());
+        panels_.push_back(processes_data_view_.get());
       }
       return processes_data_view_.get();
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {
         presets_data_view_ = std::make_unique<PresetsDataView>();
-        m_Panels.push_back(presets_data_view_.get());
+        panels_.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();
 
@@ -1046,7 +1046,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
     selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
-    m_Panels.push_back(selection_callstack_data_view_.get());
+    panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
 }
