@@ -54,6 +54,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> visible_functions_;
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
+  // TODO(kuebler): Remove OrbitProcess class and this member soon.
   std::shared_ptr<Process> selected_process_ = std::make_shared<Process>();
 };
 

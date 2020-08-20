@@ -14,8 +14,8 @@
 using orbit_client_protos::FunctionInfo;
 
 Process::Process() {
-  process_id_ = 0;
-  m_Is64Bit = false;
+  id_ = -1;
+  is_64_bit_ = false;
 }
 
 FunctionInfo* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {

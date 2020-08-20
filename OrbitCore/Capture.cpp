@@ -6,15 +6,8 @@
 
 #include <ostream>
 
-#include "EventBuffer.h"
-#include "FunctionUtils.h"
-#include "OrbitBase/Logging.h"
-#include "Path.h"
-#include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "absl/strings/str_format.h"
-
-using orbit_client_protos::FunctionInfo;
 
 CaptureData Capture::capture_data_;
 
