@@ -64,7 +64,6 @@ struct SortedCallstackReport {
 class SamplingProfiler {
  public:
   explicit SamplingProfiler(std::shared_ptr<Process> a_Process) : process_{std::move(a_Process)} {}
-  SamplingProfiler() : SamplingProfiler{std::make_shared<Process>()} {}
 
   const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
