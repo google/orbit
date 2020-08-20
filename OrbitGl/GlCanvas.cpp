@@ -29,6 +29,9 @@ float GlCanvas::Z_VALUE_BOX_ACTIVE = -0.02f;
 float GlCanvas::Z_VALUE_BOX_INACTIVE = -0.03f;
 float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
 float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
+float GlCanvas::Z_VALUE_MARGIN = 0.01f;
+float GlCanvas::Z_VALUE_SLIDER_PICKING = 0.1f;
+float GlCanvas::Z_VALUE_SLIDER = 0.05f;
 
 GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_TextRenderer.SetCanvas(this);

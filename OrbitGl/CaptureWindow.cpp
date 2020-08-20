@@ -504,7 +504,6 @@ void CaptureWindow::DrawScreenSpace() {
   Color col = slider_->GetBarColor();
   float height = slider_->GetPixelHeight();
   float canvasHeight = getHeight();
-  float z = GlCanvas::Z_VALUE_TEXT_UI_BG;
 
   const TimeGraphLayout& layout = time_graph_.GetLayout();
   float vertical_margin = layout.GetVerticalMargin();
@@ -537,8 +536,8 @@ void CaptureWindow::DrawScreenSpace() {
   const Color kBackgroundColor(70, 70, 70, 255);
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - vertical_margin;
-
-  Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
+  Box box(Vec2(margin_x0, time_graph_.GetLayout().GetSliderWidth()),
+          Vec2(margin_x1 - margin_x0, canvasHeight - height), GlCanvas::Z_VALUE_MARGIN);
   ui_batcher_.AddBox(box, kBackgroundColor);
 
   // Time bar background

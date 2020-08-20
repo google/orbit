@@ -110,6 +110,9 @@ class GlCanvas : public GlPanel {
   static float Z_VALUE_TEXT_BG;
   static float Z_VALUE_EVENT_BAR;
   static float Z_VALUE_EVENT_BAR_PICKING;
+  static float Z_VALUE_MARGIN;
+  static float Z_VALUE_SLIDER_PICKING;
+  static float Z_VALUE_SLIDER;
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
