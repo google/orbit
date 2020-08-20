@@ -54,20 +54,6 @@ TEST(ElfFile, LoadSymbols) {
   EXPECT_EQ(symbol_info.source_line(), 0);
 }
 
-TEST(ElfFile, IsAddressInTextSection) {
-  std::string executable_path = Path::GetExecutablePath();
-  std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
-
-  auto elf_file_result = ElfFile::Create(test_elf_file);
-  ASSERT_TRUE(elf_file_result) << elf_file_result.error().message();
-  std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
-
-  EXPECT_FALSE(elf_file->IsAddressInTextSection(0x104F));
-  EXPECT_TRUE(elf_file->IsAddressInTextSection(0x1050));
-  EXPECT_TRUE(elf_file->IsAddressInTextSection(0x11C0));
-  EXPECT_FALSE(elf_file->IsAddressInTextSection(0x11C1));
-}
-
 TEST(ElfFile, CalculateLoadBias) {
   const std::string executable_path = Path::GetExecutablePath();
 
