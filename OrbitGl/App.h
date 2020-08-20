@@ -186,7 +186,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  void LoadModules(int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
+  void LoadModules(const std::shared_ptr<Process>& process, int32_t process_id,
+                   const std::vector<std::shared_ptr<Module>>& modules,
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
   void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
@@ -205,8 +206,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
   [[nodiscard]] std::shared_ptr<Process> FindProcessByPid(int32_t pid);
-  [[nodiscard]] int32_t GetSelectedProcessID() const {
-    return processes_data_view_->GetSelectedProcessId();
+  [[nodiscard]] int32_t GetSelectedProcessId() const {
+    return data_manager_->selected_process()->GetId();
+  }
+  [[nodiscard]] const std::shared_ptr<Process>& GetSelectedProcess() const {
+    return data_manager_->selected_process();
   }
 
   // TODO(kuebler): Move them to a separate controler at some point
@@ -226,7 +230,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SelectTextBox(const TextBox* text_box);
 
  private:
-  void LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
+  void LoadModuleOnRemote(const std::shared_ptr<Process>& process, int32_t process_id,
+                          const std::shared_ptr<Module>& module,
                           const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<Module>& module,
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);

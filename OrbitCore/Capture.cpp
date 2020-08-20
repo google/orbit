@@ -6,28 +6,15 @@
 
 #include <ostream>
 
-#include "EventBuffer.h"
-#include "FunctionUtils.h"
-#include "OrbitBase/Logging.h"
-#include "Path.h"
-#include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "absl/strings/str_format.h"
-
-using orbit_client_protos::FunctionInfo;
 
 CaptureData Capture::capture_data_;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
-std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
-
-void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 void Capture::SetTargetProcess(std::shared_ptr<Process> process) {
-  if (process != GTargetProcess) {
-    GSamplingProfiler = std::make_shared<SamplingProfiler>(process);
-    GTargetProcess = std::move(process);
-  }
+  GSamplingProfiler = std::make_shared<SamplingProfiler>(std::move(process));
 }
 
 void Capture::FinalizeCapture() {

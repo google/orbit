@@ -32,10 +32,10 @@ class Process {
   const std::string& GetName() const { return m_Name; }
   void SetFullPath(std::string_view full_path) { m_FullPath = full_path; }
   const std::string& GetFullPath() const { return m_FullPath; }
-  void SetID(int32_t id) { m_ID = id; }
-  int32_t GetID() const { return m_ID; }
-  void SetIs64Bit(bool value) { m_Is64Bit = value; }
-  bool GetIs64Bit() const { return m_Is64Bit; }
+  void SetID(int32_t id) { id_ = id; }
+  [[nodiscard]] int32_t GetId() const { return id_; }
+  void SetIs64Bit(bool value) { is_64_bit_ = value; }
+  bool GetIs64Bit() const { return is_64_bit_; }
 
   orbit_client_protos::FunctionInfo* GetFunctionFromAddress(uint64_t address,
                                                             bool a_IsExact = true);
@@ -57,12 +57,12 @@ class Process {
   Mutex& GetDataMutex() { return data_mutex_; }
 
  private:
-  int32_t m_ID;
+  int32_t id_ = -1;
 
   std::string m_Name;
   std::string m_FullPath;
 
-  bool m_Is64Bit;
+  bool is_64_bit_;
   Mutex data_mutex_;
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;

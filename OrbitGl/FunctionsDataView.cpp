@@ -5,7 +5,6 @@
 #include "FunctionsDataView.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "OrbitProcess.h"
 #include "Pdb.h"
@@ -33,7 +32,7 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
 }
 
 std::string FunctionsDataView::GetValue(int row, int column) {
-  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
+  ScopeLock lock(GOrbitApp->GetSelectedProcess()->GetDataMutex());
 
   if (row >= static_cast<int>(GetNumElements())) {
     return "";
@@ -83,7 +82,7 @@ void FunctionsDataView::DoSort() {
   std::function<bool(int a, int b)> sorter = nullptr;
 
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      Capture::GTargetProcess->GetFunctions();
+      GOrbitApp->GetSelectedProcess()->GetFunctions();
 
   switch (sorting_column_) {
     case kColumnSelected:
@@ -149,7 +148,7 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
       GOrbitApp->DeselectFunction(GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = GOrbitApp->GetSelectedProcessID();
+    int32_t pid = GOrbitApp->GetSelectedProcessId();
     for (int i : item_indices) {
       GOrbitApp->Disassemble(pid, GetFunction(i));
     }
@@ -174,7 +173,7 @@ void FunctionsDataView::DoFilter() {
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      Capture::GTargetProcess->GetFunctions();
+      GOrbitApp->GetSelectedProcess()->GetFunctions();
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
     std::string name = ToLower(FunctionUtils::GetDisplayName(*function)) +
@@ -203,7 +202,7 @@ void FunctionsDataView::DoFilter() {
 void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      Capture::GTargetProcess->GetFunctions();
+      GOrbitApp->GetSelectedProcess()->GetFunctions();
   const auto prio = oqpi::task_priority::normal;
   auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
   // int numWorkers = oqpi::thread::hardware_concurrency();
@@ -242,9 +241,9 @@ void FunctionsDataView::ParallelFilter() {
 }
 
 void FunctionsDataView::OnDataChanged() {
-  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
+  ScopeLock lock(GOrbitApp->GetSelectedProcess()->GetDataMutex());
 
-  size_t num_functions = Capture::GTargetProcess->GetFunctions().size();
+  size_t num_functions = GOrbitApp->GetSelectedProcess()->GetFunctions().size();
   indices_.resize(num_functions);
   for (size_t i = 0; i < num_functions; ++i) {
     indices_[i] = i;
@@ -254,8 +253,8 @@ void FunctionsDataView::OnDataChanged() {
 }
 
 FunctionInfo& FunctionsDataView::GetFunction(int row) const {
-  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
+  ScopeLock lock(GOrbitApp->GetSelectedProcess()->GetDataMutex());
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      Capture::GTargetProcess->GetFunctions();
+      GOrbitApp->GetSelectedProcess()->GetFunctions();
   return *functions[indices_[row]];
 }

@@ -160,8 +160,6 @@ bool OrbitApp::Init(ApplicationOptions&& options,
 
   Path::Init();
 
-  Capture::Init();
-
 #ifdef _WIN32
   oqpi_tk::start_default_scheduler();
 #endif
@@ -212,11 +210,11 @@ void OrbitApp::PostInit() {
             process->SetIs64Bit(info.is_64_bit());
             // The other fields do not appear to be used at the moment.
 
-            process_map_.insert_or_assign(process->GetID(), process);
+            process_map_.insert_or_assign(process->GetId(), process);
           }
         }
 
-        if (GetSelectedProcessID() == -1 && processes_data_view_->GetFirstProcessId() != -1) {
+        if (GetSelectedProcessId() == -1 && processes_data_view_->GetFirstProcessId() != -1) {
           processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
         }
         FireRefreshCallbacks(DataViewType::kProcesses);
@@ -456,7 +454,7 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
 
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
-  const int32_t pid = GetSelectedProcessID();
+  const int32_t pid = GetSelectedProcessId();
   const std::shared_ptr<Process>& process = FindProcessByPid(pid);
   preset.set_process_full_path(data_manager_->GetProcessByPid(pid)->full_path());
 
@@ -519,12 +517,12 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
-  const int32_t selected_process_id = GetSelectedProcessID();
+  const int32_t selected_process_id = GetSelectedProcessId();
   const ProcessData* selected_process = data_manager_->GetProcessByPid(selected_process_id);
   const std::string& process_full_path = preset->preset_info().process_full_path();
   if (selected_process != nullptr && selected_process->full_path() == process_full_path) {
     // In case we already have the correct process selected
-    GOrbitApp->LoadModulesFromPreset(Capture::GTargetProcess, preset);
+    GOrbitApp->LoadModulesFromPreset(GetSelectedProcess(), preset);
     return;
   }
   if (!SelectProcess(Path::GetFileName(process_full_path), preset)) {
@@ -564,7 +562,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  int32_t pid = GetSelectedProcessID();
+  int32_t pid = GetSelectedProcessId();
   if (pid == -1) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please choose a target process for the capture.");
@@ -573,7 +571,9 @@ bool OrbitApp::StartCapture() {
   std::string process_name = data_manager_->GetProcessByPid(pid)->name();
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
-  Capture::capture_data_ = CaptureData(pid, std::move(process_name), selected_functions);
+  std::shared_ptr<Process> process = GetSelectedProcess();
+  Capture::capture_data_ =
+      CaptureData(pid, std::move(process_name), std::move(process), selected_functions);
 
   ErrorMessageOr<void> result =
       capture_client_->StartCapture(thread_pool_.get(), pid, selected_functions);
@@ -589,7 +589,7 @@ bool OrbitApp::StartCapture() {
 absl::flat_hash_map<uint64_t, FunctionInfo> OrbitApp::GetSelectedFunctionsAndOrbitFunctions()
     const {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
-  for (const auto& func : Capture::GTargetProcess->GetFunctions()) {
+  for (const auto& func : GetSelectedProcess()->GetFunctions()) {
     if (IsFunctionSelected(*func) || FunctionUtils::IsOrbitFunc(*func)) {
       uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
       selected_functions[address] = *func;
@@ -613,13 +613,14 @@ void OrbitApp::ClearCapture() {
   SelectTextBox(nullptr);
 
   // Trigger deallocation of previous sampling related data.
-  auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+  // TODO(kuebler): Investigate why selected process needs to be passed here.
+  auto empty_sampling_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
   AddSamplingReport(empty_sampling_profiler, nullptr);
   AddTopDownView(*empty_sampling_profiler);
   Capture::GSamplingProfiler = empty_sampling_profiler;
 
   if (selection_report_) {
-    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
     AddSelectionReport(empty_selection_profiler, nullptr);
   }
 
@@ -689,11 +690,12 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
-void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Module>& module,
+void OrbitApp::LoadModuleOnRemote(const std::shared_ptr<Process>& process, int32_t process_id,
+                                  const std::shared_ptr<Module>& module,
                                   const std::shared_ptr<PresetFile>& preset) {
   ScopedStatus scoped_status =
       CreateScopedStatus(absl::StrFormat("Loading symbols for \"%s\"...", module->m_FullName));
-  thread_pool_->Schedule([this, process_id, module, preset,
+  thread_pool_->Schedule([this, process_id, process, module, preset,
                           scoped_status = std::move(scoped_status)]() mutable {
     const std::string& module_path = module->m_FullName;
 
@@ -715,7 +717,8 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
 
     LOG("Found file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-    main_thread_executor_->Schedule([this, module, module_path, process_id, preset, debug_file_path,
+    main_thread_executor_->Schedule([this, module, module_path, process, process_id, preset,
+                                     debug_file_path,
                                      scoped_status = std::move(scoped_status)]() mutable {
       const std::string local_debug_file_path = symbol_helper_.GenerateCachedFileName(module_path);
 
@@ -745,9 +748,8 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id, const std::shared_ptr<Modu
         return;
       }
       module->LoadSymbols(result.value());
-      if (Capture::GTargetProcess != nullptr) {
-        Capture::GTargetProcess->AddFunctions(module->m_Pdb->GetFunctions());
-      }
+      CHECK(process != nullptr);
+      process->AddFunctions(module->m_Pdb->GetFunctions());
       LOG("Received and loaded %lu function symbols from remote service "
           "for module %s",
           module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
@@ -776,7 +778,8 @@ void OrbitApp::SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<
   GOrbitApp->FireRefreshCallbacks();
 }
 
-void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
+void OrbitApp::LoadModules(const std::shared_ptr<Process>& process, int32_t process_id,
+                           const std::vector<std::shared_ptr<Module>>& modules,
                            const std::shared_ptr<PresetFile>& preset) {
   // TODO(159868905) use ModuleData instead of Module
   for (const auto& module : modules) {
@@ -792,7 +795,7 @@ void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr
       LOG("Warning: Module \"%s\" does not contain a build id. Orbit cannot use local symbol files "
           "or cache symbols without a build id.",
           module_path);
-      LoadModuleOnRemote(process_id, module, preset);
+      LoadModuleOnRemote(process, process_id, module, preset);
       continue;
     }
 
@@ -808,15 +811,14 @@ void OrbitApp::LoadModules(int32_t process_id, const std::vector<std::shared_ptr
 
     if (symbols) {
       module->LoadSymbols(symbols.value());
-      if (Capture::GTargetProcess != nullptr) {
-        Capture::GTargetProcess->AddFunctions(module->m_Pdb->GetFunctions());
-      }
+      CHECK(process != nullptr);
+      process->AddFunctions(module->m_Pdb->GetFunctions());
       LOG("Loaded %lu function symbols locally for module \"%s\"",
           symbols.value().symbol_infos().size(), module->m_FullName);
       SymbolLoadingFinished(process_id, module, preset);
     } else {
       LOG("Did not find local symbols for module: %s", module->m_Name);
-      LoadModuleOnRemote(process_id, module, preset);
+      LoadModuleOnRemote(process, process_id, module, preset);
     }
   }
 }
@@ -849,13 +851,13 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                         absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
   }
   if (!modules_to_load.empty()) {
-    LoadModules(process->GetID(), modules_to_load, preset);
+    LoadModules(process, process->GetId(), modules_to_load, preset);
   }
 }
 
 void OrbitApp::UpdateProcessAndModuleList(
     int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
-  CHECK(GetSelectedProcessID() == pid);
+  CHECK(processes_data_view_->GetSelectedProcessId() == pid);
   thread_pool_->Schedule([pid, preset, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
 
@@ -870,7 +872,7 @@ void OrbitApp::UpdateProcessAndModuleList(
       // the moment we arrive here. If not - ignore the result.
       const std::vector<ModuleInfo>& module_infos = result.value();
       data_manager_->UpdateModuleInfos(pid, module_infos);
-      if (pid != GetSelectedProcessID()) {
+      if (pid != processes_data_view_->GetSelectedProcessId()) {
         return;
       }
 
@@ -905,8 +907,10 @@ void OrbitApp::UpdateProcessAndModuleList(
       // To this point all data is ready. We can set the Process and then
       // propagate the changes to the UI.
 
-      if (pid != GetSelectedProcessID()) {
+      if (pid != GetSelectedProcessId()) {
         data_manager_->ClearSelectedFunctions();
+        // TODO(kuebler): Move as soon as Capture is gone.
+        data_manager_->set_selected_process(process);
         Capture::SetTargetProcess(std::move(process));
       }
 

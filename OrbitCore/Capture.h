@@ -23,7 +23,6 @@ class SamplingProfiler;
 
 class Capture {
  public:
-  static void Init();
   static void SetTargetProcess(std::shared_ptr<Process> process);
   static void FinalizeCapture();
   static void PreSave();
@@ -31,7 +30,6 @@ class Capture {
   static CaptureData capture_data_;
 
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
-  static std::shared_ptr<Process> GTargetProcess;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_H_

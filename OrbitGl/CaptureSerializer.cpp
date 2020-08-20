@@ -182,7 +182,8 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
       capture_info.function_stats().begin(), capture_info.function_stats().end()};
   CaptureData capture_data(capture_info.process_id(), capture_info.process_name(),
-                           std::move(selected_functions), std::move(functions_stats));
+                           std::make_shared<Process>(), std::move(selected_functions),
+                           std::move(functions_stats));
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos;
   address_infos.reserve(capture_info.address_infos_size());

@@ -307,7 +307,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
 
   if (timer_info.function_address() > 0) {
     FunctionInfo* func =
-        Capture::GTargetProcess->GetFunctionFromAddress(timer_info.function_address());
+        Capture::capture_data_.process()->GetFunctionFromAddress(timer_info.function_address());
 
     if (func != nullptr) {
       Capture::capture_data_.UpdateFunctionStats(func, timer_info);
@@ -609,7 +609,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart, float a_
 
   // Generate selection report.
   std::shared_ptr<SamplingProfiler> sampling_profiler =
-      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
+      std::make_shared<SamplingProfiler>(Capture::capture_data_.process());
 
   sampling_profiler->SetGenerateSummary(a_TID == 0);
 

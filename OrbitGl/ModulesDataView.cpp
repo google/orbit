@@ -113,21 +113,22 @@ std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
 
 void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
+  const std::shared_ptr<Process>& process = GOrbitApp->GetSelectedProcess();
   if (action == kMenuActionLoadSymbols) {
     std::vector<std::shared_ptr<Module>> modules;
     for (int index : item_indices) {
       const ModuleData* module_data = GetModule(index);
       if (!module_data->is_loaded()) {
-        modules.push_back(Capture::GTargetProcess->GetModuleFromPath(module_data->file_path()));
+        modules.push_back(process->GetModuleFromPath(module_data->file_path()));
       }
     }
-    GOrbitApp->LoadModules(GOrbitApp->GetSelectedProcessID(), modules);
+    GOrbitApp->LoadModules(process, GOrbitApp->GetSelectedProcessId(), modules);
 
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
       const ModuleData* module = GetModule(index);
-      modules_to_validate.push_back(Capture::GTargetProcess->GetModuleFromName(module->name()));
+      modules_to_validate.push_back(process->GetModuleFromName(module->name()));
     }
 
     if (!modules_to_validate.empty()) {
@@ -179,7 +180,7 @@ void ModulesDataView::SetModules(int32_t process_id, const std::vector<ModuleDat
 }
 
 void ModulesDataView::OnRefreshButtonClicked() {
-  GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessID(), nullptr);
+  GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessId(), nullptr);
 }
 
 const ModuleData* ModulesDataView::GetModule(uint32_t row) const { return modules_[indices_[row]]; }
