@@ -73,8 +73,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   }
   LOG("Capture pid %d", pid);
 
-  // TODO: selected_functions available when UploadSymbols is included
-  // TODO(kuebler): right now selected_functions is only an empty placeholder,
+  // TODO: right now selected_functions is only an empty placeholder,
   //  it needs to be filled separately in each client and then passed.
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
 
