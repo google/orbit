@@ -85,6 +85,7 @@ if [ -n "$1" ]; then
 
   set +e
   if [ "$BUILD_TYPE" = "release" ] \
+     && [ -z "${ORBIT_BYPASS_RELEASE_CHECK}" ] \
      && ! git -C "${REPO_ROOT}" describe --tags --exact-match > /dev/null; then
     echo -n "We are currently conducting a release build, but we aren't on a tag."
     echo    " Aborting the build..."
@@ -226,7 +227,7 @@ if [ "$(uname -s)" == "Linux" ]; then
   docker pull "${CONTAINER}"
   docker run --rm -v ${KOKORO_ARTIFACTS_DIR}:/mnt \
     -e KOKORO_JOB_NAME -e CONAN_PROFILE -e BUILD_TYPE \
-    -e OAUTH_TOKEN_HEADER \
+    -e OAUTH_TOKEN_HEADER -e ORBIT_BYPASS_RELEASE_CHECK \
     ${CONTAINER} \
     /mnt/github/orbitprofiler/kokoro/builds/build.sh in_docker
 else
@@ -234,7 +235,7 @@ else
   docker pull "${CONTAINER}"
   docker run --rm -v ${KOKORO_ARTIFACTS_DIR}:C:/mnt \
     -e KOKORO_JOB_NAME -e CONAN_PROFILE -e BUILD_TYPE \
-    -e OAUTH_TOKEN_HEADER \
+    -e OAUTH_TOKEN_HEADER -e ORBIT_BYPASS_RELEASE_CHECK \
     --isolation=process --storage-opt 'size=50GB' \
     ${CONTAINER} \
     'C:/Program Files/Git/bin/bash.exe' -c \
