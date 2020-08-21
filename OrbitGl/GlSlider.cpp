@@ -117,7 +117,7 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
   }
 
   float start = m_Ratio * nonSliderWidth;
-  float stop = start + sliderWidth;
+  float stop = start + sliderWidth - GetPixelHeight();
 
   Color color =
       canvas->GetPickingManager().IsThisElementPicked(this) ? m_SelectedColor : m_SliderColor;
@@ -144,7 +144,7 @@ void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
   }
 
   float start = canvasHeight - m_Ratio * nonSliderHeight;
-  float stop = start - sliderHeight;
+  float stop = start - sliderHeight + GetPixelHeight();
 
   Color color =
       canvas->GetPickingManager().IsThisElementPicked(this) ? m_SelectedColor : m_SliderColor;
