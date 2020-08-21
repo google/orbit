@@ -13,6 +13,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitGrpcServer.h"
+#include "OrbitVersion/OrbitVersion.h"
 
 namespace {
 
@@ -41,6 +42,7 @@ static bool IsSshConnectionAlive(
 namespace orbit_service {
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
+  LOG("Running Orbit Service version %s", OrbitCore::GetVersion());
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
   LOG("Starting GRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server;
