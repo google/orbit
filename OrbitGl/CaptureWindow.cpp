@@ -535,7 +535,7 @@ void CaptureWindow::DrawScreenSpace() {
   const Color kBackgroundColor(70, 70, 70, 255);
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - vertical_margin;
-  
+
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight), GlCanvas::Z_VALUE_MARGIN);
   ui_batcher_.AddBox(box, kBackgroundColor);
 
