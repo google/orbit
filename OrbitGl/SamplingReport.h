@@ -18,11 +18,9 @@
 
 class SamplingReport {
  public:
-  explicit SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
-                          const CallstackData* callstack_data);
-
-  void UpdateReport();
-  [[nodiscard]] std::shared_ptr<SamplingProfiler> GetProfiler() const { return profiler_; };
+  explicit SamplingReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
+  void UpdateReport(SamplingProfiler profiler, const CallstackData* callstack_data);
+  [[nodiscard]] const SamplingProfiler& profiler() const { return profiler_; };
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
   void OnSelectAddress(uint64_t address, ThreadID thread_id);
@@ -42,7 +40,7 @@ class SamplingReport {
   void UpdateDisplayedCallstack();
 
  protected:
-  std::shared_ptr<SamplingProfiler> profiler_;
+  SamplingProfiler profiler_;
   const CallstackData* callstack_data_;
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;
