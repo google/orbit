@@ -25,7 +25,7 @@ class CaptureData {
         selected_functions_{std::move(selected_functions)},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
-        sampling_profiler_{std::make_shared<SamplingProfiler>(process_)} {
+        sampling_profiler_{process_} {
     CHECK(process_ != nullptr);
   }
   explicit CaptureData(
@@ -38,7 +38,7 @@ class CaptureData {
         selected_functions_{std::move(selected_functions)},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
-        sampling_profiler_{std::make_shared<SamplingProfiler>(process_)},
+        sampling_profiler_{process_},
         functions_stats_{std::move(functions_stats)} {
     CHECK(process_ != nullptr);
   }
@@ -47,7 +47,7 @@ class CaptureData {
       : process_{std::make_shared<Process>()},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
-        sampling_profiler_{std::make_shared<SamplingProfiler>(process_)} {};
+        sampling_profiler_{process_} {};
   CaptureData(const CaptureData& other) = delete;
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
@@ -129,11 +129,9 @@ class CaptureData {
 
   [[nodiscard]] const std::shared_ptr<Process>& process() const { return process_; }
 
-  [[nodiscard]] std::shared_ptr<SamplingProfiler> sampling_profiler() { return sampling_profiler_; }
+  [[nodiscard]] const SamplingProfiler& GetSamplingProfiler() const { return sampling_profiler_; }
 
-  [[nodiscard]] const SamplingProfiler& GetSamplingProfiler() const { return *sampling_profiler_; }
-
-  void UpdateSamplingProfiler() { sampling_profiler_->ProcessSamples(*callstack_data_); }
+  void UpdateSamplingProfiler() { sampling_profiler_.ProcessSamples(*callstack_data_); }
 
  private:
   int32_t process_id_ = -1;
@@ -146,9 +144,7 @@ class CaptureData {
   // selection_callstack_data_ is subset of callstack_data_
   std::unique_ptr<CallstackData> selection_callstack_data_;
 
-  // TODO(kuebler): Make this value type as soon as UI/SamplingReport does not need to modify it
-  //  anymore.
-  std::shared_ptr<SamplingProfiler> sampling_profiler_;
+  SamplingProfiler sampling_profiler_;
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 
