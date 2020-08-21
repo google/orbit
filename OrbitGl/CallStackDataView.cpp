@@ -111,8 +111,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
       if (module != nullptr && !module->IsLoaded()) {
-        GOrbitApp->LoadModules(Capture::capture_data_.process(),
-                               Capture::capture_data_.process_id(), {module});
+        GOrbitApp->LoadModules(Capture::capture_data_.process(), {module});
       }
     }
 
