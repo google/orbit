@@ -29,6 +29,7 @@
 #include "ImGuiOrbit.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
 #include "Path.h"
 #include "Pdb.h"
@@ -38,7 +39,9 @@
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
+#include "SymbolHelper.h"
 #include "Utils.h"
+#include "symbol.pb.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
@@ -53,6 +56,7 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
 
@@ -716,18 +720,14 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
-void OrbitApp::LoadModuleOnRemote(const std::shared_ptr<Process>& process, int32_t process_id,
+void OrbitApp::LoadModuleOnRemote(const std::shared_ptr<Process>& process,
                                   const std::shared_ptr<Module>& module,
                                   const std::shared_ptr<PresetFile>& preset) {
-  ScopedStatus scoped_status =
-      CreateScopedStatus(absl::StrFormat("Loading symbols for \"%s\"...", module->m_FullName));
-  thread_pool_->Schedule([this, process_id, process, module, preset,
+  ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
+      "Searching for symbols on remote instance (module \"%s\")...", module->m_FullName));
+  thread_pool_->Schedule([this, process, module, preset,
                           scoped_status = std::move(scoped_status)]() mutable {
     const std::string& module_path = module->m_FullName;
-
-    scoped_status.UpdateMessage(
-        absl::StrFormat("Looking for debug info file for \"%s\"...", module_path));
-
     const auto result = process_manager_->FindDebugInfoFile(module_path);
 
     if (!result) {
@@ -741,19 +741,19 @@ void OrbitApp::LoadModuleOnRemote(const std::shared_ptr<Process>& process, int32
 
     const std::string& debug_file_path = result.value();
 
-    LOG("Found file on the remote: \"%s\" - loading it using scp...", debug_file_path);
+    LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-    main_thread_executor_->Schedule([this, module, module_path, process, process_id, preset,
-                                     debug_file_path,
+    main_thread_executor_->Schedule([this, module, module_path, process, preset, debug_file_path,
                                      scoped_status = std::move(scoped_status)]() mutable {
-      const std::string local_debug_file_path = symbol_helper_.GenerateCachedFileName(module_path);
+      const std::filesystem::path local_debug_file_path =
+          symbol_helper_.GenerateCachedFileName(module_path);
 
       {
         scoped_status.UpdateMessage(
             absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)", module_path,
                             debug_file_path));
         SCOPE_TIMER_LOG(absl::StrFormat("Copying %s", debug_file_path));
-        auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path);
+        auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path.string());
         if (!scp_result) {
           SendErrorToUi("Error loading symbols",
                         absl::StrFormat("Could not copy debug info file from the remote: %s",
@@ -762,49 +762,12 @@ void OrbitApp::LoadModuleOnRemote(const std::shared_ptr<Process>& process, int32
         }
       }
 
-      scoped_status.UpdateMessage(
-          absl::StrFormat(R"(Loading symbols from "%s"...)", debug_file_path));
-      const auto result =
-          symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, module->m_DebugSignature);
-      if (!result) {
-        SendErrorToUi(
-            "Error loading symbols",
-            absl::StrFormat(R"(Did not load symbols for module "%s" (debug info file "%s"): %s)",
-                            module_path, local_debug_file_path, result.error().message()));
-        return;
-      }
-      module->LoadSymbols(result.value());
-      CHECK(process != nullptr);
-      process->AddFunctions(module->m_Pdb->GetFunctions());
-      LOG("Received and loaded %lu function symbols from remote service "
-          "for module %s",
-          module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
-      SymbolLoadingFinished(process_id, module, preset);
+      LoadSymbols(local_debug_file_path, process, module, preset);
     });
   });
 }
 
-void OrbitApp::SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<Module>& module,
-                                     const std::shared_ptr<PresetFile>& preset) {
-  if (preset != nullptr) {
-    auto it = preset->preset_info().path_to_module().find(module->m_FullName);
-    if (it != preset->preset_info().path_to_module().end()) {
-      for (const FunctionInfo* func : module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
-        SelectFunction(*func);
-      }
-    }
-  }
-
-  data_manager_->FindModuleByAddressStart(process_id, module->m_AddressStart)->set_loaded(true);
-
-  modules_currently_loading_.erase(module->m_FullName);
-
-  UpdateSamplingReport();
-  AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
-  GOrbitApp->FireRefreshCallbacks();
-}
-
-void OrbitApp::LoadModules(const std::shared_ptr<Process>& process, int32_t process_id,
+void OrbitApp::LoadModules(const std::shared_ptr<Process>& process,
                            const std::vector<std::shared_ptr<Module>>& modules,
                            const std::shared_ptr<PresetFile>& preset) {
   // TODO(159868905) use ModuleData instead of Module
@@ -814,39 +777,88 @@ void OrbitApp::LoadModules(const std::shared_ptr<Process>& process, int32_t proc
     }
     modules_currently_loading_.insert(module->m_FullName);
 
-    // TODO (159889010) Move symbol loading off the main thread.
-    const std::string& module_path = module->m_FullName;
-    const std::string& build_id = module->m_DebugSignature;
-    if (build_id.empty()) {
-      LOG("Warning: Module \"%s\" does not contain a build id. Orbit cannot use local symbol files "
-          "or cache symbols without a build id.",
-          module_path);
-      LoadModuleOnRemote(process, process_id, module, preset);
+    const auto& symbols_path = FindSymbolsLocally(module->m_FullName, module->m_DebugSignature);
+    if (symbols_path) {
+      LoadSymbols(symbols_path.value(), process, module, preset);
       continue;
     }
 
-    auto scoped_status = CreateScopedStatus(
-        absl::StrFormat("Trying to find symbols for \"%s\" on local machine...", module_path));
-    auto symbols = symbol_helper_.LoadUsingSymbolsPathFile(module_path, build_id);
+    LoadModuleOnRemote(process, module, preset);
+  }
+}
 
-    // Try loading from the cache
-    if (!symbols) {
-      const std::string cached_file_name = symbol_helper_.GenerateCachedFileName(module_path);
-      symbols = symbol_helper_.LoadSymbolsFromFile(cached_file_name, build_id);
+ErrorMessageOr<std::filesystem::path> OrbitApp::FindSymbolsLocally(
+    const std::filesystem::path& module_path, const std::string& build_id) {
+  const auto scoped_status = CreateScopedStatus(absl::StrFormat(
+      "Searching for symbols on local machine (module: \"%s\")...", module_path.string()));
+
+  if (build_id.empty()) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to find local symbols for module \"%s\", build id is empty", module_path.string()));
+  }
+
+  std::string error_message;
+  {
+    const auto symbols_path = symbol_helper_.FindSymbolsWithSymbolsPathFile(module_path, build_id);
+    if (symbols_path) {
+      LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
+          "\"%s\"",
+          module_path.string(), symbols_path.value().string());
+      return symbols_path.value();
     }
+    error_message += "\n* " + symbols_path.error().message();
+  }
+  {
+    const auto symbols_path = symbol_helper_.FindSymbolsInCache(module_path, build_id);
+    if (symbols_path) {
+      LOG("Found symbols for module \"%s\" in cache. Symbols filename: \"%s\"",
+          module_path.string(), symbols_path.value().string());
+      return symbols_path.value();
+    }
+    error_message += "\n* " + symbols_path.error().message();
+  }
+  error_message = absl::StrFormat("Did not find local symbols for module \"%s\": %s",
+                                  module_path.string(), error_message);
+  LOG("%s", error_message);
+  return ErrorMessage(error_message);
+}
 
-    if (symbols) {
-      module->LoadSymbols(symbols.value());
-      CHECK(process != nullptr);
-      process->AddFunctions(module->m_Pdb->GetFunctions());
-      LOG("Loaded %lu function symbols locally for module \"%s\"",
-          symbols.value().symbol_infos().size(), module->m_FullName);
-      SymbolLoadingFinished(process_id, module, preset);
-    } else {
-      LOG("Did not find local symbols for module: %s", module->m_Name);
-      LoadModuleOnRemote(process, process_id, module, preset);
+void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path,
+                           const std::shared_ptr<Process>& process,
+                           const std::shared_ptr<Module>& module,
+                           const std::shared_ptr<PresetFile>& preset) {
+  // TODO (159889010) Move symbol loading off the main thread.
+  const auto scoped_status = CreateScopedStatus(absl::StrFormat(
+      R"(Loading symbols for "%s" from file "%s"...)", module->m_FullName, symbols_path.string()));
+
+  const auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
+  CHECK(symbols_result);
+  const ModuleSymbols& symbols = symbols_result.value();
+
+  module->LoadSymbols(symbols);
+  CHECK(process != nullptr);
+  process->AddFunctions(module->m_Pdb->GetFunctions());
+  LOG("Loaded %lu function symbols for module \"%s\"", symbols.symbol_infos().size(),
+      module->m_FullName);
+
+  // Applying preset
+  if (preset != nullptr) {
+    auto it = preset->preset_info().path_to_module().find(module->m_FullName);
+    if (it != preset->preset_info().path_to_module().end()) {
+      for (const FunctionInfo* func : module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
+        SelectFunction(*func);
+      }
     }
   }
+
+  data_manager_->FindModuleByAddressStart(process->GetId(), module->m_AddressStart)
+      ->set_loaded(true);
+
+  modules_currently_loading_.erase(module->m_FullName);
+
+  UpdateSamplingReport();
+  AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
+  GOrbitApp->FireRefreshCallbacks();
 }
 
 void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
@@ -877,7 +889,7 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                         absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
   }
   if (!modules_to_load.empty()) {
-    LoadModules(process, process->GetId(), modules_to_load, preset);
+    LoadModules(process, modules_to_load, preset);
   }
 }
 

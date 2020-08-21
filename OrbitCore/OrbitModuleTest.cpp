@@ -135,7 +135,7 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   EXPECT_EQ(function->name(), "__free");
 }
 
-TEST(SymbolHelper, LoadSymbols) {
+TEST(OrbitModule, LoadSymbols) {
   ModuleSymbols module_symbols;
   module_symbols.set_symbols_file_path("path/symbols_file_name");
   module_symbols.set_load_bias(0x400);

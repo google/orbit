@@ -15,6 +15,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientServices/ProcessManager.h"
+#include "SymbolHelper.h"
 #include "capture_data.pb.h"
 
 using orbit_grpc_protos::ModuleInfo;
@@ -140,8 +141,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   OUTCOME_TRY(main_executable_debug_file, process_client_->FindDebugInfoFile(module_path));
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
-  OUTCOME_TRY(symbols, symbol_helper_.LoadSymbolsFromFile(main_executable_debug_file,
-                                                          module->m_DebugSignature));
+  OUTCOME_TRY(symbols, SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
   module->LoadSymbols(symbols);
   target_process_->AddFunctions(module->m_Pdb->GetFunctions());
   return outcome::success();

@@ -54,6 +54,7 @@
 #include "preset.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
+#include "symbol.pb.h"
 #include "tracepoint.pb.h"
 
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
@@ -193,7 +194,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  void LoadModules(const std::shared_ptr<Process>& process, int32_t process_id,
+  void LoadModules(const std::shared_ptr<Process>& process,
                    const std::vector<std::shared_ptr<Module>>& modules,
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
   void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
@@ -238,11 +239,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SelectTextBox(const TextBox* text_box);
 
  private:
-  void LoadModuleOnRemote(const std::shared_ptr<Process>& process, int32_t process_id,
+  ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
+                                                           const std::string& build_id);
+  void LoadSymbols(const std::filesystem::path& symbols_path,
+                   const std::shared_ptr<Process>& process, const std::shared_ptr<Module>& module,
+                   const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void LoadModuleOnRemote(const std::shared_ptr<Process>& process,
                           const std::shared_ptr<Module>& module,
                           const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  void SymbolLoadingFinished(uint32_t process_id, const std::shared_ptr<Module>& module,
-                             const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(const std::string& filename);
 

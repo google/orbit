@@ -122,7 +122,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
         modules.push_back(process->GetModuleFromPath(module_data->file_path()));
       }
     }
-    GOrbitApp->LoadModules(process, GOrbitApp->GetSelectedProcessId(), modules);
+    GOrbitApp->LoadModules(process, modules);
 
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
