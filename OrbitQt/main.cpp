@@ -246,6 +246,7 @@ int main(int argc, char* argv[]) {
 
     const std::string log_file_path = Path::GetLogFilePath();
     InitLogFile(log_file_path);
+    LOG("You are running Orbit Profiler version %s", OrbitCore::GetVersion());
 
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
