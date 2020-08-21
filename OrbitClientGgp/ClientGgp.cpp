@@ -107,7 +107,7 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
     process->SetName(process_it->name());
     process->SetFullPath(process_it->full_path());
     process->SetIs64Bit(process_it->is_64_bit());
-    LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->GetID(), process->GetName(),
+    LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->GetId(), process->GetName(),
         process->GetFullPath(), process->GetIs64Bit());
     return process;
   }
@@ -120,8 +120,6 @@ bool ClientGgp::InitCapture() {
     ERROR("Error: not able to set target process");
     return false;
   }
-  // TODO: remove this line when GTargetProcess is deprecated in Capture
-  Capture::SetTargetProcess(target_process_);
   return true;
 }
 
