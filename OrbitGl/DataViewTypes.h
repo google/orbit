@@ -15,6 +15,7 @@ enum class DataViewType {
   kSampling,
   kPresets,
   kAll,
+  kTracepoints
 };
 
 #endif  // ORBIT_GL_DATA_VIEW_TYPES_H_

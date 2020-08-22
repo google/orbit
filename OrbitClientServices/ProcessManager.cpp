@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "OrbitClientServices/ProcessManager.h"
+#include "../OrbitService/ProcessServiceImpl.h"
 
 #include <chrono>
 #include <memory>

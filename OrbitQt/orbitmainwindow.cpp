@@ -161,6 +161,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
                                 SelectionType::kExtended, FontType::kDefault);
   ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
                               SelectionType::kDefault, FontType::kDefault);
+  ui->TracepointsList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::kTracepoints), SelectionType::kExtended,
+      FontType::kDefault);
 
   SetupCodeView();
 

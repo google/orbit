@@ -28,6 +28,7 @@
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
+#include "TracepointsDataView.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitCaptureClient/CaptureClient.h"
@@ -51,6 +52,7 @@
 #include "preset.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
+#include "tracepoint.pb.h"
 
 class Process;
 
@@ -277,6 +279,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<CallStackDataView> callstack_data_view_;
   std::unique_ptr<CallStackDataView> selection_callstack_data_view_;
   std::unique_ptr<PresetsDataView> presets_data_view_;
+  std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
 
