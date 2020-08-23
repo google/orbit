@@ -91,6 +91,18 @@ void DataManager::ClearSelectedFunctions() {
   selected_functions_ = absl::flat_hash_set<uint64_t>();
 }
 
+void DataManager::SelectTracepoint(std::string tracepoint_name){
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(!selected_tracepoints_.contains(tracepoint_name));
+  selected_tracepoints_.insert(tracepoint_name);
+}
+
+void DataManager::DeselectTracepoint(std::string tracepoint_name) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(selected_tracepoints_.contains(tracepoint_name));
+  selected_tracepoints_.erase(tracepoint_name);
+}
+
 ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
@@ -124,6 +136,11 @@ ModuleData* DataManager::FindModuleByAddressStart(int32_t process_id,
 bool DataManager::IsFunctionSelected(uint64_t function_address) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_functions_.contains(function_address);
+}
+
+bool DataManager::IsTracepointSelected(std::string tracepoint_name)  const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  return selected_tracepoints_.contains(tracepoint_name);
 }
 
 const absl::flat_hash_set<uint64_t>& DataManager::selected_functions() const {

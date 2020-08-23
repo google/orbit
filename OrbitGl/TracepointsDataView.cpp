@@ -42,6 +42,7 @@ void TracepointsDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
+
   switch (sorting_column_) {
     case kColumnName:
       sorter = ORBIT_PROC_SORT(name());
@@ -56,6 +57,33 @@ void TracepointsDataView::DoSort() {
   if (sorter) {
     std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
+}
+
+void TracepointsDataView::DoFilter() {
+  std::vector<uint32_t> indices;
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+
+  for (size_t i = 0; i < tracepoints_.size(); ++i) {
+    const TracepointData* tracepoint = tracepoints_[i];
+    std::string tracepoint_string = tracepoint->name();
+
+    bool match = true;
+
+    for (std::string& filter_token : tokens) {
+      if (tracepoint_string.find(filter_token) == std::string::npos) {
+        match = false;
+        break;
+      }
+    }
+
+    if (match) {
+      indices.push_back(i);
+    }
+  }
+
+  indices_ = indices;
+
+  OnSort(sorting_column_, {});
 }
 
 std::vector<std::string> TracepointsDataView::GetContextMenu(int clicked_index,

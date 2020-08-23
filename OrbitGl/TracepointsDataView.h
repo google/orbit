@@ -14,7 +14,7 @@ class TracepointsDataView : public DataView {
   TracepointsDataView();
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return kColumnName; }
+  int GetDefaultSortingColumn() override { return kColumnCategory; }
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
@@ -26,7 +26,7 @@ class TracepointsDataView : public DataView {
 
  protected:
   void DoSort() override;
-  /*void DoFilter() override;*/
+  void DoFilter() override;
 
   std::vector<std::string> m_FilterTokens;
   std::vector<TracepointData*> tracepoints_;
