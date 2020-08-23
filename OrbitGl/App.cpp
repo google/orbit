@@ -57,9 +57,6 @@ using orbit_grpc_protos::TracepointInfo;
 std::unique_ptr<OrbitApp> GOrbitApp;
 bool DoZoom = false;
 
-namespace fs = std::filesystem;
-const char* kLinuxTracingEvents = "/sys/kernel/debug/tracing/events/";
-
 OrbitApp::OrbitApp(ApplicationOptions&& options,
                    std::unique_ptr<MainThreadExecutor> main_thread_executor)
     : options_(std::move(options)), main_thread_executor_(std::move(main_thread_executor)) {
@@ -1046,64 +1043,57 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!tracepoints_data_view_) {
         tracepoints_data_view_ = std::make_unique<TracepointsDataView>();
 
-        std::vector<TracepointInfo> result;
+        tracepoint_manager_ = TracepointManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
-        for (const auto& category : fs::directory_iterator(kLinuxTracingEvents)) {
-          if (fs::is_directory(category)) {
-            for (const auto& name : fs::directory_iterator(category)) {
-              TracepointInfo tracepoint_info;
-              tracepoint_info.set_name(fs::path(name).filename());
-              tracepoint_info.set_category(fs::path(category).filename());
-              result.emplace_back(tracepoint_info);
+        main_thread_executor_->Schedule([this]() {
+          ErrorMessageOr<std::vector<TracepointInfo>> result =
+              tracepoint_manager_->LoadTracepointList();
+
+          if (result.value().size() != 0) {
+            const std::vector<TracepointInfo> tracepoint_infos = result.value();
+
+            std::vector<TracepointData*> tracepoints_ptr;
+
+            for (auto tracepoint : tracepoint_infos) {
+              tracepoints_ptr.emplace_back(new TracepointData(tracepoint));
             }
-          }
-        }
 
-        if (result.size() != 0) {
-          const std::vector<TracepointInfo> tracepoint_infos = result;
+            tracepoints_data_view_->SetTracepoints(tracepoints_ptr);
+          };
 
-          std::vector<TracepointData*> tracepoints_ptr;
+          panels_.push_back(tracepoints_data_view_.get());
+        });
+        return tracepoints_data_view_.get();
 
-          for (auto tracepoint : tracepoint_infos) {
-            tracepoints_ptr.emplace_back(new TracepointData(tracepoint));
-          }
-
-          tracepoints_data_view_->SetTracepoints(tracepoints_ptr);
-        };
-
-        m_Panels.push_back(tracepoints_data_view_.get());
+        case DataViewType::kInvalid:
+          FATAL("DataViewType::kInvalid should not be used with the factory.");
       }
-      return tracepoints_data_view_.get();
 
-    case DataViewType::kInvalid:
-      FATAL("DataViewType::kInvalid should not be used with the factory.");
+      FATAL("Unreachable");
   }
 
-  FATAL("Unreachable");
-}
-
-DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
-  if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
-    panels_.push_back(selection_callstack_data_view_.get());
+  DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
+    if (selection_callstack_data_view_ == nullptr) {
+      selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
+      panels_.push_back(selection_callstack_data_view_.get());
+    }
+    return selection_callstack_data_view_.get();
   }
-  return selection_callstack_data_view_.get();
-}
 
-void OrbitApp::FilterTracks(const std::string& filter) {
-  GCurrentTimeGraph->SetThreadFilter(filter);
-}
-
-void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
-  if (absl::GetFlag(FLAGS_devmode)) {
-    thread_pool_->Schedule([crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
+  void OrbitApp::FilterTracks(const std::string& filter) {
+    GCurrentTimeGraph->SetThreadFilter(filter);
   }
-}
 
-bool OrbitApp::IsCapturing() const { return capture_client_->IsCapturing(); }
+  void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
+    if (absl::GetFlag(FLAGS_devmode)) {
+      thread_pool_->Schedule([crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
+    }
+  }
 
-ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  CHECK(status_listener_ != nullptr);
-  return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
-}
+  bool OrbitApp::IsCapturing() const { return capture_client_->IsCapturing(); }
+
+  ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
+    CHECK(std::this_thread::get_id() == main_thread_id_);
+    CHECK(status_listener_ != nullptr);
+    return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
+  }

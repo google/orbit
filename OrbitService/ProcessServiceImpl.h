@@ -25,10 +25,6 @@ class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Servi
       grpc::ServerContext* context, const orbit_grpc_protos::GetModuleListRequest* request,
       orbit_grpc_protos::GetModuleListResponse* response) override;
 
-  [[nodiscard]] grpc::Status GetTracepointList(
-      grpc::ServerContext* context, const orbit_grpc_protos::GetTracepointListRequest* request,
-      orbit_grpc_protos::GetTracepointListResponse* response) override;
-
   [[nodiscard]] grpc::Status GetProcessMemory(
       grpc::ServerContext* context, const orbit_grpc_protos::GetProcessMemoryRequest* request,
       orbit_grpc_protos::GetProcessMemoryResponse* response) override;

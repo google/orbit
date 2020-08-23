@@ -35,6 +35,7 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
+#include "OrbitClientServices/TracepointManager.h"
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
 #include "SamplingReport.h"
@@ -297,6 +298,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
+  std::unique_ptr<TracepointManager> tracepoint_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;
 
