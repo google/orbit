@@ -24,6 +24,8 @@ class TracepointManager {
 
   virtual ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> LoadTracepointList() = 0;
 
+  virtual std::vector<orbit_grpc_protos::TracepointInfo> GetTracepointList() const = 0;
+
 };
 
 #endif  // ORBIT_TRACEPOINTMANAGER_H

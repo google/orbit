@@ -219,11 +219,11 @@
        </widget>
        <widget class="QWidget" name="tracepointsTab">
         <attribute name="title">
-         <string>tracepoints</string>
+         <string>Tracepoints</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_3">
          <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="TracepointsList"/>
+          <widget class="OrbitDataViewPanel" name="TracepointsList" native="true"/>
          </item>
         </layout>
        </widget>
@@ -238,7 +238,7 @@
      <x>0</x>
      <y>0</y>
      <width>976</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

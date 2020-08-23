@@ -1043,8 +1043,20 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!tracepoints_data_view_) {
         tracepoints_data_view_ = std::make_unique<TracepointsDataView>();
 
-        tracepoint_manager_ = TracepointManager::Create(grpc_channel_, absl::Milliseconds(1000));
+        if (!options_.grpc_server_address.empty()) {
+          grpc::ChannelArguments channel_arguments;
 
+          channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
+          grpc_channel_ = grpc::CreateCustomChannel(
+              options_.grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
+          if (!grpc_channel_) {
+            ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
+          }
+          else {
+            tracepoint_manager_ =
+                TracepointManager::Create(grpc_channel_, absl::Milliseconds(1000));
+          }
+        }
         main_thread_executor_->Schedule([this]() {
           ErrorMessageOr<std::vector<TracepointInfo>> result =
               tracepoint_manager_->LoadTracepointList();
@@ -1071,29 +1083,30 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
       FATAL("Unreachable");
   }
+}
 
-  DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
-    if (selection_callstack_data_view_ == nullptr) {
-      selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
-      panels_.push_back(selection_callstack_data_view_.get());
-    }
-    return selection_callstack_data_view_.get();
+DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
+  if (selection_callstack_data_view_ == nullptr) {
+    selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
+    panels_.push_back(selection_callstack_data_view_.get());
   }
+  return selection_callstack_data_view_.get();
+}
 
-  void OrbitApp::FilterTracks(const std::string& filter) {
-    GCurrentTimeGraph->SetThreadFilter(filter);
+void OrbitApp::FilterTracks(const std::string& filter) {
+  GCurrentTimeGraph->SetThreadFilter(filter);
+}
+
+void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
+  if (absl::GetFlag(FLAGS_devmode)) {
+    thread_pool_->Schedule([crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
   }
+}
 
-  void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
-    if (absl::GetFlag(FLAGS_devmode)) {
-      thread_pool_->Schedule([crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
-    }
-  }
+bool OrbitApp::IsCapturing() const { return capture_client_->IsCapturing(); }
 
-  bool OrbitApp::IsCapturing() const { return capture_client_->IsCapturing(); }
-
-  ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
-    CHECK(std::this_thread::get_id() == main_thread_id_);
-    CHECK(status_listener_ != nullptr);
-    return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
-  }
+ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(status_listener_ != nullptr);
+  return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
+}

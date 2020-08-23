@@ -4,14 +4,17 @@
 
 #include "TracepointServiceImpl.h"
 
+#include <grpcpp/server_context.h>
+
 #include "OrbitBase/Logging.h"
 #include "Utils.h"
+#include "services.pb.h"
 
 namespace orbit_service {
 
 grpc::Status TracepointServiceImpl::GetTracepointList(
-    grpc::ServerContext*, const orbit_grpc_protos::GetTracepointListRequest*,
-    orbit_grpc_protos::GetTracepointListResponse* response) {
+    grpc::ServerContext*, const GetTracepointListRequest*,
+    GetTracepointListResponse* response) {
 
   LOG("Sending tracepoints");
 

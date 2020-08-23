@@ -5,26 +5,26 @@
 #ifndef ORBIT_TRACEPOINTSERVICEIMPL_H
 #define ORBIT_TRACEPOINTSERVICEIMPL_H
 
-#include <grpcpp/security/server_credentials.h>
-#include <grpcpp/server_builder.h>
-
 #include <memory>
 #include <string>
 
 #include "services.grpc.pb.h"
 
-using grpc_impl::Server;
-using grpc_impl::ServerBuilder;
-using orbit_grpc_protos::TracepointService;
-
 namespace orbit_service {
+
+using orbit_grpc_protos::TracepointService;
+using orbit_grpc_protos::GetTracepointListRequest;
+using orbit_grpc_protos::GetTracepointListResponse;
 
 class TracepointServiceImpl final : public TracepointService::Service {
  public:
+
   [[nodiscard]] grpc::Status GetTracepointList(
-      grpc::ServerContext* context, const orbit_grpc_protos::GetTracepointListRequest* request,
-      orbit_grpc_protos::GetTracepointListResponse* response) override;
+      grpc::ServerContext* context, const GetTracepointListRequest* request,
+      GetTracepointListResponse* response) override;
+
+  //void RunServer() {};
 };
 
-}  // namespace orbit_service
+}
 #endif  // ORBIT_TRACEPOINTSERVICEIMPL_H
