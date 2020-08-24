@@ -92,18 +92,18 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   }
   auto process_it = find_if(process_infos.begin(), process_infos.end(),
                             [&pid](const ProcessInfo& info) { return info.pid() == pid; });
-  if (process_it != process_infos.end()) {
-    LOG("Found process by pid, set target process");
-    std::shared_ptr<Process> process = std::make_shared<Process>();
-    process->SetID(process_it->pid());
-    process->SetName(process_it->name());
-    process->SetFullPath(process_it->full_path());
-    process->SetIs64Bit(process_it->is_64_bit());
-    LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->GetId(), process->GetName(),
-        process->GetFullPath(), process->GetIs64Bit());
-    return process;
+  if (process_it == process_infos.end()) {
+    return nullptr;
   }
-  return nullptr;
+  LOG("Found process by pid, set target process");
+  std::shared_ptr<Process> process = std::make_shared<Process>();
+  process->SetID(process_it->pid());
+  process->SetName(process_it->name());
+  process->SetFullPath(process_it->full_path());
+  process->SetIs64Bit(process_it->is_64_bit());
+  LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->GetId(), process->GetName(),
+      process->GetFullPath(), process->GetIs64Bit());
+  return process;
 }
 
 bool ClientGgp::LoadModuleAndSymbols() {
@@ -122,10 +122,11 @@ bool ClientGgp::LoadModuleAndSymbols() {
         info.file_path(), info.file_size(), info.address_start(), info.address_end(),
         info.build_id());
   }
-  std::string_view target_name = target_process_->GetName();
-  auto module_it =
-      find_if(module_infos.begin(), module_infos.end(),
-              [&target_name](const ModuleInfo& info) { return info.name() == target_name; });
+  std::string_view main_executable_name = target_process_->GetName();
+  auto module_it = find_if(module_infos.begin(), module_infos.end(),
+                           [&main_executable_name](const ModuleInfo& info) {
+                             return info.name() == main_executable_name;
+                           });
   if (module_it == module_infos.end()) {
     ERROR("Error: Module correspondent to process binary not found");
     return false;
@@ -146,16 +147,17 @@ bool ClientGgp::LoadModuleAndSymbols() {
   // Load symbols for the module
   const std::string& module_path = module->m_FullName;
   LOG("Looking for debug info file for %s", module_path);
-  ErrorMessageOr<std::string> result_debug_file = process_client_->FindDebugInfoFile(module_path);
-  if (result_debug_file.has_error()) {
-    ERROR("Error loading symbols: %s", result_debug_file.error().message());
+  ErrorMessageOr<std::string> result_main_executable_debug_file =
+      process_client_->FindDebugInfoFile(module_path);
+  if (result_main_executable_debug_file.has_error()) {
+    ERROR("Error loading symbols: %s", result_main_executable_debug_file.error().message());
     return false;
   }
-  const std::string& debug_file_path = result_debug_file.value();
-  LOG("Found file: %s", debug_file_path);
+  const std::string& main_executable_debug_file = result_main_executable_debug_file.value();
+  LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> result_symbols =
-      symbol_helper_.LoadSymbolsFromFile(debug_file_path, module->m_DebugSignature);
+      symbol_helper_.LoadSymbolsFromFile(main_executable_debug_file, module->m_DebugSignature);
   if (result_symbols.has_error()) {
     ERROR("Error loading symbols: %s", result_symbols.error().message());
     return false;
