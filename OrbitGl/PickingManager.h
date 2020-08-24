@@ -90,7 +90,7 @@ struct PickingId {
 
 class PickingManager {
  public:
-  PickingManager() {}
+  PickingManager() = default;
   PickingManager(PickingManager& rhs) = delete;
 
   void Reset();
@@ -98,16 +98,16 @@ class PickingManager {
   void Pick(PickingId id, int x, int y);
   void Release();
   void Drag(int x, int y);
-  [[nodiscard]] std::weak_ptr<Pickable> GetPicked() const;
-  [[nodiscard]] std::weak_ptr<Pickable> GetPickableFromId(PickingId id) const;
+  [[nodiscard]] std::shared_ptr<Pickable> GetPicked() const;
+  [[nodiscard]] std::shared_ptr<Pickable> GetPickableFromId(PickingId id) const;
   [[nodiscard]] bool IsDragging() const;
 
-  [[nodiscard]] Color GetPickableColor(std::weak_ptr<Pickable> pickable, BatcherId batcher_id);
+  [[nodiscard]] Color GetPickableColor(std::shared_ptr<Pickable> pickable, BatcherId batcher_id);
 
   [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  [[nodiscard]] PickingId GetOrCreatePickableId(std::weak_ptr<Pickable> pickable,
+  [[nodiscard]] PickingId GetOrCreatePickableId(std::shared_ptr<Pickable> pickable,
                                                 BatcherId batcher_id);
   [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
 

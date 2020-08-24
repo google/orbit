@@ -29,24 +29,28 @@ TEST(PickingManager, PickableMock) {
 TEST(PickingManager, BasicFunctionality) {
   auto pickable1 = std::make_shared<PickableMock>();
   auto pickable2 = std::make_shared<PickableMock>();
+  auto pickable3 = std::make_shared<PickableMock>();
   PickingManager pm;
 
   Color col_vec1 = pm.GetPickableColor(pickable1, BatcherId::kUi);
   Color col_vec2 = pm.GetPickableColor(pickable2, BatcherId::kUi);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).lock(), pickable1);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)).lock(), pickable2);
+  Color col_vec3 = pm.GetPickableColor(pickable3, BatcherId::kUi);
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)), pickable1);
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)), pickable2);
+
+  ASSERT_EQ(pm.GetPickableColor(pickable1, BatcherId::kUi), col_vec1);
 
   PickingId invalid_id;
   invalid_id.type = PickingType::kPickable;
   invalid_id.element_id = 0xdead;
-  ASSERT_TRUE(pm.GetPickableFromId(invalid_id).expired());
+  ASSERT_FALSE(pm.GetPickableFromId(invalid_id));
 
   invalid_id.type = PickingType::kLine;
   ASSERT_DEATH(auto pickable = pm.GetPickableFromId(invalid_id), "PickingType::kPickable");
 
   pm.Reset();
-  ASSERT_TRUE(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).expired());
-  ASSERT_TRUE(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)).expired());
+  ASSERT_FALSE(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)));
+  ASSERT_FALSE(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)));
 }
 
 TEST(PickingManager, Callbacks) {
@@ -110,11 +114,10 @@ TEST(PickingManager, RobustnessOnReset) {
 
   pickable.reset();
 
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec)).lock(),
-            std::shared_ptr<PickableMock>());
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec)), std::shared_ptr<PickableMock>());
   ASSERT_FALSE(pm.IsDragging());
   pm.Pick(id, 0, 0);
-  ASSERT_TRUE(pm.GetPicked().expired());
+  ASSERT_FALSE(pm.GetPicked());
 
   pickable = std::make_shared<PickableMock>();
   col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);

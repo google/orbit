@@ -76,21 +76,22 @@ class Batcher {
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, std::weak_ptr<Pickable> pickable);
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, std::shared_ptr<Pickable> pickable);
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
-                       std::weak_ptr<Pickable> pickable);
+                       std::shared_ptr<Pickable> pickable);
 
   void AddBox(const Box& box, const std::array<Color, 4>& colors,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Box& box, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const Color& color, std::weak_ptr<Pickable> pickable);
+  void AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                     std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, const Color& color, std::weak_ptr<Pickable> pickable);
+  void AddTriangle(const Triangle& triangle, const Color& color,
+                   std::shared_ptr<Pickable> pickable);
 
   virtual void Draw(bool picking = false) const;
 
