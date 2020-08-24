@@ -121,7 +121,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 top_left(tab_x0, y0 + label_height);
     Vec2 end_bottom(x1 - vertical_margin, y1);
     Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
-    float z = GlCanvas::Z_VALUE_BOX_ACTIVE + 0.001f;
+    float z = GlCanvas::Z_VALUE_ROUNDING_CORNER;
 
     glColor4ubv(&kTabColor[0]);
     DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0, z);
