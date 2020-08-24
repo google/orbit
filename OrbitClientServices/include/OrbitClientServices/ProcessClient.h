@@ -5,11 +5,16 @@
 #ifndef ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
 #define ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
 
+#include <chrono>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
+
+// This class handles the client calls related to process service.
 
 class ProcessClient {
  public:
