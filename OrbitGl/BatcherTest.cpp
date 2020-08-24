@@ -160,7 +160,7 @@ void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color, P
   const PickingUserData* rendered_data = batcher.GetUserData(id);
   EXPECT_EQ(rendered_data, nullptr);
   EXPECT_EQ(id.type, PickingType::kPickable);
-  EXPECT_EQ(pm.GetPickableFromId(id).lock().get(), pickable.get());
+  EXPECT_EQ(pm.GetPickableFromId(id).get(), pickable.get());
 }
 
 TEST(Batcher, PickingPickables) {

@@ -15,7 +15,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
 }
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
-                      std::weak_ptr<Pickable> pickable) {
+                      std::shared_ptr<Pickable> pickable) {
   CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
@@ -53,7 +53,7 @@ void Batcher::AddBox(const Box& box, const Color& color,
   AddBox(box, colors, std::move(user_data));
 }
 
-void Batcher::AddBox(const Box& box, const Color& color, std::weak_ptr<Pickable> pickable) {
+void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable) {
   CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
@@ -87,7 +87,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
 }
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
-                          std::weak_ptr<Pickable> pickable) {
+                          std::shared_ptr<Pickable> pickable) {
   CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);

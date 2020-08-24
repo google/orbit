@@ -192,7 +192,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   std::string tooltip = "";
 
   if (pickId.type == PickingType::kPickable) {
-    auto pickable = GetPickingManager().GetPickableFromId(pickId).lock();
+    auto pickable = GetPickingManager().GetPickableFromId(pickId);
     if (pickable) {
       tooltip = pickable->GetTooltip();
     }
