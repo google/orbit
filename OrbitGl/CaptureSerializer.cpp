@@ -34,12 +34,6 @@ using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
-  // Add selected functions' exact address to sampling profiler
-  SamplingProfiler profiler = Capture::capture_data_.GetSamplingProfiler();
-  for (auto& pair : Capture::capture_data_.selected_functions()) {
-    profiler.UpdateAddressInfo(pair.first);
-  }
-
   header.set_version(kRequiredCaptureVersion);
 
   std::ofstream file(filename, std::ios::binary);
