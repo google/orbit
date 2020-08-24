@@ -24,12 +24,14 @@ RUN iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.or
 
 COPY Install.cmd C:\TEMP\
 ADD https://aka.ms/vscollect.exe C:\TEMP\collect.exe
-ADD https://aka.ms/vs/16/release/channel C:\TEMP\VisualStudio.chman
-ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+
+# That's version 16.6.5
+ADD https://download.visualstudio.microsoft.com/download/pr/067fd8d0-753e-4161-8780-dfa3e577839e/4776935864d08e66183acd5b3647c9616da989c60afbfe100d4afc459f7e5785/vs_BuildTools.exe  C:\TEMP\vs_buildtools.exe
+# Was pinned to 16.6 due to this bug:
+# https://developercommunity.visualstudio.com/content/problem/1144371/failed-to-compile-llvm-9011001-in-vs-2019-1670.html
+# Before changing that to a later version please ensure that LLVM compiles.
 
 RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
-    --channelUri C:\TEMP\VisualStudio.chman `
-    --installChannelUri C:\TEMP\VisualStudio.chman `
     --add Microsoft.VisualStudio.Workload.VCTools `
     --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
     --add Microsoft.Component.VC.Runtime.UCRTSDK `
