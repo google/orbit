@@ -12,19 +12,16 @@
 
 namespace orbit_service {
 
-using orbit_grpc_protos::TracepointService;
 using orbit_grpc_protos::GetTracepointListRequest;
 using orbit_grpc_protos::GetTracepointListResponse;
+using orbit_grpc_protos::TracepointService;
 
 class TracepointServiceImpl final : public TracepointService::Service {
  public:
-
-  [[nodiscard]] grpc::Status GetTracepointList(
-      grpc::ServerContext* context, const GetTracepointListRequest* request,
-      GetTracepointListResponse* response) override;
-
-  //void RunServer() {};
+  [[nodiscard]] grpc::Status GetTracepointList(grpc::ServerContext* context,
+                                               const GetTracepointListRequest* request,
+                                               GetTracepointListResponse* response) override;
 };
 
-}
+}  // namespace orbit_service
 #endif  // ORBIT_TRACEPOINTSERVICEIMPL_H

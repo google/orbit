@@ -19,7 +19,6 @@ class TracepointData final {
 
  private:
   orbit_grpc_protos::TracepointInfo Tracepoint_info_;
-
 };
 
 #endif  // ORBIT_TRACEPOINTDATA_H

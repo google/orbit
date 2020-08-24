@@ -7,8 +7,6 @@
 #include <OrbitBase/Logging.h>
 #include <grpcpp/channel.h>
 
-#include <thread>
-
 #include "services.grpc.pb.h"
 
 using orbit_grpc_protos::GetTracepointListRequest;

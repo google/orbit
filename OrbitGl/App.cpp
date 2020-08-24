@@ -1076,9 +1076,8 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kInvalid:
       FATAL("DataViewType::kInvalid should not be used with the factory.");
-
-      FATAL("Unreachable");
   }
+  FATAL("Unreachable");
 }
 
 DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {

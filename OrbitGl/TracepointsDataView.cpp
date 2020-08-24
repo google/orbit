@@ -42,7 +42,6 @@ void TracepointsDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-
   switch (sorting_column_) {
     case kColumnName:
       sorter = ORBIT_PROC_SORT(name());
@@ -86,16 +85,15 @@ void TracepointsDataView::DoFilter() {
   OnSort(sorting_column_, {});
 }
 
-std::vector<std::string> TracepointsDataView::GetContextMenu(int clicked_index,
-                                                         const std::vector<int>& selected_indices) {
+std::vector<std::string> TracepointsDataView::GetContextMenu(
+    int clicked_index, const std::vector<int>& selected_indices) {
   std::vector<std::string> menu;
 
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
-void TracepointsDataView::OnContextMenu(const std::string&, int,
-                                        const std::vector<int>&) {}
+void TracepointsDataView::OnContextMenu(const std::string&, int, const std::vector<int>&) {}
 
 void TracepointsDataView::SetTracepoints(const std::vector<TracepointData*>& tracepoints) {
   tracepoints_ = tracepoints;
@@ -104,10 +102,8 @@ void TracepointsDataView::SetTracepoints(const std::vector<TracepointData*>& tra
   for (size_t i = 0; i < indices_.size(); ++i) {
     indices_[i] = i;
   }
-
 }
 
 const TracepointData* TracepointsDataView::GetTracepoint(uint32_t row) const {
   return tracepoints_[indices_[row]];
 }
-
