@@ -4,6 +4,9 @@
 
 #include "OrbitClientServices/ProcessClient.h"
 
+#include <memory>
+#include <vector>
+
 #include "OrbitBase/Logging.h"
 #include "grpcpp/grpcpp.h"
 #include "outcome.hpp"
