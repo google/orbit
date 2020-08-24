@@ -981,9 +981,9 @@ void OrbitApp::UpdateSamplingReport() {
 
   if (selection_report_ != nullptr) {
     SamplingProfiler selection_profiler = selection_report_->profiler();
-    selection_profiler.ProcessSamples(*Capture::capture_data_.GetCallstackData());
+    selection_profiler.ProcessSamples(*Capture::capture_data_.GetSelectionCallstackData());
     selection_report_->UpdateReport(std::move(selection_profiler),
-                                    Capture::capture_data_.GetCallstackData());
+                                    Capture::capture_data_.GetSelectionCallstackData());
   }
 }
 
