@@ -30,9 +30,9 @@ using orbit_grpc_protos::TracepointInfo;
 
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
 
-std::unique_ptr<grpc::ClientContext> CreateContext(uint64_t timeout_milliseconds) {
+std::unique_ptr<grpc::ClientContext> CreateContext(
+    uint64_t timeout_milliseconds = kGrpcDefaultTimeoutMilliseconds) {
   auto context = std::make_unique<grpc::ClientContext>();
-
   std::chrono::time_point deadline =
       std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
   context->set_deadline(deadline);
@@ -45,7 +45,7 @@ std::unique_ptr<grpc::ClientContext> CreateContext(uint64_t timeout_milliseconds
 ErrorMessageOr<std::vector<orbit_grpc_protos::ProcessInfo>> ProcessClient::GetProcessList() {
   GetProcessListRequest request;
   GetProcessListResponse response;
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
   grpc::Status status = process_service_->GetProcessList(context.get(), request, &response);
   if (!status.ok()) {
@@ -64,7 +64,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(int32_t pi
   GetModuleListResponse response;
   request.set_process_id(pid);
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
   grpc::Status status = process_service_->GetModuleList(context.get(), request, &response);
 
   if (!status.ok()) {
@@ -81,7 +81,7 @@ ErrorMessageOr<std::vector<TracepointInfo>> ProcessClient::LoadTracepointList() 
   GetTracepointListRequest request;
   GetTracepointListResponse response;
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
   grpc::Status status = process_service_->GetTracepointList(context.get(), request, &response);
 
   if (!status.ok()) {
@@ -100,7 +100,7 @@ ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(const std::string& 
 
   request.set_module_path(module_path);
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
   grpc::Status status = process_service_->GetDebugInfoFile(context.get(), request, &response);
   if (!status.ok()) {
@@ -120,7 +120,7 @@ ErrorMessageOr<std::string> ProcessClient::LoadProcessMemory(int32_t pid, uint64
 
   GetProcessMemoryResponse response;
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
   grpc::Status status = process_service_->GetProcessMemory(context.get(), request, &response);
   if (!status.ok()) {
