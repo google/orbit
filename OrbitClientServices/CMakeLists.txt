@@ -15,11 +15,13 @@ target_include_directories(OrbitClientServices PRIVATE
 
 target_sources(OrbitClientServices PUBLIC 
         include/OrbitClientServices/CrashManager.h
-        include/OrbitClientServices/ProcessManager.h)
+        include/OrbitClientServices/ProcessManager.h
+        include/OrbitClientServices/ProcessClient.h)
 
 target_sources(OrbitClientServices PRIVATE
         CrashManager.cpp
-        ProcessManager.cpp)
+        ProcessManager.cpp
+        ProcessClient.cpp)
 
 target_link_libraries(OrbitClientServices PUBLIC
         OrbitBase

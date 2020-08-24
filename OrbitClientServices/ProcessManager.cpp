@@ -9,29 +9,16 @@
 #include <string>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitClientServices/ProcessClient.h"
 #include "grpcpp/grpcpp.h"
 #include "outcome.hpp"
-#include "services.grpc.pb.h"
 #include "symbol.pb.h"
 
 namespace {
 
-using orbit_grpc_protos::GetDebugInfoFileRequest;
-using orbit_grpc_protos::GetDebugInfoFileResponse;
-using orbit_grpc_protos::GetModuleListRequest;
-using orbit_grpc_protos::GetModuleListResponse;
-using orbit_grpc_protos::GetProcessListRequest;
-using orbit_grpc_protos::GetProcessListResponse;
-using orbit_grpc_protos::GetProcessMemoryRequest;
-using orbit_grpc_protos::GetProcessMemoryResponse;
-using orbit_grpc_protos::GetTracepointListRequest;
-using orbit_grpc_protos::GetTracepointListResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_grpc_protos::ProcessService;
 using orbit_grpc_protos::TracepointInfo;
-
-constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
 
 class ProcessManagerImpl final : public ProcessManager {
  public:
@@ -56,10 +43,9 @@ class ProcessManagerImpl final : public ProcessManager {
   void Shutdown() override;
 
  private:
-  std::unique_ptr<grpc::ClientContext> CreateContext(uint64_t timeout_milliseconds) const;
   void WorkerFunction();
 
-  std::unique_ptr<ProcessService::Stub> process_service_;
+  std::unique_ptr<ProcessClient> process_client_;
 
   absl::Duration refresh_timeout_;
   absl::Mutex shutdown_mutex_;
@@ -74,9 +60,9 @@ class ProcessManagerImpl final : public ProcessManager {
 
 ProcessManagerImpl::ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& channel,
                                        absl::Duration refresh_timeout)
-    : process_service_(ProcessService::NewStub(channel)),
-      refresh_timeout_(refresh_timeout),
-      shutdown_initiated_(false) {}
+    : refresh_timeout_(refresh_timeout), shutdown_initiated_(false) {
+  process_client_ = std::make_unique<ProcessClient>(channel);
+}
 
 void ProcessManagerImpl::SetProcessListUpdateListener(
     const std::function<void(ProcessManager*)>& listener) {
@@ -85,38 +71,11 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
 }
 
 ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(int32_t pid) {
-  GetModuleListRequest request;
-  GetModuleListResponse response;
-  request.set_process_id(pid);
-
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
-  grpc::Status status = process_service_->GetModuleList(context.get(), request, &response);
-
-  if (!status.ok()) {
-    ERROR("Grpc call failed: code=%d, message=%s", status.error_code(), status.error_message());
-    return ErrorMessage(status.error_message());
-  }
-
-  const auto& modules = response.modules();
-
-  return std::vector<ModuleInfo>(modules.begin(), modules.end());
+  return process_client_->LoadModuleList(pid);
 }
 
 ErrorMessageOr<std::vector<TracepointInfo>> ProcessManagerImpl::LoadTracepointList() {
-  GetTracepointListRequest request;
-  GetTracepointListResponse response;
-
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
-  grpc::Status status = process_service_->GetTracepointList(context.get(), request, &response);
-
-  if (!status.ok()) {
-    ERROR("Grpc call failed: code=%d, message=%s", status.error_code(), status.error_message());
-    return ErrorMessage(status.error_message());
-  }
-
-  const auto& tracepoints = response.tracepoints();
-
-  return std::vector<TracepointInfo>(tracepoints.begin(), tracepoints.end());
+  return process_client_->LoadTracepointList();
 }
 
 std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
@@ -125,20 +84,7 @@ std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
 }
 
 ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(const std::string& module_path) {
-  GetDebugInfoFileRequest request;
-  GetDebugInfoFileResponse response;
-
-  request.set_module_path(module_path);
-
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
-
-  grpc::Status status = process_service_->GetDebugInfoFile(context.get(), request, &response);
-  if (!status.ok()) {
-    ERROR("gRPC call to GetDebugInfoFile failed: %s", status.error_message());
-    return ErrorMessage(status.error_message());
-  }
-
-  return response.debug_info_file_path();
+  return process_client_->FindDebugInfoFile(module_path);
 }
 
 void ProcessManagerImpl::Start() {
@@ -155,17 +101,6 @@ void ProcessManagerImpl::Shutdown() {
   }
 }
 
-std::unique_ptr<grpc::ClientContext> ProcessManagerImpl::CreateContext(
-    uint64_t timeout_milliseconds) const {
-  auto context = std::make_unique<grpc::ClientContext>();
-
-  std::chrono::time_point deadline =
-      std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
-  context->set_deadline(deadline);
-
-  return context;
-}
-
 bool IsTrue(bool* var) { return *var; }
 
 void ProcessManagerImpl::WorkerFunction() {
@@ -179,19 +114,13 @@ void ProcessManagerImpl::WorkerFunction() {
     shutdown_mutex_.Unlock();
     // Timeout expired - refresh the list
 
-    GetProcessListRequest request;
-    GetProcessListResponse response;
-    std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
-
-    grpc::Status status = process_service_->GetProcessList(context.get(), request, &response);
-    if (!status.ok()) {
-      ERROR("gRPC call to GetProcessList failed: %s (error_code=%d)", status.error_message(),
-            status.error_code());
+    ErrorMessageOr<std::vector<ProcessInfo>> result = process_client_->GetProcessList();
+    if (result.has_error()) {
       continue;
     }
 
     absl::MutexLock callback_lock(&mutex_);
-    const auto& processes = response.processes();
+    const auto& processes = result.value();
     process_list_.assign(processes.begin(), processes.end());
     if (process_list_update_listener_) {
       process_list_update_listener_(this);
@@ -201,22 +130,7 @@ void ProcessManagerImpl::WorkerFunction() {
 
 ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(int32_t pid, uint64_t address,
                                                                   uint64_t size) {
-  GetProcessMemoryRequest request;
-  request.set_pid(pid);
-  request.set_address(address);
-  request.set_size(size);
-
-  GetProcessMemoryResponse response;
-
-  std::unique_ptr<grpc::ClientContext> context = CreateContext(kGrpcDefaultTimeoutMilliseconds);
-
-  grpc::Status status = process_service_->GetProcessMemory(context.get(), request, &response);
-  if (!status.ok()) {
-    ERROR("gRPC call to GetProcessMemory failed: %s", status.error_message());
-    return ErrorMessage(status.error_message());
-  }
-
-  return std::move(*response.mutable_memory());
+  return process_client_->LoadProcessMemory(pid, address, size);
 }
 
 ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(int32_t pid,
