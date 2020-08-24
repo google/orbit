@@ -141,17 +141,19 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Draw collapsing triangle.
   float button_offset = layout.GetCollapseButtonOffset();
-  Vec2 toggle_pos = Vec2(tab_x0 + button_offset, m_Pos[1] + half_label_height);
+  float toggle_y_pos = m_Pos[1] + half_label_height;
+  Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos);
   collapse_toggle_->Draw(canvas, picking_mode);
 
   if (!picking) {
     // Draw label.
     float label_offset_x = layout.GetTrackLabelOffsetX();
-    float label_offset_y = layout.GetTrackLabelOffsetY();
+    // Vertical offset for the text to be aligned to the center of the triangle.
+    float label_offset_y = GCurrentTimeGraph->GetFontSize() / 3.f;
     const Color kTextWhite(255, 255, 255, 255);
-    canvas->AddText(label_.c_str(), tab_x0 + label_offset_x, y1 + label_offset_y + m_Size[1],
-                    text_z, kTextWhite, label_width - label_offset_x);
+    canvas->AddText(label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z,
+                    kTextWhite, label_width - label_offset_x);
   }
 
   m_Canvas = canvas;

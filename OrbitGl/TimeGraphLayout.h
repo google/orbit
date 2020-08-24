@@ -16,7 +16,6 @@ class TimeGraphLayout {
   float GetTrackBottomMargin() const { return m_TrackBottomMargin * scale_; }
   float GetTrackTopMargin() const { return m_TrackTopMargin * scale_; }
   float GetTrackLabelOffsetX() const { return m_TrackLabelOffsetX; }
-  float GetTrackLabelOffsetY() const { return m_TrackLabelOffsetY; }
   float GetSliderWidth() const { return m_SliderWidth; }
   float GetTimeBarHeight() const { return time_bar_height_; }
   float GetTrackTabWidth() const { return m_TrackTabWidth; }
@@ -53,7 +52,6 @@ class TimeGraphLayout {
   float m_TrackBottomMargin;
   float m_TrackTopMargin;
   float m_TrackLabelOffsetX;
-  float m_TrackLabelOffsetY;
   float m_SliderWidth;
   float time_bar_height_;
   float m_TrackTabWidth;
