@@ -118,10 +118,6 @@ if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
 endif()
 
-if(NOT WIN32)
-  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
-endif()
-
 add_executable(OrbitGlTests)
 
 target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})

@@ -73,10 +73,6 @@ list(PREPEND CMAKE_FIND_ROOT_PATH "${CMAKE_BINARY_DIR}")
 # scripts in a cross compilation environment.
 list(APPEND CMAKE_FIND_ROOT_PATH "${CONAN_CMAKE_MODULE_PATH}")
 
-if(NOT WIN32 AND WITH_GUI)
-  find_package(X11 REQUIRED)
-endif()
-
 find_package(OpenSSL CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 find_package(xxHash REQUIRED)
