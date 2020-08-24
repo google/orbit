@@ -25,11 +25,13 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/ThreadPool.h
+        include/OrbitBase/Tracing.h
         include/OrbitBase/SafeStrerror.h)
 
 target_sources(OrbitBase PRIVATE
         Logging.cpp
         ThreadPool.cpp
+        Tracing.cpp
         SafeStrerror.cpp)
 
 target_link_libraries(OrbitBase PUBLIC

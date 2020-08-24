@@ -5,63 +5,59 @@
 #ifndef ORBIT_TRACING_TRACING_H_
 #define ORBIT_TRACING_TRACING_H_
 
+#include <functional>
 #include <memory>
 
-#define ORBIT_TRACING_ENABLED 1
+#include "absl/synchronization/mutex.h"
 
-#if ORBIT_TRACING_ENABLED
-
-// Scoped trace with user defined name.
-#define ORBIT_SCOPE(name) orbit::tracing::Scope ORBIT_UNIQUE(ORB)(name)
-// Scoped trace with calling function name.
-#define ORBIT_SCOPE_FUNC ORBIT_SCOPE(__FUNCTION__)
-// Manual scope begin.
-#define ORBIT_BEGIN(name) ORBIT_CALL(Begin(name))
-// Manual scope end.
-#define ORBIT_END ORBIT_CALL(End())
-// Track named variable (int or float).
-#define ORBIT_TRACK(name, var) ORBIT_CALL(Track(name, var))
-
-// Internal macros.
-#define ORBIT_CONCAT_IND(x, y) (x##y)
-#define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
-#define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
-#define ORBIT_CALL(f)               \
-  do {                              \
-    if (orbit::tracing::GHandler) { \
-      orbit::tracing::GHandler->f;  \
-    }                               \
-  } while (0)
+#define ORBIT_API_NO_IMPL
+// NOTE: Orbit.h will be moved to its own
+//       OrbitApi project in a subsequent PR.
+#include "../../../Orbit.h"
 
 namespace orbit::tracing {
 
-class Handler {
- public:
-  virtual ~Handler() = default;
-  virtual void Begin(const char* name) = 0;
-  virtual void End() = 0;
-  virtual void Track(const char* name, int) = 0;
-  virtual void Track(const char* name, float) = 0;
+enum ScopeType : int {
+  kNone = 0,
+  kScope = 1,
+  kScopeAsync = 2,
+  kTrackInt = 3,
+  kTrackInt64 = 4,
+  kTrackUint = 5,
+  kTrackUint64 = 6,
+  kTrackFloat = 7,
+  kTrackDouble = 8,
+  kTrackFloatAsInt = 9,
+  kTrackDoubleAsInt64 = 10
 };
-
-// This must be instantiated in user code.
-extern std::unique_ptr<Handler> GHandler;
 
 struct Scope {
-  explicit Scope(const char* name) { ORBIT_BEGIN(name); }
-  ~Scope() { ORBIT_END; }
+  uint64_t begin = 0;
+  uint64_t end = 0;
+  uint64_t tracked_value = 0;
+  uint32_t depth = 0;
+  uint32_t tid = 0;
+  orbit::Color color = orbit::Color::kAuto;
+  const char* name;
+  ScopeType type = kNone;
 };
 
+using TimerCallback = std::function<void(Scope&& scope)>;
+
+class Listener {
+ public:
+  explicit Listener(const TimerCallback& callback);
+  ~Listener();
+
+  static absl::Mutex* GetMutex() { return &mutex_; }
+
+ private:
+  TimerCallback callback_;
+  static inline absl::Mutex mutex_;
+};
+
+void Start(const TimerCallback* callback);
+void Stop();
 }  // namespace orbit::tracing
-
-#else
-
-#define ORBIT_SCOPE(name)
-#define ORBIT_SCOPE_FUNC
-#define ORBIT_BEGIN(name)
-#define ORBIT_END
-#define ORBIT_TRACK(var)
-
-#endif  // ORBIT_TRACING_ENABLED
 
 #endif  // ORBIT_TRACING_TRACING_H_

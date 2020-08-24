@@ -4,6 +4,7 @@
 
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 
+#include "OrbitBase/Tracing.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;
@@ -18,8 +19,11 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
+using orbit_grpc_protos::IntrospectionCall;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
+
+using orbit::tracing::ScopeType;
 
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
@@ -34,6 +38,9 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
       break;
     case CaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
+      break;
+    case CaptureEvent::kIntrospectionCall:
+      ProcessIntrospectionCall(event.introspection_call());
       break;
     case CaptureEvent::kInternedString:
       ProcessInternedString(event.interned_string());
@@ -92,6 +99,7 @@ void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callst
 
 void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_call) {
   TimerInfo timer_info;
+  timer_info.set_process_id(function_call.pid());
   timer_info.set_thread_id(function_call.tid());
   timer_info.set_start(function_call.begin_timestamp_ns());
   timer_info.set_end(function_call.end_timestamp_ns());
@@ -104,6 +112,61 @@ void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_cal
   for (int i = 0; i < function_call.registers_size(); ++i) {
     timer_info.add_registers(function_call.registers(i));
   }
+
+  capture_listener_->OnTimer(timer_info);
+}
+
+[[nodiscard]] orbit::tracing::ScopeType ScopeTypeFromIntrospectionType(
+    IntrospectionCall::Type type) {
+  switch (type) {
+    case IntrospectionCall::kNone:
+      return ScopeType::kNone;
+    case IntrospectionCall::kScope:
+      return ScopeType::kScope;
+    case IntrospectionCall::kScopeAsync:
+      return ScopeType::kScopeAsync;
+    case IntrospectionCall::kTrackInt:
+      return ScopeType::kTrackInt;
+    case IntrospectionCall::kTrackInt64:
+      return ScopeType::kTrackInt64;
+    case IntrospectionCall::kTrackUint:
+      return ScopeType::kTrackUint;
+    case IntrospectionCall::kTrackUint64:
+      return ScopeType::kTrackUint64;
+    case IntrospectionCall::kTrackFloat:
+      return ScopeType::kTrackFloat;
+    case IntrospectionCall::kTrackDouble:
+      return ScopeType::kTrackDouble;
+    case IntrospectionCall::kTrackFloatAsInt:
+      return ScopeType::kTrackFloatAsInt;
+    case IntrospectionCall::kTrackDoubleAsInt64:
+      return ScopeType::kTrackDoubleAsInt64;
+    default:
+      ERROR("IntrospectionCall type not handled.");
+      return ScopeType::kNone;
+  }
+}
+
+void CaptureEventProcessor::ProcessIntrospectionCall(const IntrospectionCall& introspection_call) {
+  TimerInfo timer_info;
+  timer_info.set_process_id(introspection_call.pid());
+  timer_info.set_thread_id(introspection_call.tid());
+  timer_info.set_start(introspection_call.begin_timestamp_ns());
+  timer_info.set_end(introspection_call.end_timestamp_ns());
+  timer_info.set_depth(static_cast<uint8_t>(introspection_call.depth()));
+  timer_info.set_function_address(0);
+  uint64_t type = static_cast<uint64_t>(ScopeTypeFromIntrospectionType(introspection_call.type()));
+  timer_info.set_user_data_key(type);
+  timer_info.set_processor(-1);
+  timer_info.set_type(TimerInfo::kIntrospection);
+
+  // See Orbit.h for parameter order.
+  timer_info.add_registers(introspection_call.string_address());
+  timer_info.add_registers(introspection_call.tracked_value());
+  timer_info.add_registers(introspection_call.color());
+  timer_info.add_registers(0);
+  timer_info.add_registers(0);
+  timer_info.add_registers(0);
 
   capture_listener_->OnTimer(timer_info);
 }

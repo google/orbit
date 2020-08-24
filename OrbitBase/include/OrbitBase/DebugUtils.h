@@ -11,7 +11,7 @@
 
 #include "Logging.h"
 
-#define DEBUG_UTILS_ENABLED 0  // Enable locally only.
+#define DEBUG_UTILS_ENABLED 1  // Enable locally only.
 #if DEBUG_UTILS_ENABLED
 
 // Print variable's name and value in the form "name = value".

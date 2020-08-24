@@ -19,7 +19,6 @@ target_sources(
          CaptureData.h
          EventBuffer.h
          FunctionUtils.h
-         Introspection.h
          OrbitModule.h
          OrbitProcess.h
          Params.h
@@ -41,7 +40,6 @@ target_sources(
           CaptureData.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
-          Introspection.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           Params.cpp

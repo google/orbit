@@ -555,6 +555,8 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
   while (!(*exit_requested)) {
     ORBIT_SCOPE("Tracer Iteration");
+    static uint64_t count;
+    if (++count % 100 == 0) ORBIT_INT("test int", 4);
 
     if (!last_iteration_saw_events) {
       // Periodically print event statistics.

@@ -5,6 +5,7 @@
 #include "TimeGraph.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/Tracing.h>
 
 #include <algorithm>
 #include <utility>
@@ -34,6 +35,8 @@
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+
+using orbit::tracing::ScopeType;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
@@ -300,6 +303,36 @@ double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
   return a_Ratio * CurrentWidth;
 }
 
+FunctionInfo::OrbitType OrbitTypeFromScopeType(ScopeType type) {
+  switch (type) {
+    case ScopeType::kNone:
+      return FunctionInfo::kNone;
+    case ScopeType::kScope:
+      return FunctionInfo::kOrbitTimerStart;
+    case ScopeType::kScopeAsync:
+      return FunctionInfo::kOrbitTimerStartAsync;
+    case ScopeType::kTrackInt:
+      return FunctionInfo::kOrbitTrackInt;
+    case ScopeType::kTrackInt64:
+      return FunctionInfo::kOrbitTrackInt64;
+    case ScopeType::kTrackUint:
+      return FunctionInfo::kOrbitTrackUint;
+    case ScopeType::kTrackUint64:
+      return FunctionInfo::kOrbitTrackUint64;
+    case ScopeType::kTrackFloat:
+      return FunctionInfo::kOrbitTrackFloat;
+    case ScopeType::kTrackDouble:
+      return FunctionInfo::kOrbitTrackDouble;
+    case ScopeType::kTrackFloatAsInt:
+      return FunctionInfo::kOrbitTrackFloatAsInt;
+    case ScopeType::kTrackDoubleAsInt64:
+      return FunctionInfo::kOrbitTrackDoubleAsInt64;
+    default:
+      ERROR("ScopeType type not handled.");
+      return FunctionInfo::kNone;
+  }
+}
+
 void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   if (timer_info.end() > capture_max_timestamp_) {
     capture_max_timestamp_ = timer_info.end();
@@ -312,7 +345,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
     if (func != nullptr) {
       Capture::capture_data_.UpdateFunctionStats(func, timer_info);
       if (FunctionUtils::IsOrbitFunc(*func)) {
-        ProcessOrbitFunctionTimer(func, timer_info);
+        ProcessOrbitFunctionTimer(func->type(), timer_info);
       }
     }
   }
@@ -321,13 +354,21 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
     uint64_t timeline_hash = timer_info.timeline_hash();
     std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
     track->OnTimer(timer_info);
-  } else {
+  } else if (timer_info.type() == TimerInfo::kIntrospection) {
+    uint64_t user_data = timer_info.user_data_key();
+    orbit::tracing::ScopeType type = static_cast<orbit::tracing::ScopeType>(user_data);
+    ProcessOrbitFunctionTimer(OrbitTypeFromScopeType(type), timer_info);
+
     std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(timer_info.thread_id());
     if (timer_info.type() == TimerInfo::kIntrospection) {
       const Color kGreenIntrospection(87, 166, 74, 255);
       track->SetColor(kGreenIntrospection);
     }
 
+    track->OnTimer(timer_info);
+    ++m_ThreadCountMap[timer_info.thread_id()];
+  } else {
+    std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(timer_info.thread_id());
     if (timer_info.type() != TimerInfo::kCoreActivity) {
       track->OnTimer(timer_info);
       ++m_ThreadCountMap[timer_info.thread_id()];
@@ -340,10 +381,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   NeedsUpdate();
 }
 
-void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
+void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
                                           const TimerInfo& timer_info) {
-  FunctionInfo::OrbitType type = function->type();
-  uint64_t time = timer_info.start();
   CHECK(timer_info.registers_size() > 1);
 
   // timer_info's "registers" hold a function's integer arguments in the order
@@ -353,41 +392,34 @@ void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
   // "OrbitFunctions" are defined in Orbit.h. They are empty stubs that Orbit
   // dynamically instruments. Manual instrumentation works by monitoring those
   // function calls and the value of their arguments.
-  uint64_t arg_0 = timer_info.registers(0);  // first argument.
-  uint64_t arg_1 = timer_info.registers(1);  // second argument.
+  uint64_t value_arg = timer_info.registers(1);  // second argument.
 
   switch (type) {
     case FunctionInfo::kOrbitTrackInt: {
-      int32_t value = static_cast<int32_t>(arg_1);
-      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
-      track->AddValue(value, time);
+      int32_t value = static_cast<int32_t>(value_arg);
+      AddGraphTrackValue(timer_info, value);
     } break;
     case FunctionInfo::kOrbitTrackInt64: {
-      int64_t value = static_cast<int64_t>(arg_1);
-      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
-      track->AddValue(value, time);
+      int64_t value = static_cast<int64_t>(value_arg);
+      AddGraphTrackValue(timer_info, value);
     } break;
     case FunctionInfo::kOrbitTrackUint: {
-      uint32_t value = static_cast<uint32_t>(arg_1);
-      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
-      track->AddValue(value, time);
+      uint32_t value = static_cast<uint32_t>(value_arg);
+      AddGraphTrackValue(timer_info, value);
     } break;
     case FunctionInfo::kOrbitTrackUint64: {
-      uint64_t value = static_cast<uint64_t>(arg_1);
-      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
-      track->AddValue(value, time);
+      uint64_t value = static_cast<uint64_t>(value_arg);
+      AddGraphTrackValue(timer_info, value);
     } break;
     case FunctionInfo::kOrbitTrackFloatAsInt: {
-      int32_t int_value = static_cast<int32_t>(arg_1);
+      int32_t int_value = static_cast<int32_t>(value_arg);
       float value = *(reinterpret_cast<float*>(&int_value));
-      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
-      track->AddValue(value, time);
+      AddGraphTrackValue(timer_info, value);
     } break;
     case FunctionInfo::kOrbitTrackDoubleAsInt64: {
-      int64_t int_value = static_cast<int64_t>(arg_1);
+      int64_t int_value = static_cast<int64_t>(value_arg);
       double value = *(reinterpret_cast<double*>(&int_value));
-      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
-      track->AddValue(value, time);
+      AddGraphTrackValue(timer_info, value);
     } break;
     case FunctionInfo::kOrbitTimerStart:
       ProcessManualIntrumentationTimer(timer_info);
@@ -395,6 +427,15 @@ void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
     default:
       break;
   }
+}
+
+[[nodiscard]] static pid_t GetPidFromTimerInfo(const TimerInfo& timer_info) {
+  int32_t pid = timer_info.process_id();
+  if (pid == 0) {
+    // TODO: TimerInfo generated from urobes should set the process_id field (b/166058093)
+    pid = Capture::capture_data_.process_id();
+  }
+  return pid;
 }
 
 void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
@@ -405,9 +446,8 @@ void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
   if (!manual_instrumentation_string_manager_.Contains(string_address)) {
     // Prevent redundant string requests while the current request is in flight.
     manual_instrumentation_string_manager_.AddOrReplace(string_address, "");
-
-    GOrbitApp->GetThreadPool()->Schedule([this, string_address]() {
-      int32_t pid = Capture::capture_data_.process_id();
+    int32_t pid = GetPidFromTimerInfo(timer_info);
+    GOrbitApp->GetThreadPool()->Schedule([this, string_address, pid]() {
       const auto& process_manager = GOrbitApp->GetProcessManager();
       auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
 
@@ -419,6 +459,41 @@ void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
       }
     });
   }
+}
+
+static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track, uint64_t string_address,
+                                         OrbitApp* app, pid_t pid) {
+  app->GetThreadPool()->Schedule([track, string_address, app, pid]() {
+    const auto& process_manager = app->GetProcessManager();
+    auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
+
+    if (error_or_string.has_value()) {
+      app->GetMainThreadExecutor()->Schedule([track, error_or_string]() {
+        track->SetName(error_or_string.value());
+        track->SetLabel(error_or_string.value());
+      });
+    } else {
+      ERROR("Setting track name from remote memory: %s", error_or_string.error().message());
+    }
+  });
+}
+
+void TimeGraph::AddGraphTrackValue(const orbit_client_protos::TimerInfo& timer_info, double value) {
+  uint64_t time = timer_info.start();
+  uint64_t string_address = timer_info.registers(0);
+  pid_t pid = GetPidFromTimerInfo(timer_info);
+  std::tuple<pid_t, uint64_t> key = {pid, string_address};
+
+  ScopeLock lock(m_Mutex);
+  std::shared_ptr<GraphTrack> track = graph_tracks_[key];
+  if (track == nullptr) {
+    track = std::make_shared<GraphTrack>(this, string_address);
+    SetTrackNameFromRemoteMemory(track, string_address, GOrbitApp.get(), pid);
+    tracks_.emplace_back(track);
+    graph_tracks_[key] = track;
+  }
+
+  track->AddValue(value, time);
 }
 
 std::string TimeGraph::GetManualInstrumentationString(uint64_t string_address) const {
@@ -848,37 +923,6 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
   }
 
   return track;
-}
-
-static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track, uint64_t string_address,
-                                         OrbitApp* app) {
-  app->GetThreadPool()->Schedule([track, string_address, app]() {
-    int32_t pid = Capture::capture_data_.process_id();
-    const auto& process_manager = app->GetProcessManager();
-    auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
-
-    if (error_or_string.has_value()) {
-      app->GetMainThreadExecutor()->Schedule([track, error_or_string]() {
-        track->SetName(error_or_string.value());
-        track->SetLabel(error_or_string.value());
-      });
-    } else {
-      ERROR("Setting track name from remote memory: %s", error_or_string.error().message());
-    }
-  });
-}
-
-GraphTrack* TimeGraph::GetOrCreateGraphTrack(uint64_t graph_id) {
-  ScopeLock lock(m_Mutex);
-  std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
-  if (track == nullptr) {
-    track = std::make_shared<GraphTrack>(this, graph_id);
-    SetTrackNameFromRemoteMemory(track, graph_id, GOrbitApp.get());
-    tracks_.emplace_back(track);
-    graph_tracks_[graph_id] = track;
-  }
-
-  return track.get();
 }
 
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {

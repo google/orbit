@@ -21,6 +21,22 @@
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
+inline uint64_t MonotonicTimestampNs() {
+  timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return 1'000'000'000llu * ts.tv_sec + ts.tv_nsec;
+}
+
+#ifdef __linux__
+#include <sys/syscall.h>
+#include <unistd.h>
+
+inline pid_t GetThreadId() {
+  thread_local pid_t current_tid = syscall(__NR_gettid);
+  return current_tid;
+}
+#endif
+
 #define LOG(format, ...)                                                                \
   do {                                                                                  \
     std::string file__ = std::filesystem::path(__FILE__).filename().string();           \
@@ -106,5 +122,7 @@ void LogToFile(const std::string& message);
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
+
+#include <OrbitBase/DebugUtils.h>
 
 #endif  // ORBIT_BASE_LOGGING_H_

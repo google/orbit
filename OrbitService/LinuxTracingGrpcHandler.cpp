@@ -4,12 +4,8 @@
 
 #include "LinuxTracingGrpcHandler.h"
 
+#include "absl/base/casts.h"
 #include "llvm/Demangle/Demangle.h"
-
-#include "Introspection.h"
-#include <OrbitLinuxTracing/OrbitTracing.h>
-
-#define LOG_VAR(x) LOG("%s = %s", #x, std::to_string(x))
 
 namespace orbit_service {
 
@@ -21,13 +17,62 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
+using orbit_grpc_protos::IntrospectionCall;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
+
+using orbit::tracing::ScopeType;
+// orbit_grpc_protos::FunctionCall;
+
+IntrospectionCall::Type IntrospectionTypeFromScopeType(ScopeType type) {
+  switch (type) {
+    case ScopeType::kNone:
+      return IntrospectionCall::kNone;
+    case ScopeType::kScope:
+      return IntrospectionCall::kScope;
+    case ScopeType::kScopeAsync:
+      return IntrospectionCall::kScopeAsync;
+    case ScopeType::kTrackInt:
+      return IntrospectionCall::kTrackInt;
+    case ScopeType::kTrackInt64:
+      return IntrospectionCall::kTrackInt64;
+    case ScopeType::kTrackUint:
+      return IntrospectionCall::kTrackUint;
+    case ScopeType::kTrackUint64:
+      return IntrospectionCall::kTrackUint64;
+    case ScopeType::kTrackFloat:
+      return IntrospectionCall::kTrackFloat;
+    case ScopeType::kTrackDouble:
+      return IntrospectionCall::kTrackDouble;
+    case ScopeType::kTrackFloatAsInt:
+      return IntrospectionCall::kTrackFloatAsInt;
+    case ScopeType::kTrackDoubleAsInt64:
+      return IntrospectionCall::kTrackDoubleAsInt64;
+    default:
+      ERROR("Unhandled ScopeType");
+      return IntrospectionCall::kNone;
+  }
+}
+
+orbit_grpc_protos::IntrospectionCall IntrospectionCallFromTracingScope(
+    orbit::tracing::Scope scope) {
+  IntrospectionCall introspection_call;
+  introspection_call.set_tid(scope.tid);
+  introspection_call.set_pid(getpid());
+  introspection_call.set_begin_timestamp_ns(scope.begin);
+  introspection_call.set_end_timestamp_ns(scope.end);
+  introspection_call.set_depth(scope.depth);
+  IntrospectionCall::Type introspection_type = IntrospectionTypeFromScopeType(scope.type);
+  introspection_call.set_type(introspection_type);
+  introspection_call.set_string_address(absl::bit_cast<uint64_t>(scope.name));
+  introspection_call.set_tracked_value(scope.tracked_value);
+  introspection_call.set_color(static_cast<uint32_t>(scope.color));
+  return introspection_call;
+}
 
 void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());
-
 
   {
     // Protect tracer_ with event_buffer_mutex_ so that we can use tracer_ in
@@ -40,19 +85,15 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
 
   sender_thread_ = std::thread{[this] { SenderThread(); }};
 
-  auto handler = std::make_unique<orbit::introspection::Handler>(
-      [](orbit::introspection::Scope scope) {
-        LOG("%s", scope.name_);
-        LOG("on callback");
+  orbit_tracing_listener_ =
+      std::make_unique<orbit::tracing::Listener>([this](orbit::tracing::Scope&& scope) {
+        OnIntrospectionCall(IntrospectionCallFromTracingScope(std::move(scope)));
       });
-  LinuxTracing::SetOrbitTracingHandler(std::move(handler));
-  LOG_VAR(this);
 }
 
 void LinuxTracingGrpcHandler::Stop() {
   CHECK(tracer_ != nullptr);
   CHECK(sender_thread_.joinable());
-  LOG_VAR(this);
 
   tracer_->Stop();
   {
@@ -90,6 +131,16 @@ void LinuxTracingGrpcHandler::OnCallstackSample(CallstackSample callstack_sample
 void LinuxTracingGrpcHandler::OnFunctionCall(FunctionCall function_call) {
   CaptureEvent event;
   *event.mutable_function_call() = std::move(function_call);
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    event_buffer_.emplace_back(std::move(event));
+  }
+}
+
+void LinuxTracingGrpcHandler::OnIntrospectionCall(
+    orbit_grpc_protos::IntrospectionCall introspection_call) {
+  CaptureEvent event;
+  *event.mutable_introspection_call() = std::move(introspection_call);
   {
     absl::MutexLock lock{&event_buffer_mutex_};
     event_buffer_.emplace_back(std::move(event));
@@ -203,6 +254,7 @@ void LinuxTracingGrpcHandler::SenderThread() {
 
   bool stopped = false;
   while (!stopped) {
+    ORBIT_SCOPE("SenderThread iteration");
     event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
                                                 +[](LinuxTracingGrpcHandler* self) {
                                                   return self->event_buffer_.size() >=
@@ -222,6 +274,7 @@ void LinuxTracingGrpcHandler::SenderThread() {
 }
 
 void LinuxTracingGrpcHandler::SendBufferedEvents(std::vector<CaptureEvent>&& buffered_events) {
+  ORBIT_UINT64("LinuxTracingGrpcHandler NumBufferedEvents", buffered_events.size());
   if (buffered_events.empty()) {
     return;
   }

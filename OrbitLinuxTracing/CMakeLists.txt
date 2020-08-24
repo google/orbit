@@ -33,7 +33,6 @@ target_sources(OrbitLinuxTracing PRIVATE
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         ManualInstrumentationConfig.h
-        OrbitTracing.cpp
         PerfEvent.cpp
         PerfEvent.h
         PerfEventOpen.cpp

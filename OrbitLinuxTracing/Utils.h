@@ -13,12 +13,6 @@
 
 namespace LinuxTracing {
 
-inline uint64_t MonotonicTimestampNs() {
-  timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return 1'000'000'000llu * ts.tv_sec + ts.tv_nsec;
-}
-
 std::optional<std::string> ExecuteCommand(const std::string& cmd);
 
 std::optional<std::string> ReadFile(std::string_view filename);

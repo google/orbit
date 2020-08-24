@@ -47,7 +47,6 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 
   const FunctionInfo* func =
       Capture::capture_data_.GetSelectedFunction(text_box->GetTimerInfo().function_address());
-  CHECK(func != nullptr);
 
   if (!func) {
     return text_box->GetText();
@@ -92,7 +91,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   }
 
   // See Orbit.h for more information about the manual instrumentation API.
-  const int kColorArgumentIndex = type == FunctionInfo::kOrbitTimerStart ? 1 : 2;
+  const int kColorArgumentIndex = 2;
   constexpr uint64_t kColorAuto = 0x00000001;
   CHECK(timer_info.registers_size() > kColorArgumentIndex);
   uint64_t color_arg = timer_info.registers(kColorArgumentIndex);
@@ -163,34 +162,29 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
 
     text_box->SetElapsedTimeTextLength(time.length());
 
-    if (func) {
-      std::string extra_info = GetExtraInfo(timer_info);
-      std::string name;
-      if (func->type() == FunctionInfo::kOrbitTimerStart) {
-        name = time_graph_->GetManualInstrumentationString(timer_info.registers(0));
-        if (name.empty()) {
-          // The remote string hasn't been retrieved yet,
-          // early out and try again on next update.
-          return;
-        }
-      } else {
-        name = FunctionUtils::GetDisplayName(*func);
+    bool is_manual_instrumentation = func && func->type() == FunctionInfo::kOrbitTimerStart;
+    bool is_introspection = timer_info.type() == TimerInfo::kIntrospection;
+    std::string name;
+
+    if (is_manual_instrumentation || is_introspection) {
+      name = time_graph_->GetManualInstrumentationString(timer_info.registers(0));
+      if (name.empty()) {
+        // The remote string hasn't been retrieved yet,
+        // early out and try again on next update.
+        return;
       }
-
-      std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
-
-      text_box->SetText(text);
-    } else if (timer_info.type() == TimerInfo::kIntrospection) {
-      std::string text = absl::StrFormat(
-          "%s %s", time_graph_->GetStringManager()->Get(timer_info.user_data_key()).value_or(""),
-          time.c_str());
-      text_box->SetText(text);
+    } else if (func) {
+      name = FunctionUtils::GetDisplayName(*func);
     } else {
       ERROR(
           "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
           "type=%d",
-          func->name(), static_cast<int>(timer_info.type()));
+          func ? func->name() : "unknown", static_cast<int>(timer_info.type()));
     }
+
+    std::string extra_info = GetExtraInfo(timer_info);
+    std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
+    text_box->SetText(text);
   }
 
   const Color kTextWhite(255, 255, 255, 255);

@@ -28,7 +28,7 @@
 
 // ORBIT_START/ORBIT_STOP: profile time span on a single thread.
 #define ORBIT_START(name) ORBIT_START_WITH_COLOR(name, orbit::Color::kAuto)
-#define ORBIT_START_WITH_COLOR(name, col) orbit_api::Start(ORBIT_STR(name), col)
+#define ORBIT_START_WITH_COLOR(name, col) orbit_api::Start(ORBIT_STR(name), 0, col)
 #define ORBIT_STOP() orbit_api::Stop()
 
 // ORBIT_START_ASYNC/ORBIT_STOP_ASYNC: profile time span across threads.
@@ -130,7 +130,19 @@ enum class Color : uint32_t {
 namespace orbit_api {
 
 // NOTE: Do not use these directly, use corresponding macros instead.
-ORBIT_STUB void Start(const char*, orbit::Color) { ORBIT_NOOP(); }
+#ifdef ORBIT_API_NO_IMPL
+void Start(const char* name, uint64_t dummy, orbit::Color color);
+void Stop();
+void StartAsync(const char* name, uint64_t value, orbit::Color color);
+void StopAsync(uint64_t);
+void TrackInt(const char* name, int32_t value, orbit::Color color);
+void TrackInt64(const char* name, int64_t value, orbit::Color color);
+void TrackUint(const char* name, uint32_t value, orbit::Color color);
+void TrackUint64(const char* name, uint64_t value, orbit::Color color);
+void TrackFloat(const char* name, float value, orbit::Color color);
+void TrackDouble(const char* name, double value, orbit::Color color);
+#else
+ORBIT_STUB void Start(const char*, uint64_t, orbit::Color) { ORBIT_NOOP(); }
 ORBIT_STUB void Stop() { ORBIT_NOOP(); }
 ORBIT_STUB void StartAsync(const char*, uint64_t, orbit::Color) { ORBIT_NOOP(); }
 ORBIT_STUB void StopAsync(uint64_t) { ORBIT_NOOP(); }
@@ -156,9 +168,10 @@ inline void TrackDouble(const char* name, double value, orbit::Color color) {
   std::memcpy(&int_value, &value, sizeof(value));
   TrackDoubleAsInt64(name, int_value, color);
 }
+#endif  // ORBIT_API_NO_IMPL
 
 struct Scope {
-  Scope(const char* name, orbit::Color color) { Start(name, color); }
+  Scope(const char* name, orbit::Color color) { Start(name, 0, color); }
   ~Scope() { Stop(); }
 };
 
