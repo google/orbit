@@ -41,12 +41,6 @@ void SamplingReport::FillReport() {
     thread_report.SetSamplingReport(this);
     thread_reports_.push_back(std::move(thread_report));
   }
-
-  // Refresh the displayed callstacks as they might not be up to date anymore,
-  // for example the number of occurrences or of total callstacks might have
-  // changed (OrbitSamplingReport::RefreshCallstackView will do the actual
-  // update once OrbitApp::FireRefreshCallbacks is called).
-  UpdateDisplayedCallstack();
 }
 
 void SamplingReport::UpdateDisplayedCallstack() {

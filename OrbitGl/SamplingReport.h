@@ -20,7 +20,6 @@ class SamplingReport {
  public:
   explicit SamplingReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
   void UpdateReport(SamplingProfiler profiler, const CallstackData* callstack_data);
-  [[nodiscard]] const SamplingProfiler& profiler() const { return profiler_; };
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
   void OnSelectAddress(uint64_t address, ThreadID thread_id);
