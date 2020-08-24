@@ -5,16 +5,14 @@
 #ifndef ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 #define ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 
-#include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <thread>
 
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
-#include "OrbitClientServices/ProcessManager.h"
+#include "OrbitClientServices/ProcessClient.h"
 #include "OrbitProcess.h"
 #include "SymbolHelper.h"
 #include "grpcpp/grpcpp.h"
@@ -23,7 +21,6 @@ class ClientGgp final : public CaptureListener {
  public:
   ClientGgp(ClientGgpOptions&& options);
   bool InitClient();
-  void ShutdownClient();
   bool RequestStartCapture(ThreadPool* thread_pool);
   bool StopCapture();
   void SaveCapture();
@@ -45,9 +42,7 @@ class ClientGgp final : public CaptureListener {
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::shared_ptr<Process> target_process_;
   std::unique_ptr<CaptureClient> capture_client_;
-  std::unique_ptr<ProcessManager> process_manager_;
-  std::mutex mutex_;
-  std::condition_variable process_manager_ready_;
+  std::unique_ptr<ProcessClient> process_client_;
 
   const SymbolHelper symbol_helper_;
 
