@@ -5,17 +5,11 @@
 #ifndef ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
 #define ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
 
-//#include <chrono>
-//#include <memory>
 #include <string>
 
 #include "OrbitBase/Result.h"
 #include "grpcpp/grpcpp.h"
-//#include "module.pb.h"
-//#include "process.pb.h"
 #include "services.grpc.pb.h"
-//#include "symbol.pb.h"
-//#include "tracepoint.pb.h"
 
 class ProcessClient {
  public:
