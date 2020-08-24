@@ -77,10 +77,9 @@ service ProcessService {
 }
 
 service TracepointService {
-rpc GetTracepointList(GetTracepointListRequest)
+  rpc GetTracepointList(GetTracepointListRequest)
       returns (GetTracepointListResponse) {}
-      }
-
+}
 
 message ValidateFramePointersRequest {
   string module_path = 1;

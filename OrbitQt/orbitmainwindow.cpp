@@ -39,6 +39,7 @@
 #include "ui_orbitmainwindow.h"
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
+ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, devmode);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
@@ -170,6 +171,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
+  }
+
+  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->tracepointsTab));
   }
 
   if (!absl::GetFlag(FLAGS_devmode)) {

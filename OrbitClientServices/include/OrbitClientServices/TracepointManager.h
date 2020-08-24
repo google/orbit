@@ -16,16 +16,24 @@
 
 class TracepointManager {
  public:
+  explicit TracepointManager(const std::shared_ptr<grpc::Channel>& channel);
+
   TracepointManager() = default;
   virtual ~TracepointManager() = default;
 
-  static std::unique_ptr<TracepointManager> Create(const std::shared_ptr<grpc::Channel>& channel,
-                                                absl::Duration refresh_timeout);
+  static std::unique_ptr<TracepointManager> Create(const std::shared_ptr<grpc::Channel>& channel);
 
-  virtual ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> LoadTracepointList() = 0;
+  virtual std::vector<orbit_grpc_protos::TracepointInfo> GetTracepointList() const;
 
-  virtual std::vector<orbit_grpc_protos::TracepointInfo> GetTracepointList() const = 0;
+  void WorkerFunction();
+  void Start();
 
+ private:
+  std::unique_ptr<grpc::ClientContext> CreateContext() const;
+
+  std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;
+
+  std::vector<orbit_grpc_protos::TracepointInfo> tracepoint_list_;
 };
 
 #endif  // ORBIT_TRACEPOINTMANAGER_H

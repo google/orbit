@@ -1051,15 +1051,13 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
               options_.grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
           if (!grpc_channel_) {
             ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
-          }
-          else {
-            tracepoint_manager_ =
-                TracepointManager::Create(grpc_channel_, absl::Milliseconds(1000));
+          } else {
+            tracepoint_manager_ = TracepointManager::Create(grpc_channel_);
           }
         }
         main_thread_executor_->Schedule([this]() {
           ErrorMessageOr<std::vector<TracepointInfo>> result =
-              tracepoint_manager_->LoadTracepointList();
+              tracepoint_manager_->GetTracepointList();
 
           if (result.value().size() != 0) {
             const std::vector<TracepointInfo> tracepoint_infos = result.value();
@@ -1069,17 +1067,15 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
             for (auto tracepoint : tracepoint_infos) {
               tracepoints_ptr.emplace_back(new TracepointData(tracepoint));
             }
-
             tracepoints_data_view_->SetTracepoints(tracepoints_ptr);
-          };
-
-          panels_.push_back(tracepoints_data_view_.get());
+          }
         });
-        return tracepoints_data_view_.get();
-
-        case DataViewType::kInvalid:
-          FATAL("DataViewType::kInvalid should not be used with the factory.");
+        panels_.push_back(tracepoints_data_view_.get());
       }
+      return tracepoints_data_view_.get();
+
+    case DataViewType::kInvalid:
+      FATAL("DataViewType::kInvalid should not be used with the factory.");
 
       FATAL("Unreachable");
   }
