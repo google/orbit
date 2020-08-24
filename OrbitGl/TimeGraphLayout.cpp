@@ -20,7 +20,6 @@ TimeGraphLayout::TimeGraphLayout() {
   m_SpaceBetweenTracksAndThread = 5.f;
   m_SpaceBetweenThreadBlocks = 35.f;
   m_TrackLabelOffsetX = 30.f;
-  m_TrackLabelOffsetY = 10.f;
   m_SliderWidth = 15.f;
   m_TrackTabWidth = 350.f;
   m_TrackTabHeight = 30.f;
@@ -52,7 +51,6 @@ bool TimeGraphLayout::DrawProperties() {
   ImGui::Begin("Layout Properties", &m_DrawProperties, size, 1.f, 0);
   bool needs_redraw = false;
   FLOAT_SLIDER(m_TrackLabelOffsetX);
-  FLOAT_SLIDER(m_TrackLabelOffsetY);
   FLOAT_SLIDER(m_TextBoxHeight);
   FLOAT_SLIDER(m_CoresHeight);
   FLOAT_SLIDER(m_EventTrackHeight);

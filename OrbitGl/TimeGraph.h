@@ -105,6 +105,7 @@ class TimeGraph {
   void SetCanvas(GlCanvas* a_Canvas);
   GlCanvas* GetCanvas() { return m_Canvas; }
   void SetFontSize(int a_FontSize);
+  int GetFontSize() { return GetTextRenderer()->GetFontSize(); }
   Batcher& GetBatcher() { return m_Batcher; }
   uint32_t GetNumTimers() const;
   uint32_t GetNumCores() const;
