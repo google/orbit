@@ -1,7 +1,7 @@
 #include "DisassemblyReport.h"
 
 uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
-  if (function_count_ == 0 || profiler_ == nullptr) {
+  if (function_count_ == 0) {
     return 0;
   }
   uint64_t address = disasm_.GetAddressAtLine(line);
@@ -19,7 +19,7 @@ uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
   if (next_address == 0) {
     next_address = address + 1;
   }
-  const ThreadSampleData* data = profiler_->GetSummary();
+  const ThreadSampleData* data = profiler_.GetSummary();
   if (data == nullptr) {
     return 0.0;
   }

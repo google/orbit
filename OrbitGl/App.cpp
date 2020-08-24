@@ -109,12 +109,11 @@ void OrbitApp::OnCaptureStarted(
 void OrbitApp::OnCaptureComplete() {
   main_thread_executor_->Schedule([this] {
     Capture::capture_data_.set_address_infos(std::move(captured_address_infos_));
-    Capture::capture_data_.sampling_profiler()->ProcessSamples(
-        *Capture::capture_data_.GetCallstackData());
+    Capture::capture_data_.UpdateSamplingProfiler();
 
     RefreshCaptureView();
 
-    AddSamplingReport(Capture::capture_data_.sampling_profiler(),
+    AddSamplingReport(Capture::capture_data_.GetSamplingProfiler(),
                       Capture::capture_data_.GetCallstackData());
     AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
 
@@ -330,12 +329,12 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     disasm.AddLine(absl::StrFormat("asm: /* %s */", FunctionUtils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), FunctionUtils::GetAbsoluteAddress(function),
                        is_64_bit);
-    if (!sampling_report_ || !sampling_report_->GetProfiler()) {
+    if (!sampling_report_) {
       DisassemblyReport empty_report(disasm);
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
     }
-    std::shared_ptr<SamplingProfiler> profiler = sampling_report_->GetProfiler();
+    const SamplingProfiler& profiler = Capture::capture_data_.GetSamplingProfiler();
 
     DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler,
                              Capture::capture_data_.GetCallstackData()->GetCallstackEventsSize());
@@ -380,7 +379,7 @@ void OrbitApp::NeedsRedraw() {
   }
 }
 
-void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+void OrbitApp::AddSamplingReport(SamplingProfiler sampling_profiler,
                                  const CallstackData* callstack_data) {
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
   if (sampling_reports_callback_) {
@@ -395,7 +394,7 @@ void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_prof
   sampling_report_ = report;
 }
 
-void OrbitApp::AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
+void OrbitApp::AddSelectionReport(SamplingProfiler sampling_profiler,
                                   const CallstackData* callstack_data) {
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
 
@@ -616,13 +615,13 @@ void OrbitApp::ClearCapture() {
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
-  AddSamplingReport(Capture::capture_data_.sampling_profiler(), nullptr);
+  AddSamplingReport(Capture::capture_data_.GetSamplingProfiler(), nullptr);
   // TODO(kuebler): This seems fishy. Probably, TopDownView does not update on new symbols.
   AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
 
   if (selection_report_) {
-    auto empty_selection_profiler = std::make_shared<SamplingProfiler>(GetSelectedProcess());
-    AddSelectionReport(empty_selection_profiler, nullptr);
+    SamplingProfiler empty_selection_profiler(GetSelectedProcess());
+    AddSelectionReport(std::move(empty_selection_profiler), nullptr);
   }
 
   if (GCurrentTimeGraph != nullptr) {
@@ -975,11 +974,16 @@ void OrbitApp::SelectTextBox(const TextBox* text_box) {
 
 void OrbitApp::UpdateSamplingReport() {
   if (sampling_report_ != nullptr) {
-    sampling_report_->UpdateReport();
+    Capture::capture_data_.UpdateSamplingProfiler();
+    sampling_report_->UpdateReport(Capture::capture_data_.GetSamplingProfiler(),
+                                   Capture::capture_data_.GetCallstackData());
   }
 
   if (selection_report_ != nullptr) {
-    selection_report_->UpdateReport();
+    SamplingProfiler selection_profiler(Capture::capture_data_.process());
+    selection_profiler.ProcessSamples(*Capture::capture_data_.GetSelectionCallstackData());
+    selection_report_->UpdateReport(std::move(selection_profiler),
+                                    Capture::capture_data_.GetSelectionCallstackData());
   }
 }
 

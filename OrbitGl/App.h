@@ -99,10 +99,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void RegisterCaptureWindow(CaptureWindow* capture);
 
-  void AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
-                         const CallstackData* callstack_data);
-  void AddSelectionReport(std::shared_ptr<SamplingProfiler> sampling_profiler,
-                          const CallstackData* callstack_data);
+  void AddSamplingReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
+  void AddSelectionReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
   void AddTopDownView(const SamplingProfiler& sampling_profiler);
 
   bool SelectProcess(const std::string& process,

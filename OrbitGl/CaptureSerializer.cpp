@@ -34,12 +34,6 @@ using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
-  // Add selected functions' exact address to sampling profiler
-  const std::shared_ptr<SamplingProfiler>& profiler = Capture::capture_data_.sampling_profiler();
-  for (auto& pair : Capture::capture_data_.selected_functions()) {
-    profiler->UpdateAddressInfo(pair.first);
-  }
-
   header.set_version(kRequiredCaptureVersion);
 
   std::ofstream file(filename, std::ios::binary);
@@ -207,8 +201,7 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     Capture::capture_data_.AddCallstackEvent(std::move(callstack_event));
   }
-  Capture::capture_data_.sampling_profiler()->ProcessSamples(
-      *Capture::capture_data_.GetCallstackData());
+  Capture::capture_data_.UpdateSamplingProfiler();
 
   time_graph_->Clear();
   StringManager* string_manager = time_graph_->GetStringManager();
@@ -255,7 +248,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
     time_graph_->ProcessTimer(timer_info);
   }
 
-  GOrbitApp->AddSamplingReport(Capture::capture_data_.sampling_profiler(),
+  GOrbitApp->AddSamplingReport(Capture::capture_data_.GetSamplingProfiler(),
                                Capture::capture_data_.GetCallstackData());
   GOrbitApp->AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
   GOrbitApp->FireRefreshCallbacks();

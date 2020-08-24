@@ -13,16 +13,18 @@
 
 class DisassemblyReport : public CodeReport {
  public:
-  DisassemblyReport(Disassembler disasm, uint64_t function_address,
-                    std::shared_ptr<SamplingProfiler> profiler, uint32_t samples_count)
+  DisassemblyReport(Disassembler disasm, uint64_t function_address, SamplingProfiler profiler,
+                    uint32_t samples_count)
       : disasm_{std::move(disasm)},
         profiler_{std::move(profiler)},
-        function_count_{(profiler_ == nullptr) ? 0
-                                               : profiler_->GetCountOfFunction(function_address)},
+        function_count_{profiler_.GetCountOfFunction(function_address)},
         samples_count_(samples_count) {}
 
   explicit DisassemblyReport(Disassembler disasm)
-      : disasm_{std::move(disasm)}, profiler_{nullptr}, function_count_{0}, samples_count_{0} {};
+      : disasm_{std::move(disasm)},
+        profiler_{std::make_shared<Process>()},
+        function_count_{0},
+        samples_count_{0} {};
 
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return function_count_; }
   [[nodiscard]] uint32_t GetNumSamples() const override { return samples_count_; }
@@ -30,7 +32,7 @@ class DisassemblyReport : public CodeReport {
 
  private:
   const Disassembler disasm_;
-  const std::shared_ptr<SamplingProfiler> profiler_;
+  const SamplingProfiler profiler_;
   const uint32_t function_count_;
   const uint32_t samples_count_;
 };
