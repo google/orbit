@@ -4,20 +4,17 @@
 
 #include "ClientGgp.h"
 
-#include <condition_variable>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <memory>
 #include <string>
-#include <thread>
 
 #include "Capture.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientServices/ProcessManager.h"
-#include "absl/time/time.h"
 #include "capture_data.pb.h"
 
 using orbit_grpc_protos::ModuleInfo;
@@ -43,24 +40,15 @@ bool ClientGgp::InitClient() {
   }
   LOG("Created GRPC channel to %s", options_.grpc_server_address);
 
-  process_manager_ = ProcessManager::Create(grpc_channel_, options_.process_refresh_timeout);
-  auto callback = [this](ProcessManager*) { process_manager_ready_.notify_one(); };
-  process_manager_->SetProcessListUpdateListener(callback);
-  // wait for the process list to be updated once
-  std::unique_lock<std::mutex> lk(mutex_);
-  process_manager_ready_.wait(lk);
-  process_manager_->SetProcessListUpdateListener(nullptr);
+  process_client_ = std::make_unique<ProcessClient>(grpc_channel_);
 
   // Initialisations needed for capture to work
   if (!InitCapture()) {
-    ShutdownClient();
     return false;
   }
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
   return true;
 }
-
-void ClientGgp::ShutdownClient() { process_manager_->Shutdown(); }
 
 // Client requests to start the capture
 bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
@@ -92,7 +80,11 @@ bool ClientGgp::StopCapture() {
 
 std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   // We retrieve the information of the process to later get the module corresponding to its binary
-  const std::vector<ProcessInfo>& process_infos = process_manager_->GetProcessList();
+  ErrorMessageOr<std::vector<ProcessInfo>> result_process_infos = process_client_->GetProcessList();
+  if (result_process_infos.has_error()) {
+    return nullptr;
+  }
+  const std::vector<ProcessInfo>& process_infos = result_process_infos.value();
   LOG("List of processes:");
   for (const ProcessInfo& info : process_infos) {
     LOG("pid:%d, name:%s, path:%s, is64:%d", info.pid(), info.name(), info.full_path(),
@@ -117,7 +109,7 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
 bool ClientGgp::LoadModuleAndSymbols() {
   // Load modules for target_process_
   ErrorMessageOr<std::vector<ModuleInfo>> result_module_infos =
-      process_manager_->LoadModuleList(target_process_->GetId());
+      process_client_->LoadModuleList(target_process_->GetId());
   if (result_module_infos.has_error()) {
     ERROR("Error retrieving modules: %s", result_module_infos.error().message());
     return false;
@@ -154,7 +146,7 @@ bool ClientGgp::LoadModuleAndSymbols() {
   // Load symbols for the module
   const std::string& module_path = module->m_FullName;
   LOG("Looking for debug info file for %s", module_path);
-  ErrorMessageOr<std::string> result_debug_file = process_manager_->FindDebugInfoFile(module_path);
+  ErrorMessageOr<std::string> result_debug_file = process_client_->FindDebugInfoFile(module_path);
   if (result_debug_file.has_error()) {
     ERROR("Error loading symbols: %s", result_debug_file.error().message());
     return false;

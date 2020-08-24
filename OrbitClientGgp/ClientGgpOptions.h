@@ -7,14 +7,11 @@
 
 #include <string>
 
-#include "absl/time/time.h"
-
 // The struct used to store Orbit Ggp Client options
 // The default values are set by main()
 struct ClientGgpOptions {
   // gRPC connection string
   std::string grpc_server_address;
-  absl::Duration process_refresh_timeout;
   int32_t capture_pid;
 };
 
