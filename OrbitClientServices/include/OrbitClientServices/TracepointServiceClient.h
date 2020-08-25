@@ -24,11 +24,15 @@ class TracepointServiceClient {
   static std::unique_ptr<TracepointServiceClient> Create(
       const std::shared_ptr<grpc::Channel>& channel);
 
-  virtual std::vector<TracepointInfo> GetTracepointList() const;
+  virtual ErrorMessageOr<std::vector<TracepointInfo>> GetTracepointList() const;
 
  private:
   TracepointServiceClient() = default;
-  std::unique_ptr<grpc::ClientContext> CreateContext() const;
+
+  inline std::unique_ptr<grpc::ClientContext> CreateContext() const {
+    auto context = std::make_unique<grpc::ClientContext>();
+    return context;
+  }
 
   std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;
 };

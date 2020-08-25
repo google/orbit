@@ -14,28 +14,22 @@ using orbit_grpc_protos::TracepointService;
 TracepointServiceClient::TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel)
     : tracepoint_service_(TracepointService::NewStub(channel)) {}
 
-std::unique_ptr<grpc::ClientContext> TracepointServiceClient::CreateContext() const {
-  auto context = std::make_unique<grpc::ClientContext>();
-
-  return context;
-}
-
-std::vector<TracepointInfo> TracepointServiceClient::GetTracepointList() const {
+ErrorMessageOr<std::vector<TracepointInfo>> TracepointServiceClient::GetTracepointList() const {
   GetTracepointListRequest request;
   GetTracepointListResponse response;
   std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
-  std::vector<TracepointInfo> tracepoint_list;
   grpc::Status status = tracepoint_service_->GetTracepointList(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetTracepointList failed: %s (error_code=%d)", status.error_message(),
           status.error_code());
+    return ErrorMessage("gRPC call to GetTracepointList failed");
   }
 
-  else {
-    const auto& tracepoints = response.tracepoints();
-    tracepoint_list.assign(tracepoints.begin(), tracepoints.end());
-  }
+  std::vector<TracepointInfo> tracepoint_list;
+  const auto& tracepoints = response.tracepoints();
+  tracepoint_list.assign(tracepoints.begin(), tracepoints.end());
+
   return tracepoint_list;
 }
 
