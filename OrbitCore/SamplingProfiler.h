@@ -24,7 +24,7 @@ struct SampledFunction {
   SampledFunction() = default;
 
   std::string name;
-  std::string module;
+  std::string module_path;
   std::string file;
   float exclusive = 0;
   float inclusive = 0;
@@ -93,7 +93,7 @@ class SamplingProfiler {
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t address) const;
-  [[nodiscard]] const std::string& GetModuleNameByAddress(uint64_t address) const;
+  [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t address) const;
 
   static const int32_t kAllThreadsFakeTid;
   static const std::string kUnknownFunctionOrModuleName;
@@ -116,7 +116,7 @@ class SamplingProfiler {
   std::vector<ThreadSampleData*> sorted_thread_sample_data_;
 
   absl::flat_hash_map<uint64_t, std::string> address_to_function_name_;
-  absl::flat_hash_map<uint64_t, std::string> address_to_module_name_;
+  absl::flat_hash_map<uint64_t, std::string> address_to_module_path_;
 };
 
 #endif  // ORBIT_CORE_SAMPLING_PROFILER_H_

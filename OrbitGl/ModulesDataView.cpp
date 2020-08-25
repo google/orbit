@@ -128,7 +128,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
       const ModuleData* module = GetModule(index);
-      modules_to_validate.push_back(process->GetModuleFromName(module->name()));
+      modules_to_validate.push_back(process->GetModuleFromPath(module->file_path()));
     }
 
     if (!modules_to_validate.empty()) {

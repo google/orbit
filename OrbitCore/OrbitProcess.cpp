@@ -65,15 +65,6 @@ std::shared_ptr<Module> Process::GetModuleFromAddress(uint64_t a_Address) {
   return module;
 }
 
-std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
-  auto iter = m_NameToModuleMap.find(absl::AsciiStrToLower(a_Name));
-  if (iter != m_NameToModuleMap.end()) {
-    return iter->second;
-  }
-
-  return nullptr;
-}
-
 std::shared_ptr<Module> Process::GetModuleFromPath(const std::string& module_path) {
   auto iter = path_to_module_map_.find(module_path);
   if (iter != path_to_module_map_.end()) {
@@ -93,6 +84,5 @@ void Process::AddFunctions(
 
 void Process::AddModule(std::shared_ptr<Module>& a_Module) {
   m_Modules[a_Module->m_AddressStart] = a_Module;
-  m_NameToModuleMap[absl::AsciiStrToLower(a_Module->m_Name)] = a_Module;
   path_to_module_map_[a_Module->m_FullName] = a_Module;
 }

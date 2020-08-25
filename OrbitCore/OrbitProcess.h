@@ -24,10 +24,6 @@ class Process {
 
   void AddModule(std::shared_ptr<Module>& a_Module);
 
-  std::map<std::string, std::shared_ptr<Module>>& GetNameToModulesMap() {
-    return m_NameToModuleMap;
-  }
-
   void SetName(std::string_view name) { m_Name = name; }
   const std::string& GetName() const { return m_Name; }
   void SetFullPath(std::string_view full_path) { m_FullPath = full_path; }
@@ -40,7 +36,6 @@ class Process {
   orbit_client_protos::FunctionInfo* GetFunctionFromAddress(uint64_t address,
                                                             bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(uint64_t a_Address);
-  std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
   std::shared_ptr<Module> GetModuleFromPath(const std::string& module_path);
 
   void AddFunction(const std::shared_ptr<orbit_client_protos::FunctionInfo>& function) {
@@ -66,10 +61,6 @@ class Process {
   Mutex data_mutex_;
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
-  // TODO(antonrohr): Change the usage of m_NameToModuleMap to
-  //  path_to_module_map_, since the name of a module is not unique
-  //  (/usr/lib/libbase.so and /opt/somedir/libbase.so)
-  std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
   std::map<std::string, std::shared_ptr<Module>> path_to_module_map_;
 
   // Transients
