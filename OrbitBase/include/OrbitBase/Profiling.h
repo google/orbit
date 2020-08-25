@@ -2,10 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_PROFILING_H_
-#define ORBIT_CORE_PROFILING_H_
+#ifndef ORBIT_BASE_PROFILING_H_
+#define ORBIT_BASE_PROFILING_H_
 
-#include "Utils.h"
+#include <absl/base/internal/sysinfo.h>
+
+#include "absl/time/time.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+using pid_t = uint32_t;
+#define CLOCK_MONOTONIC 1
+#else
+#include <sys/syscall.h>
+#include <unistd.h>
+#endif
 
 typedef uint64_t TickType;
 
@@ -18,9 +29,9 @@ inline void clock_gettime(uint32_t, struct timespec* spec) {
 }
 #endif
 
-inline TickType OrbitTicks(uint32_t a_Clock = 1 /*CLOCK_MONOTONIC*/) {
+inline TickType MonotonicTimestampNs() {
   timespec ts;
-  clock_gettime(a_Clock, &ts);
+  clock_gettime(CLOCK_MONOTONIC, &ts);
   return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 }
 
@@ -38,4 +49,11 @@ inline TickType MicrosecondsToTicks(double a_Micros) {
   return static_cast<TickType>(a_Micros * 1000);
 }
 
-#endif  // ORBIT_CORE_PROFILING_H_
+#ifdef __linux__
+inline pid_t GetThreadId() {
+  thread_local pid_t current_tid = syscall(__NR_gettid);
+  return current_tid;
+}
+#endif
+
+#endif  // ORBIT_BASE_PROFILING_H_

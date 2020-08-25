@@ -13,11 +13,11 @@ thread_local size_t CurrentDepthLocal = 0;
 void Timer::Start() {
   m_TID = GetCurrentThreadId();
   m_Depth = CurrentDepth++;
-  m_Start = OrbitTicks();
+  m_Start = MonotonicTimestampNs();
 }
 
 void Timer::Stop() {
-  m_End = OrbitTicks();
+  m_End = MonotonicTimestampNs();
   --CurrentDepth;
 }
 

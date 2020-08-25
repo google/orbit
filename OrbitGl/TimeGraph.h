@@ -14,6 +14,7 @@
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
+#include "OrbitBase/Profiling.h"
 #include "SchedulerTrack.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"

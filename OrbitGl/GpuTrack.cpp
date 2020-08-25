@@ -7,7 +7,7 @@
 #include "App.h"
 #include "Capture.h"
 #include "GlCanvas.h"
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 #include "TimeGraph.h"
 #include "absl/strings/str_format.h"
 

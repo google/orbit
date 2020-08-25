@@ -4,7 +4,7 @@
 
 #include "CaptureData.h"
 
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
