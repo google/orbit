@@ -47,7 +47,7 @@ ABSL_FLAG(bool, enable_stale_features, false,
           "implemented in the client's UI");
 
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
-          "Enable panel of kernel of tracepoints "
+          "Enable panel of kernel tracepoints "
           "implemented in the client's UI");
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");

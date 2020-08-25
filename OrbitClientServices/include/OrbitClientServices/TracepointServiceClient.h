@@ -16,9 +16,6 @@ using orbit_grpc_protos::TracepointInfo;
 
 class TracepointServiceClient {
  public:
-  explicit TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
-
-  TracepointServiceClient() = default;
   virtual ~TracepointServiceClient() = default;
 
   static std::unique_ptr<TracepointServiceClient> Create(
@@ -26,10 +23,14 @@ class TracepointServiceClient {
 
   virtual std::vector<TracepointInfo> GetTracepointList() const;
 
-  void WorkerFunction();
+  void PopulateWithServerData();
   void Start();
 
+  explicit TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
+
  private:
+  TracepointServiceClient() = default;
+
   std::unique_ptr<grpc::ClientContext> CreateContext() const;
 
   std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;

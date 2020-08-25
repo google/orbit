@@ -14,7 +14,7 @@ using orbit_grpc_protos::TracepointService;
 TracepointServiceClient::TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel)
     : tracepoint_service_(TracepointService::NewStub(channel)) {}
 
-void TracepointServiceClient::WorkerFunction() {
+void TracepointServiceClient::PopulateWithServerData() {
   GetTracepointListRequest request;
   GetTracepointListResponse response;
   std::unique_ptr<grpc::ClientContext> context = CreateContext();
@@ -42,8 +42,7 @@ std::vector<TracepointInfo> TracepointServiceClient::GetTracepointList() const {
 
 std::unique_ptr<TracepointServiceClient> TracepointServiceClient::Create(
     const std::shared_ptr<grpc::Channel>& channel) {
-  std::unique_ptr<TracepointServiceClient> impl =
+  std::unique_ptr<TracepointServiceClient> client =
       std::make_unique<TracepointServiceClient>(channel);
-  impl->WorkerFunction();
-  return impl;
+  return client;
 }

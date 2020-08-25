@@ -12,7 +12,7 @@ const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
-    columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
+    columns[kColumnSelected] = {"Selected", .0f, SortingOrder::kDescending};
     columns[kColumnCategory] = {"Category", .5f, SortingOrder::kAscending};
     columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
     return columns;
@@ -21,13 +21,13 @@ const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
 }
 
 std::string TracepointsDataView::GetValue(int row, int col) {
-  const TracepointInfo* tracepoint = GetTracepoint(row);
+  const TracepointInfo tracepoint = GetTracepoint(row);
 
   switch (col) {
     case kColumnName:
-      return tracepoint->name();
+      return tracepoint.name();
     case kColumnCategory:
-      return tracepoint->category();
+      return tracepoint.category();
     default:
       return "";
   }
@@ -104,6 +104,6 @@ void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& trac
   }
 }
 
-const TracepointInfo* TracepointsDataView::GetTracepoint(uint32_t row) const {
-  return new TracepointInfo(tracepoints_[indices_[row]]);
+const TracepointInfo TracepointsDataView::GetTracepoint(uint32_t row) const {
+  return tracepoints_[indices_[row]];
 }

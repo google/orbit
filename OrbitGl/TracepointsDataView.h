@@ -34,7 +34,7 @@ class TracepointsDataView : public DataView {
 
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };
 
-  const TracepointInfo* GetTracepoint(uint32_t row) const;
+  const TracepointInfo GetTracepoint(uint32_t row) const;
 };
 
 #endif  // ORBIT_TRACEPOINTSDATAVIEW_H

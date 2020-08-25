@@ -40,7 +40,11 @@
 #include "StringManager.h"
 #include "Utils.h"
 
+ABSL_FLAG(bool, enable_tracepoint_service, false,
+          "Start the retrieval of kernel tracepoints from the service");
+
 ABSL_DECLARE_FLAG(bool, devmode);
+ABSL_DECLARE_FLAG(bool, enable_tracepoint_service);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -194,8 +198,6 @@ void OrbitApp::PostInit() {
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
     process_manager_ = ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
-    tracepoint_manager_ = TracepointServiceClient::Create(grpc_channel_);
-
     auto callback = [this](ProcessManager* process_manager) {
       main_thread_executor_->Schedule([this, process_manager]() {
         const std::vector<ProcessInfo>& process_infos = process_manager->GetProcessList();
@@ -243,21 +245,26 @@ void OrbitApp::PostInit() {
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
-  thread_pool_->Schedule([this] {
-    ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager_->GetTracepointList();
+  if (absl::GetFlag(FLAGS_enable_tracepoint_service)) {
+    tracepoint_manager_ = TracepointServiceClient::Create(grpc_channel_);
 
-    if (result.has_error()) {
-      ERROR("Error retrieving tracepoints: %s", result.error().message());
-      SendErrorToUi("Error retrieving tracepoints", result.error().message());
-      return;
-    }
+    thread_pool_->Schedule([this] {
+      tracepoint_manager_->PopulateWithServerData();
+      ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager_->GetTracepointList();
 
-    main_thread_executor_->Schedule([result, this]() {
-      tracepoints_data_view_->SetTracepoints(result.value());
+      if (result.has_error()) {
+        ERROR("Error retrieving tracepoints: %s", result.error().message());
+        SendErrorToUi("Error retrieving tracepoints", result.error().message());
+        return;
+      }
 
-      FireRefreshCallbacks(DataViewType::kTracepoints);
+      main_thread_executor_->Schedule([result, this]() {
+        tracepoints_data_view_->SetTracepoints(result.value());
+
+        FireRefreshCallbacks(DataViewType::kTracepoints);
+      });
     });
-  });
+  }
 }
 
 void OrbitApp::LoadFileMapping() {
