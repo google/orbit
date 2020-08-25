@@ -47,7 +47,7 @@ class ClientGgp final : public CaptureListener {
 
   const SymbolHelper symbol_helper_;
 
-  std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
+  ErrorMessageOr<std::shared_ptr<Process>> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
 };
