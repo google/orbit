@@ -125,7 +125,7 @@ void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data) {
   function_address_to_exact_addresses_.clear();
   sorted_thread_sample_data_.clear();
   address_to_function_name_.clear();
-  address_to_module_name_.clear();
+  address_to_module_path_.clear();
 
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : callstack_data.callstack_events()) {
@@ -294,15 +294,15 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   address_to_function_name_[address] = function_name;
   address_to_function_name_[function_address] = function_name;
 
-  std::string module_name = kUnknownFunctionOrModuleName;
+  std::string module_path = kUnknownFunctionOrModuleName;
   std::shared_ptr<Module> module = process_->GetModuleFromAddress(address);
   if (module != nullptr) {
-    module_name = module->m_Name;
+    module_path = module->m_FullName;
   } else if (address_info != nullptr) {
-    module_name = Path::GetFileName(address_info->module_name());
+    module_path = address_info->module_path();
   }
-  address_to_module_name_[address] = module_name;
-  address_to_module_name_[function_address] = module_name;
+  address_to_module_path_[address] = module_path;
+  address_to_module_path_[function_address] = module_path;
 }
 
 void SamplingProfiler::FillThreadSampleDataSampleReports() {
@@ -328,8 +328,8 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
         function.exclusive = 100.f * it->second / thread_sample_data->samples_count;
       }
       function.address = address;
-      CHECK(address_to_module_name_.count(address) > 0);
-      function.module = address_to_module_name_.at(address);
+      CHECK(address_to_module_path_.count(address) > 0);
+      function.module_path = address_to_module_path_.at(address);
 
       sampled_functions->push_back(function);
     }
@@ -344,9 +344,9 @@ const std::string& SamplingProfiler::GetFunctionNameByAddress(uint64_t address) 
   return kUnknownFunctionOrModuleName;
 }
 
-const std::string& SamplingProfiler::GetModuleNameByAddress(uint64_t address) const {
-  auto it = address_to_module_name_.find(address);
-  if (it != address_to_module_name_.end()) {
+const std::string& SamplingProfiler::GetModulePathByAddress(uint64_t address) const {
+  auto it = address_to_module_path_.find(address);
+  if (it != address_to_module_path_.end()) {
     return it->second;
   }
   return kUnknownFunctionOrModuleName;

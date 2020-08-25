@@ -56,7 +56,7 @@ message CallstackInfo {
 
 message LinuxAddressInfo {
   uint64 absolute_address = 1;
-  string module_name = 2;
+  string module_path = 2;
   string function_name = 3;
   uint64 offset_in_function = 4;
 }

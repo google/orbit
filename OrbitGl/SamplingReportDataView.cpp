@@ -12,6 +12,7 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "OrbitModule.h"
+#include "Path.h"
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 
@@ -50,7 +51,7 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnInclusive:
       return absl::StrFormat("%.2f", func.inclusive);
     case kColumnModuleName:
-      return func.module;
+      return Path::GetFileName(func.module_path);
     case kColumnFile:
       return func.file;
     case kColumnLine:
@@ -70,6 +71,12 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
   [&](int a, int b) {                                                              \
     return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), ascending); \
+  }
+
+#define ORBIT_MODULE_NAME_FUNC_SORT                                                     \
+  [&](int a, int b) {                                                                   \
+    return OrbitUtils::Compare(Path::GetFileName(functions[a].module_path),             \
+                               Path::GetFileName(functions[b].module_path), ascending); \
   }
 
 void SamplingReportDataView::DoSort() {
@@ -92,7 +99,7 @@ void SamplingReportDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(inclusive);
       break;
     case kColumnModuleName:
-      sorter = ORBIT_PROC_SORT(module);
+      sorter = ORBIT_MODULE_NAME_FUNC_SORT;
       break;
     case kColumnFile:
       sorter = ORBIT_PROC_SORT(file);
@@ -134,20 +141,19 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
 
 std::vector<std::shared_ptr<Module>> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) {
-  std::vector<std::shared_ptr<Module>> modules;
   std::shared_ptr<Process> process = Capture::capture_data_.process();
   CHECK(process != nullptr);
-  std::set<std::string> module_names;
+  std::set<std::string> module_paths;
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
-    module_names.emplace(sampled_function.module);
+    module_paths.emplace(sampled_function.module_path);
   }
 
-  auto& module_map = process->GetNameToModulesMap();
-  for (const std::string& module_name : module_names) {
-    auto module_it = module_map.find(ToLower(module_name));
-    if (module_it != module_map.end()) {
-      modules.push_back(module_it->second);
+  std::vector<std::shared_ptr<Module>> modules;
+  for (const std::string& module_path : module_paths) {
+    const std::shared_ptr<Module> module = process->GetModuleFromPath(module_path);
+    if (module != nullptr) {
+      modules.push_back(module);
     }
   }
 
@@ -259,13 +265,13 @@ void SamplingReportDataView::DoFilter() {
   for (size_t i = 0; i < functions_.size(); ++i) {
     SampledFunction& func = functions_[i];
     std::string name = ToLower(func.name);
-    std::string module = ToLower(func.module);
+    std::string module_name = ToLower(Path::GetFileName(func.module_path));
 
     bool match = true;
 
     for (std::string& filter_token : tokens) {
       if (!(name.find(filter_token) != std::string::npos ||
-            module.find(filter_token) != std::string::npos)) {
+            module_name.find(filter_token) != std::string::npos)) {
         match = false;
         break;
       }

@@ -8,6 +8,7 @@
 #include "Callstack.h"
 #include "Capture.h"
 #include "FunctionUtils.h"
+#include "Path.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
@@ -60,7 +61,8 @@ std::string CallStackDataView::GetValue(int row, int column) {
       if (module != nullptr) {
         return module->m_Name;
       }
-      return Capture::capture_data_.GetSamplingProfiler().GetModuleNameByAddress(frame.address);
+      return Path::GetFileName(
+          Capture::capture_data_.GetSamplingProfiler().GetModulePathByAddress(frame.address));
     case kColumnAddress:
       return absl::StrFormat("%#llx", frame.address);
     default:

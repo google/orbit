@@ -188,7 +188,7 @@ void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) 
 
   LinuxAddressInfo linux_address_info;
   linux_address_info.set_absolute_address(address_info.absolute_address());
-  linux_address_info.set_module_name(map_name);
+  linux_address_info.set_module_path(map_name);
   linux_address_info.set_function_name(function_name);
   linux_address_info.set_offset_in_function(address_info.offset_in_function());
   capture_listener_->OnAddressInfo(linux_address_info);
