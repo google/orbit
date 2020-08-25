@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 project(OrbitClientServices)
-add_library(OrbitClientServices STATIC TracepointManager.cpp include/OrbitClientServices/TracepointManager.h)
+add_library(OrbitClientServices STATIC)
 
 target_compile_options(OrbitClientServices PRIVATE ${STRICT_COMPILE_FLAGS})
 
@@ -16,12 +16,12 @@ target_include_directories(OrbitClientServices PRIVATE
 target_sources(OrbitClientServices PUBLIC 
         include/OrbitClientServices/CrashManager.h
         include/OrbitClientServices/ProcessManager.h
-        include/OrbitClientServices/ProcessClient.h)
+        include/OrbitClientServices/TracepointServiceClient.h)
 
 target_sources(OrbitClientServices PRIVATE
         CrashManager.cpp
         ProcessManager.cpp
-        ProcessClient.cpp)
+        TracepointServiceClient.cpp)
 
 target_link_libraries(OrbitClientServices PUBLIC
         OrbitBase

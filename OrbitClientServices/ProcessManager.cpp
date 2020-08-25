@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 
-#include "../OrbitService/ProcessServiceImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitClientServices/ProcessClient.h"
 #include "grpcpp/grpcpp.h"

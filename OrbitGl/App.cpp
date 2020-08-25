@@ -194,6 +194,8 @@ void OrbitApp::PostInit() {
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
     process_manager_ = ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
+    tracepoint_manager_ = TracepointServiceClient::Create(grpc_channel_);
+
     auto callback = [this](ProcessManager* process_manager) {
       main_thread_executor_->Schedule([this, process_manager]() {
         const std::vector<ProcessInfo>& process_infos = process_manager->GetProcessList();
@@ -240,6 +242,22 @@ void OrbitApp::PostInit() {
 
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
+
+  thread_pool_->Schedule([this] {
+    ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager_->GetTracepointList();
+
+    if (result.has_error()) {
+      ERROR("Error retrieving tracepoints: %s", result.error().message());
+      SendErrorToUi("Error retrieving tracepoints", result.error().message());
+      return;
+    }
+
+    main_thread_executor_->Schedule([result, this]() {
+      tracepoints_data_view_->SetTracepoints(result.value());
+
+      FireRefreshCallbacks(DataViewType::kTracepoints);
+    });
+  });
 }
 
 void OrbitApp::LoadFileMapping() {
@@ -1042,34 +1060,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
         tracepoints_data_view_ = std::make_unique<TracepointsDataView>();
-
-        if (!options_.grpc_server_address.empty()) {
-          grpc::ChannelArguments channel_arguments;
-
-          channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
-          grpc_channel_ = grpc::CreateCustomChannel(
-              options_.grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
-          if (!grpc_channel_) {
-            ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
-          } else {
-            tracepoint_manager_ = TracepointManager::Create(grpc_channel_);
-          }
-        }
-        main_thread_executor_->Schedule([this]() {
-          ErrorMessageOr<std::vector<TracepointInfo>> result =
-              tracepoint_manager_->GetTracepointList();
-
-          if (result.value().size() != 0) {
-            const std::vector<TracepointInfo> tracepoint_infos = result.value();
-
-            std::vector<TracepointData*> tracepoints_ptr;
-
-            for (auto tracepoint : tracepoint_infos) {
-              tracepoints_ptr.emplace_back(new TracepointData(tracepoint));
-            }
-            tracepoints_data_view_->SetTracepoints(tracepoints_ptr);
-          }
-        });
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();

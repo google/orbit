@@ -2,22 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitClientServices/TracepointManager.h"
+#include "OrbitClientServices/TracepointServiceClient.h"
 
-#include <OrbitBase/Logging.h>
-#include <grpcpp/channel.h>
-
-#include "services.grpc.pb.h"
+#include "OrbitBase/Logging.h"
 
 using orbit_grpc_protos::GetTracepointListRequest;
 using orbit_grpc_protos::GetTracepointListResponse;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::TracepointService;
 
-TracepointManager::TracepointManager(const std::shared_ptr<grpc::Channel>& channel)
+TracepointServiceClient::TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel)
     : tracepoint_service_(TracepointService::NewStub(channel)) {}
 
-void TracepointManager::WorkerFunction() {
+void TracepointServiceClient::WorkerFunction() {
   GetTracepointListRequest request;
   GetTracepointListResponse response;
   std::unique_ptr<grpc::ClientContext> context = CreateContext();
@@ -33,19 +30,20 @@ void TracepointManager::WorkerFunction() {
   tracepoint_list_.assign(tracepoints.begin(), tracepoints.end());
 }
 
-std::unique_ptr<grpc::ClientContext> TracepointManager::CreateContext() const {
+std::unique_ptr<grpc::ClientContext> TracepointServiceClient::CreateContext() const {
   auto context = std::make_unique<grpc::ClientContext>();
 
   return context;
 }
 
-std::vector<TracepointInfo> TracepointManager::GetTracepointList() const {
+std::vector<TracepointInfo> TracepointServiceClient::GetTracepointList() const {
   return tracepoint_list_;
 }
 
-std::unique_ptr<TracepointManager> TracepointManager::Create(
+std::unique_ptr<TracepointServiceClient> TracepointServiceClient::Create(
     const std::shared_ptr<grpc::Channel>& channel) {
-  std::unique_ptr<TracepointManager> impl = std::make_unique<TracepointManager>(channel);
+  std::unique_ptr<TracepointServiceClient> impl =
+      std::make_unique<TracepointServiceClient>(channel);
   impl->WorkerFunction();
   return impl;
 }

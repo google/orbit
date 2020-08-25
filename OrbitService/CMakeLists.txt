@@ -7,7 +7,7 @@
 # but only builds main.cpp and links to OrbitServiceLib.
 project(OrbitServiceLib)
 
-add_library(OrbitServiceLib STATIC TracepointServiceImpl.h TracepointServiceImpl.cpp)
+add_library(OrbitServiceLib STATIC)
 target_compile_options(OrbitServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitServiceLib PRIVATE
@@ -25,6 +25,8 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
+        TracepointServiceImpl.h
+        TracepointServiceImpl.cpp
         Utils.cpp
         Utils.h)
 

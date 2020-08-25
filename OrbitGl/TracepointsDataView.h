@@ -6,8 +6,9 @@
 #define ORBIT_TRACEPOINTSDATAVIEW_H
 
 #include "DataView.h"
-#include "TracepointData.h"
 #include "tracepoint.pb.h"
+
+using orbit_grpc_protos::TracepointInfo;
 
 class TracepointsDataView : public DataView {
  public:
@@ -22,18 +23,18 @@ class TracepointsDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   // void OnDataChanged() override;
-  void SetTracepoints(const std::vector<TracepointData*>& tracepoints);
+  void SetTracepoints(const std::vector<TracepointInfo>& tracepoints);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
 
   std::vector<std::string> m_FilterTokens;
-  std::vector<TracepointData*> tracepoints_;
+  std::vector<TracepointInfo> tracepoints_;
 
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };
 
-  const TracepointData* GetTracepoint(uint32_t row) const;
+  const TracepointInfo* GetTracepoint(uint32_t row) const;
 };
 
 #endif  // ORBIT_TRACEPOINTSDATAVIEW_H

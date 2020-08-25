@@ -36,15 +36,11 @@ class DataManager final {
   void set_selected_text_box(const TextBox* text_box);
   void set_selected_process(std::shared_ptr<Process> process);
 
-  void SelectTracepoint(std::string tracepoint_name);
-  void DeselectTracepoint(std::string tracepoint_name);
-
   [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
   [[nodiscard]] const std::vector<ModuleData*>& GetModules(int32_t process_id) const;
   [[nodiscard]] ModuleData* FindModuleByAddressStart(int32_t process_id,
                                                      uint64_t address_start) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t function_address) const;
-  [[nodiscard]] bool IsTracepointSelected(std::string tracepoint_name) const;
   [[nodiscard]] const absl::flat_hash_set<uint64_t>& selected_functions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] int32_t selected_thread_id() const;
@@ -56,8 +52,6 @@ class DataManager final {
   absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
-  absl::flat_hash_set<std::string> visible_tracepoints_;
-  absl::flat_hash_set<std::string> selected_tracepoints_;
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
   // TODO(kuebler): Remove OrbitProcess class and this member soon.

@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitGl CXX)
-add_library(OrbitGl STATIC TracepointsDataView.h TracepointsDataView.cpp TracepointData.h)
+add_library(OrbitGl STATIC TracepointsDataView.h TracepointsDataView.cpp)
 
 target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 

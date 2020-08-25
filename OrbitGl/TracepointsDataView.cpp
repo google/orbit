@@ -21,7 +21,7 @@ const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
 }
 
 std::string TracepointsDataView::GetValue(int row, int col) {
-  const TracepointData* tracepoint = GetTracepoint(row);
+  const TracepointInfo* tracepoint = GetTracepoint(row);
 
   switch (col) {
     case kColumnName:
@@ -33,9 +33,9 @@ std::string TracepointsDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                              \
-  [&](int a, int b) {                                                                        \
-    return OrbitUtils::Compare(tracepoints_[a]->Member, tracepoints_[b]->Member, ascending); \
+#define ORBIT_PROC_SORT(Member)                                                            \
+  [&](int a, int b) {                                                                      \
+    return OrbitUtils::Compare(tracepoints_[a].Member, tracepoints_[b].Member, ascending); \
   }
 
 void TracepointsDataView::DoSort() {
@@ -63,8 +63,8 @@ void TracepointsDataView::DoFilter() {
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < tracepoints_.size(); ++i) {
-    const TracepointData* tracepoint = tracepoints_[i];
-    std::string tracepoint_string = tracepoint->name();
+    const TracepointInfo tracepoint = tracepoints_[i];
+    std::string tracepoint_string = tracepoint.name();
 
     bool match = true;
 
@@ -95,7 +95,7 @@ std::vector<std::string> TracepointsDataView::GetContextMenu(
 
 void TracepointsDataView::OnContextMenu(const std::string&, int, const std::vector<int>&) {}
 
-void TracepointsDataView::SetTracepoints(const std::vector<TracepointData*>& tracepoints) {
+void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& tracepoints) {
   tracepoints_ = tracepoints;
 
   indices_.resize(tracepoints_.size());
@@ -104,6 +104,6 @@ void TracepointsDataView::SetTracepoints(const std::vector<TracepointData*>& tra
   }
 }
 
-const TracepointData* TracepointsDataView::GetTracepoint(uint32_t row) const {
-  return tracepoints_[indices_[row]];
+const TracepointInfo* TracepointsDataView::GetTracepoint(uint32_t row) const {
+  return new TracepointInfo(tracepoints_[indices_[row]]);
 }
