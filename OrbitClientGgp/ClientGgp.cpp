@@ -122,10 +122,11 @@ bool ClientGgp::LoadModuleAndSymbols() {
         info.file_path(), info.file_size(), info.address_start(), info.address_end(),
         info.build_id());
   }
-  std::string_view main_executable_name = target_process_->GetName();
+  // Process name can be arbitrary so we use the path to find the module corresponding to the binary
+  std::string_view main_executable_path = target_process_->GetFullPath();
   auto module_it = find_if(module_infos.begin(), module_infos.end(),
-                           [&main_executable_name](const ModuleInfo& info) {
-                             return info.name() == main_executable_name;
+                           [&main_executable_path](const ModuleInfo& info) {
+                             return info.file_path() == main_executable_path;
                            });
   if (module_it == module_infos.end()) {
     ERROR("Error: Module correspondent to process binary not found");
