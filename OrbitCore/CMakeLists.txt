@@ -24,7 +24,6 @@ target_sources(
          Params.h
          Path.h
          Pdb.h
-         Profiling.h
          RingBuffer.h
          SamplingProfiler.h
          ScopeTimer.h

@@ -11,7 +11,7 @@
 #include <QPainter>
 #include <QTextLayout>
 
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
 #include "types.h"
 

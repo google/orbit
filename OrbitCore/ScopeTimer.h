@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)
 

@@ -5,6 +5,7 @@
 #include "TimeGraph.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/Profiling.h>
 #include <OrbitBase/Tracing.h>
 
 #include <algorithm>
