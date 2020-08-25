@@ -78,13 +78,9 @@ bool ClientGgp::StopCapture() {
   return capture_client_->StopCapture();
 }
 
-std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
+ErrorMessageOr<std::shared_ptr<Process>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   // We retrieve the information of the process to later get the module corresponding to its binary
-  ErrorMessageOr<std::vector<ProcessInfo>> result_process_infos = process_client_->GetProcessList();
-  if (result_process_infos.has_error()) {
-    return nullptr;
-  }
-  const std::vector<ProcessInfo>& process_infos = result_process_infos.value();
+  OUTCOME_TRY(process_infos, process_client_->GetProcessList());
   LOG("List of processes:");
   for (const ProcessInfo& info : process_infos) {
     LOG("pid:%d, name:%s, path:%s, is64:%d", info.pid(), info.name(), info.full_path(),
@@ -93,7 +89,7 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   auto process_it = find_if(process_infos.begin(), process_infos.end(),
                             [&pid](const ProcessInfo& info) { return info.pid() == pid; });
   if (process_it == process_infos.end()) {
-    return nullptr;
+    return ErrorMessage(absl::StrFormat("Error: Process with pid %d not found", pid));
   }
   LOG("Found process by pid, set target process");
   std::shared_ptr<Process> process = std::make_shared<Process>();
@@ -152,11 +148,13 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
 }
 
 bool ClientGgp::InitCapture() {
-  target_process_ = GetOrbitProcessByPid(options_.capture_pid);
-  if (target_process_ == nullptr) {
-    ERROR("Not able to set target process");
+  ErrorMessageOr<std::shared_ptr<Process>> target_process_result =
+      GetOrbitProcessByPid(options_.capture_pid);
+  if (target_process_result.has_error()) {
+    ERROR("Not able to set target process: %s", target_process_result.error().message());
     return false;
   }
+  target_process_ = target_process_result.value();
   // Load the module and symbols
   ErrorMessageOr<void> result = LoadModuleAndSymbols();
   if (result.has_error()) {
