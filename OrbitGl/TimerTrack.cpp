@@ -26,8 +26,8 @@ TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
 
   num_timers_ = 0;
-  min_time_ = std::numeric_limits<TickType>::max();
-  max_time_ = std::numeric_limits<TickType>::min();
+  min_time_ = std::numeric_limits<uint64_t>::max();
+  max_time_ = std::numeric_limits<uint64_t>::min();
 }
 
 void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
@@ -196,7 +196,7 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
   return timers;
 }
 
-const TextBox* TimerTrack::GetFirstAfterTime(TickType time, uint32_t depth) const {
+const TextBox* TimerTrack::GetFirstAfterTime(uint64_t time, uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 
@@ -212,7 +212,7 @@ const TextBox* TimerTrack::GetFirstAfterTime(TickType time, uint32_t depth) cons
   return nullptr;
 }
 
-const TextBox* TimerTrack::GetFirstBeforeTime(TickType time, uint32_t depth) const {
+const TextBox* TimerTrack::GetFirstBeforeTime(uint64_t time, uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 

@@ -36,14 +36,14 @@ void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
   ui->Label->setTextWithElision(QString::fromStdString(function_name));
 }
 
-void OrbitEventIterator::SetMinMaxTime(TickType min_time, TickType max_time) {
+void OrbitEventIterator::SetMinMaxTime(uint64_t min_time, uint64_t max_time) {
   min_time_ = min_time;
   max_time_ = max_time;
   current_time_ = std::min(current_time_, max_time_);
   current_time_ = std::max(current_time_, min_time_);
   UpdatePositionLabel();
 }
-void OrbitEventIterator::SetCurrentTime(TickType current_time) {
+void OrbitEventIterator::SetCurrentTime(uint64_t current_time) {
   current_time_ = current_time;
   UpdatePositionLabel();
 }

@@ -133,8 +133,8 @@ class GlCanvas : public GlPanel {
   int m_MousePosY;
   Vec2 m_SelectStart;
   Vec2 m_SelectStop;
-  TickType m_TimeStart;
-  TickType m_TimeStop;
+  uint64_t m_TimeStart;
+  uint64_t m_TimeStop;
   int m_ScreenClickX;
   int m_ScreenClickY;
   int m_MinWheelDelta;
@@ -155,8 +155,8 @@ class GlCanvas : public GlPanel {
   bool m_CanHover;
 
   ImGuiContext* m_ImGuiContext;
-  TickType m_RefTimeClick;
-  TickType m_SelectedInterval;
+  uint64_t m_RefTimeClick;
+  uint64_t m_SelectedInterval;
   TextRenderer m_TextRenderer;
   Timer m_UpdateTimer;
   PickingManager m_PickingManager;

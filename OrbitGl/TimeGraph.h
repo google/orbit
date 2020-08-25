@@ -45,16 +45,16 @@ class TimeGraph {
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo* function,
                                  const orbit_client_protos::TimerInfo& timer_info);
-  void UpdateMaxTimeStamp(TickType a_Time);
+  void UpdateMaxTimeStamp(uint64_t a_Time);
 
   float GetThreadTotalHeight();
   float GetTextBoxHeight() const { return m_Layout.GetTextBoxHeight(); }
   int GetMarginInPixels() const { return m_Margin; }
-  float GetWorldFromTick(TickType a_Time) const;
+  float GetWorldFromTick(uint64_t a_Time) const;
   float GetWorldFromUs(double a_Micros) const;
-  TickType GetTickFromWorld(float a_WorldX);
-  TickType GetTickFromUs(double a_MicroSeconds) const;
-  double GetUsFromTick(TickType time) const;
+  uint64_t GetTickFromWorld(float a_WorldX);
+  uint64_t GetTickFromUs(double a_MicroSeconds) const;
+  double GetUsFromTick(uint64_t time) const;
   double GetTimeWindowUs() const { return m_TimeWindowUs; }
   void GetWorldMinMax(float& a_Min, float& a_Max) const;
   bool UpdateCaptureMinMaxTimestamps();
@@ -62,7 +62,7 @@ class TimeGraph {
   void Clear();
   void ZoomAll();
   void Zoom(const TextBox* a_TextBox);
-  void Zoom(TickType min, TickType max);
+  void Zoom(uint64_t min, uint64_t max);
   void ZoomTime(float a_ZoomValue, double a_MouseRatio);
   void VerticalZoom(float a_ZoomValue, float a_MouseRatio);
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
@@ -71,7 +71,7 @@ class TimeGraph {
     kPartlyVisible,
     kFullyVisible,
   };
-  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max,
+  void HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, uint64_t max,
                                 double distance = 0.3);
   void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
                                 double distance = 0.3);
@@ -82,9 +82,9 @@ class TimeGraph {
   enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
-  const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time,
+  const TextBox* FindPreviousFunctionCall(uint64_t function_address, uint64_t current_time,
                                           std::optional<int32_t> thread_ID = std::nullopt) const;
-  const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time,
+  const TextBox* FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
                                       std::optional<int32_t> thread_ID = std::nullopt) const;
   void SelectAndZoom(const TextBox* a_TextBox);
   double GetCaptureTimeSpanUs();
@@ -94,9 +94,9 @@ class TimeGraph {
   void ToggleDrawText() { m_DrawText = !m_DrawText; }
   void SetThreadFilter(const std::string& a_Filter);
 
-  bool IsFullyVisible(TickType min, TickType max) const;
-  bool IsPartlyVisible(TickType min, TickType max) const;
-  bool IsVisible(VisibilityType vis_type, TickType min, TickType max) const;
+  bool IsFullyVisible(uint64_t min, uint64_t max) const;
+  bool IsPartlyVisible(uint64_t min, uint64_t max) const;
+  bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
   int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
   void SetTextRenderer(TextRenderer* a_TextRenderer) { m_TextRenderer = a_TextRenderer; }
@@ -137,8 +137,8 @@ class TimeGraph {
     NeedsRedraw();
   }
 
-  TickType GetCaptureMin() { return capture_min_timestamp_; }
-  TickType GetCaptureMax() { return capture_max_timestamp_; }
+  uint64_t GetCaptureMin() { return capture_min_timestamp_; }
+  uint64_t GetCaptureMax() { return capture_max_timestamp_; }
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
@@ -163,8 +163,8 @@ class TimeGraph {
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
   double m_MaxTimeUs = 0;
-  TickType capture_min_timestamp_ = 0;
-  TickType capture_max_timestamp_ = 0;
+  uint64_t capture_min_timestamp_ = 0;
+  uint64_t capture_max_timestamp_ = 0;
   std::map<ThreadID, uint32_t> m_EventCount;
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;

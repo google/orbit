@@ -80,7 +80,7 @@ void TimeGraph::Clear() {
   ScopeLock lock(m_Mutex);
 
   m_Batcher.StartNewFrame();
-  capture_min_timestamp_ = std::numeric_limits<TickType>::max();
+  capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   capture_max_timestamp_ = 0;
   m_ThreadCountMap.clear();
   GEventTracer.GetEventBuffer().Reset();
@@ -105,12 +105,12 @@ void TimeGraph::Clear() {
 double GNumHistorySeconds = 2.f;
 
 bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
-  capture_min_timestamp_ = std::numeric_limits<TickType>::max();
+  capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
 
   m_Mutex.lock();
   for (auto& track : tracks_) {
     if (track->GetNumTimers()) {
-      TickType min = track->GetMinTime();
+      uint64_t min = track->GetMinTime();
       if (min > 0 && min < capture_min_timestamp_) {
         capture_min_timestamp_ = min;
       }
@@ -125,7 +125,7 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
         std::max(capture_max_timestamp_, GEventTracer.GetEventBuffer().GetMaxTime());
   }
 
-  return capture_min_timestamp_ != std::numeric_limits<TickType>::max();
+  return capture_min_timestamp_ != std::numeric_limits<uint64_t>::max();
 }
 
 void TimeGraph::ZoomAll() {
@@ -138,7 +138,7 @@ void TimeGraph::ZoomAll() {
   }
 }
 
-void TimeGraph::Zoom(TickType min, TickType max) {
+void TimeGraph::Zoom(uint64_t min, uint64_t max) {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
   double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
@@ -232,7 +232,7 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width, double a_In
   NeedsUpdate();
 }
 
-void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max,
+void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, uint64_t max,
                                          double distance) {
   if (IsVisible(vis_type, min, max)) {
     return;
@@ -457,7 +457,7 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains
   return chains;
 }
 
-void TimeGraph::UpdateMaxTimeStamp(TickType a_Time) {
+void TimeGraph::UpdateMaxTimeStamp(uint64_t a_Time) {
   if (a_Time > capture_max_timestamp_) {
     capture_max_timestamp_ = a_Time;
   }
@@ -465,7 +465,7 @@ void TimeGraph::UpdateMaxTimeStamp(TickType a_Time) {
 
 float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
 
-float TimeGraph::GetWorldFromTick(TickType a_Time) const {
+float TimeGraph::GetWorldFromTick(uint64_t a_Time) const {
   if (m_TimeWindowUs > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, a_Time) - m_MinTimeUs;
     double normalizedStart = start / m_TimeWindowUs;
@@ -480,11 +480,11 @@ float TimeGraph::GetWorldFromUs(double a_Micros) const {
   return GetWorldFromTick(GetTickFromUs(a_Micros));
 }
 
-double TimeGraph::GetUsFromTick(TickType time) const {
+double TimeGraph::GetUsFromTick(uint64_t time) const {
   return TicksToMicroseconds(capture_min_timestamp_, time) - m_MinTimeUs;
 }
 
-TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
+uint64_t TimeGraph::GetTickFromWorld(float a_WorldX) {
   double ratio =
       m_WorldWidth != 0 ? static_cast<double>((a_WorldX - m_WorldStartX) / m_WorldWidth) : 0;
   double timeStamp = GetTime(ratio);
@@ -492,7 +492,7 @@ TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
   return capture_min_timestamp_ + MicrosecondsToTicks(timeStamp);
 }
 
-TickType TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
+uint64_t TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
   return capture_min_timestamp_ + MicrosecondsToTicks(a_MicroSeconds);
 }
 
@@ -507,10 +507,10 @@ void TimeGraph::Select(const TextBox* text_box) {
   VerticallyMoveIntoView(text_box);
 }
 
-const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, TickType current_time,
+const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, uint64_t current_time,
                                                    std::optional<int32_t> thread_ID) const {
   TextBox* previous_box = nullptr;
-  TickType previous_box_time = std::numeric_limits<TickType>::lowest();
+  uint64_t previous_box_time = std::numeric_limits<uint64_t>::lowest();
   std::vector<std::shared_ptr<TimerChain>> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
@@ -532,10 +532,10 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, Ti
   return previous_box;
 }
 
-const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address, TickType current_time,
+const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
                                                std::optional<int32_t> thread_ID) const {
   TextBox* next_box = nullptr;
-  TickType next_box_time = std::numeric_limits<TickType>::max();
+  uint64_t next_box_time = std::numeric_limits<uint64_t>::max();
   std::vector<std::shared_ptr<TimerChain>> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
@@ -574,8 +574,8 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   m_WorldStartX = m_Canvas->GetWorldTopLeftX();
   m_WorldWidth = m_Canvas->GetWorldWidth();
-  TickType min_tick = GetTickFromUs(m_MinTimeUs);
-  TickType max_tick = GetTickFromUs(m_MaxTimeUs);
+  uint64_t min_tick = GetTickFromUs(m_MinTimeUs);
+  uint64_t max_tick = GetTickFromUs(m_MaxTimeUs);
 
   SortTracks();
 
@@ -597,8 +597,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart, float a_
     std::swap(a_WorldEnd, a_WorldStart);
   }
 
-  TickType t0 = GetTickFromWorld(a_WorldStart);
-  TickType t1 = GetTickFromWorld(a_WorldEnd);
+  uint64_t t0 = GetTickFromWorld(a_WorldStart);
+  uint64_t t1 = GetTickFromWorld(a_WorldEnd);
 
   std::vector<CallstackEvent> selected_callstack_events =
       GEventTracer.GetEventBuffer().GetCallstackEvents(t0, t1, a_TID);
@@ -1086,14 +1086,14 @@ void TimeGraph::DrawText(GlCanvas* canvas) {
   }
 }
 
-bool TimeGraph::IsFullyVisible(TickType min, TickType max) const {
+bool TimeGraph::IsFullyVisible(uint64_t min, uint64_t max) const {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
   double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   return start > m_MinTimeUs && end < m_MaxTimeUs;
 }
 
-bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
+bool TimeGraph::IsPartlyVisible(uint64_t min, uint64_t max) const {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
   double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
@@ -1106,7 +1106,7 @@ bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
   return true;
 }
 
-bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
+bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const {
   switch (vis_type) {
     case VisibilityType::kPartlyVisible:
       return IsPartlyVisible(min, max);

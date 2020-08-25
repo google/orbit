@@ -45,8 +45,8 @@ GpuTrack::GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_
   timeline_hash_ = timeline_hash;
 
   num_timers_ = 0;
-  min_time_ = std::numeric_limits<TickType>::max();
-  max_time_ = std::numeric_limits<TickType>::min();
+  min_time_ = std::numeric_limits<uint64_t>::max();
+  max_time_ = std::numeric_limits<uint64_t>::min();
 
   string_manager_ = string_manager;
 

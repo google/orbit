@@ -34,7 +34,7 @@ uint64_t AbsDiff(uint64_t a, uint64_t b) {
   }
 }
 
-const TextBox* ClosestTo(TickType point, const TextBox* box_a, const TextBox* box_b) {
+const TextBox* ClosestTo(uint64_t point, const TextBox* box_a, const TextBox* box_b) {
   uint64_t a_diff = AbsDiff(point, box_a->GetTimerInfo().start());
   uint64_t b_diff = AbsDiff(point, box_b->GetTimerInfo().start());
   if (a_diff <= b_diff) {
@@ -47,7 +47,7 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
   double min_us = GCurrentTimeGraph->GetMinTimeUs();
   double max_us = GCurrentTimeGraph->GetMaxTimeUs();
   double center_us = 0.5 * max_us + 0.5 * min_us;
-  TickType center = GCurrentTimeGraph->GetTickFromUs(center_us);
+  uint64_t center = GCurrentTimeGraph->GetTickFromUs(center_us);
 
   // First, we find the next function call (text box) that has its end timestamp
   // after center - 1 (we use center - 1 to make sure that center itself is
@@ -208,7 +208,7 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
   Move();
 }
 
-TickType LiveFunctionsController::GetStartTime(uint64_t index) {
+uint64_t LiveFunctionsController::GetStartTime(uint64_t index) {
   const auto& it = current_textboxes_.find(index);
   if (it != current_textboxes_.end()) {
     return it->second->GetTimerInfo().start();
@@ -216,8 +216,8 @@ TickType LiveFunctionsController::GetStartTime(uint64_t index) {
   return GetCaptureMin();
 }
 
-TickType LiveFunctionsController::GetCaptureMin() { return GCurrentTimeGraph->GetCaptureMin(); }
-TickType LiveFunctionsController::GetCaptureMax() { return GCurrentTimeGraph->GetCaptureMax(); }
+uint64_t LiveFunctionsController::GetCaptureMin() { return GCurrentTimeGraph->GetCaptureMin(); }
+uint64_t LiveFunctionsController::GetCaptureMax() { return GCurrentTimeGraph->GetCaptureMax(); }
 
 void LiveFunctionsController::Reset() {
   function_iterators_.clear();

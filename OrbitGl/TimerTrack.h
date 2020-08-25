@@ -42,11 +42,11 @@ class TimerTrack : public Track {
   [[nodiscard]] Color GetColor() const;
   [[nodiscard]] static Color GetColor(ThreadID a_TID);
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
-  [[nodiscard]] TickType GetMinTime() const { return min_time_; }
-  [[nodiscard]] TickType GetMaxTime() const { return max_time_; }
+  [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
+  [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
 
-  [[nodiscard]] const TextBox* GetFirstAfterTime(TickType time, uint32_t depth) const;
-  [[nodiscard]] const TextBox* GetFirstBeforeTime(TickType time, uint32_t depth) const;
+  [[nodiscard]] const TextBox* GetFirstAfterTime(uint64_t time, uint32_t depth) const;
+  [[nodiscard]] const TextBox* GetFirstBeforeTime(uint64_t time, uint32_t depth) const;
 
   // Must be overriden by child class for sensible behavior.
   [[nodiscard]] virtual const TextBox* GetLeft(const TextBox* textbox) const { return textbox; };

@@ -204,7 +204,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     CHECK(item_indices.size() == 1);
     auto function_address = FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
-        function_address, std::numeric_limits<TickType>::lowest());
+        function_address, std::numeric_limits<uint64_t>::lowest());
     if (first_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(first_box);
     }
@@ -212,7 +212,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     CHECK(item_indices.size() == 1);
     auto function_address = FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
-        function_address, std::numeric_limits<TickType>::max());
+        function_address, std::numeric_limits<uint64_t>::max());
     if (last_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(last_box);
     }

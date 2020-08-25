@@ -18,8 +18,6 @@ using pid_t = uint32_t;
 #include <unistd.h>
 #endif
 
-typedef uint64_t TickType;
-
 #ifdef _WIN32
 inline void clock_gettime(uint32_t, struct timespec* spec) {
   __int64 time;
@@ -29,24 +27,24 @@ inline void clock_gettime(uint32_t, struct timespec* spec) {
 }
 #endif
 
-inline TickType MonotonicTimestampNs() {
+inline uint64_t MonotonicTimestampNs() {
   timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 }
 
-inline uint64_t TicksToNanoseconds(TickType start, TickType end) { return end - start; }
+inline uint64_t TicksToNanoseconds(uint64_t start, uint64_t end) { return end - start; }
 
-inline absl::Duration TicksToDuration(TickType start, TickType end) {
+inline absl::Duration TicksToDuration(uint64_t start, uint64_t end) {
   return absl::Nanoseconds(TicksToNanoseconds(start, end));
 }
 
-inline double TicksToMicroseconds(TickType a_Start, TickType a_End) {
+inline double TicksToMicroseconds(uint64_t a_Start, uint64_t a_End) {
   return double((a_End - a_Start)) * 0.001;
 }
 
-inline TickType MicrosecondsToTicks(double a_Micros) {
-  return static_cast<TickType>(a_Micros * 1000);
+inline uint64_t MicrosecondsToTicks(double a_Micros) {
+  return static_cast<uint64_t>(a_Micros * 1000);
 }
 
 #ifdef __linux__
