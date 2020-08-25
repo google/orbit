@@ -10,6 +10,7 @@
 #include <string>
 
 #include "ClientGgpOptions.h"
+#include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientServices/ProcessClient.h"
@@ -48,7 +49,7 @@ class ClientGgp final : public CaptureListener {
 
   std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
-  bool LoadModuleAndSymbols();
+  ErrorMessageOr<void> LoadModuleAndSymbols();
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
