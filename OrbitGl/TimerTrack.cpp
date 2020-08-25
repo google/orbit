@@ -82,10 +82,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   // out, many events will be discarded quickly.
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
-
-  uint64_t pixel_delta_in_ticks =
-      static_cast<uint64_t>(MicrosecondsToTicks(time_graph_->GetTimeWindowUs())) /
-      canvas->getWidth();
+  uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
+  uint64_t pixel_delta_in_ticks = time_window_ns / canvas->getWidth();
   uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {

@@ -484,16 +484,16 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
   return TicksToMicroseconds(capture_min_timestamp_, time) - m_MinTimeUs;
 }
 
-uint64_t TimeGraph::GetTickFromWorld(float a_WorldX) {
+uint64_t TimeGraph::GetTickFromWorld(float world_x) {
   double ratio =
-      m_WorldWidth != 0 ? static_cast<double>((a_WorldX - m_WorldStartX) / m_WorldWidth) : 0;
-  double timeStamp = GetTime(ratio);
-
-  return capture_min_timestamp_ + MicrosecondsToTicks(timeStamp);
+      m_WorldWidth != 0 ? static_cast<double>((world_x - m_WorldStartX) / m_WorldWidth) : 0;
+  uint64_t time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
+  return capture_min_timestamp_ + time_span_ns;
 }
 
-uint64_t TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
-  return capture_min_timestamp_ + MicrosecondsToTicks(a_MicroSeconds);
+uint64_t TimeGraph::GetTickFromUs(double micros) const {
+  uint64_t nanos = static_cast<uint64_t>(1000 * micros);
+  return capture_min_timestamp_ + nanos;
 }
 
 void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {

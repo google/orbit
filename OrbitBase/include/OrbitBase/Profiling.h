@@ -5,8 +5,6 @@
 #ifndef ORBIT_BASE_PROFILING_H_
 #define ORBIT_BASE_PROFILING_H_
 
-#include <absl/base/internal/sysinfo.h>
-
 #include "absl/time/time.h"
 
 #ifdef _WIN32
@@ -33,18 +31,12 @@ inline uint64_t MonotonicTimestampNs() {
   return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 }
 
-inline uint64_t TicksToNanoseconds(uint64_t start, uint64_t end) { return end - start; }
-
 inline absl::Duration TicksToDuration(uint64_t start, uint64_t end) {
-  return absl::Nanoseconds(TicksToNanoseconds(start, end));
+  return absl::Nanoseconds(end - start);
 }
 
-inline double TicksToMicroseconds(uint64_t a_Start, uint64_t a_End) {
-  return double((a_End - a_Start)) * 0.001;
-}
-
-inline uint64_t MicrosecondsToTicks(double a_Micros) {
-  return static_cast<uint64_t>(a_Micros * 1000);
+inline double TicksToMicroseconds(uint64_t start, uint64_t end) {
+  return double((end - start)) * 0.001;
 }
 
 #ifdef __linux__
