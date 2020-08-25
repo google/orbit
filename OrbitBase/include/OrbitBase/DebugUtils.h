@@ -16,9 +16,8 @@
 // Print variable's name and value in the form "name = value".
 #define PRINT_VAR(x) LOG("%s = %s", #x, std::to_string(x))
 // Print current function's name, file and line as url, and thread id.
-#define PRINT_FUNC                                      \
-  LOG("%s %s(%u) %s", __FUNCTION__, __FILE__, __LINE__, \
-      std::to_string(absl::base_internal::GetTID()))
+#define PRINT_FUNC \
+  LOG("%s %s(%u) %s", __FUNCTION__, __FILE__, __LINE__, std::to_string(GetCurrentThreadId()))
 
 #endif  // DEBUG_UTILS_ENABLED
 

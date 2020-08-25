@@ -39,10 +39,10 @@ TEST(Profiling, TicksToMicroseconds) {
 
 #ifdef __linux__
 TEST(Profiling, ThreadId) {
-  pid_t current_tid = GetThreadId();
+  pid_t current_tid = GetCurrentThreadId();
   EXPECT_TRUE(current_tid >= 0);
   pid_t worker_tid = 0;
-  std::thread t([&worker_tid]() { worker_tid = GetThreadId(); });
+  std::thread t([&worker_tid]() { worker_tid = GetCurrentThreadId(); });
   t.join();
   EXPECT_TRUE(worker_tid != 0);
   EXPECT_TRUE(worker_tid != current_tid);

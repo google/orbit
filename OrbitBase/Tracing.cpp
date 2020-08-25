@@ -4,12 +4,11 @@
 
 #include "OrbitBase/Tracing.h"
 
-#include <absl/base/internal/sysinfo.h>
-
 #include <memory>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 
 using orbit::tracing::Scope;
 using orbit::tracing::ScopeType;
@@ -18,9 +17,6 @@ using orbit::tracing::TimerCallback;
 thread_local std::vector<Scope> scopes;
 
 TimerCallback* g_callback;
-
-// Dummy implementation. This depends on another PR, will rebase before submitting.
-[[nodiscard]] static uint64_t MonotonicTimestampNs() { return 0; }
 
 namespace orbit::tracing {
 Listener::Listener(const TimerCallback& callback) {
@@ -52,13 +48,13 @@ void Stop() {
   auto& scope = scopes.back();
   scope.end = MonotonicTimestampNs();
   scope.depth = scopes.size() - 1;
-  scope.tid = absl::base_internal::GetTID();  // Will be replaced by our own implementation (#1113).
+  scope.tid = GetCurrentThreadId();
   scope.type = ScopeType::kScope;
 
-  absl::Mutex* mutex = orbit::tracing::Listener::GetMutex();
-  mutex->Lock();
-  if (g_callback != nullptr) (*g_callback)(std::move(scope));
-  mutex->Unlock();
+  {
+    absl::MutexLock lock(orbit::tracing::Listener::GetMutex());
+    if (g_callback != nullptr) (*g_callback)(std::move(scope));
+  }
 
   scopes.pop_back();
 }
@@ -73,7 +69,7 @@ void TrackScope(const char* name, uint64_t value, orbit::Color color, ScopeType 
   scope.name = name;
   scope.color = color;
   scope.tracked_value = value;
-  scope.tid = absl::base_internal::GetTID();
+  scope.tid = GetCurrentThreadId();
   scope.type = type;
 
   absl::MutexLock lock(orbit::tracing::Listener::GetMutex());

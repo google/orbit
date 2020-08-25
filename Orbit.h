@@ -131,7 +131,7 @@ namespace orbit_api {
 
 // NOTE: Do not use these directly, use corresponding macros instead.
 #ifdef ORBIT_API_INTERNAL_IMPL
-void Start(const char* name, uint64_t dummy, orbit::Color color);
+void Start(const char* name, uint8_t dummy, orbit::Color color);
 void Stop();
 void StartAsync(const char* name, uint64_t value, orbit::Color color);
 void StopAsync(uint64_t);
