@@ -29,6 +29,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                            -Werror=sign-compare)
 endif()
 
+option(WITH_ORBITGL "Setting this option will enable the OrbitGL component." ON)
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
 
@@ -86,13 +87,12 @@ include("third_party/protobuf/protobuf-generate.cmake")
 include("cmake/grpc_helper.cmake")
 
 
-if(WITH_GUI)
+if(WITH_ORBITGL)
   find_package(freetype CONFIG REQUIRED)
   find_package(freetype-gl CONFIG REQUIRED)
   find_package(OpenGL REQUIRED)
   find_package(glew CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
-  find_package(libssh2 CONFIG REQUIRED)
 endif()
 
 find_package(oqpi REQUIRED)
@@ -102,6 +102,7 @@ find_package(capstone CONFIG REQUIRED)
 if(WITH_GUI)
   find_package(Qt5 CONFIG REQUIRED COMPONENTS Core Network Widgets)
   find_package(qtpropertybrowser REQUIRED)
+  find_package(libssh2 CONFIG REQUIRED)
 endif()
 
 if(WITH_GUI AND WITH_CRASH_HANDLING)
@@ -144,11 +145,14 @@ add_subdirectory(OrbitGrpcProtos)
 add_subdirectory(OrbitTest)
 add_subdirectory(OrbitVersion)
 
+if(WITH_ORBITGL)
+  add_subdirectory(OrbitGl)
+endif()
+
 if(WITH_GUI)
   add_subdirectory(OrbitGgp)
   add_subdirectory(OrbitSsh)
   add_subdirectory(OrbitSshQt)
-  add_subdirectory(OrbitGl)
   add_subdirectory(OrbitQt)
 endif()
 
