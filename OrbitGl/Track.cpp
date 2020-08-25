@@ -45,7 +45,7 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   float cos_r = cosf(kPiFloat * rotation / 180.f);
   float sin_r = sinf(kPiFloat * rotation / 180.f);
   std::vector<Vec2> result;
-  for (const Vec2 point : points) {
+  for (const Vec2& point : points) {
     float x_rotated = cos_r * point[0] - sin_r * point[1];
     float y_rotated = sin_r * point[0] + cos_r * point[1];
     result.push_back(Vec2(x_rotated, y_rotated));
