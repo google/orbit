@@ -40,11 +40,9 @@
 #include "StringManager.h"
 #include "Utils.h"
 
-ABSL_FLAG(bool, enable_tracepoint_service, false,
-          "Start the retrieval of kernel tracepoints from the service");
-
 ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_service);
+ABSL_FLAG(bool, enable_tracepoint_feature, false,
+          "Enable the setting of the panel of kernel tracepoints");
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -245,12 +243,12 @@ void OrbitApp::PostInit() {
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
-  if (absl::GetFlag(FLAGS_enable_tracepoint_service)) {
-    tracepoint_manager_ = TracepointServiceClient::Create(grpc_channel_);
-
+  if (absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     thread_pool_->Schedule([this] {
-      tracepoint_manager_->PopulateWithServerData();
-      ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager_->GetTracepointList();
+      std::unique_ptr<TracepointServiceClient> tracepoint_manager =
+          TracepointServiceClient::Create(grpc_channel_);
+
+      ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager->GetTracepointList();
 
       if (result.has_error()) {
         ERROR("Error retrieving tracepoints: %s", result.error().message());

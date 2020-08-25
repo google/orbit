@@ -63,7 +63,7 @@ void TracepointsDataView::DoFilter() {
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < tracepoints_.size(); ++i) {
-    const TracepointInfo tracepoint = tracepoints_[i];
+    const TracepointInfo& tracepoint = tracepoints_[i];
     std::string tracepoint_string = tracepoint.name();
 
     bool match = true;

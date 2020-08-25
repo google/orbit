@@ -27,7 +27,6 @@
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
 #include "TopDownViewItemModel.h"
-#include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
@@ -39,7 +38,6 @@
 #include "ui_orbitmainwindow.h"
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, devmode);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;

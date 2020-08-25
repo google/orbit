@@ -48,12 +48,15 @@
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/flags/flag.h"
 #include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "preset.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 #include "tracepoint.pb.h"
+
+ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
 class Process;
 
@@ -298,7 +301,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
-  std::unique_ptr<TracepointServiceClient> tracepoint_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;
 

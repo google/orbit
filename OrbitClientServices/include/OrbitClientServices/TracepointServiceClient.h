@@ -5,6 +5,7 @@
 #ifndef ORBIT_TRACEPOINTSERVICECLIENT_H
 #define ORBIT_TRACEPOINTSERVICECLIENT_H
 
+#include <memory>
 #include <vector>
 
 #include "OrbitBase/Result.h"
@@ -16,6 +17,8 @@ using orbit_grpc_protos::TracepointInfo;
 
 class TracepointServiceClient {
  public:
+  TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
+
   virtual ~TracepointServiceClient() = default;
 
   static std::unique_ptr<TracepointServiceClient> Create(
@@ -23,19 +26,11 @@ class TracepointServiceClient {
 
   virtual std::vector<TracepointInfo> GetTracepointList() const;
 
-  void PopulateWithServerData();
-  void Start();
-
-  explicit TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
-
  private:
   TracepointServiceClient() = default;
-
   std::unique_ptr<grpc::ClientContext> CreateContext() const;
 
   std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;
-
-  std::vector<TracepointInfo> tracepoint_list_;
 };
 
 #endif  // ORBIT_TRACEPOINTSERVICECLIENT_H
