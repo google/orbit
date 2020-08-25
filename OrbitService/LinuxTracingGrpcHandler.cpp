@@ -101,8 +101,6 @@ void LinuxTracingGrpcHandler::Stop() {
     tracer_.reset();
   }
 
-  LOG("STOPPING LINUXTRACINGGRPCHANDLER");
-
   sender_thread_.join();
 }
 
