@@ -9,6 +9,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
