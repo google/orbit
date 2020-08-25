@@ -173,9 +173,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
   }
 
-  /*if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->tracepointsTab));
-  }*/
+  }
 
   if (!absl::GetFlag(FLAGS_devmode)) {
     ui->menuDebug->menuAction()->setVisible(false);
