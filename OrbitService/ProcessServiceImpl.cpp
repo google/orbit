@@ -4,7 +4,6 @@
 
 #include "ProcessServiceImpl.h"
 
-#include <grpcpp/server_context.h>
 #include <grpcpp/support/status.h>
 
 #include <memory>
