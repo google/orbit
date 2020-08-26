@@ -18,7 +18,6 @@ namespace {
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_grpc_protos::TracepointInfo;
 
 class ProcessManagerImpl final : public ProcessManager {
  public:
@@ -29,8 +28,6 @@ class ProcessManagerImpl final : public ProcessManager {
 
   std::vector<ProcessInfo> GetProcessList() const override;
   ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(int32_t pid) override;
-
-  ErrorMessageOr<std::vector<TracepointInfo>> LoadTracepointList() override;
 
   ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
                                                 uint64_t size) override;
@@ -72,10 +69,6 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
 
 ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(int32_t pid) {
   return process_client_->LoadModuleList(pid);
-}
-
-ErrorMessageOr<std::vector<TracepointInfo>> ProcessManagerImpl::LoadTracepointList() {
-  return process_client_->LoadTracepointList();
 }
 
 std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {

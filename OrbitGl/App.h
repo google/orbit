@@ -34,6 +34,7 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
+#include "OrbitClientServices/TracepointServiceClient.h"
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
 #include "SamplingReport.h"
@@ -44,13 +45,18 @@
 #include "SymbolHelper.h"
 #include "Threading.h"
 #include "TopDownView.h"
+#include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/flags/flag.h"
 #include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "preset.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
+#include "tracepoint.pb.h"
+
+ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
 class Process;
 
@@ -277,6 +283,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<CallStackDataView> callstack_data_view_;
   std::unique_ptr<CallStackDataView> selection_callstack_data_view_;
   std::unique_ptr<PresetsDataView> presets_data_view_;
+  std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
 

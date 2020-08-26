@@ -27,7 +27,6 @@
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
 #include "TopDownViewItemModel.h"
-#include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
@@ -161,12 +160,19 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
                                 SelectionType::kExtended, FontType::kDefault);
   ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
                               SelectionType::kDefault, FontType::kDefault);
+  ui->TracepointsList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::kTracepoints), SelectionType::kExtended,
+      FontType::kDefault);
 
   SetupCodeView();
 
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
+  }
+
+  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->tracepointsTab));
   }
 
   if (!absl::GetFlag(FLAGS_devmode)) {

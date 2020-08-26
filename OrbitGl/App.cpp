@@ -41,6 +41,8 @@
 #include "Utils.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
+ABSL_FLAG(bool, enable_tracepoint_feature, false,
+          "Enable the setting of the panel of kernel tracepoints");
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -52,6 +54,7 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::TracepointInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
 bool DoZoom = false;
@@ -239,6 +242,29 @@ void OrbitApp::PostInit() {
 
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
+
+  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+    return;
+  }
+
+  thread_pool_->Schedule([this] {
+    std::unique_ptr<TracepointServiceClient> tracepoint_manager =
+        TracepointServiceClient::Create(grpc_channel_);
+
+    ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager->GetTracepointList();
+
+    if (result.has_error()) {
+      ERROR("Error retrieving tracepoints: %s", result.error().message());
+      SendErrorToUi("Error retrieving tracepoints", result.error().message());
+      return;
+    }
+
+    main_thread_executor_->Schedule([result, this]() {
+      tracepoints_data_view_->SetTracepoints(result.value());
+
+      FireRefreshCallbacks(DataViewType::kTracepoints);
+    });
+  });
 }
 
 void OrbitApp::LoadFileMapping() {
@@ -1038,10 +1064,16 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
     case DataViewType::kAll:
       FATAL("DataViewType::kAll should not be used with the factory.");
 
+    case DataViewType::kTracepoints:
+      if (!tracepoints_data_view_) {
+        tracepoints_data_view_ = std::make_unique<TracepointsDataView>();
+        panels_.push_back(tracepoints_data_view_.get());
+      }
+      return tracepoints_data_view_.get();
+
     case DataViewType::kInvalid:
       FATAL("DataViewType::kInvalid should not be used with the factory.");
   }
-
   FATAL("Unreachable");
 }
 

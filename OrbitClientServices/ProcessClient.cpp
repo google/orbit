@@ -24,12 +24,9 @@ using orbit_grpc_protos::GetProcessListRequest;
 using orbit_grpc_protos::GetProcessListResponse;
 using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
-using orbit_grpc_protos::GetTracepointListRequest;
-using orbit_grpc_protos::GetTracepointListResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::ProcessService;
-using orbit_grpc_protos::TracepointInfo;
 
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
 
@@ -78,23 +75,6 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(int32_t pi
   const auto& modules = response.modules();
 
   return std::vector<ModuleInfo>(modules.begin(), modules.end());
-}
-
-ErrorMessageOr<std::vector<TracepointInfo>> ProcessClient::LoadTracepointList() {
-  GetTracepointListRequest request;
-  GetTracepointListResponse response;
-
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
-  grpc::Status status = process_service_->GetTracepointList(context.get(), request, &response);
-
-  if (!status.ok()) {
-    ERROR("Grpc call failed: code=%d, message=%s", status.error_code(), status.error_message());
-    return ErrorMessage(status.error_message());
-  }
-
-  const auto& tracepoints = response.tracepoints();
-
-  return std::vector<TracepointInfo>(tracepoints.begin(), tracepoints.end());
 }
 
 ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(const std::string& module_path) {

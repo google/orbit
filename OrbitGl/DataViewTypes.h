@@ -14,6 +14,7 @@ enum class DataViewType {
   kModules,
   kSampling,
   kPresets,
+  kTracepoints,
   kAll,
 };
 

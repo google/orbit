@@ -25,6 +25,8 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
+        TracepointServiceImpl.h
+        TracepointServiceImpl.cpp
         Utils.cpp
         Utils.h)
 

@@ -68,21 +68,6 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   return Status::OK;
 }
 
-Status ProcessServiceImpl::GetTracepointList(
-    grpc::ServerContext*, const orbit_grpc_protos::GetTracepointListRequest*,
-    orbit_grpc_protos::GetTracepointListResponse* response) {
-  LOG("Sending tracepoints");
-
-  const auto tracepoint_infos = utils::ReadTracepoints();
-  if (!tracepoint_infos) {
-    return Status(StatusCode::NOT_FOUND, tracepoint_infos.error().message());
-  }
-
-  *response->mutable_tracepoints() = {tracepoint_infos.value().begin(),
-                                      tracepoint_infos.value().end()};
-
-  return Status::OK;
-}
 
 Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemoryRequest* request,
                                             GetProcessMemoryResponse* response) {

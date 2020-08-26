@@ -72,11 +72,13 @@ service ProcessService {
   rpc GetProcessMemory(GetProcessMemoryRequest)
       returns (GetProcessMemoryResponse) {}
 
-  rpc GetTracepointList(GetTracepointListRequest)
-      returns (GetTracepointListResponse) {}
-
   rpc GetDebugInfoFile(GetDebugInfoFileRequest)
       returns (GetDebugInfoFileResponse) {}
+}
+
+service TracepointService {
+  rpc GetTracepointList(GetTracepointListRequest)
+      returns (GetTracepointListResponse) {}
 }
 
 message ValidateFramePointersRequest {
