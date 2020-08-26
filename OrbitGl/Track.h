@@ -11,8 +11,8 @@
 #include "Batcher.h"
 #include "BlockChain.h"
 #include "CoreMath.h"
+#include "OrbitBase/Profiling.h"
 #include "PickingManager.h"
-#include "Profiling.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
@@ -53,8 +53,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void SetVisible(bool value) { m_Visible = value; }
 
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
-  [[nodiscard]] TickType GetMinTime() const { return min_time_; }
-  [[nodiscard]] TickType GetMaxTime() const { return max_time_; }
+  [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
+  [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
 
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() { return {}; }
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() { return {}; }
@@ -96,8 +96,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   Color m_Color;
   bool m_Visible = true;
   std::atomic<uint32_t> num_timers_;
-  std::atomic<TickType> min_time_;
-  std::atomic<TickType> max_time_;
+  std::atomic<uint64_t> min_time_;
+  std::atomic<uint64_t> max_time_;
   bool m_PickingEnabled = false;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;

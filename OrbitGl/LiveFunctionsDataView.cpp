@@ -8,8 +8,8 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
+#include "OrbitBase/Profiling.h"
 #include "Pdb.h"
-#include "Profiling.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"
@@ -204,7 +204,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     CHECK(item_indices.size() == 1);
     auto function_address = FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
-        function_address, std::numeric_limits<TickType>::lowest());
+        function_address, std::numeric_limits<uint64_t>::lowest());
     if (first_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(first_box);
     }
@@ -212,7 +212,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     CHECK(item_indices.size() == 1);
     auto function_address = FunctionUtils::GetAbsoluteAddress(*GetFunction(item_indices[0]));
     auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
-        function_address, std::numeric_limits<TickType>::max());
+        function_address, std::numeric_limits<uint64_t>::max());
     if (last_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(last_box);
     }
@@ -319,16 +319,13 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInf
       for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         if (box.GetTimerInfo().function_address() == function_address) {
-          uint64_t elapsed_nanos =
-              TicksToNanoseconds(box.GetTimerInfo().start(), box.GetTimerInfo().end());
+          uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
           if (min_box == nullptr ||
-              elapsed_nanos < TicksToNanoseconds(min_box->GetTimerInfo().start(),
-                                                 min_box->GetTimerInfo().end())) {
+              elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
             min_box = &box;
           }
           if (max_box == nullptr ||
-              elapsed_nanos > TicksToNanoseconds(max_box->GetTimerInfo().start(),
-                                                 max_box->GetTimerInfo().end())) {
+              elapsed_nanos > (max_box->GetTimerInfo().end() - max_box->GetTimerInfo().start())) {
             max_box = &box;
           }
         }

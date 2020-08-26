@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)
 
@@ -55,8 +55,8 @@ class Timer {
   uint64_t m_FunctionAddress = 0;
   uint64_t m_UserData[2] = {0};
   uint64_t m_Registers[6] = {0};
-  TickType m_Start = 0;
-  TickType m_End = 0;
+  uint64_t m_Start = 0;
+  uint64_t m_End = 0;
 };
 #pragma pack(pop)
 

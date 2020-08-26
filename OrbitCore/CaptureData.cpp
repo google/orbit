@@ -4,7 +4,7 @@
 
 #include "CaptureData.h"
 
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -31,7 +31,7 @@ void CaptureData::UpdateFunctionStats(FunctionInfo* func, const TimerInfo& timer
   const uint64_t function_address = func->address();
   FunctionStats& stats = functions_stats_[function_address];
   stats.set_count(stats.count() + 1);
-  uint64_t elapsed_nanos = TicksToNanoseconds(timer_info.start(), timer_info.end());
+  uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
   stats.set_total_time_ns(stats.total_time_ns() + elapsed_nanos);
   stats.set_average_time_ns(stats.total_time_ns() / stats.count());
 

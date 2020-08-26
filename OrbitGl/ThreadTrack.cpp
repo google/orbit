@@ -8,7 +8,7 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 

@@ -11,7 +11,7 @@
 #include <QPainter>
 #include <QTextLayout>
 
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
 #include "types.h"
 
@@ -39,8 +39,8 @@ class OrbitEventIterator : public QFrame {
   }
 
   void SetFunctionName(const std::string& function);
-  void SetMinMaxTime(TickType min_time_us, TickType max_time_us);
-  void SetCurrentTime(TickType current_time_us);
+  void SetMinMaxTime(uint64_t min_time_us, uint64_t max_time_us);
+  void SetCurrentTime(uint64_t current_time_us);
 
   void DisableButtons();
   void EnableButtons();
@@ -58,9 +58,9 @@ class OrbitEventIterator : public QFrame {
   std::function<void(void)> previous_button_callback_;
   std::function<void(void)> delete_button_callback_;
 
-  TickType min_time_;
-  TickType max_time_;
-  TickType current_time_;
+  uint64_t min_time_;
+  uint64_t max_time_;
+  uint64_t current_time_;
 };
 
 #endif  // ORBIT_QT_ORBIT_EVENT_ITERATOR_H_

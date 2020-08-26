@@ -5,11 +5,10 @@
 #ifndef ORBIT_BASE_DEBUG_UTILS_H_
 #define ORBIT_BASE_DEBUG_UTILS_H_
 
-#include <absl/base/internal/sysinfo.h>
-
 #include <string>
 
 #include "Logging.h"
+#include "OrbitBase/Profiling.h"
 
 #define DEBUG_UTILS_ENABLED 0  // Enable locally only.
 #if DEBUG_UTILS_ENABLED

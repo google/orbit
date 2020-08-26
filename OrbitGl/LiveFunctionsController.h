@@ -8,7 +8,7 @@
 #include <functional>
 
 #include "LiveFunctionsDataView.h"
-#include "Profiling.h"
+#include "OrbitBase/Profiling.h"
 #include "TextBox.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
@@ -34,9 +34,9 @@ class LiveFunctionsController {
     add_iterator_callback_ = callback;
   }
 
-  TickType GetCaptureMin();
-  TickType GetCaptureMax();
-  TickType GetStartTime(uint64_t index);
+  uint64_t GetCaptureMin();
+  uint64_t GetCaptureMax();
+  uint64_t GetStartTime(uint64_t index);
 
   void AddIterator(orbit_client_protos::FunctionInfo* function);
 

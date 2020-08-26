@@ -113,7 +113,7 @@ void CaptureWindow::LeftDown(int a_X, int a_Y) {
   m_ScreenClickX = a_X;
   m_ScreenClickY = a_Y;
   m_RefTimeClick =
-      static_cast<TickType>(time_graph_.GetTime(static_cast<double>(a_X) / getWidth()));
+      static_cast<uint64_t>(time_graph_.GetTime(static_cast<double>(a_X) / getWidth()));
 
   m_IsSelecting = false;
 
@@ -789,8 +789,8 @@ void CaptureWindow::RenderTimeBar() {
 
 void CaptureWindow::RenderSelectionOverlay() {
   if (!m_Picking && m_SelectStart[0] != m_SelectStop[0]) {
-    TickType minTime = std::min(m_TimeStart, m_TimeStop);
-    TickType maxTime = std::max(m_TimeStart, m_TimeStop);
+    uint64_t minTime = std::min(m_TimeStart, m_TimeStop);
+    uint64_t maxTime = std::max(m_TimeStart, m_TimeStop);
 
     float from = time_graph_.GetWorldFromTick(minTime);
     float to = time_graph_.GetWorldFromTick(maxTime);
