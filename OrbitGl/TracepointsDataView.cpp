@@ -9,7 +9,7 @@
 TracepointsDataView::TracepointsDataView() : DataView(DataViewType::kTracepoints) {}
 
 const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column>& columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnSelected] = {"Selected", .0f, SortingOrder::kDescending};
@@ -21,7 +21,7 @@ const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
 }
 
 std::string TracepointsDataView::GetValue(int row, int col) {
-  const TracepointInfo tracepoint = GetTracepoint(row);
+  const TracepointInfo& tracepoint = GetTracepoint(row);
 
   switch (col) {
     case kColumnName:
@@ -64,7 +64,7 @@ void TracepointsDataView::DoFilter() {
 
   for (size_t i = 0; i < tracepoints_.size(); ++i) {
     const TracepointInfo& tracepoint = tracepoints_[i];
-    std::string tracepoint_string = tracepoint.name();
+    const std::string tracepoint_string = tracepoint.name();
 
     bool match = true;
 
@@ -76,7 +76,7 @@ void TracepointsDataView::DoFilter() {
     }
 
     if (match) {
-      indices.push_back(i);
+      indices.emplace_back(i);
     }
   }
 
@@ -93,10 +93,8 @@ std::vector<std::string> TracepointsDataView::GetContextMenu(
   return menu;
 }
 
-void TracepointsDataView::OnContextMenu(const std::string&, int, const std::vector<int>&) {}
-
 void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& tracepoints) {
-  tracepoints_ = tracepoints;
+  tracepoints_.assign(tracepoints.cbegin(), tracepoints.cend());
 
   indices_.resize(tracepoints_.size());
   for (size_t i = 0; i < indices_.size(); ++i) {
@@ -104,6 +102,6 @@ void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& trac
   }
 }
 
-const TracepointInfo TracepointsDataView::GetTracepoint(uint32_t row) const {
-  return tracepoints_[indices_[row]];
+const TracepointInfo& TracepointsDataView::GetTracepoint(uint32_t row) const {
+  return tracepoints_.at(indices_[row]);
 }
