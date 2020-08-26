@@ -13,10 +13,14 @@ message ModuleSymbols {
 }
 
 message SymbolInfo {
+  reserved 5, 6;
   string name = 1;
   string demangled_name = 2;
   uint64 address = 3;
   uint64 size = 4;
-  string source_file = 5;
-  uint32 source_line = 6;
+}
+
+message LineInfo {
+  string source_file = 1;
+  uint32 source_line = 2;
 }

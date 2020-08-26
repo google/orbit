@@ -10,6 +10,7 @@
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "llvm/DebugInfo/Symbolize/Symbolize.h"
 #include "llvm/Demangle/Demangle.h"
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
@@ -20,6 +21,7 @@ namespace ElfUtils {
 
 namespace {
 
+using orbit_grpc_protos::LineInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
 
@@ -29,12 +31,14 @@ class ElfFileImpl : public ElfFile {
   ElfFileImpl(std::string_view file_path,
               llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbols() const override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbols() override;
   [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
   [[nodiscard]] bool HasSymtab() const override;
+  [[nodiscard]] bool HasDebugInfo() const override;
   [[nodiscard]] bool Is64Bit() const override;
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] std::string GetFilePath() const override;
+  [[nodiscard]] ErrorMessageOr<LineInfo> GetLineInfo(uint64_t address) override;
 
  private:
   void InitSections();
@@ -42,14 +46,19 @@ class ElfFileImpl : public ElfFile {
   const std::string file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::ELFObjectFile<ElfT>* object_file_;
+  llvm::symbolize::LLVMSymbolizer symbolizer_;
   std::string build_id_;
   bool has_symtab_section_;
+  bool has_debug_info_section_;
 };
 
 template <typename ElfT>
 ElfFileImpl<ElfT>::ElfFileImpl(std::string_view file_path,
                                llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
-    : file_path_(file_path), owning_binary_(std::move(owning_binary)), has_symtab_section_(false) {
+    : file_path_(file_path),
+      owning_binary_(std::move(owning_binary)),
+      has_symtab_section_(false),
+      has_debug_info_section_(false) {
   object_file_ = llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(owning_binary_.getBinary());
   InitSections();
 }
@@ -76,6 +85,10 @@ void ElfFileImpl<ElfT>::InitSections() {
       has_symtab_section_ = true;
     }
 
+    if (name.str() == ".debug_info") {
+      has_debug_info_section_ = true;
+    }
+
     if (name.str() == ".note.gnu.build-id" && section.sh_type == llvm::ELF::SHT_NOTE) {
       llvm::Error error = llvm::Error::success();
       for (const typename ElfT::Note& note : elf_file->notes(section, error)) {
@@ -94,7 +107,7 @@ void ElfFileImpl<ElfT>::InitSections() {
 }
 
 template <typename ElfT>
-ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
+ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() {
   // TODO: if we want to use other sections than .symtab in the future for
   //       example .dynsym, than we have to change this.
   if (!has_symtab_section_) {
@@ -127,14 +140,12 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
       continue;
     }
 
+    uint64_t symbol_address = symbol_ref.getValue();
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
     symbol_info->set_name(name);
     symbol_info->set_demangled_name(demangled_name);
-    symbol_info->set_address(symbol_ref.getValue());
+    symbol_info->set_address(symbol_address);
     symbol_info->set_size(symbol_ref.getSize());
-    // TODO (b/154580143) have correct source file and line here
-    symbol_info->set_source_file("");
-    symbol_info->set_source_line(0);
 
     symbols_added = true;
   }
@@ -191,6 +202,11 @@ bool ElfFileImpl<ElfT>::HasSymtab() const {
 }
 
 template <typename ElfT>
+bool ElfFileImpl<ElfT>::HasDebugInfo() const {
+  return has_debug_info_section_;
+}
+
+template <typename ElfT>
 std::string ElfFileImpl<ElfT>::GetBuildId() const {
   return build_id_;
 }
@@ -200,10 +216,36 @@ std::string ElfFileImpl<ElfT>::GetFilePath() const {
   return file_path_;
 }
 
+template <typename ElfT>
+ErrorMessageOr<LineInfo> ElfUtils::ElfFileImpl<ElfT>::GetLineInfo(uint64_t address) {
+  CHECK(has_debug_info_section_);
+  auto line_info_or_error = symbolizer_.symbolizeCode(
+      *object_file_, {address, llvm::object::SectionedAddress::UndefSection});
+  if (!line_info_or_error) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to get line number info for \"%s\", address=0x%x: %s", object_file_->getFileName(),
+        address, llvm::toString(line_info_or_error.takeError())));
+  }
+
+  auto& symbolizer_line_info = line_info_or_error.get();
+
+  // This is what symbolizer returns in case of an error. We convert it to a ErrorMessage here.
+  if (symbolizer_line_info.FileName == "<invalid>" && symbolizer_line_info.Line == 0) {
+    return ErrorMessage(absl::StrFormat("Unable to get line info for address=0x%x", address));
+  }
+
+  LineInfo line_info;
+  line_info.set_source_file(symbolizer_line_info.FileName);
+  line_info.set_source_line(symbolizer_line_info.Line);
+
+  return line_info;
+}
+
 template <>
 bool ElfFileImpl<llvm::object::ELF64LE>::Is64Bit() const {
   return true;
 }
+
 template <>
 bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
   return false;
