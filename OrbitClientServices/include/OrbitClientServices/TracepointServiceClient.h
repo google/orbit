@@ -17,8 +17,6 @@ using orbit_grpc_protos::TracepointInfo;
 
 class TracepointServiceClient {
  public:
-  TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
-
   static std::unique_ptr<TracepointServiceClient> Create(
       const std::shared_ptr<grpc::Channel>& channel);
 
@@ -26,6 +24,8 @@ class TracepointServiceClient {
 
  private:
   TracepointServiceClient() = default;
+
+  TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
 
   std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;
 };

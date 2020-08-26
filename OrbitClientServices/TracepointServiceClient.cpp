@@ -37,7 +37,8 @@ ErrorMessageOr<std::vector<TracepointInfo>> TracepointServiceClient::GetTracepoi
 
 std::unique_ptr<TracepointServiceClient> TracepointServiceClient::Create(
     const std::shared_ptr<grpc::Channel>& channel) {
-  std::unique_ptr<TracepointServiceClient> client =
-      std::make_unique<TracepointServiceClient>(channel);
+  TracepointServiceClient* service = new TracepointServiceClient(channel);
+  std::unique_ptr<TracepointServiceClient> client(service);
+
   return client;
 }

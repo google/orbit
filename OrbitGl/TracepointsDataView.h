@@ -6,6 +6,8 @@
 #define ORBIT_TRACEPOINTSDATAVIEW_H
 
 #include <deque>
+#include <string>
+#include <vector>
 
 #include "DataView.h"
 #include "tracepoint.pb.h"
@@ -24,7 +26,7 @@ class TracepointsDataView : public DataView {
 
   void SetTracepoints(const std::vector<TracepointInfo>& tracepoints);
 
- protected:
+ private:
   void DoSort() override;
   void DoFilter() override;
 
