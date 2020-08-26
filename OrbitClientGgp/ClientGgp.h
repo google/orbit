@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 
+#include "CaptureData.h"
 #include "ClientGgpOptions.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
@@ -26,9 +27,9 @@ class ClientGgp final : public CaptureListener {
   void SaveCapture();
 
   // CaptureListener implementation
-  void OnCaptureStarted(int32_t process_id,
-                        const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
-                            selected_functions) override;
+  void OnCaptureStarted(
+      int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
@@ -43,6 +44,7 @@ class ClientGgp final : public CaptureListener {
   std::shared_ptr<Process> target_process_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
+  CaptureData capture_data_;
 
   ErrorMessageOr<std::shared_ptr<Process>> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();

@@ -4,10 +4,9 @@
 
 #include "SamplingProfiler.h"
 
-#include "Capture.h"
+#include "CaptureData.h"
 #include "FunctionUtils.h"
 #include "OrbitModule.h"
-#include "Path.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -100,58 +99,51 @@ void SamplingProfiler::SortByThreadUsage() {
   sorted_thread_sample_data_.clear();
   sorted_thread_sample_data_.reserve(thread_id_to_sample_data_.size());
 
-  // "All"
-  thread_id_to_sample_data_[kAllThreadsFakeTid].average_thread_usage = 100.f;
+  // If "All" exists, set to 100% usage
+  auto all_threads_it = thread_id_to_sample_data_.find(kAllThreadsFakeTid);
+  if (all_threads_it != thread_id_to_sample_data_.end()) {
+    all_threads_it->second.average_thread_usage = 100.f;
+  }
 
   for (auto& pair : thread_id_to_sample_data_) {
-    ThreadSampleData* data = &pair.second;
-    data->thread_id = pair.first;
+    ThreadSampleData& data = pair.second;
+    data.thread_id = pair.first;
     sorted_thread_sample_data_.push_back(data);
   }
 
   sort(sorted_thread_sample_data_.begin(), sorted_thread_sample_data_.end(),
-       [](const ThreadSampleData* a, const ThreadSampleData* b) {
-         return a->average_thread_usage > b->average_thread_usage;
+       [](const ThreadSampleData& a, const ThreadSampleData& b) {
+         return a.average_thread_usage > b.average_thread_usage;
        });
 }
 
-void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data) {
-  // Clear the result of a previous call to ProcessSamples.
-  thread_id_to_sample_data_.clear();
-  unique_resolved_callstacks_.clear();
-  original_to_resolved_callstack_.clear();
-  function_address_to_callstack_.clear();
-  exact_address_to_function_address_.clear();
-  function_address_to_exact_addresses_.clear();
-  sorted_thread_sample_data_.clear();
-  address_to_function_name_.clear();
-  address_to_module_path_.clear();
-
+void SamplingProfiler::ProcessSamples(const CaptureData& capture_data, bool generate_summary) {
+  const CallstackData* callstack_data = capture_data.GetCallstackData();
   // Unique call stacks and per thread data
-  for (const CallstackEvent& callstack : callstack_data.callstack_events()) {
-    CHECK(callstack_data.HasCallStack(callstack.callstack_hash()));
+  for (const CallstackEvent& callstack : callstack_data->callstack_events()) {
+    CHECK(callstack_data->HasCallStack(callstack.callstack_hash()));
 
     ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[callstack.thread_id()];
     thread_sample_data->samples_count++;
     thread_sample_data->callstack_count[callstack.callstack_hash()]++;
 
-    callstack_data.ForEachFrameInCallstack(callstack.callstack_hash(),
-                                           [&thread_sample_data](uint64_t address) {
-                                             thread_sample_data->raw_address_count[address]++;
-                                           });
+    callstack_data->ForEachFrameInCallstack(callstack.callstack_hash(),
+                                            [&thread_sample_data](uint64_t address) {
+                                              thread_sample_data->raw_address_count[address]++;
+                                            });
 
-    if (generate_summary_) {
+    if (generate_summary) {
       ThreadSampleData* all_thread_sample_data = &thread_id_to_sample_data_[kAllThreadsFakeTid];
       all_thread_sample_data->samples_count++;
       all_thread_sample_data->callstack_count[callstack.callstack_hash()]++;
-      callstack_data.ForEachFrameInCallstack(callstack.callstack_hash(),
-                                             [&all_thread_sample_data](uint64_t address) {
-                                               all_thread_sample_data->raw_address_count[address]++;
-                                             });
+      callstack_data->ForEachFrameInCallstack(
+          callstack.callstack_hash(), [&all_thread_sample_data](uint64_t address) {
+            all_thread_sample_data->raw_address_count[address]++;
+          });
     }
   }
 
-  ResolveCallstacks(callstack_data);
+  ResolveCallstacks(capture_data);
 
   for (auto& sample_data_it : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &sample_data_it.second;
@@ -188,44 +180,40 @@ void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data) {
     }
   }
 
-  SortByThreadUsage();
+  FillThreadSampleDataSampleReports(capture_data);
 
-  FillThreadSampleDataSampleReports();
+  SortByThreadUsage();
 }
 
-void SamplingProfiler::ResolveCallstacks(const CallstackData& callstack_data) {
-  callstack_data.ForEachUniqueCallstack([this](const CallStack& call_stack) {
-    // A "resolved callstack" is a callstack where every address is replaced
-    // by the start address of the function (if known).
-    std::vector<uint64_t> resolved_callstack_data;
+void SamplingProfiler::ResolveCallstacks(const CaptureData& capture_data) {
+  capture_data.GetCallstackData()->ForEachUniqueCallstack(
+      [this, &capture_data](const CallStack& call_stack) {
+        // A "resolved callstack" is a callstack where every address is replaced
+        // by the start address of the function (if known).
+        std::vector<uint64_t> resolved_callstack_data;
 
-    for (uint64_t address : call_stack.GetFrames()) {
-      if (exact_address_to_function_address_.find(address) ==
-          exact_address_to_function_address_.end()) {
-        UpdateAddressInfo(address);
-      }
+        for (uint64_t address : call_stack.GetFrames()) {
+          if (exact_address_to_function_address_.find(address) ==
+              exact_address_to_function_address_.end()) {
+            MapAddressToFunctionAddress(address, capture_data);
+          }
+          uint64_t function_address = exact_address_to_function_address_.at(address);
 
-      auto address_it = exact_address_to_function_address_.find(address);
-      if (address_it != exact_address_to_function_address_.end()) {
-        const uint64_t& function_address = address_it->second;
-        resolved_callstack_data.push_back(function_address);
-        function_address_to_callstack_[function_address].insert(call_stack.GetHash());
-      } else {
-        resolved_callstack_data.push_back(address);
-      }
-    }
+          resolved_callstack_data.push_back(function_address);
+          function_address_to_callstack_[function_address].insert(call_stack.GetHash());
+        }
 
-    CallStack resolved_callstack(std::move(resolved_callstack_data));
+        CallStack resolved_callstack(std::move(resolved_callstack_data));
 
-    CallstackID resolved_callstack_id = resolved_callstack.GetHash();
-    if (unique_resolved_callstacks_.find(resolved_callstack_id) ==
-        unique_resolved_callstacks_.end()) {
-      unique_resolved_callstacks_[resolved_callstack_id] =
-          std::make_shared<CallStack>(resolved_callstack);
-    }
+        CallstackID resolved_callstack_id = resolved_callstack.GetHash();
+        if (unique_resolved_callstacks_.find(resolved_callstack_id) ==
+            unique_resolved_callstacks_.end()) {
+          unique_resolved_callstacks_[resolved_callstack_id] =
+              std::make_shared<CallStack>(resolved_callstack);
+        }
 
-    original_to_resolved_callstack_[call_stack.GetHash()] = resolved_callstack_id;
-  });
+        original_to_resolved_callstack_[call_stack.GetHash()] = resolved_callstack_id;
+      });
 }
 
 const ThreadSampleData* SamplingProfiler::GetSummary() const {
@@ -256,11 +244,11 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   return result;
 }
 
-const std::string SamplingProfiler::kUnknownFunctionOrModuleName{"???"};
-
-void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
-  LinuxAddressInfo* address_info = Capture::capture_data_.GetAddressInfo(address);
-  FunctionInfo* function = process_->GetFunctionFromAddress(address, false);
+void SamplingProfiler::MapAddressToFunctionAddress(uint64_t absolute_address,
+                                                   const CaptureData& capture_data) {
+  const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
+  const FunctionInfo* function =
+      capture_data.process()->GetFunctionFromAddress(absolute_address, false);
 
   // Find the start address of the function this address falls inside.
   // Use the Function returned by Process::GetFunctionFromAddress, and
@@ -268,44 +256,22 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   // been loaded) use (for now) the LinuxAddressInfo that is collected
   // for every address in a callstack. SamplingProfiler relies heavily
   // on the association between address and function address held by
-  // m_ExactAddressToFunctionAddress, otherwise each address is
+  // exact_address_to_function_address_, otherwise each address is
   // considered a different function.
-  uint64_t function_address;
-  std::string function_name = kUnknownFunctionOrModuleName;
+  uint64_t absolute_function_address;
   if (function != nullptr) {
-    function_address = FunctionUtils::GetAbsoluteAddress(*function);
-    function_name = FunctionUtils::GetDisplayName(*function);
+    absolute_function_address = FunctionUtils::GetAbsoluteAddress(*function);
   } else if (address_info != nullptr) {
-    function_address = address - address_info->offset_in_function();
-    if (!address_info->function_name().empty()) {
-      function_name = address_info->function_name();
-    }
+    absolute_function_address = absolute_address - address_info->offset_in_function();
   } else {
-    function_address = address;
+    absolute_function_address = absolute_address;
   }
 
-  if (function != nullptr && address_info != nullptr) {
-    address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
-  }
-
-  exact_address_to_function_address_[address] = function_address;
-  function_address_to_exact_addresses_[function_address].insert(address);
-
-  address_to_function_name_[address] = function_name;
-  address_to_function_name_[function_address] = function_name;
-
-  std::string module_path = kUnknownFunctionOrModuleName;
-  std::shared_ptr<Module> module = process_->GetModuleFromAddress(address);
-  if (module != nullptr) {
-    module_path = module->m_FullName;
-  } else if (address_info != nullptr) {
-    module_path = address_info->module_path();
-  }
-  address_to_module_path_[address] = module_path;
-  address_to_module_path_[function_address] = module_path;
+  exact_address_to_function_address_[absolute_address] = absolute_function_address;
+  function_address_to_exact_addresses_[absolute_function_address].insert(absolute_address);
 }
 
-void SamplingProfiler::FillThreadSampleDataSampleReports() {
+void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capture_data) {
   for (auto& data : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &data.second;
     std::vector<SampledFunction>* sampled_functions = &thread_sample_data->sampled_function;
@@ -313,41 +279,21 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
     for (auto sortedIt = thread_sample_data->address_count_sorted.rbegin();
          sortedIt != thread_sample_data->address_count_sorted.rend(); ++sortedIt) {
       uint32_t numOccurences = sortedIt->first;
-      uint64_t address = sortedIt->second;
+      uint64_t absolute_address = sortedIt->second;
       float inclusive_percent = 100.f * numOccurences / thread_sample_data->samples_count;
 
       SampledFunction function;
-      // GAddressToFunctionName and GAddressToModuleName should be filled in
-      // UpdateAddressInfo()
-      CHECK(address_to_function_name_.count(address) > 0);
-      function.name = address_to_function_name_.at(address);
+      function.name = capture_data.GetFunctionNameByAddress(absolute_address);
       function.inclusive = inclusive_percent;
       function.exclusive = 0.f;
-      auto it = thread_sample_data->exclusive_count.find(address);
+      auto it = thread_sample_data->exclusive_count.find(absolute_address);
       if (it != thread_sample_data->exclusive_count.end()) {
         function.exclusive = 100.f * it->second / thread_sample_data->samples_count;
       }
-      function.address = address;
-      CHECK(address_to_module_path_.count(address) > 0);
-      function.module_path = address_to_module_path_.at(address);
+      function.address = absolute_address;
+      function.module_path = capture_data.GetModulePathByAddress(absolute_address);
 
       sampled_functions->push_back(function);
     }
   }
-}
-
-const std::string& SamplingProfiler::GetFunctionNameByAddress(uint64_t address) const {
-  auto it = address_to_function_name_.find(address);
-  if (it != address_to_function_name_.end()) {
-    return it->second;
-  }
-  return kUnknownFunctionOrModuleName;
-}
-
-const std::string& SamplingProfiler::GetModulePathByAddress(uint64_t address) const {
-  auto it = address_to_module_path_.find(address);
-  if (it != address_to_module_path_.end()) {
-    return it->second;
-  }
-  return kUnknownFunctionOrModuleName;
 }

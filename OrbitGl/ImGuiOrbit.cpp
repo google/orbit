@@ -14,7 +14,6 @@
 
 #include <imgui.h>
 
-#include "Capture.h"
 #include "GlCanvas.h"
 #include "Images.h"
 #include "OpenGl.h"

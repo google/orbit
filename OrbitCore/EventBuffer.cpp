@@ -4,7 +4,6 @@
 
 #include "EventBuffer.h"
 
-#include "Capture.h"
 #include "EventTracer.h"
 #include "Params.h"
 #include "SamplingProfiler.h"

@@ -5,8 +5,6 @@
 #include "CallstackData.h"
 
 #include "Callstack.h"
-#include "Capture.h"
-#include "SamplingProfiler.h"
 
 using orbit_client_protos::CallstackEvent;
 
@@ -23,9 +21,9 @@ void CallstackData::AddUniqueCallStack(CallStack call_stack) {
 }
 
 void CallstackData::AddCallStackFromKnownCallstackData(
-    const orbit_client_protos::CallstackEvent& event, const CallstackData& known_callstack_data) {
+    const orbit_client_protos::CallstackEvent& event, const CallstackData* known_callstack_data) {
   uint64_t hash = event.callstack_hash();
-  std::shared_ptr<CallStack> unique_callstack = known_callstack_data.GetCallstackPtr(hash);
+  std::shared_ptr<CallStack> unique_callstack = known_callstack_data->GetCallstackPtr(hash);
   if (unique_callstack == nullptr) {
     return;
   }

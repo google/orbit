@@ -13,7 +13,6 @@
 
 #include "App.h"
 #include "Batcher.h"
-#include "Capture.h"
 #include "EventTracer.h"
 #include "EventTrack.h"
 #include "FunctionUtils.h"
@@ -44,7 +43,7 @@ TimeGraph::TimeGraph() : m_Batcher(BatcherId::kTimeGraph) {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   // The process track is a special ThreadTrack of id "0".
-  process_track_ = GetOrCreateThreadTrack(0);
+  process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 }
 
 Color TimeGraph::GetThreadColor(ThreadID tid) const {
@@ -95,7 +94,7 @@ void TimeGraph::Clear() {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   // The process track is a special ThreadTrack of id "0".
-  process_track_ = GetOrCreateThreadTrack(0);
+  process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 
   SetIteratorOverlayData({}, {});
 
@@ -302,21 +301,13 @@ double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
   return a_Ratio * CurrentWidth;
 }
 
-void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
+void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* function) {
   if (timer_info.end() > capture_max_timestamp_) {
     capture_max_timestamp_ = timer_info.end();
   }
 
-  if (timer_info.function_address() > 0) {
-    FunctionInfo* func =
-        Capture::capture_data_.process()->GetFunctionFromAddress(timer_info.function_address());
-
-    if (func != nullptr) {
-      Capture::capture_data_.UpdateFunctionStats(func, timer_info);
-      if (FunctionUtils::IsOrbitFunc(*func)) {
-        ProcessOrbitFunctionTimer(func, timer_info);
-      }
-    }
+  if (function != nullptr && FunctionUtils::IsOrbitFunc(*function)) {
+    ProcessOrbitFunctionTimer(*function, timer_info);
   }
 
   if (timer_info.type() == TimerInfo::kGpuActivity) {
@@ -342,9 +333,9 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   NeedsUpdate();
 }
 
-void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
+void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo& function,
                                           const TimerInfo& timer_info) {
-  FunctionInfo::OrbitType type = function->type();
+  FunctionInfo::OrbitType type = function.type();
   uint64_t time = timer_info.start();
   CHECK(timer_info.registers_size() > 1);
 
@@ -409,7 +400,7 @@ void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
     manual_instrumentation_string_manager_.AddOrReplace(string_address, "");
 
     GOrbitApp->GetThreadPool()->Schedule([this, string_address]() {
-      int32_t pid = Capture::capture_data_.process_id();
+      int32_t pid = GOrbitApp->GetCaptureData().process_id();
       const auto& process_manager = GOrbitApp->GetProcessManager();
       auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
 
@@ -591,39 +582,25 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   m_NeedsUpdatePrimitives = false;
 }
 
-std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart, float a_WorldEnd,
-                                                    ThreadID a_TID) {
-  if (a_WorldStart > a_WorldEnd) {
-    std::swap(a_WorldEnd, a_WorldStart);
+std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float world_end,
+                                                    ThreadID thread_id) {
+  if (world_start > world_end) {
+    std::swap(world_end, world_start);
   }
 
-  uint64_t t0 = GetTickFromWorld(a_WorldStart);
-  uint64_t t1 = GetTickFromWorld(a_WorldEnd);
+  uint64_t t0 = GetTickFromWorld(world_start);
+  uint64_t t1 = GetTickFromWorld(world_end);
 
   std::vector<CallstackEvent> selected_callstack_events =
-      GEventTracer.GetEventBuffer().GetCallstackEvents(t0, t1, a_TID);
+      GEventTracer.GetEventBuffer().GetCallstackEvents(t0, t1, thread_id);
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
     selected_callstack_events_per_thread_[event.thread_id()].emplace_back(event);
-    selected_callstack_events_per_thread_[0].emplace_back(event);
+    selected_callstack_events_per_thread_[SamplingProfiler::kAllThreadsFakeTid].emplace_back(event);
   }
 
-  // Generate selection report.
-  SamplingProfiler sampling_profiler(Capture::capture_data_.process());
-
-  sampling_profiler.SetGenerateSummary(a_TID == 0);
-
-  const CallstackData* callstack_data = Capture::capture_data_.GetCallstackData();
-  std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
-  for (const CallstackEvent& event : selected_callstack_events) {
-    selection_callstack_data->AddCallStackFromKnownCallstackData(event, *callstack_data);
-  }
-
-  sampling_profiler.ProcessSamples(*selection_callstack_data);
-
-  GOrbitApp->AddSelectionReport(std::move(sampling_profiler), selection_callstack_data.get());
-  Capture::capture_data_.SetSelectionCallstackData(std::move(selection_callstack_data));
+  GOrbitApp->SelectCallstackEvents(selected_callstack_events, thread_id);
 
   NeedsUpdate();
 
@@ -798,11 +775,11 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
       int32_t tid = thread_track->GetThreadId();
       if (tid == 0) {
         // This is the process_track_.
-        std::string process_name = Capture::capture_data_.process_name();
+        std::string process_name = GOrbitApp->GetCaptureData().process_name();
         thread_track->SetName(process_name);
         thread_track->SetLabel(process_name + " (all threads)");
       } else {
-        const std::string& thread_name = Capture::capture_data_.GetThreadName(tid);
+        const std::string& thread_name = GOrbitApp->GetCaptureData().GetThreadName(tid);
         track->SetName(thread_name);
         std::string track_label = absl::StrFormat("%s [%u]", thread_name, tid);
         track->SetLabel(track_label);
@@ -855,7 +832,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
 static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track, uint64_t string_address,
                                          OrbitApp* app) {
   app->GetThreadPool()->Schedule([track, string_address, app]() {
-    int32_t pid = Capture::capture_data_.process_id();
+    int32_t pid = GOrbitApp->GetCaptureData().process_id();
     const auto& process_manager = app->GetProcessManager();
     auto error_or_string = process_manager->LoadNullTerminatedString(pid, string_address);
 

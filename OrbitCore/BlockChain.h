@@ -111,6 +111,14 @@ class BlockChain final {
  public:
   BlockChain() : size_(0) { root_ = current_ = new Block<T, BlockSize>(nullptr); }
 
+  BlockChain(const BlockChain& other) = delete;
+
+  BlockChain& operator=(const BlockChain& other) = delete;
+
+  BlockChain(BlockChain&& other) = delete;
+
+  BlockChain& operator=(BlockChain&& other) = delete;
+
   ~BlockChain() {
     // Find last block in chain
     while (current_->HasNext()) {

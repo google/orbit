@@ -7,10 +7,13 @@
 #include "CallStackDataView.h"
 #include "absl/strings/str_format.h"
 
-SamplingReport::SamplingReport(SamplingProfiler sampling_profiler,
-                               const CallstackData* callstack_data)
-    : profiler_{std::move(sampling_profiler)} {
-  callstack_data_ = callstack_data;
+SamplingReport::SamplingReport(
+    SamplingProfiler sampling_profiler,
+    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
+    bool has_summary)
+    : profiler_{std::move(sampling_profiler)},
+      unique_callstacks_{std::move(unique_callstacks)},
+      has_summary_{has_summary} {
   selected_address_ = 0;
   selected_thread_id_ = 0;
   callstack_data_view_ = nullptr;
@@ -30,14 +33,10 @@ void SamplingReport::ClearReport() {
 void SamplingReport::FillReport() {
   const auto& sample_data = profiler_.GetThreadSampleData();
 
-  for (ThreadSampleData* thread_sample_data : sample_data) {
-    ThreadID tid = thread_sample_data->thread_id;
-
-    if (tid == SamplingProfiler::kAllThreadsFakeTid && !profiler_.GetGenerateSummary()) continue;
-
+  for (const ThreadSampleData& thread_sample_data : sample_data) {
     SamplingReportDataView thread_report;
-    thread_report.SetSampledFunctions(thread_sample_data->sampled_function);
-    thread_report.SetThreadID(tid);
+    thread_report.SetSampledFunctions(thread_sample_data.sampled_function);
+    thread_report.SetThreadID(thread_sample_data.thread_id);
     thread_report.SetSamplingReport(this);
     thread_reports_.push_back(std::move(thread_report));
   }
@@ -53,11 +52,10 @@ void SamplingReport::UpdateDisplayedCallstack() {
   }
 }
 
-void SamplingReport::UpdateReport(SamplingProfiler profiler, const CallstackData* callstack_data) {
-  if (callstack_data == nullptr) {
-    return;
-  }
-  callstack_data_ = callstack_data;
+void SamplingReport::UpdateReport(
+    SamplingProfiler profiler,
+    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
+  unique_callstacks_ = std::move(unique_callstacks);
   profiler_ = std::move(profiler);
 
   for (SamplingReportDataView& thread_report : thread_reports_) {
@@ -130,7 +128,9 @@ void SamplingReport::OnCallstackIndexChanged(size_t index) {
   if (index < selected_sorted_callstack_report_->callstacks_count.size()) {
     const CallstackCount& cs = selected_sorted_callstack_report_->callstacks_count[index];
     selected_callstack_index_ = index;
-    callstack_data_view_->SetCallStack(*callstack_data_->GetCallStack(cs.callstack_id));
+    auto it = unique_callstacks_.find(cs.callstack_id);
+    CHECK(it != unique_callstacks_.end());
+    callstack_data_view_->SetCallStack(*it->second);
   } else {
     selected_callstack_index_ = 0;
   }

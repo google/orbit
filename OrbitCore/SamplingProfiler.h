@@ -20,6 +20,9 @@
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
+// TODO(kuebler): Remove forward declaration as soon as SamplingProfiler is stateless.
+class CaptureData;
+
 struct SampledFunction {
   SampledFunction() = default;
 
@@ -63,19 +66,27 @@ struct SortedCallstackReport {
 
 class SamplingProfiler {
  public:
-  explicit SamplingProfiler(std::shared_ptr<Process> a_Process) : process_{std::move(a_Process)} {}
+  explicit SamplingProfiler() = default;
+  explicit SamplingProfiler(const CaptureData& capture_data, bool generate_summary = true) {
+    ProcessSamples(capture_data, generate_summary);
+  }
+  SamplingProfiler& operator=(const SamplingProfiler& other) = default;
+  SamplingProfiler(const SamplingProfiler& other) = default;
 
-  const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
+  SamplingProfiler(SamplingProfiler&& other) = default;
+  SamplingProfiler& operator=(SamplingProfiler&& other) = default;
 
-  std::multimap<int, CallstackID> GetCallstacksFromAddress(uint64_t address, ThreadID thread_id,
-                                                           int* callstacks_count) const;
-  std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(uint64_t address,
-                                                                        ThreadID thread_id) const;
+  [[nodiscard]] const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
-  const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
+  [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddress(
+      uint64_t address, ThreadID thread_id, int* callstacks_count) const;
+  [[nodiscard]] std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
+      uint64_t address, ThreadID thread_id) const;
+
+  [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;
   }
-  const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t thread_id) const {
+  [[nodiscard]] const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t thread_id) const {
     auto it = thread_id_to_sample_data_.find(thread_id);
     if (it == thread_id_to_sample_data_.end()) {
       return nullptr;
@@ -84,27 +95,17 @@ class SamplingProfiler {
     return &it->second;
   }
 
-  void SetGenerateSummary(bool value) { generate_summary_ = value; }
-  bool GetGenerateSummary() const { return generate_summary_; }
   void SortByThreadUsage();
-  void ProcessSamples(const CallstackData& callstack_data);
-  void UpdateAddressInfo(uint64_t address);
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
-  [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t address) const;
-  [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t address) const;
-
   static const int32_t kAllThreadsFakeTid;
-  static const std::string kUnknownFunctionOrModuleName;
 
- protected:
-  void ResolveCallstacks(const CallstackData& callstack_data);
-  void FillThreadSampleDataSampleReports();
-
- protected:
-  std::shared_ptr<Process> process_;
-  bool generate_summary_ = true;
+ private:
+  void ProcessSamples(const CaptureData& capture_data, bool generate_summary);
+  void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
+  void ResolveCallstacks(const CaptureData& capture_data);
+  void FillThreadSampleDataSampleReports(const CaptureData& capture_data);
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
@@ -113,10 +114,7 @@ class SamplingProfiler {
   absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack_;
   absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
-  std::vector<ThreadSampleData*> sorted_thread_sample_data_;
-
-  absl::flat_hash_map<uint64_t, std::string> address_to_function_name_;
-  absl::flat_hash_map<uint64_t, std::string> address_to_module_path_;
+  std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
 #endif  // ORBIT_CORE_SAMPLING_PROFILER_H_

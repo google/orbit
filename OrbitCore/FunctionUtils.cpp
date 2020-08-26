@@ -6,7 +6,6 @@
 
 #include <map>
 
-#include "Capture.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 #include "Utils.h"

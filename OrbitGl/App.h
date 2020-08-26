@@ -80,10 +80,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
   ErrorMessageOr<void> OnLoadCapture(const std::string& file_name);
-  bool IsCapturing() const;
+  [[nodiscard]] bool IsCapturing() const;
   bool StartCapture();
   void StopCapture();
   void ClearCapture();
+  void SetCaptureData(CaptureData capture_data) { capture_data_ = std::move(capture_data); }
+  [[nodiscard]] const CaptureData& GetCaptureData() const { return capture_data_; }
   void ToggleDrawHelp();
   void ToggleCapture();
   void LoadFileMapping();
@@ -91,9 +93,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void RefreshCaptureView();
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
 
-  void OnCaptureStarted(int32_t process_id,
-                        const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
-                            selected_functions) override;
+  void OnCaptureStarted(
+      int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
@@ -106,9 +108,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void RegisterCaptureWindow(CaptureWindow* capture);
 
-  void AddSamplingReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
-  void AddSelectionReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
-  void AddTopDownView(const SamplingProfiler& sampling_profiler);
+  void SetSamplingReport(
+      SamplingProfiler sampling_profiler,
+      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
+  void SetSelectionReport(
+      SamplingProfiler sampling_profiler,
+      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
+      bool has_summary);
+  void SetTopDownView(const CaptureData& capture_data);
 
   bool SelectProcess(const std::string& process,
                      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
@@ -238,6 +245,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] const TextBox* selected_text_box() const;
   void SelectTextBox(const TextBox* text_box);
 
+  void SelectCallstackEvents(
+      const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
+      int32_t thread_id);
+
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
@@ -292,7 +303,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   CaptureWindow* capture_window_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;
-  std::shared_ptr<SamplingReport> selection_report_;
+  std::shared_ptr<SamplingReport> selection_report_ = nullptr;
   std::map<std::string, std::string> file_mapping_;
 
   absl::flat_hash_set<std::string> modules_currently_loading_;
@@ -310,11 +321,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   const SymbolHelper symbol_helper_;
 
+  StatusListener* status_listener_ = nullptr;
+
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
-  // Temporary objects used by CaptureListener implementation
-  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> captured_address_infos_;
-  StatusListener* status_listener_ = nullptr;
+  // TODO(kuebler): This is mostely written during capture by the capture thread on the
+  //  CaptureListener parts of App, but may be read also during capturing by all threads.
+  //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
+  CaptureData capture_data_;
 };
 
 extern std::unique_ptr<OrbitApp> GOrbitApp;

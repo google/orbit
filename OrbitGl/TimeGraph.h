@@ -38,12 +38,13 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
-  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(float a_WorldStart,
-                                                                float a_WorldEnd, ThreadID a_TID);
+  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(float world_start, float world_end,
+                                                                ThreadID thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
 
-  void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo* function,
+  void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
+                    const orbit_client_protos::FunctionInfo* function);
+  void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo& function,
                                  const orbit_client_protos::TimerInfo& timer_info);
   void UpdateMaxTimeStamp(uint64_t a_Time);
 

@@ -5,11 +5,9 @@
 #include "EventTrack.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "EventTracer.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
-#include "SamplingProfiler.h"
 
 using orbit_client_protos::CallstackEvent;
 
@@ -160,9 +158,8 @@ bool EventTrack::IsEmpty() const {
 }
 
 static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
-  const std::string& function_name =
-      Capture::capture_data_.GetSamplingProfiler().GetFunctionNameByAddress(addr);
-  if (function_name == SamplingProfiler::kUnknownFunctionOrModuleName) {
+  const std::string& function_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(addr);
+  if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
   }
 
@@ -210,7 +207,7 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
     return unknown_return_text;
   }
 
-  const CallstackData* callstack_data = Capture::capture_data_.GetCallstackData();
+  const CallstackData* callstack_data = GOrbitApp->GetCaptureData().GetCallstackData();
   CallstackEvent* callstack_event = static_cast<CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_hash = callstack_event->callstack_hash();

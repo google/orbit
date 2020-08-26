@@ -5,7 +5,6 @@
 #include "SchedulerTrack.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "EventTrack.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
@@ -28,7 +27,7 @@ float SchedulerTrack::GetHeight() const {
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
   bool is_same_tid_as_selected = timer_info.thread_id() == GOrbitApp->selected_thread_id();
-  int32_t capture_process_id = Capture::capture_data_.process_id();
+  int32_t capture_process_id = GOrbitApp->GetCaptureData().process_id();
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
 
@@ -72,6 +71,6 @@ std::string SchedulerTrack::GetBoxTooltip(PickingId id) const {
       "<b>Core:</b> %d<br/>"
       "<b>Thread:</b> %s [%d]<br/>",
       text_box->GetTimerInfo().processor(),
-      Capture::capture_data_.GetThreadName(text_box->GetTimerInfo().thread_id()),
+      GOrbitApp->GetCaptureData().GetThreadName(text_box->GetTimerInfo().thread_id()),
       text_box->GetTimerInfo().thread_id());
 }

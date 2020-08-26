@@ -21,10 +21,7 @@ class DisassemblyReport : public CodeReport {
         samples_count_(samples_count) {}
 
   explicit DisassemblyReport(Disassembler disasm)
-      : disasm_{std::move(disasm)},
-        profiler_{std::make_shared<Process>()},
-        function_count_{0},
-        samples_count_{0} {};
+      : disasm_{std::move(disasm)}, function_count_{0}, samples_count_{0} {};
 
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return function_count_; }
   [[nodiscard]] uint32_t GetNumSamples() const override { return samples_count_; }

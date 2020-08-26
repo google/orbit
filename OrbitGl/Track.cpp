@@ -4,7 +4,6 @@
 
 #include "Track.h"
 
-#include "Capture.h"
 #include "CoreMath.h"
 #include "GlCanvas.h"
 #include "TimeGraphLayout.h"
