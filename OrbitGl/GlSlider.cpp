@@ -112,7 +112,7 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Bar
   if (!picking) {
-    Box box(Vec2(0, y), Vec2(canvasWidth, GetPixelHeight()), GlCanvas::Z_VALUE_SLIDER);
+    Box box(Vec2(0, y), Vec2(canvasWidth, GetPixelHeight()), GlCanvas::Z_VALUE_MARGIN);
     batcher->AddBox(box, m_BarColor, shared_from_this());
   }
 
@@ -122,7 +122,7 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
   Color color =
       canvas->GetPickingManager().IsThisElementPicked(this) ? m_SelectedColor : m_SliderColor;
 
-  Box box(Vec2(start, y), Vec2(stop - start, GetPixelHeight()), GlCanvas::Z_VALUE_SLIDER_PICKING);
+  Box box(Vec2(start, y), Vec2(stop - start, GetPixelHeight()), GlCanvas::Z_VALUE_SLIDER);
   batcher->AddBox(box, color, shared_from_this());
 }
 
@@ -139,7 +139,7 @@ void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Bar
   if (!picking) {
-    Box box(Vec2(x, 0), Vec2(GetPixelHeight(), canvasHeight), GlCanvas::Z_VALUE_SLIDER);
+    Box box(Vec2(x, 0), Vec2(GetPixelHeight(), canvasHeight), GlCanvas::Z_VALUE_MARGIN);
     batcher->AddBox(box, m_BarColor, shared_from_this());
   }
 
@@ -149,6 +149,6 @@ void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
   Color color =
       canvas->GetPickingManager().IsThisElementPicked(this) ? m_SelectedColor : m_SliderColor;
 
-  Box box(Vec2(x, start), Vec2(GetPixelHeight(), stop - start), GlCanvas::Z_VALUE_SLIDER_PICKING);
+  Box box(Vec2(x, start), Vec2(GetPixelHeight(), stop - start), GlCanvas::Z_VALUE_SLIDER);
   batcher->AddBox(box, color, shared_from_this());
 }

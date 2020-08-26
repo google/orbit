@@ -32,8 +32,6 @@ class TimeGraphLayout {
   float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks * scale_; }
   float GetSpaceBetweenCores() const { return m_SpaceBetweenCores * scale_; }
   float GetSpaceBetweenTracksAndThread() const { return m_SpaceBetweenTracksAndThread * scale_; }
-  float GetTextZ() const { return m_TextZ; }
-  float GetTrackZ() const { return m_TrackZ; }
   float GetToolbarIconHeight() const { return m_ToolbarIconHeight; }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = value; }
@@ -69,8 +67,6 @@ class TimeGraphLayout {
   float m_SpaceBetweenTracksAndThread;
   float m_SpaceBetweenThreadBlocks;
 
-  float m_TextZ;
-  float m_TrackZ;
   float m_ToolbarIconHeight;
   float scale_;
 

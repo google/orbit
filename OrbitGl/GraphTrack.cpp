@@ -12,7 +12,6 @@ GraphTrack::GraphTrack(TimeGraph* time_graph, uint64_t graph_id)
 void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
-  TimeGraphLayout& layout = time_graph_->GetLayout();
   float trackWidth = canvas->GetWorldWidth();
 
   m_Pos[0] = canvas->GetWorldTopLeftX();
@@ -32,8 +31,8 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     color = kPickedColor;
   }
 
-  float track_z = layout.GetTrackZ();
-  float text_z = layout.GetTextZ();
+  float track_z = GlCanvas::Z_VALUE_TRACK;
+  float text_z = GlCanvas::Z_VALUE_TEXT;
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
   batcher->AddBox(box, color, shared_from_this());
