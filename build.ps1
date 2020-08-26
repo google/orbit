@@ -47,7 +47,7 @@ foreach ($profile in $profiles) {
   
   Write-Host "Building Orbit in build_$profile/ with conan profile $profile"
 
-  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "install","-pr",$profile,"-o","system_qt=False","-if","build_$profile/","--build","outdated",$PSScriptRoot
+  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "install","--update","-pr",$profile,"-o","system_qt=False","-if","build_$profile/","--build","outdated",$PSScriptRoot
   if ($process.ExitCode -ne 0) {
     Throw "Error while running conan install."
   }
