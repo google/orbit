@@ -1,4 +1,4 @@
-LINKER_FLAGS=/FIXED:NO
+LINKER_FLAGS=/FIXED:NO /ignore:4099
 [settings]
 os=Windows
 os_build=Windows

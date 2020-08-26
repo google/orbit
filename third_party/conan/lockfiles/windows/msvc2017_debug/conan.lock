@@ -1,5 +1,5 @@
 {
- "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Debug\ncompiler=Visual Studio\ncompiler.runtime=MDd\ncompiler.version=15\nos=Windows\nos_build=Windows\n[options]\nOrbitProfiler:system_qt=False\n[build_requires]\n*: cmake_installer/3.16.3@conan/stable\n[env]\nCONAN_CMAKE_SYSTEM_VERSION=8.1\nLDFLAGS=/FIXED:NO",
+ "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Debug\ncompiler=Visual Studio\ncompiler.runtime=MDd\ncompiler.version=15\nos=Windows\nos_build=Windows\n[options]\nOrbitProfiler:system_qt=False\n[build_requires]\n*: cmake_installer/3.16.3@conan/stable\n[env]\nCONAN_CMAKE_SYSTEM_VERSION=8.1\nLDFLAGS=/FIXED:NO /ignore:4099",
  "graph_lock": {
   "nodes": {
    "0": {
