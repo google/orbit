@@ -84,8 +84,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + m_Size[0];
   float y0 = m_Pos[1];
   float y1 = y0 - m_Size[1];
-  float track_z = layout.GetTrackZ();
-  float text_z = layout.GetTextZ();
+  float track_z = GlCanvas::Z_VALUE_TRACK;
+  float text_z = GlCanvas::Z_VALUE_TEXT;
   float top_margin = layout.GetTrackTopMargin();
 
   // Draw track background.

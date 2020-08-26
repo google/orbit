@@ -494,6 +494,7 @@ void CaptureWindow::Draw() {
     RenderTimeBar();
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
+    // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT, Color(0, 255, 0, 127));
   }
 }
@@ -543,7 +544,7 @@ void CaptureWindow::DrawScreenSpace() {
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
     Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
             Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
-            GlCanvas::Z_VALUE_TEXT_UI_BG);
+            GlCanvas::Z_VALUE_TIME_BAR_BG);
     ui_batcher_.AddBox(box, Color(70, 70, 70, 200));
   }
 }
@@ -802,7 +803,7 @@ void CaptureWindow::RenderSelectionOverlay() {
     std::string text = GetPrettyTime(TicksToDuration(minTime, maxTime));
     const Color color(0, 128, 0, 128);
 
-    Box box(pos, size, GlCanvas::Z_VALUE_BOX_ACTIVE);
+    Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
     ui_batcher_.AddBox(box, color);
 
     const Color text_color(255, 255, 255, 255);
@@ -813,7 +814,7 @@ void CaptureWindow::RenderSelectionOverlay() {
 
     const unsigned char g = 100;
     Color grey(g, g, g, 255);
-    ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::Z_VALUE_BOX_ACTIVE, grey);
+    ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::Z_VALUE_OVERLAY, grey);
   }
 }
 

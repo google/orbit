@@ -97,23 +97,21 @@ class GlCanvas : public GlPanel {
 
   PickingManager& GetPickingManager() { return m_PickingManager; }
 
-  static float Z_VALUE_UI;
-  static float Z_VALUE_TEXT;
+  static float Z_VALUE_SLIDER;
+  static float Z_VALUE_MARGIN;
   static float Z_VALUE_TEXT_UI;
-  static float Z_VALUE_TEXT_UI_BG;
+  static float Z_VALUE_UI;
+  static float Z_VALUE_TIME_BAR_BG;
   static float Z_VALUE_OVERLAY;
   static float Z_VALUE_OVERLAY_BG;
-  static float Z_VALUE_CONTEXT_SWITCH;
-  static float Z_VALUE_EVENT;
-  static float Z_VALUE_BOX_ACTIVE;
-  static float Z_VALUE_BOX_INACTIVE;
-  static float Z_VALUE_TEXT_BG;
-  static float Z_VALUE_EVENT_BAR;
-  static float Z_VALUE_EVENT_BAR_PICKING;
-  static float Z_VALUE_MARGIN;
-  static float Z_VALUE_SLIDER_PICKING;
-  static float Z_VALUE_SLIDER;
   static float Z_VALUE_ROUNDING_CORNER;
+  static float Z_VALUE_TEXT;
+  static float Z_VALUE_EVENT;
+  static float Z_VALUE_BOX;
+  static float Z_VALUE_EVENT_BAR;
+  static float Z_VALUE_TRACK;
+
+  static float Z_VALUE_EVENT_BAR_PICKING;
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
