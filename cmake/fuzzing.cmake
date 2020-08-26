@@ -12,11 +12,18 @@ function(add_fuzzer target_name)
     add_executable(${target_name} ${ARGN})
     target_compile_options(${target_name} PRIVATE ${STRICT_COMPILE_FLAGS})
 
-    target_compile_options(${target_name} PUBLIC "-fsanitize=fuzzer")
+    if (ENV{LIB_FUZZING_ENGINE})
+      message(STATUS "Adding linker flags according to LIB_FUZZING_ENGINE env variable: $ENV{LIB_FUZZING_ENGINE}")
+      set(FUZZING_OPTION $ENV{LIB_FUZZING_ENGINE})
+    else()
+      set(FUZZING_OPTION "-fsanitize=fuzzer")
+    endif()
+
+    target_compile_options(${target_name} PUBLIC ${FUZZING_OPTION})
     set_property(
       TARGET ${target_name}
       APPEND
-      PROPERTY LINK_OPTIONS "-fsanitize=fuzzer")
+      PROPERTY LINK_OPTIONS ${FUZZING_OPTION})
   else()
     add_library(${target_name} STATIC ${ARGN})
     target_compile_options(${target_name} PRIVATE ${STRICT_COMPILE_FLAGS})
