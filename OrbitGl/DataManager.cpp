@@ -40,8 +40,9 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
 
 void DataManager::SelectFunction(uint64_t function_address) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  CHECK(!selected_functions_.contains(function_address));
-  selected_functions_.insert(function_address);
+  if (!selected_functions_.contains(function_address)) {
+    selected_functions_.insert(function_address);
+  }
 }
 
 void DataManager::DeselectFunction(uint64_t function_address) {
