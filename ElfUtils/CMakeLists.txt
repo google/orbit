@@ -25,6 +25,7 @@ target_link_libraries(
          OrbitProtos
          abseil::abseil
          llvm_object::llvm_object
+         llvm_symbolize::llvm_symbolize
          Outcome::Outcome)
 
 add_executable(ElfUtilsTests)

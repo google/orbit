@@ -19,7 +19,7 @@ using orbit_grpc_protos::SymbolInfo;
 
 TEST(ElfFile, LoadSymbols) {
   std::string executable_dir = Path::GetExecutableDir();
-  std::string executable = "hello_world_elf";
+  std::string executable = "hello_world_elf_with_debug_info";
   std::string file_path = executable_dir + "testdata/" + executable;
 
   auto elf_file_result = ElfFile::Create(file_path);
@@ -40,18 +40,12 @@ TEST(ElfFile, LoadSymbols) {
   EXPECT_EQ(symbol_info.demangled_name(), "deregister_tm_clones");
   EXPECT_EQ(symbol_info.address(), 0x1080);
   EXPECT_EQ(symbol_info.size(), 0);
-  // TODO (b/154580143) have correct source file and line here
-  EXPECT_EQ(symbol_info.source_file(), "");
-  EXPECT_EQ(symbol_info.source_line(), 0);
 
-  symbol_info = symbol_infos[9];
+  symbol_info = symbol_infos[5];
   EXPECT_EQ(symbol_info.name(), "main");
   EXPECT_EQ(symbol_info.demangled_name(), "main");
-  EXPECT_EQ(symbol_info.address(), 0x1135);
-  EXPECT_EQ(symbol_info.size(), 35);
-  // TODO (b/154580143) have correct source file and line here
-  EXPECT_EQ(symbol_info.source_file(), "");
-  EXPECT_EQ(symbol_info.source_line(), 0);
+  EXPECT_EQ(symbol_info.address(), 0x1140);
+  EXPECT_EQ(symbol_info.size(), 45);
 }
 
 TEST(ElfFile, CalculateLoadBias) {
@@ -154,4 +148,67 @@ TEST(ElfFile, FileDoesNotExist) {
   ASSERT_FALSE(elf_file);
   EXPECT_THAT(absl::AsciiStrToLower(elf_file.error().message()),
               testing::HasSubstr("no such file or directory"));
+}
+
+TEST(ElfFile, HasDebugInfo) {
+  std::string file_path =
+      Path::JoinPath({Path::GetExecutableDir(), "testdata", "hello_world_elf_with_debug_info"});
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+
+  EXPECT_TRUE(hello_world.value()->HasDebugInfo());
+}
+
+TEST(ElfFile, DoesNotHaveDebugInfo) {
+  std::string file_path = Path::JoinPath({Path::GetExecutableDir(), "testdata", "hello_world_elf"});
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+
+  EXPECT_FALSE(hello_world.value()->HasDebugInfo());
+}
+
+static void RunLineInfoTest(const char* file_name) {
+#ifdef _WIN32
+  constexpr const char* const kSourcePath = "/ssd/local\\hello.cpp";
+#else
+  constexpr const char* const kSourcePath = "/ssd/local/hello.cpp";
+#endif
+  std::string file_path = Path::JoinPath({Path::GetExecutableDir(), "testdata", file_name});
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+
+  auto line_info1 = hello_world.value()->GetLineInfo(0x1140);
+  ASSERT_TRUE(line_info1) << line_info1.error().message();
+
+  EXPECT_EQ(line_info1.value().source_file(), kSourcePath);
+  EXPECT_EQ(line_info1.value().source_line(), 3);
+
+  auto line_info2 = hello_world.value()->GetLineInfo(0x1150);
+  ASSERT_TRUE(line_info2) << line_info2.error().message();
+
+  EXPECT_EQ(line_info2.value().source_file(), kSourcePath);
+  EXPECT_EQ(line_info2.value().source_line(), 4);
+
+  auto line_info_invalid_address = hello_world.value()->GetLineInfo(0x10);
+  ASSERT_FALSE(line_info_invalid_address);
+  EXPECT_THAT(line_info_invalid_address.error().message(),
+              testing::HasSubstr("Unable to get line info for address=0x10"));
+}
+
+TEST(ElfFile, LineInfo) { RunLineInfoTest("hello_world_elf_with_debug_info"); }
+
+TEST(ElfFile, LineInfoOnlyDebug) { RunLineInfoTest("hello_world_elf.debug"); }
+
+TEST(ElfFile, LineInfoNoDebugInfo) {
+  std::string file_path = Path::JoinPath({Path::GetExecutableDir(), "testdata", "hello_world_elf"});
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+
+  EXPECT_FALSE(hello_world.value()->HasDebugInfo());
+
+  EXPECT_DEATH((void)hello_world.value()->GetLineInfo(0x1140), "");
 }

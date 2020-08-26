@@ -144,8 +144,6 @@ TEST(OrbitModule, LoadSymbols) {
   symbol_info->set_demangled_name("pretty name");
   symbol_info->set_address(15);
   symbol_info->set_size(12);
-  symbol_info->set_source_file("file name");
-  symbol_info->set_source_line(70);
 
   std::shared_ptr<Module> module = std::make_shared<Module>();
   module->m_FullName = "module name";
@@ -166,6 +164,8 @@ TEST(OrbitModule, LoadSymbols) {
   EXPECT_EQ(resulting_function->pretty_name(), "pretty name");
   EXPECT_EQ(resulting_function->address(), 15);
   EXPECT_EQ(resulting_function->size(), 12);
-  EXPECT_EQ(resulting_function->file(), "file name");
-  EXPECT_EQ(resulting_function->line(), 70);
+
+  // Module symbols do not have this information
+  EXPECT_EQ(resulting_function->file(), "");
+  EXPECT_EQ(resulting_function->line(), 0);
 }

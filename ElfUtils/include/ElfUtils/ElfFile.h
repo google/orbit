@@ -21,7 +21,7 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbols() const = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbols() = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some
@@ -38,9 +38,12 @@ class ElfFile {
   // available. This should be the case for all loadable elf-files.
   [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
   [[nodiscard]] virtual bool HasSymtab() const = 0;
+  [[nodiscard]] virtual bool HasDebugInfo() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual std::string GetFilePath() const = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
+      uint64_t address) = 0;
 
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(std::string_view file_path);
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
