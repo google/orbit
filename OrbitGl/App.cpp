@@ -243,26 +243,28 @@ void OrbitApp::PostInit() {
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
-  if (absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
-    thread_pool_->Schedule([this] {
-      std::unique_ptr<TracepointServiceClient> tracepoint_manager =
-          TracepointServiceClient::Create(grpc_channel_);
-
-      ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager->GetTracepointList();
-
-      if (result.has_error()) {
-        ERROR("Error retrieving tracepoints: %s", result.error().message());
-        SendErrorToUi("Error retrieving tracepoints", result.error().message());
-        return;
-      }
-
-      main_thread_executor_->Schedule([result, this]() {
-        tracepoints_data_view_->SetTracepoints(result.value());
-
-        FireRefreshCallbacks(DataViewType::kTracepoints);
-      });
-    });
+  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+    return;
   }
+
+  thread_pool_->Schedule([this] {
+    std::unique_ptr<TracepointServiceClient> tracepoint_manager =
+        TracepointServiceClient::Create(grpc_channel_);
+
+    ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager->GetTracepointList();
+
+    if (result.has_error()) {
+      ERROR("Error retrieving tracepoints: %s", result.error().message());
+      SendErrorToUi("Error retrieving tracepoints", result.error().message());
+      return;
+    }
+
+    main_thread_executor_->Schedule([result, this]() {
+      tracepoints_data_view_->SetTracepoints(result.value());
+
+      FireRefreshCallbacks(DataViewType::kTracepoints);
+    });
+  });
 }
 
 void OrbitApp::LoadFileMapping() {
