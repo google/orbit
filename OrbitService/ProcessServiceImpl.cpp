@@ -4,8 +4,6 @@
 
 #include "ProcessServiceImpl.h"
 
-#include <grpcpp/support/status.h>
-
 #include <memory>
 
 #include "ElfUtils/ElfFile.h"
