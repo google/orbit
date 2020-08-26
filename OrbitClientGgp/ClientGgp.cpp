@@ -11,13 +11,16 @@
 #include <string>
 #include <vector>
 
+#include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "SymbolHelper.h"
+#include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
+using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
@@ -60,12 +63,24 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
         "No process selected. Please choose a target process for the capture.");
     return false;
   }
+
+  // Load selected functions if provided
+  absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
+  if (!options_.capture_functions.empty()) {
+    LOG("Loading selected functions");
+    selected_functions = GetSelectedFunctions();
+    if (!selected_functions.empty()) {
+      LOG("List of selected functions to hook in the capture:");
+      for (auto const& [address, selected_function] : selected_functions) {
+        LOG("%d %s", address, selected_function.pretty_name());
+      }
+    }
+  } else {
+    LOG("No functions provided; no functions hooked in the capture");
+  }
+
+  // Start capture
   LOG("Capture pid %d", pid);
-
-  // TODO: right now selected_functions is only an empty placeholder,
-  //  it needs to be filled separately in each client and then passed.
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool, pid, target_process_->GetName(), target_process_, selected_functions);
   if (result.has_error()) {
@@ -163,6 +178,43 @@ bool ClientGgp::InitCapture() {
     return false;
   }
   return true;
+}
+
+void ClientGgp::InformUsedSelectedCaptureFunctions() {
+  if (capture_functions_used_.size() != options_.capture_functions.size()) {
+    for (std::string selected_function : options_.capture_functions) {
+      if (!capture_functions_used_.contains(selected_function)) {
+        ERROR("Function matching %s not found; will not be hooked in the capture",
+              selected_function);
+      }
+    }
+  } else {
+    LOG("All functions provided had at least a match");
+  }
+}
+
+bool ClientGgp::IsSelectedFunction(const FunctionInfo& func) {
+  for (std::string selected_function : options_.capture_functions) {
+    if (func.pretty_name().find(selected_function) != std::string::npos) {
+      if (!capture_functions_used_.contains(selected_function)) {
+        capture_functions_used_.insert(selected_function);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
+  absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
+  for (const auto& func : target_process_->GetFunctions()) {
+    if (IsSelectedFunction(*func)) {
+      uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
+      selected_functions[address] = *func;
+    }
+  }
+  InformUsedSelectedCaptureFunctions();
+  return selected_functions;
 }
 
 // CaptureListener implementation
