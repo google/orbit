@@ -47,14 +47,13 @@ class ClientGgp final : public CaptureListener {
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
   CaptureData capture_data_;
-  absl::flat_hash_set<std::string> capture_functions_used_;
 
   ErrorMessageOr<std::shared_ptr<Process>> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
-  bool IsSelectedFunction(const orbit_client_protos::FunctionInfo& func);
+  std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> GetSelectedFunctions();
-  void InformUsedSelectedCaptureFunctions();
+  void InformUsedSelectedCaptureFunctions(absl::flat_hash_set<std::string> capture_functions_used);
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
