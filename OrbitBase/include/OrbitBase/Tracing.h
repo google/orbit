@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_TRACING_TRACING_H_
-#define ORBIT_TRACING_TRACING_H_
+#ifndef ORBIT_BASE_TRACING_H_
+#define ORBIT_BASE_TRACING_H_
 
 #include <functional>
 #include <memory>
@@ -50,4 +50,4 @@ class Listener {
 
 }  // namespace orbit::tracing
 
-#endif  // ORBIT_TRACING_TRACING_H_
+#endif  // ORBIT_BASE_TRACING_H_
