@@ -13,11 +13,15 @@
 #include "TextBox.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "tracepoint.pb.h"
 
 // This class is responsible for storing and
 // navigating data on the client side. Note that
 // every method of this class should be called
 // on the main thread.
+
+using orbit_grpc_protos::TracepointInfo;
+
 class DataManager final {
  public:
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
@@ -47,11 +51,32 @@ class DataManager final {
   [[nodiscard]] const TextBox* selected_text_box() const;
   [[nodiscard]] const std::shared_ptr<Process>& selected_process() const;
 
+  void SelectTracepoint(const TracepointInfo& info);
+  void DeselectTracepoint(const TracepointInfo& info);
+
+  [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
+
  private:
   const std::thread::id main_thread_id_;
   absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
+
+  struct HashTracepointInfo {
+    size_t operator()(const TracepointInfo& info) const {
+      return std::hash<std::string>{}(info.category()) * 37 + std::hash<std::string>{}(info.name());
+    }
+  };
+
+  struct EqualTracepointInfo {
+    size_t operator()(const TracepointInfo& left, const TracepointInfo& right) const {
+      return left.category().compare(right.category()) == 0;
+    }
+  };
+
+  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
+      selected_tracepoints_;
+
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
   // TODO(kuebler): Remove OrbitProcess class and this member soon.

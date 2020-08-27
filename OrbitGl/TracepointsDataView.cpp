@@ -8,6 +8,9 @@
 
 TracepointsDataView::TracepointsDataView() : DataView(DataViewType::kTracepoints) {}
 
+const std::string TracepointsDataView::kMenuActionSelect = "Select";
+const std::string TracepointsDataView::kMenuActionUnselect = "Unselect";
+
 const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {
     std::vector<Column> columns;
@@ -24,6 +27,8 @@ std::string TracepointsDataView::GetValue(int row, int col) {
   const TracepointInfo& tracepoint = GetTracepoint(row);
 
   switch (col) {
+    case kColumnSelected:
+      return GOrbitApp->IsTracepointSelected(tracepoint) ? "X" : "-";
     case kColumnName:
       return tracepoint.name();
     case kColumnCategory:
@@ -89,10 +94,35 @@ std::vector<std::string> TracepointsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   std::vector<std::string> menu;
 
+  bool enable_select = false;
+  bool enable_unselect = false;
+  for (int index : selected_indices) {
+    const TracepointInfo& tracepoint = GetTracepoint(index);
+    enable_select |= !GOrbitApp->IsTracepointSelected(tracepoint);
+    enable_unselect |= GOrbitApp->IsTracepointSelected(tracepoint);
+  }
+
+  if (enable_select) menu.emplace_back(kMenuActionSelect);
+  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
+
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
+void TracepointsDataView::OnContextMenu(const std::string& action, int menu_index,
+                                        const std::vector<int>& item_indices) {
+  if (action == kMenuActionSelect) {
+    for (int i : item_indices) {
+      GOrbitApp->SelectTracepoint(GetTracepoint(i));
+    }
+  } else if (action == kMenuActionUnselect) {
+    for (int i : item_indices) {
+      GOrbitApp->DeselectTracepoint(GetTracepoint(i));
+    }
+  } else {
+    DataView::OnContextMenu(action, menu_index, item_indices);
+  }
+}
 void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& tracepoints) {
   tracepoints_.assign(tracepoints.cbegin(), tracepoints.cend());
 
