@@ -582,8 +582,8 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
 }
 
 ImFont* AddOrbitFont(float pixel_size) {
-  const auto exe_path = Path::GetExecutablePath();
-  const auto font_file_name = exe_path + "fonts/Vera.ttf";
+  const auto exe_dir = Path::GetExecutableDir();
+  const auto font_file_name = Path::JoinPath({exe_dir, "fonts", "Vera.ttf"});
   return ImGui::GetIO().Fonts->AddFontFromFileTTF(font_file_name.c_str(), pixel_size);
 }
 

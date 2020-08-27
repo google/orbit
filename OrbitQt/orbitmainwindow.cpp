@@ -189,7 +189,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
   SetTitle({});
-  std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
+  std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
   this->setWindowIcon(QIcon(iconFileName.c_str()));
 
   GOrbitApp->PostInit();
@@ -429,7 +429,7 @@ void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
 
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(this, "Select a file to open...",
-                                                   Path::GetPresetPath().c_str(), "*.opr");
+                                                   Path::CreateOrGetPresetDir().c_str(), "*.opr");
   for (const auto& file : list) {
     ErrorMessageOr<void> result = GOrbitApp->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
@@ -458,7 +458,7 @@ QPixmap QtGrab(OrbitMainWindow* a_Window) {
 
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file = QFileDialog::getSaveFileName(this, "Specify a file to save...",
-                                              Path::GetPresetPath().c_str(), "*.opr");
+                                              Path::CreateOrGetPresetDir().c_str(), "*.opr");
   if (file.isEmpty()) {
     return;
   }
@@ -505,7 +505,8 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
 
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
-      Path::JoinPath({Path::GetCapturePath(), GOrbitApp->GetCaptureFileName()}).c_str(), "*.orbit");
+      Path::JoinPath({Path::CreateOrGetCaptureDir(), GOrbitApp->GetCaptureFileName()}).c_str(),
+      "*.orbit");
   if (file.isEmpty()) {
     return;
   }
@@ -521,7 +522,7 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
 
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
-      this, "Open capture...", QString::fromStdString(Path::GetCapturePath()), "*.orbit");
+      this, "Open capture...", QString::fromStdString(Path::CreateOrGetCaptureDir()), "*.orbit");
   if (file.isEmpty()) {
     return;
   }

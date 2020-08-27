@@ -55,8 +55,8 @@ void TextRenderer::Init() {
   int atlasSize = 2 * 1024;
   m_Atlas = texture_atlas_new(atlasSize, atlasSize, 1);
 
-  const auto exePath = Path::GetExecutablePath();
-  const auto fontFileName = exePath + "fonts/Vera.ttf";
+  const auto exe_dir = Path::GetExecutableDir();
+  const auto fontFileName = exe_dir + "fonts/Vera.ttf";
 
   static float fsize = GParams.font_size;
   m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
@@ -71,8 +71,8 @@ void TextRenderer::Init() {
 
   glGenTextures(1, &m_Atlas->id);
 
-  const auto vertShaderFileName = exePath + "shaders/v3f-t2f-c4f.vert";
-  const auto fragShaderFileName = exePath + "shaders/v3f-t2f-c4f.frag";
+  const auto vertShaderFileName = Path::JoinPath({exe_dir, "shaders", "v3f-t2f-c4f.vert"});
+  const auto fragShaderFileName = Path::JoinPath({exe_dir, "shaders", "v3f-t2f-c4f.frag"});
   m_Shader = shader_load(vertShaderFileName.c_str(), fragShaderFileName.c_str());
 
   mat4_set_identity(&m_Proj);

@@ -24,13 +24,7 @@
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
-std::string Path::base_path_;
-
-void Path::Init() { GetBasePath(); }
-
-std::string Path::GetExecutableName() {
-  // TODO(161419404): This function should probably be called GetExecutablePath
-  //  or GetExecutableFullPath.
+std::string Path::GetExecutablePath() {
 #ifdef _WIN32
   WCHAR cwBuffer[2048] = {0};
   LPWSTR pszBuffer = cwBuffer;
@@ -60,63 +54,10 @@ std::string Path::GetExecutableName() {
 #endif
 }
 
-std::string Path::GetExecutablePath() {
-  // TODO(161419404): This function should probably be named
-  //  GetExecutableDirectory.
-  std::string fullPath = GetExecutableName();
-  std::string path = fullPath.substr(0, fullPath.find_last_of('/')) + "/";
-  return path;
-}
-
-uint64_t Path::FileSize(const std::string& file) {
-  struct stat stat_buf;
-  int ret = stat(file.c_str(), &stat_buf);
-  return ret == 0 ? stat_buf.st_size : 0;
-}
-
-bool Path::DirExists(const std::string& dir) {
-#if _WIN32
-  DWORD ftyp = GetFileAttributesA(dir.c_str());
-  if (ftyp == INVALID_FILE_ATTRIBUTES) return false;
-
-  if (ftyp & FILE_ATTRIBUTE_DIRECTORY) return true;
-
-  return false;
-#else
-  // TODO: also use stat here?
-  DIR* pDir;
-  bool exists = false;
-  pDir = opendir(dir.c_str());
-  if (pDir != nullptr) {
-    exists = true;
-    (void)closedir(pDir);
-  }
-
-  return exists;
-#endif
-}
-
-std::string Path::GetBasePath() {
-  if (!base_path_.empty()) {
-    return base_path_;
-  }
-
-  std::string exePath = GetExecutablePath();
-  base_path_ = exePath.substr(0, exePath.find("bin/"));
-
-  return base_path_;
-}
-
-std::string Path::GetDllPath(bool a_Is64Bit) {
-  std::string basePath = GetBasePath();
-
-  return basePath + GetDllName(a_Is64Bit);
-}
-
-std::string Path::GetDllName(bool a_Is64Bit) { return a_Is64Bit ? "Orbit64.dll" : "Orbit32.dll"; }
+std::string Path::GetExecutableDir() { return GetDirectory(GetExecutablePath()); }
 
 static std::string CreateAndGetConfigPath() {
-  std::string configDir = Path::JoinPath({Path::GetAppDataPath(), "config"});
+  std::string configDir = Path::JoinPath({Path::CreateOrGetOrbitAppDataDir(), "config"});
   std::filesystem::create_directory(configDir);
   return configDir;
 }
@@ -129,67 +70,60 @@ std::string Path::GetSymbolsFileName() {
   return Path::JoinPath({CreateAndGetConfigPath(), "SymbolPaths.txt"});
 }
 
-std::string Path::GetCachePath() {
-  std::string cacheDir = Path::JoinPath({Path::GetAppDataPath(), "cache"});
+std::string Path::CreateOrGetCacheDir() {
+  std::string cacheDir = Path::JoinPath({Path::CreateOrGetOrbitAppDataDir(), "cache"});
   std::filesystem::create_directory(cacheDir);
   return cacheDir;
 }
 
-std::string Path::GetPresetPath() {
-  std::string presetDir = Path::JoinPath({Path::GetAppDataPath(), "presets"});
+std::string Path::CreateOrGetPresetDir() {
+  std::string presetDir = Path::JoinPath({Path::CreateOrGetOrbitAppDataDir(), "presets"});
   std::filesystem::create_directory(presetDir);
   return presetDir;
 }
 
-std::string Path::GetPluginPath() {
-  std::string presetDir = Path::JoinPath({Path::GetAppDataPath(), "plugins"});
-  std::filesystem::create_directory(presetDir);
-  return presetDir;
-}
-
-std::string Path::GetCapturePath() {
-  std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "output"});
+std::string Path::CreateOrGetCaptureDir() {
+  std::string captureDir = Path::JoinPath({Path::CreateOrGetOrbitAppDataDir(), "output"});
   std::filesystem::create_directory(captureDir);
   return captureDir;
 }
 
-std::string Path::GetDumpPath() {
-  std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "dumps"});
+std::string Path::CreateOrGetDumpDir() {
+  std::string captureDir = Path::JoinPath({Path::CreateOrGetOrbitAppDataDir(), "dumps"});
   std::filesystem::create_directory(captureDir);
   return captureDir;
 }
 
-std::string Path::GetFileName(const std::string& a_FullName) {
-  std::string FullName = a_FullName;
-  std::replace(FullName.begin(), FullName.end(), '\\', '/');
-  auto index = FullName.find_last_of('/');
+std::string Path::GetFileName(const std::string& file_path) {
+  std::string full_name = file_path;
+  std::replace(full_name.begin(), full_name.end(), '\\', '/');
+  auto index = full_name.find_last_of('/');
   if (index != std::string::npos) {
-    std::string FileName = FullName.substr(FullName.find_last_of('/') + 1);
-    return FileName;
+    std::string file_name = full_name.substr(full_name.find_last_of('/') + 1);
+    return file_name;
   }
 
-  return a_FullName;
+  return full_name;
 }
 
-std::string Path::GetFileNameNoExt(const std::string& a_FullName) {
-  return StripExtension(GetFileName(a_FullName));
+std::string Path::StripExtension(const std::string& file_path) {
+  std::string full_name = file_path;
+  std::replace(full_name.begin(), full_name.end(), '\\', '/');
+  const std::string extension = GetExtension(full_name);
+  return full_name.substr(0, file_path.length() - extension.length());
 }
 
-std::string Path::StripExtension(const std::string& a_FullName) {
-  size_t index = a_FullName.find_last_of('.');
-  if (index != std::string::npos) return a_FullName.substr(0, index);
-  return a_FullName;
-}
-
-std::string Path::GetExtension(const std::string& a_FullName) {
+std::string Path::GetExtension(const std::string& file_path) {
   // returns ".ext" (includes point)
-  size_t index = a_FullName.find_last_of('.');
-  if (index != std::string::npos) return a_FullName.substr(index, a_FullName.length());
+  // Perform on file name to make sure we're not detecting "." within the directory path
+  const std::string file_name = GetFileName(file_path);
+  size_t index = file_name.find_last_of('.');
+  if (index != std::string::npos) return file_name.substr(index, file_name.length());
   return "";
 }
 
-std::string Path::GetDirectory(const std::string& a_FullName) {
-  std::string FullName = a_FullName;
+std::string Path::GetDirectory(const std::string& any_path) {
+  std::string FullName = any_path;
   std::replace(FullName.begin(), FullName.end(), '\\', '/');
   auto index = FullName.find_last_of('/');
   if (index != std::string::npos) {
@@ -200,13 +134,13 @@ std::string Path::GetDirectory(const std::string& a_FullName) {
   return "";
 }
 
-std::string Path::GetParentDirectory(std::string a_Directory) {
-  if (a_Directory.empty()) return "";
-  std::replace(a_Directory.begin(), a_Directory.end(), '\\', '/');
-  wchar_t lastChar = a_Directory.c_str()[a_Directory.size() - 1];
-  if (lastChar == '/') a_Directory.erase(a_Directory.size() - 1);
+std::string Path::GetParentDirectory(std::string any_path) {
+  if (any_path.empty()) return "";
+  std::replace(any_path.begin(), any_path.end(), '\\', '/');
+  wchar_t lastChar = any_path.c_str()[any_path.size() - 1];
+  if (lastChar == '/') any_path.erase(any_path.size() - 1);
 
-  return GetDirectory(a_Directory);
+  return GetDirectory(any_path);
 }
 
 std::string Path::JoinPath(const std::vector<std::string>& parts) {
@@ -220,39 +154,32 @@ std::string Path::JoinPath(const std::vector<std::string>& parts) {
   return joined.string();
 }
 
-std::string Path::GetAppDataPath() {
+std::string Path::CreateOrGetOrbitAppDataDir() {
 #ifdef WIN32
   std::string appData = GetEnvVar("APPDATA");
   std::string path = Path::JoinPath({appData, "OrbitProfiler"});
 #else
-  std::string path = Path::JoinPath({Path::GetHome(), ".orbitprofiler"});
+  std::string path = Path::JoinPath({GetEnvVar("HOME"), ".orbitprofiler"});
 #endif
   std::filesystem::create_directory(path);
   return path;
 }
 
-std::string Path::GetLogFilePath() {
+std::string Path::GetLogFilePathAndCreateDir() {
   std::string logs_dir;
   if (!absl::GetFlag(FLAGS_log_dir).empty()) {
     logs_dir = absl::GetFlag(FLAGS_log_dir);
   } else {
-    logs_dir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
+    logs_dir = Path::JoinPath({Path::CreateOrGetOrbitAppDataDir(), "logs"});
   }
   std::filesystem::create_directory(logs_dir);
   return Path::JoinPath({logs_dir, "Orbit.log"});
 }
 
 std::string Path::GetIconsPath() {
-  static std::string icons_path = JoinPath({GetExecutablePath(), "icons"});
+  static std::string icons_path = JoinPath({GetExecutableDir(), "icons"});
   return icons_path;
 }
-
-#ifdef __linux__
-std::string Path::GetHome() {
-  std::string home = GetEnvVar("HOME") + "/";
-  return home;
-}
-#endif
 
 std::vector<std::string> Path::ListFiles(const std::string& directory,
                                          const std::function<bool(const std::string&)>& filter) {

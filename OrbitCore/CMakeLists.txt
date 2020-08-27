@@ -106,6 +106,13 @@ target_link_libraries(
           llvm_object::llvm_object
           abseil::abseil)
 
+add_custom_command(TARGET OrbitCoreTests POST_BUILD COMMAND ${CMAKE_COMMAND}
+                   -E remove_directory $<TARGET_FILE_DIR:OrbitCoreTests>/testdata/OrbitCore)
+
+add_custom_command(TARGET OrbitCoreTests POST_BUILD COMMAND ${CMAKE_COMMAND}
+                   -E copy_directory ${CMAKE_SOURCE_DIR}/OrbitCore/testdata/
+                   $<TARGET_FILE_DIR:OrbitCoreTests>/testdata/OrbitCore)
+
 register_test(OrbitCoreTests)
 
 add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)

@@ -16,7 +16,7 @@
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
 
-const std::string executable_directory = Path::GetExecutablePath() + "testdata/";
+const std::string executable_directory = Path::GetExecutableDir() + "testdata/";
 
 using ElfUtils::ElfFile;
 using orbit_client_protos::FunctionInfo;

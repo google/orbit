@@ -16,8 +16,8 @@ using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::SymbolInfo;
 
 TEST(FramePointerValidator, GetFpoFunctions) {
-  std::string executable_path = Path::GetExecutablePath();
-  std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
+  std::string executable_dir = Path::GetExecutableDir();
+  std::string test_elf_file = executable_dir + "/testdata/hello_world_elf";
 
   auto elf_file = ElfUtils::ElfFile::Create(test_elf_file);
   ASSERT_TRUE(elf_file) << elf_file.error().message();
