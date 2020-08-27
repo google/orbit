@@ -89,7 +89,7 @@ void TrackScope(const char* name, uint64_t value, orbit::Color color, ScopeType 
 }
 
 template <typename Dest, typename Source>
-inline Dest encode(const Source& source) {
+inline Dest Encode(const Source& source) {
   static_assert(sizeof(Source) <= sizeof(Dest));
   Dest dest = 0;
   std::memcpy(&dest, &source, sizeof(Source));
@@ -97,15 +97,15 @@ inline Dest encode(const Source& source) {
 }
 
 void TrackInt(const char* name, int32_t value, orbit::Color color) {
-  TrackScope(name, encode<uint64_t>(value), color, ScopeType::kTrackInt);
+  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackInt);
 }
 
 void TrackInt64(const char* name, int64_t value, orbit::Color color) {
-  TrackScope(name, encode<uint64_t>(value), color, ScopeType::kTrackInt64);
+  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackInt64);
 }
 
 void TrackUint(const char* name, uint32_t value, orbit::Color color) {
-  TrackScope(name, encode<uint64_t>(value), color, ScopeType::kTrackUint);
+  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackUint);
 }
 
 void TrackUint64(const char* name, uint64_t value, orbit::Color color) {
@@ -113,11 +113,11 @@ void TrackUint64(const char* name, uint64_t value, orbit::Color color) {
 }
 
 void TrackFloat(const char* name, float value, orbit::Color color) {
-  TrackScope(name, encode<uint64_t>(value), color, ScopeType::kTrackFloatAsInt);
+  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackFloatAsInt);
 }
 
 void TrackDouble(const char* name, double value, orbit::Color color) {
-  TrackScope(name, encode<uint64_t>(value), color, ScopeType::kTrackDoubleAsInt64);
+  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackDoubleAsInt64);
 }
 
 }  // namespace orbit_api
