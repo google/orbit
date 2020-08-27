@@ -119,7 +119,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, box_height_);
-        float z = GlCanvas::Z_VALUE_BOX;
+        float z = GlCanvas::kZValueBox;
         Color color = GetTimerColor(timer_info, is_selected);
         text_box.SetPos(pos);
         text_box.SetSize(size);

@@ -31,8 +31,8 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     color = kPickedColor;
   }
 
-  float track_z = GlCanvas::Z_VALUE_TRACK;
-  float text_z = GlCanvas::Z_VALUE_TEXT;
+  float track_z = GlCanvas::kZValueTrack;
+  float text_z = GlCanvas::kZValueText;
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
   batcher->AddBox(box, color, shared_from_this());

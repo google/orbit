@@ -17,21 +17,20 @@
 
 RingBuffer<float, 512> GDeltaTimeBuffer;
 
-float GlCanvas::Z_VALUE_SLIDER = 0.02f;
-float GlCanvas::Z_VALUE_MARGIN = 0.01f;
-float GlCanvas::Z_VALUE_TEXT_UI = 0.0f;
-float GlCanvas::Z_VALUE_UI = 0.0f;
-float GlCanvas::Z_VALUE_TIME_BAR_BG = -0.001f;
-float GlCanvas::Z_VALUE_TEXT = -0.002f;
-float GlCanvas::Z_VALUE_OVERLAY = -0.003f;
-float GlCanvas::Z_VALUE_OVERLAY_BG = -0.004f;
-float GlCanvas::Z_VALUE_ROUNDING_CORNER = -0.01f;
-float GlCanvas::Z_VALUE_EVENT = -0.02f;
-float GlCanvas::Z_VALUE_BOX = -0.03f;
-float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
-float GlCanvas::Z_VALUE_TRACK = -0.2f;
-
-float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
+float GlCanvas::kZValueEventBarPicking = 0.1f;
+float GlCanvas::kZValueSlider = 0.02f;
+float GlCanvas::kZValueMargin = 0.01f;
+float GlCanvas::kZValueTextUi = 0.0f;
+float GlCanvas::kZValueUi = 0.0f;
+float GlCanvas::kZValueTimeBarBg = -0.001f;
+float GlCanvas::kZValueText = -0.002f;
+float GlCanvas::kZValueOverlay = -0.003f;
+float GlCanvas::kZValueOverlayBg = -0.004f;
+float GlCanvas::kZValueRoundingCorner = -0.01f;
+float GlCanvas::kZValueEvent = -0.02f;
+float GlCanvas::kZValueBox = -0.03f;
+float GlCanvas::kZValueEventBar = -0.1f;
+float GlCanvas::kZValueTrack = -0.2f;
 
 GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_TextRenderer.SetCanvas(this);

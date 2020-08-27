@@ -28,8 +28,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // have a tooltip. For picking, we want to draw the event bar over them if
   // handling a click, and underneath otherwise.
   // This simulates "click-through" behavior.
-  const float eventBarZ = picking_mode == PickingMode::kClick ? GlCanvas::Z_VALUE_EVENT_BAR_PICKING
-                                                              : GlCanvas::Z_VALUE_EVENT_BAR;
+  const float eventBarZ = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
+                                                              : GlCanvas::kZValueEventBar;
   Color color = m_Color;
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
   batcher->AddBox(box, color, shared_from_this());
@@ -43,8 +43,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color, shared_from_this());
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR, color,
+  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::kZValueEventBar, color, shared_from_this());
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::kZValueEventBar, color,
                    shared_from_this());
 
   if (m_Picked) {
@@ -57,7 +57,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     y1 = y0 - m_Size[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), GlCanvas::Z_VALUE_UI);
+    Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), GlCanvas::kZValueUi);
     batcher->AddBox(box, picked_color, shared_from_this());
   }
 
@@ -67,7 +67,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float z = GlCanvas::Z_VALUE_EVENT;
+  float z = GlCanvas::kZValueEvent;
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 
