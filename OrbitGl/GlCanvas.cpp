@@ -17,15 +17,15 @@
 
 RingBuffer<float, 512> GDeltaTimeBuffer;
 
-float GlCanvas::kZValueEventBarPicking = 0.1f;
 float GlCanvas::kZValueSlider = 0.02f;
 float GlCanvas::kZValueMargin = 0.01f;
 float GlCanvas::kZValueTextUi = 0.0f;
 float GlCanvas::kZValueUi = 0.0f;
-float GlCanvas::kZValueTimeBarBg = -0.001f;
-float GlCanvas::kZValueText = -0.002f;
-float GlCanvas::kZValueOverlay = -0.003f;
-float GlCanvas::kZValueOverlayBg = -0.004f;
+float GlCanvas::kZValueEventBarPicking = -0.001f;
+float GlCanvas::kZValueTimeBarBg = -0.002f;
+float GlCanvas::kZValueText = -0.003f;
+float GlCanvas::kZValueOverlay = -0.004f;
+float GlCanvas::kZValueOverlayBg = -0.005f;
 float GlCanvas::kZValueRoundingCorner = -0.01f;
 float GlCanvas::kZValueEvent = -0.02f;
 float GlCanvas::kZValueBox = -0.03f;

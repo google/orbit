@@ -97,11 +97,11 @@ class GlCanvas : public GlPanel {
 
   PickingManager& GetPickingManager() { return m_PickingManager; }
 
-  static float kZValueEventBarPicking;
   static float kZValueSlider;
   static float kZValueMargin;
   static float kZValueTextUi;
   static float kZValueUi;
+  static float kZValueEventBarPicking;
   static float kZValueTimeBarBg;
   static float kZValueText;
   static float kZValueOverlay;
