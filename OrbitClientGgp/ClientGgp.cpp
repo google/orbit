@@ -180,10 +180,11 @@ bool ClientGgp::InitCapture() {
   return true;
 }
 
-void ClientGgp::InformUsedSelectedCaptureFunctions() {
-  if (capture_functions_used_.size() != options_.capture_functions.size()) {
-    for (std::string selected_function : options_.capture_functions) {
-      if (!capture_functions_used_.contains(selected_function)) {
+void ClientGgp::InformUsedSelectedCaptureFunctions(
+    absl::flat_hash_set<std::string> capture_functions_used) {
+  if (capture_functions_used.size() != options_.capture_functions.size()) {
+    for (const std::string selected_function : options_.capture_functions) {
+      if (!capture_functions_used.contains(selected_function)) {
         ERROR("Function matching %s not found; will not be hooked in the capture",
               selected_function);
       }
@@ -193,27 +194,29 @@ void ClientGgp::InformUsedSelectedCaptureFunctions() {
   }
 }
 
-bool ClientGgp::IsSelectedFunction(const FunctionInfo& func) {
-  for (std::string selected_function : options_.capture_functions) {
+std::string ClientGgp::SelectedFunctionMatch(const FunctionInfo& func) {
+  for (const std::string selected_function : options_.capture_functions) {
     if (func.pretty_name().find(selected_function) != std::string::npos) {
-      if (!capture_functions_used_.contains(selected_function)) {
-        capture_functions_used_.insert(selected_function);
-      }
-      return true;
+      return selected_function;
     }
   }
-  return false;
+  return {};
 }
 
 absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
+  absl::flat_hash_set<std::string> capture_functions_used;
   for (const auto& func : target_process_->GetFunctions()) {
-    if (IsSelectedFunction(*func)) {
+    const std::string selected_function_match = SelectedFunctionMatch(*func);
+    if (!selected_function_match.empty()) {
       uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
       selected_functions[address] = *func;
+      if (!capture_functions_used.contains(selected_function_match)) {
+        capture_functions_used.insert(selected_function_match);
+      }
     }
   }
-  InformUsedSelectedCaptureFunctions();
+  InformUsedSelectedCaptureFunctions(capture_functions_used);
   return selected_functions;
 }
 
