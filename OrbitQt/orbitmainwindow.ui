@@ -106,7 +106,7 @@
       </widget>
       <widget class="QTabWidget" name="RightTabWidget">
        <property name="currentIndex">
-        <number>7</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="FunctionsTab">
         <attribute name="title">
