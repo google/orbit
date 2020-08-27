@@ -6,6 +6,7 @@
 #define ORBIT_TRACING_TRACING_H_
 
 #include <functional>
+#include <memory>
 
 #define ORBIT_API_INTERNAL_IMPL
 // NOTE: Orbit.h will be moved to its own
@@ -43,11 +44,8 @@ using TimerCallback = std::function<void(const Scope& scope)>;
 
 class Listener {
  public:
-  explicit Listener(const TimerCallback& callback);
+  explicit Listener(std::unique_ptr<TimerCallback> callback);
   ~Listener();
-
- private:
-  TimerCallback callback_;
 };
 
 }  // namespace orbit::tracing

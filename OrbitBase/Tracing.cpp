@@ -16,7 +16,7 @@ using orbit::tracing::ScopeType;
 using orbit::tracing::TimerCallback;
 
 ABSL_CONST_INIT static absl::Mutex global_callback_mutex(absl::kConstInit);
-ABSL_CONST_INIT static TimerCallback* global_callback;
+ABSL_CONST_INIT static std::unique_ptr<TimerCallback> global_callback = {};
 
 static std::vector<Scope>& GetThreadLocalScopes() {
   thread_local std::vector<Scope> thread_local_scopes;
@@ -39,12 +39,11 @@ static void DeferScopeProcessing(const Scope& scope) {
 
 namespace orbit::tracing {
 
-Listener::Listener(const TimerCallback& callback) {
+Listener::Listener(std::unique_ptr<TimerCallback> callback) {
   absl::MutexLock lock(&global_callback_mutex);
   // Only one listener is supported.
   CHECK(global_callback == nullptr);
-  callback_ = callback;
-  global_callback = &callback_;
+  global_callback = std::move(callback);
 }
 
 Listener::~Listener() {
