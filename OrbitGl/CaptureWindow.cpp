@@ -495,7 +495,7 @@ void CaptureWindow::Draw() {
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT, Color(0, 255, 0, 127));
+    ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, kZValueText, Color(0, 255, 0, 127));
   }
 }
 
@@ -537,14 +537,14 @@ void CaptureWindow::DrawScreenSpace() {
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - vertical_margin;
 
-  Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight), GlCanvas::Z_VALUE_MARGIN);
+  Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight), GlCanvas::kZValueMargin);
   ui_batcher_.AddBox(box, kBackgroundColor);
 
   // Time bar background
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
     Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
             Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
-            GlCanvas::Z_VALUE_TIME_BAR_BG);
+            GlCanvas::kZValueTimeBarBg);
     ui_batcher_.AddBox(box, Color(70, 70, 70, 200));
   }
 }
@@ -779,11 +779,11 @@ void CaptureWindow::RenderTimeBar() {
 
       std::string text = GetPrettyTime(absl::Microseconds(current_micros));
       float worldX = time_graph_.GetWorldFromUs(current_micros);
-      m_TextRenderer.AddText(text.c_str(), worldX + xMargin, worldY, GlCanvas::Z_VALUE_TEXT_UI,
+      m_TextRenderer.AddText(text.c_str(), worldX + xMargin, worldY, GlCanvas::kZValueTextUi,
                              Color(255, 255, 255, 255));
 
       Vec2 pos(worldX, worldY);
-      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::Z_VALUE_UI, Color(255, 255, 255, 255));
+      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueUi, Color(255, 255, 255, 255));
     }
   }
 }
@@ -803,18 +803,18 @@ void CaptureWindow::RenderSelectionOverlay() {
     std::string text = GetPrettyTime(TicksToDuration(minTime, maxTime));
     const Color color(0, 128, 0, 128);
 
-    Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
+    Box box(pos, size, GlCanvas::kZValueOverlay);
     ui_batcher_.AddBox(box, color);
 
     const Color text_color(255, 255, 255, 255);
     float pos_x = pos[0] + size[0];
 
-    m_TextRenderer.AddText(text.c_str(), pos_x, m_SelectStop[1], GlCanvas::Z_VALUE_TEXT, text_color,
+    m_TextRenderer.AddText(text.c_str(), pos_x, m_SelectStop[1], GlCanvas::kZValueText, text_color,
                            size[0], true);
 
     const unsigned char g = 100;
     Color grey(g, g, g, 255);
-    ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::Z_VALUE_OVERLAY, grey);
+    ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
   }
 }
 

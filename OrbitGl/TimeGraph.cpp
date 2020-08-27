@@ -673,7 +673,7 @@ std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
 
 void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
                      const std::string& label, const std::string& time, float text_y) {
-  Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
+  Box box(pos, size, GlCanvas::kZValueOverlay);
   canvas->GetBatcher()->AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
@@ -683,13 +683,13 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 
   float max_size = size[0];
   canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine, GlCanvas::Z_VALUE_TEXT,
+      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine, GlCanvas::kZValueText,
       Color(255, 255, 255, 255), time.length(), max_size);
 
   constexpr const float kOffsetBelowText = kAdditionalSpaceForLine / 2.f;
   Vec2 line_from(pos[0], text_y + kOffsetBelowText);
   Vec2 line_to(pos[0] + size[0], text_y + kOffsetBelowText);
-  canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::Z_VALUE_OVERLAY,
+  canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::kZValueOverlay,
                                 Color(255, 255, 255, 255));
 }
 
@@ -734,7 +734,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 pos(world_timer_x, world_start_y);
     x_coords.push_back(pos[0]);
 
-    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, GlCanvas::Z_VALUE_OVERLAY,
+    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, GlCanvas::kZValueOverlay,
                                           GetThreadColor(timer_info.thread_id()));
   }
 

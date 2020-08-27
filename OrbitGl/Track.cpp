@@ -84,8 +84,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + m_Size[0];
   float y0 = m_Pos[1];
   float y1 = y0 - m_Size[1];
-  float track_z = GlCanvas::Z_VALUE_TRACK;
-  float text_z = GlCanvas::Z_VALUE_TEXT;
+  float track_z = GlCanvas::kZValueTrack;
+  float text_z = GlCanvas::kZValueText;
   float top_margin = layout.GetTrackTopMargin();
 
   // Draw track background.
@@ -121,7 +121,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 top_left(tab_x0, y0 + label_height);
     Vec2 end_bottom(x1 - vertical_margin, y1);
     Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
-    float z = GlCanvas::Z_VALUE_ROUNDING_CORNER;
+    float z = GlCanvas::kZValueRoundingCorner;
 
     glColor4ubv(&kTabColor[0]);
     DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0, z);
