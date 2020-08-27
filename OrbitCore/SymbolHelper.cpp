@@ -52,7 +52,7 @@ std::vector<fs::path> ReadSymbolsFile() {
       if (absl::StartsWith(line, "//") || line.empty()) continue;
 
       const fs::path& dir = line;
-      if (fs::exists(dir)) {
+      if (std::filesystem::is_directory(dir)) {
         directories.push_back(dir);
       } else {
         ERROR("Symbols directory \"%s\" doesn't exist", dir.string());
@@ -84,7 +84,7 @@ ErrorMessageOr<void> VerifySymbolsFile(const fs::path& symbols_path, const std::
 }  // namespace
 
 SymbolHelper::SymbolHelper()
-    : symbols_file_directories_(ReadSymbolsFile()), cache_directory_(Path::GetCachePath()) {}
+    : symbols_file_directories_(ReadSymbolsFile()), cache_directory_(Path::CreateOrGetCacheDir()) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
     const fs::path& module_path, const std::string& build_id) const {

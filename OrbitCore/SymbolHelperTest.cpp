@@ -15,7 +15,7 @@
 using orbit_grpc_protos::ModuleSymbols;
 namespace fs = std::filesystem;
 
-const fs::path executable_directory = Path::GetExecutablePath() + "testdata/";
+const std::filesystem::path executable_directory = Path::GetExecutableDir() + "testdata/";
 
 TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
   SymbolHelper symbol_helper({executable_directory}, "");
@@ -125,8 +125,8 @@ TEST(SymbolHelper, LoadFromFile) {
 }
 
 TEST(SymbolHelper, GenerateCachedFileName) {
-  SymbolHelper symbol_helper{{}, Path::GetCachePath()};
+  SymbolHelper symbol_helper{{}, Path::CreateOrGetCacheDir()};
   const std::string file_path = "/var/data/filename.elf";
-  const std::string cache_file_path = Path::GetCachePath() + "/_var_data_filename.elf";
+  const std::string cache_file_path = Path::CreateOrGetCacheDir() + "/_var_data_filename.elf";
   EXPECT_EQ(symbol_helper.GenerateCachedFileName(file_path), cache_file_path);
 }

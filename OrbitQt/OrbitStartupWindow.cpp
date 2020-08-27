@@ -69,7 +69,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
 
   QObject::connect(load_capture_button, &QPushButton::clicked, this, [this, button_box]() {
     const QString file = QFileDialog::getOpenFileName(
-        this, "Open capture...", QString::fromStdString(Path::GetCapturePath()), "*.orbit");
+        this, "Open capture...", QString::fromStdString(Path::CreateOrGetCaptureDir()), "*.orbit");
     if (!file.isEmpty()) {
       result_ = file;
       accept();

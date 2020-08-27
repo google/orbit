@@ -8,50 +8,28 @@
 #include <string>
 #include <vector>
 
-class Path {
- public:
-  static void Init();
+namespace Path {
+[[nodiscard]] std::string GetExecutablePath();
+[[nodiscard]] std::string GetExecutableDir();
+[[nodiscard]] std::string GetFileMappingFileName();
+[[nodiscard]] std::string GetSymbolsFileName();
+[[nodiscard]] std::string CreateOrGetCacheDir();
+[[nodiscard]] std::string CreateOrGetPresetDir();
+[[nodiscard]] std::string CreateOrGetCaptureDir();
+[[nodiscard]] std::string CreateOrGetDumpDir();
+[[nodiscard]] std::string CreateOrGetOrbitAppDataDir();
+[[nodiscard]] std::string GetLogFilePathAndCreateDir();
+[[nodiscard]] std::string GetIconsPath();
+[[nodiscard]] std::string GetFileName(const std::string& file_path);
+[[nodiscard]] std::string StripExtension(const std::string& file_path);
+[[nodiscard]] std::string GetExtension(const std::string& file_path);
+[[nodiscard]] std::string GetDirectory(const std::string& any_path);
+[[nodiscard]] std::string GetParentDirectory(std::string any_path);
+[[nodiscard]] std::string JoinPath(const std::vector<std::string>& parts);
 
-  static std::string GetExecutableName();
-  static std::string GetExecutablePath();
-  static std::string GetBasePath();
-  static std::string GetDllPath(bool a_Is64Bit);
-  static std::string GetDllName(bool a_Is64Bit);
-  static std::string GetFileMappingFileName();
-  static std::string GetSymbolsFileName();
-  static std::string GetCachePath();
-  static std::string GetPresetPath();
-  static std::string GetPluginPath();
-  static std::string GetCapturePath();
-  static std::string GetDumpPath();
-  static std::string GetAppDataPath();
-  static std::string GetLogFilePath();
-  static std::string GetIconsPath();
-  static void Dump();
-
-#ifdef __linux__
-  static std::string GetHome();
-#endif
-
-  static std::string GetFileName(const std::string& a_FullName);
-  static std::string GetFileNameNoExt(const std::string& a_FullName);
-  static std::string StripExtension(const std::string& a_FullName);
-  static std::string GetExtension(const std::string& a_FullName);
-  static std::string GetDirectory(const std::string& a_FullName);
-  static std::string GetParentDirectory(std::string a_FullName);
-  static std::string JoinPath(const std::vector<std::string>& parts);
-
-  // TODO(159868905): This is only used by OrbitModule. Remove this as soon as
-  //  OrbitModule is removed.
-  static uint64_t FileSize(const std::string& a_File);
-  static bool DirExists(const std::string& a_Dir);
-
-  static std::vector<std::string> ListFiles(
-      const std::string& directory, const std::function<bool(const std::string&)>& filter =
-                                        [](const std::string&) { return true; });
-  static std::vector<std::string> ListFiles(const std::string& directory,
-                                            const std::string& filter);
-
- private:
-  static std::string base_path_;
-};
+[[nodiscard]] std::vector<std::string> ListFiles(
+    const std::string& directory, const std::function<bool(const std::string&)>& filter =
+                                      [](const std::string&) { return true; });
+[[nodiscard]] std::vector<std::string> ListFiles(const std::string& directory,
+                                                 const std::string& filter);
+};  // namespace Path

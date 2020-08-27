@@ -169,8 +169,6 @@ bool OrbitApp::Init(ApplicationOptions&& options,
                     std::unique_ptr<MainThreadExecutor> main_thread_executor) {
   GOrbitApp = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
 
-  Path::Init();
-
 #ifdef _WIN32
   oqpi_tk::start_default_scheduler();
 #endif
@@ -319,7 +317,7 @@ void OrbitApp::LoadFileMapping() {
 }
 
 void OrbitApp::ListPresets() {
-  std::vector<std::string> preset_filenames = Path::ListFiles(Path::GetPresetPath(), ".opr");
+  std::vector<std::string> preset_filenames = Path::ListFiles(Path::CreateOrGetPresetDir(), ".opr");
   std::vector<std::shared_ptr<PresetFile>> presets;
   for (std::string& filename : preset_filenames) {
     ErrorMessageOr<PresetInfo> preset_result = ReadPresetFromFile(filename);
@@ -524,7 +522,7 @@ ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::string& filen
   std::string file_path = filename;
 
   if (Path::GetDirectory(filename).empty()) {
-    file_path = Path::JoinPath({Path::GetPresetPath(), filename});
+    file_path = Path::JoinPath({Path::CreateOrGetPresetDir(), filename});
   }
 
   std::ifstream file(file_path, std::ios::binary);
