@@ -9,54 +9,69 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadPool.h"
 
 using orbit::tracing::Scope;
 using orbit::tracing::ScopeType;
 using orbit::tracing::TimerCallback;
 
-thread_local std::vector<Scope> scopes;
+ABSL_CONST_INIT static absl::Mutex global_callback_mutex(absl::kConstInit);
+ABSL_CONST_INIT static TimerCallback* global_callback;
 
-TimerCallback* g_callback;
+static std::vector<Scope>& GetThreadLocalScopes() {
+  thread_local std::vector<Scope> thread_local_scopes;
+  return thread_local_scopes;
+}
+
+static void DeferScopeProcessing(const Scope& scope) {
+  constexpr size_t kMinNumThreads = 1;
+  constexpr size_t kMaxNumThreads = 1;
+  static std::unique_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(1));
+
+  // User callback is called from a worker thread to
+  // minimize contention on the instrumented threads.
+  thread_pool->Schedule([scope]() {
+    absl::MutexLock lock(&global_callback_mutex);
+    if (global_callback != nullptr) (*global_callback)(scope);
+  });
+}
 
 namespace orbit::tracing {
+
 Listener::Listener(const TimerCallback& callback) {
-  // Note: only one listener is supported.
-  absl::MutexLock lock(&mutex_);
-  CHECK(g_callback == nullptr);
+  absl::MutexLock lock(&global_callback_mutex);
+  // Only one listener is supported.
+  CHECK(global_callback == nullptr);
   callback_ = callback;
-  g_callback = &callback_;
+  global_callback = &callback_;
 }
 
 Listener::~Listener() {
-  absl::MutexLock lock(&mutex_);
-  g_callback = nullptr;
+  absl::MutexLock lock(&global_callback_mutex);
+  global_callback = nullptr;
 }
 
 }  // namespace orbit::tracing
 
 namespace orbit_api {
 
-void Start(const char* name, uint64_t, orbit::Color color) {
-  scopes.emplace_back(orbit::tracing::Scope());
-  auto& scope = scopes.back();
+void Start(const char* name, uint8_t, orbit::Color color) {
+  GetThreadLocalScopes().emplace_back(orbit::tracing::Scope());
+  auto& scope = GetThreadLocalScopes().back();
   scope.name = name;
   scope.begin = MonotonicTimestampNs();
   scope.color = color;
 }
 
 void Stop() {
-  auto& scope = scopes.back();
+  auto& scope = GetThreadLocalScopes().back();
   scope.end = MonotonicTimestampNs();
-  scope.depth = scopes.size() - 1;
+  scope.depth = GetThreadLocalScopes().size() - 1;
   scope.tid = GetCurrentThreadId();
   scope.type = ScopeType::kScope;
-
-  {
-    absl::MutexLock lock(orbit::tracing::Listener::GetMutex());
-    if (g_callback != nullptr) (*g_callback)(std::move(scope));
-  }
-
-  scopes.pop_back();
+  DeferScopeProcessing(scope);
+  GetThreadLocalScopes().pop_back();
 }
 
 // Will be implemented shortly.
@@ -71,9 +86,7 @@ void TrackScope(const char* name, uint64_t value, orbit::Color color, ScopeType 
   scope.tracked_value = value;
   scope.tid = GetCurrentThreadId();
   scope.type = type;
-
-  absl::MutexLock lock(orbit::tracing::Listener::GetMutex());
-  if (g_callback != nullptr) (*g_callback)(std::move(scope));
+  DeferScopeProcessing(scope);
 }
 
 template <typename Dest, typename Source>

@@ -6,9 +6,6 @@
 #define ORBIT_TRACING_TRACING_H_
 
 #include <functional>
-#include <memory>
-
-#include "absl/synchronization/mutex.h"
 
 #define ORBIT_API_INTERNAL_IMPL
 // NOTE: Orbit.h will be moved to its own
@@ -38,26 +35,21 @@ struct Scope {
   uint32_t depth = 0;
   uint32_t tid = 0;
   orbit::Color color = orbit::Color::kAuto;
-  const char* name;
+  const char* name = nullptr;
   ScopeType type = kNone;
 };
 
-using TimerCallback = std::function<void(Scope&& scope)>;
+using TimerCallback = std::function<void(const Scope& scope)>;
 
 class Listener {
  public:
   explicit Listener(const TimerCallback& callback);
   ~Listener();
 
-  static absl::Mutex* GetMutex() { return &mutex_; }
-
  private:
   TimerCallback callback_;
-  static inline absl::Mutex mutex_;
 };
 
-void Start(const TimerCallback* callback);
-void Stop();
 }  // namespace orbit::tracing
 
 #endif  // ORBIT_TRACING_TRACING_H_

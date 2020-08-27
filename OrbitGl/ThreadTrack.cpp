@@ -91,7 +91,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   }
 
   // See Orbit.h for more information about the manual instrumentation API.
-  const int kColorArgumentIndex = 2;
+  constexpr int kColorArgumentIndex = 2;
   constexpr uint64_t kColorAuto = 0x00000001;
   CHECK(timer_info.registers_size() > kColorArgumentIndex);
   uint64_t color_arg = timer_info.registers(kColorArgumentIndex);
