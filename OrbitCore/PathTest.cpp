@@ -99,22 +99,27 @@ TEST(Path, JoinPathPartsAbsoluteRootBackslash) {
 }
 
 TEST(Path, FileNamesAndExtensions) {
-#ifdef _WIN32
-  std::string abs_input[] = {"C:\\some_abs_path\\file.txt", "C:\\dir.with.dots\\file_without_ext"};
-  std::string abs_stripped[] = {"C:/some_abs_path/file", "C:/dir.with.dots/file_without_ext"};
-#else
-  std::string abs_input[] = {"/some_abs_path/file.txt", "/dir.with.dots/file_without_ext"};
-  std::string abs_stripped[] = {"/some_abs_path/file", "/dir.with.dots/file_without_ext"};
-#endif
-  EXPECT_EQ(Path::GetExtension(abs_input[0]), ".txt");
-  EXPECT_EQ(Path::StripExtension(abs_input[0]), abs_stripped[0]);
-  EXPECT_EQ(Path::GetFileName(abs_input[0]), "file.txt");
+  std::string input = "C:\\win_abs_path\\file.txt";
+  EXPECT_EQ(Path::GetExtension(input), ".txt");
+  EXPECT_EQ(Path::StripExtension(input), "C:/win_abs_path/file");
+  EXPECT_EQ(Path::GetFileName(input), "file.txt");
 
-  EXPECT_EQ(Path::GetExtension(abs_input[1]), "");
-  EXPECT_EQ(Path::StripExtension(abs_input[1]), abs_stripped[1]);
-  EXPECT_EQ(Path::GetFileName(abs_input[1]), "file_without_ext");
+  input = "/unix_abs_path/file.txt";
+  EXPECT_EQ(Path::GetExtension(input), ".txt");
+  EXPECT_EQ(Path::StripExtension(input), "/unix_abs_path/file");
+  EXPECT_EQ(Path::GetFileName(input), "file.txt");
 
-  std::string input = "relative\\mixed/path/file.txt";
+  input = "C:\\windir.with.dots\\file_without_ext";
+  EXPECT_EQ(Path::GetExtension(input), "");
+  EXPECT_EQ(Path::StripExtension(input), "C:/windir.with.dots/file_without_ext");
+  EXPECT_EQ(Path::GetFileName(input), "file_without_ext");
+
+  input = "/unixdir.with.dots/file_without_ext";
+  EXPECT_EQ(Path::GetExtension(input), "");
+  EXPECT_EQ(Path::StripExtension(input), "/unixdir.with.dots/file_without_ext");
+  EXPECT_EQ(Path::GetFileName(input), "file_without_ext");
+
+  input = "relative\\mixed/path/file.txt";
   EXPECT_EQ(Path::GetExtension(input), ".txt");
   EXPECT_EQ(Path::StripExtension(input), "relative/mixed/path/file");
   EXPECT_EQ(Path::GetFileName(input), "file.txt");
