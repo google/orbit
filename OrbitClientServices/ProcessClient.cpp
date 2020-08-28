@@ -12,7 +12,6 @@
 #include "outcome.hpp"
 #include "services.grpc.pb.h"
 #include "symbol.pb.h"
-#include "tracepoint.pb.h"
 
 namespace {
 

@@ -26,8 +26,6 @@ class ProcessClient {
   [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
       int32_t pid);
 
-  [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> LoadTracepointList();
-
   [[nodiscard]] ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path);
 
   [[nodiscard]] ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
