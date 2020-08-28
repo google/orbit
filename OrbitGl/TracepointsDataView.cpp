@@ -8,7 +8,6 @@
 
 namespace {
 static const std::string kMenuActionSelect = "Hook";
-;
 static const std::string kMenuActionUnselect = "Unhook";
 }  // namespace
 
@@ -126,6 +125,7 @@ void TracepointsDataView::OnContextMenu(const std::string& action, int menu_inde
     DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
+
 void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& tracepoints) {
   tracepoints_.assign(tracepoints.cbegin(), tracepoints.cend());
 

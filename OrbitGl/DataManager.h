@@ -35,6 +35,7 @@ struct EqualTracepointInfo {
   }
 };
 }  // namespace internal
+
 class DataManager final {
  public:
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
