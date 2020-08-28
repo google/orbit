@@ -67,8 +67,9 @@ struct SortedCallstackReport {
 class SamplingProfiler {
  public:
   explicit SamplingProfiler() = default;
-  explicit SamplingProfiler(const CaptureData& capture_data, bool generate_summary = true) {
-    ProcessSamples(capture_data, generate_summary);
+  explicit SamplingProfiler(const CallstackData& callstack_data, const CaptureData& capture_data,
+                            bool generate_summary = true) {
+    ProcessSamples(callstack_data, capture_data, generate_summary);
   }
   SamplingProfiler& operator=(const SamplingProfiler& other) = default;
   SamplingProfiler(const SamplingProfiler& other) = default;
@@ -102,9 +103,10 @@ class SamplingProfiler {
   static const int32_t kAllThreadsFakeTid;
 
  private:
-  void ProcessSamples(const CaptureData& capture_data, bool generate_summary);
+  void ProcessSamples(const CallstackData& callstack_data, const CaptureData& capture_data,
+                      bool generate_summary);
+  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
   void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
-  void ResolveCallstacks(const CaptureData& capture_data);
   void FillThreadSampleDataSampleReports(const CaptureData& capture_data);
 
   // Filled by ProcessSamples.

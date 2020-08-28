@@ -206,7 +206,7 @@ CaptureData CaptureSerializer::GenerateCaptureData(const CaptureInfo& capture_in
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     capture_data.AddCallstackEvent(std::move(callstack_event));
   }
-  SamplingProfiler sampling_profiler(capture_data);
+  SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
   capture_data.set_sampling_profiler(sampling_profiler);
 
   time_graph_->Clear();

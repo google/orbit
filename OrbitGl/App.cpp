@@ -116,7 +116,7 @@ void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
 }
 
 void OrbitApp::OnCaptureComplete() {
-  SamplingProfiler sampling_profiler(capture_data_);
+  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
   capture_data_.set_sampling_profiler(sampling_profiler);
   main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(sampling_profiler)]() mutable {
@@ -1038,7 +1038,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   // Generate selection report.
   bool generate_summary = thread_id == SamplingProfiler::kAllThreadsFakeTid;
 
-  SamplingProfiler sampling_profiler(GetCaptureData(), generate_summary);
+  SamplingProfiler sampling_profiler(*selection_callstack_data, GetCaptureData(), generate_summary);
 
   SetSelectionReport(std::move(sampling_profiler),
                      selection_callstack_data->GetUniqueCallstacksCopy(), generate_summary);
@@ -1049,7 +1049,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
 void OrbitApp::UpdateSamplingReport() {
   const CaptureData& capture_data = GetCaptureData();
   if (sampling_report_ != nullptr) {
-    SamplingProfiler sampling_profiler(capture_data);
+    SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
     sampling_report_->UpdateReport(sampling_profiler,
                                    capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
     capture_data_.set_sampling_profiler(sampling_profiler);
@@ -1057,7 +1057,8 @@ void OrbitApp::UpdateSamplingReport() {
 
   if (selection_report_ != nullptr) {
     // TODO(kuebler): propagate this information
-    SamplingProfiler selection_profiler(capture_data, selection_report_->has_summary());
+    SamplingProfiler selection_profiler(*capture_data.GetSelectionCallstackData(), capture_data,
+                                        selection_report_->has_summary());
     selection_report_->UpdateReport(
         std::move(selection_profiler),
         capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());
