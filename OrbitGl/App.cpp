@@ -611,13 +611,14 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 
 bool OrbitApp::StartCapture() {
   int32_t pid = GetSelectedProcessId();
-  std::string process_name = data_manager_->GetProcessByPid(pid)->name();
+  const ProcessData* process_data = data_manager_->GetProcessByPid(pid);
   std::shared_ptr<Process> process = FindProcessByPid(pid);
-  if (pid == -1) {
+  if (pid == -1 || process_data == nullptr || process == nullptr) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please choose a target process for the capture.");
     return false;
   }
+  std::string process_name = process_data->name();
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
