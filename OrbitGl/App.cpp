@@ -567,7 +567,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
   const int32_t selected_process_id = GetSelectedProcessId();
   const ProcessData* selected_process = data_manager_->GetProcessByPid(selected_process_id);
   if (selected_process != nullptr) {
-    GOrbitApp->LoadModulesFromPreset(GetSelectedProcess(), preset);
+    LoadModulesFromPreset(GetSelectedProcess(), preset);
   } else {
     SendErrorToUi("Preset loading failed", "Process is not selected");
   }
@@ -716,6 +716,14 @@ void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
     if (info_message_callback_) {
       info_message_callback_(title, text);
+    }
+  });
+}
+
+void OrbitApp::SendWarningToUi(const std::string& title, const std::string& text) {
+  main_thread_executor_->Schedule([this, title, text] {
+    if (warning_message_callback_) {
+      warning_message_callback_(title, text);
     }
   });
 }
@@ -893,11 +901,18 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
     modules_to_load.emplace_back(std::move(module));
   }
   if (!modules_not_found.empty()) {
-    SendErrorToUi(
-        "Preset loading incomplete",
-        absl::StrFormat("Unable to load the preset for the following modules:\n\"%s\"\nThe "
-                        "modules are not loaded by process \"%s\".",
-                        absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
+    if (static_cast<int>(modules_not_found.size()) == preset->preset_info().path_to_module_size()) {
+      // no modules were loaded
+      SendErrorToUi(
+          "Preset loading failed",
+          absl::StrFormat("None of the modules in the preset are loaded by the process \"%s\".",
+                          process->GetName()));
+    } else {
+      SendWarningToUi(
+          "Preset only partially loaded",
+          absl::StrFormat("The following modules are not loaded by the process \"%s\":\n\"%s\"",
+                          process->GetName(), absl::StrJoin(modules_not_found, "\"\n\"")));
+    }
   }
   if (!modules_to_load.empty()) {
     LoadModules(process, modules_to_load, preset);
