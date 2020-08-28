@@ -504,7 +504,6 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
   const int32_t pid = GetSelectedProcessId();
   const std::shared_ptr<Process>& process = FindProcessByPid(pid);
-  preset.set_process_full_path(data_manager_->GetProcessByPid(pid)->full_path());
 
   for (uint64_t function_address : data_manager_->selected_functions()) {
     FunctionInfo* func = process->GetFunctionFromAddress(function_address);
@@ -567,16 +566,10 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
   const int32_t selected_process_id = GetSelectedProcessId();
   const ProcessData* selected_process = data_manager_->GetProcessByPid(selected_process_id);
-  const std::string& process_full_path = preset->preset_info().process_full_path();
-  if (selected_process != nullptr && selected_process->full_path() == process_full_path) {
-    // In case we already have the correct process selected
+  if (selected_process != nullptr) {
     GOrbitApp->LoadModulesFromPreset(GetSelectedProcess(), preset);
-    return;
-  }
-  if (!SelectProcess(Path::GetFileName(process_full_path), preset)) {
-    SendErrorToUi("Preset loading failed",
-                  absl::StrFormat("The process \"%s\" is not running.", process_full_path));
-    return;
+  } else {
+    SendErrorToUi("Preset loading failed", "Process is not selected");
   }
 }
 

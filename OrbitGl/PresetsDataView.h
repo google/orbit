@@ -35,7 +35,7 @@ class PresetsDataView : public DataView {
 
   std::vector<std::shared_ptr<orbit_client_protos::PresetFile>> presets_;
 
-  enum ColumnIndex { kColumnSessionName, kColumnProcessName, kNumColumns };
+  enum ColumnIndex { kColumnSessionName, kNumColumns };
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;
