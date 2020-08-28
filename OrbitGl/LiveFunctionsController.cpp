@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "App.h"
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "TimeGraph.h"
 

@@ -5,7 +5,6 @@
 #include "LiveFunctionsDataView.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Profiling.h"
@@ -48,7 +47,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 
   const FunctionInfo& function = *GetFunction(row);
-  const FunctionStats& stats = Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
+  const FunctionStats& stats = GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(function);
 
   switch (column) {
     case kColumnSelected:
@@ -78,13 +77,13 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   [&](int a, int b) {                                                                \
     return OrbitUtils::Compare(functions[a].Member, functions[b].Member, ascending); \
   }
-#define ORBIT_STAT_SORT(Member)                                                   \
-  [&](int a, int b) {                                                             \
-    const FunctionStats& stats_a =                                                \
-        Capture::capture_data_.GetFunctionStatsOrDefault(functions[a].address()); \
-    const FunctionStats& stats_b =                                                \
-        Capture::capture_data_.GetFunctionStatsOrDefault(functions[b].address()); \
-    return OrbitUtils::Compare(stats_a.Member, stats_b.Member, ascending);        \
+#define ORBIT_STAT_SORT(Member)                                              \
+  [&](int a, int b) {                                                        \
+    const FunctionStats& stats_a =                                           \
+        GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(functions[a]); \
+    const FunctionStats& stats_b =                                           \
+        GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(functions[b]); \
+    return OrbitUtils::Compare(stats_a.Member, stats_b.Member, ascending);   \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
   [&](int a, int b) {                                                              \
@@ -149,10 +148,10 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_unselect = false;
   bool enable_iterator = false;
   bool enable_disassembly = !selected_indices.empty();
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunction(index);
-    const FunctionStats& stats =
-        Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(function);
     enable_select |= !GOrbitApp->IsFunctionSelected(function);
     enable_unselect |= GOrbitApp->IsFunctionSelected(function);
     enable_iterator |= stats.count() > 0;
@@ -171,8 +170,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
     const FunctionInfo& function = *GetFunction(selected_indices[0]);
-    const FunctionStats& stats =
-        Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(function);
     if (stats.count() > 0) {
       menu.insert(menu.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast, kMenuActionJumpToMin,
                                kMenuActionJumpToMax});
@@ -195,7 +193,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       GOrbitApp->DeselectFunction(*function);
     }
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = Capture::capture_data_.process_id();
+    int32_t pid = GOrbitApp->GetCaptureData().process_id();
     for (int i : item_indices) {
       const FunctionInfo& function = *GetFunction(i);
       GOrbitApp->Disassemble(pid, function);
@@ -233,8 +231,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
       FunctionInfo* function = GetFunction(i);
-      const FunctionStats& stats =
-          Capture::capture_data_.GetFunctionStatsOrDefault(function->address());
+      const FunctionStats& stats = GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(*function);
       if (stats.count() > 0) {
         live_functions_->AddIterator(function);
       }
@@ -283,7 +280,7 @@ void LiveFunctionsDataView::DoFilter() {
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
-      Capture::capture_data_.selected_functions();
+      GOrbitApp->GetCaptureData().selected_functions();
   size_t functions_count = selected_functions.size();
   indices_.resize(functions_count);
   size_t i = 0;

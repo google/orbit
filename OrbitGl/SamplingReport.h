@@ -18,8 +18,12 @@
 
 class SamplingReport {
  public:
-  explicit SamplingReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
-  void UpdateReport(SamplingProfiler profiler, const CallstackData* callstack_data);
+  explicit SamplingReport(
+      SamplingProfiler sampling_profiler,
+      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
+      bool has_summary = true);
+  void UpdateReport(SamplingProfiler profiler,
+                    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
   void OnSelectAddress(uint64_t address, ThreadID thread_id);
@@ -28,9 +32,8 @@ class SamplingReport {
   [[nodiscard]] std::string GetSelectedCallstackString() const;
   void SetUiRefreshFunc(std::function<void()> func) { ui_refresh_func_ = std::move(func); };
   [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
-  [[nodiscard]] bool HasSamples() const {
-    return callstack_data_ != nullptr && callstack_data_->GetCallstackEventsSize() > 0;
-  }
+  [[nodiscard]] bool HasSamples() const { return !unique_callstacks_.empty(); }
+  [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
 
  protected:
@@ -40,7 +43,7 @@ class SamplingReport {
 
  protected:
   SamplingProfiler profiler_;
-  const CallstackData* callstack_data_;
+  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;
 
@@ -49,6 +52,7 @@ class SamplingReport {
   std::shared_ptr<SortedCallstackReport> selected_sorted_callstack_report_;
   size_t selected_callstack_index_;
   std::function<void()> ui_refresh_func_;
+  bool has_summary_;
 };
 
 #endif  // ORBIT_GL_SAMPLING_REPORT_H_

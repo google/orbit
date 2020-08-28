@@ -12,13 +12,14 @@
 #include <outcome.hpp>
 #include <string>
 
+#include "CaptureData.h"
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
 
 class CaptureSerializer {
  public:
-  void Save(std::ostream& stream);
-  ErrorMessageOr<void> Save(const std::string& filename);
+  void Save(std::ostream& stream, const CaptureData& capture_data);
+  ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data);
 
   ErrorMessageOr<void> Load(std::istream& stream);
   ErrorMessageOr<void> Load(const std::string& filename);
@@ -31,8 +32,9 @@ class CaptureSerializer {
                            google::protobuf::io::CodedOutputStream* output);
 
  private:
-  void FillCaptureData(orbit_client_protos::CaptureInfo* capture_info);
-  void ProcessCaptureData(const orbit_client_protos::CaptureInfo& capture_info);
+  orbit_client_protos::CaptureInfo GenerateCaptureInfo(const CaptureData& capture_data);
+  [[nodiscard]] CaptureData GenerateCaptureData(
+      const orbit_client_protos::CaptureInfo& capture_info);
 
   orbit_client_protos::CaptureHeader header;
 

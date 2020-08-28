@@ -27,7 +27,7 @@ class EventTrack : public Track {
   bool Draggable() override { return true; }
   float GetHeight() const override { return m_Size[1]; }
 
-  void SetThreadId(ThreadID a_ThreadId) { thread_id_ = a_ThreadId; }
+  void SetThreadId(ThreadID thread_id) { thread_id_ = thread_id; }
   void SetTimeGraph(TimeGraph* a_TimeGraph) { time_graph_ = a_TimeGraph; }
   void SetPos(float a_X, float a_Y);
   void SetSize(float a_SizeX, float a_SizeY);

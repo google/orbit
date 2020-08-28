@@ -24,8 +24,7 @@ class CaptureData {
         process_{std::move(process)},
         selected_functions_{std::move(selected_functions)},
         callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()),
-        sampling_profiler_{process_} {
+        selection_callstack_data_(std::make_unique<CallstackData>()) {
     CHECK(process_ != nullptr);
   }
   explicit CaptureData(
@@ -38,7 +37,6 @@ class CaptureData {
         selected_functions_{std::move(selected_functions)},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
-        sampling_profiler_{process_},
         functions_stats_{std::move(functions_stats)} {
     CHECK(process_ != nullptr);
   }
@@ -46,11 +44,12 @@ class CaptureData {
   explicit CaptureData()
       : process_{std::make_shared<Process>()},
         callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()),
-        sampling_profiler_{process_} {};
-  CaptureData(const CaptureData& other) = delete;
+        selection_callstack_data_(std::make_unique<CallstackData>()){};
+
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
+  CaptureData(const CaptureData& other) = delete;
+
   CaptureData(CaptureData&& other) = default;
   CaptureData& operator=(CaptureData&& other) = default;
 
@@ -75,12 +74,20 @@ class CaptureData {
     return address_infos_;
   }
 
+  [[nodiscard]] const orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
+      uint64_t absolute_address) const;
+
   void set_address_infos(
       absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos) {
     address_infos_ = std::move(address_infos);
   }
 
-  [[nodiscard]] orbit_client_protos::LinuxAddressInfo* GetAddressInfo(uint64_t address);
+  void InsertAddressInfo(orbit_client_protos::LinuxAddressInfo address_info);
+
+  [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
+
+  static const std::string kUnknownFunctionOrModuleName;
 
   [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>& thread_names() const {
     return thread_names_;
@@ -100,14 +107,15 @@ class CaptureData {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
-  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>& functions_stats() {
+  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>& functions_stats() const {
     return functions_stats_;
   }
 
-  const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(uint64_t function_address);
+  const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
+      const orbit_client_protos::FunctionInfo& function) const;
 
-  void UpdateFunctionStats(orbit_client_protos::FunctionInfo* func,
-                           const orbit_client_protos::TimerInfo& timer_info);
+  void UpdateFunctionStats(const orbit_client_protos::FunctionInfo& function,
+                           uint64_t elapsed_nanos);
 
   [[nodiscard]] const CallstackData* GetCallstackData() const { return callstack_data_.get(); };
 
@@ -123,15 +131,17 @@ class CaptureData {
     return selection_callstack_data_.get();
   };
 
-  void SetSelectionCallstackData(std::unique_ptr<CallstackData> selection_callstack_data) {
+  void set_selection_callstack_data(std::unique_ptr<CallstackData> selection_callstack_data) {
     selection_callstack_data_ = std::move(selection_callstack_data);
   }
 
   [[nodiscard]] const std::shared_ptr<Process>& process() const { return process_; }
 
-  [[nodiscard]] const SamplingProfiler& GetSamplingProfiler() const { return sampling_profiler_; }
+  [[nodiscard]] const SamplingProfiler& sampling_profiler() const { return sampling_profiler_; }
 
-  void UpdateSamplingProfiler() { sampling_profiler_.ProcessSamples(*callstack_data_); }
+  void set_sampling_profiler(SamplingProfiler sampling_profiler) {
+    sampling_profiler_ = std::move(sampling_profiler);
+  }
 
  private:
   int32_t process_id_ = -1;

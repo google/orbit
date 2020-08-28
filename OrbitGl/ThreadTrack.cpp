@@ -5,7 +5,6 @@
 #include "ThreadTrack.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Profiling.h"
@@ -46,7 +45,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
   }
 
   const FunctionInfo* func =
-      Capture::capture_data_.GetSelectedFunction(text_box->GetTimerInfo().function_address());
+      GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
   CHECK(func != nullptr);
 
   if (!func) {
@@ -109,7 +108,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
   }
 
   uint64_t address = timer_info.function_address();
-  const FunctionInfo* function_info = Capture::capture_data_.GetSelectedFunction(address);
+  const FunctionInfo* function_info = GOrbitApp->GetCaptureData().GetSelectedFunction(address);
   CHECK(function_info);
   std::optional<Color> user_color = GetUserColor(timer_info, *function_info);
 
@@ -159,7 +158,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     const FunctionInfo* func =
-        Capture::capture_data_.GetSelectedFunction(timer_info.function_address());
+        GOrbitApp->GetCaptureData().GetSelectedFunction(timer_info.function_address());
 
     text_box->SetElapsedTimeTextLength(time.length());
 

@@ -7,10 +7,10 @@
 
 #include <unordered_map>
 
-#include "SamplingProfiler.h"
+#include "CaptureData.h"
 #include "absl/container/node_hash_map.h"
 
-class [[nodiscard]] TopDownNode {
+class TopDownNode {
  public:
   explicit TopDownNode(TopDownNode* parent) : parent_{parent} {}
   virtual ~TopDownNode() = default;
@@ -35,7 +35,7 @@ class [[nodiscard]] TopDownNode {
 
 class TopDownFunction;
 
-class [[nodiscard]] TopDownInternalNode : public TopDownNode {
+class TopDownInternalNode : public TopDownNode {
  public:
   explicit TopDownInternalNode(TopDownNode* parent) : TopDownNode{parent} {
     CHECK(parent != nullptr);
@@ -60,7 +60,7 @@ class [[nodiscard]] TopDownInternalNode : public TopDownNode {
   absl::node_hash_map<uint64_t, TopDownFunction> function_nodes_;
 };
 
-class [[nodiscard]] TopDownFunction : public TopDownInternalNode {
+class TopDownFunction : public TopDownInternalNode {
  public:
   explicit TopDownFunction(uint64_t function_absolute_address, std::string function_name,
                            TopDownNode* parent)
@@ -99,7 +99,7 @@ class [[nodiscard]] TopDownFunction : public TopDownInternalNode {
   std::string function_name_;
 };
 
-class [[nodiscard]] TopDownThread : public TopDownInternalNode {
+class TopDownThread : public TopDownInternalNode {
  public:
   explicit TopDownThread(int32_t thread_id, std::string thread_name, TopDownNode* parent)
       : TopDownInternalNode{parent}, thread_id_{thread_id}, thread_name_{std::move(thread_name)} {}
@@ -123,11 +123,10 @@ class [[nodiscard]] TopDownThread : public TopDownInternalNode {
   std::string thread_name_;
 };
 
-class [[nodiscard]] TopDownView : public TopDownNode {
+class TopDownView : public TopDownNode {
  public:
-  [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromSamplingProfiler(
-      const SamplingProfiler& sampling_profiler, const std::string& process_name,
-      const absl::flat_hash_map<int32_t, std::string>& thread_names);
+  [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromCaptureData(
+      const CaptureData& capture_data);
 
   TopDownView() : TopDownNode{nullptr} {}
 

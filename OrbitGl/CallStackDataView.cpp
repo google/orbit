@@ -6,7 +6,6 @@
 
 #include "App.h"
 #include "Callstack.h"
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "Path.h"
 #include "absl/flags/flag.h"
@@ -61,8 +60,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
       if (module != nullptr) {
         return module->m_Name;
       }
-      return Path::GetFileName(
-          Capture::capture_data_.GetSamplingProfiler().GetModulePathByAddress(frame.address));
+      return Path::GetFileName(GOrbitApp->GetCaptureData().GetModulePathByAddress(frame.address));
     case kColumnAddress:
       return absl::StrFormat("%#llx", frame.address);
     default:
@@ -107,11 +105,12 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
 void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
+    const std::shared_ptr<Process>& process = GOrbitApp->GetCaptureData().process();
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
       if (module != nullptr && !module->IsLoaded()) {
-        GOrbitApp->LoadModules(Capture::capture_data_.process(), {module});
+        GOrbitApp->LoadModules(process, {module});
       }
     }
 
@@ -130,7 +129,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
     }
 
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = Capture::capture_data_.process_id();
+    const int32_t pid = GOrbitApp->GetCaptureData().process_id();
     for (int i : item_indices) {
       GOrbitApp->Disassemble(pid, *GetFrameFromRow(i).function);
     }
@@ -194,7 +193,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   FunctionInfo* function = nullptr;
   std::shared_ptr<Module> module = nullptr;
 
-  const std::shared_ptr<Process> process = Capture::capture_data_.process();
+  const std::shared_ptr<Process> process = GOrbitApp->GetCaptureData().process();
   CHECK(process != nullptr);
   // TODO(kuebler): Get rid of locks on caller side
   ScopeLock lock(process->GetDataMutex());
@@ -204,8 +203,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   if (function != nullptr) {
     return CallStackDataViewFrame(address, function, module);
   } else {
-    std::string fallback_name;
-    fallback_name = Capture::capture_data_.GetSamplingProfiler().GetFunctionNameByAddress(address);
+    std::string fallback_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(address);
     return CallStackDataViewFrame(address, fallback_name, module);
   }
 }

@@ -10,7 +10,6 @@
 #include <memory>
 #include <string>
 
-#include "Capture.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
@@ -66,7 +65,8 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   //  it needs to be filled separately in each client and then passed.
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
 
-  ErrorMessageOr<void> result = capture_client_->StartCapture(thread_pool, pid, selected_functions);
+  ErrorMessageOr<void> result = capture_client_->StartCapture(
+      thread_pool, pid, target_process_->GetName(), target_process_, selected_functions);
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
     return false;
@@ -166,10 +166,9 @@ bool ClientGgp::InitCapture() {
 
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
-    int32_t process_id,
-    const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions) {
-  Capture::capture_data_ =
-      CaptureData(process_id, target_process_->GetName(), target_process_, selected_functions);
+    int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) {
+  capture_data_ = CaptureData(process_id, process_name, process, selected_functions);
   LOG("Capture started");
 }
 

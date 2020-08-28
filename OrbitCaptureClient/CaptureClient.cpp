@@ -6,6 +6,7 @@
 
 #include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "absl/flags/flag.h"
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
@@ -30,7 +31,8 @@ static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTyp
 }
 
 ErrorMessageOr<void> CaptureClient::StartCapture(
-    ThreadPool* thread_pool, int32_t pid,
+    ThreadPool* thread_pool, int32_t process_id, std::string process_name,
+    std::shared_ptr<Process> process,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
@@ -40,16 +42,17 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   }
 
   state_ = State::kStarting;
-  thread_pool->Schedule([this, pid, selected_functions]() { Capture(pid, selected_functions); });
+  thread_pool->Schedule([this, process_id, process_name, process, selected_functions]() {
+    Capture(process_id, process_name, process, selected_functions);
+  });
 
   return outcome::success();
 }
 
-void CaptureClient::Capture(int32_t pid,
-                            const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
+void CaptureClient::Capture(int32_t process_id, std::string process_name,
+                            std::shared_ptr<Process> process,
+                            absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
   CHECK(reader_writer_ == nullptr);
-
-  event_processor_.emplace(capture_listener_);
 
   grpc::ClientContext context;
   reader_writer_ = capture_service_->Capture(&context);
@@ -57,7 +60,7 @@ void CaptureClient::Capture(int32_t pid,
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
-  capture_options->set_pid(pid);
+  capture_options->set_pid(process_id);
   uint16_t sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
   if (sampling_rate == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
@@ -94,11 +97,14 @@ void CaptureClient::Capture(int32_t pid,
   state_ = State::kStarted;
   state_mutex_.Unlock();
 
-  capture_listener_->OnCaptureStarted(pid, selected_functions);
+  CaptureEventProcessor event_processor(capture_listener_);
+
+  capture_listener_->OnCaptureStarted(process_id, std::move(process_name), std::move(process),
+                                      std::move(selected_functions));
 
   CaptureResponse response;
   while (!force_stop_ && reader_writer_->Read(&response)) {
-    event_processor_->ProcessEvents(response.capture_events());
+    event_processor.ProcessEvents(response.capture_events());
   }
   LOG("Finished reading from Capture's gRPC stream: all capture data has been "
       "received");
@@ -149,7 +155,6 @@ void CaptureClient::FinishCapture() {
     ERROR("Finishing gRPC call to Capture: %s", status.error_message());
   }
   reader_writer_.reset();
-  event_processor_.reset();
 
   absl::MutexLock lock(&state_mutex_);
   state_ = State::kStopped;

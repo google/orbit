@@ -7,7 +7,6 @@
 #include <limits>
 
 #include "App.h"
-#include "Capture.h"
 #include "EventTrack.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"

@@ -17,7 +17,6 @@
 
 #include "CallStackDataView.h"
 #include "Callstack.h"
-#include "Capture.h"
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
 #include "Disassembler.h"
@@ -77,86 +76,97 @@ OrbitApp::~OrbitApp() {
 #endif
 }
 
-void OrbitApp::OnCaptureStarted(
-    int32_t process_id, const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions) {
+void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
+                                std::shared_ptr<Process> process,
+                                absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
-  captured_address_infos_.clear();
 
-  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, process_id,
-                                   &selected_functions] {
-    ClearCapture();
+  main_thread_executor_->Schedule(
+      [this, &initialization_complete, &mutex, process_id, process_name = std::move(process_name),
+       process = std::move(process), selected_functions = std::move(selected_functions)]() mutable {
+        const bool has_selected_functions = !selected_functions.empty();
 
-    std::string process_name = data_manager_->GetProcessByPid(process_id)->name();
-    std::shared_ptr<Process> process = FindProcessByPid(process_id);
-    Capture::capture_data_ =
-        CaptureData(process_id, std::move(process_name), std::move(process), selected_functions);
+        ClearCapture();
 
-    if (capture_started_callback_) {
-      capture_started_callback_();
-    }
+        // It is safe to do this write on the main thread, as the capture thread is suspended until
+        // this task is completely executed.
+        capture_data_ = CaptureData(process_id, std::move(process_name), std::move(process),
+                                    std::move(selected_functions));
 
-    if (!Capture::capture_data_.selected_functions().empty() && select_live_tab_callback_) {
-      select_live_tab_callback_();
-    }
+        if (capture_started_callback_) {
+          capture_started_callback_();
+        }
 
-    FireRefreshCallbacks();
+        if (has_selected_functions && select_live_tab_callback_) {
+          select_live_tab_callback_();
+        }
 
-    absl::MutexLock lock(&mutex);
-    initialization_complete = true;
-  });
+        FireRefreshCallbacks();
+
+        absl::MutexLock lock(&mutex);
+        initialization_complete = true;
+      });
 
   bool (*IsTrue)(bool*) = [](bool* value) { return *value; };
   mutex.Await(absl::Condition(IsTrue, &initialization_complete));
 }
 
 void OrbitApp::OnCaptureComplete() {
-  main_thread_executor_->Schedule([this] {
-    Capture::capture_data_.set_address_infos(std::move(captured_address_infos_));
-    Capture::capture_data_.UpdateSamplingProfiler();
+  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
+  capture_data_.set_sampling_profiler(sampling_profiler);
+  main_thread_executor_->Schedule(
+      [this, sampling_profiler = std::move(sampling_profiler)]() mutable {
+        RefreshCaptureView();
 
-    RefreshCaptureView();
+        SetSamplingReport(std::move(sampling_profiler),
+                          GetCaptureData().GetCallstackData()->GetUniqueCallstacksCopy());
+        SetTopDownView(GetCaptureData());
 
-    AddSamplingReport(Capture::capture_data_.GetSamplingProfiler(),
-                      Capture::capture_data_.GetCallstackData());
-    AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
+        if (capture_stopped_callback_) {
+          capture_stopped_callback_();
+        }
 
-    if (capture_stopped_callback_) {
-      capture_stopped_callback_();
-    }
-
-    FireRefreshCallbacks();
-  });
+        FireRefreshCallbacks();
+      });
 }
 
-void OrbitApp::OnTimer(const TimerInfo& timer_info) { GCurrentTimeGraph->ProcessTimer(timer_info); }
+void OrbitApp::OnTimer(const TimerInfo& timer_info) {
+  if (timer_info.function_address() > 0) {
+    FunctionInfo* func =
+        GetCaptureData().process()->GetFunctionFromAddress(timer_info.function_address());
+    CHECK(func != nullptr);
+    uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
+    capture_data_.UpdateFunctionStats(*func, elapsed_nanos);
+    GCurrentTimeGraph->ProcessTimer(timer_info, func);
+  } else {
+    GCurrentTimeGraph->ProcessTimer(timer_info, nullptr);
+  }
+}
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
 }
 
 void OrbitApp::OnUniqueCallStack(CallStack callstack) {
-  Capture::capture_data_.AddUniqueCallStack(std::move(callstack));
+  capture_data_.AddUniqueCallStack(std::move(callstack));
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
-  Capture::capture_data_.AddCallstackEvent(std::move(callstack_event));
+  capture_data_.AddCallstackEvent(std::move(callstack_event));
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  main_thread_executor_->Schedule([thread_id, thread_name = std::move(thread_name)]() mutable {
-    Capture::capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
-  });
+  capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  uint64_t address = address_info.absolute_address();
-  captured_address_infos_.emplace(address, std::move(address_info));
+  capture_data_.InsertAddressInfo(std::move(address_info));
 }
 
 void OrbitApp::OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate) {
@@ -362,10 +372,11 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
     }
-    const SamplingProfiler& profiler = Capture::capture_data_.GetSamplingProfiler();
+    const CaptureData& capture_data = GetCaptureData();
+    const SamplingProfiler& profiler = capture_data.sampling_profiler();
 
     DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler,
-                             Capture::capture_data_.GetCallstackData()->GetCallstackEventsSize());
+                             capture_data.GetCallstackData()->GetCallstackEventsSize());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }
@@ -407,9 +418,11 @@ void OrbitApp::NeedsRedraw() {
   }
 }
 
-void OrbitApp::AddSamplingReport(SamplingProfiler sampling_profiler,
-                                 const CallstackData* callstack_data) {
-  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
+void OrbitApp::SetSamplingReport(
+    SamplingProfiler sampling_profiler,
+    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
+  auto report =
+      std::make_shared<SamplingReport>(std::move(sampling_profiler), std::move(unique_callstacks));
   if (sampling_reports_callback_) {
     DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
     sampling_reports_callback_(callstack_data_view, report);
@@ -422,9 +435,12 @@ void OrbitApp::AddSamplingReport(SamplingProfiler sampling_profiler,
   sampling_report_ = report;
 }
 
-void OrbitApp::AddSelectionReport(SamplingProfiler sampling_profiler,
-                                  const CallstackData* callstack_data) {
-  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler), callstack_data);
+void OrbitApp::SetSelectionReport(
+    SamplingProfiler sampling_profiler,
+    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
+    bool has_summary) {
+  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler),
+                                                 std::move(unique_callstacks), has_summary);
 
   if (selection_report_callback_) {
     DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
@@ -439,21 +455,20 @@ void OrbitApp::AddSelectionReport(SamplingProfiler sampling_profiler,
   FireRefreshCallbacks();
 }
 
-void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
+void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
   if (!top_down_view_callback_) {
     return;
   }
-  std::unique_ptr<TopDownView> top_down_view = TopDownView::CreateFromSamplingProfiler(
-      sampling_profiler, Capture::capture_data_.process_name(),
-      Capture::capture_data_.thread_names());
+
+  std::unique_ptr<TopDownView> top_down_view = TopDownView::CreateFromCaptureData(capture_data);
   top_down_view_callback_(std::move(top_down_view));
 }
 
 std::string OrbitApp::GetCaptureFileName() {
-  time_t timestamp =
-      std::chrono::system_clock::to_time_t(Capture::capture_data_.capture_start_time());
+  const CaptureData& capture_data = GetCaptureData();
+  time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
   std::string result;
-  result.append(Path::StripExtension(Capture::capture_data_.process_name()));
+  result.append(Path::StripExtension(capture_data.process_name()));
   result.append("_");
   result.append(OrbitUtils::FormatTime(timestamp));
   result.append(".orbit");
@@ -568,7 +583,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
-  return ar.Save(file_name);
+  return ar.Save(file_name, GetCaptureData());
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
@@ -596,17 +611,20 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 
 bool OrbitApp::StartCapture() {
   int32_t pid = GetSelectedProcessId();
-  if (pid == -1) {
+  const ProcessData* process_data = data_manager_->GetProcessByPid(pid);
+  std::shared_ptr<Process> process = FindProcessByPid(pid);
+  if (pid == -1 || process_data == nullptr || process == nullptr) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please choose a target process for the capture.");
     return false;
   }
+  std::string process_name = process_data->name();
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
 
-  ErrorMessageOr<void> result =
-      capture_client_->StartCapture(thread_pool_.get(), pid, selected_functions);
+  ErrorMessageOr<void> result = capture_client_->StartCapture(
+      thread_pool_.get(), pid, std::move(process_name), std::move(process), selected_functions);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -639,17 +657,17 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
-  Capture::capture_data_ = CaptureData();
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
-  AddSamplingReport(Capture::capture_data_.GetSamplingProfiler(), nullptr);
-  // TODO(kuebler): This seems fishy. Probably, TopDownView does not update on new symbols.
-  AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
+  SamplingProfiler empty_profiler;
+  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> empty_unique_callstacks;
+
+  SetSamplingReport(empty_profiler, empty_unique_callstacks);
+  SetTopDownView(GetCaptureData());
 
   if (selection_report_) {
-    SamplingProfiler empty_selection_profiler(GetSelectedProcess());
-    AddSelectionReport(std::move(empty_selection_profiler), nullptr);
+    SetSelectionReport(std::move(empty_profiler), empty_unique_callstacks, false);
   }
 
   if (GCurrentTimeGraph != nullptr) {
@@ -855,7 +873,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path,
   modules_currently_loading_.erase(module->m_FullName);
 
   UpdateSamplingReport();
-  AddTopDownView(Capture::capture_data_.GetSamplingProfiler());
+  SetTopDownView(GetCaptureData());
   GOrbitApp->FireRefreshCallbacks();
 }
 
@@ -1010,18 +1028,41 @@ void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_selected_text_box(text_box);
 }
 
+void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
+                                     int32_t thread_id) {
+  const CallstackData* callstack_data = GetCaptureData().GetCallstackData();
+  std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
+  for (const CallstackEvent& event : selected_callstack_events) {
+    selection_callstack_data->AddCallStackFromKnownCallstackData(event, callstack_data);
+  }
+
+  // Generate selection report.
+  bool generate_summary = thread_id == SamplingProfiler::kAllThreadsFakeTid;
+
+  SamplingProfiler sampling_profiler(*selection_callstack_data, GetCaptureData(), generate_summary);
+
+  SetSelectionReport(std::move(sampling_profiler),
+                     selection_callstack_data->GetUniqueCallstacksCopy(), generate_summary);
+  // TODO: this might live on the data_manager
+  capture_data_.set_selection_callstack_data(std::move(selection_callstack_data));
+}
+
 void OrbitApp::UpdateSamplingReport() {
+  const CaptureData& capture_data = GetCaptureData();
   if (sampling_report_ != nullptr) {
-    Capture::capture_data_.UpdateSamplingProfiler();
-    sampling_report_->UpdateReport(Capture::capture_data_.GetSamplingProfiler(),
-                                   Capture::capture_data_.GetCallstackData());
+    SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
+    sampling_report_->UpdateReport(sampling_profiler,
+                                   capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
+    capture_data_.set_sampling_profiler(sampling_profiler);
   }
 
   if (selection_report_ != nullptr) {
-    SamplingProfiler selection_profiler(Capture::capture_data_.process());
-    selection_profiler.ProcessSamples(*Capture::capture_data_.GetSelectionCallstackData());
-    selection_report_->UpdateReport(std::move(selection_profiler),
-                                    Capture::capture_data_.GetSelectionCallstackData());
+    // TODO(kuebler): propagate this information
+    SamplingProfiler selection_profiler(*capture_data.GetSelectionCallstackData(), capture_data,
+                                        selection_report_->has_summary());
+    selection_report_->UpdateReport(
+        std::move(selection_profiler),
+        capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());
   }
 }
 

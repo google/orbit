@@ -7,11 +7,11 @@
 
 #include <optional>
 
-#include "CaptureEventProcessor.h"
 #include "CaptureListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitProcess.h"
 #include "capture_data.pb.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
@@ -30,7 +30,8 @@ class CaptureClient {
   }
 
   [[nodiscard]] ErrorMessageOr<void> StartCapture(
-      ThreadPool* thread_pool, int32_t pid,
+      ThreadPool* thread_pool, int32_t process_id, std::string process_name,
+      std::shared_ptr<Process> process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions);
 
   // Returns true if stop was initiated and false otherwise.
@@ -52,9 +53,8 @@ class CaptureClient {
   }
 
  private:
-  void Capture(
-      int32_t pid,
-      const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions);
+  void Capture(int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+               absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions);
 
   void FinishCapture();
 
@@ -64,8 +64,6 @@ class CaptureClient {
       reader_writer_;
 
   CaptureListener* capture_listener_ = nullptr;
-
-  std::optional<CaptureEventProcessor> event_processor_;
 
   mutable absl::Mutex state_mutex_;
   State state_;

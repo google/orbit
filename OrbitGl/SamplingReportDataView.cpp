@@ -9,7 +9,6 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "OrbitModule.h"
 #include "Path.h"
@@ -122,7 +121,7 @@ void SamplingReportDataView::DoSort() {
 std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
     const std::vector<int>& indices) {
   std::set<FunctionInfo*> functions_set;
-  const std::shared_ptr<Process>& process = Capture::capture_data_.process();
+  const std::shared_ptr<Process>& process = GOrbitApp->GetCaptureData().process();
   CHECK(process != nullptr);
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
@@ -141,7 +140,7 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
 
 std::vector<std::shared_ptr<Module>> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) {
-  std::shared_ptr<Process> process = Capture::capture_data_.process();
+  std::shared_ptr<Process> process = GOrbitApp->GetCaptureData().process();
   CHECK(process != nullptr);
   std::set<std::string> module_paths;
   for (int index : indices) {
@@ -212,9 +211,9 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(Capture::capture_data_.process(), modules);
+    GOrbitApp->LoadModules(GOrbitApp->GetCaptureData().process(), modules);
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = Capture::capture_data_.process_id();
+    int32_t pid = GOrbitApp->GetCaptureData().process_id();
     for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->Disassemble(pid, *function);
     }

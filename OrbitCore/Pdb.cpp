@@ -4,7 +4,6 @@
 
 #include "Pdb.h"
 
-#include "Capture.h"
 #include "FunctionUtils.h"
 #include "OrbitProcess.h"
 #include "Path.h"

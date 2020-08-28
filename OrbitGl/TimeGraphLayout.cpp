@@ -4,7 +4,6 @@
 
 #include "TimeGraphLayout.h"
 
-#include "Capture.h"
 #include "ImGuiOrbit.h"
 
 TimeGraphLayout::TimeGraphLayout() {

@@ -5,7 +5,6 @@
 #include "CaptureWindow.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "EventTracer.h"
 #include "GlUtils.h"
 #include "absl/base/casts.h"
