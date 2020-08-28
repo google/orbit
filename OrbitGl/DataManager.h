@@ -22,6 +22,19 @@
 
 using orbit_grpc_protos::TracepointInfo;
 
+namespace internal {
+struct HashTracepointInfo {
+  size_t operator()(const TracepointInfo& info) const {
+    return std::hash<std::string>{}(info.category()) * 37 + std::hash<std::string>{}(info.name());
+  }
+};
+
+struct EqualTracepointInfo {
+  size_t operator()(const TracepointInfo& left, const TracepointInfo& right) const {
+    return left.category().compare(right.category()) == 0;
+  }
+};
+}  // namespace internal
 class DataManager final {
  public:
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
@@ -62,19 +75,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
-  struct HashTracepointInfo {
-    size_t operator()(const TracepointInfo& info) const {
-      return std::hash<std::string>{}(info.category()) * 37 + std::hash<std::string>{}(info.name());
-    }
-  };
-
-  struct EqualTracepointInfo {
-    size_t operator()(const TracepointInfo& left, const TracepointInfo& right) const {
-      return left.category().compare(right.category()) == 0;
-    }
-  };
-
-  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
+  absl::flat_hash_set<TracepointInfo, internal::HashTracepointInfo, internal::EqualTracepointInfo>
       selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;
