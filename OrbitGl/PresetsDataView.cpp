@@ -25,8 +25,7 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
-    columns[kColumnSessionName] = {"Preset", .49f, SortingOrder::kAscending};
-    columns[kColumnProcessName] = {"Process", .49f, SortingOrder::kAscending};
+    columns[kColumnSessionName] = {"Preset", .99f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -38,8 +37,6 @@ std::string PresetsDataView::GetValue(int row, int column) {
   switch (column) {
     case kColumnSessionName:
       return Path::GetFileName(preset->file_name());
-    case kColumnProcessName:
-      return Path::GetFileName(preset->preset_info().process_full_path());
     default:
       return "";
   }
@@ -62,9 +59,6 @@ void PresetsDataView::DoSort() {
   switch (sorting_column_) {
     case kColumnSessionName:
       sorter = ORBIT_PRESET_SORT(file_name());
-      break;
-    case kColumnProcessName:
-      sorter = ORBIT_PRESET_SORT(preset_info().process_full_path());
       break;
     default:
       break;
@@ -129,13 +123,11 @@ void PresetsDataView::DoFilter() {
   for (size_t i = 0; i < presets_.size(); ++i) {
     const PresetFile& preset = *presets_[i];
     std::string name = Path::GetFileName(ToLower(preset.file_name()));
-    std::string path = ToLower(preset.preset_info().process_full_path());
 
     bool match = true;
 
     for (std::string& filter_token : tokens) {
-      if (!(name.find(filter_token) != std::string::npos ||
-            path.find(filter_token) != std::string::npos)) {
+      if (!(name.find(filter_token) != std::string::npos)) {
         match = false;
         break;
       }
