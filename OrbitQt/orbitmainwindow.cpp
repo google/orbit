@@ -134,6 +134,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   GOrbitApp->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
   });
+  GOrbitApp->SetWarningMessageCallback([this](const std::string& title, const std::string& text) {
+    QMessageBox::warning(this, QString::fromStdString(title), QString::fromStdString(text));
+  });
   GOrbitApp->SetInfoMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(text));
   });
