@@ -141,3 +141,16 @@ const std::shared_ptr<Process>& DataManager::selected_process() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_process_;
 }
+
+void DataManager::SelectTracepoint(const TracepointInfo& info) {
+  if (!IsTracepointSelected(info)) selected_tracepoints_.emplace(info);
+}
+
+void DataManager::DeselectTracepoint(const TracepointInfo& info) {
+  CHECK(IsTracepointSelected(info));
+  selected_tracepoints_.erase(info);
+}
+
+bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
+  return selected_tracepoints_.contains(info);
+}

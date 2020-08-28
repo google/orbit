@@ -249,6 +249,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
       int32_t thread_id);
 
+  void SelectTracepoint(const TracepointInfo& info);
+  void DeselectTracepoint(const TracepointInfo& tracepoint);
+
+  [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
+
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);

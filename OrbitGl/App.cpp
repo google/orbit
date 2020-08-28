@@ -1155,3 +1155,15 @@ ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   CHECK(status_listener_ != nullptr);
   return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
 }
+
+void OrbitApp::SelectTracepoint(const TracepointInfo& tracepoint) {
+  data_manager_->SelectTracepoint(tracepoint);
+}
+
+void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
+  data_manager_->DeselectTracepoint(tracepoint);
+}
+
+[[nodiscard]] bool OrbitApp::IsTracepointSelected(const TracepointInfo& info) const {
+  return data_manager_->IsTracepointSelected(info);
+}
