@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "CaptureData.h"
 #include "ClientGgpOptions.h"
@@ -53,7 +52,8 @@ class ClientGgp final : public CaptureListener {
   ErrorMessageOr<void> LoadModuleAndSymbols();
   std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> GetSelectedFunctions();
-  void InformUsedSelectedCaptureFunctions(absl::flat_hash_set<std::string> capture_functions_used);
+  void InformUsedSelectedCaptureFunctions(
+      const absl::flat_hash_set<std::string>& capture_functions_used);
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_

@@ -181,9 +181,9 @@ bool ClientGgp::InitCapture() {
 }
 
 void ClientGgp::InformUsedSelectedCaptureFunctions(
-    absl::flat_hash_set<std::string> capture_functions_used) {
+    const absl::flat_hash_set<std::string>& capture_functions_used) {
   if (capture_functions_used.size() != options_.capture_functions.size()) {
-    for (const std::string selected_function : options_.capture_functions) {
+    for (const std::string& selected_function : options_.capture_functions) {
       if (!capture_functions_used.contains(selected_function)) {
         ERROR("Function matching %s not found; will not be hooked in the capture",
               selected_function);
@@ -195,7 +195,7 @@ void ClientGgp::InformUsedSelectedCaptureFunctions(
 }
 
 std::string ClientGgp::SelectedFunctionMatch(const FunctionInfo& func) {
-  for (const std::string selected_function : options_.capture_functions) {
+  for (const std::string& selected_function : options_.capture_functions) {
     if (func.pretty_name().find(selected_function) != std::string::npos) {
       return selected_function;
     }
@@ -207,7 +207,7 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
   absl::flat_hash_set<std::string> capture_functions_used;
   for (const auto& func : target_process_->GetFunctions()) {
-    const std::string selected_function_match = SelectedFunctionMatch(*func);
+    const std::string& selected_function_match = SelectedFunctionMatch(*func);
     if (!selected_function_match.empty()) {
       uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
       selected_functions[address] = *func;
