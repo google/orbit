@@ -16,11 +16,16 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientServices/ProcessManager.h"
+#include "SamplingProfiler.h"
+#include "StringManager.h"
 #include "SymbolHelper.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
+using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
@@ -51,6 +56,7 @@ bool ClientGgp::InitClient() {
     return false;
   }
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
+  string_manager_ = std::make_shared<StringManager>();
   return true;
 }
 
@@ -224,6 +230,8 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   return selected_functions;
 }
 
+void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_back(timer_info); }
+
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
     int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
@@ -234,16 +242,39 @@ void ClientGgp::OnCaptureStarted(
   LOG("Capture started");
 }
 
-void ClientGgp::OnCaptureComplete() { LOG("Capture completed"); }
+void ClientGgp::OnCaptureComplete() {
+  LOG("Capture completed");
+  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
+  capture_data_.set_sampling_profiler(sampling_profiler);
+}
 
-void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo&) {}
+void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  if (timer_info.function_address() > 0) {
+    FunctionInfo* func =
+        capture_data_.process()->GetFunctionFromAddress(timer_info.function_address());
+    CHECK(func != nullptr);
+    uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
+    capture_data_.UpdateFunctionStats(*func, elapsed_nanos);
+  }
+  ProcessTimer(timer_info);
+}
 
-void ClientGgp::OnKeyAndString(uint64_t, std::string) {}
+void ClientGgp::OnKeyAndString(uint64_t key, std::string str) {
+  string_manager_->AddIfNotPresent(key, std::move(str));
+}
 
-void ClientGgp::OnUniqueCallStack(CallStack) {}
+void ClientGgp::OnUniqueCallStack(CallStack callstack) {
+  capture_data_.AddUniqueCallStack(std::move(callstack));
+}
 
-void ClientGgp::OnCallstackEvent(orbit_client_protos::CallstackEvent) {}
+void ClientGgp::OnCallstackEvent(CallstackEvent callstack_event) {
+  capture_data_.AddCallstackEvent(std::move(callstack_event));
+}
 
-void ClientGgp::OnThreadName(int32_t, std::string) {}
+void ClientGgp::OnThreadName(int32_t thread_id, std::string thread_name) {
+  capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
+}
 
-void ClientGgp::OnAddressInfo(orbit_client_protos::LinuxAddressInfo) {}
+void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
+  capture_data_.InsertAddressInfo(std::move(address_info));
+}
