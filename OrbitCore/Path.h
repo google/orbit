@@ -24,7 +24,6 @@ namespace Path {
 [[nodiscard]] std::string StripExtension(const std::string& file_path);
 [[nodiscard]] std::string GetExtension(const std::string& file_path);
 [[nodiscard]] std::string GetDirectory(const std::string& any_path);
-[[nodiscard]] std::string GetParentDirectory(std::string any_path);
 [[nodiscard]] std::string JoinPath(const std::vector<std::string>& parts);
 
 [[nodiscard]] std::vector<std::string> ListFiles(

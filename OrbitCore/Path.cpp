@@ -134,15 +134,6 @@ std::string Path::GetDirectory(const std::string& any_path) {
   return "";
 }
 
-std::string Path::GetParentDirectory(std::string any_path) {
-  if (any_path.empty()) return "";
-  std::replace(any_path.begin(), any_path.end(), '\\', '/');
-  wchar_t lastChar = any_path.c_str()[any_path.size() - 1];
-  if (lastChar == '/') any_path.erase(any_path.size() - 1);
-
-  return GetDirectory(any_path);
-}
-
 std::string Path::JoinPath(const std::vector<std::string>& parts) {
   if (parts.empty()) {
     return "";

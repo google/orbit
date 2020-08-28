@@ -156,38 +156,34 @@ static std::string GetTestDataAbsPath(const std::string& filename = "") {
   }
 }
 
-TEST(Path, GetDirectoryAndParent) {
+TEST(Path, GetDirectory) {
   struct Test {
     std::string input;
     std::string dir;
-    std::string parent_of_input;
-    std::string parent_of_dir;
   };
 
   // The hoops I'm jumping through to have the test declarations below nicely formatted...
   using V = std::vector<Test>;
 #ifdef _WIN32
-  V tests = {{"C:\\dir/With\\fwd_slash.txt.ext", "C:/dir/With/", "C:/dir/With/", "C:/dir/"},
-             {"C:\\no\\ext\\file", "C:/no/ext/", "C:/no/ext/", "C:/no/"},
-             {"C:\\dir\\subdir\\", "C:/dir/subdir/", "C:/dir/", "C:/dir/"},
-             {"C:\\file_in_root", "C:/", "C:/", ""},
-             {"broken_path", "", "", ""},
-             {"C:\\", "C:/", "", ""}};
+  V tests = {{"C:\\dir/With\\fwd_slash.txt.ext", "C:/dir/With/"},
+             {"C:\\no\\ext\\file", "C:/no/ext/"},
+             {"C:\\dir\\subdir\\", "C:/dir/subdir/"},
+             {"C:\\file_in_root", "C:/"},
+             {"broken_path", ""},
+             {"C:\\", "C:/"}};
 #else
-  V tests = {{"/dir/With/mult_ext.txt.ext", "/dir/With/", "/dir/With/", "/dir/"},
-             {"/no/ext/file", "/no/ext/", "/no/ext/", "/no/"},
-             {"/dir/subdir/", "/dir/subdir/", "/dir/", "/dir/"},
-             {"/file_in_root", "/", "/", ""},
-             {"broken_path", "", "", ""},
-             {"/", "/", "", ""}};
+  V tests = {{"/dir/With/mult_ext.txt.ext", "/dir/With/"},
+             {"/no/ext/file", "/no/ext/"},
+             {"/dir/subdir/", "/dir/subdir/"},
+             {"/file_in_root", "/"},
+             {"broken_path", ""},
+             {"/", "/"}};
 #endif
 
   for (auto& test : tests) {
-    LOG("Checking directory and parent of \"%s\"", test.input.c_str());
+    LOG("Checking directory of \"%s\"", test.input.c_str());
     const std::string result_dir = Path::GetDirectory(test.input);
     EXPECT_EQ(result_dir, test.dir);
-    EXPECT_EQ(Path::GetParentDirectory(test.input), test.parent_of_input);
-    EXPECT_EQ(Path::GetParentDirectory(result_dir), test.parent_of_dir);
   }
 }
 
