@@ -110,8 +110,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void AddSelectionReport(SamplingProfiler sampling_profiler, const CallstackData* callstack_data);
   void AddTopDownView(const SamplingProfiler& sampling_profiler);
 
-  bool SelectProcess(const std::string& process,
-                     const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  bool SelectProcess(const std::string& process);
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
@@ -199,8 +198,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
   void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  void UpdateProcessAndModuleList(int32_t pid,
-                                  const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateSamplingReport();
   void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& session);
