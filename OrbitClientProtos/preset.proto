@@ -11,7 +11,7 @@ message PresetModule {
 }
 
 message PresetInfo {
-  string process_full_path = 1;
+  reserved 1;
   map<string, PresetModule> path_to_module = 2;
 }
 
