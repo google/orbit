@@ -31,7 +31,7 @@ struct HashTracepointInfo {
 
 struct EqualTracepointInfo {
   size_t operator()(const TracepointInfo& left, const TracepointInfo& right) const {
-    return left.category().compare(right.category()) == 0;
+    return left.category().compare(right.category()) == 0 && left.name().compare(right.name()) == 0;
   }
 };
 }  // namespace internal
