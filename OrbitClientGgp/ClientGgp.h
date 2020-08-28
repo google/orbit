@@ -16,7 +16,6 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientServices/ProcessClient.h"
 #include "OrbitProcess.h"
-#include "SymbolHelper.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {
