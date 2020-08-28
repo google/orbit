@@ -158,6 +158,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetErrorMessageCallback(ErrorMessageCallback callback) {
     error_message_callback_ = std::move(callback);
   }
+  using WarningMessageCallback = std::function<void(const std::string&, const std::string&)>;
+  void SetWarningMessageCallback(WarningMessageCallback callback) {
+    warning_message_callback_ = std::move(callback);
+  }
   using InfoMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetInfoMessageCallback(InfoMessageCallback callback) {
     info_message_callback_ = std::move(callback);
@@ -197,6 +201,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
+  void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
@@ -283,6 +288,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SelectLiveTabCallback select_live_tab_callback_;
   DisassemblyCallback disassembly_callback_;
   ErrorMessageCallback error_message_callback_;
+  WarningMessageCallback warning_message_callback_;
   InfoMessageCallback info_message_callback_;
   TooltipCallback tooltip_callback_;
   RefreshCallback refresh_callback_;
