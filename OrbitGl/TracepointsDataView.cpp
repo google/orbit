@@ -6,10 +6,13 @@
 
 #include "App.h"
 
-TracepointsDataView::TracepointsDataView() : DataView(DataViewType::kTracepoints) {}
+namespace {
+static const std::string kMenuActionSelect = "Hook";
+;
+static const std::string kMenuActionUnselect = "Unhook";
+}  // namespace
 
-const std::string TracepointsDataView::kMenuActionSelect = "Select";
-const std::string TracepointsDataView::kMenuActionUnselect = "Unselect";
+TracepointsDataView::TracepointsDataView() : DataView(DataViewType::kTracepoints) {}
 
 const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {

@@ -143,9 +143,7 @@ const std::shared_ptr<Process>& DataManager::selected_process() const {
 }
 
 void DataManager::SelectTracepoint(const TracepointInfo& info) {
-  if (!IsTracepointSelected(info)) {
-    selected_tracepoints_.emplace(info);
-  }
+  if (!IsTracepointSelected(info)) selected_tracepoints_.emplace(info);
 }
 
 void DataManager::DeselectTracepoint(const TracepointInfo& info) {

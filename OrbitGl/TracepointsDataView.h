@@ -39,9 +39,6 @@ class TracepointsDataView : public DataView {
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };
 
   const TracepointInfo& GetTracepoint(uint32_t row) const;
-
-  static const std::string kMenuActionSelect;
-  static const std::string kMenuActionUnselect;
 };
 
 #endif  // ORBIT_TRACEPOINTSDATAVIEW_H
