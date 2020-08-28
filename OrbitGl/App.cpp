@@ -688,10 +688,9 @@ void OrbitApp::ToggleCapture() {
   }
 }
 
-bool OrbitApp::SelectProcess(const std::string& process,
-                             const std::shared_ptr<PresetFile>& preset) {
+bool OrbitApp::SelectProcess(const std::string& process) {
   if (processes_data_view_) {
-    return processes_data_view_->SelectProcess(process, preset);
+    return processes_data_view_->SelectProcess(process);
   }
 
   return false;
@@ -907,10 +906,9 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
   FireRefreshCallbacks();
 }
 
-void OrbitApp::UpdateProcessAndModuleList(
-    int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
+void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
   CHECK(processes_data_view_->GetSelectedProcessId() == pid);
-  thread_pool_->Schedule([pid, preset, this] {
+  thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
 
     if (result.has_error()) {
@@ -919,7 +917,7 @@ void OrbitApp::UpdateProcessAndModuleList(
       return;
     }
 
-    main_thread_executor_->Schedule([pid, result, preset, this] {
+    main_thread_executor_->Schedule([pid, result, this] {
       // Make sure that pid is actually what user has selected at
       // the moment we arrive here. If not - ignore the result.
       const std::vector<ModuleInfo>& module_infos = result.value();
@@ -950,10 +948,6 @@ void OrbitApp::UpdateProcessAndModuleList(
         process->AddModule(module);
       }
 
-      if (preset) {
-        LoadModulesFromPreset(process, preset);
-        data_manager_->set_selected_process(process);
-      }
       // To this point ----------------------------------
 
       // To this point all data is ready. We can set the Process and then
@@ -1090,9 +1084,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!processes_data_view_) {
         processes_data_view_ = std::make_unique<ProcessesDataView>();
         processes_data_view_->SetSelectionListener(
-            [&](int32_t pid, const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
-              UpdateProcessAndModuleList(pid, preset);
-            });
+            [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
         panels_.push_back(processes_data_view_.get());
       }
       return processes_data_view_.get();
