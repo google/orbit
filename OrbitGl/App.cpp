@@ -889,6 +889,7 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
   if (!modules_to_load.empty()) {
     LoadModules(process, modules_to_load, preset);
   }
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::UpdateProcessAndModuleList(
@@ -936,6 +937,7 @@ void OrbitApp::UpdateProcessAndModuleList(
 
       if (preset) {
         LoadModulesFromPreset(process, preset);
+        data_manager_->set_selected_process(process);
       }
       // To this point ----------------------------------
 
