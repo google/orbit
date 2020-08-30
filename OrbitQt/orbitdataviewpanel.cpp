@@ -17,8 +17,9 @@ OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
 OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui; }
 
 void OrbitDataViewPanel::Initialize(DataView* data_view, SelectionType selection_type,
-                                    FontType font_type, bool is_main_instance) {
-  ui->treeView->Initialize(data_view, selection_type, font_type);
+                                    FontType font_type, bool is_main_instance,
+                                    bool uniform_row_height) {
+  ui->treeView->Initialize(data_view, selection_type, font_type, uniform_row_height);
 
   if (is_main_instance) {
     ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
