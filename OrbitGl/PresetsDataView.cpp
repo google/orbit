@@ -16,16 +16,32 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
 
 using orbit_client_protos::PresetFile;
+using orbit_client_protos::PresetInfo;
 
 PresetsDataView::PresetsDataView() : DataView(DataViewType::kPresets) {}
+
+std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) const {
+  return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
+    absl::StrAppend(out, module.module_name);
+  });
+}
+
+std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>& modules) const {
+  return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
+    absl::StrAppend(out, module.function_count);
+  });
+}
 
 const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
-    columns[kColumnSessionName] = {"Preset", .99f, SortingOrder::kAscending};
+    columns[kColumnSessionName] = {"Preset", .39f, SortingOrder::kAscending};
+    columns[kColumnModules] = {"Modules", .39f, SortingOrder::kAscending};
+    columns[kColumnFunctionCount] = {"Hooked Functions", .19f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -37,6 +53,10 @@ std::string PresetsDataView::GetValue(int row, int column) {
   switch (column) {
     case kColumnSessionName:
       return Path::GetFileName(preset->file_name());
+    case kColumnModules:
+      return GetModulesList(GetModules(row));
+    case kColumnFunctionCount:
+      return GetFunctionCountList(GetModules(row));
     default:
       return "";
   }
@@ -90,7 +110,6 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       return;
     }
     const std::shared_ptr<PresetFile>& preset = GetPreset(item_indices[0]);
-
     GOrbitApp->LoadPreset(preset);
 
   } else if (action == kMenuActionDelete) {
@@ -145,8 +164,15 @@ void PresetsDataView::DoFilter() {
 
 void PresetsDataView::OnDataChanged() {
   indices_.resize(presets_.size());
+  modules_.resize(presets_.size());
   for (size_t i = 0; i < presets_.size(); ++i) {
     indices_[i] = i;
+    std::vector<ModuleView> modules;
+    for (const auto& pair : presets_[i]->preset_info().path_to_module()) {
+      modules.push_back(
+          ModuleView(Path::GetFileName(pair.first), pair.second.function_hashes_size()));
+    }
+    modules_[i] = std::move(modules);
   }
 
   DataView::OnDataChanged();
@@ -159,4 +185,7 @@ void PresetsDataView::SetPresets(const std::vector<std::shared_ptr<PresetFile> >
 
 const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(unsigned int row) const {
   return presets_[indices_[row]];
+}
+const std::vector<PresetsDataView::ModuleView>& PresetsDataView::GetModules(uint32_t row) const {
+  return modules_[indices_[row]];
 }
