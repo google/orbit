@@ -8,21 +8,28 @@
 #include <memory>
 #include <vector>
 
+#include "../../OrbitGl/TracepointCustom.h"
 #include "CallstackData.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
+#include "TracepointCollection.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
+#include "tracepoint.pb.h"
 
 class CaptureData {
  public:
   explicit CaptureData(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions)
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                          internal::EqualTracepointInfo>
+          selected_tracepoints)
       : process_id_{process_id},
         process_name_{std::move(process_name)},
         process_{std::move(process)},
         selected_functions_{std::move(selected_functions)},
+        selected_tracepoints_{std::move(selected_tracepoints)},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()) {
     CHECK(process_ != nullptr);
@@ -143,11 +150,22 @@ class CaptureData {
     sampling_profiler_ = std::move(sampling_profiler);
   }
 
+  void AddOrAssignTracepointServiceResponse(int32_t pid, int32_t tid, int64_t time,
+                                            int64_t stream_id, int32_t cpu,
+                                            orbit_grpc_protos::TracepointInfo tracepoint_info) {
+    TracepointCollection tracepoint_collection(pid, tid, time, stream_id, cpu, tracepoint_info);
+    server_response_tracepoints_.emplace_back(tracepoint_collection);
+  }
+
  private:
   int32_t process_id_ = -1;
   std::string process_name_;
   std::shared_ptr<Process> process_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
+
+  absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                      internal::EqualTracepointInfo>
+      selected_tracepoints_;
   // std::unique_ptr<> allows to move and copy CallstackData easier
   // (as CallstackData stores an absl::Mutex inside)
   std::unique_ptr<CallstackData> callstack_data_;
@@ -161,6 +179,8 @@ class CaptureData {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
 
   absl::flat_hash_map<int32_t, std::string> thread_names_;
+
+  std::deque<TracepointCollection> server_response_tracepoints_;
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 };

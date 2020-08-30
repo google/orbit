@@ -51,6 +51,14 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
       manual_instrumentation_config_.AddTimerStopAddress(absolute_address);
     }
   }
+
+  for (const CaptureOptions::InstrumentedTracepoint& instrumented_tracepoint :
+       capture_options.instrumented_tracepoint()) {
+    orbit_grpc_protos::TracepointInfo info;
+    info.set_name(instrumented_tracepoint.name());
+    info.set_category(instrumented_tracepoint.category());
+    instrumented_tracepoints_.emplace_back(info);
+  }
 }
 
 namespace {
@@ -360,9 +368,14 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
                                     &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
-  /*tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
-      "sched", "sched_switch", cpus, &tracing_fds_, &sched_switch_ids_,
-      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);*/
+  for (const auto& selected_tracepoint : instrumented_tracepoints_) {
+    absl::flat_hash_set<uint64_t> empty_hash_set;
+    instrumented_tracepoints_ids_.emplace(selected_tracepoint, empty_hash_set);
+    tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+        selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), cpus,
+        &tracing_fds_, &instrumented_tracepoints_ids_.at(selected_tracepoint),
+        &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+  }
 
   return !tracepoint_event_open_errors;
 }
@@ -741,14 +754,25 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
   bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
   bool is_task_newtask = task_newtask_ids_.contains(stream_id);
-  bool is_sched_switch = sched_switch_ids_.contains(stream_id);
   bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_amdgpu_cs_ioctl_event = amdgpu_cs_ioctl_ids_.contains(stream_id);
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
+
+  absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, bool, internal::HashTracepointInfo,
+                      internal::EqualTracepointInfo>
+      are_instrumented_tracepoints;
+  std::for_each(
+      instrumented_tracepoints_ids_.begin(), instrumented_tracepoints_ids_.end(),
+      [&are_instrumented_tracepoints,
+       stream_id](const std::pair<orbit_grpc_protos::TracepointInfo, absl::flat_hash_set<uint64_t>>&
+                      element) {
+        are_instrumented_tracepoints.emplace(element.first, element.second.contains(stream_id));
+      });
+
   CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask + is_task_rename +
-            is_sched_switch + is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
+            +is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
             is_dma_fence_signaled_event + is_callchain_sample <=
         1);
 
@@ -825,11 +849,27 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
 
-  } else if (is_sched_switch) {
-    auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
+  } else if (!are_instrumented_tracepoints.empty()) {
+    absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, bool, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>::iterator it =
+        are_instrumented_tracepoints.begin();
 
-    LOG(" CPU: %d ** %s : %d -> %s : %d", event->GetCpu(), event->GetPrevComm(),
-        event->GetPrevPid(), event->GetNextComm(), event->GetNextPid());
+    while (it != are_instrumented_tracepoints.end()) {
+      if (it->second != false) {
+        auto event = ConsumeTracepointPerfEvent<TracepointServerResponse>(ring_buffer, header);
+
+        orbit_grpc_protos::TracepointServerResponse tracepoint_server_response;
+        tracepoint_server_response.set_pid(event->GetPid());
+        tracepoint_server_response.set_tid(event->GetTid());
+        tracepoint_server_response.set_time(event->GetTimestamp());
+        tracepoint_server_response.set_stream_id(event->GetStreamId());
+        tracepoint_server_response.set_cpu(event->GetCpu());
+        tracepoint_server_response.set_category(it->first.category());
+        tracepoint_server_response.set_name(it->first.name());
+        listener_->OnTracepointServiceResponse(std::move(tracepoint_server_response));
+      }
+      it++;
+    }
 
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
@@ -864,7 +904,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
-}
+}  // namespace LinuxTracing
 
 void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {

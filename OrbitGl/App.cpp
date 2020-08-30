@@ -76,9 +76,12 @@ OrbitApp::~OrbitApp() {
 #endif
 }
 
-void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
-                                std::shared_ptr<Process> process,
-                                absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
+void OrbitApp::OnCaptureStarted(
+    int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>
+        selected_tracepoints) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -87,7 +90,8 @@ void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
 
   main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, process_id, process_name = std::move(process_name),
-       process = std::move(process), selected_functions = std::move(selected_functions)]() mutable {
+       process = std::move(process), selected_functions = std::move(selected_functions),
+       selected_tracepoints = std::move(selected_tracepoints)]() mutable {
         const bool has_selected_functions = !selected_functions.empty();
 
         ClearCapture();
@@ -95,7 +99,7 @@ void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
         capture_data_ = CaptureData(process_id, std::move(process_name), std::move(process),
-                                    std::move(selected_functions));
+                                    std::move(selected_functions), std::move(selected_tracepoints));
 
         if (capture_started_callback_) {
           capture_started_callback_();
@@ -167,6 +171,16 @@ void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   capture_data_.InsertAddressInfo(std::move(address_info));
+}
+
+void OrbitApp::OnTracepointServiceResponse(int32_t pid, int32_t tid, int64_t time,
+                                           int64_t stream_id, int32_t cpu,
+                                           orbit_grpc_protos::TracepointInfo tracepoint_info) {
+  capture_data_.AddOrAssignTracepointServiceResponse(pid, tid, time, stream_id, cpu,
+                                                     tracepoint_info);
+  LOG(" Name: %s ** Category: % s ** Pid : %d ** Tid: %d ** Time: %d ** Stream Id: %d ** Cpu: %d "
+      "**",
+      tracepoint_info.name(), tracepoint_info.category(), pid, tid, time, stream_id, cpu);
 }
 
 void OrbitApp::OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate) {
@@ -255,9 +269,9 @@ void OrbitApp::PostInit() {
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
-  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+  /*if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     return;
-  }
+  }*/
 
   thread_pool_->Schedule([this] {
     std::unique_ptr<TracepointServiceClient> tracepoint_manager =
@@ -623,8 +637,12 @@ bool OrbitApp::StartCapture() {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
 
-  ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool_.get(), pid, std::move(process_name), std::move(process), selected_functions);
+  absl::flat_hash_set<TracepointInfo, internal::HashTracepointInfo, internal::EqualTracepointInfo>
+      selected_tracepoints = GetSelectedTracepoints();
+
+  ErrorMessageOr<void> result =
+      capture_client_->StartCapture(thread_pool_.get(), pid, std::move(process_name),
+                                    std::move(process), selected_functions, selected_tracepoints);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());

@@ -30,9 +30,17 @@ message CaptureOptions {
     }
     FunctionType function_type = 4;
   }
+
+  message InstrumentedTracepoint {
+    string category = 1;
+    string name = 2;
+  }
+
   repeated InstrumentedFunction instrumented_functions = 5;
 
   bool trace_gpu_driver = 6;
+
+  repeated InstrumentedTracepoint instrumented_tracepoint = 7;
 }
 
 message SchedulingSlice {
@@ -114,6 +122,16 @@ message AddressInfo {
   }
 }
 
+message TracepointServerResponse {
+  int32 pid = 1;
+  int32 tid = 2;
+  int64 time = 3;
+  int64 stream_id = 4;
+  int32 cpu = 5;
+  string category = 7;
+  string name = 8;
+}
+
 message CaptureEvent {
   oneof event {
     SchedulingSlice scheduling_slice = 1;
@@ -124,5 +142,6 @@ message CaptureEvent {
     GpuJob gpu_job = 6;
     ThreadName thread_name = 7;
     AddressInfo address_info = 8;
+    TracepointServerResponse tracepoint_server_response = 9;
   }
 }

@@ -47,6 +47,9 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
     case CaptureEvent::kAddressInfo:
       ProcessAddressInfo(event.address_info());
       break;
+    case CaptureEvent::kTracepointServerResponse:
+      ProcessTracepointServerResponse(event.tracepoint_server_response());
+      break;
     case CaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
@@ -192,6 +195,17 @@ void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) 
   linux_address_info.set_function_name(function_name);
   linux_address_info.set_offset_in_function(address_info.offset_in_function());
   capture_listener_->OnAddressInfo(linux_address_info);
+}
+
+void CaptureEventProcessor::ProcessTracepointServerResponse(
+    const orbit_grpc_protos::TracepointServerResponse tracepoint_server_response) {
+  orbit_grpc_protos::TracepointInfo tracepoint_info;
+  tracepoint_info.set_category(tracepoint_server_response.category());
+  tracepoint_info.set_name(tracepoint_server_response.name());
+  capture_listener_->OnTracepointServiceResponse(
+      tracepoint_server_response.pid(), tracepoint_server_response.tid(),
+      tracepoint_server_response.time(), tracepoint_server_response.stream_id(),
+      tracepoint_server_response.cpu(), tracepoint_info);
 }
 
 uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(

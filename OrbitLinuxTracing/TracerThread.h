@@ -8,6 +8,7 @@
 #include <Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 #include <linux/perf_event.h>
+#include <tracepoint.pb.h>
 
 #include <atomic>
 #include <memory>
@@ -16,6 +17,7 @@
 #include <regex>
 #include <vector>
 
+#include "../../OrbitGl/TracepointCustom.h"
 #include "ContextSwitchManager.h"
 #include "GpuTracepointEventProcessor.h"
 #include "ManualInstrumentationConfig.h"
@@ -129,6 +131,7 @@ class TracerThread {
   uint64_t sampling_period_ns_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
+  std::deque<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
   bool trace_gpu_driver_;
 
   TracerListener* listener_ = nullptr;
@@ -142,7 +145,9 @@ class TracerThread {
   absl::flat_hash_set<uint64_t> uretprobes_ids_;
   absl::flat_hash_set<uint64_t> stack_sampling_ids_;
   absl::flat_hash_set<uint64_t> task_newtask_ids_;
-  absl::flat_hash_set<uint64_t> sched_switch_ids_;
+  absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, absl::flat_hash_set<uint64_t>,
+                      internal::HashTracepointInfo, internal::EqualTracepointInfo>
+      instrumented_tracepoints_ids_;
   absl::flat_hash_set<uint64_t> task_rename_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_cs_ioctl_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_sched_run_job_ids_;

@@ -8,11 +8,13 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "absl/flags/flag.h"
 #include "services.pb.h"
+#include "tracepoint.pb.h"
 
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
 using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::TracepointInfo;
 
 namespace {
 using orbit_client_protos::CallstackEvent;
@@ -23,8 +25,9 @@ class MyCaptureListener : public CaptureListener {
  private:
   void OnCaptureStarted(
       int32_t /*process_id*/, std::string /*process_name*/, std::shared_ptr<Process> /*process*/,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> /*selected_functions*/)
-      override {}
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> /*selected_functions*/,
+      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                          internal::EqualTracepointInfo> /*selected_tracepoints*/) override {}
   void OnCaptureComplete() override {}
   void OnTimer(const TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
@@ -32,6 +35,8 @@ class MyCaptureListener : public CaptureListener {
   void OnCallstackEvent(CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
   void OnAddressInfo(LinuxAddressInfo) override {}
+  void OnTracepointServiceResponse(int32_t, int32_t, int64_t, int64_t, int32_t,
+                                   TracepointInfo) override {}
 };
 }  // namespace
 

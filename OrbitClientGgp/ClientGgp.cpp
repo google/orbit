@@ -79,10 +79,18 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
     LOG("No functions provided; no functions hooked in the capture");
   }
 
+
   // Start capture
   LOG("Capture pid %d", pid);
-  ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool, pid, target_process_->GetName(), target_process_, selected_functions);
+
+  absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                      internal::EqualTracepointInfo>
+      selected_tracepoints;
+
+  ErrorMessageOr<void> result =
+      capture_client_->StartCapture(thread_pool, pid, target_process_->GetName(), target_process_,
+                                    selected_functions, selected_tracepoints);
+
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
     return false;
@@ -223,8 +231,12 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
     int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) {
-  capture_data_ = CaptureData(process_id, process_name, process, selected_functions);
+    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>
+        selected_tracepoints) {
+  capture_data_ =
+      CaptureData(process_id, process_name, process, selected_functions, selected_tracepoints);
   LOG("Capture started");
 }
 
@@ -241,3 +253,6 @@ void ClientGgp::OnCallstackEvent(orbit_client_protos::CallstackEvent) {}
 void ClientGgp::OnThreadName(int32_t, std::string) {}
 
 void ClientGgp::OnAddressInfo(orbit_client_protos::LinuxAddressInfo) {}
+
+void ClientGgp::OnTracepointServiceResponse(int32_t, int32_t, int64_t, int64_t, int32_t,
+                                            orbit_grpc_protos::TracepointInfo) {}

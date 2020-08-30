@@ -95,7 +95,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnCaptureStarted(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) override;
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                          internal::EqualTracepointInfo>
+          selected_tracepoints) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
@@ -103,6 +106,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnTracepointServiceResponse(int32_t pid, int32_t tid, int64_t time, int64_t stream_id,
+                                   int32_t cpu,
+                                   orbit_grpc_protos::TracepointInfo tracepoint_info) override;
 
   void OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate);
 
@@ -253,6 +259,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void DeselectTracepoint(const TracepointInfo& tracepoint);
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
+
+  [[nodiscard]] const absl::flat_hash_set<TracepointInfo, internal::HashTracepointInfo,
+                                          internal::EqualTracepointInfo>&
+  GetSelectedTracepoints() const {
+    return data_manager_->selected_tracepoints();
+  }
 
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,

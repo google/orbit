@@ -125,6 +125,16 @@ void LinuxTracingGrpcHandler::OnAddressInfo(AddressInfo address_info) {
   }
 }
 
+void LinuxTracingGrpcHandler::OnTracepointServiceResponse(
+    orbit_grpc_protos::TracepointServerResponse tracepoint_server_response) {
+  CaptureEvent event;
+  *event.mutable_tracepoint_server_response() = std::move(tracepoint_server_response);
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    event_buffer_.emplace_back(std::move(event));
+  }
+}
+
 uint64_t LinuxTracingGrpcHandler::ComputeCallstackKey(const Callstack& callstack) {
   uint64_t key = 17;
   for (uint64_t pc : callstack.pcs()) {

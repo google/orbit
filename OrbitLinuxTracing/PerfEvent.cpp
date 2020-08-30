@@ -42,6 +42,6 @@ void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->vi
 
 void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void SchedSwitchPerfEvent::Accept(PerfEventVisitor*) {}
+void TracepointServerResponse::Accept(PerfEventVisitor*) {}
 
 }  // namespace LinuxTracing

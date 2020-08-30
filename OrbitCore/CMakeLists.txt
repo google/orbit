@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitCore)
-add_library(OrbitCore STATIC)
+add_library(OrbitCore STATIC TracepointCollection.h)
 
 target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 

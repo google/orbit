@@ -33,7 +33,10 @@ static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTyp
 ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, int32_t process_id, std::string process_name,
     std::shared_ptr<Process> process,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
+    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>
+        selected_tracepoints) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return ErrorMessage(
@@ -42,16 +45,20 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   }
 
   state_ = State::kStarting;
-  thread_pool->Schedule([this, process_id, process_name, process, selected_functions]() {
-    Capture(process_id, process_name, process, selected_functions);
-  });
+  thread_pool->Schedule(
+      [this, process_id, process_name, process, selected_functions, selected_tracepoints]() {
+        Capture(process_id, process_name, process, selected_functions, selected_tracepoints);
+      });
 
   return outcome::success();
 }
 
-void CaptureClient::Capture(int32_t process_id, std::string process_name,
-                            std::shared_ptr<Process> process,
-                            absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
+void CaptureClient::Capture(
+    int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>
+        selected_tracepoints) {
   CHECK(reader_writer_ == nullptr);
 
   grpc::ClientContext context;
@@ -84,6 +91,13 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
     instrumented_function->set_function_type(IntrumentedFunctionTypeFromOrbitType(function.type()));
   }
 
+  for (const auto& tracepoint : selected_tracepoints) {
+    CaptureOptions::InstrumentedTracepoint* instrumented_tracepoint =
+        capture_options->add_instrumented_tracepoint();
+    instrumented_tracepoint->set_category(tracepoint.category());
+    instrumented_tracepoint->set_name(tracepoint.name());
+  }
+
   if (!reader_writer_->Write(request)) {
     ERROR("Sending CaptureRequest on Capture's gRPC stream");
     reader_writer_->WritesDone();
@@ -100,7 +114,8 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
   CaptureEventProcessor event_processor(capture_listener_);
 
   capture_listener_->OnCaptureStarted(process_id, std::move(process_name), std::move(process),
-                                      std::move(selected_functions));
+                                      std::move(selected_functions),
+                                      std::move(selected_tracepoints));
 
   CaptureResponse response;
   while (!force_stop_ && reader_writer_->Read(&response)) {

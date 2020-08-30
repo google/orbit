@@ -154,3 +154,9 @@ void DataManager::DeselectTracepoint(const TracepointInfo& info) {
 bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
   return selected_tracepoints_.contains(info);
 }
+
+const absl::flat_hash_set<TracepointInfo, internal::HashTracepointInfo,
+                          internal::EqualTracepointInfo>&
+DataManager::selected_tracepoints() const {
+  return selected_tracepoints_;
+}

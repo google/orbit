@@ -17,6 +17,7 @@
 #include "OrbitClientServices/ProcessClient.h"
 #include "OrbitProcess.h"
 #include "grpcpp/grpcpp.h"
+#include "tracepoint.pb.h"
 
 class ClientGgp final : public CaptureListener {
  public:
@@ -29,7 +30,10 @@ class ClientGgp final : public CaptureListener {
   // CaptureListener implementation
   void OnCaptureStarted(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) override;
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                          internal::EqualTracepointInfo>
+          selected_tracepoints) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
@@ -37,6 +41,9 @@ class ClientGgp final : public CaptureListener {
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnTracepointServiceResponse(int32_t pid, int32_t tid, int64_t time, int64_t stream_id,
+                                   int32_t cpu,
+                                   orbit_grpc_protos::TracepointInfo tracepoint_info) override;
 
  private:
   ClientGgpOptions options_;
