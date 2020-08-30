@@ -33,7 +33,6 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(
   setItemsExpandable(false);
   setContextMenuPolicy(Qt::CustomContextMenu);
   setSelectionBehavior(QTreeView::SelectRows);
-  setUniformRowHeights(true);
   setTextElideMode(Qt::ElideMiddle);
 
   connect(header(), SIGNAL(sortIndicatorChanged(int, Qt::SortOrder)), this,
@@ -50,7 +49,9 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(
 }
 
 void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type,
-                               FontType font_type) {
+                               FontType font_type, bool uniform_row_height) {
+  setUniformRowHeights(uniform_row_height);
+
   model_ = std::make_unique<OrbitTableModel>(data_view);
   setModel(model_.get());
   header()->resizeSections(QHeaderView::ResizeToContents);
