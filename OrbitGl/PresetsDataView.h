@@ -29,13 +29,24 @@ class PresetsDataView : public DataView {
   void SetPresets(const std::vector<std::shared_ptr<orbit_client_protos::PresetFile>>& presets);
 
  protected:
+  struct ModuleView {
+    ModuleView(std::string name, uint32_t count)
+        : module_name(std::move(name)), function_count(count){};
+    std::string module_name;
+    uint32_t function_count;
+  };
+
   void DoSort() override;
   void DoFilter() override;
+  std::string GetModulesList(const std::vector<ModuleView>& modules) const;
+  std::string GetFunctionCountList(const std::vector<ModuleView>& modules) const;
   const std::shared_ptr<orbit_client_protos::PresetFile>& GetPreset(unsigned int row) const;
+  const std::vector<ModuleView>& GetModules(uint32_t row) const;
 
   std::vector<std::shared_ptr<orbit_client_protos::PresetFile>> presets_;
+  std::vector<std::vector<ModuleView>> modules_;
 
-  enum ColumnIndex { kColumnSessionName, kNumColumns };
+  enum ColumnIndex { kColumnSessionName, kColumnModules, kColumnFunctionCount, kNumColumns };
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;

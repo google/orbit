@@ -24,7 +24,7 @@ class OrbitDataViewPanel : public QWidget {
   ~OrbitDataViewPanel() override;
 
   void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type,
-                  bool is_main_instance = true);
+                  bool is_main_instance = true, bool uniform_row_height = true);
   void Link(OrbitDataViewPanel* a_Panel);
   void Refresh();
   void SetDataModel(DataView* model);
