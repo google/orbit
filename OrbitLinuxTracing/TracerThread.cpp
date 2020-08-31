@@ -51,6 +51,14 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
       manual_instrumentation_config_.AddTimerStopAddress(absolute_address);
     }
   }
+
+  for (const CaptureOptions::InstrumentedTracepoint& instrumented_tracepoint :
+       capture_options.instrumented_tracepoint()) {
+    orbit_grpc_protos::TracepointInfo info;
+    info.set_name(instrumented_tracepoint.name());
+    info.set_category(instrumented_tracepoint.category());
+    instrumented_tracepoints_.emplace_back(info);
+  }
 }
 
 namespace {

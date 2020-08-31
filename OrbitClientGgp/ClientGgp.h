@@ -29,7 +29,10 @@ class ClientGgp final : public CaptureListener {
   // CaptureListener implementation
   void OnCaptureStarted(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) override;
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo,
+                          EqualTracepointInfo>
+          selected_tracepoints) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
