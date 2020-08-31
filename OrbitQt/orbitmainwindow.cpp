@@ -162,7 +162,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
                                 SelectionType::kExtended, FontType::kDefault);
   ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
                               SelectionType::kDefault, FontType::kDefault,
-                              /*is_main_instance=*/true, /*uniform_row_height=*/false);
+                              /*is_main_instance=*/true, /*uniform_row_height=*/false,
+                              /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
   ui->TracepointsList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::kTracepoints), SelectionType::kExtended,
       FontType::kDefault);
