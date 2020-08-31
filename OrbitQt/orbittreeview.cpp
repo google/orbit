@@ -49,10 +49,11 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(
 }
 
 void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type,
-                               FontType font_type, bool uniform_row_height) {
+                               FontType font_type, bool uniform_row_height,
+                               QFlags<Qt::AlignmentFlag> text_alignment) {
   setUniformRowHeights(uniform_row_height);
 
-  model_ = std::make_unique<OrbitTableModel>(data_view);
+  model_ = std::make_unique<OrbitTableModel>(data_view, /*parent=*/nullptr, text_alignment);
   setModel(model_.get());
   header()->resizeSections(QHeaderView::ResizeToContents);
 
