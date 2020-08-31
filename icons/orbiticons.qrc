@@ -1,6 +1,8 @@
 <RCC>
   <qresource prefix="/actions">
     <file alias="bug_report">outline_bug_report_white_48dp.png</file>
+    <file alias="search_small">outline_search_white_18dp.png</file>
+    <file alias="filter_list_small">outline_filter_list_white_18dp.png</file>
     <file alias="report">outline_report_white_48dp.png</file>
     <file alias="refresh">outline_refresh_white_48dp.png</file>
     <file alias="exit_to_app">outline_exit_to_app_white_48dp.png</file>

@@ -34,10 +34,20 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="FilterLineEdit"/>
+      <widget class="QLineEdit" name="FilterLineEdit">
+       <property name="accessibleName">
+        <string>filter</string>
+       </property>
+       <property name="placeholderText">
+        <string>Filter</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>Refresh list</string>
+       </property>
        <property name="icon">
         <iconset resource="../icons/orbiticons.qrc">
          <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>

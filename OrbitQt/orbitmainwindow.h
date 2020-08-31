@@ -93,9 +93,6 @@ class OrbitMainWindow : public QMainWindow {
   std::vector<OrbitGLWidget*> m_GlWidgets;
 
   // Capture toolbar.
-  QLabel* timer_label_ = nullptr;
-  QLineEdit* filter_functions_line_edit_ = nullptr;
-  QLineEdit* filter_tracks_line_edit_ = nullptr;
   QIcon icon_start_capture_;
   QIcon icon_stop_capture_;
 
