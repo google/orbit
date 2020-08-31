@@ -19,7 +19,8 @@ class OrbitTreeView : public QTreeView {
  public:
   explicit OrbitTreeView(QWidget* parent = nullptr);
   void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type,
-                  bool uniform_row_height = true);
+                  bool uniform_row_height = true,
+                  QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
   void SetDataModel(DataView* model);
   void OnFilter(const QString& a_Filter);
   void Refresh();
