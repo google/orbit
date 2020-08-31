@@ -63,7 +63,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
-  absl::flat_hash_set<TracepointInfo, internal::HashTracepointInfo, internal::EqualTracepointInfo>
+  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
       selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;

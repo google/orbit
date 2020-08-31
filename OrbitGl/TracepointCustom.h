@@ -7,7 +7,6 @@
 
 #include "tracepoint.pb.h"
 
-namespace internal {
 struct HashTracepointInfo {
   size_t operator()(const orbit_grpc_protos::TracepointInfo& info) const {
     return std::hash<std::string>{}(info.category()) * 37 + std::hash<std::string>{}(info.name());
@@ -20,6 +19,5 @@ struct EqualTracepointInfo {
     return left.category().compare(right.category()) == 0 && left.name().compare(right.name()) == 0;
   }
 };
-}  // namespace internal
 
 #endif  // ORBIT_TRACEPOINTCUSTOM_H
