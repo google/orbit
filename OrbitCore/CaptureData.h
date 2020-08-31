@@ -86,6 +86,8 @@ class CaptureData {
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
   [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoByAddress(
+      uint64_t absolute_address) const;
 
   static const std::string kUnknownFunctionOrModuleName;
 

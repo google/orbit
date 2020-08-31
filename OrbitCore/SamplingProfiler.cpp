@@ -293,6 +293,12 @@ void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capt
       function.address = absolute_address;
       function.module_path = capture_data.GetModulePathByAddress(absolute_address);
 
+      const FunctionInfo* function_info = capture_data.GetFunctionInfoByAddress(absolute_address);
+      if (function_info != nullptr) {
+        function.line = function_info->line();
+        function.file = function_info->file();
+      }
+
       sampled_functions->push_back(function);
     }
   }
