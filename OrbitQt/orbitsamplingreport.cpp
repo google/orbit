@@ -16,11 +16,7 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
   ui->setupUi(this);
   if (!m_SamplingReport || !m_SamplingReport->HasCallstacks()) {
     ui->NextCallstackButton->setEnabled(false);
-    ui->NextCallstackButton->setStyleSheet(
-        QString::fromUtf8("QPushButton:disabled{ color: gray }"));
     ui->PreviousCallstackButton->setEnabled(false);
-    ui->PreviousCallstackButton->setStyleSheet(
-        QString::fromUtf8("QPushButton:disabled{ color: gray }"));
   }
 
   QList<int> sizes;
