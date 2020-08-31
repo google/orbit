@@ -843,38 +843,41 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path,
                            const std::shared_ptr<Process>& process,
                            const std::shared_ptr<Module>& module,
                            const std::shared_ptr<PresetFile>& preset) {
-  // TODO (159889010) Move symbol loading off the main thread.
-  const auto scoped_status = CreateScopedStatus(absl::StrFormat(
+  auto scoped_status = CreateScopedStatus(absl::StrFormat(
       R"(Loading symbols for "%s" from file "%s"...)", module->m_FullName, symbols_path.string()));
+  thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, process,
+                          module, preset]() mutable {
+    auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
+    CHECK(symbols_result);
+    main_thread_executor_->Schedule([this, symbols = std::move(symbols_result.value()),
+                                     scoped_status = std::move(scoped_status), process, module,
+                                     preset] {
+      module->LoadSymbols(symbols);
+      CHECK(process != nullptr);
+      process->AddFunctions(module->m_Pdb->GetFunctions());
+      LOG("Loaded %lu function symbols for module \"%s\"", symbols.symbol_infos().size(),
+          module->m_FullName);
 
-  const auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
-  CHECK(symbols_result);
-  const ModuleSymbols& symbols = symbols_result.value();
-
-  module->LoadSymbols(symbols);
-  CHECK(process != nullptr);
-  process->AddFunctions(module->m_Pdb->GetFunctions());
-  LOG("Loaded %lu function symbols for module \"%s\"", symbols.symbol_infos().size(),
-      module->m_FullName);
-
-  // Applying preset
-  if (preset != nullptr) {
-    auto it = preset->preset_info().path_to_module().find(module->m_FullName);
-    if (it != preset->preset_info().path_to_module().end()) {
-      for (const FunctionInfo* func : module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
-        SelectFunction(*func);
+      // Applying preset
+      if (preset != nullptr) {
+        auto it = preset->preset_info().path_to_module().find(module->m_FullName);
+        if (it != preset->preset_info().path_to_module().end()) {
+          for (const FunctionInfo* func : module->m_Pdb->GetSelectedFunctionsFromPreset(*preset)) {
+            SelectFunction(*func);
+          }
+        }
       }
-    }
-  }
 
-  data_manager_->FindModuleByAddressStart(process->GetId(), module->m_AddressStart)
-      ->set_loaded(true);
+      data_manager_->FindModuleByAddressStart(process->GetId(), module->m_AddressStart)
+          ->set_loaded(true);
 
-  modules_currently_loading_.erase(module->m_FullName);
+      modules_currently_loading_.erase(module->m_FullName);
 
-  UpdateSamplingReport();
-  SetTopDownView(GetCaptureData());
-  GOrbitApp->FireRefreshCallbacks();
+      UpdateSamplingReport();
+      SetTopDownView(GetCaptureData());
+      GOrbitApp->FireRefreshCallbacks();
+    });
+  });
 }
 
 void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
