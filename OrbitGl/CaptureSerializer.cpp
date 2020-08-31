@@ -189,12 +189,10 @@ CaptureData CaptureSerializer::GenerateCaptureData(const CaptureInfo& capture_in
                            std::make_shared<Process>(), std::move(selected_functions),
                            std::move(functions_stats));
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos;
-  address_infos.reserve(capture_info.address_infos_size());
   for (const auto& address_info : capture_info.address_infos()) {
-    address_infos[address_info.absolute_address()] = address_info;
+    capture_data.InsertAddressInfo(address_info);
   }
-  capture_data.set_address_infos(std::move(address_infos));
+
   absl::flat_hash_map<int32_t, std::string> thread_names{capture_info.thread_names().begin(),
                                                          capture_info.thread_names().end()};
   capture_data.set_thread_names(thread_names);
