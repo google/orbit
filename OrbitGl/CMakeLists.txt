@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitGl CXX)
-add_library(OrbitGl STATIC)
+add_library(OrbitGl STATIC TracepointCustom.h)
 
 target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 

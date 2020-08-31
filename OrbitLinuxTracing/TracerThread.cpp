@@ -360,10 +360,6 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
                                     &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
-  /*tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
-      "sched", "sched_switch", cpus, &tracing_fds_, &sched_switch_ids_,
-      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);*/
-
   return !tracepoint_event_open_errors;
 }
 
@@ -741,15 +737,14 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
   bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
   bool is_task_newtask = task_newtask_ids_.contains(stream_id);
-  bool is_sched_switch = sched_switch_ids_.contains(stream_id);
   bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_amdgpu_cs_ioctl_event = amdgpu_cs_ioctl_ids_.contains(stream_id);
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
   CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask + is_task_rename +
-            is_sched_switch + is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
-            is_dma_fence_signaled_event + is_callchain_sample <=
+            is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
+            is_callchain_sample <=
         1);
 
   int fd = ring_buffer->GetFileDescriptor();
@@ -824,12 +819,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_name(event->GetNewComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
-
-  } else if (is_sched_switch) {
-    auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
-
-    LOG(" CPU: %d ** %s : %d -> %s : %d", event->GetCpu(), event->GetPrevComm(),
-        event->GetPrevPid(), event->GetNextComm(), event->GetNextPid());
 
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
