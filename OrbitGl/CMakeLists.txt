@@ -55,7 +55,8 @@ target_sources(
          TimerTrack.h
          Track.h
          TriangleToggle.h
-         TracepointsDataView.h )
+         TracepointsDataView.h
+         TracepointCustom.h)
 
 target_sources(
   OrbitGl

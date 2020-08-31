@@ -11,6 +11,7 @@
 
 #include "ProcessData.h"
 #include "TextBox.h"
+#include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "tracepoint.pb.h"
@@ -21,20 +22,6 @@
 // on the main thread.
 
 using orbit_grpc_protos::TracepointInfo;
-
-namespace internal {
-struct HashTracepointInfo {
-  size_t operator()(const TracepointInfo& info) const {
-    return std::hash<std::string>{}(info.category()) * 37 + std::hash<std::string>{}(info.name());
-  }
-};
-
-struct EqualTracepointInfo {
-  bool operator()(const TracepointInfo& left, const TracepointInfo& right) const {
-    return left.category().compare(right.category()) == 0 && left.name().compare(right.name()) == 0;
-  }
-};
-}  // namespace internal
 
 class DataManager final {
  public:
@@ -76,7 +63,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
-  absl::flat_hash_set<TracepointInfo, internal::HashTracepointInfo, internal::EqualTracepointInfo>
+  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
       selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;
