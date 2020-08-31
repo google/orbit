@@ -20,6 +20,26 @@ struct PresetLoadState {
     }
     return "";
   }
+
+  inline void GetDisplayColor(unsigned char& red, unsigned char& green, unsigned char& blue) const {
+    switch (state) {
+      case PresetLoadState::kLoadable:
+        red = 200;
+        green = 240;
+        blue = 200;
+        break;
+      case PresetLoadState::kPartiallyLoadable:
+        red = 240;
+        green = 240;
+        blue = 200;
+        break;
+      case PresetLoadState::kNotLoadable:
+        red = 230;
+        green = 190;
+        blue = 190;
+        break;
+    }
+  }
 };
 
 #endif  // ORBIT_GL_PRESET_LOAD_STATE_H_

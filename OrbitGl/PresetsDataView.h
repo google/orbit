@@ -26,6 +26,10 @@ class PresetsDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
 
+  bool WantsDisplayColor() override { return true; }
+  bool GetDisplayColor(int /*row*/, int /*column*/, unsigned char& /*red*/,
+                       unsigned char& /*green*/, unsigned char& /*blue*/) override;
+
   void SetPresets(const std::vector<std::shared_ptr<orbit_client_protos::PresetFile>>& presets);
 
  protected:
