@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitGl CXX)
-add_library(OrbitGl STATIC TracepointCustom.h)
+add_library(OrbitGl STATIC)
 
 target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 
@@ -55,7 +55,8 @@ target_sources(
          TimerTrack.h
          Track.h
          TriangleToggle.h
-         TracepointsDataView.h )
+         TracepointsDataView.h
+         TracepointCustom.h)
 
 target_sources(
   OrbitGl
