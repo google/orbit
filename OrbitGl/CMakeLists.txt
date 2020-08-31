@@ -39,6 +39,7 @@ target_sources(
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
+         PresetLoadState.h
          PresetsDataView.h
          ProcessesDataView.h
          SamplingReport.h

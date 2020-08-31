@@ -59,6 +59,34 @@ using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
 
+namespace {
+PresetLoadState GetPresetLoadStateForProcess(
+    const std::shared_ptr<orbit_client_protos::PresetFile>& preset,
+    const std::shared_ptr<Process>& process) {
+  if (process == nullptr) {
+    return PresetLoadState::kNotLoadable;
+  }
+
+  int modules_not_found_count = 0;
+  for (const auto& pair : preset->preset_info().path_to_module()) {
+    const std::string& module_path = pair.first;
+    if (process->GetModuleFromPath(module_path) == nullptr) {
+      modules_not_found_count++;
+    }
+  }
+
+  if (modules_not_found_count == preset->preset_info().path_to_module_size()) {
+    return PresetLoadState::kNotLoadable;
+  }
+
+  if (modules_not_found_count == 0) {
+    return PresetLoadState::kLoadable;
+  }
+
+  return PresetLoadState::kPartiallyLoadable;
+}
+}  // namespace
+
 std::unique_ptr<OrbitApp> GOrbitApp;
 bool DoZoom = false;
 
@@ -571,6 +599,12 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
   } else {
     SendErrorToUi("Preset loading failed", "Process is not selected");
   }
+}
+
+PresetLoadState OrbitApp::GetPresetLoadState(
+    const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const {
+  const std::shared_ptr<Process> selected_process = GetSelectedProcess();
+  return GetPresetLoadStateForProcess(preset, selected_process);
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
