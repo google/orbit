@@ -203,6 +203,14 @@ void PresetsDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
+bool PresetsDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
+                                      unsigned char& green, unsigned char& blue) {
+  const std::shared_ptr<PresetFile> preset = GetPreset(row);
+  PresetLoadState load_state = GOrbitApp->GetPresetLoadState(preset);
+  load_state.GetDisplayColor(red, green, blue);
+  return true;
+}
+
 void PresetsDataView::SetPresets(const std::vector<std::shared_ptr<PresetFile> >& presets) {
   presets_ = presets;
   OnDataChanged();

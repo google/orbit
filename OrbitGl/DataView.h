@@ -61,6 +61,7 @@ class DataView {
   virtual void OnDataChanged();
   virtual void OnTimer() {}
   virtual bool WantsDisplayColor() { return false; }
+  // TODO(irinashkviro): return a Color instead of using out-parameters
   virtual bool GetDisplayColor(int /*row*/, int /*column*/, unsigned char& /*red*/,
                                unsigned char& /*green*/, unsigned char& /*blue*/) {
     return false;
