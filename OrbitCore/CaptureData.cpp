@@ -102,3 +102,7 @@ const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address
   }
   return module_path;
 }
+
+const FunctionInfo* CaptureData::GetFunctionInfoByAddress(uint64_t absolute_address) const {
+  return process_->GetFunctionFromAddress(absolute_address, false);
+}
