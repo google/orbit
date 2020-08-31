@@ -14,11 +14,29 @@
 #include "ModulesDataView.h"
 #include "Path.h"
 #include "Pdb.h"
+#include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 
 using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
+
+constexpr const char* kLoadableColumnName = "Loadable";
+constexpr const char* kPresetColumnName = "Preset";
+constexpr const char* kModulesColumnName = "Modules";
+constexpr const char* kHookedFunctionsColumnName = "Hooked Functions";
+
+constexpr const float kLoadableColumnWidth = 0.14f;
+constexpr const float kPresetColumnWidth = 0.34f;
+constexpr const float kModulesColumnWidth = 0.34f;
+constexpr const float kHookedFunctionsColumnWidth = 0.16f;
+
+namespace {
+std::string GetLoadStateString(std::shared_ptr<orbit_client_protos::PresetFile> preset) {
+  PresetLoadState load_state = GOrbitApp->GetPresetLoadState(preset);
+  return load_state.GetName();
+}
+}  // namespace
 
 PresetsDataView::PresetsDataView() : DataView(DataViewType::kPresets) {}
 
@@ -38,9 +56,12 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
-    columns[kColumnSessionName] = {"Preset", .39f, SortingOrder::kAscending};
-    columns[kColumnModules] = {"Modules", .39f, SortingOrder::kAscending};
-    columns[kColumnFunctionCount] = {"Hooked Functions", .19f, SortingOrder::kAscending};
+    columns[kColumnLoadState] = {kLoadableColumnName, kLoadableColumnWidth,
+                                 SortingOrder::kAscending};
+    columns[kColumnSessionName] = {kPresetColumnName, kPresetColumnWidth, SortingOrder::kAscending};
+    columns[kColumnModules] = {kModulesColumnName, kModulesColumnWidth, SortingOrder::kAscending};
+    columns[kColumnFunctionCount] = {kHookedFunctionsColumnName, kHookedFunctionsColumnWidth,
+                                     SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -50,6 +71,8 @@ std::string PresetsDataView::GetValue(int row, int column) {
   const std::shared_ptr<PresetFile>& preset = GetPreset(row);
 
   switch (column) {
+    case kColumnLoadState:
+      return GetLoadStateString(preset);
     case kColumnSessionName:
       return Path::GetFileName(preset->file_name());
     case kColumnModules:
@@ -66,18 +89,21 @@ std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
   return preset.file_name();
 }
 
-#define ORBIT_PRESET_SORT(Member)                                                    \
-  [&](int a, int b) {                                                                \
-    return OrbitUtils::Compare(presets_[a]->Member, presets_[b]->Member, ascending); \
-  }
-
 void PresetsDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (sorting_column_) {
+    case kColumnLoadState:
+      sorter = [&](int a, int b) {
+        return OrbitUtils::Compare(GOrbitApp->GetPresetLoadState(presets_[a]).state,
+                                   GOrbitApp->GetPresetLoadState(presets_[b]).state, ascending);
+      };
+      break;
     case kColumnSessionName:
-      sorter = ORBIT_PRESET_SORT(file_name());
+      sorter = [&](int a, int b) {
+        return OrbitUtils::Compare(presets_[a]->file_name(), presets_[b]->file_name(), ascending);
+      };
       break;
     default:
       break;
