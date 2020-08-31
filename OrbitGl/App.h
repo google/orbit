@@ -35,6 +35,7 @@
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "OrbitClientServices/TracepointServiceClient.h"
+#include "PresetLoadState.h"
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
 #include "SamplingReport.h"
@@ -206,7 +207,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateSamplingReport();
-  void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& session);
+  void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  PresetLoadState GetPresetLoadState(
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const;
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
