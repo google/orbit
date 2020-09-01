@@ -23,6 +23,9 @@
      <property name="placeholderText">
       <string>Filter (invalidates the expanded/collapsed state of all nodes in the tree)</string>
      </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item row="1" column="0">
