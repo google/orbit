@@ -15,9 +15,12 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QLineEdit[accessibleName=&quot;filter&quot;] {
-	background-image: url(:/actions/search_small);
-	background-position: right 2px;
+	background-image: url(:/actions/search_small_offset);
+	background-position: left center;
 	background-repeat: no-repeat;
+	height: 22px;
+	padding-left: 20px;
+	padding-bottom: 1px;
 }
 
 QToolTip {
@@ -141,13 +144,13 @@ QPushButton:disabled {
                <string>filter</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">background-image: url(:/actions/filter_list_small);</string>
+               <string notr="true">background-image: url(:/actions/filter_list_small_offset);</string>
               </property>
               <property name="placeholderText">
                <string>Filter Tracks</string>
               </property>
               <property name="clearButtonEnabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -160,7 +163,7 @@ QPushButton:disabled {
                <string>Filter Functions</string>
               </property>
               <property name="clearButtonEnabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
              </widget>
             </item>

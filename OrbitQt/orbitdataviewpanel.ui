@@ -41,6 +41,9 @@
        <property name="placeholderText">
         <string>Filter</string>
        </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
