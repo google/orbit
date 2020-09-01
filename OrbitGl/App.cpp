@@ -657,6 +657,7 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
+  capture_data_ = CaptureData();
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
