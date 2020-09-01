@@ -21,7 +21,7 @@
       <string>filter</string>
      </property>
      <property name="placeholderText">
-      <string>Filter (invalidates the expanded/collapsed state of all nodes in the tree)</string>
+      <string>Search (invalidates the expanded/collapsed state of all nodes in the tree)</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>
