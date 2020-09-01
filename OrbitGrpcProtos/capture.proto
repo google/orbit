@@ -6,6 +6,8 @@ syntax = "proto3";
 
 package orbit_grpc_protos;
 
+import "tracepoint.proto";
+
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
@@ -31,16 +33,11 @@ message CaptureOptions {
     FunctionType function_type = 4;
   }
 
-  message InstrumentedTracepoint {
-    string category = 1;
-    string name = 2;
-  }
-
   repeated InstrumentedFunction instrumented_functions = 5;
 
   bool trace_gpu_driver = 6;
 
-  repeated InstrumentedTracepoint instrumented_tracepoint = 7;
+  repeated TracepointInfo instrumented_tracepoint = 7;
 }
 
 message SchedulingSlice {

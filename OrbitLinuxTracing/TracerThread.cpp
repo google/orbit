@@ -52,7 +52,7 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
     }
   }
 
-  for (const CaptureOptions::InstrumentedTracepoint& instrumented_tracepoint :
+  for (const orbit_grpc_protos::TracepointInfo& instrumented_tracepoint :
        capture_options.instrumented_tracepoint()) {
     orbit_grpc_protos::TracepointInfo info;
     info.set_name(instrumented_tracepoint.name());

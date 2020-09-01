@@ -89,8 +89,7 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
   }
 
   for (const auto& tracepoint : selected_tracepoints) {
-    CaptureOptions::InstrumentedTracepoint* instrumented_tracepoint =
-        capture_options->add_instrumented_tracepoint();
+    TracepointInfo* instrumented_tracepoint = capture_options->add_instrumented_tracepoint();
     instrumented_tracepoint->set_category(tracepoint.category());
     instrumented_tracepoint->set_name(tracepoint.name());
   }

@@ -24,8 +24,8 @@ struct EqualTracepointInfo {
 };
 }  // namespace internal
 
-typedef absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
-                            internal::EqualTracepointInfo>
-    TracepointInfoSet;
+using TracepointInfoSet =
+    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>;
 
 #endif  // ORBIT_TRACEPOINTCUSTOM_H

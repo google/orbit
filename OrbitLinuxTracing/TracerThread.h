@@ -17,7 +17,6 @@
 #include <regex>
 #include <vector>
 
-#include "../OrbitCore/TracepointCustom.h"
 #include "ContextSwitchManager.h"
 #include "GpuTracepointEventProcessor.h"
 #include "ManualInstrumentationConfig.h"
