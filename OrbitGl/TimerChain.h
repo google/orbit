@@ -66,17 +66,24 @@ class TimerBlock {
 class TimerChainIterator {
  public:
   explicit TimerChainIterator(TimerBlock* block) : block_(block) {}
+  TimerChainIterator& operator=(const TimerChainIterator& other) = default;
+  TimerChainIterator(const TimerChainIterator& other) = default;
+  TimerChainIterator(TimerChainIterator&& other) = default;
+  TimerChainIterator& operator=(TimerChainIterator&& other) = default;
 
-  TimerBlock& operator*() { return *block_; }
+  bool operator!=(const TimerChainIterator& other) const { return !(*this == other); }
 
-  bool operator!=(const TimerChainIterator& other) const { return block_ != other.block_; }
-
+  bool operator==(const TimerChainIterator& other) const { return block_ == other.block_; }
   TimerChainIterator& operator++() {
     block_ = block_->next_;
     return *this;
   }
 
+  const TimerBlock& operator*() const { return *block_; }
+  TimerBlock& operator*() { return *block_; }
+
   TimerBlock* operator->() { return block_; }
+  const TimerBlock* operator->() const { return block_; }
 
  private:
   TimerBlock* block_;

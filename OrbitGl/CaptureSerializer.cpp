@@ -16,12 +16,9 @@
 #include "EventTracer.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
-#include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
-#include "TextBox.h"
 #include "TimeGraph.h"
-#include "TimerChain.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 
@@ -31,24 +28,6 @@ using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
-
-ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename,
-                                             const CaptureData& capture_data) {
-  header.set_version(kRequiredCaptureVersion);
-
-  std::ofstream file(filename, std::ios::binary);
-  if (file.fail()) {
-    ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
-    return ErrorMessage("Error opening the file for writing");
-  }
-
-  {
-    SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-    Save(file, capture_data);
-  }
-
-  return outcome::success();
-}
 
 void CaptureSerializer::WriteMessage(const google::protobuf::Message* message,
                                      google::protobuf::io::CodedOutputStream* output) {
@@ -102,35 +81,6 @@ CaptureInfo CaptureSerializer::GenerateCaptureInfo(const CaptureData& capture_da
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 
   return capture_info;
-}
-
-void CaptureSerializer::Save(std::ostream& stream, const CaptureData& capture_data) {
-  google::protobuf::io::OstreamOutputStream out_stream(&stream);
-  google::protobuf::io::CodedOutputStream coded_output(&out_stream);
-
-  CHECK(time_graph_ != nullptr);
-  int timers_count = time_graph_->GetNumTimers();
-
-  WriteMessage(&header, &coded_output);
-
-  CaptureInfo capture_info = GenerateCaptureInfo(capture_data);
-  WriteMessage(&capture_info, &coded_output);
-
-  // Timers
-  int writes_count = 0;
-  std::vector<std::shared_ptr<TimerChain>> chains = time_graph_->GetAllTimerChains();
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      for (uint32_t k = 0; k < block.size(); ++k) {
-        WriteMessage(&block[k].GetTimerInfo(), &coded_output);
-        if (++writes_count > timers_count) {
-          return;
-        }
-      }
-    }
-  }
 }
 
 ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
