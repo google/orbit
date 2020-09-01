@@ -13,10 +13,12 @@ TopDownFunction* TopDownInternalNode::GetFunctionOrNull(uint64_t function_absolu
 }
 
 TopDownFunction* TopDownInternalNode::AddAndGetFunction(uint64_t function_absolute_address,
-                                                        std::string function_name) {
+                                                        std::string function_name,
+                                                        std::string module_path) {
   function_nodes_.insert_or_assign(
       function_absolute_address,
-      TopDownFunction{function_absolute_address, std::move(function_name), this});
+      TopDownFunction{function_absolute_address, std::move(function_name), std::move(module_path),
+                      this});
   return &function_nodes_.at(function_absolute_address);
 }
 
@@ -35,7 +37,7 @@ TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id, std::string threa
 
 [[nodiscard]] static TopDownFunction* GetOrCreateFunctionNode(
     TopDownInternalNode* current_thread_or_function, uint64_t frame,
-    const std::string& function_name) {
+    const std::string& function_name, const std::string& module_path) {
   TopDownFunction* function_node = current_thread_or_function->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
     std::string formatted_function_name;
@@ -44,8 +46,8 @@ TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id, std::string threa
     } else {
       formatted_function_name = absl::StrFormat("[unknown@%#llx]", frame);
     }
-    function_node =
-        current_thread_or_function->AddAndGetFunction(frame, std::move(formatted_function_name));
+    function_node = current_thread_or_function->AddAndGetFunction(
+        frame, std::move(formatted_function_name), module_path);
   }
   return function_node;
 }
@@ -59,8 +61,9 @@ static void AddCallstackToTopDownThread(TopDownThread* thread_node,
        frame_it != resolved_callstack.GetFrames().crend(); ++frame_it) {
     uint64_t frame = *frame_it;
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
+    const std::string& module_path = capture_data.GetModulePathByAddress(frame);
     TopDownFunction* function_node =
-        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name);
+        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name, module_path);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }

@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "CaptureData.h"
+#include "Path.h"
 #include "absl/container/node_hash_map.h"
 
 class TopDownNode {
@@ -44,7 +45,8 @@ class TopDownInternalNode : public TopDownNode {
   [[nodiscard]] TopDownFunction* GetFunctionOrNull(uint64_t function_absolute_address);
 
   [[nodiscard]] TopDownFunction* AddAndGetFunction(uint64_t function_absolute_address,
-                                                   std::string function_name);
+                                                   std::string function_name,
+                                                   std::string module_path);
 
   [[nodiscard]] float GetInclusivePercent(uint64_t total_sample_count) const {
     return 100.0f * sample_count() / total_sample_count;
@@ -63,14 +65,19 @@ class TopDownInternalNode : public TopDownNode {
 class TopDownFunction : public TopDownInternalNode {
  public:
   explicit TopDownFunction(uint64_t function_absolute_address, std::string function_name,
-                           TopDownNode* parent)
+                           std::string module_path, TopDownNode* parent)
       : TopDownInternalNode{parent},
         function_absolute_address_{function_absolute_address},
-        function_name_{std::move(function_name)} {}
+        function_name_{std::move(function_name)},
+        module_path_{std::move(module_path)} {}
 
   [[nodiscard]] uint64_t function_absolute_address() const { return function_absolute_address_; }
 
   [[nodiscard]] const std::string& function_name() const { return function_name_; }
+
+  [[nodiscard]] const std::string& module_path() const { return module_path_; }
+
+  [[nodiscard]] std::string GetModuleName() const { return Path::GetFileName(module_path()); }
 
   [[nodiscard]] uint64_t GetExclusiveSampleCount() const {
     uint64_t children_sample_count = 0;
@@ -97,6 +104,7 @@ class TopDownFunction : public TopDownInternalNode {
  private:
   uint64_t function_absolute_address_;
   std::string function_name_;
+  std::string module_path_;
 };
 
 class TopDownThread : public TopDownInternalNode {

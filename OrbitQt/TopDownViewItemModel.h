@@ -32,6 +32,7 @@ class TopDownViewItemModel : public QAbstractItemModel {
     kInclusive,
     kExclusive,
     kOfParent,
+    kModule,
     kFunctionAddress,
     kColumnCount
   };
