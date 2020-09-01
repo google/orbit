@@ -106,7 +106,8 @@ OrbitApp::~OrbitApp() {
 
 void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
                                 std::shared_ptr<Process> process,
-                                absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions) {
+                                absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+                                TracepointInfoSet selected_tracepoints) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -115,7 +116,8 @@ void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
 
   main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, process_id, process_name = std::move(process_name),
-       process = std::move(process), selected_functions = std::move(selected_functions)]() mutable {
+       process = std::move(process), selected_functions = std::move(selected_functions),
+       selected_tracepoints = std::move(selected_tracepoints)]() mutable {
         const bool has_selected_functions = !selected_functions.empty();
 
         ClearCapture();
@@ -123,7 +125,7 @@ void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
         capture_data_ = CaptureData(process_id, std::move(process_name), std::move(process),
-                                    std::move(selected_functions));
+                                    std::move(selected_functions), std::move(selected_tracepoints));
 
         if (capture_started_callback_) {
           capture_started_callback_();
@@ -650,8 +652,11 @@ bool OrbitApp::StartCapture() {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
 
-  ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool_.get(), pid, std::move(process_name), std::move(process), selected_functions);
+  TracepointInfoSet selected_tracepoints = GetSelectedTracepoints();
+
+  ErrorMessageOr<void> result =
+      capture_client_->StartCapture(thread_pool_.get(), pid, std::move(process_name),
+                                    std::move(process), selected_functions, selected_tracepoints);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());

@@ -9,7 +9,9 @@
 #include "EventBuffer.h"
 #include "OrbitProcess.h"
 #include "ScopeTimer.h"
+#include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
 class CaptureListener {
@@ -19,7 +21,8 @@ class CaptureListener {
   // Called after capture started but before the first event arrived.
   virtual void OnCaptureStarted(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) = 0;
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      TracepointInfoSet selected_tracepoints) = 0;
   // Called when capture is complete
   virtual void OnCaptureComplete() = 0;
 

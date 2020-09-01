@@ -14,7 +14,6 @@
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "tracepoint.pb.h"
 
 // This class is responsible for storing and
 // navigating data on the client side. Note that
@@ -57,14 +56,15 @@ class DataManager final {
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
 
+  [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
+
  private:
   const std::thread::id main_thread_id_;
   absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
-  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-      selected_tracepoints_;
+  TracepointInfoSet selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;

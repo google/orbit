@@ -46,6 +46,7 @@
 #include "SymbolHelper.h"
 #include "Threading.h"
 #include "TopDownView.h"
+#include "TracepointCustom.h"
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -56,7 +57,6 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 #include "symbol.pb.h"
-#include "tracepoint.pb.h"
 
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
@@ -96,7 +96,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnCaptureStarted(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions) override;
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
@@ -259,6 +260,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void DeselectTracepoint(const TracepointInfo& tracepoint);
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
+
+  [[nodiscard]] const TracepointInfoSet& GetSelectedTracepoints() const {
+    return data_manager_->selected_tracepoints();
+  }
 
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,

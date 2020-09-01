@@ -8,6 +8,7 @@
 #include <Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 #include <linux/perf_event.h>
+#include <tracepoint.pb.h>
 
 #include <atomic>
 #include <memory>
@@ -129,6 +130,7 @@ class TracerThread {
   uint64_t sampling_period_ns_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
+  std::deque<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
   bool trace_gpu_driver_;
 
   TracerListener* listener_ = nullptr;

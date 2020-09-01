@@ -30,6 +30,7 @@ target_sources(
          StringManager.h
          SymbolHelper.h
          Threading.h
+         TracepointCustom.h
          Utils.h)
 
 target_sources(

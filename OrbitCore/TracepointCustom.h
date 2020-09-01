@@ -5,8 +5,11 @@
 #ifndef ORBIT_TRACEPOINTCUSTOM_H
 #define ORBIT_TRACEPOINTCUSTOM_H
 
+#include <absl/container/flat_hash_set.h>
+
 #include "tracepoint.pb.h"
 
+namespace internal {
 struct HashTracepointInfo {
   size_t operator()(const orbit_grpc_protos::TracepointInfo& info) const {
     return std::hash<std::string>{}(info.category()) * 37 + std::hash<std::string>{}(info.name());
@@ -19,5 +22,10 @@ struct EqualTracepointInfo {
     return left.category().compare(right.category()) == 0 && left.name().compare(right.name()) == 0;
   }
 };
+}  // namespace internal
+
+using TracepointInfoSet =
+    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>;
 
 #endif  // ORBIT_TRACEPOINTCUSTOM_H
