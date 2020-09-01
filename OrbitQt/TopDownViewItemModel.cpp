@@ -48,6 +48,8 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
       case kOfParent:
         return QString::fromStdString(
             absl::StrFormat("%.2f%%", function_item->GetPercentOfParent()));
+      case kModule:
+        return QString::fromStdString(function_item->GetModuleName());
       case kFunctionAddress:
         return QString::fromStdString(
             absl::StrFormat("%#llx", function_item->function_absolute_address()));
@@ -79,6 +81,8 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
         return static_cast<qulonglong>(function_item->GetExclusiveSampleCount());
       case kOfParent:
         return static_cast<qulonglong>(function_item->GetPercentOfParent());
+      case kModule:
+        return QString::fromStdString(function_item->GetModuleName());
       case kFunctionAddress:
         return static_cast<qulonglong>(function_item->function_absolute_address());
     }
@@ -123,6 +127,8 @@ QVariant TopDownViewItemModel::headerData(int section, Qt::Orientation orientati
           return "Exclusive";
         case Columns::kOfParent:
           return "Of parent";
+        case Columns::kModule:
+          return "Module";
         case Columns::kFunctionAddress:
           return "Function address";
       }
@@ -137,6 +143,8 @@ QVariant TopDownViewItemModel::headerData(int section, Qt::Orientation orientati
           return Qt::DescendingOrder;
         case Columns::kOfParent:
           return Qt::DescendingOrder;
+        case Columns::kModule:
+          return Qt::AscendingOrder;
         case Columns::kFunctionAddress:
           return Qt::AscendingOrder;
       }
