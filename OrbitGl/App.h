@@ -95,9 +95,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCaptureStarted(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo,
-                          EqualTracepointInfo>
-          selected_tracepoints) override;
+      TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
@@ -256,8 +254,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
 
-  [[nodiscard]] const absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>&
-  GetSelectedTracepoints() const {
+  [[nodiscard]] const TracepointInfoSet& GetSelectedTracepoints() const {
     return data_manager_->selected_tracepoints();
   }
 

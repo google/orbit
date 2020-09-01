@@ -33,9 +33,7 @@ class CaptureClient {
       ThreadPool* thread_pool, int32_t process_id, std::string process_name,
       std::shared_ptr<Process> process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo,
-                          EqualTracepointInfo>
-          selected_tracepoints);
+      TracepointInfoSet selected_tracepoints);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -58,9 +56,7 @@ class CaptureClient {
  private:
   void Capture(int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-               absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo,
-                                   EqualTracepointInfo>
-                   selected_tracepoints);
+               TracepointInfoSet selected_tracepoints);
 
   void FinishCapture();
 

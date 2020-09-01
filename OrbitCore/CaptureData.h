@@ -8,10 +8,10 @@
 #include <memory>
 #include <vector>
 
-#include "../../OrbitGl/TracepointCustom.h"
 #include "CallstackData.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
+#include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -20,9 +20,7 @@ class CaptureData {
   explicit CaptureData(
       int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo,
-                          EqualTracepointInfo>
-          selected_tracepoints)
+      TracepointInfoSet selected_tracepoints)
       : process_id_{process_id},
         process_name_{std::move(process_name)},
         process_{std::move(process)},
@@ -156,8 +154,7 @@ class CaptureData {
   std::shared_ptr<Process> process_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
 
-  absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-      selected_tracepoints_;
+  TracepointInfoSet selected_tracepoints_;
   // std::unique_ptr<> allows to move and copy CallstackData easier
   // (as CallstackData stores an absl::Mutex inside)
   std::unique_ptr<CallstackData> callstack_data_;

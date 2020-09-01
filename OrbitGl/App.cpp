@@ -76,11 +76,10 @@ OrbitApp::~OrbitApp() {
 #endif
 }
 
-void OrbitApp::OnCaptureStarted(
-    int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-        selected_tracepoints) {
+void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
+                                std::shared_ptr<Process> process,
+                                absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+                                TracepointInfoSet selected_tracepoints) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -626,8 +625,7 @@ bool OrbitApp::StartCapture() {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions =
       GetSelectedFunctionsAndOrbitFunctions();
 
-  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-      selected_tracepoints = GetSelectedTracepoints();
+  TracepointInfoSet selected_tracepoints = GetSelectedTracepoints();
 
   ErrorMessageOr<void> result =
       capture_client_->StartCapture(thread_pool_.get(), pid, std::move(process_name),

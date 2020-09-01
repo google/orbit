@@ -56,8 +56,7 @@ class DataManager final {
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
 
-  [[nodiscard]] const absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>&
-  selected_tracepoints() const;
+  [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
 
  private:
   const std::thread::id main_thread_id_;
@@ -65,8 +64,7 @@ class DataManager final {
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
-  absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-      selected_tracepoints_;
+  TracepointInfoSet selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;

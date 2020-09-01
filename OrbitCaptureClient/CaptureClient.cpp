@@ -35,8 +35,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, int32_t process_id, std::string process_name,
     std::shared_ptr<Process> process,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    absl::flat_hash_set<TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-        selected_tracepoints) {
+    TracepointInfoSet selected_tracepoints) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return ErrorMessage(
@@ -53,11 +52,10 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   return outcome::success();
 }
 
-void CaptureClient::Capture(
-    int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, HashTracepointInfo, EqualTracepointInfo>
-        selected_tracepoints) {
+void CaptureClient::Capture(int32_t process_id, std::string process_name,
+                            std::shared_ptr<Process> process,
+                            absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+                            TracepointInfoSet selected_tracepoints) {
   CHECK(reader_writer_ == nullptr);
 
   grpc::ClientContext context;
