@@ -6,6 +6,7 @@
 
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "TracepointCustom.h"
 #include "absl/flags/flag.h"
 #include "services.pb.h"
 

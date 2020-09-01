@@ -12,6 +12,8 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitProcess.h"
+#include "TracepointCustom.h"
+#include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
