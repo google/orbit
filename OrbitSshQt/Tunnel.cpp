@@ -4,6 +4,7 @@
 
 #include "OrbitSshQt/Tunnel.h"
 
+#include <QHostAddress>
 #include <QTimer>
 
 #include "OrbitBase/Logging.h"
@@ -76,7 +77,7 @@ outcome::result<void> Tunnel::startup() {
     }
     case State::kChannelInitialized: {
       local_server_.emplace();
-      const auto result = local_server_->listen();
+      const auto result = local_server_->listen(QHostAddress{QHostAddress::LocalHost});
 
       if (!result) {
         return Error::kCouldNotListen;
