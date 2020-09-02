@@ -1054,6 +1054,10 @@ void OrbitApp::ClearSelectedFunctions() { data_manager_->ClearSelectedFunctions(
   return data_manager_->IsFunctionSelected(func.address);
 }
 
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(uint64_t absolute_address) const {
+  return data_manager_->IsFunctionSelected(absolute_address);
+}
+
 void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions) {
   data_manager_->set_visible_functions(std::move(visible_functions));
   NeedsRedraw();

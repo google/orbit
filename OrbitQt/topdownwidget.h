@@ -5,6 +5,7 @@
 #ifndef ORBIT_QT_TOP_DOWN_WIDGET_H_
 #define ORBIT_QT_TOP_DOWN_WIDGET_H_
 
+#include <QIdentityProxyModel>
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QWidget>
@@ -64,10 +65,22 @@ class TopDownWidget : public QWidget {
     std::vector<std::string> lowercase_filter_tokens_;
   };
 
+  class HookedIdentityProxyModel : public QIdentityProxyModel {
+   public:
+    HookedIdentityProxyModel(OrbitApp* app, QObject* parent)
+        : QIdentityProxyModel{parent}, app_{app} {}
+
+    QVariant data(const QModelIndex& index, int role) const override;
+
+   private:
+    OrbitApp* app_;
+  };
+
   std::unique_ptr<Ui::TopDownWidget> ui_;
   OrbitApp* app_ = nullptr;
   std::unique_ptr<TopDownViewItemModel> model_;
-  std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> proxy_model_;
+  std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
+  std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;
 };
 
 #endif  // ORBIT_QT_TOP_DOWN_WIDGET_H_
