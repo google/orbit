@@ -259,7 +259,6 @@ uint64_t CaptureEventProcessor::GetTracepointInfoHashAndSendToListenerIfNecessar
 
   if (!tracepoint_hashes_seen_.contains(hash)) {
     tracepoint_hashes_seen_.emplace(hash);
-    LOG("hello %s %s", tracepoint_info.category(), tracepoint_info.name());
     capture_listener_->OnUniqueTracepoint(hash, tracepoint_info);
   }
   return hash;

@@ -832,7 +832,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
-    auto event = ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header, true);
     ThreadName thread_name;
     thread_name.set_tid(event->GetTid());
     thread_name.set_name(event->GetComm());
@@ -840,7 +840,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     listener_->OnThreadName(std::move(thread_name));
 
   } else if (is_task_rename) {
-    auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header, true);
     ThreadName thread_name;
     thread_name.set_tid(event->GetTid());
     thread_name.set_name(event->GetNewComm());
@@ -854,7 +854,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
     while (it != are_instrumented_tracepoints.end()) {
       if (it->second != false) {
-        auto event = ConsumeTracepointPerfEvent<TracepointEvent>(ring_buffer, header);
+        auto event = ConsumeTracepointPerfEvent<TracepointEvent>(ring_buffer, header, false);
 
         orbit_grpc_protos::TracepointSample tracepoint_sample;
         tracepoint_sample.set_pid(event->GetPid());
@@ -872,17 +872,17 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     }
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
-    auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header, true);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
   } else if (is_amdgpu_sched_run_job_event) {
-    auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header, true);
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
   } else if (is_dma_fence_signaled_event) {
-    auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
+    auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header, true);
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
   } else if (is_callchain_sample) {

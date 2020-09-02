@@ -26,14 +26,16 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
 
 template <typename T, typename = std::enable_if_t<std::is_base_of_v<TracepointPerfEvent, T>>>
 std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                              const perf_event_header& header) {
+                                              const perf_event_header& header,
+                                              bool read_data_perf_sample_raw) {
   uint32_t tracepoint_size;
   ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
   auto event = std::make_unique<T>(tracepoint_size);
   ring_buffer->ReadRawAtOffset(&event->ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
-  ring_buffer->ReadRawAtOffset(&event->tracepoint_data[0],
-                               offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t),
-                               tracepoint_size);
+  if (read_data_perf_sample_raw)
+    ring_buffer->ReadRawAtOffset(&event->tracepoint_data[0],
+                                 offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t),
+                                 tracepoint_size);
   ring_buffer->SkipRecord(header);
   return event;
 }
