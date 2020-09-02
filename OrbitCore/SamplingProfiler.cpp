@@ -93,7 +93,7 @@ std::shared_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFrom
   return report;
 }
 
-const int32_t SamplingProfiler::kAllThreadsFakeTid = 0;
+const int32_t SamplingProfiler::kAllThreadsFakeTid = -1;
 
 void SamplingProfiler::SortByThreadUsage() {
   sorted_thread_sample_data_.clear();
