@@ -175,7 +175,7 @@ void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
 QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(const QModelIndex& index,
                                                                         int role) const {
   if (role == Qt::ForegroundRole) {
-    if (!lowercase_filter_.empty() && ItemMatchesFilter(index)) {
+    if (!lowercase_filter_tokens_.empty() && ItemMatchesFilter(index)) {
       return QColor{Qt::green};
     }
   } else if (role == kMatchesCustomFilterRole) {
@@ -192,5 +192,10 @@ bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter
           .data()
           .toString()
           .toStdString());
-  return absl::StrContains(haystack, lowercase_filter_);
+  for (const std::string& token : lowercase_filter_tokens_) {
+    if (!absl::StrContains(haystack, token)) {
+      return false;
+    }
+  }
+  return true;
 }
