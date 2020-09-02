@@ -42,13 +42,13 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID
   event_map[time] = event;
 
   // Add all callstack events to "all threads".
-  std::map<uint64_t, CallstackEvent>& event_map_0 =
+  std::map<uint64_t, CallstackEvent>& event_map_all_threads =
       callstack_events_[SamplingProfiler::kAllThreadsFakeTid];
-  CallstackEvent event0;
-  event0.set_time(time);
-  event0.set_callstack_hash(cs_hash);
-  event0.set_thread_id(SamplingProfiler::kAllThreadsFakeTid);
-  event_map_0[time] = event0;
+  CallstackEvent event_all_threads;
+  event_all_threads.set_time(time);
+  event_all_threads.set_callstack_hash(cs_hash);
+  event_all_threads.set_thread_id(SamplingProfiler::kAllThreadsFakeTid);
+  event_map_all_threads[time] = event_all_threads;
 
   RegisterTime(time);
 }
