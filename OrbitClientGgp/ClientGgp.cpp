@@ -252,6 +252,7 @@ void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
     FunctionInfo* func =
         capture_data_.process()->GetFunctionFromAddress(timer_info.function_address());
+    // For timers, the function must be present in the process
     CHECK(func != nullptr);
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
     capture_data_.UpdateFunctionStats(*func, elapsed_nanos);
