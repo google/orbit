@@ -37,6 +37,8 @@ const QString TopDownWidget::kActionCollapseChildrenRecursively =
 const QString TopDownWidget::kActionExpandAll = QStringLiteral("Expand all");
 const QString TopDownWidget::kActionCollapseAll = QStringLiteral("Collapse all");
 const QString TopDownWidget::kActionLoadSymbols = QStringLiteral("&Load Symbols");
+const QString TopDownWidget::kActionSelect = QStringLiteral("&Hook");
+const QString TopDownWidget::kActionDeselect = QStringLiteral("&Unhook");
 const QString TopDownWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
@@ -162,6 +164,13 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   bool enable_load = !modules_to_load.empty();
 
   std::vector<FunctionInfo*> functions = GetFunctionsFromIndices(app_, selected_tree_indices);
+  bool enable_select = false;
+  bool enable_deselect = false;
+  for (FunctionInfo* function : functions) {
+    enable_select |= !app_->IsFunctionSelected(*function);
+    enable_deselect |= app_->IsFunctionSelected(*function);
+  }
+
   bool enable_disassembly = !functions.empty();
 
   QMenu menu{ui_->topDownTreeView};
@@ -178,6 +187,12 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   menu.addSeparator();
   if (enable_load) {
     menu.addAction(kActionLoadSymbols);
+  }
+  if (enable_select) {
+    menu.addAction(kActionSelect);
+  }
+  if (enable_deselect) {
+    menu.addAction(kActionDeselect);
   }
   if (enable_disassembly) {
     menu.addAction(kActionDisassembly);
@@ -206,6 +221,14 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     ui_->topDownTreeView->collapseAll();
   } else if (action->text() == kActionLoadSymbols) {
     app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
+  } else if (action->text() == kActionSelect) {
+    for (FunctionInfo* function : functions) {
+      app_->SelectFunction(*function);
+    }
+  } else if (action->text() == kActionDeselect) {
+    for (FunctionInfo* function : functions) {
+      app_->DeselectFunction(*function);
+    }
   } else if (action->text() == kActionDisassembly) {
     for (FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
