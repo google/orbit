@@ -15,7 +15,7 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        if (thread_item->thread_id() == 0) {
+        if (thread_item->thread_id() == SamplingProfiler::kAllThreadsFakeTid) {
           return QString::fromStdString(
               thread_item->thread_name().empty()
                   ? "(all threads)"

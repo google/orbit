@@ -248,7 +248,7 @@ void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFuncti
 
 void SamplingReportDataView::SetThreadID(ThreadID tid) {
   tid_ = tid;
-  if (tid == 0) {
+  if (tid == SamplingProfiler::kAllThreadsFakeTid) {
     name_ = "All";
   } else {
     name_ = absl::StrFormat("%d", tid_);
