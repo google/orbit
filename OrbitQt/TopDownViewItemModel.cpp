@@ -65,6 +65,7 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
+        // Threads are sorted by tid, not by name.
         return thread_item->thread_id();
       case kInclusive:
         return static_cast<qulonglong>(thread_item->sample_count());
@@ -90,6 +91,18 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
   return QVariant();
 }
 
+QVariant TopDownViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
+  auto* item = static_cast<TopDownNode*>(index.internalPointer());
+  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  if (function_item != nullptr) {
+    switch (index.column()) {
+      case kModule:
+        return QString::fromStdString(function_item->module_path());
+    }
+  }
+  return QVariant();
+}
+
 QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return QVariant();
@@ -100,6 +113,9 @@ QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
     // The value returned when role == Qt::EditRole is used for sorting.
     case Qt::EditRole:
       return GetEditRoleData(index);
+    // When role == Qt::ToolTipRole more detailed information than it's shown is returned.
+    case Qt::ToolTipRole:
+      return GetToolTipRoleData(index);
   }
   return QVariant();
 }
