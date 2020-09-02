@@ -37,10 +37,13 @@ class TopDownViewItemModel : public QAbstractItemModel {
     kColumnCount
   };
 
+  static const int kModulePathRole = Qt::UserRole + 1;
+
  private:
   [[nodiscard]] QVariant GetDisplayRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetEditRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetToolTipRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetModulePathRoleData(const QModelIndex& index) const;
 
   std::unique_ptr<TopDownView> top_down_view_;
 };
