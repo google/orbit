@@ -38,9 +38,9 @@ class TopDownViewItemModel : public QAbstractItemModel {
   };
 
  private:
-  QVariant GetDisplayRoleData(const QModelIndex& index) const;
-  QVariant GetEditRoleData(const QModelIndex& index) const;
-  QVariant GetToolTipRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetDisplayRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetEditRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetToolTipRoleData(const QModelIndex& index) const;
 
   std::unique_ptr<TopDownView> top_down_view_;
 };

@@ -9,6 +9,7 @@ TopDownViewItemModel::TopDownViewItemModel(std::unique_ptr<TopDownView> top_down
     : QAbstractItemModel{parent}, top_down_view_{std::move(top_down_view)} {}
 
 QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
   auto* item = static_cast<TopDownNode*>(index.internalPointer());
   auto thread_item = dynamic_cast<TopDownThread*>(item);
   auto function_item = dynamic_cast<TopDownFunction*>(item);
@@ -59,6 +60,7 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
 }
 
 QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
   auto* item = static_cast<TopDownNode*>(index.internalPointer());
   auto thread_item = dynamic_cast<TopDownThread*>(item);
   auto function_item = dynamic_cast<TopDownFunction*>(item);
@@ -92,6 +94,7 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
 }
 
 QVariant TopDownViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
   auto* item = static_cast<TopDownNode*>(index.internalPointer());
   auto function_item = dynamic_cast<TopDownFunction*>(item);
   if (function_item != nullptr) {
