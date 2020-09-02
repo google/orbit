@@ -42,6 +42,7 @@ class TopDownWidget : public QWidget {
   static const QString kActionExpandAll;
   static const QString kActionCollapseAll;
   static const QString kActionLoadSymbols;
+  static const QString kActionDisassembly;
 
   class HighlightCustomFilterSortFilterProxyModel : public QSortFilterProxyModel {
    public:
