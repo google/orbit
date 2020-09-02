@@ -99,6 +99,8 @@ QVariant TopDownViewItemModel::GetToolTipRoleData(const QModelIndex& index) cons
   auto function_item = dynamic_cast<TopDownFunction*>(item);
   if (function_item != nullptr) {
     switch (index.column()) {
+      case kThreadOrFunction:
+        return QString::fromStdString(function_item->function_name());
       case kModule:
         return QString::fromStdString(function_item->module_path());
     }
