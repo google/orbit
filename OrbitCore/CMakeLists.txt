@@ -31,6 +31,7 @@ target_sources(
          SymbolHelper.h
          Threading.h
          TracepointCustom.h
+         TracepointInfoManager.h
          Utils.h)
 
 target_sources(
@@ -49,6 +50,7 @@ target_sources(
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
+          TracepointInfoManager.cpp
           Utils.cpp)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})

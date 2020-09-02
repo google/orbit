@@ -78,6 +78,22 @@ message CallstackSample {
   uint64 timestamp_ns = 5;
 }
 
+message InternedTracepointInfo {
+  uint64 key = 1;
+  TracepointInfo intern = 2;
+}
+
+message TracepointSample {
+  int32 pid = 1;
+  int32 tid = 2;
+  int64 time = 3;
+  int32 cpu = 4;
+  oneof tracepoint_info_or_key {
+    TracepointInfo tracepoint_info = 5;
+    uint64 tracepoint_key = 6;
+  }
+}
+
 message InternedString {
   uint64 key = 1;
   string intern = 2;
@@ -129,5 +145,7 @@ message CaptureEvent {
     GpuJob gpu_job = 6;
     ThreadName thread_name = 7;
     AddressInfo address_info = 8;
+    InternedTracepointInfo interned_tracepoint_info = 9;
+    TracepointSample tracepoint_sample = 10;
   }
 }

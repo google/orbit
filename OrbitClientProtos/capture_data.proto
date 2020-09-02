@@ -54,6 +54,14 @@ message CallstackInfo {
   repeated uint64 data = 1;
 }
 
+message TracepointEvent {
+  int32 pid = 1;
+  int32 tid = 2;
+  int64 time = 3;
+  int32 cpu = 4;
+  uint64 tracepoint_hash = 5;
+}
+
 message LinuxAddressInfo {
   uint64 absolute_address = 1;
   string module_path = 2;
@@ -76,6 +84,7 @@ message CaptureInfo {
   map<uint64, string> key_to_string = 8;
   // TODO(kuebler): consider removing this field completely.
   map<uint64, FunctionStats> function_stats = 9;
+  repeated TracepointEvent tracepoint_events = 10;
 }
 
 message TimerInfo {

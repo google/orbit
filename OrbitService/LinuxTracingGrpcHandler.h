@@ -37,6 +37,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override;
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override;
   void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) override;
+  void OnTracepointSample(orbit_grpc_protos::TracepointSample tracepoint_sample) override;
 
  private:
   grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
@@ -48,6 +49,8 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
       orbit_grpc_protos::Callstack callstack);
   [[nodiscard]] static uint64_t ComputeStringKey(const std::string& str);
   [[nodiscard]] uint64_t InternStringIfNecessaryAndGetKey(std::string str);
+  [[nodiscard]] uint64_t InternTracepointInfoIfNecessaryAndGetKey(
+      orbit_grpc_protos::TracepointInfo tracepoint_info);
 
   absl::flat_hash_set<uint64_t> addresses_seen_;
   absl::Mutex addresses_seen_mutex_;
@@ -55,7 +58,8 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   absl::Mutex callstack_keys_sent_mutex_;
   absl::flat_hash_set<uint64_t> string_keys_sent_;
   absl::Mutex string_keys_sent_mutex_;
-
+  absl::Mutex tracepoint_keys_sent_mutex_;
+  absl::flat_hash_set<uint64_t> tracepoint_keys_sent_;
   void SenderThread();
   void SendBufferedEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& buffered_events);
 

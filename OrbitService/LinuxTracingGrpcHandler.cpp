@@ -101,6 +101,20 @@ void LinuxTracingGrpcHandler::OnThreadName(ThreadName thread_name) {
   }
 }
 
+void LinuxTracingGrpcHandler::OnTracepointSample(
+    orbit_grpc_protos::TracepointSample tracepoint_sample) {
+  CHECK(tracepoint_sample.tracepoint_info_or_key_case() ==
+        orbit_grpc_protos::TracepointSample::kTracepointInfo);
+  tracepoint_sample.set_tracepoint_key(
+      InternTracepointInfoIfNecessaryAndGetKey(tracepoint_sample.tracepoint_info()));
+
+  CaptureEvent event;
+  *event.mutable_tracepoint_sample() = std::move(tracepoint_sample);
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    event_buffer_.emplace_back(std::move(event));
+  }
+}
 void LinuxTracingGrpcHandler::OnAddressInfo(AddressInfo address_info) {
   {
     absl::MutexLock lock{&addresses_seen_mutex_};
@@ -170,6 +184,30 @@ uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(std::string s
   CaptureEvent event;
   event.mutable_interned_string()->set_key(key);
   event.mutable_interned_string()->set_intern(std::move(str));
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    event_buffer_.emplace_back(std::move(event));
+  }
+  return key;
+}
+
+uint64_t LinuxTracingGrpcHandler::InternTracepointInfoIfNecessaryAndGetKey(
+    orbit_grpc_protos::TracepointInfo tracepoint_info) {
+  uint64_t key =
+      ComputeStringKey(tracepoint_info.category()) * 37 + ComputeStringKey(tracepoint_info.name());
+  {
+    absl::MutexLock lock{&tracepoint_keys_sent_mutex_};
+    if (tracepoint_keys_sent_.contains(key)) {
+      return key;
+    }
+    tracepoint_keys_sent_.emplace(key);
+  }
+
+  CaptureEvent event;
+  event.mutable_interned_tracepoint_info()->set_key(key);
+  event.mutable_interned_tracepoint_info()->mutable_intern()->set_name(tracepoint_info.name());
+  event.mutable_interned_tracepoint_info()->mutable_intern()->set_category(
+      tracepoint_info.category());
   {
     absl::MutexLock lock{&event_buffer_mutex_};
     event_buffer_.emplace_back(std::move(event));

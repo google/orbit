@@ -24,6 +24,7 @@
 #include "PerfEventProcessor.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
+#include "TracepointCustom.h"
 #include "Utils.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -131,6 +132,9 @@ class TracerThread {
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
   std::deque<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
+  absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, absl::flat_hash_set<uint64_t>,
+                      internal::HashTracepointInfo, internal::EqualTracepointInfo>
+      instrumented_tracepoints_ids_;
   bool trace_gpu_driver_;
 
   TracerListener* listener_ = nullptr;

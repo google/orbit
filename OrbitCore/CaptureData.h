@@ -158,6 +158,7 @@ class CaptureData {
   // std::unique_ptr<> allows to move and copy CallstackData easier
   // (as CallstackData stores an absl::Mutex inside)
   std::unique_ptr<CallstackData> callstack_data_;
+
   // selection_callstack_data_ is subset of callstack_data_
   std::unique_ptr<CallstackData> selection_callstack_data_;
 

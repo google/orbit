@@ -32,6 +32,9 @@ class CaptureListener {
   virtual void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) = 0;
   virtual void OnThreadName(int32_t thread_id, std::string thread_name) = 0;
   virtual void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) = 0;
+  virtual void OnUniqueTracepoint(uint64_t key,
+                                  orbit_grpc_protos::TracepointInfo tracepoint_info) = 0;
+  virtual void OnTracepointEvent(orbit_client_protos::TracepointEvent tracepoint_event) = 0;
 };
 
 #endif  // ORBIT_GL_CAPTURE_LISTENER_H_

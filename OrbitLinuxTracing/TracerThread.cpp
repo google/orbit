@@ -368,6 +368,14 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
                                     &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
+  for (const auto& selected_tracepoint : instrumented_tracepoints_) {
+    absl::flat_hash_set<uint64_t> empty_hash_set;
+    instrumented_tracepoints_ids_.emplace(selected_tracepoint, empty_hash_set);
+    tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+        selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), cpus,
+        &tracing_fds_, &instrumented_tracepoints_ids_.at(selected_tracepoint),
+        &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+  }
   return !tracepoint_event_open_errors;
 }
 
@@ -755,6 +763,17 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
             is_callchain_sample <=
         1);
 
+  absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, bool, internal::HashTracepointInfo,
+                      internal::EqualTracepointInfo>
+      are_instrumented_tracepoints;
+  std::for_each(
+      instrumented_tracepoints_ids_.begin(), instrumented_tracepoints_ids_.end(),
+      [&are_instrumented_tracepoints,
+       stream_id](const std::pair<orbit_grpc_protos::TracepointInfo, absl::flat_hash_set<uint64_t>>&
+                      element) {
+        are_instrumented_tracepoints.emplace(element.first, element.second.contains(stream_id));
+      });
+
   int fd = ring_buffer->GetFileDescriptor();
 
   if (is_uprobe) {
@@ -828,6 +847,29 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
 
+  } else if (!are_instrumented_tracepoints.empty()) {
+    absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, bool, internal::HashTracepointInfo,
+                        internal::EqualTracepointInfo>::iterator it =
+        are_instrumented_tracepoints.begin();
+
+    while (it != are_instrumented_tracepoints.end()) {
+      if (it->second != false) {
+        auto event = ConsumeTracepointPerfEvent<TracepointEvent>(ring_buffer, header);
+
+        orbit_grpc_protos::TracepointSample tracepoint_sample;
+        tracepoint_sample.set_pid(event->GetPid());
+        tracepoint_sample.set_tid(event->GetTid());
+        tracepoint_sample.set_time(event->GetTimestamp());
+        tracepoint_sample.set_cpu(event->GetCpu());
+
+        orbit_grpc_protos::TracepointInfo* tracepoint = tracepoint_sample.mutable_tracepoint_info();
+        tracepoint->set_name(it->first.name());
+        tracepoint->set_category(it->first.category());
+
+        listener_->OnTracepointSample(std::move(tracepoint_sample));
+      }
+      it++;
+    }
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
@@ -835,7 +877,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     // visibility into all GPU activity across the system.
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
-
   } else if (is_amdgpu_sched_run_job_event) {
     auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
     gpu_event_processor_->PushEvent(*event);
@@ -844,7 +885,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
-
   } else if (is_callchain_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     if (pid != pid_) {
@@ -856,7 +896,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
-
   } else {
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);

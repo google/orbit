@@ -279,3 +279,8 @@ void ClientGgp::OnThreadName(int32_t thread_id, std::string thread_name) {
 void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
   capture_data_.InsertAddressInfo(std::move(address_info));
 }
+
+void ClientGgp::OnUniqueTracepoint(uint64_t, orbit_grpc_protos::TracepointInfo) {}
+
+void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEvent) {}
+
