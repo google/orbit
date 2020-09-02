@@ -43,7 +43,10 @@ class TopDownWidget : public QWidget {
     explicit HighlightCustomFilterSortFilterProxyModel(QObject* parent)
         : QSortFilterProxyModel{parent} {}
 
-    void SetFilter(std::string_view filter) { lowercase_filter_ = absl::AsciiStrToLower(filter); }
+    void SetFilter(std::string_view filter) {
+      lowercase_filter_tokens_ =
+          absl::StrSplit(absl::AsciiStrToLower(filter), ' ', absl::SkipWhitespace());
+    }
 
     static const int kMatchesCustomFilterRole = Qt::UserRole;
 
@@ -52,7 +55,7 @@ class TopDownWidget : public QWidget {
    private:
     bool ItemMatchesFilter(const QModelIndex& index) const;
 
-    std::string lowercase_filter_;
+    std::vector<std::string> lowercase_filter_tokens_;
   };
 
   std::unique_ptr<Ui::TopDownWidget> ui_;
