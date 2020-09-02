@@ -17,7 +17,8 @@
 
 RingBuffer<float, 512> GDeltaTimeBuffer;
 
-float GlCanvas::kZValueSlider = 0.02f;
+float GlCanvas::kZValueSlider = 0.03f;
+float GlCanvas::kZValueSliderBg = 0.02f;
 float GlCanvas::kZValueMargin = 0.01f;
 float GlCanvas::kZValueTextUi = 0.0f;
 float GlCanvas::kZValueUi = 0.0f;
