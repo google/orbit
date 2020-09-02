@@ -16,11 +16,14 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   CHECK(app_ != nullptr);
 
   model_ = std::make_unique<TopDownViewItemModel>(std::move(top_down_view));
-  proxy_model_ = std::make_unique<HighlightCustomFilterSortFilterProxyModel>(nullptr);
-  proxy_model_->setSourceModel(model_.get());
-  proxy_model_->setSortRole(Qt::EditRole);
+  search_proxy_model_ = std::make_unique<HighlightCustomFilterSortFilterProxyModel>(nullptr);
+  search_proxy_model_->setSourceModel(model_.get());
+  search_proxy_model_->setSortRole(Qt::EditRole);
 
-  ui_->topDownTreeView->setModel(proxy_model_.get());
+  hooked_proxy_model_ = std::make_unique<HookedIdentityProxyModel>(app_, nullptr);
+  hooked_proxy_model_->setSourceModel(search_proxy_model_.get());
+
+  ui_->topDownTreeView->setModel(hooked_proxy_model_.get());
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive, Qt::DescendingOrder);
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
 
@@ -237,10 +240,10 @@ static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
 }
 
 void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
-  if (proxy_model_ == nullptr) {
+  if (search_proxy_model_ == nullptr) {
     return;
   }
-  proxy_model_->SetFilter(text.toStdString());
+  search_proxy_model_->SetFilter(text.toStdString());
   ui_->topDownTreeView->viewport()->update();
   if (!text.isEmpty()) {
     ExpandCollapseBasedOnRole(
@@ -275,4 +278,27 @@ bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter
     }
   }
   return true;
+}
+
+QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index, int role) const {
+  QVariant data = QIdentityProxyModel::data(index, role);
+  if (role != Qt::DisplayRole || index.column() != TopDownViewItemModel::kThreadOrFunction) {
+    return data;
+  }
+
+  bool is_ulonglong;
+  uint64_t function_address =
+      index.model()
+          ->index(index.row(), TopDownViewItemModel::kFunctionAddress, index.parent())
+          .data(Qt::EditRole)
+          .toULongLong(&is_ulonglong);
+  if (!is_ulonglong) {
+    // This is the case for a thread node, where "Function address" is empty.
+    return data;
+  }
+
+  if (!app_->IsFunctionSelected(function_address)) {
+    return data;
+  }
+  return QStringLiteral("[✓] ") + data.toString();
 }
