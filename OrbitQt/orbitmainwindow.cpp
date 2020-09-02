@@ -192,6 +192,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
+  ui->topDownWidget->Initialize(GOrbitApp.get());
+
   SetTitle({});
   std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
   this->setWindowIcon(QIcon(iconFileName.c_str()));
