@@ -7,9 +7,12 @@
 #include <QColor>
 #include <QMenu>
 
+#include "App.h"
 #include "TopDownViewItemModel.h"
 
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
+  CHECK(app_ != nullptr);
+
   model_ = std::make_unique<TopDownViewItemModel>(std::move(top_down_view));
   proxy_model_ = std::make_unique<HighlightCustomFilterSortFilterProxyModel>(nullptr);
   proxy_model_->setSourceModel(model_.get());
@@ -28,6 +31,7 @@ const QString TopDownWidget::kActionCollapseChildrenRecursively =
     QStringLiteral("Collapse children recursively");
 const QString TopDownWidget::kActionExpandAll = QStringLiteral("Expand all");
 const QString TopDownWidget::kActionCollapseAll = QStringLiteral("Collapse all");
+const QString TopDownWidget::kActionLoadSymbols = QStringLiteral("&Load Symbols");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
@@ -65,6 +69,32 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
   }
 }
 
+static std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
+    OrbitApp* app, const std::vector<QModelIndex>& indices) {
+  std::shared_ptr<Process> process = app->GetCaptureData().process();
+  CHECK(process != nullptr);
+
+  std::set<std::string> unique_module_paths;
+  for (const auto& index : indices) {
+    std::string module_path =
+        index.model()
+            ->index(index.row(), TopDownViewItemModel::kModule, index.parent())
+            .data(Qt::ToolTipRole)
+            .toString()
+            .toStdString();
+    unique_module_paths.insert(module_path);
+  }
+
+  std::vector<std::shared_ptr<Module>> modules;
+  for (const std::string& module_path : unique_module_paths) {
+    std::shared_ptr<Module> module = process->GetModuleFromPath(module_path);
+    if (module != nullptr) {
+      modules.emplace_back(std::move(module));
+    }
+  }
+  return modules;
+}
+
 void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   QModelIndex index = ui_->topDownTreeView->indexAt(point);
   if (!index.isValid()) {
@@ -97,6 +127,14 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     }
   }
 
+  std::vector<std::shared_ptr<Module>> modules_to_load;
+  for (const auto& module : GetModulesFromIndices(app_, selected_tree_indices)) {
+    if (!module->IsLoaded()) {
+      modules_to_load.push_back(module);
+    }
+  }
+  bool enable_load = !modules_to_load.empty();
+
   QMenu menu{ui_->topDownTreeView};
   if (enable_expand_recursively) {
     menu.addAction(kActionExpandRecursively);
@@ -108,6 +146,10 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   menu.addSeparator();
   menu.addAction(kActionExpandAll);
   menu.addAction(kActionCollapseAll);
+  menu.addSeparator();
+  if (enable_load) {
+    menu.addAction(kActionLoadSymbols);
+  }
 
   QAction* action = menu.exec(ui_->topDownTreeView->mapToGlobal(point));
   if (action == nullptr) {
@@ -130,6 +172,8 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     ui_->topDownTreeView->expandAll();
   } else if (action->text() == kActionCollapseAll) {
     ui_->topDownTreeView->collapseAll();
+  } else if (action->text() == kActionLoadSymbols) {
+    app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
   }
 }
 

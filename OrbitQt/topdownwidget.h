@@ -14,6 +14,8 @@
 #include "TopDownViewItemModel.h"
 #include "ui_topdownwidget.h"
 
+class OrbitApp;
+
 class TopDownWidget : public QWidget {
   Q_OBJECT
 
@@ -24,6 +26,8 @@ class TopDownWidget : public QWidget {
     connect(ui_->topDownTreeView, &QTreeView::customContextMenuRequested, this,
             &TopDownWidget::onCustomContextMenuRequested);
   }
+
+  void Initialize(OrbitApp* app) { app_ = app; }
 
   void SetTopDownView(std::unique_ptr<TopDownView> top_down_view);
 
@@ -37,6 +41,7 @@ class TopDownWidget : public QWidget {
   static const QString kActionCollapseChildrenRecursively;
   static const QString kActionExpandAll;
   static const QString kActionCollapseAll;
+  static const QString kActionLoadSymbols;
 
   class HighlightCustomFilterSortFilterProxyModel : public QSortFilterProxyModel {
    public:
@@ -59,6 +64,7 @@ class TopDownWidget : public QWidget {
   };
 
   std::unique_ptr<Ui::TopDownWidget> ui_;
+  OrbitApp* app_ = nullptr;
   std::unique_ptr<TopDownViewItemModel> model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> proxy_model_;
 };
