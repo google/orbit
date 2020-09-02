@@ -13,11 +13,11 @@ using orbit_client_protos::CallstackEvent;
 EventTracer GEventTracer;
 
 std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
-    uint64_t time_begin, uint64_t time_end, ThreadID thread_id /*= kAllThreadsFakeTid*/) {
+    uint64_t time_begin, uint64_t time_end, int32_t thread_id /*= kAllThreadsFakeTid*/) const {
   std::vector<CallstackEvent> callstack_events;
   for (auto& pair : callstack_events_) {
-    const ThreadID callstack_thread_id = pair.first;
-    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
+    const int32_t callstack_thread_id = pair.first;
+    const std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
 
     if (thread_id == SamplingProfiler::kAllThreadsFakeTid || callstack_thread_id == thread_id) {
       for (auto it = callstacks.lower_bound(time_begin); it != callstacks.end(); ++it) {
@@ -32,8 +32,8 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
   return callstack_events;
 }
 
-void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID thread_id) {
-  ScopeLock lock(m_Mutex);
+void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, int32_t thread_id) {
+  ScopeLock lock(mutex_);
   std::map<uint64_t, CallstackEvent>& event_map = callstack_events_[thread_id];
   CallstackEvent event;
   event.set_time(time);
@@ -55,11 +55,11 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID
 
 #ifdef __linux
 size_t EventBuffer::GetNumEvents() const {
-  size_t numEvents = 0;
+  size_t num_events = 0;
   for (auto& pair : callstack_events_) {
-    numEvents += pair.second.size();
+    num_events += pair.second.size();
   }
 
-  return numEvents;
+  return num_events;
 }
 #endif

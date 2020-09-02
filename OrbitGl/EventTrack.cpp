@@ -70,8 +70,8 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   const bool picking = picking_mode != PickingMode::kNone;
 
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
-  std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacks()[thread_id_];
+  const std::map<uint64_t, CallstackEvent>& callstacks =
+      GEventTracer.GetEventBuffer().GetCallstacksOfThread(thread_id_);
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
@@ -99,7 +99,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     constexpr const float kPickingBoxWidth = 9.0f;
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
-    for (auto& pair : callstacks) {
+    for (const auto& pair : callstacks) {
       uint64_t time = pair.first;
       if (time > min_tick && time < max_tick) {
         Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
@@ -153,7 +153,7 @@ void EventTrack::SelectEvents() {
 bool EventTrack::IsEmpty() const {
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   const std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacks()[thread_id_];
+      GEventTracer.GetEventBuffer().GetCallstacksOfThread(thread_id_);
   return callstacks.empty();
 }
 
@@ -208,7 +208,7 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
   }
 
   const CallstackData* callstack_data = GOrbitApp->GetCaptureData().GetCallstackData();
-  CallstackEvent* callstack_event = static_cast<CallstackEvent*>(user_data->custom_data_);
+  const auto callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_hash = callstack_event->callstack_hash();
   const CallStack* callstack = callstack_data->GetCallStack(callstack_hash);
