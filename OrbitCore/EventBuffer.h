@@ -9,6 +9,7 @@
 
 #include "BlockChain.h"
 #include "Callstack.h"
+#include "SamplingProfiler.h"
 #include "Threading.h"
 #include "capture_data.pb.h"
 
@@ -17,22 +18,22 @@ class EventBuffer {
   EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX) {}
 
   void Reset() {
-    m_CallstackEvents.clear();
+    callstack_events_.clear();
     m_MinTime = LLONG_MAX;
     m_MaxTime = 0;
   }
   std::map<ThreadID, std::map<uint64_t, orbit_client_protos::CallstackEvent> >& GetCallstacks() {
-    return m_CallstackEvents;
+    return callstack_events_;
   }
   Mutex& GetMutex() { return m_Mutex; }
-  std::vector<orbit_client_protos::CallstackEvent> GetCallstackEvents(uint64_t a_TimeBegin,
-                                                                      uint64_t a_TimeEnd,
-                                                                      ThreadID a_ThreadId = 0);
+  std::vector<orbit_client_protos::CallstackEvent> GetCallstackEvents(
+      uint64_t time_begin, uint64_t time_end,
+      ThreadID thread_id = SamplingProfiler::kAllThreadsFakeTid);
   uint64_t GetMaxTime() const { return m_MaxTime; }
   uint64_t GetMinTime() const { return m_MinTime; }
   bool HasEvent() {
     ScopeLock lock(m_Mutex);
-    return !m_CallstackEvents.empty();
+    return !callstack_events_.empty();
   }
 
 #ifdef __linux__
@@ -48,7 +49,7 @@ class EventBuffer {
 
  private:
   Mutex m_Mutex;
-  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::CallstackEvent> > m_CallstackEvents;
+  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::CallstackEvent> > callstack_events_;
   std::atomic<uint64_t> m_MaxTime;
   std::atomic<uint64_t> m_MinTime;
 };

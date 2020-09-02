@@ -42,7 +42,7 @@ TimeGraph::TimeGraph() : m_Batcher(BatcherId::kTimeGraph) {
   m_LastThreadReorder.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
-  // The process track is a special ThreadTrack of id "0".
+  // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 }
 
@@ -93,7 +93,7 @@ void TimeGraph::Clear() {
   cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
-  // The process track is a special ThreadTrack of id "0".
+  // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 
   SetIteratorOverlayData({}, {});
@@ -773,7 +773,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
     if (track->GetType() == Track::kThreadTrack) {
       auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
       int32_t tid = thread_track->GetThreadId();
-      if (tid == 0) {
+      if (tid == SamplingProfiler::kAllThreadsFakeTid) {
         // This is the process_track_.
         std::string process_name = GOrbitApp->GetCaptureData().process_name();
         thread_track->SetName(process_name);
@@ -887,18 +887,18 @@ void TimeGraph::SortTracks() {
     std::vector<std::pair<ThreadID, uint32_t>> sortedThreads =
         OrbitUtils::ReverseValueSort(m_ThreadCountMap);
     for (auto& pair : sortedThreads) {
-      // Track "0" holds all target process sampling info, it is handled
+      // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
       // separately.
-      if (pair.first != 0) sortedThreadIds.push_back(pair.first);
+      if (pair.first != SamplingProfiler::kAllThreadsFakeTid) sortedThreadIds.push_back(pair.first);
     }
 
     // Then show threads sorted by number of events
     std::vector<std::pair<ThreadID, uint32_t>> sortedByEvents =
         OrbitUtils::ReverseValueSort(m_EventCount);
     for (auto& pair : sortedByEvents) {
-      // Track "0" holds all target process sampling info, it is handled
+      // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
       // separately.
-      if (pair.first == 0) continue;
+      if (pair.first == SamplingProfiler::kAllThreadsFakeTid) continue;
       if (m_ThreadCountMap.find(pair.first) == m_ThreadCountMap.end()) {
         sortedThreadIds.push_back(pair.first);
       }

@@ -12,42 +12,42 @@ using orbit_client_protos::CallstackEvent;
 
 EventTracer GEventTracer;
 
-std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(uint64_t a_TimeBegin,
-                                                            uint64_t a_TimeEnd,
-                                                            ThreadID a_ThreadId /*= 0*/) {
-  std::vector<CallstackEvent> callstackEvents;
-  for (auto& pair : m_CallstackEvents) {
-    ThreadID threadID = pair.first;
+std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
+    uint64_t time_begin, uint64_t time_end, ThreadID thread_id /*= kAllThreadsFakeTid*/) {
+  std::vector<CallstackEvent> callstack_events;
+  for (auto& pair : callstack_events_) {
+    const ThreadID callstack_thread_id = pair.first;
     std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
 
-    if (a_ThreadId == 0 || threadID == a_ThreadId) {
-      for (auto it = callstacks.lower_bound(a_TimeBegin); it != callstacks.end(); ++it) {
+    if (thread_id == SamplingProfiler::kAllThreadsFakeTid || callstack_thread_id == thread_id) {
+      for (auto it = callstacks.lower_bound(time_begin); it != callstacks.end(); ++it) {
         uint64_t time = it->first;
-        if (time < a_TimeEnd) {
-          callstackEvents.push_back(it->second);
+        if (time < time_end) {
+          callstack_events.push_back(it->second);
         }
       }
     }
   }
 
-  return callstackEvents;
+  return callstack_events;
 }
 
 void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID thread_id) {
   ScopeLock lock(m_Mutex);
-  std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
+  std::map<uint64_t, CallstackEvent>& event_map = callstack_events_[thread_id];
   CallstackEvent event;
   event.set_time(time);
   event.set_callstack_hash(cs_hash);
   event.set_thread_id(thread_id);
   event_map[time] = event;
 
-  // Add all callstack events to "thread 0".
-  std::map<uint64_t, CallstackEvent>& event_map_0 = m_CallstackEvents[0];
+  // Add all callstack events to "all threads".
+  std::map<uint64_t, CallstackEvent>& event_map_0 =
+      callstack_events_[SamplingProfiler::kAllThreadsFakeTid];
   CallstackEvent event0;
   event0.set_time(time);
   event0.set_callstack_hash(cs_hash);
-  event0.set_thread_id(0);
+  event0.set_thread_id(SamplingProfiler::kAllThreadsFakeTid);
   event_map_0[time] = event0;
 
   RegisterTime(time);
@@ -56,7 +56,7 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID
 #ifdef __linux
 size_t EventBuffer::GetNumEvents() const {
   size_t numEvents = 0;
-  for (auto& pair : m_CallstackEvents) {
+  for (auto& pair : callstack_events_) {
     numEvents += pair.second.size();
   }
 
