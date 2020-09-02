@@ -53,7 +53,6 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, int32_t 
   RegisterTime(time);
 }
 
-#ifdef __linux
 size_t EventBuffer::GetNumEvents() const {
   size_t num_events = 0;
   for (auto& pair : callstack_events_) {
@@ -62,4 +61,3 @@ size_t EventBuffer::GetNumEvents() const {
 
   return num_events;
 }
-#endif
