@@ -75,12 +75,13 @@ PresetLoadState GetPresetLoadStateForProcess(
     }
   }
 
-  if (modules_not_found_count == preset->preset_info().path_to_module_size()) {
-    return PresetLoadState::kNotLoadable;
-  }
-
+  // Empty preset is also loadable
   if (modules_not_found_count == 0) {
     return PresetLoadState::kLoadable;
+  }
+
+  if (modules_not_found_count == preset->preset_info().path_to_module_size()) {
+    return PresetLoadState::kNotLoadable;
   }
 
   return PresetLoadState::kPartiallyLoadable;
