@@ -64,7 +64,7 @@ function upload_symbol_file {
     breakpad/bin/symupload -p sym-upload-v2 -k $api_key $sym_file_path \
       https://prod-crashsymbolcollector-pa.googleapis.com
   else
-    breakpad/bin/symupload -p $symbol_file_path \
+    PATH="/c/BuildTools/DIA SDK/bin/amd64:$PATH" breakpad/bin/symupload -p $symbol_file_path \
       https://prod-crashsymbolcollector-pa.googleapis.com $api_key
   fi
 }
