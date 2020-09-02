@@ -79,7 +79,7 @@ static std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
     std::string module_path =
         index.model()
             ->index(index.row(), TopDownViewItemModel::kModule, index.parent())
-            .data(Qt::ToolTipRole)
+            .data(TopDownViewItemModel::kModulePathRole)
             .toString()
             .toStdString();
     unique_module_paths.insert(module_path);

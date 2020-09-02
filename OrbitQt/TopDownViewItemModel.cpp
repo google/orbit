@@ -106,6 +106,16 @@ QVariant TopDownViewItemModel::GetToolTipRoleData(const QModelIndex& index) cons
   return QVariant();
 }
 
+QVariant TopDownViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
+  auto* item = static_cast<TopDownNode*>(index.internalPointer());
+  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  if (function_item != nullptr) {
+    return QString::fromStdString(function_item->module_path());
+  }
+  return QVariant();
+}
+
 QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return QVariant();
@@ -119,6 +129,8 @@ QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
     // When role == Qt::ToolTipRole more detailed information than it's shown is returned.
     case Qt::ToolTipRole:
       return GetToolTipRoleData(index);
+    case kModulePathRole:
+      return GetModulePathRoleData(index);
   }
   return QVariant();
 }
