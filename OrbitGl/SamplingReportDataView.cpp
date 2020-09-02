@@ -113,9 +113,29 @@ void SamplingReportDataView::DoSort() {
       break;
   }
 
-  if (sorter) {
-    std::stable_sort(indices_.begin(), indices_.end(), sorter);
+  if (!sorter) {
+    return;
   }
+
+  const auto fallback_sorter = [&](const auto& ind_left, const auto& ind_right) {
+    // `SampledFunction::address` is the absolute function address. Hence it is unique and qualifies
+    // for total ordering.
+    return functions[ind_left].address < functions[ind_right].address;
+  };
+
+  const auto combined_sorter = [&](const auto& ind_left, const auto& ind_right) {
+    if (sorter(ind_left, ind_right)) {
+      return true;
+    }
+
+    if (sorter(ind_right, ind_left)) {
+      return false;
+    }
+
+    return fallback_sorter(ind_left, ind_right);
+  };
+
+  std::sort(indices_.begin(), indices_.end(), combined_sorter);
 }
 
 std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
