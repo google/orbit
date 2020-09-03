@@ -38,8 +38,7 @@ class CaptureSerializer {
 
  private:
   template <class TimersIterator>
-  static void Save(std::ostream& stream, const orbit_client_protos::CaptureHeader& header,
-                   const CaptureData& capture_data,
+  static void Save(std::ostream& stream, const CaptureData& capture_data,
                    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
                    TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
 
@@ -56,13 +55,14 @@ class CaptureSerializer {
 };
 
 template <class TimersIterator>
-void CaptureSerializer::Save(std::ostream& stream, const orbit_client_protos::CaptureHeader& header,
-                             const CaptureData& capture_data,
+void CaptureSerializer::Save(std::ostream& stream, const CaptureData& capture_data,
                              const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
                              TimersIterator begin, TimersIterator end) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
   google::protobuf::io::CodedOutputStream coded_output(&out_stream);
 
+  orbit_client_protos::CaptureHeader header;
+  header.set_version(kRequiredCaptureVersion);
   WriteMessage(&header, &coded_output);
 
   orbit_client_protos::CaptureInfo capture_info =
@@ -80,9 +80,6 @@ ErrorMessageOr<void> CaptureSerializer::Save(
     const std::string& filename, const CaptureData& capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
     TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
-  orbit_client_protos::CaptureHeader header;
-  header.set_version(kRequiredCaptureVersion);
-
   std::ofstream file(filename, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
@@ -91,8 +88,7 @@ ErrorMessageOr<void> CaptureSerializer::Save(
 
   {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-
-    Save(file, header, capture_data, key_to_string_map, std::move(timers_iterator_begin),
+    Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
          std::move(timers_iterator_end));
   }
 
