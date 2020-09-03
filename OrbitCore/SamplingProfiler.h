@@ -32,7 +32,7 @@ struct SampledFunction {
   float exclusive = 0;
   float inclusive = 0;
   int line = 0;
-  uint64_t address = 0;
+  uint64_t absolute_address = 0;
   orbit_client_protos::FunctionInfo* function = nullptr;
 };
 

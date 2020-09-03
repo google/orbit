@@ -290,7 +290,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capt
       if (it != thread_sample_data->exclusive_count.end()) {
         function.exclusive = 100.f * it->second / thread_sample_data->samples_count;
       }
-      function.address = absolute_address;
+      function.absolute_address = absolute_address;
       function.module_path = capture_data.GetModulePathByAddress(absolute_address);
 
       const FunctionInfo* function_info = capture_data.GetFunctionInfoByAddress(absolute_address);

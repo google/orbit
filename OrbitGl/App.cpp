@@ -1051,7 +1051,7 @@ void OrbitApp::ClearSelectedFunctions() { data_manager_->ClearSelectedFunctions(
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(const SampledFunction& func) const {
-  return data_manager_->IsFunctionSelected(func.address);
+  return data_manager_->IsFunctionSelected(func.absolute_address);
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(uint64_t absolute_address) const {
