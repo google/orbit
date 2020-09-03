@@ -56,7 +56,7 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnLine:
       return func.line > 0 ? absl::StrFormat("%d", func.line) : "";
     case kColumnAddress:
-      return absl::StrFormat("%#llx", func.address);
+      return absl::StrFormat("%#llx", func.absolute_address);
     default:
       return "";
   }
@@ -107,7 +107,7 @@ void SamplingReportDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(line);
       break;
     case kColumnAddress:
-      sorter = ORBIT_PROC_SORT(address);
+      sorter = ORBIT_PROC_SORT(absolute_address);
       break;
     default:
       break;
@@ -120,7 +120,7 @@ void SamplingReportDataView::DoSort() {
   const auto fallback_sorter = [&](const auto& ind_left, const auto& ind_right) {
     // `SampledFunction::address` is the absolute function address. Hence it is unique and qualifies
     // for total ordering.
-    return functions[ind_left].address < functions[ind_right].address;
+    return functions[ind_left].absolute_address < functions[ind_right].absolute_address;
   };
 
   const auto combined_sorter = [&](const auto& ind_left, const auto& ind_right) {
@@ -146,7 +146,8 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
     if (sampled_function.function == nullptr) {
-      sampled_function.function = process->GetFunctionFromAddress(sampled_function.address, false);
+      sampled_function.function =
+          process->GetFunctionFromAddress(sampled_function.absolute_address, false);
     }
 
     FunctionInfo* function = sampled_function.function;
@@ -244,7 +245,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
 
 void SamplingReportDataView::OnSelect(int index) {
   SampledFunction& func = GetSampledFunction(index);
-  sampling_report_->OnSelectAddress(func.address, tid_);
+  sampling_report_->OnSelectAddress(func.absolute_address, tid_);
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {
