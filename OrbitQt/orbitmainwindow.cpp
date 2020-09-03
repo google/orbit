@@ -560,3 +560,19 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
 }
 
 void OrbitMainWindow::OnCaptureCleared() { ui->liveFunctions->Reset(); }
+
+void OrbitMainWindow::closeEvent(QCloseEvent* event) {
+  if (GOrbitApp->IsCapturing()) {
+    event->ignore();
+
+    if (QMessageBox::question(this, "Capture in progress",
+                              "A capture is currently in progress. Do you want to abort the "
+                              "capture and exit Orbit?") == QMessageBox::Yes) {
+      // We need for the capture to clean up - close as soon as this is done
+      GOrbitApp->SetCaptureStoppedCallback([&] { close(); });
+      GOrbitApp->StopCapture();
+    }
+  } else {
+    QMainWindow::closeEvent(event);
+  }
+}
