@@ -48,18 +48,7 @@ class EventBuffer {
 
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
 
-  [[nodiscard]] bool HasEvent() {
-    ScopeLock lock(mutex_);
-    if (callstack_events_.empty()) {
-      return false;
-    }
-    for (const auto& pair : callstack_events_) {
-      if (!pair.second.empty()) {
-        return true;
-      }
-    }
-    return true;
-  }
+  [[nodiscard]] bool HasEvent();
 
   [[nodiscard]] size_t GetNumEvents() const;
 
