@@ -208,7 +208,7 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
   }
 
   const CallstackData* callstack_data = GOrbitApp->GetCaptureData().GetCallstackData();
-  const auto callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
+  const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_hash = callstack_event->callstack_hash();
   const CallStack* callstack = callstack_data->GetCallStack(callstack_hash);
