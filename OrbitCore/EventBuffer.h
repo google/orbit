@@ -15,13 +15,14 @@
 
 class EventBuffer {
  public:
-  EventBuffer() : min_time_(0), max_time_(LLONG_MAX) {}
+  EventBuffer() : max_time_(0), min_time_(std::numeric_limits<uint64_t>::max()) {}
 
   void Reset() {
     callstack_events_.clear();
-    max_time_ = LLONG_MAX;
-    min_time_ = 0;
+    min_time_ = std::numeric_limits<uint64_t>::max();
+    max_time_ = 0;
   }
+
   [[nodiscard]] const std::map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>&
   GetCallstacks() const {
     return callstack_events_;
@@ -36,12 +37,17 @@ class EventBuffer {
     }
     return it->second;
   }
+
   Mutex& GetMutex() { return mutex_; }
+
   [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEvents(
       uint64_t time_begin, uint64_t time_end,
       int32_t thread_id = SamplingProfiler::kAllThreadsFakeTid) const;
-  [[nodiscard]] uint64_t GetMaxTime() const { return min_time_; }
-  [[nodiscard]] uint64_t GetMinTime() const { return max_time_; }
+
+  [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
+
+  [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
+
   [[nodiscard]] bool HasEvent() {
     ScopeLock lock(mutex_);
     return !callstack_events_.empty();
@@ -50,8 +56,8 @@ class EventBuffer {
   [[nodiscard]] size_t GetNumEvents() const;
 
   void RegisterTime(uint64_t time) {
-    if (time > min_time_) min_time_ = time;
-    if (time > 0 && time < max_time_) max_time_ = time;
+    if (time > max_time_) max_time_ = time;
+    if (time > 0 && time < min_time_) min_time_ = time;
   }
 
   void AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID thread_id);
@@ -59,8 +65,8 @@ class EventBuffer {
  private:
   Mutex mutex_;
   std::map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>> callstack_events_;
-  std::atomic<uint64_t> min_time_;
   std::atomic<uint64_t> max_time_;
+  std::atomic<uint64_t> min_time_;
 };
 
 #endif  // ORBIT_CORE_EVENT_BUFFER_H_

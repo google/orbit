@@ -46,7 +46,7 @@ TimeGraph::TimeGraph() : m_Batcher(BatcherId::kTimeGraph) {
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 }
 
-Color TimeGraph::GetThreadColor(ThreadID tid) const {
+Color TimeGraph::GetThreadColor(int32_t tid) const {
   static unsigned char a = 255;
   static std::vector<Color> s_ThreadColors{
       Color(231, 68, 53, a),    // red
@@ -583,7 +583,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
 }
 
 std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float world_end,
-                                                    ThreadID thread_id) {
+                                                    int32_t thread_id) {
   if (world_start > world_end) {
     std::swap(world_end, world_start);
   }
@@ -607,7 +607,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float wor
   return selected_callstack_events;
 }
 
-const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(ThreadID tid) {
+const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t tid) {
   return selected_callstack_events_per_thread_[tid];
 }
 
@@ -801,14 +801,14 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   return track;
 }
 
-std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(ThreadID a_TID) {
+std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
   ScopeLock lock(m_Mutex);
-  std::shared_ptr<ThreadTrack> track = thread_tracks_[a_TID];
+  std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(this, a_TID);
+    track = std::make_shared<ThreadTrack>(this, tid);
     tracks_.emplace_back(track);
-    thread_tracks_[a_TID] = track;
-    track->SetEventTrackColor(GetThreadColor(a_TID));
+    thread_tracks_[tid] = track;
+    track->SetEventTrackColor(GetThreadColor(tid));
   }
   return track;
 }
@@ -872,7 +872,7 @@ void TimeGraph::SortTracks() {
     m_EventCount.clear();
 
     for (auto& pair : GEventTracer.GetEventBuffer().GetCallstacks()) {
-      ThreadID thread_id = pair.first;
+      int32_t thread_id = pair.first;
       const std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
       m_EventCount[thread_id] = callstacks.size();
       GetOrCreateThreadTrack(thread_id);
@@ -881,10 +881,10 @@ void TimeGraph::SortTracks() {
 
   // Reorder threads once every second when capturing
   if (!GOrbitApp->IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
-    std::vector<ThreadID> sortedThreadIds;
+    std::vector<int32_t> sortedThreadIds;
 
     // Show threads with instrumented functions first
-    std::vector<std::pair<ThreadID, uint32_t>> sortedThreads =
+    std::vector<std::pair<int32_t, uint32_t>> sortedThreads =
         OrbitUtils::ReverseValueSort(m_ThreadCountMap);
     for (auto& pair : sortedThreads) {
       // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
@@ -893,7 +893,7 @@ void TimeGraph::SortTracks() {
     }
 
     // Then show threads sorted by number of events
-    std::vector<std::pair<ThreadID, uint32_t>> sortedByEvents =
+    std::vector<std::pair<int32_t, uint32_t>> sortedByEvents =
         OrbitUtils::ReverseValueSort(m_EventCount);
     for (auto& pair : sortedByEvents) {
       // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
@@ -907,8 +907,8 @@ void TimeGraph::SortTracks() {
     // Filter thread ids if needed
     if (!m_ThreadFilter.empty()) {
       std::vector<std::string> filters = absl::StrSplit(m_ThreadFilter, ' ');
-      std::vector<ThreadID> filteredThreadIds;
-      for (ThreadID tid : sortedThreadIds) {
+      std::vector<int32_t> filteredThreadIds;
+      for (int32_t tid : sortedThreadIds) {
         std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(tid);
 
         for (auto& filter : filters) {

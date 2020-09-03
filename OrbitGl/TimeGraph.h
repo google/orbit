@@ -39,8 +39,8 @@ class TimeGraph {
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
   std::vector<orbit_client_protos::CallstackEvent> SelectEvents(float world_start, float world_end,
-                                                                ThreadID thread_id);
-  const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
+                                                                int32_t thread_id);
+  const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo* function);
@@ -127,7 +127,7 @@ class TimeGraph {
   const TextBox* FindTop(const TextBox* from);
   const TextBox* FindDown(const TextBox* from);
 
-  Color GetThreadColor(ThreadID tid) const;
+  Color GetThreadColor(int32_t tid) const;
   [[nodiscard]] std::string GetManualInstrumentationString(uint64_t string_address) const;
 
   void SetIteratorOverlayData(
@@ -144,7 +144,7 @@ class TimeGraph {
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
-  std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
+  std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(uint64_t graph_id);
 
@@ -167,7 +167,7 @@ class TimeGraph {
   double m_MaxTimeUs = 0;
   uint64_t capture_min_timestamp_ = 0;
   uint64_t capture_max_timestamp_ = 0;
-  std::map<ThreadID, uint32_t> m_EventCount;
+  std::map<int32_t, uint32_t> m_EventCount;
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;
   float m_WorldWidth = 0;
@@ -180,7 +180,7 @@ class TimeGraph {
 
   TimeGraphLayout m_Layout;
 
-  std::map<ThreadID, uint32_t> m_ThreadCountMap;
+  std::map<int32_t, uint32_t> m_ThreadCountMap;
 
   // Be careful when directly changing these members without using the
   // methods NeedsRedraw() or NeedsUpdate():
@@ -199,7 +199,7 @@ class TimeGraph {
 
   mutable Mutex m_Mutex;
   std::vector<std::shared_ptr<Track>> tracks_;
-  std::unordered_map<ThreadID, std::shared_ptr<ThreadTrack>> thread_tracks_;
+  std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<GraphTrack>> graph_tracks_;
   // Mapping from timeline hash to GPU tracks.
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
@@ -210,7 +210,7 @@ class TimeGraph {
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
 
-  absl::flat_hash_map<ThreadID, std::vector<orbit_client_protos::CallstackEvent>>
+  absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;
 
   std::shared_ptr<StringManager> string_manager_;
