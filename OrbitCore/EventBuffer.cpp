@@ -12,11 +12,14 @@ using orbit_client_protos::CallstackEvent;
 
 EventTracer GEventTracer;
 
-std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
+std::vector<CallstackEvent> EventBuffer::GetCallstackEventsInTimeRangeForThreadId(
     uint64_t time_begin, uint64_t time_end, int32_t thread_id /*= kAllThreadsFakeTid*/) const {
   std::vector<CallstackEvent> callstack_events;
-  for (auto& pair : callstack_events_) {
+  for (const auto& pair : callstack_events_) {
     const int32_t callstack_thread_id = pair.first;
+    if (callstack_thread_id == SamplingProfiler::kAllThreadsFakeTid) {
+      continue;
+    }
     const std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
 
     if (thread_id == SamplingProfiler::kAllThreadsFakeTid || callstack_thread_id == thread_id) {

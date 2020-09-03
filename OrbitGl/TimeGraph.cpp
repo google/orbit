@@ -592,7 +592,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float wor
   uint64_t t1 = GetTickFromWorld(world_end);
 
   std::vector<CallstackEvent> selected_callstack_events =
-      GEventTracer.GetEventBuffer().GetCallstackEvents(t0, t1, thread_id);
+      GEventTracer.GetEventBuffer().GetCallstackEventsInTimeRangeForThreadId(t0, t1, thread_id);
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
