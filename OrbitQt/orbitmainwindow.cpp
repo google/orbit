@@ -213,8 +213,8 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   QToolBar* toolbar = ui->capture_toolbar;
 
   // Create missing icons
-  icon_start_capture_ = QIcon(":/actions/outline_play_arrow_white_48dp.png");
-  icon_stop_capture_ = QIcon(":/actions/outline_stop_white_48dp.png");
+  icon_start_capture_ = QIcon(":/actions/play_arrow");
+  icon_stop_capture_ = QIcon(":/actions/stop");
 
   // Attach the filter panel to the toolbar
   toolbar->addWidget(CreateSpacer(toolbar));

@@ -614,7 +614,7 @@ QPushButton:disabled {
  </customwidgets>
  <resources>
   <include location="../icons/orbiticons.qrc"/>
-  <include location="../fonts/orbitfonts.qrc"/>
+  <include location="../images/orbitimages.qrc"/>
  </resources>
  <connections>
   <connection>
