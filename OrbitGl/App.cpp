@@ -39,6 +39,7 @@
 #include "ScopeTimer.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "TimerInfosIterator.h"
 #include "Utils.h"
 #include "symbol.pb.h"
 
@@ -611,9 +612,15 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
-  CaptureSerializer ar;
-  ar.time_graph_ = GCurrentTimeGraph;
-  return ar.Save(file_name, GetCaptureData());
+  const auto& key_to_string_map = GCurrentTimeGraph->GetStringManager()->GetKeyToStringMap();
+
+  std::vector<std::shared_ptr<TimerChain>> chains = GCurrentTimeGraph->GetAllTimerChains();
+
+  TimerInfosIterator timers_it_begin(chains.begin(), chains.end());
+  TimerInfosIterator timers_it_end(chains.end(), chains.end());
+
+  return CaptureSerializer::Save(file_name, GetCaptureData(), key_to_string_map, timers_it_begin,
+                                 timers_it_end);
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {

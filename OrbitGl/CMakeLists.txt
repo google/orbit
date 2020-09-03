@@ -52,6 +52,7 @@ target_sources(
          TimeGraph.h
          TimeGraphLayout.h
          TimerChain.h
+         TimerInfosIterator.h
          TopDownView.h
          TimerTrack.h
          Track.h
@@ -92,6 +93,7 @@ target_sources(
           TimeGraph.cpp
           TimeGraphLayout.cpp
           TimerChain.cpp
+          TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadTrack.cpp
           TopDownView.cpp
@@ -131,7 +133,8 @@ target_sources(OrbitGlTests PRIVATE
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                PickingManagerTest.cpp
-               ScopedStatusTest.cpp)
+               ScopedStatusTest.cpp
+               TimerInfosIteratorTest.cpp)
 
 target_link_libraries(
   OrbitGlTests
