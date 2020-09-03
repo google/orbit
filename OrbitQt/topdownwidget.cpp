@@ -305,7 +305,8 @@ bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter
 
 QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index, int role) const {
   QVariant data = QIdentityProxyModel::data(index, role);
-  if (role != Qt::DisplayRole || index.column() != TopDownViewItemModel::kThreadOrFunction) {
+  if ((role != Qt::DisplayRole && role != Qt::ToolTipRole) ||
+      index.column() != TopDownViewItemModel::kThreadOrFunction) {
     return data;
   }
 
@@ -322,6 +323,10 @@ QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index,
 
   if (!app_->IsFunctionSelected(function_address)) {
     return data;
+  }
+
+  if (role == Qt::ToolTipRole) {
+    return QStringLiteral("[HOOKED] ") + data.toString();
   }
   return QStringLiteral("[✓] ") + data.toString();
 }
