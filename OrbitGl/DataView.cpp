@@ -63,36 +63,34 @@ std::vector<std::string> DataView::GetContextMenu(int /*clicked_index*/,
   return menu;
 }
 
-void DataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
-                             const std::vector<int>& a_ItemIndices) {
-  UNUSED(a_MenuIndex);
-
-  if (a_Action == kMenuActionExportToCsv) {
+void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
+                             const std::vector<int>& item_indices) {
+  if (action == kMenuActionExportToCsv) {
     std::string save_file = GOrbitApp->GetSaveFile(".csv");
     if (!save_file.empty()) {
       ExportCSV(save_file);
     }
-  } else if (a_Action == kMenuActionCopySelection) {
-    CopySelection(a_ItemIndices);
+  } else if (action == kMenuActionCopySelection) {
+    CopySelection(item_indices);
   }
 }
 
-void DataView::ExportCSV(const std::string& a_FileName) {
-  std::ofstream out(a_FileName);
+void DataView::ExportCSV(const std::string& file_path) {
+  std::ofstream out(file_path);
   if (out.fail()) return;
 
-  size_t numColumns = GetColumns().size();
-  for (size_t i = 0; i < numColumns; ++i) {
+  size_t num_columns = GetColumns().size();
+  for (size_t i = 0; i < num_columns; ++i) {
     out << GetColumns()[i].header;
-    if (i < numColumns - 1) out << ", ";
+    if (i < num_columns - 1) out << ", ";
   }
   out << "\n";
 
-  size_t numElements = GetNumElements();
-  for (size_t i = 0; i < numElements; ++i) {
-    for (size_t j = 0; j < numColumns; ++j) {
+  size_t num_elements = GetNumElements();
+  for (size_t i = 0; i < num_elements; ++i) {
+    for (size_t j = 0; j < num_columns; ++j) {
       out << GetValue(i, j);
-      if (j < numColumns - 1) out << ", ";
+      if (j < num_columns - 1) out << ", ";
     }
     out << "\n";
   }
@@ -102,19 +100,19 @@ void DataView::ExportCSV(const std::string& a_FileName) {
 
 void DataView::CopySelection(const std::vector<int>& selection) {
   std::string clipboard;
-  size_t numColumns = GetColumns().size();
-  for (size_t i = 0; i < numColumns; ++i) {
+  size_t num_columns = GetColumns().size();
+  for (size_t i = 0; i < num_columns; ++i) {
     clipboard += GetColumns()[i].header;
-    if (i < numColumns - 1) clipboard += ", ";
+    if (i < num_columns - 1) clipboard += ", ";
   }
   clipboard += "\n";
 
-  size_t numElements = GetNumElements();
+  size_t num_elements = GetNumElements();
   for (size_t i : selection) {
-    if (i < numElements) {
-      for (size_t j = 0; j < numColumns; ++j) {
+    if (i < num_elements) {
+      for (size_t j = 0; j < num_columns; ++j) {
         clipboard += GetValue(i, j);
-        if (j < numColumns - 1) clipboard += ", ";
+        if (j < num_columns - 1) clipboard += ", ";
       }
       clipboard += "\n";
     }
