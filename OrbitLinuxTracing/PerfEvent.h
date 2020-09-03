@@ -369,6 +369,18 @@ class TaskRenamePerfEvent : public TracepointPerfEvent {
   }
 };
 
+class TracepointEventPidTidTimeCpu : public TracepointPerfEvent {
+ public:
+  explicit TracepointEventPidTidTimeCpu(uint32_t tracepoint_size)
+      : TracepointPerfEvent(tracepoint_size) {}
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  int32_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+
+  int32_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+};
+
 class GpuPerfEvent : public TracepointPerfEvent {
  public:
   explicit GpuPerfEvent(uint32_t tracepoint_size) : TracepointPerfEvent(tracepoint_size) {}
