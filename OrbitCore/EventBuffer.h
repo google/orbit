@@ -40,7 +40,7 @@ class EventBuffer {
 
   Mutex& GetMutex() { return mutex_; }
 
-  [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEvents(
+  std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsInTimeRangeForThreadId(
       uint64_t time_begin, uint64_t time_end,
       int32_t thread_id = SamplingProfiler::kAllThreadsFakeTid) const;
 
