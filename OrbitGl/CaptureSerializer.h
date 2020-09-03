@@ -57,7 +57,8 @@ class CaptureSerializer {
 template <class TimersIterator>
 void CaptureSerializer::Save(std::ostream& stream, const CaptureData& capture_data,
                              const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-                             TimersIterator begin, TimersIterator end) {
+                             TimersIterator timers_iterator_begin,
+                             TimersIterator timers_iterator_end) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
   google::protobuf::io::CodedOutputStream coded_output(&out_stream);
 
@@ -70,8 +71,8 @@ void CaptureSerializer::Save(std::ostream& stream, const CaptureData& capture_da
   WriteMessage(&capture_info, &coded_output);
 
   // Timers
-  for (; begin != end; ++begin) {
-    WriteMessage(&(*begin), &coded_output);
+  for (auto it = timers_iterator_begin; timers_iterator_begin != timers_iterator_end; ++it) {
+    WriteMessage(&(*it), &coded_output);
   }
 }
 
