@@ -42,7 +42,8 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return GOrbitApp->IsFunctionSelected(func) ? "X" : "-";
+      return GOrbitApp->IsFunctionSelected(func) ? FunctionsDataView::kSelectedFunctionString
+                                                 : FunctionsDataView::kUnselectedFunctionString;
     case kColumnFunctionName:
       return func.name;
     case kColumnExclusive:

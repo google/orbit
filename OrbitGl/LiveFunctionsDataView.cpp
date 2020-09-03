@@ -51,7 +51,8 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return GOrbitApp->IsFunctionSelected(function) ? "X" : "-";
+      return GOrbitApp->IsFunctionSelected(function) ? FunctionsDataView::kSelectedFunctionString
+                                                     : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
       return FunctionUtils::GetDisplayName(function);
     case kColumnCount:

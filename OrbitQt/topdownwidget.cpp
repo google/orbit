@@ -8,6 +8,7 @@
 #include <QMenu>
 
 #include "App.h"
+#include "FunctionsDataView.h"
 #include "TopDownViewItemModel.h"
 
 using orbit_client_protos::FunctionInfo;
@@ -310,7 +311,7 @@ QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index,
     return data;
   }
 
-  bool is_ulonglong;
+  bool is_ulonglong = false;
   uint64_t function_address =
       index.model()
           ->index(index.row(), TopDownViewItemModel::kFunctionAddress, index.parent())
@@ -326,7 +327,11 @@ QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index,
   }
 
   if (role == Qt::ToolTipRole) {
-    return QStringLiteral("[HOOKED] ") + data.toString();
+    static const QString kTooltipHookedPrefix = QStringLiteral("[HOOKED] ");
+    return kTooltipHookedPrefix + data.toString();
   }
-  return QStringLiteral("[✓] ") + data.toString();
+  static const QString kDisplayHookedPrefix =
+      QStringLiteral("[") + QString::fromStdString(FunctionsDataView::kSelectedFunctionString) +
+      QStringLiteral("] ");
+  return kDisplayHookedPrefix + data.toString();
 }

@@ -15,6 +15,9 @@ using orbit_client_protos::FunctionInfo;
 
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::kFunctions) {}
 
+const std::string FunctionsDataView::kSelectedFunctionString = "✓";
+const std::string FunctionsDataView::kUnselectedFunctionString = "";
+
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -42,7 +45,8 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return GOrbitApp->IsFunctionSelected(function) ? "X" : "-";
+      return GOrbitApp->IsFunctionSelected(function) ? kSelectedFunctionString
+                                                     : kUnselectedFunctionString;
     case kColumnName:
       return FunctionUtils::GetDisplayName(function);
     case kColumnSize:

@@ -12,6 +12,9 @@ class FunctionsDataView : public DataView {
  public:
   FunctionsDataView();
 
+  static const std::string kSelectedFunctionString;
+  static const std::string kUnselectedFunctionString;
+
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }
   std::vector<std::string> GetContextMenu(int clicked_index,

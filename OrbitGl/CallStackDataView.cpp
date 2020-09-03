@@ -44,7 +44,9 @@ std::string CallStackDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return (function != nullptr && GOrbitApp->IsFunctionSelected(*function)) ? "X" : "-";
+      return (function != nullptr && GOrbitApp->IsFunctionSelected(*function))
+                 ? FunctionsDataView::kSelectedFunctionString
+                 : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
       return function != nullptr ? FunctionUtils::GetDisplayName(*function) : frame.fallback_name;
     case kColumnSize:
