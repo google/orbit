@@ -507,7 +507,7 @@ std::string OrbitApp::GetCaptureFileName() {
 }
 
 std::string OrbitApp::GetCaptureTime() {
-  double time = GCurrentTimeGraph != nullptr ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0;
+  double time = GCurrentTimeGraph != nullptr ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0.0;
   return GetPrettyTime(absl::Microseconds(time));
 }
 

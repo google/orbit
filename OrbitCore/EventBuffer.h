@@ -50,7 +50,15 @@ class EventBuffer {
 
   [[nodiscard]] bool HasEvent() {
     ScopeLock lock(mutex_);
-    return !callstack_events_.empty();
+    if (callstack_events_.empty()) {
+      return false;
+    }
+    for (const auto& pair : callstack_events_) {
+      if (!pair.second.empty()) {
+        return true;
+      }
+    }
+    return true;
   }
 
   [[nodiscard]] size_t GetNumEvents() const;

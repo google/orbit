@@ -157,7 +157,7 @@ double TimeGraph::GetCaptureTimeSpanUs() {
     return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
   }
 
-  return 0;
+  return 0.0;
 }
 
 double TimeGraph::GetCurrentTimeSpanUs() { return m_MaxTimeUs - m_MinTimeUs; }
