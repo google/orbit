@@ -73,7 +73,7 @@ class DataView {
   virtual void LinkDataView(DataView* /*data_view*/) {}
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
-  virtual void ExportCSV(const std::string& filename);
+  virtual void ExportCSV(const std::string& file_path);
   virtual void CopySelection(const std::vector<int>& selection);
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
