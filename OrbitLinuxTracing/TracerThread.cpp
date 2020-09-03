@@ -368,6 +368,18 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
                                     &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
+  for (const auto& selected_tracepoint : instrumented_tracepoints_) {
+    absl::flat_hash_set<uint64_t> empty_hash_set;
+    instrumented_tracepoints_ids_.emplace(selected_tracepoint, empty_hash_set);
+    tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+        selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), cpus,
+        &tracing_fds_, &instrumented_tracepoints_ids_.at(selected_tracepoint),
+        &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+
+    for (const auto& instrument_tracepoint : instrumented_tracepoints_ids_.at(selected_tracepoint))
+      stream_id_to_tracepoint_.emplace(instrument_tracepoint, selected_tracepoint);
+  }
+
   return !tracepoint_event_open_errors;
 }
 
@@ -828,6 +840,26 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
 
+  } else if (!stream_id_to_tracepoint_.empty()) {
+    absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo>::iterator it =
+        stream_id_to_tracepoint_.begin();
+
+    while (it != stream_id_to_tracepoint_.end()) {
+      if (it->first == stream_id) {
+        auto event = ConsumeTracepointPerfEvent<TracepointEventPidTidTimeCpu>(ring_buffer, header);
+
+        orbit_grpc_protos::TracepointEvent tracepoint_event;
+        tracepoint_event.set_pid(event->GetPid());
+        tracepoint_event.set_tid(event->GetTid());
+        tracepoint_event.set_time(event->GetTimestamp());
+        tracepoint_event.set_cpu(event->GetCpu());
+
+        orbit_grpc_protos::TracepointInfo* tracepoint = tracepoint_event.mutable_tracepoint_info();
+        tracepoint->set_name(it->second.name());
+        tracepoint->set_category(it->second.category());
+      }
+      it++;
+    }
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
