@@ -490,8 +490,20 @@ void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
     return;
   }
 
-  std::unique_ptr<TopDownView> top_down_view = TopDownView::CreateFromCaptureData(capture_data);
+  std::unique_ptr<TopDownView> top_down_view =
+      TopDownView::CreateFromSamplingProfiler(capture_data.sampling_profiler(), capture_data);
   top_down_view_callback_(std::move(top_down_view));
+}
+
+void OrbitApp::SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
+                                       const CaptureData& capture_data) {
+  if (!selection_top_down_view_callback_) {
+    return;
+  }
+
+  std::unique_ptr<TopDownView> selection_top_down_view =
+      TopDownView::CreateFromSamplingProfiler(selection_sampling_profiler, capture_data);
+  selection_top_down_view_callback_(std::move(selection_top_down_view));
 }
 
 std::string OrbitApp::GetCaptureFileName() {
@@ -704,6 +716,7 @@ void OrbitApp::ClearCapture() {
 
   SetSamplingReport(empty_profiler, empty_unique_callstacks);
   SetTopDownView(GetCaptureData());
+  SetSelectionTopDownView(empty_profiler, GetCaptureData());
 
   if (selection_report_) {
     SetSelectionReport(std::move(empty_profiler), empty_unique_callstacks, false);
@@ -919,8 +932,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path,
 
       modules_currently_loading_.erase(module->m_FullName);
 
-      UpdateSamplingReport();
-      SetTopDownView(GetCaptureData());
+      UpdateAfterSymbolLoading();
       GOrbitApp->FireRefreshCallbacks();
     });
   });
@@ -1090,20 +1102,24 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   for (const CallstackEvent& event : selected_callstack_events) {
     selection_callstack_data->AddCallStackFromKnownCallstackData(event, callstack_data);
   }
+  // TODO: this might live on the data_manager
+  capture_data_.set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.
   bool generate_summary = thread_id == SamplingProfiler::kAllThreadsFakeTid;
+  SamplingProfiler sampling_profiler(*capture_data_.GetSelectionCallstackData(), GetCaptureData(),
+                                     generate_summary);
 
-  SamplingProfiler sampling_profiler(*selection_callstack_data, GetCaptureData(), generate_summary);
+  SetSelectionTopDownView(sampling_profiler, GetCaptureData());
 
   SetSelectionReport(std::move(sampling_profiler),
-                     selection_callstack_data->GetUniqueCallstacksCopy(), generate_summary);
-  // TODO: this might live on the data_manager
-  capture_data_.set_selection_callstack_data(std::move(selection_callstack_data));
+                     capture_data_.GetSelectionCallstackData()->GetUniqueCallstacksCopy(),
+                     generate_summary);
 }
 
-void OrbitApp::UpdateSamplingReport() {
+void OrbitApp::UpdateAfterSymbolLoading() {
   const CaptureData& capture_data = GetCaptureData();
+
   if (sampling_report_ != nullptr) {
     SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
     sampling_report_->UpdateReport(sampling_profiler,
@@ -1111,10 +1127,15 @@ void OrbitApp::UpdateSamplingReport() {
     capture_data_.set_sampling_profiler(sampling_profiler);
   }
 
+  SetTopDownView(GetCaptureData());
+
+  // TODO(kuebler): propagate this information
+  SamplingProfiler selection_profiler(*capture_data.GetSelectionCallstackData(), capture_data,
+                                      selection_report_->has_summary());
+
+  SetSelectionTopDownView(selection_profiler, GetCaptureData());
+
   if (selection_report_ != nullptr) {
-    // TODO(kuebler): propagate this information
-    SamplingProfiler selection_profiler(*capture_data.GetSelectionCallstackData(), capture_data,
-                                        selection_report_->has_summary());
     selection_report_->UpdateReport(
         std::move(selection_profiler),
         capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());

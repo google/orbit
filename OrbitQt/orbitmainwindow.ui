@@ -273,11 +273,21 @@ QPushButton:disabled {
        </widget>
        <widget class="QWidget" name="selectionTab">
         <attribute name="title">
-         <string>Selection</string>
+         <string>Sampling (selection)</string>
         </attribute>
         <layout class="QGridLayout" name="selectionGridLayout">
          <item row="0" column="0">
           <widget class="OrbitSamplingReport" name="selectionReport" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="selectionTopDownTab">
+        <attribute name="title">
+         <string>Top-Down (selection)</string>
+        </attribute>
+        <layout class="QGridLayout" name="selectionTopDownGridLayout">
+         <item row="0" column="0">
+          <widget class="TopDownWidget" name="selectionTopDownWidget" native="true"/>
          </item>
         </layout>
        </widget>

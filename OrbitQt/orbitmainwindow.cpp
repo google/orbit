@@ -123,6 +123,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   GOrbitApp->SetTopDownViewCallback([this](std::unique_ptr<TopDownView> top_down_view) {
     this->OnNewTopDownView(std::move(top_down_view));
   });
+  GOrbitApp->SetSelectionTopDownViewCallback(
+      [this](std::unique_ptr<TopDownView> selection_top_down_view) {
+        this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
+      });
 
   GOrbitApp->SetOpenCaptureCallback([this] { on_actionOpen_Capture_triggered(); });
   GOrbitApp->SetSaveCaptureCallback([this] { on_actionSave_Capture_triggered(); });
@@ -194,6 +198,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
   ui->topDownWidget->Initialize(GOrbitApp.get());
+  ui->selectionTopDownWidget->Initialize(GOrbitApp.get());
 
   SetTitle({});
   std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
@@ -309,6 +314,11 @@ void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
 
 void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   ui->topDownWidget->SetTopDownView(std::move(top_down_view));
+}
+
+void OrbitMainWindow::OnNewSelectionTopDownView(
+    std::unique_ptr<TopDownView> selection_top_down_view) {
+  ui->selectionTopDownWidget->SetTopDownView(std::move(selection_top_down_view));
 }
 
 std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {

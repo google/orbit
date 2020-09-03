@@ -118,6 +118,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
       bool has_summary);
   void SetTopDownView(const CaptureData& capture_data);
+  void SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
+                               const CaptureData& capture_data);
 
   bool SelectProcess(const std::string& process);
 
@@ -183,6 +185,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetTopDownViewCallback(TopDownViewCallback callback) {
     top_down_view_callback_ = std::move(callback);
   }
+  void SetSelectionTopDownViewCallback(TopDownViewCallback callback) {
+    selection_top_down_view_callback_ = std::move(callback);
+  }
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
   void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
   void FireRefreshCallbacks(DataViewType type = DataViewType::kAll);
@@ -214,7 +219,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
 
-  void UpdateSamplingReport();
+  void UpdateAfterSymbolLoading();
   void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   PresetLoadState GetPresetLoadState(
       const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const;
@@ -304,6 +309,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;
   TopDownViewCallback top_down_view_callback_;
+  TopDownViewCallback selection_top_down_view_callback_;
   std::vector<DataView*> panels_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;

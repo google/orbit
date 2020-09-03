@@ -133,8 +133,8 @@ class TopDownThread : public TopDownInternalNode {
 
 class TopDownView : public TopDownNode {
  public:
-  [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromCaptureData(
-      const CaptureData& capture_data);
+  [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromSamplingProfiler(
+      const SamplingProfiler& sampling_profiler, const CaptureData& capture_data);
 
   TopDownView() : TopDownNode{nullptr} {}
 

@@ -85,11 +85,11 @@ static void AddCallstackToTopDownThread(TopDownThread* thread_node,
   return thread_node;
 }
 
-std::unique_ptr<TopDownView> TopDownView::CreateFromCaptureData(const CaptureData& capture_data) {
+std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
+    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
   auto top_down_view = std::make_unique<TopDownView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
-  const SamplingProfiler& sampling_profiler = capture_data.sampling_profiler();
   for (const ThreadSampleData& thread_sample_data : sampling_profiler.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data.thread_id;
     TopDownThread* thread_node =
