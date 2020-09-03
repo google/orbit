@@ -36,7 +36,9 @@ void CaptureSerializer::WriteMessage(const google::protobuf::Message* message,
   message->SerializeToCodedStream(output);
 }
 
-CaptureInfo CaptureSerializer::GenerateCaptureInfo(const CaptureData& capture_data) {
+CaptureInfo CaptureSerializer::GenerateCaptureInfo(
+    const CaptureData& capture_data,
+    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
   for (const auto& pair : capture_data.selected_functions()) {
     capture_info.add_selected_functions()->CopyFrom(pair.second);
@@ -77,7 +79,6 @@ CaptureInfo CaptureSerializer::GenerateCaptureInfo(const CaptureData& capture_da
     capture_info.add_callstack_events()->CopyFrom(callstack);
   }
 
-  const auto& key_to_string_map = time_graph_->GetStringManager()->GetKeyToStringMap();
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 
   return capture_info;
@@ -180,15 +181,15 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
       "was taken with a previous Orbit version, it could be incompatible. "
       "Please check release notes for more information.";
 
-  if (!ReadMessage(&header, &coded_input) || header.version().empty()) {
+  if (!ReadMessage(&header_, &coded_input) || header_.version().empty()) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
-  if (header.version() != kRequiredCaptureVersion) {
+  if (header_.version() != kRequiredCaptureVersion) {
     std::string incompatible_version_error_message = absl::StrFormat(
         "This capture format is no longer supported but could be opened with "
         "Orbit version %s.",
-        header.version());
+        header_.version());
     ERROR("%s", incompatible_version_error_message);
     return ErrorMessage(incompatible_version_error_message);
   }
