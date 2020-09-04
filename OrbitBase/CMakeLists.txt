@@ -26,11 +26,13 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Profiling.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/ThreadPool.h
+        include/OrbitBase/Tracing.h
         include/OrbitBase/SafeStrerror.h)
 
 target_sources(OrbitBase PRIVATE
         Logging.cpp
         ThreadPool.cpp
+        Tracing.cpp
         SafeStrerror.cpp)
 
 target_link_libraries(OrbitBase PUBLIC
@@ -44,6 +46,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitBaseTests PRIVATE
     UniqueResourceTest.cpp
     ProfilingTest.cpp
+    TracingTest.cpp
 )
 
 # Threadpool test contains some sleeps we couldn't work around - disable them on the CI

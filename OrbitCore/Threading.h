@@ -119,13 +119,3 @@ inline std::string GetThreadName(HANDLE thread) {
 inline std::string GetCurrentThreadName() { return GetThreadName(GetCurrentThread()); }
 
 #endif
-
-#ifdef __linux__
-#include <sys/syscall.h>
-#include <unistd.h>
-
-inline pid_t GetCurrentThreadId() {
-  thread_local pid_t current_tid = syscall(__NR_gettid);
-  return current_tid;
-}
-#endif

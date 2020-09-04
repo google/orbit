@@ -36,7 +36,7 @@ using pid_t = uint32_t;
 }
 
 #ifdef __linux__
-[[nodiscard]] inline pid_t GetThreadId() {
+[[nodiscard]] inline pid_t GetCurrentThreadId() {
   thread_local pid_t current_tid = syscall(__NR_gettid);
   return current_tid;
 }

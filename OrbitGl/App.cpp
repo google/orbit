@@ -427,8 +427,6 @@ Timer GMainTimer;
 
 // TODO: make it non-static
 void OrbitApp::MainTick() {
-  ORBIT_SCOPE_FUNC;
-
   GMainTimer.Reset();
 
   if (DoZoom) {
