@@ -46,6 +46,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitBaseTests PRIVATE
     UniqueResourceTest.cpp
     ProfilingTest.cpp
+    TracingTest.cpp
 )
 
 # Threadpool test contains some sleeps we couldn't work around - disable them on the CI

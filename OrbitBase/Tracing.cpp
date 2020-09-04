@@ -17,21 +17,33 @@ using orbit::tracing::TimerCallback;
 
 ABSL_CONST_INIT static absl::Mutex global_callback_mutex(absl::kConstInit);
 ABSL_CONST_INIT static std::unique_ptr<TimerCallback> global_callback = {};
+ABSL_CONST_INIT static absl::Mutex global_thread_pool_mutex(absl::kConstInit);
+ABSL_CONST_INIT static std::unique_ptr<ThreadPool> glolbal_thread_pool = {};
 
 static std::vector<Scope>& GetThreadLocalScopes() {
   thread_local std::vector<Scope> thread_local_scopes;
   return thread_local_scopes;
 }
 
-static void DeferScopeProcessing(const Scope& scope) {
+static void CreateCallbackThreadPool() {
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
-  static std::unique_ptr<ThreadPool> thread_pool =
-      ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(1));
+  absl::MutexLock lock(&global_thread_pool_mutex);
+  CHECK(glolbal_thread_pool == nullptr);
+  glolbal_thread_pool = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
+}
 
+static void ShutdownCallbackThreadPool() {
+  absl::MutexLock lock(&global_thread_pool_mutex);
+  CHECK(glolbal_thread_pool != nullptr);
+  glolbal_thread_pool->Shutdown();
+  glolbal_thread_pool->Wait();
+}
+
+static void DeferScopeProcessing(const Scope& scope) {
   // User callback is called from a worker thread to
   // minimize contention on the instrumented threads.
-  thread_pool->Schedule([scope]() {
+  glolbal_thread_pool->Schedule([scope]() {
     absl::MutexLock lock(&global_callback_mutex);
     if (global_callback != nullptr) (*global_callback)(scope);
   });
@@ -40,6 +52,7 @@ static void DeferScopeProcessing(const Scope& scope) {
 namespace orbit::tracing {
 
 Listener::Listener(std::unique_ptr<TimerCallback> callback) {
+  CreateCallbackThreadPool();
   absl::MutexLock lock(&global_callback_mutex);
   // Only one listener is supported.
   CHECK(global_callback == nullptr);
@@ -47,8 +60,11 @@ Listener::Listener(std::unique_ptr<TimerCallback> callback) {
 }
 
 Listener::~Listener() {
-  absl::MutexLock lock(&global_callback_mutex);
-  global_callback = nullptr;
+  {
+    absl::MutexLock lock(&global_callback_mutex);
+    global_callback = nullptr;
+  }
+  ShutdownCallbackThreadPool();
 }
 
 }  // namespace orbit::tracing
