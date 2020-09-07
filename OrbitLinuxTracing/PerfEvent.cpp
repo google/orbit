@@ -36,7 +36,7 @@ void TaskNewtaskPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(th
 
 void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void GenericTracepointPerfEvent::Accept(PerfEventVisitor*) {}
+void GenericTracepointPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
