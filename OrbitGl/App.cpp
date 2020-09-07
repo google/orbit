@@ -17,7 +17,8 @@
 
 #include "CallStackDataView.h"
 #include "Callstack.h"
-#include "CaptureSerializer.h"
+#include "CaptureDeserializer.h"
+#include "OrbitClientModel/CaptureSerializer.h"
 #include "CaptureWindow.h"
 #include "Disassembler.h"
 #include "DisassemblyReport.h"
@@ -627,7 +628,7 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
   ClearCapture();
 
-  CaptureSerializer ar;
+  CaptureDeserializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
   OUTCOME_TRY(ar.Load(file_name));
 

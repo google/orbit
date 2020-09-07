@@ -110,7 +110,7 @@ message TimerInfo {
 }
 
 // libprotobuf-mutator needs a single proto with all the data
-message CaptureSerializerFuzzerInfo {
+message CaptureDeserializerFuzzerInfo {
   CaptureInfo capture_info = 1;
   repeated TimerInfo timers = 2;
 }
