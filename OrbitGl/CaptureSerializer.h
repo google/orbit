@@ -71,7 +71,7 @@ void CaptureSerializer::Save(std::ostream& stream, const CaptureData& capture_da
   WriteMessage(&capture_info, &coded_output);
 
   // Timers
-  for (auto it = timers_iterator_begin; timers_iterator_begin != timers_iterator_end; ++it) {
+  for (auto it = timers_iterator_begin; it != timers_iterator_end; ++it) {
     WriteMessage(&(*it), &coded_output);
   }
 }
