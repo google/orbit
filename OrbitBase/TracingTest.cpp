@@ -28,14 +28,14 @@ TEST(Tracing, Scopes) {
   constexpr size_t kNumThreads = 10;
   constexpr size_t kNumExpectedScopesPerThread = 4;
 
-  absl::flat_hash_map<pid_t, std::vector<Scope>> scopes_by_trhead_id;
+  absl::flat_hash_map<pid_t, std::vector<Scope>> scopes_by_thread_id;
   {
     Listener tracing_listener(
-        std::make_unique<TimerCallback>([&scopes_by_trhead_id](const Scope& scope) {
+        std::make_unique<TimerCallback>([&scopes_by_thread_id](const Scope& scope) {
           // Check that callback is called from a single thread.
           static pid_t callback_thread_id = GetCurrentThreadId();
-          EXPECT_TRUE(GetCurrentThreadId() == callback_thread_id);
-          scopes_by_trhead_id[scope.tid].emplace_back(scope);
+          EXPECT_EQ(GetCurrentThreadId(), callback_thread_id);
+          scopes_by_thread_id[scope.tid].emplace_back(scope);
         }));
 
     std::vector<std::unique_ptr<std::thread>> threads;
@@ -43,13 +43,13 @@ TEST(Tracing, Scopes) {
       threads.emplace_back(std::make_unique<std::thread>([] { TestScopes(); }));
     }
 
-    for (size_t i = 0; i < threads.size(); ++i) {
-      threads[i]->join();
+    for (auto& thread : threads) {
+      thread->join();
     }
   }
 
-  EXPECT_TRUE(scopes_by_trhead_id.size() == kNumThreads);
-  for (auto& pair : scopes_by_trhead_id) {
-    EXPECT_TRUE(pair.second.size() == kNumExpectedScopesPerThread);
+  EXPECT_EQ(scopes_by_thread_id.size(), kNumThreads);
+  for (const auto& pair : scopes_by_thread_id) {
+    EXPECT_EQ(pair.second.size(), kNumExpectedScopesPerThread);
   }
 }
