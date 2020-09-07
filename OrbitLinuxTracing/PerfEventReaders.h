@@ -24,6 +24,9 @@ std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(PerfEventRingB
 std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
+std::unique_ptr<TracepointEventPidTidTimeCpu> ConsumeTracepointEventPidTipCpuTime(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
+
 template <typename T, typename = std::enable_if_t<std::is_base_of_v<TracepointPerfEvent, T>>>
 std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
                                               const perf_event_header& header) {
@@ -37,7 +40,6 @@ std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
   ring_buffer->SkipRecord(header);
   return event;
 }
-
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_READERS_H_

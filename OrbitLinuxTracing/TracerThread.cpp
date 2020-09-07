@@ -368,6 +368,8 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
                                     &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
+  TracepointInfoToHashSet instrumented_tracepoints_ids_;
+
   for (const auto& selected_tracepoint : instrumented_tracepoints_) {
     absl::flat_hash_set<uint64_t> empty_hash_set;
     instrumented_tracepoints_ids_.emplace(selected_tracepoint, empty_hash_set);
@@ -376,8 +378,8 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
         &tracing_fds_, &instrumented_tracepoints_ids_.at(selected_tracepoint),
         &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
-    for (const auto& instrument_tracepoint : instrumented_tracepoints_ids_.at(selected_tracepoint))
-      stream_id_to_tracepoint_.emplace(instrument_tracepoint, selected_tracepoint);
+    for (const auto& stream_id : instrumented_tracepoints_ids_.at(selected_tracepoint))
+      stream_id_to_tracepoint_.emplace(stream_id, selected_tracepoint);
   }
 
   return !tracepoint_event_open_errors;
@@ -762,6 +764,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
+  bool is_tracepoint = stream_id_to_tracepoint_.contains(stream_id);
+
   CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask + is_task_rename +
             is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
             is_callchain_sample <=
@@ -840,24 +844,20 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
 
-  } else if (!stream_id_to_tracepoint_.empty()) {
-    absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo>::iterator it =
-        stream_id_to_tracepoint_.begin();
+  } else if (is_tracepoint) {
+    absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo>::const_iterator it =
+        stream_id_to_tracepoint_.find(stream_id);
 
-    while (it != stream_id_to_tracepoint_.end()) {
-      if (it->first == stream_id) {
-        auto event = ConsumeTracepointPerfEvent<TracepointEventPidTidTimeCpu>(ring_buffer, header);
+    if (it != stream_id_to_tracepoint_.end()) {
+      auto event = ConsumeTracepointEventPidTipCpuTime(ring_buffer, header);
 
-        orbit_grpc_protos::TracepointEvent tracepoint_event;
-        tracepoint_event.set_pid(event->GetPid());
-        tracepoint_event.set_tid(event->GetTid());
-        tracepoint_event.set_time(event->GetTimestamp());
-        tracepoint_event.set_cpu(event->GetCpu());
+      orbit_grpc_protos::TracepointEvent tracepoint_event;
+      tracepoint_event.set_pid(event->GetPid());
+      tracepoint_event.set_tid(event->GetTid());
+      tracepoint_event.set_time(event->GetTimestamp());
+      tracepoint_event.set_cpu(event->GetCpu());
 
-        orbit_grpc_protos::TracepointInfo* tracepoint = tracepoint_event.mutable_tracepoint_info();
-        tracepoint->set_name(it->second.name());
-        tracepoint->set_category(it->second.category());
-      }
+      /*TO DO: Sending of the event*/
       it++;
     }
   } else if (is_amdgpu_cs_ioctl_event) {

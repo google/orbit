@@ -87,4 +87,12 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
   return event;
 }
 
+std::unique_ptr<TracepointEventPidTidTimeCpu> ConsumeTracepointEventPidTipCpuTime(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  auto event = std::make_unique<TracepointEventPidTidTimeCpu>();
+  ring_buffer->ReadRawAtOffset(&event->ring_buffer_record, sizeof(perf_event_header),
+                               sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+  ring_buffer->SkipRecord(header);
+  return event;
+}
 }  // namespace LinuxTracing

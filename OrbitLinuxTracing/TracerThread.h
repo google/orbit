@@ -157,8 +157,6 @@ class TracerThread {
   ContextSwitchManager context_switch_manager_;
   std::unique_ptr<PerfEventProcessor> uprobes_event_processor_;
   std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
-
-  TracepointInfoToHashSet instrumented_tracepoints_ids_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> stream_id_to_tracepoint_;
 
   struct EventStats {
