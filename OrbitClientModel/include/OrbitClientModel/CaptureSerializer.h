@@ -15,7 +15,6 @@
 
 #include "CaptureData.h"
 #include "OrbitBase/Result.h"
-#include "TimeGraph.h"
 #include "capture_data.pb.h"
 
 class CaptureDeserializer {
@@ -26,13 +25,6 @@ class CaptureDeserializer {
       const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
       TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
 
-  ErrorMessageOr<void> Load(std::istream& stream);
-  ErrorMessageOr<void> Load(const std::string& filename);
-
-  TimeGraph* time_graph_;
-
-  static bool ReadMessage(google::protobuf::Message* message,
-                          google::protobuf::io::CodedInputStream* input);
   static void WriteMessage(const google::protobuf::Message* message,
                            google::protobuf::io::CodedOutputStream* output);
 
@@ -45,11 +37,6 @@ class CaptureDeserializer {
   static orbit_client_protos::CaptureInfo GenerateCaptureInfo(
       const CaptureData& capture_data,
       const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
-
-  [[nodiscard]] CaptureData GenerateCaptureData(
-      const orbit_client_protos::CaptureInfo& capture_info);
-
-  orbit_client_protos::CaptureHeader header_;
 
   static inline const std::string kRequiredCaptureVersion = "1.52";
 };

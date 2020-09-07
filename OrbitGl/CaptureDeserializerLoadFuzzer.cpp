@@ -10,7 +10,8 @@
 #include <filesystem>
 
 #include "App.h"
-#include "CaptureSerializer.h"
+#include "CaptureDeserializer.h"
+#include "OrbitClientModel/CaptureSerializer.h"
 #include "SamplingProfiler.h"
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
@@ -24,7 +25,7 @@ ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
-DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureSerializerFuzzerInfo& info) {
+DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& info) {
   std::string buffer{};
   {
     google::protobuf::io::StringOutputStream stream{&buffer};
@@ -46,12 +47,12 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureSerializerFuzzerInfo& info
   time_graph.SetStringManager(string_manager);
   GOrbitApp->ClearCapture();
 
-  CaptureSerializer serializer{};
-  serializer.time_graph_ = GCurrentTimeGraph;
+  CaptureDeserializer deserializer{};
+  deserializer.time_graph_ = GCurrentTimeGraph;
 
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
-  (void)serializer.Load(input_stream);
+  (void)deserializer.Load(input_stream);
 
   GOrbitApp->GetThreadPool()->ShutdownAndWait();
   GOrbitApp.reset();

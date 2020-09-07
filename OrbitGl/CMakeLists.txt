@@ -14,7 +14,7 @@ target_sources(
   PUBLIC App.h
          Batcher.h
          CallStackDataView.h
-         CaptureSerializer.h
+         CaptureDeserializer.h
          CaptureWindow.h
          CodeReport.h
          CoreMath.h
@@ -64,7 +64,7 @@ target_sources(
   PRIVATE App.cpp
           Batcher.cpp
           CallStackDataView.cpp
-          CaptureSerializer.cpp
+          CaptureDeserializer.cpp
           CaptureWindow.cpp
           DataManager.cpp
           DataView.cpp
@@ -107,6 +107,7 @@ target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
          OrbitCaptureClient
+         OrbitClientModel
          OrbitClientServices
          OrbitProtos
          freetype-gl::freetype-gl
@@ -143,8 +144,8 @@ target_link_libraries(
 
 register_test(OrbitGlTests)
 
-add_fuzzer(CaptureSerializerLoadFuzzer CaptureSerializerLoadFuzzer.cpp)
-target_link_libraries(CaptureSerializerLoadFuzzer
+add_fuzzer(CaptureDeserializerLoadFuzzer CaptureDeserializerLoadFuzzer.cpp)
+target_link_libraries(CaptureDeserializerLoadFuzzer
                       PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
 
 add_fuzzer(DataManagerUpdateModuleInfosFuzzer
