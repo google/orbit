@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
-#define ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
+#ifndef ORBIT_GL_CAPTURE_DESERIALIZER_H_
+#define ORBIT_GL_CAPTURE_DESERIALIZER_H_
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -96,4 +96,4 @@ ErrorMessageOr<void> CaptureDeserializer::Save(
   return outcome::success();
 }
 
-#endif  // ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
+#endif  // ORBIT_GL_CAPTURE_DESERIALIZER_H_
