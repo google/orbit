@@ -702,16 +702,7 @@ void OrbitApp::ClearCapture() {
   set_selected_thread_id(-1);
   SelectTextBox(nullptr);
 
-  SamplingProfiler empty_profiler;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> empty_unique_callstacks;
-
-  SetSamplingReport(empty_profiler, empty_unique_callstacks);
-  SetTopDownView(GetCaptureData());
-  SetSelectionTopDownView(empty_profiler, GetCaptureData());
-
-  if (selection_report_) {
-    SetSelectionReport(std::move(empty_profiler), empty_unique_callstacks, false);
-  }
+  UpdateAfterCaptureCleared();
 
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
@@ -1130,6 +1121,18 @@ void OrbitApp::UpdateAfterSymbolLoading() {
     selection_report_->UpdateReport(
         std::move(selection_profiler),
         capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());
+  }
+}
+
+void OrbitApp::UpdateAfterCaptureCleared() {
+  SamplingProfiler empty_profiler;
+  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> empty_unique_callstacks;
+
+  SetSamplingReport(empty_profiler, empty_unique_callstacks);
+  SetTopDownView(GetCaptureData());
+  SetSelectionTopDownView(empty_profiler, GetCaptureData());
+  if (selection_report_) {
+    SetSelectionReport(std::move(empty_profiler), empty_unique_callstacks, false);
   }
 }
 
