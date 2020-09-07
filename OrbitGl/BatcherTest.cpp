@@ -125,7 +125,7 @@ void ExpectCustomDataEq(const MockBatcher& batcher, const Color& rendered_color,
   const PickingUserData* rendered_data = batcher.GetUserData(id);
   EXPECT_NE(rendered_data, nullptr);
   EXPECT_NE(rendered_data->custom_data_, nullptr);
-  EXPECT_EQ(*static_cast<T*>(rendered_data->custom_data_), value);
+  EXPECT_EQ(*static_cast<const T*>(rendered_data->custom_data_), value);
 }
 
 TEST(Batcher, PickingSimpleElements) {
