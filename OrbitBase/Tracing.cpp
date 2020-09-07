@@ -18,7 +18,7 @@ using orbit::tracing::TimerCallback;
 ABSL_CONST_INIT static absl::Mutex global_callback_mutex(absl::kConstInit);
 ABSL_CONST_INIT static std::unique_ptr<TimerCallback> global_callback = {};
 ABSL_CONST_INIT static absl::Mutex global_thread_pool_mutex(absl::kConstInit);
-ABSL_CONST_INIT static std::unique_ptr<ThreadPool> glolbal_thread_pool = {};
+ABSL_CONST_INIT static std::unique_ptr<ThreadPool> global_thread_pool = {};
 
 static std::vector<Scope>& GetThreadLocalScopes() {
   thread_local std::vector<Scope> thread_local_scopes;
@@ -29,21 +29,21 @@ static void CreateCallbackThreadPool() {
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
   absl::MutexLock lock(&global_thread_pool_mutex);
-  CHECK(glolbal_thread_pool == nullptr);
-  glolbal_thread_pool = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
+  CHECK(global_thread_pool == nullptr);
+  global_thread_pool = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
 }
 
 static void ShutdownCallbackThreadPool() {
   absl::MutexLock lock(&global_thread_pool_mutex);
-  CHECK(glolbal_thread_pool != nullptr);
-  glolbal_thread_pool->Shutdown();
-  glolbal_thread_pool->Wait();
+  CHECK(global_thread_pool != nullptr);
+  global_thread_pool->Shutdown();
+  global_thread_pool->Wait();
 }
 
 static void DeferScopeProcessing(const Scope& scope) {
   // User callback is called from a worker thread to
   // minimize contention on the instrumented threads.
-  glolbal_thread_pool->Schedule([scope]() {
+  global_thread_pool->Schedule([scope]() {
     absl::MutexLock lock(&global_callback_mutex);
     if (global_callback != nullptr) (*global_callback)(scope);
   });
