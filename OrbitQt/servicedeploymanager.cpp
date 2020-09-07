@@ -85,7 +85,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
     version = version.substr(1);
   }
   const auto command =
-      absl::StrFormat("/usr/bin/dpkg-query -W orbitprofiler 2>/dev/null | grep -E '%s$'", version);
+      absl::StrFormat("/usr/bin/dpkg-query -W -f '${Version}' orbitprofiler 2>/dev/null | grep -xF '%s'", version);
 
   OrbitSshQt::Task check_if_installed_task{&session_.value(), command};
 
