@@ -93,7 +93,10 @@ message TracepointEvent {
   int32 tid = 2;
   int64 time = 3;
   int32 cpu = 4;
-  uint64 tracepoint_info_key = 5;
+  oneof tracepoint_info_or_key {
+    TracepointInfo tracepoint_info = 5;
+    uint64 tracepoint_info_key = 6;
+  }
 }
 
 message GpuJob {

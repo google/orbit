@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_TRACEPOINTCUSTOM_H
-#define ORBIT_TRACEPOINTCUSTOM_H
+#ifndef ORBIT_TRACEPOINT_CUSTOM_H
+#define ORBIT_TRACEPOINT_CUSTOM_H
 
 #include <absl/container/flat_hash_set.h>
 
@@ -28,8 +28,4 @@ using TracepointInfoSet =
     absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
                         internal::EqualTracepointInfo>;
 
-using TracepointInfoToHashSet =
-    absl::flat_hash_map<orbit_grpc_protos::TracepointInfo, absl::flat_hash_set<uint64_t>,
-                        internal::HashTracepointInfo, internal::EqualTracepointInfo>;
-
-#endif  // ORBIT_TRACEPOINTCUSTOM_H
+#endif  // ORBIT_TRACEPOINT_CUSTOM_H
