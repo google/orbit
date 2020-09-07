@@ -84,8 +84,8 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
     // packages. So we have to remove it.
     version = version.substr(1);
   }
-  const auto command =
-      absl::StrFormat("/usr/bin/dpkg-query -W -f '${Version}' orbitprofiler 2>/dev/null | grep -xF '%s'", version);
+  const auto command = absl::StrFormat(
+      "/usr/bin/dpkg-query -W -f '${Version}' orbitprofiler 2>/dev/null | grep -xF '%s'", version);
 
   OrbitSshQt::Task check_if_installed_task{&session_.value(), command};
 
