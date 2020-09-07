@@ -41,6 +41,10 @@ static void ShutdownCallbackThreadPool() {
 }
 
 static void DeferScopeProcessing(const Scope& scope) {
+  if (global_thread_pool == nullptr) {
+    // No orbit::tracing::Listener was set and hence CreateCallbackThreadPool() was never called.
+    return;
+  }
   // User callback is called from a worker thread to
   // minimize contention on the instrumented threads.
   global_thread_pool->Schedule([scope]() {
