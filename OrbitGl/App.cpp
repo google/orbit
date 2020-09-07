@@ -453,10 +453,9 @@ void OrbitApp::SetSamplingReport(
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
   auto report =
       std::make_shared<SamplingReport>(std::move(sampling_profiler), std::move(unique_callstacks));
-  if (sampling_reports_callback_) {
-    DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
-    sampling_reports_callback_(callstack_data_view, report);
-  }
+  CHECK(sampling_reports_callback_);
+  DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
+  sampling_reports_callback_(callstack_data_view, report);
 
   // clear old sampling report
   if (sampling_report_ != nullptr) {
@@ -469,13 +468,11 @@ void OrbitApp::SetSelectionReport(
     SamplingProfiler sampling_profiler,
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
     bool has_summary) {
+  CHECK(selection_report_callback_);
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler),
                                                  std::move(unique_callstacks), has_summary);
-
-  if (selection_report_callback_) {
-    DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
-    selection_report_callback_(callstack_data_view, report);
-  }
+  DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
+  selection_report_callback_(callstack_data_view, report);
 
   // clear old selection report
   if (selection_report_ != nullptr) {
@@ -486,10 +483,7 @@ void OrbitApp::SetSelectionReport(
 }
 
 void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
-  if (!top_down_view_callback_) {
-    return;
-  }
-
+  CHECK(top_down_view_callback_);
   std::unique_ptr<TopDownView> top_down_view =
       TopDownView::CreateFromSamplingProfiler(capture_data.sampling_profiler(), capture_data);
   top_down_view_callback_(std::move(top_down_view));
@@ -497,10 +491,7 @@ void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
 
 void OrbitApp::SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
                                        const CaptureData& capture_data) {
-  if (!selection_top_down_view_callback_) {
-    return;
-  }
-
+  CHECK(selection_top_down_view_callback_);
   std::unique_ptr<TopDownView> selection_top_down_view =
       TopDownView::CreateFromSamplingProfiler(selection_sampling_profiler, capture_data);
   selection_top_down_view_callback_(std::move(selection_top_down_view));
