@@ -47,12 +47,9 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   time_graph.SetStringManager(string_manager);
   GOrbitApp->ClearCapture();
 
-  CaptureDeserializer deserializer{};
-  deserializer.time_graph_ = GCurrentTimeGraph;
-
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
-  (void)deserializer.Load(input_stream);
+  (void)CaptureDeserializer::Load(input_stream, GCurrentTimeGraph);
 
   GOrbitApp->GetThreadPool()->ShutdownAndWait();
   GOrbitApp.reset();
