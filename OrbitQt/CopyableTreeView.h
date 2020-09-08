@@ -12,7 +12,7 @@ class CopyableTreeView : public QTreeView {
   Q_OBJECT
 
  public:
-  CopyableTreeView(QWidget* parent = nullptr) : QTreeView(parent) {}
+  explicit CopyableTreeView(QWidget* parent = nullptr) : QTreeView(parent) {}
 
   void keyPressEvent(QKeyEvent* event) override {
     if (event->matches(QKeySequence::Copy)) {
