@@ -34,7 +34,7 @@ class CaptureEventProcessor {
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
-  void ProcessTracepointEventInfo(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
+  void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;

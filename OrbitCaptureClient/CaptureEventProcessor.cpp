@@ -36,7 +36,7 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
       ProcessInternedTracepointInfo(event.interned_tracepoint_info());
       break;
     case CaptureEvent::kTracepointEvent:
-      ProcessTracepointEventInfo(event.tracepoint_event());
+      ProcessTracepointEvent(event.tracepoint_event());
       break;
     case CaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
@@ -216,12 +216,12 @@ uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
 void CaptureEventProcessor::ProcessInternedTracepointInfo(
     orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info) {
   if (tracepoint_intern_pool_.contains(interned_tracepoint_info.key())) {
-    ERROR("Overwriting InternedTracepointInfo  with key %llu", interned_tracepoint_info.key());
+    ERROR("Overwriting InternedTracepointInfo with key %llu", interned_tracepoint_info.key());
   }
   tracepoint_intern_pool_.emplace(interned_tracepoint_info.key(),
                                   std::move(*interned_tracepoint_info.mutable_intern()));
 }
-void CaptureEventProcessor::ProcessTracepointEventInfo(
+void CaptureEventProcessor::ProcessTracepointEvent(
     const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
   orbit_grpc_protos::TracepointInfo tracepoint_info;
 
@@ -237,7 +237,7 @@ void CaptureEventProcessor::ProcessTracepointEventInfo(
   tracepoint_event_info.set_cpu(tracepoint_event.cpu());
   tracepoint_event_info.set_tracepoint_info_key(hash);
 
-  // TODO: Set the capture listener to the tracepoint event
+  // TODO: Store the tracepoint event in a unordered map that has as the key the hash computed
 }
 
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
