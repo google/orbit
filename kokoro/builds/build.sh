@@ -198,6 +198,7 @@ if [ -n "$1" ]; then
     cp -av bin/ Orbit
     find Orbit/ -name \*.pdb -delete
     cp -v NOTICE Orbit/NOTICE
+    test -f NOTICE.Chromium && cp -v NOTICE.Chromium Orbit/NOTICE.Chromium
     cp -v LICENSE Orbit/LICENSE.txt
     cp -av ../../contrib/automation_tests Orbit
     zip -r Orbit.zip Orbit/

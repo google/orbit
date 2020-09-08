@@ -250,6 +250,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitService.debug", src="bin/", dst="bin")
         self.copy("crashpad_handler.exe", src="bin/", dst="bin")
         self.copy("NOTICE")
+        self.copy("NOTICE.Chromium")
         self.copy("LICENSE")
 
     def deploy(self):
