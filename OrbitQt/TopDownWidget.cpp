@@ -31,27 +31,28 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   onSearchLineEditTextEdited(ui_->searchLineEdit->text());
 }
 
-static void CopyFromIndices(OrbitApp* app, const QModelIndexList& indices) {
-  std::string clipboard;
+static std::string BuildStringFromIndices(const QModelIndexList& indices) {
+  std::string buffer;
   std::optional<QModelIndex> prev_index;
   // Note: indices are sorted by row in order of selection and then by column in ascending order.
   for (const QModelIndex& index : indices) {
     if (prev_index.has_value()) {
       // row() is the position among siblings: also compare parent().
       if (index.row() != prev_index->row() || index.parent() != prev_index->parent()) {
-        clipboard += "\n";
+        buffer += "\n";
       } else {
-        clipboard += ", ";
+        buffer += ", ";
       }
     }
-    clipboard += index.data().toString().toStdString();
+    buffer += index.data().toString().toStdString();
     prev_index = index;
   }
-  app->SetClipboard(clipboard);
+  return buffer;
 }
 
 void TopDownWidget::onCopyKeySequencePressed() {
-  CopyFromIndices(app_, ui_->topDownTreeView->selectionModel()->selectedIndexes());
+  app_->SetClipboard(
+      BuildStringFromIndices(ui_->topDownTreeView->selectionModel()->selectedIndexes()));
 }
 
 const QString TopDownWidget::kActionExpandRecursively = QStringLiteral("&Expand recursively");
@@ -265,7 +266,8 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
     }
   } else if (action->text() == kActionCopySelection) {
-    CopyFromIndices(app_, ui_->topDownTreeView->selectionModel()->selectedIndexes());
+    app_->SetClipboard(
+        BuildStringFromIndices(ui_->topDownTreeView->selectionModel()->selectedIndexes()));
   }
 }
 
