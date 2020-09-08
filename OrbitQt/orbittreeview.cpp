@@ -79,8 +79,8 @@ void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type
   setAlternatingRowColors(true);
 
   if (font_type == FontType::kFixed) {
-    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    setFont(fixedFont);
+    const QFont fixed_font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    setFont(fixed_font);
   }
 }
 
@@ -133,11 +133,11 @@ void OrbitTreeView::Refresh() {
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
   if (auto_resize_ && model_ && model_->GetDataView()) {
-    QSize headerSize = size();
+    QSize header_size = size();
     for (size_t i = 0; i < model_->GetDataView()->GetColumns().size(); ++i) {
       float ratio = model_->GetDataView()->GetColumns()[i].ratio;
       if (ratio > 0.f) {
-        header()->resizeSection(i, static_cast<int>(headerSize.width() * ratio));
+        header()->resizeSection(i, static_cast<int>(header_size.width() * ratio));
       }
     }
   }
@@ -152,8 +152,8 @@ void OrbitTreeView::Link(OrbitTreeView* link) {
   model_->GetDataView()->LinkDataView(data_view);
 }
 
-void OrbitTreeView::SetGlWidget(OrbitGLWidget* a_GlWidget) {
-  model_->GetDataView()->SetGlPanel(a_GlWidget->GetPanel());
+void OrbitTreeView::SetGlWidget(OrbitGLWidget* gl_widget) {
+  model_->GetDataView()->SetGlPanel(gl_widget->GetPanel());
 }
 
 void OrbitTreeView::drawRow(QPainter* painter, const QStyleOptionViewItem& options,
@@ -178,24 +178,24 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
     std::vector<std::string> menu =
         model_->GetDataView()->GetContextMenu(clicked_index, selected_indices);
     if (!menu.empty()) {
-      QMenu contextMenu(tr("ContextMenu"), this);
-      GContextMenu = &contextMenu;
+      QMenu context_menu(tr("ContextMenu"), this);
+      GContextMenu = &context_menu;
       std::vector<std::unique_ptr<QAction>> actions;
 
       for (size_t i = 0; i < menu.size(); ++i) {
         actions.push_back(std::make_unique<QAction>(QString::fromStdString(menu[i])));
         connect(actions[i].get(), &QAction::triggered,
                 [this, &menu, i] { OnMenuClicked(menu[i], i); });
-        contextMenu.addAction(actions[i].get());
+        context_menu.addAction(actions[i].get());
       }
 
-      contextMenu.exec(mapToGlobal(pos));
+      context_menu.exec(mapToGlobal(pos));
       GContextMenu = nullptr;
     }
   }
 }
 
-void OrbitTreeView::OnMenuClicked(const std::string& a_Action, int a_MenuIndex) {
+void OrbitTreeView::OnMenuClicked(const std::string& action, int menu_index) {
   QModelIndexList selection_list = selectionModel()->selectedIndexes();
   std::set<int> selection_set;
   for (QModelIndex& index : selection_list) {
@@ -204,7 +204,7 @@ void OrbitTreeView::OnMenuClicked(const std::string& a_Action, int a_MenuIndex) 
 
   std::vector<int> indices(selection_set.begin(), selection_set.end());
   if (!indices.empty()) {
-    model_->GetDataView()->OnContextMenu(a_Action, a_MenuIndex, indices);
+    model_->GetDataView()->OnContextMenu(action, menu_index, indices);
   }
 }
 
@@ -244,10 +244,10 @@ void OrbitTreeView::OnRowSelected(int row) {
   }
 }
 
-void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max) {
+void OrbitTreeView::OnRangeChanged(int /*min*/, int max) {
   DataView* data_view = model_->GetDataView();
   if (data_view->ScrollToBottom()) {
-    verticalScrollBar()->setValue(a_Max);
+    verticalScrollBar()->setValue(max);
   }
 }
 
