@@ -69,16 +69,11 @@ static void FillEventBuffer(const CaptureData& capture_data) {
 
 CaptureData CaptureDeserializer::internal::GenerateCaptureData(const CaptureInfo& capture_info,
                                                                StringManager* string_manager) {
-  // Clear the old capture
-  GOrbitApp->ClearSelectedFunctions();
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-  absl::flat_hash_set<uint64_t> visible_functions;
   for (const auto& function : capture_info.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
     selected_functions[address] = function;
-    visible_functions.insert(address);
   }
-  GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
 
   absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
       capture_info.function_stats().begin(), capture_info.function_stats().end()};
@@ -158,6 +153,13 @@ ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream, TimeGraph* 
     }
   }
 
+  // Clear the old capture and set the new one
+  GOrbitApp->ClearSelectedFunctions();
+  absl::flat_hash_set<uint64_t> visible_functions;
+  for (auto const& [address, selected_function] : capture_data.selected_functions()) {
+    visible_functions.insert(address);
+  }
+  GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
   GOrbitApp->SetSamplingReport(capture_data.sampling_profiler(),
                                capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
   GOrbitApp->SetTopDownView(capture_data);
