@@ -78,7 +78,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
     ui->actionOpen_Preset->setDisabled(true);
     ui->actionSave_Preset_As->setDisabled(true);
     ui->HomeTab->setDisabled(true);
-    SetTitle({});
+    setWindowTitle({});
   });
 
   auto finalizing_capture_dialog =
@@ -200,7 +200,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   ui->topDownWidget->Initialize(GOrbitApp.get());
   ui->selectionTopDownWidget->Initialize(GOrbitApp.get());
 
-  SetTitle({});
+  setWindowTitle({});
   std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
   this->setWindowIcon(QIcon(iconFileName.c_str()));
 
@@ -353,7 +353,7 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 
 void OrbitMainWindow::on_actionAbout_triggered() {
   OrbitQt::OrbitAboutDialog dialog{this};
-  dialog.setWindowTitle(windowTitle());
+  dialog.setWindowTitle("About");
   dialog.SetVersionString(QCoreApplication::applicationVersion());
   dialog.SetBuildInformation(QString::fromStdString(OrbitCore::GetBuildReport()));
 
@@ -506,14 +506,14 @@ outcome::result<void> OrbitMainWindow::OpenCapture(const std::string& filepath) 
   ErrorMessageOr<void> result = GOrbitApp->OnLoadCapture(filepath);
 
   if (result.has_error()) {
-    SetTitle({});
+    setWindowTitle({});
     QMessageBox::critical(
         this, "Error loading capture",
         QString::fromStdString(absl::StrFormat("Could not load capture from \"%s\":\n%s", filepath,
                                                result.error().message())));
     return std::errc::no_such_file_or_directory;
   }
-  SetTitle(QString::fromStdString(filepath));
+  setWindowTitle(QString::fromStdString(filepath));
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
   return outcome::success();
 }
@@ -527,17 +527,6 @@ void OrbitMainWindow::OpenDisassembly(std::string a_String, DisassemblyReport re
   dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |
                          Qt::WindowMaximizeButtonHint);
   dialog->show();
-}
-
-void OrbitMainWindow::SetTitle(const QString& task_description) {
-  if (task_description.isEmpty()) {
-    setWindowTitle(
-        QString("%1 %2").arg(QApplication::applicationName(), QApplication::applicationVersion()));
-  } else {
-    setWindowTitle(QString("%1 %2 - %3")
-                       .arg(QApplication::applicationName(), QApplication::applicationVersion(),
-                            task_description));
-  }
 }
 
 void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }

@@ -253,8 +253,15 @@ int main(int argc, char* argv[]) {
 #endif
 
     QApplication app(argc, argv);
-    QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
-    QCoreApplication::setApplicationVersion(QString::fromStdString(OrbitCore::GetVersion()));
+    QApplication::setApplicationName("orbitprofiler");
+
+    // The application display name is automatically appended to all window titles when shown in the
+    // title bar: <specific window title> - <application display name>
+    const auto version_string = QString::fromStdString(OrbitCore::GetVersion());
+    QApplication::setApplicationDisplayName(
+        QString{"Orbit Profiler %1 [BETA]"}.arg(version_string));
+
+    QApplication::setApplicationVersion(version_string);
     path_to_executable = QCoreApplication::applicationFilePath();
 
 #ifdef ORBIT_CRASH_HANDLING
