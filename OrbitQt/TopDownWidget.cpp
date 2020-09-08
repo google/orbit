@@ -198,8 +198,7 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
 
   bool enable_disassembly = !functions.empty();
 
-  QModelIndexList selected_indices = ui_->topDownTreeView->selectionModel()->selectedIndexes();
-  bool enable_copy = !selected_indices.empty();
+  bool enable_copy = ui_->topDownTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->topDownTreeView};
   if (enable_expand_recursively) {
@@ -266,7 +265,7 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
     }
   } else if (action->text() == kActionCopySelection) {
-    CopyFromIndices(app_, selected_indices);
+    CopyFromIndices(app_, ui_->topDownTreeView->selectionModel()->selectedIndexes());
   }
 }
 
