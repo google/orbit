@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/flags/flag.h>
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <libfuzzer/libfuzzer_macro.h>
 
 #include <cstdio>
@@ -14,7 +12,9 @@
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "SamplingProfiler.h"
 #include "TimeGraph.h"
+#include "absl/flags/flag.h"
 #include "capture_data.pb.h"
+#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 
 // Hack: This is declared in a header we include here
 // and the definition needs to take place somewhere.

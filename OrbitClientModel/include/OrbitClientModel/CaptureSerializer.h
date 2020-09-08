@@ -5,10 +5,6 @@
 #ifndef ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
 #define ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
 
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/message.h>
-
 #include <iosfwd>
 #include <outcome.hpp>
 #include <string>
@@ -16,6 +12,9 @@
 #include "CaptureData.h"
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
+#include "google/protobuf/io/coded_stream.h"
+#include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "google/protobuf/message.h"
 
 class CaptureDeserializer {
  public:
