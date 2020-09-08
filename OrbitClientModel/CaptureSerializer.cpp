@@ -32,7 +32,7 @@ void CaptureDeserializer::WriteMessage(const google::protobuf::Message* message,
   message->SerializeToCodedStream(output);
 }
 
-CaptureInfo CaptureDeserializer::GenerateCaptureInfo(
+CaptureInfo internal::GenerateCaptureInfo(
     const CaptureData& capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;

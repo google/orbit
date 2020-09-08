@@ -16,49 +16,51 @@
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
 
-class CaptureDeserializer {
- public:
-  template <class TimersIterator>
-  static ErrorMessageOr<void> Save(
-      const std::string& filename, const CaptureData& capture_data,
-      const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-      TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
-
-  static void WriteMessage(const google::protobuf::Message* message,
-                           google::protobuf::io::CodedOutputStream* output);
-
- private:
-  template <class TimersIterator>
-  static void Save(std::ostream& stream, const CaptureData& capture_data,
-                   const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-                   TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
-
-  static orbit_client_protos::CaptureInfo GenerateCaptureInfo(
-      const CaptureData& capture_data,
-      const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
-
-  static inline const std::string kRequiredCaptureVersion = "1.52";
-};
+namespace CaptureSerializer {
 
 template <class TimersIterator>
-void CaptureDeserializer::Save(std::ostream& stream, const CaptureData& capture_data,
-                               const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-                               TimersIterator timers_iterator_begin,
-                               TimersIterator timers_iterator_end) {
+ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data,
+                          const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
+                          TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
+
+void WriteMessage(const google::protobuf::Message* message,
+                  google::protobuf::io::CodedOutputStream* output);
+
+}  // namespace CaptureSerializer
+
+namespace internal {
+
+template <class TimersIterator>
+void Save(std::ostream& stream, const CaptureData& capture_data,
+          const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
+          TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
+
+orbit_client_protos::CaptureInfo GenerateCaptureInfo(
+    const CaptureData& capture_data,
+    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
+
+inline const std::string kRequiredCaptureVersion = "1.52";
+
+}  // namespace internal
+
+template <class TimersIterator>
+void internal::Save(std::ostream& stream, const CaptureData& capture_data,
+                    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
+                    TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
   google::protobuf::io::CodedOutputStream coded_output(&out_stream);
 
   orbit_client_protos::CaptureHeader header;
   header.set_version(kRequiredCaptureVersion);
-  WriteMessage(&header, &coded_output);
+  CaptureSerializer::WriteMessage(&header, &coded_output);
 
   orbit_client_protos::CaptureInfo capture_info =
-      GenerateCaptureInfo(capture_data, key_to_string_map);
-  WriteMessage(&capture_info, &coded_output);
+      internal::GenerateCaptureInfo(capture_data, key_to_string_map);
+  CaptureSerializer::WriteMessage(&capture_info, &coded_output);
 
   // Timers
   for (auto it = timers_iterator_begin; it != timers_iterator_end; ++it) {
-    WriteMessage(&(*it), &coded_output);
+    CaptureSerializer::WriteMessage(&(*it), &coded_output);
   }
 }
 
@@ -75,8 +77,8 @@ ErrorMessageOr<void> CaptureDeserializer::Save(
 
   {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-    Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
-         std::move(timers_iterator_end));
+    internal::Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
+                   std::move(timers_iterator_end));
   }
 
   return outcome::success();
