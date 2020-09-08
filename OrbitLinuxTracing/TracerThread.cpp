@@ -850,10 +850,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
     auto event = ConsumeGenericTracepointPerfEvent(ring_buffer, header);
 
-    if (event->GetPid() != pid_) {
-      return;
-    }
-
     orbit_grpc_protos::TracepointEvent tracepoint_event;
     tracepoint_event.set_pid(event->GetPid());
     tracepoint_event.set_tid(event->GetTid());
