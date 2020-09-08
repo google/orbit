@@ -22,10 +22,10 @@ class OrbitTreeView : public QTreeView {
                   bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
   void SetDataModel(DataView* model);
-  void OnFilter(const QString& a_Filter);
+  void OnFilter(const QString& filter);
   void Refresh();
-  void Link(OrbitTreeView* a_Link);
-  void SetGlWidget(OrbitGLWidget* a_Link);
+  void Link(OrbitTreeView* link);
+  void SetGlWidget(OrbitGLWidget* gl_widget);
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
   void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) override;
@@ -44,11 +44,11 @@ class OrbitTreeView : public QTreeView {
   void columnResized(int column, int oldSize, int newSize);
 
  private slots:
-  void OnSort(int a_Section, Qt::SortOrder a_Order);
+  void OnSort(int section, Qt::SortOrder order);
   void OnTimer();
   void ShowContextMenu(const QPoint& pos);
-  void OnMenuClicked(const std::string& a_Action, int a_MenuIndex);
-  void OnRangeChanged(int a_Min, int a_Max);
+  void OnMenuClicked(const std::string& action, int menu_index);
+  void OnRangeChanged(int min, int max);
   void OnRowSelected(int row);
 
  private:
