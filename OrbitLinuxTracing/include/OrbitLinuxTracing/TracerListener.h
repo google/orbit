@@ -18,6 +18,7 @@ class TracerListener {
   virtual void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) = 0;
   virtual void OnThreadName(orbit_grpc_protos::ThreadName thread_name) = 0;
   virtual void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) = 0;
+  virtual void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) = 0;
 };
 
 }  // namespace LinuxTracing

@@ -860,7 +860,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     tracepoint->set_name(it->second.name());
     tracepoint->set_category(it->second.category());
 
-    // TODO: Sending of the event
+    listener_->OnTracepointEvent(std::move(tracepoint_event));
+
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
