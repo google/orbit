@@ -4,7 +4,6 @@
 
 #include "LinuxTracingGrpcHandler.h"
 
-#include "absl/strings/str_join.h"
 #include "llvm/Demangle/Demangle.h"
 
 namespace orbit_service {
