@@ -619,7 +619,7 @@ QPushButton:disabled {
   <customwidget>
    <class>TopDownWidget</class>
    <extends>QWidget</extends>
-   <header>topdownwidget.h</header>
+   <header>TopDownWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>
