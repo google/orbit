@@ -60,10 +60,9 @@ CaptureInfo CaptureDeserializer::GenerateCaptureInfo(
       capture_data.functions_stats();
   capture_info.mutable_function_stats()->insert(functions_stats.begin(), functions_stats.end());
 
-  // TODO: this is not really synchronized, since GetCallstacks processing below
-  // is not under the same mutex lock we could end up having list of callstacks
-  // inconsistent with unique_callstacks. Revisit sampling profiler data
-  // thread-safety.
+  // TODO: this is not really synchronized, since GetCallstackData processing below is not under the
+  // same mutex lock we could end up having list of callstacks inconsistent with unique_callstacks.
+  // Revisit sampling profiler data thread-safety.
   capture_data.GetCallstackData()->ForEachUniqueCallstack(
       [&capture_info](const CallStack& call_stack) {
         CallstackInfo* callstack = capture_info.add_callstacks();
