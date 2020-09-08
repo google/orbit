@@ -8,11 +8,11 @@
 #include <QKeyEvent>
 #include <QTreeView>
 
-class CopyableTreeView : public QTreeView {
+class CopyKeySequenceEnabledTreeView : public QTreeView {
   Q_OBJECT
 
  public:
-  explicit CopyableTreeView(QWidget* parent = nullptr) : QTreeView(parent) {}
+  explicit CopyKeySequenceEnabledTreeView(QWidget* parent = nullptr) : QTreeView(parent) {}
 
   void keyPressEvent(QKeyEvent* event) override {
     if (event->matches(QKeySequence::Copy)) {
