@@ -29,7 +29,7 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QTreeView" name="topDownTreeView">
+    <widget class="CopyableTreeView" name="topDownTreeView">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>
@@ -46,6 +46,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CopyableTreeView</class>
+   <extends>QTreeView</extends>
+   <header>CopyableTreeView.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

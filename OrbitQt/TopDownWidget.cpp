@@ -28,7 +28,30 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive, Qt::DescendingOrder);
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
 
-  on_searchLineEdit_textEdited(ui_->searchLineEdit->text());
+  onSearchLineEditTextEdited(ui_->searchLineEdit->text());
+}
+
+static void CopyFromIndices(OrbitApp* app, const QModelIndexList& indices) {
+  std::string clipboard;
+  std::optional<QModelIndex> prev_index;
+  // Note: indices are sorted by row in order of selection and then by column in ascending order.
+  for (const QModelIndex& index : indices) {
+    if (prev_index.has_value()) {
+      // row() is the position among siblings: also compare parent().
+      if (index.row() != prev_index->row() || index.parent() != prev_index->parent()) {
+        clipboard += "\n";
+      } else {
+        clipboard += ", ";
+      }
+    }
+    clipboard += index.data().toString().toStdString();
+    prev_index = index;
+  }
+  app->SetClipboard(clipboard);
+}
+
+void TopDownWidget::onCopyKeySequencePressed() {
+  CopyFromIndices(app_, ui_->topDownTreeView->selectionModel()->selectedIndexes());
 }
 
 const QString TopDownWidget::kActionExpandRecursively = QStringLiteral("&Expand recursively");
@@ -123,25 +146,6 @@ static std::vector<FunctionInfo*> GetFunctionsFromIndices(OrbitApp* app,
     }
   }
   return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
-}
-
-static void CopyFromIndices(OrbitApp* app, const QModelIndexList& indices) {
-  std::string clipboard;
-  std::optional<QModelIndex> prev_index;
-  // Note: indices are sorted by row in order of selection and then by column in ascending order.
-  for (const QModelIndex& index : indices) {
-    if (prev_index.has_value()) {
-      // row() is the position among siblings: also compare parent().
-      if (index.row() != prev_index->row() || index.parent() != prev_index->parent()) {
-        clipboard += "\n";
-      } else {
-        clipboard += ", ";
-      }
-    }
-    clipboard += index.data().toString().toStdString();
-    prev_index = index;
-  }
-  app->SetClipboard(clipboard);
 }
 
 void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
@@ -292,7 +296,7 @@ static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
   }
 }
 
-void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
+void TopDownWidget::onSearchLineEditTextEdited(const QString& text) {
   if (search_proxy_model_ == nullptr) {
     return;
   }
