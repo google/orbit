@@ -41,6 +41,7 @@ const QString TopDownWidget::kActionLoadSymbols = QStringLiteral("&Load Symbols"
 const QString TopDownWidget::kActionSelect = QStringLiteral("&Hook");
 const QString TopDownWidget::kActionDeselect = QStringLiteral("&Unhook");
 const QString TopDownWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
+const QString TopDownWidget::kActionCopySelection = QStringLiteral("Copy Selection");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
@@ -124,6 +125,25 @@ static std::vector<FunctionInfo*> GetFunctionsFromIndices(OrbitApp* app,
   return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
+static void CopyFromIndices(OrbitApp* app, const QModelIndexList& indices) {
+  std::string clipboard;
+  std::optional<QModelIndex> prev_index;
+  // Note: indices are sorted by row in order of selection and then by column in ascending order.
+  for (const QModelIndex& index : indices) {
+    if (prev_index.has_value()) {
+      // row() is the position among siblings: also compare parent().
+      if (index.row() != prev_index->row() || index.parent() != prev_index->parent()) {
+        clipboard += "\n";
+      } else {
+        clipboard += ", ";
+      }
+    }
+    clipboard += index.data().toString().toStdString();
+    prev_index = index;
+  }
+  app->SetClipboard(clipboard);
+}
+
 void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   QModelIndex index = ui_->topDownTreeView->indexAt(point);
   if (!index.isValid()) {
@@ -174,6 +194,9 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
 
   bool enable_disassembly = !functions.empty();
 
+  QModelIndexList selected_indices = ui_->topDownTreeView->selectionModel()->selectedIndexes();
+  bool enable_copy = !selected_indices.empty();
+
   QMenu menu{ui_->topDownTreeView};
   if (enable_expand_recursively) {
     menu.addAction(kActionExpandRecursively);
@@ -197,6 +220,10 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   }
   if (enable_disassembly) {
     menu.addAction(kActionDisassembly);
+  }
+  menu.addSeparator();
+  if (enable_copy) {
+    menu.addAction(kActionCopySelection);
   }
 
   QAction* action = menu.exec(ui_->topDownTreeView->mapToGlobal(point));
@@ -234,6 +261,8 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     for (FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
     }
+  } else if (action->text() == kActionCopySelection) {
+    CopyFromIndices(app_, selected_indices);
   }
 }
 
