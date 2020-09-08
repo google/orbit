@@ -28,6 +28,7 @@
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
 #include "ManualInstrumentationManager.h"
+#include "ModuleData.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
@@ -257,6 +258,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
+  }
+  [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const {
+    return data_manager_->GetMutableModuleByPath(path);
   }
 
   // TODO(kuebler): Move them to a separate controler at some point

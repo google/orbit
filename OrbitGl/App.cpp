@@ -953,8 +953,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path,
         }
       }
 
-      data_manager_->FindModuleByAddressStart(process->GetId(), module->m_AddressStart)
-          ->set_loaded(true);
+      GetMutableModuleByPath(module->m_FullName)->set_loaded(true);
 
       modules_currently_loading_.erase(module->m_FullName);
 
@@ -1024,7 +1023,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         return;
       }
 
-      modules_data_view_->SetModules(pid, data_manager_->GetModules(pid));
+      modules_data_view_->SetProcess(data_manager_->GetProcessByPid(pid));
 
       // TODO: remove this part when all client code is moved to
       // new data model.

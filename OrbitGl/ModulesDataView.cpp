@@ -7,6 +7,7 @@
 #include "App.h"
 #include "OrbitModule.h"
 #include "Pdb.h"
+#include "ProcessData.h"
 #include "absl/flags/flag.h"
 
 // TODO(kuebler): remove this once we have the validator complete
@@ -30,6 +31,7 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
 
 std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleData* module = GetModule(row);
+  const MemorySpace* memory_space = module_memory_.at(module);
 
   switch (col) {
     case kColumnName:
@@ -37,7 +39,7 @@ std::string ModulesDataView::GetValue(int row, int col) {
     case kColumnPath:
       return module->file_path();
     case kColumnAddressRange:
-      return module->address_range();
+      return memory_space->FormattedAddressRange();
     case kColumnFileSize:
       return GetPrettySize(module->file_size());
     case kColumnLoaded:
@@ -52,6 +54,12 @@ std::string ModulesDataView::GetValue(int row, int col) {
     return OrbitUtils::Compare(modules_[a]->Member, modules_[b]->Member, ascending); \
   }
 
+#define ORBIT_MODULE_SPACE_SORT(Member)                                            \
+  [&](int a, int b) {                                                              \
+    return OrbitUtils::Compare(module_memory_.at(modules_[a])->Member,             \
+                               module_memory_.at(modules_[b])->Member, ascending); \
+  }
+
 void ModulesDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
@@ -64,7 +72,7 @@ void ModulesDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(file_path());
       break;
     case kColumnAddressRange:
-      sorter = ORBIT_PROC_SORT(address_start());
+      sorter = ORBIT_MODULE_SPACE_SORT(start);
       break;
     case kColumnFileSize:
       sorter = ORBIT_PROC_SORT(file_size());
@@ -144,7 +152,8 @@ void ModulesDataView::DoFilter() {
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
-    std::string module_string = absl::StrFormat("%s %s", module->address_range(),
+    const MemorySpace* memory_space = module_memory_.at(module);
+    std::string module_string = absl::StrFormat("%s %s", memory_space->FormattedAddressRange(),
                                                 absl::AsciiStrToLower(module->file_path()));
 
     bool match = true;
@@ -166,9 +175,14 @@ void ModulesDataView::DoFilter() {
   OnSort(sorting_column_, {});
 }
 
-void ModulesDataView::SetModules(int32_t process_id, const std::vector<ModuleData*>& modules) {
-  process_id_ = process_id;
-  modules_ = modules;
+void ModulesDataView::SetProcess(const ProcessData* process) {
+  modules_.clear();
+  module_memory_.clear();
+  for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {
+    ModuleData* module = GOrbitApp->GetMutableModuleByPath(module_path);
+    modules_.push_back(module);
+    module_memory_[module] = &memory_space;
+  }
 
   indices_.resize(modules_.size());
   for (size_t i = 0; i < indices_.size(); ++i) {
@@ -181,8 +195,6 @@ void ModulesDataView::SetModules(int32_t process_id, const std::vector<ModuleDat
 void ModulesDataView::OnRefreshButtonClicked() {
   GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessId());
 }
-
-const ModuleData* ModulesDataView::GetModule(uint32_t row) const { return modules_[indices_[row]]; }
 
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
