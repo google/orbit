@@ -32,8 +32,6 @@ class CaptureDeserializer {
   [[nodiscard]] CaptureData GenerateCaptureData(
       const orbit_client_protos::CaptureInfo& capture_info);
 
-  orbit_client_protos::CaptureHeader header_;
-
   static inline const std::string kRequiredCaptureVersion = "1.52";
 };
 
