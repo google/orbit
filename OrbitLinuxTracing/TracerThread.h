@@ -24,6 +24,7 @@
 #include "PerfEventProcessor.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
+#include "TracepointCustom.h"
 #include "Utils.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -149,6 +150,7 @@ class TracerThread {
   absl::flat_hash_set<uint64_t> amdgpu_sched_run_job_ids_;
   absl::flat_hash_set<uint64_t> dma_fence_signaled_ids_;
   absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> ids_to_tracepoint_info_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;

@@ -368,6 +368,17 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
                                     &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
+  for (const auto& selected_tracepoint : instrumented_tracepoints_) {
+    absl::flat_hash_set<uint64_t> stream_ids;
+    tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+        selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), cpus,
+        &tracing_fds_, &stream_ids, &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+
+    for (const auto& stream_id : stream_ids) {
+      ids_to_tracepoint_info_.emplace(stream_id, selected_tracepoint);
+    }
+  }
+
   return !tracepoint_event_open_errors;
 }
 
@@ -750,9 +761,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
+  bool is_user_instrumented_tracepoint = ids_to_tracepoint_info_.contains(stream_id);
+
   CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask + is_task_rename +
-            is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
-            is_callchain_sample <=
+            is_user_instrumented_tracepoint + is_amdgpu_cs_ioctl_event +
+            is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event + is_callchain_sample <=
         1);
 
   int fd = ring_buffer->GetFileDescriptor();
@@ -828,6 +841,26 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
 
+  } else if (is_user_instrumented_tracepoint) {
+    auto it = ids_to_tracepoint_info_.find(stream_id);
+
+    if (it == ids_to_tracepoint_info_.end()) {
+      return;
+    }
+
+    auto event = ConsumeGenericTracepointPerfEvent(ring_buffer, header);
+
+    orbit_grpc_protos::TracepointEvent tracepoint_event;
+    tracepoint_event.set_pid(event->GetPid());
+    tracepoint_event.set_tid(event->GetTid());
+    tracepoint_event.set_time(event->GetTimestamp());
+    tracepoint_event.set_cpu(event->GetCpu());
+
+    orbit_grpc_protos::TracepointInfo* tracepoint = tracepoint_event.mutable_tracepoint_info();
+    tracepoint->set_name(it->second.name());
+    tracepoint->set_category(it->second.category());
+
+    // TODO: Sending of the event
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
@@ -835,7 +868,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     // visibility into all GPU activity across the system.
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
-
   } else if (is_amdgpu_sched_run_job_event) {
     auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
     gpu_event_processor_->PushEvent(*event);
@@ -844,7 +876,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
     gpu_event_processor_->PushEvent(*event);
     ++stats_.gpu_events_count;
-
   } else if (is_callchain_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     if (pid != pid_) {
@@ -856,12 +887,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
-
   } else {
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
-}
+}  // namespace LinuxTracing
 
 void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {

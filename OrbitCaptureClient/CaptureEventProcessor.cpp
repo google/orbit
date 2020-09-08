@@ -32,6 +32,10 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
     case CaptureEvent::kCallstackSample:
       ProcessCallstackSample(event.callstack_sample());
       break;
+    case CaptureEvent::kInternedTracepointInfo:
+      break;
+    case CaptureEvent::kTracepointEvent:
+      break;
     case CaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
       break;

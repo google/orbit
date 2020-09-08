@@ -314,6 +314,23 @@ class MapsPerfEvent : public PerfEvent {
   std::string maps_;
 };
 
+class GenericTracepointPerfEvent : public PerfEvent {
+ public:
+  explicit GenericTracepointPerfEvent() {}
+
+  perf_event_raw_sample_fixed ring_buffer_record;
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  int32_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+
+  int32_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+};
+
 class TracepointPerfEvent : public PerfEvent {
  public:
   explicit TracepointPerfEvent(uint32_t size)

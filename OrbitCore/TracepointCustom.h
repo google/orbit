@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_TRACEPOINTCUSTOM_H
-#define ORBIT_TRACEPOINTCUSTOM_H
+#ifndef ORBIT_CORE_TRACEPOINT_CUSTOM_H_
+#define ORBIT_CORE_TRACEPOINT_CUSTOM_H_
 
 #include <absl/container/flat_hash_set.h>
 
@@ -22,10 +22,11 @@ struct EqualTracepointInfo {
     return left.category().compare(right.category()) == 0 && left.name().compare(right.name()) == 0;
   }
 };
+
 }  // namespace internal
 
 using TracepointInfoSet =
     absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
                         internal::EqualTracepointInfo>;
 
-#endif  // ORBIT_TRACEPOINTCUSTOM_H
+#endif  // ORBIT_CORE_TRACEPOINT_CUSTOM_H_
