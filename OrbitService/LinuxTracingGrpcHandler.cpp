@@ -4,6 +4,7 @@
 
 #include "LinuxTracingGrpcHandler.h"
 
+#include "absl/strings/str_join.h"
 #include "llvm/Demangle/Demangle.h"
 
 namespace orbit_service {
@@ -195,7 +196,7 @@ uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(std::string s
 uint64_t LinuxTracingGrpcHandler::InternTracepointInfoIfNecessaryAndGetKey(
     orbit_grpc_protos::TracepointInfo tracepoint_info) {
   uint64_t key =
-      ComputeStringKey(tracepoint_info.category()) * 37 + ComputeStringKey(tracepoint_info.name());
+      ComputeStringKey(absl::StrCat(tracepoint_info.category(), ":", tracepoint_info.name()));
   {
     absl::MutexLock lock{&tracepoint_keys_sent_mutex_};
     if (tracepoint_keys_sent_.contains(key)) {
