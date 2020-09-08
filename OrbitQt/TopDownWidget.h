@@ -13,7 +13,7 @@
 
 #include "TopDownView.h"
 #include "TopDownViewItemModel.h"
-#include "ui_topdownwidget.h"
+#include "ui_TopDownWidget.h"
 
 class OrbitApp;
 

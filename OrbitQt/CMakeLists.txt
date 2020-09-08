@@ -34,7 +34,7 @@ target_sources(
           servicedeploymanager.h
           TopDownViewItemModel.h
           TutorialOverlay.h
-          topdownwidget.h)
+          TopDownWidget.h)
 
 target_sources(
   OrbitQt
@@ -63,7 +63,8 @@ target_sources(
           processlauncherwidget.cpp
           servicedeploymanager.cpp
           TopDownViewItemModel.cpp
-          topdownwidget.cpp
+          TopDownWidget.cpp
+          TopDownWidget.ui
           TutorialOverlay.cpp
           TutorialOverlay.ui
           ../icons/orbiticons.qrc
