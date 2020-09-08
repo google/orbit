@@ -5,13 +5,27 @@
 #ifndef ORBIT_GL_PROCESS_DATA_H_
 #define ORBIT_GL_PROCESS_DATA_H_
 
+#include <memory>
 #include <utility>
 
 #include "ModuleData.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "module.pb.h"
 #include "process.pb.h"
+#include "symbol.pb.h"
+
+// Small struct to model a space in memory occupied by a module.
+struct MemorySpace {
+  explicit MemorySpace(uint64_t start, uint64_t end) : start(start), end(end) {}
+  uint64_t start;
+  uint64_t end;
+  [[nodiscard]] std::string FormattedAddressRange() const {
+    return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]", start, end);
+  }
+};
 
 // Contains current information about process
 class ProcessData final {
@@ -28,48 +42,36 @@ class ProcessData final {
     process_info_ = process_info;
   }
 
-  int32_t pid() const { return process_info_.pid(); }
-  const std::string& name() const { return process_info_.name(); }
-  double cpu_usage() const { return process_info_.cpu_usage(); }
-  const std::string& full_path() const { return process_info_.full_path(); }
-  const std::string& command_line() const { return process_info_.command_line(); }
-  bool is_64_bit() const { return process_info_.is_64_bit(); }
+  [[nodiscard]] int32_t pid() const { return process_info_.pid(); }
+  [[nodiscard]] const std::string& name() const { return process_info_.name(); }
+  [[nodiscard]] double cpu_usage() const { return process_info_.cpu_usage(); }
+  [[nodiscard]] const std::string& full_path() const { return process_info_.full_path(); }
+  [[nodiscard]] const std::string& command_line() const { return process_info_.command_line(); }
+  [[nodiscard]] bool is_64_bit() const { return process_info_.is_64_bit(); }
 
-  void UpdateModuleInfos(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
-    current_module_list_.clear();
-    for (const orbit_grpc_protos::ModuleInfo& info : module_infos) {
-      uint64_t module_id = info.address_start();
-      auto it = modules_.find(module_id);
-      if (it != modules_.end()) {
-        it->second->SetModuleInfo(info);
-        current_module_list_.push_back(it->second.get());
-      } else {
-        auto [inserted_it, success] =
-            modules_.try_emplace(module_id, std::make_unique<ModuleData>(info));
-        CHECK(success);
-        current_module_list_.push_back(inserted_it->second.get());
-      }
-    }
+  void UpdateModuleInfos(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
+
+  [[nodiscard]] ErrorMessageOr<std::pair<std::string, uint64_t>> FindModuleByAddress(
+      uint64_t absolute_address) const;
+
+  // TODO(antonrohr): remove this function and add symbols directly into a module, as soon as the
+  // module_base_address is not needed anymore (FunctionInfo needs to be changed)
+  void AddSymbols(ModuleData* module, const orbit_grpc_protos::ModuleSymbols& module_symbols) const;
+  const absl::flat_hash_map<std::string, MemorySpace>& GetMemoryMap() const {
+    return module_memory_map_;
   }
-
-  const std::vector<ModuleData*>& GetModules() const { return current_module_list_; }
-
-  ModuleData* FindModuleByAddressStart(uint64_t address_start) {
-    auto it = modules_.find(address_start);
-    if (it == modules_.end()) {
-      return nullptr;
-    }
-
-    return it->second.get();
+  bool IsModuleLoaded(const std::string& module_path) const {
+    return module_memory_map_.contains(module_path);
   }
+  static std::unique_ptr<ProcessData> Create(orbit_grpc_protos::ProcessInfo process_info);
+  std::unique_ptr<ProcessData> CreateCopy() const;
 
  private:
   orbit_grpc_protos::ProcessInfo process_info_;
 
-  // This list omits unloaded modules, note that they are still stored
-  // in the map.
-  std::vector<ModuleData*> current_module_list_;
-  absl::flat_hash_map<uint64_t, std::unique_ptr<ModuleData>> modules_;
+  // This is a map from module_path to the space in memory where that module is loaded
+  absl::flat_hash_map<std::string, MemorySpace> module_memory_map_;
+  std::map<uint64_t, const std::string> start_addresses_;
 };
 
 #endif  // ORBIT_GL_PROCESS_DATA_H_

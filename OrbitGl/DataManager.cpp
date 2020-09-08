@@ -4,8 +4,13 @@
 
 #include "DataManager.h"
 
+#include "ModuleData.h"
 #include "OrbitBase/Logging.h"
+#include "ProcessData.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 
+using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
@@ -32,6 +37,14 @@ void DataManager::UpdateProcessInfos(const std::vector<ProcessInfo>& process_inf
 void DataManager::UpdateModuleInfos(int32_t process_id,
                                     const std::vector<ModuleInfo>& module_infos) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
+
+  for (const auto& module_info : module_infos) {
+    if (module_map_.find(module_info.file_path()) == module_map_.end()) {
+      const auto [inserted_it, success] = module_map_.try_emplace(
+          module_info.file_path(), std::make_unique<ModuleData>(module_info));
+      CHECK(success);
+    }
+  }
 
   auto it = process_map_.find(process_id);
   CHECK(it != process_map_.end());
@@ -97,23 +110,15 @@ ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
   return it->second.get();
 }
 
-const std::vector<ModuleData*>& DataManager::GetModules(int32_t process_id) const {
+[[nodiscard]] ModuleData* DataManager::GetMutableModuleByPath(const std::string& path) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
-  auto it = process_map_.find(process_id);
-  CHECK(it != process_map_.end());
+  auto it = module_map_.find(path);
+  if (it == module_map_.end()) {
+    return nullptr;
+  }
 
-  return it->second->GetModules();
-}
-
-ModuleData* DataManager::FindModuleByAddressStart(int32_t process_id,
-                                                  uint64_t address_start) const {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  auto it = process_map_.find(process_id);
-  CHECK(it != process_map_.end());
-
-  return it->second->FindModuleByAddressStart(address_start);
+  return it->second.get();
 }
 
 bool DataManager::IsFunctionSelected(uint64_t function_address) const {
@@ -151,3 +156,38 @@ bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
 }
 
 const TracepointInfoSet& DataManager::selected_tracepoints() const { return selected_tracepoints_; }
+
+[[nodiscard]] ModuleData* DataManager::FindModuleByAddress(int32_t process_id,
+                                                           uint64_t absolute_address) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+
+  const ProcessData* process = GetProcessByPid(process_id);
+  if (process == nullptr) return nullptr;
+
+  const auto& result = process->FindModuleByAddress(absolute_address);
+  if (!result) return nullptr;
+
+  const std::string& module_path = result.value().first;
+
+  return module_map_.at(module_path).get();
+}
+
+const FunctionInfo* DataManager::FindFunctionByAddress(int32_t process_id,
+                                                       uint64_t absolute_address,
+                                                       bool is_exact) const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+
+  const ProcessData* process = GetProcessByPid(process_id);
+  if (process == nullptr) return nullptr;
+
+  const auto& result = process->FindModuleByAddress(absolute_address);
+  if (!result) return nullptr;
+
+  const std::string& module_path = result.value().first;
+  const uint64_t module_base_address = result.value().second;
+
+  const ModuleData* module = module_map_.at(module_path).get();
+
+  const uint64_t relative_address = absolute_address - module_base_address;
+  return module->FindFunctionByRelativeAddress(relative_address, is_exact);
+}

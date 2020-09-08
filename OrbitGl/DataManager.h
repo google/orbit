@@ -9,6 +9,7 @@
 
 #include <thread>
 
+#include "ModuleData.h"
 #include "ProcessData.h"
 #include "TextBox.h"
 #include "TracepointCustom.h"
@@ -38,9 +39,10 @@ class DataManager final {
   void set_selected_process(std::shared_ptr<Process> process);
 
   [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
-  [[nodiscard]] const std::vector<ModuleData*>& GetModules(int32_t process_id) const;
-  [[nodiscard]] ModuleData* FindModuleByAddressStart(int32_t process_id,
-                                                     uint64_t address_start) const;
+  [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const;
+  [[nodiscard]] ModuleData* FindModuleByAddress(int32_t process_id, uint64_t absolute_address);
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
+      int32_t process_id, uint64_t absolute_address, bool is_exact) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t function_address) const;
   [[nodiscard]] const absl::flat_hash_set<uint64_t>& selected_functions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
@@ -58,6 +60,7 @@ class DataManager final {
  private:
   const std::thread::id main_thread_id_;
   absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
+  absl::flat_hash_map<std::string, std::unique_ptr<ModuleData>> module_map_;
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
