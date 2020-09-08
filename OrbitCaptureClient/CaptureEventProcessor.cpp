@@ -237,7 +237,7 @@ void CaptureEventProcessor::ProcessTracepointEvent(
   tracepoint_event_info.set_cpu(tracepoint_event.cpu());
   tracepoint_event_info.set_tracepoint_info_key(hash);
 
-  // TODO: Store the tracepoint event in a unordered map that has as the key the hash computed
+  // TODO: Store the tracepoint event in a unordered set
 }
 
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
@@ -256,7 +256,9 @@ uint64_t CaptureEventProcessor::GetTracepointInfoHashAndSendToListenerIfNecessar
   if (!tracepoint_hashes_seen_.contains(hash)) {
     tracepoint_hashes_seen_.emplace(hash);
 
-    // TODO: Set the capture listener to the hash
+    /* TODO: Store the hash as a key to the tracepoint info in an unordered map such that the
+     * tracepoints events recognise the tracepoint's name and category according to the hash
+     * */
   }
   return hash;
 }
