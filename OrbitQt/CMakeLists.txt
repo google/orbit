@@ -11,7 +11,7 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   OrbitQt
   PRIVATE deploymentconfigurations.h
-          CopyableTreeView.h
+          CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
           ElidedLabel.h
           Error.h
