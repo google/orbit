@@ -24,6 +24,7 @@
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
+using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -124,15 +125,16 @@ ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream) {
       "was taken with a previous Orbit version, it could be incompatible. "
       "Please check release notes for more information.";
 
-  if (!ReadMessage(&header_, &coded_input) || header_.version().empty()) {
+  CaptureHeader header;
+  if (!ReadMessage(&header, &coded_input) || header.version().empty()) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
-  if (header_.version() != kRequiredCaptureVersion) {
+  if (header.version() != kRequiredCaptureVersion) {
     std::string incompatible_version_error_message = absl::StrFormat(
         "This capture format is no longer supported but could be opened with "
         "Orbit version %s.",
-        header_.version());
+        header.version());
     ERROR("%s", incompatible_version_error_message);
     return ErrorMessage(incompatible_version_error_message);
   }
