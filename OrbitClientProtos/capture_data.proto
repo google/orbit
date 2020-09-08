@@ -54,6 +54,14 @@ message CallstackInfo {
   repeated uint64 data = 1;
 }
 
+message TracepointEventInfo {
+  int32 pid = 1;
+  int32 tid = 2;
+  int64 time = 3;
+  int32 cpu = 4;
+  uint64 tracepoint_info_key = 5;
+}
+
 message LinuxAddressInfo {
   uint64 absolute_address = 1;
   string module_path = 2;

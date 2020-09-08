@@ -33,8 +33,10 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
       ProcessCallstackSample(event.callstack_sample());
       break;
     case CaptureEvent::kInternedTracepointInfo:
+      ProcessInternedTracepointInfo(event.interned_tracepoint_info());
       break;
     case CaptureEvent::kTracepointEvent:
+      ProcessTracepointEventInfo(event.tracepoint_event());
       break;
     case CaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
@@ -211,11 +213,50 @@ uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
   return hash;
 }
 
+void CaptureEventProcessor::ProcessInternedTracepointInfo(
+    orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info) {
+  if (tracepoint_intern_pool_.contains(interned_tracepoint_info.key())) {
+    ERROR("Overwriting InternedTracepointInfo  with key %llu", interned_tracepoint_info.key());
+  }
+  tracepoint_intern_pool_.emplace(interned_tracepoint_info.key(),
+                                  std::move(*interned_tracepoint_info.mutable_intern()));
+}
+void CaptureEventProcessor::ProcessTracepointEventInfo(
+    const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
+  orbit_grpc_protos::TracepointInfo tracepoint_info;
+
+  CHECK(tracepoint_event.tracepoint_info_or_key_case() ==
+        orbit_grpc_protos::TracepointEvent::kTracepointInfoKey);
+  tracepoint_info = tracepoint_intern_pool_[tracepoint_event.tracepoint_info_key()];
+
+  uint64_t hash = GetTracepointInfoHashAndSendToListenerIfNecessary(tracepoint_info);
+  orbit_client_protos::TracepointEventInfo tracepoint_event_info;
+  tracepoint_event_info.set_pid(tracepoint_event.pid());
+  tracepoint_event_info.set_tid(tracepoint_event.tid());
+  tracepoint_event_info.set_time(tracepoint_event.time());
+  tracepoint_event_info.set_cpu(tracepoint_event.cpu());
+  tracepoint_event_info.set_tracepoint_info_key(hash);
+
+  // TODO: Set the capture listener to the tracepoint event
+}
+
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
   uint64_t hash = StringHash(str);
   if (!string_hashes_seen_.contains(hash)) {
     string_hashes_seen_.emplace(hash);
     capture_listener_->OnKeyAndString(hash, str);
+  }
+  return hash;
+}
+
+uint64_t CaptureEventProcessor::GetTracepointInfoHashAndSendToListenerIfNecessary(
+    const orbit_grpc_protos::TracepointInfo& tracepoint_info) {
+  uint64_t hash = StringHash(absl::StrCat(tracepoint_info.category(), ":", tracepoint_info.name()));
+
+  if (!tracepoint_hashes_seen_.contains(hash)) {
+    tracepoint_hashes_seen_.emplace(hash);
+
+    // TODO: Set the capture listener to the hash
   }
   return hash;
 }
