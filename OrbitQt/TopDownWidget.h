@@ -24,8 +24,12 @@ class TopDownWidget : public QWidget {
   explicit TopDownWidget(QWidget* parent = nullptr)
       : QWidget{parent}, ui_{std::make_unique<Ui::TopDownWidget>()} {
     ui_->setupUi(this);
+    connect(ui_->topDownTreeView, &CopyableTreeView::copyKeySequencePressed, this,
+            &TopDownWidget::onCopyKeySequencePressed);
     connect(ui_->topDownTreeView, &QTreeView::customContextMenuRequested, this,
             &TopDownWidget::onCustomContextMenuRequested);
+    connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
+            &TopDownWidget::onSearchLineEditTextEdited);
   }
 
   void Initialize(OrbitApp* app) { app_ = app; }
@@ -33,8 +37,9 @@ class TopDownWidget : public QWidget {
   void SetTopDownView(std::unique_ptr<TopDownView> top_down_view);
 
  private slots:
+  void onCopyKeySequencePressed();
   void onCustomContextMenuRequested(const QPoint& point);
-  void on_searchLineEdit_textEdited(const QString& text);
+  void onSearchLineEditTextEdited(const QString& text);
 
  private:
   static const QString kActionExpandRecursively;
