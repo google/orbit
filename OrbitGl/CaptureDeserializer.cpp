@@ -4,10 +4,6 @@
 
 #include "CaptureDeserializer.h"
 
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/message.h>
-
 #include <fstream>
 #include <memory>
 
@@ -21,6 +17,9 @@
 #include "TimeGraph.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
+#include "google/protobuf/io/coded_stream.h"
+#include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "google/protobuf/message.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
