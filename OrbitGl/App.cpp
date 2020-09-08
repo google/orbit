@@ -1111,17 +1111,18 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   SetTopDownView(GetCaptureData());
 
+  if (selection_report_ == nullptr) {
+    return;
+  }
+
   // TODO(kuebler): propagate this information
   SamplingProfiler selection_profiler(*capture_data.GetSelectionCallstackData(), capture_data,
                                       selection_report_->has_summary());
 
   SetSelectionTopDownView(selection_profiler, GetCaptureData());
-
-  if (selection_report_ != nullptr) {
-    selection_report_->UpdateReport(
-        std::move(selection_profiler),
-        capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());
-  }
+  selection_report_->UpdateReport(
+      std::move(selection_profiler),
+      capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());
 }
 
 void OrbitApp::UpdateAfterCaptureCleared() {
