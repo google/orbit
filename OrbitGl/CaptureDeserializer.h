@@ -17,21 +17,22 @@
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
 
-class CaptureDeserializer {
- public:
-  ErrorMessageOr<void> Load(std::istream& stream);
-  ErrorMessageOr<void> Load(const std::string& filename);
+namespace CaptureDeserializer {
 
-  TimeGraph* time_graph_;
+ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph);
+ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph);
 
-  static bool ReadMessage(google::protobuf::Message* message,
-                          google::protobuf::io::CodedInputStream* input);
+bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
- private:
-  [[nodiscard]] CaptureData GenerateCaptureData(
-      const orbit_client_protos::CaptureInfo& capture_info);
+namespace internal {
 
-  static inline const std::string kRequiredCaptureVersion = "1.52";
-};
+[[nodiscard]] CaptureData GenerateCaptureData(const orbit_client_protos::CaptureInfo& capture_info,
+                                              StringManager* string_manager);
+
+inline const std::string kRequiredCaptureVersion = "1.52";
+
+}  // namespace internal
+
+}  // namespace CaptureDeserializer
 
 #endif  // ORBIT_GL_CAPTURE_DESERIALIZER_H_

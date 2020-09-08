@@ -29,7 +29,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
-ErrorMessageOr<void> CaptureDeserializer::Load(const std::string& filename) {
+ErrorMessageOr<void> CaptureDeserializer::Load(const std::string& filename, TimeGraph* time_graph) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
   // Binary
@@ -39,7 +39,7 @@ ErrorMessageOr<void> CaptureDeserializer::Load(const std::string& filename) {
     return ErrorMessage("Error opening the file for reading");
   }
 
-  return Load(file);
+  return Load(file, time_graph);
 }
 
 bool CaptureDeserializer::ReadMessage(google::protobuf::Message* message,
@@ -67,7 +67,8 @@ static void FillEventBuffer(const CaptureData& capture_data) {
   }
 }
 
-CaptureData CaptureDeserializer::GenerateCaptureData(const CaptureInfo& capture_info) {
+CaptureData CaptureDeserializer::internal::GenerateCaptureData(const CaptureInfo& capture_info,
+                                                               StringManager* string_manager) {
   // Clear the old capture
   GOrbitApp->ClearSelectedFunctions();
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
@@ -103,8 +104,6 @@ CaptureData CaptureDeserializer::GenerateCaptureData(const CaptureInfo& capture_
   SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
   capture_data.set_sampling_profiler(sampling_profiler);
 
-  time_graph_->Clear();
-  StringManager* string_manager = time_graph_->GetStringManager();
   string_manager->Clear();
   for (const auto& entry : capture_info.key_to_string()) {
     string_manager->AddIfNotPresent(entry.first, entry.second);
@@ -115,7 +114,7 @@ CaptureData CaptureDeserializer::GenerateCaptureData(const CaptureInfo& capture_
   return capture_data;
 }
 
-ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream) {
+ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream, TimeGraph* time_graph) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
@@ -129,7 +128,7 @@ ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
-  if (header.version() != kRequiredCaptureVersion) {
+  if (header.version() != internal::kRequiredCaptureVersion) {
     std::string incompatible_version_error_message = absl::StrFormat(
         "This capture format is no longer supported but could be opened with "
         "Orbit version %s.",
@@ -143,7 +142,9 @@ ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
-  CaptureData capture_data = GenerateCaptureData(capture_info);
+  time_graph->Clear();
+  StringManager* string_manager = time_graph->GetStringManager();
+  CaptureData capture_data = internal::GenerateCaptureData(capture_info, string_manager);
 
   // Timers
   TimerInfo timer_info;
@@ -151,9 +152,9 @@ ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream) {
     if (timer_info.function_address() > 0) {
       const FunctionInfo& func =
           capture_data.selected_functions().at(timer_info.function_address());
-      time_graph_->ProcessTimer(timer_info, &func);
+      time_graph->ProcessTimer(timer_info, &func);
     } else {
-      time_graph_->ProcessTimer(timer_info, nullptr);
+      time_graph->ProcessTimer(timer_info, nullptr);
     }
   }
 
