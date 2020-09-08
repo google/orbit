@@ -26,27 +26,18 @@ ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& captur
 void WriteMessage(const google::protobuf::Message* message,
                   google::protobuf::io::CodedOutputStream* output);
 
-}  // namespace CaptureSerializer
-
 namespace internal {
 
-template <class TimersIterator>
-void Save(std::ostream& stream, const CaptureData& capture_data,
-          const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-          TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
+inline const std::string kRequiredCaptureVersion = "1.52";
 
 orbit_client_protos::CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
 
-inline const std::string kRequiredCaptureVersion = "1.52";
-
-}  // namespace internal
-
 template <class TimersIterator>
-void internal::Save(std::ostream& stream, const CaptureData& capture_data,
-                    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-                    TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
+void Save(std::ostream& stream, const CaptureData& capture_data,
+          const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
+          TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
   google::protobuf::io::CodedOutputStream coded_output(&out_stream);
 
@@ -55,7 +46,7 @@ void internal::Save(std::ostream& stream, const CaptureData& capture_data,
   CaptureSerializer::WriteMessage(&header, &coded_output);
 
   orbit_client_protos::CaptureInfo capture_info =
-      internal::GenerateCaptureInfo(capture_data, key_to_string_map);
+      GenerateCaptureInfo(capture_data, key_to_string_map);
   CaptureSerializer::WriteMessage(&capture_info, &coded_output);
 
   // Timers
@@ -63,6 +54,10 @@ void internal::Save(std::ostream& stream, const CaptureData& capture_data,
     CaptureSerializer::WriteMessage(&(*it), &coded_output);
   }
 }
+
+}  // namespace internal
+
+}  // namespace CaptureSerializer
 
 template <class TimersIterator>
 ErrorMessageOr<void> CaptureDeserializer::Save(
@@ -77,8 +72,9 @@ ErrorMessageOr<void> CaptureDeserializer::Save(
 
   {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-    internal::Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
-                   std::move(timers_iterator_end));
+    CaptureSerializer::internal::Save(file, capture_data, key_to_string_map,
+                                      std::move(timers_iterator_begin),
+                                      std::move(timers_iterator_end));
   }
 
   return outcome::success();
