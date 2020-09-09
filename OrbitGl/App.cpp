@@ -513,17 +513,6 @@ void OrbitApp::SetSelectionTopDownView(const SamplingProfiler& selection_samplin
   selection_top_down_view_callback_(std::move(selection_top_down_view));
 }
 
-std::string OrbitApp::GetCaptureFileName() {
-  const CaptureData& capture_data = GetCaptureData();
-  time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string result;
-  result.append(Path::StripExtension(capture_data.process_name()));
-  result.append("_");
-  result.append(OrbitUtils::FormatTime(timestamp));
-  result.append(".orbit");
-  return result;
-}
-
 std::string OrbitApp::GetCaptureTime() {
   double time = GCurrentTimeGraph != nullptr ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0.0;
   return GetPrettyTime(absl::Microseconds(time));

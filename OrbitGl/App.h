@@ -73,7 +73,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnExit();
   static void MainTick();
 
-  std::string GetCaptureFileName();
   std::string GetCaptureTime();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::string& text);
