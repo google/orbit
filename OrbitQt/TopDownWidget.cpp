@@ -26,7 +26,12 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
 
   ui_->topDownTreeView->setModel(hooked_proxy_model_.get());
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive, Qt::DescendingOrder);
-  ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
+
+  // Resize columns only the first time a non-empty TopDownView is set.
+  if (!columns_already_resized_ && hooked_proxy_model_->rowCount(QModelIndex{}) > 0) {
+    ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
+    columns_already_resized_ = true;
+  }
 
   onSearchLineEditTextEdited(ui_->searchLineEdit->text());
 }
