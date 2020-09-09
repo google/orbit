@@ -22,6 +22,7 @@
 
 #include "App.h"
 #include "MainThreadExecutorImpl.h"
+#include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "SamplingReport.h"
@@ -561,9 +562,12 @@ void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
   ShowCaptureOnSaveWarningIfNeeded();
 
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
-      Path::JoinPath({Path::CreateOrGetCaptureDir(), GOrbitApp->GetCaptureFileName()}).c_str(),
+      Path::JoinPath({Path::CreateOrGetCaptureDir(),
+                      capture_serializer::file_management::GetCaptureFileName(capture_data)})
+          .c_str(),
       "*.orbit");
   if (file.isEmpty()) {
     return;

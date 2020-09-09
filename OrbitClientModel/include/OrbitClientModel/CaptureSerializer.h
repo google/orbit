@@ -26,9 +26,18 @@ ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& captur
 void WriteMessage(const google::protobuf::Message* message,
                   google::protobuf::io::CodedOutputStream* output);
 
+namespace file_management {
+
+std::string GetCaptureFileName(const CaptureData& capture_data);
+
+void IncludeOrbitExtensionInFile(std::string& file_name);
+
+}  // namespace file_management
+
 namespace internal {
 
 inline const std::string kRequiredCaptureVersion = "1.52";
+inline const std::string kFileOrbitExtension = ".orbit";
 
 orbit_client_protos::CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,

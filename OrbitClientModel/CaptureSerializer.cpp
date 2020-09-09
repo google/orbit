@@ -12,6 +12,7 @@
 #include "FunctionUtils.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitProcess.h"
+#include "Path.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
@@ -33,6 +34,27 @@ void WriteMessage(const google::protobuf::Message* message,
   output->WriteLittleEndian32(message_size);
   message->SerializeToCodedStream(output);
 }
+
+namespace file_management {
+
+std::string GetCaptureFileName(const CaptureData& capture_data) {
+  time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
+  std::string result;
+  result.append(Path::StripExtension(capture_data.process_name()));
+  result.append("_");
+  result.append(OrbitUtils::FormatTime(timestamp));
+  IncludeOrbitExtensionInFile(result);
+  return result;
+}
+
+void IncludeOrbitExtensionInFile(std::string& file_name) {
+  const std::string extension = Path::GetExtension(file_name);
+  if (extension != internal::kFileOrbitExtension) {
+    file_name.append(internal::kFileOrbitExtension);
+  }
+}
+
+}  // namespace file_management
 
 namespace internal {
 
