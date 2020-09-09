@@ -70,20 +70,20 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
         // Threads are sorted by tid, not by name.
         return thread_item->thread_id();
       case kInclusive:
-        return static_cast<qulonglong>(thread_item->sample_count());
+        return thread_item->GetInclusivePercent(top_down_view_->sample_count());
       case kOfParent:
-        return static_cast<qulonglong>(thread_item->GetPercentOfParent());
+        return thread_item->GetPercentOfParent();
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
         return QString::fromStdString(function_item->function_name());
       case kInclusive:
-        return static_cast<qulonglong>(function_item->sample_count());
+        return function_item->GetInclusivePercent(top_down_view_->sample_count());
       case kExclusive:
-        return static_cast<qulonglong>(function_item->GetExclusiveSampleCount());
+        return function_item->GetExclusivePercent(top_down_view_->sample_count());
       case kOfParent:
-        return static_cast<qulonglong>(function_item->GetPercentOfParent());
+        return function_item->GetPercentOfParent();
       case kModule:
         return QString::fromStdString(function_item->GetModuleName());
       case kFunctionAddress:
