@@ -6,12 +6,29 @@
 
 #include <QColor>
 #include <QMenu>
+#include <QPainter>
+#include <QPalette>
+#include <QStyleOption>
 
 #include "App.h"
 #include "FunctionsDataView.h"
 #include "TopDownViewItemModel.h"
 
 using orbit_client_protos::FunctionInfo;
+
+TopDownWidget::TopDownWidget(QWidget* parent)
+    : QWidget{parent}, ui_{std::make_unique<Ui::TopDownWidget>()} {
+  ui_->setupUi(this);
+  ui_->topDownTreeView->setItemDelegateForColumn(TopDownViewItemModel::kInclusive,
+                                                 new ProgressBarItemDelegate{ui_->topDownTreeView});
+
+  connect(ui_->topDownTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
+          &TopDownWidget::onCopyKeySequencePressed);
+  connect(ui_->topDownTreeView, &QTreeView::customContextMenuRequested, this,
+          &TopDownWidget::onCustomContextMenuRequested);
+  connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
+          &TopDownWidget::onSearchLineEditTextEdited);
+}
 
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   CHECK(app_ != nullptr);
@@ -315,11 +332,13 @@ void TopDownWidget::onSearchLineEditTextEdited(const QString& text) {
   }
 }
 
+const QColor TopDownWidget::HighlightCustomFilterSortFilterProxyModel::kHighlightColor{Qt::green};
+
 QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(const QModelIndex& index,
                                                                         int role) const {
   if (role == Qt::ForegroundRole) {
-    if (!lowercase_filter_tokens_.empty() && ItemMatchesFilter(index)) {
-      return QColor{Qt::green};
+    if (ItemMatchesFilter(index)) {
+      return kHighlightColor;
     }
   } else if (role == kMatchesCustomFilterRole) {
     return ItemMatchesFilter(index);
@@ -329,6 +348,9 @@ QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(const QM
 
 bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter(
     const QModelIndex& index) const {
+  if (lowercase_filter_tokens_.empty()) {
+    return false;
+  }
   std::string haystack = absl::AsciiStrToLower(
       index.model()
           ->index(index.row(), TopDownViewItemModel::kThreadOrFunction, index.parent())
@@ -373,4 +395,53 @@ QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index,
       QStringLiteral("[") + QString::fromStdString(FunctionsDataView::kSelectedFunctionString) +
       QStringLiteral("] ");
   return kDisplayHookedPrefix + data.toString();
+}
+
+void TopDownWidget::ProgressBarItemDelegate::paint(QPainter* painter,
+                                                   const QStyleOptionViewItem& option,
+                                                   const QModelIndex& index) const {
+  bool is_float = false;
+  float inclusive_percent = index.data(Qt::EditRole).toFloat(&is_float);
+  if (!is_float) {
+    QStyledItemDelegate::paint(painter, option, index);
+    return;
+  }
+
+  bool highlight =
+      index.data(HighlightCustomFilterSortFilterProxyModel::kMatchesCustomFilterRole).toBool();
+  if (option.state & QStyle::State_Selected) {
+    painter->fillRect(option.rect, option.palette.highlight());
+    // Don't highlight the progress bar text when the row is selected, for consistency with the
+    // other columns.
+    highlight = false;
+  }
+
+  QStyleOptionProgressBar option_progress_bar;
+  option_progress_bar.rect = option.rect;
+  option_progress_bar.minimum = 0;
+  option_progress_bar.maximum = 100;
+  option_progress_bar.progress = static_cast<int>(round(inclusive_percent));
+
+  const QColor bar_background_color = option.palette.color(QPalette::Disabled, QPalette::Base);
+  option_progress_bar.palette.setColor(QPalette::Base, bar_background_color);
+
+  const QColor palette_highlight_color = option.palette.color(QPalette::Highlight);
+  static const float kBarColorValueReductionFactor = .3f / .4f;
+  const QColor bar_foreground_color = QColor::fromHsv(
+      palette_highlight_color.hue(), palette_highlight_color.saturation(),
+      static_cast<int>(round(palette_highlight_color.value() * kBarColorValueReductionFactor)));
+  option_progress_bar.palette.setColor(QPalette::Highlight, bar_foreground_color);
+
+  if (!highlight) {
+    option_progress_bar.text = index.data(Qt::DisplayRole).toString();
+    option_progress_bar.textVisible = true;
+  }
+  option.widget->style()->drawControl(QStyle::CE_ProgressBar, &option_progress_bar, painter);
+
+  if (highlight) {
+    QTextOption text_option;
+    text_option.setAlignment(Qt::AlignCenter);
+    painter->setPen(HighlightCustomFilterSortFilterProxyModel::kHighlightColor);
+    painter->drawText(option.rect, index.data(Qt::DisplayRole).toString(), text_option);
+  }
 }

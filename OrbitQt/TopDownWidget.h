@@ -8,6 +8,7 @@
 #include <QIdentityProxyModel>
 #include <QSortFilterProxyModel>
 #include <QString>
+#include <QStyledItemDelegate>
 #include <QWidget>
 #include <memory>
 
@@ -21,16 +22,7 @@ class TopDownWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit TopDownWidget(QWidget* parent = nullptr)
-      : QWidget{parent}, ui_{std::make_unique<Ui::TopDownWidget>()} {
-    ui_->setupUi(this);
-    connect(ui_->topDownTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
-            &TopDownWidget::onCopyKeySequencePressed);
-    connect(ui_->topDownTreeView, &QTreeView::customContextMenuRequested, this,
-            &TopDownWidget::onCustomContextMenuRequested);
-    connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
-            &TopDownWidget::onSearchLineEditTextEdited);
-  }
+  explicit TopDownWidget(QWidget* parent = nullptr);
 
   void Initialize(OrbitApp* app) { app_ = app; }
 
@@ -64,6 +56,7 @@ class TopDownWidget : public QWidget {
     }
 
     static const int kMatchesCustomFilterRole = Qt::UserRole;
+    static const QColor kHighlightColor;
 
     QVariant data(const QModelIndex& index, int role) const override;
 
@@ -82,6 +75,16 @@ class TopDownWidget : public QWidget {
 
    private:
     OrbitApp* app_;
+  };
+
+  // Displays progress bars in the "Inclusive" column as a means to better visualize the percentage
+  // in each cell and the distribution of samples in the tree.
+  class ProgressBarItemDelegate : public QStyledItemDelegate {
+   public:
+    explicit ProgressBarItemDelegate(QObject* parent) : QStyledItemDelegate(parent) {}
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override;
   };
 
   std::unique_ptr<Ui::TopDownWidget> ui_;
