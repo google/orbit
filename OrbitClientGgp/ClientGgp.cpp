@@ -57,6 +57,7 @@ bool ClientGgp::InitClient() {
   }
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
   string_manager_ = std::make_shared<StringManager>();
+  tracepoint_info_manager_ = std::make_shared<TracepointInfoManager>();
   return true;
 }
 

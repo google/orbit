@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_TRACEPOINT_INFO_MANAGER_H_
-#define ORBIT_TRACEPOINT_INFO_MANAGER_H_
+#ifndef ORBIT_CORE_TRACEPOINT_INFO_MANAGER_H_
+#define ORBIT_CORE_TRACEPOINT_INFO_MANAGER_H_
 
 #include <optional>
 #include <string>
@@ -31,4 +31,4 @@ class TracepointInfoManager {
   mutable absl::Mutex unique_tracepoints_mutex_;
 };
 
-#endif  // ORBIT_TRACEPOINT_INFO_MANAGER_H
+#endif  // ORBIT_CORE_TRACEPOINT_INFO_MANAGER_H
