@@ -29,7 +29,7 @@ namespace orbit::tracing {
 Listener::Listener(std::unique_ptr<TimerCallback> callback) {
   absl::MutexLock lock(&global_tracing_mutex);
   // Only one listener is supported.
-  CHECK(IsActive() == false);
+  CHECK(!IsActive());
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
   thread_pool_ = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
