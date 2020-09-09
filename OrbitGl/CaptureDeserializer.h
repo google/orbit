@@ -17,7 +17,7 @@
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
 
-namespace CaptureDeserializer {
+namespace capture_deserializer {
 
 ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph);
 ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph);
@@ -33,6 +33,6 @@ inline const std::string kRequiredCaptureVersion = "1.52";
 
 }  // namespace internal
 
-}  // namespace CaptureDeserializer
+}  // namespace capture_deserializer
 
 #endif  // ORBIT_GL_CAPTURE_DESERIALIZER_H_
