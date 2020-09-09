@@ -11,67 +11,56 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadPool.h"
 
+using orbit::tracing::Listener;
 using orbit::tracing::Scope;
 using orbit::tracing::ScopeType;
 using orbit::tracing::TimerCallback;
 
-ABSL_CONST_INIT static absl::Mutex global_callback_mutex(absl::kConstInit);
-ABSL_CONST_INIT static std::unique_ptr<TimerCallback> global_callback = {};
-ABSL_CONST_INIT static absl::Mutex global_thread_pool_mutex(absl::kConstInit);
-ABSL_CONST_INIT static std::unique_ptr<ThreadPool> global_thread_pool = {};
+ABSL_CONST_INIT static absl::Mutex global_tracing_mutex(absl::kConstInit);
+ABSL_CONST_INIT static Listener* global_tracing_listener = nullptr;
 
 static std::vector<Scope>& GetThreadLocalScopes() {
   thread_local std::vector<Scope> thread_local_scopes;
   return thread_local_scopes;
 }
 
-static void CreateCallbackThreadPool() {
-  constexpr size_t kMinNumThreads = 1;
-  constexpr size_t kMaxNumThreads = 1;
-  absl::MutexLock lock(&global_thread_pool_mutex);
-  CHECK(global_thread_pool == nullptr);
-  global_thread_pool = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
-}
-
-static void ShutdownCallbackThreadPool() {
-  absl::MutexLock lock(&global_thread_pool_mutex);
-  CHECK(global_thread_pool != nullptr);
-  global_thread_pool->Shutdown();
-  global_thread_pool->Wait();
-}
-
-static void DeferScopeProcessing(const Scope& scope) {
-  if (global_thread_pool == nullptr) {
-    // No orbit::tracing::Listener was set and hence CreateCallbackThreadPool() was never called.
-    return;
-  }
-  // User callback is called from a worker thread to
-  // minimize contention on the instrumented threads.
-  global_thread_pool->Schedule([scope]() {
-    absl::MutexLock lock(&global_callback_mutex);
-    if (global_callback != nullptr) (*global_callback)(scope);
-  });
-}
-
 namespace orbit::tracing {
 
 Listener::Listener(std::unique_ptr<TimerCallback> callback) {
-  CreateCallbackThreadPool();
-  absl::MutexLock lock(&global_callback_mutex);
+  absl::MutexLock lock(&global_tracing_mutex);
   // Only one listener is supported.
-  CHECK(global_callback == nullptr);
-  global_callback = std::move(callback);
+  CHECK(IsActive() == false);
+  constexpr size_t kMinNumThreads = 1;
+  constexpr size_t kMaxNumThreads = 1;
+  thread_pool_ = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
+  user_callback_ = std::move(callback);
+  global_tracing_listener = this;
+  active_ = true;
 }
 
 Listener::~Listener() {
-  {
-    absl::MutexLock lock(&global_callback_mutex);
-    global_callback = nullptr;
-  }
-  ShutdownCallbackThreadPool();
+  absl::MutexLock lock(&global_tracing_mutex);
+  CHECK(IsActive() == true);
+  // Purge deferred scopes.
+  thread_pool_->Shutdown();
+  thread_pool_->Wait();
+  active_ = false;
+  global_tracing_listener = nullptr;
 }
 
 }  // namespace orbit::tracing
+
+void Listener::DeferScopeProcessing(const Scope& scope) {
+  // User callback is called from a worker thread to
+  // minimize contention on the instrumented threads.
+  absl::MutexLock lock(&global_tracing_mutex);
+  if (IsActive() == false) return;
+  global_tracing_listener->thread_pool_->Schedule([scope]() {
+    absl::MutexLock lock(&global_tracing_mutex);
+    if (IsActive() == false) return;
+    (*global_tracing_listener->user_callback_)(scope);
+  });
+}
 
 namespace orbit_api {
 
@@ -89,7 +78,7 @@ void Stop() {
   scope.depth = GetThreadLocalScopes().size() - 1;
   scope.tid = GetCurrentThreadId();
   scope.type = ScopeType::kScope;
-  DeferScopeProcessing(scope);
+  Listener::DeferScopeProcessing(scope);
   GetThreadLocalScopes().pop_back();
 }
 
@@ -105,7 +94,7 @@ void TrackScope(const char* name, uint64_t value, orbit::Color color, ScopeType 
   scope.tracked_value = value;
   scope.tid = GetCurrentThreadId();
   scope.type = type;
-  DeferScopeProcessing(scope);
+  Listener::DeferScopeProcessing(scope);
 }
 
 template <typename Dest, typename Source>
