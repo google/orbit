@@ -167,7 +167,7 @@ void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
   m_MouseRatio = a_MouseRatio;
 
   static double incrementRatio = 0.1;
-  double scale = a_ZoomValue > 0 ? 1 + incrementRatio : 1 - incrementRatio;
+  double scale = (a_ZoomValue > 0) ? (1 + incrementRatio) : (1 / (1 + incrementRatio));
 
   double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   m_RefTimeUs = m_MinTimeUs + a_MouseRatio * CurrentTimeWindowUs;
@@ -188,7 +188,7 @@ void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
 void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
   constexpr float increment_ratio = 0.1f;
 
-  const float ratio = zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
+  const float ratio = (zoom_value > 0) ? (1 + increment_ratio) : (1 / (1 + increment_ratio));
 
   const float world_height = m_Canvas->GetWorldHeight();
   const float y_mouse_position =
