@@ -223,7 +223,6 @@ void CaptureEventProcessor::ProcessInternedTracepointInfo(
 }
 void CaptureEventProcessor::ProcessTracepointEvent(
     const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
-
   CHECK(tracepoint_event.tracepoint_info_or_key_case() ==
         orbit_grpc_protos::TracepointEvent::kTracepointInfoKey);
 
