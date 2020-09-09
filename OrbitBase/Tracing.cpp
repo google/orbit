@@ -57,7 +57,7 @@ void Listener::DeferScopeProcessing(const Scope& scope) {
   if (!IsActive()) return;
   global_tracing_listener->thread_pool_->Schedule([scope]() {
     absl::MutexLock lock(&global_tracing_mutex);
-    if (IsActive() == false) return;
+    if (!IsActive()) return;
     (*global_tracing_listener->user_callback_)(scope);
   });
 }
