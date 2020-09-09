@@ -240,7 +240,7 @@ void CaptureEventProcessor::ProcessTracepointEvent(
   tracepoint_event_info.set_cpu(tracepoint_event.cpu());
   tracepoint_event_info.set_tracepoint_info_key(hash);
 
-  // TODO(msandru): Store the tracepoint event in a unordered set
+  capture_listener_->OnTracepointEvent(std::move(tracepoint_event_info));
 }
 
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
@@ -253,12 +253,9 @@ uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const 
 }
 
 void CaptureEventProcessor::SendTracepointInfoToListenerIfNecessary(
-    const orbit_grpc_protos::TracepointInfo&, const uint64_t& hash) {
+    const orbit_grpc_protos::TracepointInfo& tracepoint_info, const uint64_t& hash) {
   if (!tracepoint_hashes_seen_.contains(hash)) {
     tracepoint_hashes_seen_.emplace(hash);
-
-    /* TODO(msandru): Store the hash as a key to the tracepoint info in an unordered map such that
-     * the tracepoints events recognise the tracepoint's name and category according to the hash
-     * */
+    capture_listener_->OnUniqueTracepointInfo(hash, tracepoint_info);
   }
 }

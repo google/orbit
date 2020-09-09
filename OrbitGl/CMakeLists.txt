@@ -57,7 +57,8 @@ target_sources(
          TimerTrack.h
          Track.h
          TriangleToggle.h
-         TracepointsDataView.h)
+         TracepointsDataView.h
+         TracepointInfoManager.h)
 
 target_sources(
   OrbitGl
@@ -99,7 +100,8 @@ target_sources(
           TopDownView.cpp
           Track.cpp
           TriangleToggle.cpp
-          TracepointsDataView.cpp)
+          TracepointsDataView.cpp
+          TracepointInfoManager.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -202,6 +202,15 @@ void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   capture_data_.InsertAddressInfo(std::move(address_info));
 }
 
+void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
+                                      orbit_grpc_protos::TracepointInfo tracepoint_info) {
+  tracepoint_info_manager_->AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+}
+
+void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
+  tracepoint_info_manager_->AddTracepointEvent(std::move(tracepoint_event_info));
+}
+
 void OrbitApp::OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate) {
   thread_pool_->Schedule([modules_to_validate = std::move(modules_to_validate), this] {
     frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
@@ -286,6 +295,8 @@ void OrbitApp::PostInit() {
   ListPresets();
 
   string_manager_ = std::make_shared<StringManager>();
+  tracepoint_info_manager_ = std::make_shared<TracepointInfoManager>();
+
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
   if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {

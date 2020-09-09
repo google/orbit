@@ -18,6 +18,7 @@
 #include "OrbitProcess.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"
+#include "TracepointInfoManager.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {
@@ -40,12 +41,16 @@ class ClientGgp final : public CaptureListener {
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnUniqueTracepointInfo(uint64_t key,
+                              orbit_grpc_protos::TracepointInfo tracepoint_info) override;
+  void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
 
  private:
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::shared_ptr<Process> target_process_;
   std::shared_ptr<StringManager> string_manager_;
+  std::shared_ptr<TracepointInfoManager> tracepoint_info_manager_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
   CaptureData capture_data_;
