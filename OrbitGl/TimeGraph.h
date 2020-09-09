@@ -119,8 +119,8 @@ class TimeGraph {
   double GetMaxTimeUs() const { return m_MaxTimeUs; }
   const TimeGraphLayout& GetLayout() const { return m_Layout; }
   TimeGraphLayout& GetLayout() { return m_Layout; }
-  float GetVerticalMargin() const { return vertical_margin_; }
-  void SetVerticalMargin(float margin) { vertical_margin_ = margin; }
+  float GetRightMargin() const { return right_margin_; }
+  void SetRightMargin(float margin) { right_margin_ = margin; }
 
   const TextBox* FindPrevious(const TextBox* from);
   const TextBox* FindNext(const TextBox* from);
@@ -173,7 +173,7 @@ class TimeGraph {
   float m_WorldWidth = 0;
   float min_y_ = 0;
   int m_Margin = 0;
-  float vertical_margin_ = 0;
+  float right_margin_ = 0;
 
   double m_ZoomValue = 0;
   double m_MouseRatio = 0;

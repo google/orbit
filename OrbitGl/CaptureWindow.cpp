@@ -505,7 +505,7 @@ void CaptureWindow::DrawScreenSpace() {
   float canvasHeight = getHeight();
 
   const TimeGraphLayout& layout = time_graph_.GetLayout();
-  float vertical_margin = layout.GetVerticalMargin();
+  float right_margin = layout.GetRightMargin();
 
   const auto picking_mode = GetPickingMode();
 
@@ -526,15 +526,15 @@ void CaptureWindow::DrawScreenSpace() {
       vertical_slider_->SetPixelHeight(slider_width);
       vertical_slider_->SetSliderWidthRatio(verticalRatio);
       vertical_slider_->Draw(this, picking_mode);
-      vertical_margin += slider_width;
+      right_margin += slider_width;
     }
   }
 
   // Right vertical margin.
-  time_graph_.SetVerticalMargin(vertical_margin);
+  time_graph_.SetRightMargin(right_margin);
   const Color kBackgroundColor(70, 70, 70, 255);
   float margin_x1 = getWidth();
-  float margin_x0 = margin_x1 - vertical_margin;
+  float margin_x0 = margin_x1 - right_margin;
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight), GlCanvas::kZValueMargin);
   ui_batcher_.AddBox(box, kBackgroundColor);
