@@ -16,7 +16,7 @@
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
 
-namespace CaptureSerializer {
+namespace capture_serializer {
 
 template <class TimersIterator>
 ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data,
@@ -43,27 +43,25 @@ void Save(std::ostream& stream, const CaptureData& capture_data,
 
   orbit_client_protos::CaptureHeader header;
   header.set_version(kRequiredCaptureVersion);
-  CaptureSerializer::WriteMessage(&header, &coded_output);
+  WriteMessage(&header, &coded_output);
 
   orbit_client_protos::CaptureInfo capture_info =
       GenerateCaptureInfo(capture_data, key_to_string_map);
-  CaptureSerializer::WriteMessage(&capture_info, &coded_output);
+  WriteMessage(&capture_info, &coded_output);
 
   // Timers
   for (auto it = timers_iterator_begin; it != timers_iterator_end; ++it) {
-    CaptureSerializer::WriteMessage(&(*it), &coded_output);
+    WriteMessage(&(*it), &coded_output);
   }
 }
 
 }  // namespace internal
 
-}  // namespace CaptureSerializer
-
 template <class TimersIterator>
-ErrorMessageOr<void> CaptureDeserializer::Save(
-    const std::string& filename, const CaptureData& capture_data,
-    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
-    TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
+ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data,
+                          const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
+                          TimersIterator timers_iterator_begin,
+                          TimersIterator timers_iterator_end) {
   std::ofstream file(filename, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
@@ -72,12 +70,13 @@ ErrorMessageOr<void> CaptureDeserializer::Save(
 
   {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-    CaptureSerializer::internal::Save(file, capture_data, key_to_string_map,
-                                      std::move(timers_iterator_begin),
-                                      std::move(timers_iterator_end));
+    internal::Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
+                   std::move(timers_iterator_end));
   }
 
   return outcome::success();
 }
+
+}  // namespace capture_serializer
 
 #endif  // ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_

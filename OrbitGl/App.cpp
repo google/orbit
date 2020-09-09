@@ -621,8 +621,8 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   TimerInfosIterator timers_it_begin(chains.begin(), chains.end());
   TimerInfosIterator timers_it_end(chains.end(), chains.end());
 
-  return CaptureSerializer::Save(file_name, GetCaptureData(), key_to_string_map, timers_it_begin,
-                                 timers_it_end);
+  return capture_serializer::Save(file_name, GetCaptureData(), key_to_string_map, timers_it_begin,
+                                  timers_it_end);
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {

@@ -33,10 +33,10 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     orbit_client_protos::CaptureHeader capture_header{};
     capture_header.set_version("1.52");
 
-    CaptureSerializer::WriteMessage(&capture_header, &coded_stream);
-    CaptureSerializer::WriteMessage(&info.capture_info(), &coded_stream);
+    capture_serializer::WriteMessage(&capture_header, &coded_stream);
+    capture_serializer::WriteMessage(&info.capture_info(), &coded_stream);
     for (const auto& timer : info.timers()) {
-      CaptureSerializer::WriteMessage(&timer, &coded_stream);
+      capture_serializer::WriteMessage(&timer, &coded_stream);
     }
   }
 

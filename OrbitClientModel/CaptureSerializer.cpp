@@ -25,14 +25,18 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
-void CaptureDeserializer::WriteMessage(const google::protobuf::Message* message,
-                                       google::protobuf::io::CodedOutputStream* output) {
+namespace capture_serializer {
+
+void WriteMessage(const google::protobuf::Message* message,
+                  google::protobuf::io::CodedOutputStream* output) {
   uint32_t message_size = message->ByteSizeLong();
   output->WriteLittleEndian32(message_size);
   message->SerializeToCodedStream(output);
 }
 
-CaptureInfo CaptureSerializer::internal::GenerateCaptureInfo(
+namespace internal {
+
+CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
@@ -78,3 +82,7 @@ CaptureInfo CaptureSerializer::internal::GenerateCaptureInfo(
 
   return capture_info;
 }
+
+}  // namespace internal
+
+}  // namespace capture_serializer
