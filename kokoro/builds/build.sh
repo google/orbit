@@ -199,6 +199,7 @@ if [ -n "$1" ]; then
     find Orbit/ -name \*.pdb -delete
     cp -v NOTICE Orbit/NOTICE
     cp -v LICENSE Orbit/LICENSE.txt
+    cp -av ../../contrib/automation_tests Orbit
     zip -r Orbit.zip Orbit/
     rm -rf Orbit/
     popd > /dev/null
