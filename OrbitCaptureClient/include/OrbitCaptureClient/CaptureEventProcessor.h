@@ -48,8 +48,8 @@ class CaptureEventProcessor {
   absl::flat_hash_set<uint64_t> string_hashes_seen_;
   uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
   absl::flat_hash_set<uint64_t> tracepoint_hashes_seen_;
-  uint64_t GetTracepointInfoHashAndSendToListenerIfNecessary(
-      const orbit_grpc_protos::TracepointInfo& tracepoint_info);
+  void SendTracepointInfoToListenerIfNecessary(
+      const orbit_grpc_protos::TracepointInfo& tracepoint_info, const uint64_t& hash);
 };
 
 #endif  // ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_

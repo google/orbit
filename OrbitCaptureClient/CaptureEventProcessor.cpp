@@ -223,13 +223,17 @@ void CaptureEventProcessor::ProcessInternedTracepointInfo(
 }
 void CaptureEventProcessor::ProcessTracepointEvent(
     const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
-  orbit_grpc_protos::TracepointInfo tracepoint_info;
 
   CHECK(tracepoint_event.tracepoint_info_or_key_case() ==
         orbit_grpc_protos::TracepointEvent::kTracepointInfoKey);
-  tracepoint_info = tracepoint_intern_pool_[tracepoint_event.tracepoint_info_key()];
 
-  uint64_t hash = GetTracepointInfoHashAndSendToListenerIfNecessary(tracepoint_info);
+  const uint64_t& hash = tracepoint_event.tracepoint_info_key();
+
+  CHECK(tracepoint_intern_pool_.contains(hash));
+
+  const auto& tracepoint_info = tracepoint_intern_pool_[hash];
+
+  SendTracepointInfoToListenerIfNecessary(tracepoint_info, hash);
   orbit_client_protos::TracepointEventInfo tracepoint_event_info;
   tracepoint_event_info.set_pid(tracepoint_event.pid());
   tracepoint_event_info.set_tid(tracepoint_event.tid());
@@ -237,7 +241,7 @@ void CaptureEventProcessor::ProcessTracepointEvent(
   tracepoint_event_info.set_cpu(tracepoint_event.cpu());
   tracepoint_event_info.set_tracepoint_info_key(hash);
 
-  // TODO: Store the tracepoint event in a unordered set
+  // TODO(msandru): Store the tracepoint event in a unordered set
 }
 
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
@@ -249,16 +253,13 @@ uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const 
   return hash;
 }
 
-uint64_t CaptureEventProcessor::GetTracepointInfoHashAndSendToListenerIfNecessary(
-    const orbit_grpc_protos::TracepointInfo& tracepoint_info) {
-  uint64_t hash = StringHash(absl::StrCat(tracepoint_info.category(), ":", tracepoint_info.name()));
-
+void CaptureEventProcessor::SendTracepointInfoToListenerIfNecessary(
+    const orbit_grpc_protos::TracepointInfo&, const uint64_t& hash) {
   if (!tracepoint_hashes_seen_.contains(hash)) {
     tracepoint_hashes_seen_.emplace(hash);
 
-    /* TODO: Store the hash as a key to the tracepoint info in an unordered map such that the
-     * tracepoints events recognise the tracepoint's name and category according to the hash
+    /* TODO(msandru): Store the hash as a key to the tracepoint info in an unordered map such that
+     * the tracepoints events recognise the tracepoint's name and category according to the hash
      * */
   }
-  return hash;
 }
