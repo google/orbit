@@ -57,22 +57,6 @@ ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph) {
   return Load(file, time_graph);
 }
 
-bool ReadMessage(google::protobuf::Message* message,
-                 google::protobuf::io::CodedInputStream* input) {
-  uint32_t message_size;
-  if (!input->ReadLittleEndian32(&message_size)) {
-    return false;
-  }
-
-  std::unique_ptr<char[]> buffer = make_unique_for_overwrite<char[]>(message_size);
-  if (!input->ReadRaw(buffer.get(), message_size)) {
-    return false;
-  }
-  message->ParseFromArray(buffer.get(), message_size);
-
-  return true;
-}
-
 ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
@@ -83,7 +67,7 @@ ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
       "Please check release notes for more information.";
 
   CaptureHeader header;
-  if (!ReadMessage(&header, &coded_input) || header.version().empty()) {
+  if (!internal::ReadMessage(&header, &coded_input) || header.version().empty()) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
@@ -97,7 +81,7 @@ ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
   }
 
   CaptureInfo capture_info;
-  if (!ReadMessage(&capture_info, &coded_input)) {
+  if (!internal::ReadMessage(&capture_info, &coded_input)) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
@@ -107,7 +91,7 @@ ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
 
   // Timers
   TimerInfo timer_info;
-  while (ReadMessage(&timer_info, &coded_input)) {
+  while (internal::ReadMessage(&timer_info, &coded_input)) {
     if (timer_info.function_address() > 0) {
       const FunctionInfo& func =
           capture_data.selected_functions().at(timer_info.function_address());
@@ -133,6 +117,22 @@ ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
 }
 
 namespace internal {
+
+bool ReadMessage(google::protobuf::Message* message,
+                 google::protobuf::io::CodedInputStream* input) {
+  uint32_t message_size;
+  if (!input->ReadLittleEndian32(&message_size)) {
+    return false;
+  }
+
+  std::unique_ptr<char[]> buffer = make_unique_for_overwrite<char[]>(message_size);
+  if (!input->ReadRaw(buffer.get(), message_size)) {
+    return false;
+  }
+  message->ParseFromArray(buffer.get(), message_size);
+
+  return true;
+}
 
 CaptureData GenerateCaptureData(const CaptureInfo& capture_info, StringManager* string_manager) {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;

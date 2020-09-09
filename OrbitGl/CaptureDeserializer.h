@@ -22,9 +22,9 @@ namespace capture_deserializer {
 ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph);
 ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph);
 
-bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
-
 namespace internal {
+
+bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
 [[nodiscard]] CaptureData GenerateCaptureData(const orbit_client_protos::CaptureInfo& capture_info,
                                               StringManager* string_manager);
