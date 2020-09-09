@@ -40,7 +40,7 @@ Listener::Listener(std::unique_ptr<TimerCallback> callback) {
 
 Listener::~Listener() {
   absl::MutexLock lock(&global_tracing_mutex);
-  CHECK(IsActive() == true);
+  CHECK(IsActive());
   // Purge deferred scopes.
   thread_pool_->Shutdown();
   thread_pool_->Wait();
