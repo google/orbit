@@ -107,7 +107,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Draw rounded corners.
   if (!picking) {
-    float vertical_margin = time_graph_->GetVerticalMargin();
+    float right_margin = time_graph_->GetRightMargin();
     const Color kBackgroundColor(70, 70, 70, 255);
 
     float radius = std::min(layout.GetRoundingRadius(), half_label_height);
@@ -118,8 +118,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 bottom_right(tab_x0 + label_width, y0 + top_margin);
     Vec2 top_right(tab_x0 + label_width, y0 + label_height);
     Vec2 top_left(tab_x0, y0 + label_height);
-    Vec2 end_bottom(x1 - vertical_margin, y1);
-    Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
+    Vec2 end_bottom(x1 - right_margin, y1);
+    Vec2 end_top(x1 - right_margin, y0 + top_margin);
     float z = GlCanvas::kZValueRoundingCorner;
 
     glColor4ubv(&kTabColor[0]);
