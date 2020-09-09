@@ -116,13 +116,18 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
       });
+
+  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), false);
   GOrbitApp->SetSelectionReportCallback(
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
+
   GOrbitApp->SetTopDownViewCallback([this](std::unique_ptr<TopDownView> top_down_view) {
     this->OnNewTopDownView(std::move(top_down_view));
   });
+
+  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), false);
   GOrbitApp->SetSelectionTopDownViewCallback(
       [this](std::unique_ptr<TopDownView> selection_top_down_view) {
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
@@ -290,7 +295,7 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
   delete ui->samplingReport;
 
   ui->samplingReport = new OrbitSamplingReport(ui->samplingTab);
-  ui->samplingReport->Initialize(callstack_data_view, std::move(sampling_report));
+  ui->samplingReport->Initialize(callstack_data_view, sampling_report);
   ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
   // Switch to sampling tab if sampling report is not empty and if not already in live tab.
@@ -302,14 +307,25 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
 
 void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
                                            std::shared_ptr<SamplingReport> sampling_report) {
+  if (sampling_report->HasSamples()) {
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), true);
+    ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
+  } else {
+    // If the selection is empty, if this tab is currently selected switch to the corresponding tab
+    // for the entire capture...
+    if (ui->RightTabWidget->currentWidget() == ui->selectionTab) {
+      ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
+    }
+    // ...and then disable this tab.
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), false);
+  }
+
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;
 
   ui->selectionReport = new OrbitSamplingReport(ui->selectionTab);
   ui->selectionReport->Initialize(callstack_data_view, std::move(sampling_report));
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
-
-  ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
 }
 
 void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view) {
@@ -318,6 +334,17 @@ void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<TopDownView> top_down_vie
 
 void OrbitMainWindow::OnNewSelectionTopDownView(
     std::unique_ptr<TopDownView> selection_top_down_view) {
+  if (selection_top_down_view->child_count() > 0) {
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), true);
+  } else {
+    // If the selection is empty, if this tab is currently selected switch to the corresponding tab
+    // for the entire capture...
+    if (ui->RightTabWidget->currentWidget() == ui->selectionTopDownTab) {
+      ui->RightTabWidget->setCurrentWidget(ui->topDownTab);
+    }
+    // ...and then disable this tab.
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), false);
+  }
   ui->selectionTopDownWidget->SetTopDownView(std::move(selection_top_down_view));
 }
 
