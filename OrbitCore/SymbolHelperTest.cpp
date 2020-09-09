@@ -130,3 +130,40 @@ TEST(SymbolHelper, GenerateCachedFileName) {
   const std::string cache_file_path = Path::CreateOrGetCacheDir() + "/_var_data_filename.elf";
   EXPECT_EQ(symbol_helper.GenerateCachedFileName(file_path), cache_file_path);
 }
+
+TEST(SymbolHelper, VerifySymbolsFile) {
+  {
+    // valid file containing symbols and matching build id
+    fs::path symbols_file = executable_directory / "no_symbols_elf.debug";
+    std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_TRUE(result);
+  }
+  {
+    // valid file containing symbols, build id not matching;
+    fs::path symbols_file = executable_directory / "no_symbols_elf.debug";
+    std::string build_id = "incorrect build id";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_FALSE(result);
+    EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
+                testing::HasSubstr("has a different build id"));
+  }
+  {
+    // valid file no symbols and matching build id
+    fs::path symbols_file = executable_directory / "no_symbols_elf";
+    std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_FALSE(result);
+    EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
+                testing::HasSubstr("does not contain symbols"));
+  }
+  {
+    // invalid file
+    fs::path symbols_file = "path/to/invalid_file";
+    std::string build_id = "build id does not matter";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_FALSE(result);
+    EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
+                testing::HasSubstr("unable to load elf file"));
+  }
+}

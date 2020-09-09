@@ -45,6 +45,7 @@
 #include "symbol.pb.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
+ABSL_DECLARE_FLAG(bool, local);
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 
@@ -839,7 +840,16 @@ void OrbitApp::LoadModules(const std::shared_ptr<Process>& process,
       continue;
     }
 
-    LoadModuleOnRemote(process, module, preset);
+    if (!absl::GetFlag(FLAGS_local)) {
+      LoadModuleOnRemote(process, module, preset);
+      continue;
+    }
+
+    // If no symbols are found and remote loading is not attempted.
+    SendErrorToUi("Error loading symbols",
+                  absl::StrFormat("Did not find symbols for module \"%s\": %s", module->m_FullName,
+                                  symbols_path.error().message()));
+    modules_currently_loading_.erase(module->m_FullName);
   }
 }
 
@@ -873,6 +883,16 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindSymbolsLocally(
     }
     error_message += "\n* " + symbols_path.error().message();
   }
+  if (absl::GetFlag(FLAGS_local)) {
+    const auto symbols_included_in_module = SymbolHelper::VerifySymbolsFile(module_path, build_id);
+    if (symbols_included_in_module) {
+      LOG("Found symbols included in module: \"%s\"", module_path.string());
+      return module_path;
+    }
+    error_message += "\n* Symbols are not included in module file: " +
+                     symbols_included_in_module.error().message();
+  }
+
   error_message = absl::StrFormat("Did not find local symbols for module \"%s\": %s",
                                   module_path.string(), error_message);
   LOG("%s", error_message);
