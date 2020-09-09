@@ -89,6 +89,7 @@ class TopDownWidget : public QWidget {
   std::unique_ptr<TopDownViewItemModel> model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
   std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;
+  bool columns_already_resized_ = false;
 };
 
 #endif  // ORBIT_QT_TOP_DOWN_WIDGET_H_
