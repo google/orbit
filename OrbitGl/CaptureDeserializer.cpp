@@ -41,6 +41,7 @@ static void FillEventBuffer(const CaptureData& capture_data) {
 }
 
 }  // namespace
+
 namespace capture_deserializer {
 
 ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph) {
