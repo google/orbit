@@ -63,7 +63,10 @@ std::vector<fs::path> ReadSymbolsFile() {
   return directories;
 }
 
-ErrorMessageOr<void> VerifySymbolsFile(const fs::path& symbols_path, const std::string& build_id) {
+}  // namespace
+
+ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
+                                                     const std::string& build_id) {
   OUTCOME_TRY(symbols_file, ElfFile::Create(symbols_path.string()));
 
   if (!symbols_file->HasSymtab()) {
@@ -82,7 +85,6 @@ ErrorMessageOr<void> VerifySymbolsFile(const fs::path& symbols_path, const std::
   }
   return outcome::success();
 }
-}  // namespace
 
 SymbolHelper::SymbolHelper()
     : symbols_file_directories_(ReadSymbolsFile()), cache_directory_(Path::CreateOrGetCacheDir()) {}
