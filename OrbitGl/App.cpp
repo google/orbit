@@ -628,7 +628,7 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
   ClearCapture();
 
-  OUTCOME_TRY(CaptureDeserializer::Load(file_name, GCurrentTimeGraph));
+  OUTCOME_TRY(capture_deserializer::Load(file_name, GCurrentTimeGraph));
 
   DoZoom = true;  // TODO: remove global, review logic
   return outcome::success();

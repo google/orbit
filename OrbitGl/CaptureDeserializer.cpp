@@ -29,7 +29,21 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
-ErrorMessageOr<void> CaptureDeserializer::Load(const std::string& filename, TimeGraph* time_graph) {
+namespace {
+
+static void FillEventBuffer(const CaptureData& capture_data) {
+  GEventTracer.GetEventBuffer().Reset();
+  for (const CallstackEvent& callstack_event :
+       capture_data.GetCallstackData()->callstack_events()) {
+    GEventTracer.GetEventBuffer().AddCallstackEvent(
+        callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
+  }
+}
+
+}  // namespace
+namespace capture_deserializer {
+
+ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
   // Binary
@@ -42,8 +56,8 @@ ErrorMessageOr<void> CaptureDeserializer::Load(const std::string& filename, Time
   return Load(file, time_graph);
 }
 
-bool CaptureDeserializer::ReadMessage(google::protobuf::Message* message,
-                                      google::protobuf::io::CodedInputStream* input) {
+bool ReadMessage(google::protobuf::Message* message,
+                 google::protobuf::io::CodedInputStream* input) {
   uint32_t message_size;
   if (!input->ReadLittleEndian32(&message_size)) {
     return false;
@@ -58,58 +72,7 @@ bool CaptureDeserializer::ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-static void FillEventBuffer(const CaptureData& capture_data) {
-  GEventTracer.GetEventBuffer().Reset();
-  for (const CallstackEvent& callstack_event :
-       capture_data.GetCallstackData()->callstack_events()) {
-    GEventTracer.GetEventBuffer().AddCallstackEvent(
-        callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
-  }
-}
-
-CaptureData CaptureDeserializer::internal::GenerateCaptureData(const CaptureInfo& capture_info,
-                                                               StringManager* string_manager) {
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-  for (const auto& function : capture_info.selected_functions()) {
-    uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
-    selected_functions[address] = function;
-  }
-
-  absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
-      capture_info.function_stats().begin(), capture_info.function_stats().end()};
-  CaptureData capture_data(capture_info.process_id(), capture_info.process_name(),
-                           std::make_shared<Process>(), std::move(selected_functions),
-                           std::move(functions_stats));
-
-  for (const auto& address_info : capture_info.address_infos()) {
-    capture_data.InsertAddressInfo(address_info);
-  }
-
-  absl::flat_hash_map<int32_t, std::string> thread_names{capture_info.thread_names().begin(),
-                                                         capture_info.thread_names().end()};
-  capture_data.set_thread_names(thread_names);
-
-  for (const CallstackInfo& callstack : capture_info.callstacks()) {
-    CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
-    capture_data.AddUniqueCallStack(std::move(unique_callstack));
-  }
-  for (CallstackEvent callstack_event : capture_info.callstack_events()) {
-    capture_data.AddCallstackEvent(std::move(callstack_event));
-  }
-  SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
-  capture_data.set_sampling_profiler(sampling_profiler);
-
-  string_manager->Clear();
-  for (const auto& entry : capture_info.key_to_string()) {
-    string_manager->AddIfNotPresent(entry.first, entry.second);
-  }
-
-  FillEventBuffer(capture_data);
-
-  return capture_data;
-}
-
-ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream, TimeGraph* time_graph) {
+ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
@@ -167,3 +130,50 @@ ErrorMessageOr<void> CaptureDeserializer::Load(std::istream& stream, TimeGraph* 
   GOrbitApp->FireRefreshCallbacks();
   return outcome::success();
 }
+
+namespace internal {
+
+CaptureData GenerateCaptureData(const CaptureInfo& capture_info, StringManager* string_manager) {
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
+  for (const auto& function : capture_info.selected_functions()) {
+    uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
+    selected_functions[address] = function;
+  }
+
+  absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
+      capture_info.function_stats().begin(), capture_info.function_stats().end()};
+  CaptureData capture_data(capture_info.process_id(), capture_info.process_name(),
+                           std::make_shared<Process>(), std::move(selected_functions),
+                           std::move(functions_stats));
+
+  for (const auto& address_info : capture_info.address_infos()) {
+    capture_data.InsertAddressInfo(address_info);
+  }
+
+  absl::flat_hash_map<int32_t, std::string> thread_names{capture_info.thread_names().begin(),
+                                                         capture_info.thread_names().end()};
+  capture_data.set_thread_names(thread_names);
+
+  for (const CallstackInfo& callstack : capture_info.callstacks()) {
+    CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
+    capture_data.AddUniqueCallStack(std::move(unique_callstack));
+  }
+  for (CallstackEvent callstack_event : capture_info.callstack_events()) {
+    capture_data.AddCallstackEvent(std::move(callstack_event));
+  }
+  SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
+  capture_data.set_sampling_profiler(sampling_profiler);
+
+  string_manager->Clear();
+  for (const auto& entry : capture_info.key_to_string()) {
+    string_manager->AddIfNotPresent(entry.first, entry.second);
+  }
+
+  FillEventBuffer(capture_data);
+
+  return capture_data;
+}
+
+}  // namespace internal
+
+}  // namespace capture_deserializer
