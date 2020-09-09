@@ -54,7 +54,7 @@ void Listener::DeferScopeProcessing(const Scope& scope) {
   // User callback is called from a worker thread to
   // minimize contention on the instrumented threads.
   absl::MutexLock lock(&global_tracing_mutex);
-  if (IsActive() == false) return;
+  if (!IsActive()) return;
   global_tracing_listener->thread_pool_->Schedule([scope]() {
     absl::MutexLock lock(&global_tracing_mutex);
     if (IsActive() == false) return;
