@@ -29,6 +29,7 @@ using orbit_client_protos::TimerInfo;
 namespace {
 inline const std::string kFileOrbitExtension = ".orbit";
 }
+
 namespace capture_serializer {
 
 void WriteMessage(const google::protobuf::Message* message,
