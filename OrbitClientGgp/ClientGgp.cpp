@@ -15,6 +15,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "SamplingProfiler.h"
 #include "StringManager.h"
@@ -104,6 +105,26 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
 bool ClientGgp::StopCapture() {
   LOG("Request to stop capture");
   return capture_client_->StopCapture();
+}
+
+bool ClientGgp::SaveCapture() {
+  LOG("Saving capture");
+  const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
+  std::string file_name = options_.capture_file_name;
+  if (file_name.empty()) {
+    file_name = capture_serializer::file_management::GetCaptureFileName(capture_data_);
+  } else {
+    // Make sure the file is saved with orbit extension
+    capture_serializer::file_management::IncludeOrbitExtensionInFile(file_name);
+  }
+
+  ErrorMessageOr<void> result = capture_serializer::Save(
+      file_name, capture_data_, key_to_string_map, timer_infos_.begin(), timer_infos_.end());
+  if (result.has_error()) {
+    ERROR("Could not save the capture: %s", result.error().message());
+    return false;
+  }
+  return true;
 }
 
 ErrorMessageOr<std::shared_ptr<Process>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {

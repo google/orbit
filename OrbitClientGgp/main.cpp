@@ -14,6 +14,7 @@ ABSL_FLAG(int32_t, pid, 0, "pid to capture");
 ABSL_FLAG(uint32_t, capture_length, 10, "duration of capture in seconds");
 ABSL_FLAG(std::vector<std::string>, functions, {},
           "Comma-separated list of functions to hook to the capture");
+ABSL_FLAG(std::string, file_name, "", "Set file name for saving the capture.");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
@@ -29,6 +30,7 @@ int main(int argc, char** argv) {
   options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   options.capture_pid = absl::GetFlag(FLAGS_pid);
   options.capture_functions = absl::GetFlag(FLAGS_functions);
+  options.capture_file_name = absl::GetFlag(FLAGS_file_name);
 
   ClientGgp client_ggp(std::move(options));
   if (!client_ggp.InitClient()) {
@@ -57,7 +59,9 @@ int main(int argc, char** argv) {
   LOG("Shut down the thread and wait for it to finish");
   thread_pool->ShutdownAndWait();
 
-  // TODO: process/save capture data
+  if (!client_ggp.SaveCapture()) {
+    return -1;
+  }
 
   LOG("All done");
   return 0;
