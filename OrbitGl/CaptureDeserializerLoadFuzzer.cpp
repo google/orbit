@@ -8,7 +8,7 @@
 #include <filesystem>
 
 #include "App.h"
-#include "CaptureDeserializer.h"
+#include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "SamplingProfiler.h"
 #include "TimeGraph.h"
@@ -50,7 +50,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
 
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
-  (void)capture_deserializer::Load(input_stream, GCurrentTimeGraph);
+  (void)capture_deserializer::Load(input_stream, GOrbitApp.get());
 
   GOrbitApp->GetThreadPool()->ShutdownAndWait();
   GOrbitApp.reset();
