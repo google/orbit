@@ -26,7 +26,7 @@ class ClientGgp final : public CaptureListener {
   bool InitClient();
   bool RequestStartCapture(ThreadPool* thread_pool);
   bool StopCapture();
-  void SaveCapture();
+  bool SaveCapture();
 
   // CaptureListener implementation
   void OnCaptureStarted(
