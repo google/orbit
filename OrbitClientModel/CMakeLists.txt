@@ -13,12 +13,15 @@ target_include_directories(OrbitClientModel PUBLIC
 target_include_directories(OrbitClientModel PRIVATE 
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitClientModel PUBLIC 
+target_sources(OrbitClientModel PUBLIC
+        include/OrbitClientModel/CaptureDeserializer.h
         include/OrbitClientModel/CaptureSerializer.h)
 
 target_sources(OrbitClientModel PRIVATE
+        CaptureDeserializer.cpp
         CaptureSerializer.cpp)
 
-target_link_libraries(OrbitClientModel PUBLIC 
+target_link_libraries(OrbitClientModel PUBLIC
+        OrbitCaptureClient
         OrbitCore
         OrbitProtos)

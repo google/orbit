@@ -540,23 +540,13 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
     return;
   }
 
-  (void)OpenCapture(file.toStdString());
+  OpenCapture(file.toStdString());
 }
 
-outcome::result<void> OrbitMainWindow::OpenCapture(const std::string& filepath) {
-  ErrorMessageOr<void> result = GOrbitApp->OnLoadCapture(filepath);
-
-  if (result.has_error()) {
-    setWindowTitle({});
-    QMessageBox::critical(
-        this, "Error loading capture",
-        QString::fromStdString(absl::StrFormat("Could not load capture from \"%s\":\n%s", filepath,
-                                               result.error().message())));
-    return std::errc::no_such_file_or_directory;
-  }
+void OrbitMainWindow::OpenCapture(const std::string& filepath) {
+  GOrbitApp->OnLoadCapture(filepath);
   setWindowTitle(QString::fromStdString(filepath));
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
-  return outcome::success();
 }
 
 void OrbitMainWindow::OpenDisassembly(std::string a_String, DisassemblyReport report) {
