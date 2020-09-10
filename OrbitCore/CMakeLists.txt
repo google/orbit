@@ -30,6 +30,8 @@ target_sources(
          SymbolHelper.h
          Threading.h
          TracepointCustom.h
+         TracepointEventBuffer.h
+         TracepointEventTracer.h
          TracepointInfoManager.h
          Utils.h)
 
@@ -48,6 +50,7 @@ target_sources(
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
+          TracepointEventBuffer.cpp
           TracepointInfoManager.cpp
           Utils.cpp)
 
