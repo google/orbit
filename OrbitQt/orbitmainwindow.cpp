@@ -309,7 +309,14 @@ void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
                                            std::shared_ptr<SamplingReport> sampling_report) {
   if (sampling_report->HasSamples()) {
     ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), true);
-    ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
+    // This condition and the corresponding one in OnNewSelectionTopDownView need to be
+    // complementary, such that one doesn't cause switching away from or to a tab that the other
+    // method would switch from when such a tab is selected. Otherwise, which tab ends up being
+    // selected would depend on the order in which these two methods are called.
+    if (ui->RightTabWidget->currentWidget() != ui->topDownTab &&
+        ui->RightTabWidget->currentWidget() != ui->selectionTopDownTab) {
+      ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
+    }
   } else {
     // If the selection is empty, if this tab is currently selected switch to the corresponding tab
     // for the entire capture...
@@ -336,6 +343,13 @@ void OrbitMainWindow::OnNewSelectionTopDownView(
     std::unique_ptr<TopDownView> selection_top_down_view) {
   if (selection_top_down_view->child_count() > 0) {
     ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), true);
+    // This condition and the corresponding one in OnNewSelectionReport need to be complementary,
+    // such that one doesn't cause switching away from or to a tab that the other method would
+    // switch from when such a tab is selected. Otherwise, which tab ends up being selected would
+    // depend on the order in which these two methods are called.
+    if (ui->RightTabWidget->currentWidget() == ui->topDownTab) {
+      ui->RightTabWidget->setCurrentWidget(ui->selectionTopDownTab);
+    }
   } else {
     // If the selection is empty, if this tab is currently selected switch to the corresponding tab
     // for the entire capture...
