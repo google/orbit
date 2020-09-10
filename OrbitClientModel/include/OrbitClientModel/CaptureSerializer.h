@@ -37,7 +37,6 @@ void IncludeOrbitExtensionInFile(std::string& file_name);
 namespace internal {
 
 inline const std::string kRequiredCaptureVersion = "1.52";
-inline const std::string kFileOrbitExtension = ".orbit";
 
 orbit_client_protos::CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
