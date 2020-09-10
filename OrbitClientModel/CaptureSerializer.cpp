@@ -26,6 +26,9 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
+namespace {
+inline const std::string kFileOrbitExtension = ".orbit";
+}
 namespace capture_serializer {
 
 void WriteMessage(const google::protobuf::Message* message,
@@ -49,8 +52,8 @@ std::string GetCaptureFileName(const CaptureData& capture_data) {
 
 void IncludeOrbitExtensionInFile(std::string& file_name) {
   const std::string extension = Path::GetExtension(file_name);
-  if (extension != internal::kFileOrbitExtension) {
-    file_name.append(internal::kFileOrbitExtension);
+  if (extension != kFileOrbitExtension) {
+    file_name.append(kFileOrbitExtension);
   }
 }
 
