@@ -117,7 +117,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
       });
 
-  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), false);
+  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), false);
   GOrbitApp->SetSelectionReportCallback(
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
@@ -308,29 +308,29 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
 void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
                                            std::shared_ptr<SamplingReport> sampling_report) {
   if (sampling_report->HasSamples()) {
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), true);
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), true);
     // This condition and the corresponding one in OnNewSelectionTopDownView need to be
     // complementary, such that one doesn't cause switching away from or to a tab that the other
     // method would switch from when such a tab is selected. Otherwise, which tab ends up being
     // selected would depend on the order in which these two methods are called.
     if (ui->RightTabWidget->currentWidget() != ui->topDownTab &&
         ui->RightTabWidget->currentWidget() != ui->selectionTopDownTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
+      ui->RightTabWidget->setCurrentWidget(ui->selectionSamplingTab);
     }
   } else {
     // If the selection is empty, if this tab is currently selected switch to the corresponding tab
     // for the entire capture...
-    if (ui->RightTabWidget->currentWidget() == ui->selectionTab) {
+    if (ui->RightTabWidget->currentWidget() == ui->selectionSamplingTab) {
       ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
     }
     // ...and then disable this tab.
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTab), false);
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), false);
   }
 
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;
 
-  ui->selectionReport = new OrbitSamplingReport(ui->selectionTab);
+  ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
   ui->selectionReport->Initialize(callstack_data_view, std::move(sampling_report));
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 }

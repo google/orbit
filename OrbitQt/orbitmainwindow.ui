@@ -271,7 +271,7 @@ QPushButton:disabled {
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="selectionTab">
+       <widget class="QWidget" name="selectionSamplingTab">
         <attribute name="title">
          <string>Sampling (selection)</string>
         </attribute>
