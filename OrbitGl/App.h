@@ -47,6 +47,7 @@
 #include "Threading.h"
 #include "TopDownView.h"
 #include "TracepointCustom.h"
+#include "TracepointInfoManager.h"
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -105,6 +106,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnUniqueTracepointInfo(uint64_t key,
+                              orbit_grpc_protos::TracepointInfo tracepoint_info) override;
+  void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
 
   void OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate);
 
@@ -335,6 +339,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   absl::flat_hash_set<std::string> modules_currently_loading_;
 
   std::shared_ptr<StringManager> string_manager_;
+  std::shared_ptr<TracepointInfoManager> tracepoint_info_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;

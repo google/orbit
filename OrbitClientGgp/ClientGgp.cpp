@@ -57,6 +57,7 @@ bool ClientGgp::InitClient() {
   }
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
   string_manager_ = std::make_shared<StringManager>();
+  tracepoint_info_manager_ = std::make_shared<TracepointInfoManager>();
   return true;
 }
 
@@ -278,4 +279,13 @@ void ClientGgp::OnThreadName(int32_t thread_id, std::string thread_name) {
 
 void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
   capture_data_.InsertAddressInfo(std::move(address_info));
+}
+
+void ClientGgp::OnUniqueTracepointInfo(uint64_t key,
+                                       orbit_grpc_protos::TracepointInfo tracepoint_info) {
+  tracepoint_info_manager_->AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+}
+
+void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
+  tracepoint_info_manager_->AddTracepointEvent(std::move(tracepoint_event_info));
 }
