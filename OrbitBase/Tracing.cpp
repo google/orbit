@@ -27,23 +27,26 @@ static std::vector<Scope>& GetThreadLocalScopes() {
 namespace orbit::tracing {
 
 Listener::Listener(std::unique_ptr<TimerCallback> callback) {
-  absl::MutexLock lock(&global_tracing_mutex);
-  // Only one listener is supported.
-  CHECK(!IsActive());
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
   thread_pool_ = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
   user_callback_ = std::move(callback);
+
+  // Activate listener (only one listener instance is supported).
+  absl::MutexLock lock(&global_tracing_mutex);
+  CHECK(!IsActive());
   global_tracing_listener = this;
   active_ = true;
 }
 
 Listener::~Listener() {
-  absl::MutexLock lock(&global_tracing_mutex);
-  CHECK(IsActive());
   // Purge deferred scopes.
   thread_pool_->Shutdown();
   thread_pool_->Wait();
+
+  // Deactivate listener.
+  absl::MutexLock lock(&global_tracing_mutex);
+  CHECK(IsActive());
   active_ = false;
   global_tracing_listener = nullptr;
 }
