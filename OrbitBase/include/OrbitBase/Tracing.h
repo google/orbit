@@ -12,6 +12,7 @@
 // NOTE: Orbit.h will be moved to its own
 //       OrbitApi project in a subsequent PR.
 #include "../../../Orbit.h"
+#include "OrbitBase/ThreadPool.h"
 
 namespace orbit::tracing {
 
@@ -46,6 +47,14 @@ class Listener {
  public:
   explicit Listener(std::unique_ptr<TimerCallback> callback);
   ~Listener();
+
+  static void DeferScopeProcessing(const Scope& scope);
+  [[nodiscard]] inline static bool IsActive() { return active_; }
+
+ private:
+  std::unique_ptr<TimerCallback> user_callback_ = {};
+  std::unique_ptr<ThreadPool> thread_pool_ = {};
+  inline static bool active_ = false;
 };
 
 }  // namespace orbit::tracing
