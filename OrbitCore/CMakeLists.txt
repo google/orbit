@@ -31,7 +31,6 @@ target_sources(
          Threading.h
          TracepointCustom.h
          TracepointEventBuffer.h
-         TracepointEventTracer.h
          TracepointInfoManager.h
          Utils.h)
 

@@ -41,7 +41,6 @@
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "TimerInfosIterator.h"
-#include "TracepointEventTracer.h"
 #include "Utils.h"
 #include "symbol.pb.h"
 
@@ -210,9 +209,9 @@ void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
 }
 
 void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  GTracepointEventTracer.GetTracepointEventBuffer().AddTracepointEvent(
-      tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
-      tracepoint_event_info.tid());
+  tracepoint_event_buffer_->AddTracepointEvent(tracepoint_event_info.time(),
+                                               tracepoint_event_info.tracepoint_info_key(),
+                                               tracepoint_event_info.tid());
   tracepoint_info_manager_->AddTracepointEvent(std::move(tracepoint_event_info));
 }
 
@@ -326,6 +325,8 @@ void OrbitApp::PostInit() {
       FireRefreshCallbacks(DataViewType::kTracepoints);
     });
   });
+
+  tracepoint_event_buffer_ = std::make_unique<TracepointEventBuffer>();
 }
 
 void OrbitApp::LoadFileMapping() {
