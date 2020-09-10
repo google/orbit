@@ -66,8 +66,8 @@ const bool TracepointEventBuffer::HasEvent() {
 
 void TracepointEventBuffer::Reset() {
   tracepoint_events_.clear();
-  max_time_ = std::numeric_limits<long long int>::max();
-  min_time_ = 0;
+  min_time_ = std::numeric_limits<long long int>::max();
+  max_time_ = 0;
 }
 
 uint64_t TracepointEventBuffer::max_time() const { return max_time_; }
