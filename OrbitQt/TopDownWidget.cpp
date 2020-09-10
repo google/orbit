@@ -418,6 +418,7 @@ void TopDownWidget::ProgressBarItemDelegate::paint(QPainter* painter,
 
   QStyleOptionProgressBar option_progress_bar;
   option_progress_bar.rect = option.rect;
+  option_progress_bar.palette = option.palette;
   option_progress_bar.minimum = 0;
   option_progress_bar.maximum = 100;
   option_progress_bar.progress = static_cast<int>(round(inclusive_percent));
@@ -432,16 +433,15 @@ void TopDownWidget::ProgressBarItemDelegate::paint(QPainter* painter,
       static_cast<int>(round(palette_highlight_color.value() * kBarColorValueReductionFactor)));
   option_progress_bar.palette.setColor(QPalette::Highlight, bar_foreground_color);
 
-  if (!highlight) {
-    option_progress_bar.text = index.data(Qt::DisplayRole).toString();
-    option_progress_bar.textVisible = true;
-  }
-  option.widget->style()->drawControl(QStyle::CE_ProgressBar, &option_progress_bar, painter);
+  option_progress_bar.text = index.data(Qt::DisplayRole).toString();
+  option_progress_bar.textVisible = true;
 
   if (highlight) {
-    QTextOption text_option;
-    text_option.setAlignment(Qt::AlignCenter);
-    painter->setPen(HighlightCustomFilterSortFilterProxyModel::kHighlightColor);
-    painter->drawText(option.rect, index.data(Qt::DisplayRole).toString(), text_option);
+    option_progress_bar.palette.setColor(
+        QPalette::Text, HighlightCustomFilterSortFilterProxyModel::kHighlightColor);
+    option_progress_bar.palette.setColor(
+        QPalette::HighlightedText, HighlightCustomFilterSortFilterProxyModel::kHighlightColor);
   }
+
+  option.widget->style()->drawControl(QStyle::CE_ProgressBar, &option_progress_bar, painter);
 }
