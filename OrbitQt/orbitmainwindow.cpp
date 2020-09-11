@@ -133,7 +133,28 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
       });
 
-  GOrbitApp->SetOpenCaptureCallback([this] { on_actionOpen_Capture_triggered(); });
+  GOrbitApp->SetOpenCaptureCallback([this] {
+    ui->actionToggle_Capture->setIcon(icon_stop_capture_);
+    ui->actionToggle_Capture->setDisabled(true);
+    ui->actionClear_Capture->setDisabled(true);
+    ui->actionOpen_Capture->setDisabled(true);
+    ui->actionSave_Capture->setDisabled(true);
+    ui->actionOpen_Preset->setDisabled(true);
+    ui->actionSave_Preset_As->setDisabled(true);
+    ui->HomeTab->setDisabled(true);
+    setWindowTitle({});
+  });
+  GOrbitApp->SetOpenCaptureFailedCallback([this] {
+    ui->actionToggle_Capture->setIcon(icon_start_capture_);
+    ui->actionToggle_Capture->setDisabled(false);
+    ui->actionClear_Capture->setDisabled(false);
+    ui->actionOpen_Capture->setDisabled(false);
+    ui->actionSave_Capture->setDisabled(false);
+    ui->actionOpen_Preset->setDisabled(false);
+    ui->actionSave_Preset_As->setDisabled(false);
+    ui->HomeTab->setDisabled(false);
+    setWindowTitle({});
+  });
   GOrbitApp->SetSaveCaptureCallback([this] { on_actionSave_Capture_triggered(); });
   GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });

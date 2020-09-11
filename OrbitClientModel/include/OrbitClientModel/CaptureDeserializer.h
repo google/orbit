@@ -26,9 +26,9 @@ namespace internal {
 
 bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
-void DoLoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
-                       CaptureListener* capture_listener,
-                       google::protobuf::io::CodedInputStream* coded_input);
+void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
+                     CaptureListener* capture_listener,
+                     google::protobuf::io::CodedInputStream* coded_input);
 
 inline const std::string kRequiredCaptureVersion = "1.52";
 

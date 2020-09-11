@@ -67,7 +67,7 @@ ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listene
     return ErrorMessage(error_message);
   }
 
-  internal::DoLoadCaptureInfo(capture_info, capture_listener, &coded_input);
+  internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input);
 
   return outcome::success();
 }
@@ -90,8 +90,8 @@ bool ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-void DoLoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
-                       google::protobuf::io::CodedInputStream* coded_input) {
+void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
+                     google::protobuf::io::CodedInputStream* coded_input) {
   CHECK(capture_listener != nullptr);
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   for (const auto& function : capture_info.selected_functions()) {

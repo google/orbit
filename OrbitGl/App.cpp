@@ -170,7 +170,7 @@ void OrbitApp::OnCaptureComplete() {
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
-    const FunctionInfo func =
+    const FunctionInfo& func =
         GetCaptureData().selected_functions().at(timer_info.function_address());
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
     capture_data_.UpdateFunctionStats(func, elapsed_nanos);
@@ -638,12 +638,18 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 }
 
 void OrbitApp::OnLoadCapture(const std::string& file_name) {
+  if (open_capture_callback_) {
+    open_capture_callback_();
+  }
   ClearCapture();
   GCurrentTimeGraph->GetStringManager()->Clear();
   thread_pool_->Schedule([this, file_name]() mutable {
     ErrorMessageOr<void> result = capture_deserializer::Load(file_name, this);
 
     if (result.has_error()) {
+      if (open_capture_failed_callback_) {
+        open_capture_failed_callback_();
+      }
       SendErrorToUi("Error loading capture",
                     absl::StrFormat("Could not load capture from \"%s\":\n%s", file_name,
                                     result.error().message()));
