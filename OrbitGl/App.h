@@ -47,7 +47,6 @@
 #include "Threading.h"
 #include "TopDownView.h"
 #include "TracepointCustom.h"
-#include "TracepointEventBuffer.h"
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"

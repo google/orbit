@@ -18,7 +18,6 @@
 #include "OrbitProcess.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"
-#include "TracepointInfoManager.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {

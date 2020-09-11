@@ -5,8 +5,10 @@
 #ifndef ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
 #define ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
 
+#include <atomic>
 #include <limits>
-#include <set>
+#include <map>
+#include <vector>
 
 #include "SamplingProfiler.h"
 #include "capture_data.pb.h"
