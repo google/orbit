@@ -644,7 +644,9 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   ClearCapture();
   GCurrentTimeGraph->GetStringManager()->Clear();
   thread_pool_->Schedule([this, file_name]() mutable {
-    ErrorMessageOr<void> result = capture_deserializer::Load(file_name, this);
+    capture_loading_cancalation_requested_ = false;
+    ErrorMessageOr<void> result =
+        capture_deserializer::Load(file_name, this, &capture_loading_cancalation_requested_);
 
     if (result.has_error()) {
       if (open_capture_failed_callback_) {
@@ -654,9 +656,21 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
                     absl::StrFormat("Could not load capture from \"%s\":\n%s", file_name,
                                     result.error().message()));
     }
+
+    if (open_capture_finished_callback_) {
+      open_capture_finished_callback_();
+    }
   });
 
   DoZoom = true;  // TODO: remove global, review logic
+}
+
+void OrbitApp::OnLoadCatpureCanceled() {
+  capture_loading_cancalation_requested_ = true;
+  if (open_capture_failed_callback_) {
+    open_capture_failed_callback_();
+  }
+  ClearCapture();
 }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {

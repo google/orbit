@@ -25,7 +25,8 @@ using orbit_client_protos::TimerInfo;
 
 namespace capture_deserializer {
 
-ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener) {
+ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener,
+                          bool* cancelation_requested) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
   // Binary
@@ -35,10 +36,11 @@ ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_
     return ErrorMessage("Error opening the file for reading");
   }
 
-  return Load(file, capture_listener);
+  return Load(file, capture_listener, cancelation_requested);
 }
 
-ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener) {
+ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener,
+                          bool* cancelation_requested) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
@@ -67,7 +69,7 @@ ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listene
     return ErrorMessage(error_message);
   }
 
-  internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input);
+  internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input, cancelation_requested);
 
   return outcome::success();
 }
@@ -91,8 +93,10 @@ bool ReadMessage(google::protobuf::Message* message,
 }
 
 void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
-                     google::protobuf::io::CodedInputStream* coded_input) {
+                     google::protobuf::io::CodedInputStream* coded_input,
+                     bool* cancelation_requested) {
   CHECK(capture_listener != nullptr);
+
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
@@ -100,36 +104,60 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   }
   TracepointInfoSet selected_tracepoints;
 
+  if (*cancelation_requested) {
+    return;
+  }
   capture_listener->OnCaptureStarted(capture_info.process_id(), capture_info.process_name(),
                                      std::make_shared<Process>(), std::move(selected_functions),
                                      std::move(selected_tracepoints));
 
   for (const auto& address_info : capture_info.address_infos()) {
+    if (*cancelation_requested) {
+      return;
+    }
     capture_listener->OnAddressInfo(address_info);
   }
 
   for (const auto& thread_id_and_name : capture_info.thread_names()) {
+    if (*cancelation_requested) {
+      return;
+    }
     capture_listener->OnThreadName(thread_id_and_name.first, thread_id_and_name.second);
   }
 
   for (const CallstackInfo& callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
+    if (*cancelation_requested) {
+      return;
+    }
     capture_listener->OnUniqueCallStack(std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
+    if (*cancelation_requested) {
+      return;
+    }
     capture_listener->OnCallstackEvent(std::move(callstack_event));
   }
 
   for (const auto& key_to_string : capture_info.key_to_string()) {
+    if (*cancelation_requested) {
+      return;
+    }
     capture_listener->OnKeyAndString(key_to_string.first, key_to_string.second);
   }
 
   // Timers
   TimerInfo timer_info;
   while (internal::ReadMessage(&timer_info, coded_input)) {
+    if (*cancelation_requested) {
+      return;
+    }
     capture_listener->OnTimer(timer_info);
   }
 
+  if (*cancelation_requested) {
+    return;
+  }
   capture_listener->OnCaptureComplete();
 }
 

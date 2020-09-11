@@ -81,6 +81,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
   void OnLoadCapture(const std::string& file_name);
+  void OnLoadCatpureCanceled();
   [[nodiscard]] bool IsCapturing() const;
   bool StartCapture();
   void StopCapture();
@@ -152,6 +153,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   using OpenCaptureFailedCallback = std::function<void()>;
   void SetOpenCaptureFailedCallback(OpenCaptureFailedCallback callback) {
     open_capture_failed_callback_ = std::move(callback);
+  }
+  using OpenCaptureFinishedCallback = std::function<void()>;
+  void SetOpenCaptureFinishedCallback(OpenCaptureFinishedCallback callback) {
+    open_capture_finished_callback_ = std::move(callback);
   }
   using SaveCaptureCallback = std::function<void()>;
   void SetSaveCaptureCallback(SaveCaptureCallback callback) {
@@ -302,12 +307,15 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   absl::Mutex process_map_mutex_;
   absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
+  bool capture_loading_cancalation_requested_ = false;
+
   CaptureStartedCallback capture_started_callback_;
   CaptureStopRequestedCallback capture_stop_requested_callback_;
   CaptureStoppedCallback capture_stopped_callback_;
   CaptureClearedCallback capture_cleared_callback_;
   OpenCaptureCallback open_capture_callback_;
   OpenCaptureFailedCallback open_capture_failed_callback_;
+  OpenCaptureFinishedCallback open_capture_finished_callback_;
   SaveCaptureCallback save_capture_callback_;
   SelectLiveTabCallback select_live_tab_callback_;
   DisassemblyCallback disassembly_callback_;
