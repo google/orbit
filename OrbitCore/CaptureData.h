@@ -117,6 +117,15 @@ class CaptureData {
 
   [[nodiscard]] const CallstackData* GetCallstackData() const { return callstack_data_.get(); };
 
+  [[nodiscard]] Mutex& GetTracepointEventBufferMutex() const {
+    return tracepoint_event_buffer_->mutex();
+  }
+
+  [[nodiscard]] std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  GetTracepointEventBufferTracepoints() const {
+    return tracepoint_event_buffer_->tracepoint_events();
+  }
+
   void AddUniqueCallStack(CallStack call_stack) {
     callstack_data_->AddUniqueCallStack(std::move(call_stack));
   }
