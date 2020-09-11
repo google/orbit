@@ -31,7 +31,7 @@ class CaptureData {
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
-        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()){
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {
     CHECK(process_ != nullptr);
   }
   explicit CaptureData(
@@ -149,10 +149,8 @@ class CaptureData {
     tracepoint_info_manager_->AddTracepointEvent(std::move(tracepoint_event_info));
   }
 
-  void AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t thread_id){
-    tracepoint_event_buffer_->AddTracepointEvent(time,
-                                                 tracepoint_hash,
-                                                 thread_id);
+  void AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t thread_id) {
+    tracepoint_event_buffer_->AddTracepointEvent(time, tracepoint_hash, thread_id);
   }
 
   [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {
