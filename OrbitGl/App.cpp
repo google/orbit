@@ -642,7 +642,7 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
     open_capture_callback_();
   }
   ClearCapture();
-  GCurrentTimeGraph->GetStringManager()->Clear();
+  string_manager_->Clear();
   thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancalation_requested_ = false;
     ErrorMessageOr<void> result =
