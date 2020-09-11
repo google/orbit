@@ -16,7 +16,6 @@ target_sources(
          CallstackData.h
          CallstackTypes.h
          CaptureData.h
-         FunctionUtils.h
          OrbitModule.h
          OrbitProcess.h
          Params.h
@@ -37,7 +36,6 @@ target_sources(
   OrbitCore
   PRIVATE CallstackData.cpp
           CaptureData.cpp
-          FunctionUtils.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           Params.cpp
@@ -57,6 +55,7 @@ target_link_libraries(
   OrbitCore
   PUBLIC ElfUtils
          OrbitBase
+         OrbitClientData
          OrbitClientProtos
          OrbitProtos
          xxHash::xxHash

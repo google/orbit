@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ModuleData.h"
+#include "OrbitClientData/ModuleData.h"
 
-#include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 

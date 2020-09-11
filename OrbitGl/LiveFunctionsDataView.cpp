@@ -5,9 +5,9 @@
 #include "LiveFunctionsDataView.h"
 
 #include "App.h"
-#include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "Pdb.h"
 #include "TextBox.h"
 #include "TimeGraph.h"

@@ -5,9 +5,9 @@
 #include "ModulesDataView.h"
 
 #include "App.h"
+#include "OrbitClientData/ProcessData.h"
 #include "OrbitModule.h"
 #include "Pdb.h"
-#include "ProcessData.h"
 #include "absl/flags/flag.h"
 
 // TODO(kuebler): remove this once we have the validator complete

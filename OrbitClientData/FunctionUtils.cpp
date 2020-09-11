@@ -2,13 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 
 #include <map>
 
 #include "OrbitBase/Logging.h"
-#include "Path.h"
-#include "Utils.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/match.h"
+#include "xxhash.h"
+
+namespace {
+uint64_t StringHash(const std::string& string) {
+  return XXH64(string.data(), string.size(), 0xBADDCAFEDEAD10CC);
+}
+}  // namespace
 
 namespace FunctionUtils {
 
@@ -16,7 +23,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::SymbolInfo;
 
 std::string GetLoadedModuleName(const FunctionInfo& func) {
-  return Path::GetFileName(func.loaded_module_path());
+  return std::filesystem::path(func.loaded_module_path()).filename().string();
 }
 
 uint64_t GetHash(const FunctionInfo& func) { return StringHash(func.pretty_name()); }

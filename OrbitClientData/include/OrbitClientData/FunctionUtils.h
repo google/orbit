@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <string>
 
-#include "SamplingProfiler.h"
-#include "ScopeTimer.h"
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
 

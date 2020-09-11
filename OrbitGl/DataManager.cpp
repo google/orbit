@@ -4,9 +4,9 @@
 
 #include "DataManager.h"
 
-#include "ModuleData.h"
 #include "OrbitBase/Logging.h"
-#include "ProcessData.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 

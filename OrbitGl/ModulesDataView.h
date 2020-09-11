@@ -6,8 +6,8 @@
 #define ORBIT_GL_MODULES_DATA_VIEW_H_
 
 #include "DataView.h"
-#include "ModuleData.h"
-#include "ProcessData.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
 
 class ModulesDataView : public DataView {
  public:

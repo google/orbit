@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "ElfUtils/ElfFile.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"

@@ -5,7 +5,7 @@
 #include "FunctionsDataView.h"
 
 #include "App.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitProcess.h"
 #include "Pdb.h"
 #include "absl/flags/flag.h"

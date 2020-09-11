@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "SamplingProfiler.h"

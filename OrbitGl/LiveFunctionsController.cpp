@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "App.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "TimeGraph.h"
 
 using orbit_client_protos::FunctionInfo;
