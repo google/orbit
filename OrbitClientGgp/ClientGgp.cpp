@@ -286,4 +286,8 @@ void ClientGgp::OnUniqueTracepointInfo(uint64_t key,
   capture_data_.AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
 }
 
-void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo) {}
+void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
+  capture_data_.AddTracepointEventAndMapToThreads(tracepoint_event_info.time(),
+                                                  tracepoint_event_info.tracepoint_info_key(),
+                                                  tracepoint_event_info.tid());
+}
