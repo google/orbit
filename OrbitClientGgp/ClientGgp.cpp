@@ -283,7 +283,7 @@ void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
 
 void ClientGgp::OnUniqueTracepointInfo(uint64_t key,
                                        orbit_grpc_protos::TracepointInfo tracepoint_info) {
-  tracepoint_info_manager_->AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+  capture_data_.AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
 }
 
 void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo) {}
