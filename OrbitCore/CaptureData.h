@@ -155,7 +155,6 @@ class CaptureData {
                                                  thread_id);
   }
 
-
   [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {
     return selection_callstack_data_.get();
   };
