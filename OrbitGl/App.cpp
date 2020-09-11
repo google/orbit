@@ -209,9 +209,9 @@ void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
 }
 
 void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  capture_data_.AddTracepointEvent(tracepoint_event_info.time(),
-                                   tracepoint_event_info.tracepoint_info_key(),
-                                   tracepoint_event_info.tid());
+  capture_data_.AddTracepointEventAndMapToThreads(tracepoint_event_info.time(),
+                                                  tracepoint_event_info.tracepoint_info_key(),
+                                                  tracepoint_event_info.tid());
   capture_data_.AddTracepointEvent(std::move(tracepoint_event_info));
 }
 

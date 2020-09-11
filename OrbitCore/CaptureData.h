@@ -149,8 +149,9 @@ class CaptureData {
     tracepoint_info_manager_->AddTracepointEvent(std::move(tracepoint_event_info));
   }
 
-  void AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t thread_id) {
-    tracepoint_event_buffer_->AddTracepointEvent(time, tracepoint_hash, thread_id);
+  void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
+                                         int32_t thread_id) {
+    tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(time, tracepoint_hash, thread_id);
   }
 
   [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {

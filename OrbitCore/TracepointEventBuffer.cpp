@@ -6,7 +6,7 @@
 
 using orbit_client_protos::TracepointEventInfo;
 
-std::vector<TracepointEventInfo> TracepointEventBuffer::GetTracepointEvents(
+std::vector<TracepointEventInfo> TracepointEventBuffer::GetTracepointEventsInTimeRangeForThreadId(
     uint64_t time_begin, uint64_t time_end, int32_t thread_id /*= kAllThreadsFakeTid*/) {
   ScopeLock lock(mutex_);
   std::vector<TracepointEventInfo> tracepoint_events;
@@ -14,21 +14,24 @@ std::vector<TracepointEventInfo> TracepointEventBuffer::GetTracepointEvents(
     const int32_t tracepoint_thread_id = pair.first;
     std::map<uint64_t, TracepointEventInfo>& tracepoints = pair.second;
 
-    CHECK(thread_id == SamplingProfiler::kAllThreadsFakeTid || tracepoint_thread_id == thread_id);
-    for (auto it = tracepoints.lower_bound(time_begin); it != tracepoints.end(); ++it) {
-      uint64_t time = it->first;
-      if (time < time_end) {
-        tracepoint_events.push_back(it->second);
-      } else
-        return tracepoint_events;
+    if (thread_id == SamplingProfiler::kAllThreadsFakeTid || tracepoint_thread_id == thread_id) {
+      for (auto it = tracepoints.lower_bound(time_begin); it != tracepoints.end(); ++it) {
+        uint64_t time = it->first;
+        if (time < time_end) {
+          tracepoint_events.push_back(it->second);
+        } else {
+          break;
+        }
+      }
     }
   }
 
   return tracepoint_events;
 }
 
-void TracepointEventBuffer::AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash,
-                                               int32_t thread_id) {
+void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
+                                                              uint64_t tracepoint_hash,
+                                                              int32_t thread_id) {
   ScopeLock lock(mutex_);
   std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& event_map =
       tracepoint_events_[thread_id];
