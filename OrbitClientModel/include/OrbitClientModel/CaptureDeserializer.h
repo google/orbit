@@ -20,9 +20,9 @@
 namespace capture_deserializer {
 
 ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener,
-                          bool* cancelation_requested);
+                          std::atomic<bool>* cancellation_requested);
 ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener,
-                          bool* cancelation_requested);
+                          std::atomic<bool>* cancellation_requested);
 
 namespace internal {
 
@@ -31,7 +31,7 @@ bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::Coded
 void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
                      CaptureListener* capture_listener,
                      google::protobuf::io::CodedInputStream* coded_input,
-                     bool* cancelation_requested);
+                     std::atomic<bool>* cancellation_requested);
 
 inline const std::string kRequiredCaptureVersion = "1.52";
 

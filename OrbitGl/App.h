@@ -307,7 +307,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   absl::Mutex process_map_mutex_;
   absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
-  bool capture_loading_cancalation_requested_ = false;
+  std::atomic<bool> capture_loading_cancellation_requested_ = false;
 
   CaptureStartedCallback capture_started_callback_;
   CaptureStopRequestedCallback capture_stop_requested_callback_;
