@@ -36,6 +36,7 @@ def ConnectToGamelet(application):
   dialog = application.window(title_re='orbitprofiler')
   dialog.set_focus()
   # DataItem0 contains the name of the first gamelet.
+  dialog.DataItem0.wait('exists', timeout=100)
   dialog.DataItem0.click_input()
   dialog.OK.click_input()
   logging.info('Connected to Gamelet.')
@@ -49,10 +50,6 @@ def main(argv):
   WaitForOrbit()
 
   application = Application(backend='uia').connect(title_re='orbitprofiler')
-  if application.is_process_running():
-    logging.info('Orbit is running.')
-  else:
-    logging.info('Orbit is not running.')
 
   ConnectToGamelet(application)
 
