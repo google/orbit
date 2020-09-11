@@ -145,10 +145,6 @@ class CaptureData {
     tracepoint_info_manager_->AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
   }
 
-  void AddTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-    tracepoint_info_manager_->AddTracepointEvent(std::move(tracepoint_event_info));
-  }
-
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
                                          int32_t thread_id) {
     tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(time, tracepoint_hash, thread_id);
