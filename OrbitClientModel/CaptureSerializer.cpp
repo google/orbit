@@ -39,8 +39,6 @@ void WriteMessage(const google::protobuf::Message* message,
   message->SerializeToCodedStream(output);
 }
 
-namespace file_management {
-
 std::string GetCaptureFileName(const CaptureData& capture_data) {
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
   std::string result;
@@ -57,8 +55,6 @@ void IncludeOrbitExtensionInFile(std::string& file_name) {
     file_name.append(kFileOrbitExtension);
   }
 }
-
-}  // namespace file_management
 
 namespace internal {
 

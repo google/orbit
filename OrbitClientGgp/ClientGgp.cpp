@@ -112,10 +112,10 @@ bool ClientGgp::SaveCapture() {
   const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
   std::string file_name = options_.capture_file_name;
   if (file_name.empty()) {
-    file_name = capture_serializer::file_management::GetCaptureFileName(capture_data_);
+    file_name = capture_serializer::GetCaptureFileName(capture_data_);
   } else {
     // Make sure the file is saved with orbit extension
-    capture_serializer::file_management::IncludeOrbitExtensionInFile(file_name);
+    capture_serializer::IncludeOrbitExtensionInFile(file_name);
   }
 
   ErrorMessageOr<void> result = capture_serializer::Save(
