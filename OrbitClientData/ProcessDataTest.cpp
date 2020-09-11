@@ -7,7 +7,7 @@
 #include <gtest/gtest-death-test.h>
 #include <gtest/gtest.h>
 
-#include "ProcessData.h"
+#include "OrbitClientData/ProcessData.h"
 #include "module.pb.h"
 #include "process.pb.h"
 

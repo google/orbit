@@ -4,10 +4,10 @@
 
 #include "OrbitCaptureClient/CaptureClient.h"
 
-#include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 

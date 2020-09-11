@@ -8,8 +8,8 @@
 
 #include "App.h"
 #include "EventTrack.h"
-#include "FunctionUtils.h"
 #include "GlCanvas.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"

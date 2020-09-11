@@ -5,9 +5,9 @@
 #include "AsyncTrack.h"
 
 #include "App.h"
-#include "FunctionUtils.h"
 #include "GlCanvas.h"
 #include "ManualInstrumentationManager.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
 

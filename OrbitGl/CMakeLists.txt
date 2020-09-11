@@ -37,13 +37,11 @@ target_sources(
          LiveFunctionsController.h
          LiveFunctionsDataView.h
          ManualInstrumentationManager.h
-         ModuleData.h
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
          PresetLoadState.h
          PresetsDataView.h
-         ProcessData.h
          ProcessesDataView.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -87,11 +85,9 @@ target_sources(
           ImGuiOrbit.cpp
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
-          ModuleData.cpp
           ModulesDataView.cpp
           PickingManager.cpp
           PresetsDataView.cpp
-          ProcessData.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
@@ -115,6 +111,7 @@ target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
          OrbitCaptureClient
+         OrbitClientData
          OrbitClientModel
          OrbitClientServices
          OrbitProtos
@@ -141,9 +138,7 @@ target_sources(OrbitGlTests PRIVATE
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
-               ModuleDataTest.cpp
                PickingManagerTest.cpp
-               ProcessDataTest.cpp
                ScopedStatusTest.cpp
                TimerInfosIteratorTest.cpp)
 

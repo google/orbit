@@ -5,7 +5,7 @@
 #include "SamplingProfiler.h"
 
 #include "CaptureData.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitModule.h"
 
 using orbit_client_protos::CallstackEvent;

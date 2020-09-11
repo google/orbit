@@ -10,7 +10,7 @@
 #include <string>
 
 #include "App.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "Pdb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"

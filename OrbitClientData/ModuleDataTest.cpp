@@ -5,8 +5,8 @@
 #include <gtest/gtest-death-test.h>
 #include <gtest/gtest.h>
 
-#include "FunctionUtils.h"
-#include "ModuleData.h"
+#include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleData.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "symbol.pb.h"

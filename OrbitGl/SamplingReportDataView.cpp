@@ -9,7 +9,7 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "SamplingReport.h"

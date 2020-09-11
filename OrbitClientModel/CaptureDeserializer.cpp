@@ -8,8 +8,8 @@
 #include <memory>
 
 #include "Callstack.h"
-#include "FunctionUtils.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"

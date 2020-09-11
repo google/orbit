@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "CaptureData.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitProcess.h"
 #include "TracepointCustom.h"

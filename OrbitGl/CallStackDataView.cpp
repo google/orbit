@@ -6,7 +6,7 @@
 
 #include "App.h"
 #include "Callstack.h"
-#include "FunctionUtils.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "Path.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"

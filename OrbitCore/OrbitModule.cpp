@@ -9,8 +9,8 @@
 #include <cinttypes>
 #include <string>
 
-#include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "capture_data.pb.h"

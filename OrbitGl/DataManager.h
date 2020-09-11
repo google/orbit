@@ -9,8 +9,8 @@
 
 #include <thread>
 
-#include "ModuleData.h"
-#include "ProcessData.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
 #include "TextBox.h"
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
