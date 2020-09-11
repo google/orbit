@@ -26,13 +26,9 @@ ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& captur
 void WriteMessage(const google::protobuf::Message* message,
                   google::protobuf::io::CodedOutputStream* output);
 
-namespace file_management {
-
 std::string GetCaptureFileName(const CaptureData& capture_data);
 
 void IncludeOrbitExtensionInFile(std::string& file_name);
-
-}  // namespace file_management
 
 namespace internal {
 
