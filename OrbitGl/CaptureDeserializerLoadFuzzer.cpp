@@ -50,7 +50,8 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
 
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
-  (void)capture_deserializer::Load(input_stream, GOrbitApp.get());
+  bool cancelation_requested = false;
+  (void)capture_deserializer::Load(input_stream, GOrbitApp.get(), &cancelation_requested);
 
   GOrbitApp->GetThreadPool()->ShutdownAndWait();
   GOrbitApp.reset();
