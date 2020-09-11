@@ -9,8 +9,7 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitModule.h"
+#include "OrbitClientData/ModuleData.h"
 #include "Path.h"
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
@@ -139,43 +138,36 @@ void SamplingReportDataView::DoSort() {
   std::sort(indices_.begin(), indices_.end(), combined_sorter);
 }
 
-std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
+std::vector<const FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
     const std::vector<int>& indices) {
-  std::set<FunctionInfo*> functions_set;
-  const std::shared_ptr<Process>& process = GOrbitApp->GetCaptureData().process();
-  CHECK(process != nullptr);
+  std::set<const FunctionInfo*> functions_set;
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
     if (sampled_function.function == nullptr) {
-      sampled_function.function =
-          process->GetFunctionFromAddress(sampled_function.absolute_address, false);
+      const FunctionInfo* func = GOrbitApp->GetCaptureData().FindFunctionByAddress(
+          sampled_function.absolute_address, false);
+      sampled_function.function = func;
     }
 
-    FunctionInfo* function = sampled_function.function;
+    const FunctionInfo* function = sampled_function.function;
     if (function != nullptr) {
       functions_set.insert(function);
     }
   }
 
-  return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
+  return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
-std::vector<std::shared_ptr<Module>> SamplingReportDataView::GetModulesFromIndices(
-    const std::vector<int>& indices) {
-  std::shared_ptr<Process> process = GOrbitApp->GetCaptureData().process();
-  CHECK(process != nullptr);
-  std::set<std::string> module_paths;
+std::vector<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
+    const std::vector<int>& indices) const {
+  std::vector<ModuleData*> modules;
   for (int index : indices) {
-    SampledFunction& sampled_function = GetSampledFunction(index);
-    module_paths.emplace(sampled_function.module_path);
-  }
-
-  std::vector<std::shared_ptr<Module>> modules;
-  for (const std::string& module_path : module_paths) {
-    const std::shared_ptr<Module> module = process->GetModuleFromPath(module_path);
-    if (module != nullptr) {
-      modules.push_back(module);
-    }
+    const SampledFunction& sampled_function = GetSampledFunction(index);
+    CHECK(sampled_function.absolute_address != 0);
+    ModuleData* module =
+        GOrbitApp->GetCaptureData().FindModuleByAddress(sampled_function.absolute_address);
+    CHECK(module != nullptr);
+    modules.push_back(module);
   }
 
   return modules;
@@ -191,7 +183,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
 
-  std::vector<FunctionInfo*> selected_functions = GetFunctionsFromIndices(selected_indices);
+  std::vector<const FunctionInfo*> selected_functions = GetFunctionsFromIndices(selected_indices);
 
   bool enable_disassembly = !selected_functions.empty();
 
@@ -202,7 +194,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
 
   bool enable_load = false;
   for (const auto& module : GetModulesFromIndices(selected_indices)) {
-    if (!module->IsLoaded()) {
+    if (!module->is_loaded()) {
       enable_load = true;
     }
   }
@@ -219,24 +211,24 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
 void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_index,
                                            const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
-    for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
+    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->SelectFunction(*function);
     }
   } else if (action == kMenuActionUnselect) {
-    for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
+    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->DeselectFunction(*function);
     }
   } else if (action == kMenuActionLoadSymbols) {
-    std::vector<std::shared_ptr<Module>> modules;
-    for (const auto& module : GetModulesFromIndices(item_indices)) {
-      if (!module->IsLoaded()) {
-        modules.push_back(module);
+    std::vector<ModuleData*> modules_to_load;
+    for (ModuleData* module : GetModulesFromIndices(item_indices)) {
+      if (!module->is_loaded()) {
+        modules_to_load.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(GOrbitApp->GetCaptureData().process(), modules);
+    GOrbitApp->LoadModules(GOrbitApp->GetCaptureData().process(), modules_to_load);
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = GOrbitApp->GetCaptureData().process_id();
-    for (FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
+    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->Disassemble(pid, *function);
     }
   } else {

@@ -36,9 +36,10 @@ class SamplingReportDataView : public DataView {
   void DoFilter() override;
   const SampledFunction& GetSampledFunction(unsigned int row) const;
   SampledFunction& GetSampledFunction(unsigned int row);
-  std::vector<orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
+  std::vector<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
       const std::vector<int>& indices);
-  std::vector<std::shared_ptr<Module>> GetModulesFromIndices(const std::vector<int>& indices);
+  [[nodiscard]] std::vector<ModuleData*> GetModulesFromIndices(
+      const std::vector<int>& indices) const;
 
  private:
   std::vector<SampledFunction> functions_;

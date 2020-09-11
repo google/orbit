@@ -9,23 +9,24 @@
 #include <vector>
 
 #include "CallstackData.h"
-#include "OrbitProcess.h"
+#include "OrbitClientData/ProcessData.h"
 #include "SamplingProfiler.h"
 #include "TracepointCustom.h"
 #include "TracepointEventBuffer.h"
 #include "TracepointInfoManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
+#include "process.pb.h"
 
 class CaptureData {
  public:
   explicit CaptureData(
-      int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+      std::unique_ptr<ProcessData> process,
+      absl::flat_hash_map<std::string, ModuleData*>&& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints)
-      : process_id_{process_id},
-        process_name_{std::move(process_name)},
-        process_{std::move(process)},
+      : process_(std::move(process)),
+        module_map_(std::move(module_map)),
         selected_functions_{std::move(selected_functions)},
         selected_tracepoints_{std::move(selected_tracepoints)},
         callstack_data_(std::make_unique<CallstackData>()),
@@ -36,8 +37,7 @@ class CaptureData {
   }
 
   explicit CaptureData()
-      : process_{std::make_shared<Process>()},
-        callstack_data_(std::make_unique<CallstackData>()),
+      : callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
         tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()){};
@@ -57,9 +57,9 @@ class CaptureData {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetSelectedFunction(
       uint64_t function_address) const;
 
-  [[nodiscard]] int32_t process_id() const { return process_id_; }
+  [[nodiscard]] int32_t process_id() const;
 
-  [[nodiscard]] const std::string& process_name() const { return process_name_; }
+  [[nodiscard]] const std::string process_name() const;
 
   [[nodiscard]] const std::chrono::system_clock::time_point& capture_start_time() const {
     return capture_start_time_;
@@ -77,8 +77,10 @@ class CaptureData {
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
   [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoByAddress(
-      uint64_t absolute_address) const;
+
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
+      uint64_t absolute_address, bool is_exact) const;
+  [[nodiscard]] ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
 
   static const std::string kUnknownFunctionOrModuleName;
 
@@ -158,7 +160,7 @@ class CaptureData {
     selection_callstack_data_ = std::move(selection_callstack_data);
   }
 
-  [[nodiscard]] const std::shared_ptr<Process>& process() const { return process_; }
+  [[nodiscard]] const ProcessData* process() const { return process_.get(); }
 
   [[nodiscard]] const SamplingProfiler& sampling_profiler() const { return sampling_profiler_; }
 
@@ -167,9 +169,8 @@ class CaptureData {
   }
 
  private:
-  int32_t process_id_ = -1;
-  std::string process_name_;
-  std::shared_ptr<Process> process_;
+  std::unique_ptr<ProcessData> process_;
+  absl::flat_hash_map<std::string, ModuleData*> module_map_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
 
   TracepointInfoSet selected_tracepoints_;

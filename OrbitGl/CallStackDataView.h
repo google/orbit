@@ -9,7 +9,7 @@
 
 #include "Callstack.h"
 #include "DataView.h"
-#include "OrbitModule.h"
+#include "OrbitClientData/ModuleData.h"
 #include "capture_data.pb.h"
 
 class CallStackDataView : public DataView {
@@ -32,7 +32,10 @@ class CallStackDataView : public DataView {
     OnDataChanged();
   }
 
-  void ClearCallstack() { callstack_ = CallStack(); }
+  void ClearCallstack() {
+    callstack_ = CallStack();
+    OnDataChanged();
+  }
 
  protected:
   void DoFilter() override;
@@ -41,17 +44,16 @@ class CallStackDataView : public DataView {
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame() = default;
-    CallStackDataViewFrame(uint64_t address, orbit_client_protos::FunctionInfo* function,
-                           std::shared_ptr<Module> module)
-        : address(address), function(function), module(std::move(module)) {}
-    CallStackDataViewFrame(uint64_t address, std::string fallback_name,
-                           std::shared_ptr<Module> module)
-        : address(address), fallback_name(std::move(fallback_name)), module(std::move(module)) {}
+    CallStackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
+                           ModuleData* module)
+        : address(address), function(function), module(module) {}
+    CallStackDataViewFrame(uint64_t address, std::string fallback_name, ModuleData* module)
+        : address(address), fallback_name(std::move(fallback_name)), module(module) {}
 
     uint64_t address = 0;
-    orbit_client_protos::FunctionInfo* function = nullptr;
+    const orbit_client_protos::FunctionInfo* function = nullptr;
     std::string fallback_name;
-    std::shared_ptr<Module> module;
+    ModuleData* module;
   };
 
   CallStackDataViewFrame GetFrameFromRow(int row);

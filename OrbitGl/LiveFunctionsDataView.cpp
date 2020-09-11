@@ -8,7 +8,6 @@
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "Pdb.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"

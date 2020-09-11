@@ -20,7 +20,6 @@
 #include "OrbitBase/Logging.h"
 #include "Params.h"
 #include "Path.h"
-#include "Pdb.h"
 #include "absl/base/casts.h"
 
 #define STB_IMAGE_IMPLEMENTATION

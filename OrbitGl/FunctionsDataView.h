@@ -23,13 +23,16 @@ class FunctionsDataView : public DataView {
 
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
-  void OnDataChanged() override;
+  void AddFunctions(std::vector<const orbit_client_protos::FunctionInfo*> functions);
+  void ClearFunctions();
 
  protected:
   void DoSort() override;
   void DoFilter() override;
   void ParallelFilter();
-  orbit_client_protos::FunctionInfo& GetFunction(int row) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunction(int row) const {
+    return functions_[indices_[row]];
+  }
 
   std::vector<std::string> m_FilterTokens;
 
@@ -47,6 +50,9 @@ class FunctionsDataView : public DataView {
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
   static const std::string kMenuActionDisassembly;
+
+ private:
+  std::vector<const orbit_client_protos::FunctionInfo*> functions_;
 };
 
 #endif  // ORBIT_GL_FUNCTIONS_DATA_VIEW_H_

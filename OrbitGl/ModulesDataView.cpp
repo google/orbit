@@ -6,8 +6,6 @@
 
 #include "App.h"
 #include "OrbitClientData/ProcessData.h"
-#include "OrbitModule.h"
-#include "Pdb.h"
 #include "absl/flags/flag.h"
 
 // TODO(kuebler): remove this once we have the validator complete
@@ -120,22 +118,23 @@ std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
 
 void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
-  const std::shared_ptr<Process>& process = GOrbitApp->GetSelectedProcess();
   if (action == kMenuActionLoadSymbols) {
-    std::vector<std::shared_ptr<Module>> modules;
+    std::vector<ModuleData*> modules_to_load;
     for (int index : item_indices) {
-      const ModuleData* module_data = GetModule(index);
+      ModuleData* module_data = GetModule(index);
       if (!module_data->is_loaded()) {
-        modules.push_back(process->GetModuleFromPath(module_data->file_path()));
+        modules_to_load.push_back(module_data);
       }
     }
-    GOrbitApp->LoadModules(process, modules);
+    CHECK(process_ != nullptr);
+    GOrbitApp->LoadModules(process_, modules_to_load);
 
   } else if (action == kMenuActionVerifyFramePointers) {
-    std::vector<std::shared_ptr<Module>> modules_to_validate;
+    std::vector<const ModuleData*> modules_to_validate;
+    modules_to_validate.reserve(item_indices.size());
     for (int index : item_indices) {
       const ModuleData* module = GetModule(index);
-      modules_to_validate.push_back(process->GetModuleFromPath(module->file_path()));
+      modules_to_validate.push_back(module);
     }
 
     if (!modules_to_validate.empty()) {
@@ -176,6 +175,7 @@ void ModulesDataView::DoFilter() {
 }
 
 void ModulesDataView::SetProcess(const ProcessData* process) {
+  process_ = process;
   modules_.clear();
   module_memory_.clear();
   for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {
@@ -193,7 +193,12 @@ void ModulesDataView::SetProcess(const ProcessData* process) {
 }
 
 void ModulesDataView::OnRefreshButtonClicked() {
-  GOrbitApp->UpdateProcessAndModuleList(GOrbitApp->GetSelectedProcessId());
+  const ProcessData* process = GOrbitApp->GetSelectedProcess();
+  if (process == nullptr) {
+    LOG("Unable to refresh module list, no process selected");
+    return;
+  }
+  GOrbitApp->UpdateProcessAndModuleList(process->pid());
 }
 
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,

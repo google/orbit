@@ -11,6 +11,7 @@
 
 #include "CaptureData.h"
 #include "OrbitBase/Result.h"
+#include "ScopeTimer.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"

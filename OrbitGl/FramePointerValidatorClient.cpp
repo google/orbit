@@ -11,10 +11,12 @@
 
 #include "App.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "Pdb.h"
+#include "OrbitClientData/ModuleData.h"
+#include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 
+using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::FramePointerValidatorService;
 using orbit_grpc_protos::ValidateFramePointersRequest;
@@ -24,8 +26,7 @@ FramePointerValidatorClient::FramePointerValidatorClient(OrbitApp* app,
                                                          std::shared_ptr<grpc::Channel> channel)
     : app_{app}, frame_pointer_validator_service_{FramePointerValidatorService::NewStub(channel)} {}
 
-void FramePointerValidatorClient::AnalyzeModules(
-    const std::vector<std::shared_ptr<Module>>& modules) {
+void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleData*>& modules) {
   if (modules.empty()) {
     ERROR("No module to validate, cancelling");
     return;
@@ -34,14 +35,14 @@ void FramePointerValidatorClient::AnalyzeModules(
   std::vector<std::string> dialogue_messages;
   dialogue_messages.push_back("Validation complete.");
 
-  for (const std::shared_ptr<Module>& module : modules) {
+  for (const ModuleData* module : modules) {
     ValidateFramePointersRequest request;
     ValidateFramePointersResponse response;
-    if (module == nullptr) continue;
-    if (module->m_Pdb == nullptr) continue;
+    CHECK(module != nullptr);
 
-    request.set_module_path(module->m_FullName);
-    for (const auto& function : module->m_Pdb->GetFunctions()) {
+    std::vector<const FunctionInfo*> functions = module->GetFunctions();
+    request.set_module_path(module->file_path());
+    for (const FunctionInfo* function : functions) {
       CodeBlock* function_info = request.add_functions();
       function_info->set_offset(FunctionUtils::Offset(*function));
       function_info->set_size(function->size());
@@ -58,13 +59,13 @@ void FramePointerValidatorClient::AnalyzeModules(
       return app_->SendErrorToUi(
           "Frame Pointer Validation",
           absl::StrFormat("Grpc call for frame-pointer validation failed for module %s: %s",
-                          module->m_Name, status.error_message()));
+                          module->name(), status.error_message()));
     }
-    int fpo_functions = response.functions_without_frame_pointer_size();
-    int no_fpo_functions = module->m_Pdb->GetFunctions().size() - fpo_functions;
+    size_t fpo_functions = response.functions_without_frame_pointer_size();
+    size_t no_fpo_functions = functions.size() - fpo_functions;
     dialogue_messages.push_back(
         absl::StrFormat("Module %s: %d functions support frame pointers, %d functions don't.",
-                        module->m_Name, no_fpo_functions, fpo_functions));
+                        module->name(), no_fpo_functions, fpo_functions));
   }
 
   std::string text = absl::StrJoin(dialogue_messages, "\n");

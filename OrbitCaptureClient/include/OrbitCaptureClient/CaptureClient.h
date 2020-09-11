@@ -5,13 +5,11 @@
 #ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
 
-#include <optional>
-
 #include "CaptureListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitProcess.h"
+#include "OrbitClientData/ProcessData.h"
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -32,8 +30,8 @@ class CaptureClient {
   }
 
   [[nodiscard]] ErrorMessageOr<void> StartCapture(
-      ThreadPool* thread_pool, int32_t process_id, std::string process_name,
-      std::shared_ptr<Process> process,
+      ThreadPool* thread_pool, const ProcessData& process,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints);
 
@@ -56,7 +54,8 @@ class CaptureClient {
   }
 
  private:
-  void Capture(int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+  void Capture(std::unique_ptr<ProcessData> process,
+               absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
                TracepointInfoSet selected_tracepoints);
 

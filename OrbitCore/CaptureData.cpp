@@ -4,8 +4,12 @@
 
 #include "CaptureData.h"
 
+#include <memory>
+
 #include "OrbitBase/Profiling.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleData.h"
+#include "process.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -70,7 +74,7 @@ void CaptureData::InsertAddressInfo(LinuxAddressInfo address_info) {
 const std::string CaptureData::kUnknownFunctionOrModuleName{"???"};
 
 const std::string& CaptureData::GetFunctionNameByAddress(uint64_t absolute_address) const {
-  const FunctionInfo* function = process_->GetFunctionFromAddress(absolute_address, false);
+  const FunctionInfo* function = FindFunctionByAddress(absolute_address, false);
   if (function != nullptr) {
     return FunctionUtils::GetDisplayName(*function);
   }
@@ -87,9 +91,9 @@ const std::string& CaptureData::GetFunctionNameByAddress(uint64_t absolute_addre
 }
 
 const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address) const {
-  const std::shared_ptr<Module>& module = process_->GetModuleFromAddress(absolute_address);
-  if (module != nullptr) {
-    return module->m_FullName;
+  const ModuleData* module_data = FindModuleByAddress(absolute_address);
+  if (module_data != nullptr) {
+    return module_data->file_path();
   }
   const auto address_info_it = address_infos_.find(absolute_address);
   if (address_info_it == address_infos_.end()) {
@@ -103,6 +107,33 @@ const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address
   return module_path;
 }
 
-const FunctionInfo* CaptureData::GetFunctionInfoByAddress(uint64_t absolute_address) const {
-  return process_->GetFunctionFromAddress(absolute_address, false);
+const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address,
+                                                       bool is_exact) const {
+  const auto result = process_->FindModuleByAddress(absolute_address);
+  if (!result) return nullptr;
+  const std::string& module_path = result.value().first;
+  const uint64_t module_base_address = result.value().second;
+
+  const ModuleData* module = module_map_.at(module_path);
+
+  const uint64_t relative_address = absolute_address - module_base_address;
+  return module->FindFunctionByRelativeAddress(relative_address, is_exact);
+}
+
+[[nodiscard]] ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
+  const auto result = process_->FindModuleByAddress(absolute_address);
+  if (!result) return nullptr;
+  return module_map_.at(result.value().first);
+}
+
+int32_t CaptureData::process_id() const {
+  // TODO(antonrohr) Maybe do a CHECK(process_ != nullptr) here instead of returning -1. Currently
+  // CaptureSerializerTest is the only scenario where this is actually needed.
+  return process_ != nullptr ? process_->pid() : -1;
+}
+
+const std::string CaptureData::process_name() const {
+  // TODO(antonrohr) Maybe do a CHECK(process_ != nullptr) here instead of returning an empty
+  // string. Currently CaptureSerializerTest is the only scenario where this is actually needed.
+  return process_ != nullptr ? process_->name() : "";
 }

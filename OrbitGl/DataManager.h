@@ -5,8 +5,6 @@
 #ifndef ORBIT_GL_DATA_MANAGER_H_
 #define ORBIT_GL_DATA_MANAGER_H_
 
-#include <OrbitProcess.h>
-
 #include <thread>
 
 #include "OrbitClientData/ModuleData.h"
@@ -36,19 +34,25 @@ class DataManager final {
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
   void set_selected_thread_id(int32_t thread_id);
   void set_selected_text_box(const TextBox* text_box);
-  void set_selected_process(std::shared_ptr<Process> process);
+  void set_selected_process(int32_t pid);
 
-  [[nodiscard]] ProcessData* GetProcessByPid(int32_t process_id) const;
+  [[nodiscard]] const ProcessData* GetProcessByPid(int32_t process_id) const;
+  [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const;
   [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const;
-  [[nodiscard]] ModuleData* FindModuleByAddress(int32_t process_id, uint64_t absolute_address);
+  [[nodiscard]] const ModuleData* FindModuleByAddress(int32_t process_id,
+                                                      uint64_t absolute_address);
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       int32_t process_id, uint64_t absolute_address, bool is_exact) const;
+  [[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> GetModulesLoadedByProcess(
+      const ProcessData* process) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t function_address) const;
-  [[nodiscard]] const absl::flat_hash_set<uint64_t>& selected_functions() const;
+  [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetSelectedFunctions() const;
+  [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetSelectedAndOrbitFunctions()
+      const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] int32_t selected_thread_id() const;
   [[nodiscard]] const TextBox* selected_text_box() const;
-  [[nodiscard]] const std::shared_ptr<Process>& selected_process() const;
+  [[nodiscard]] const ProcessData* selected_process() const;
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
@@ -68,8 +72,8 @@ class DataManager final {
 
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
-  // TODO(kuebler): Remove OrbitProcess class and this member soon.
-  std::shared_ptr<Process> selected_process_ = std::make_shared<Process>();
+
+  const ProcessData* selected_process_ = nullptr;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

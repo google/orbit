@@ -32,26 +32,6 @@ uint64_t Offset(const FunctionInfo& func) { return func.address() - func.load_bi
 
 bool IsOrbitFunc(const FunctionInfo& func) { return func.orbit_type() != FunctionInfo::kNone; }
 
-std::shared_ptr<FunctionInfo> CreateFunctionInfo(std::string name, std::string pretty_name,
-                                                 uint64_t address, uint64_t load_bias,
-                                                 uint64_t size, std::string file, uint32_t line,
-                                                 std::string loaded_module_path,
-                                                 uint64_t module_base_address) {
-  std::shared_ptr<FunctionInfo> function_info = std::make_shared<FunctionInfo>();
-  function_info->set_name(std::move(name));
-  function_info->set_pretty_name(std::move(pretty_name));
-  function_info->set_address(address);
-  function_info->set_load_bias(load_bias);
-  function_info->set_size(size);
-  function_info->set_file(std::move(file));
-  function_info->set_line(line);
-  function_info->set_loaded_module_path(std::move(loaded_module_path));
-  function_info->set_module_base_address(module_base_address);
-
-  SetOrbitTypeFromName(function_info.get());
-  return function_info;
-}
-
 std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info, uint64_t load_bias,
                                                  const std::string& module_path,
                                                  uint64_t module_base_address) {

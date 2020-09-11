@@ -2,16 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <memory>
+#include <string>
+
 #include "CaptureData.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
-#include "OrbitProcess.h"
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "capture_data.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "process.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
@@ -19,6 +23,7 @@ using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_grpc_protos::ProcessInfo;
 using ::testing::ElementsAreArray;
 
 TEST(CaptureSerializer, GetCaptureFileName) {
@@ -59,9 +64,12 @@ TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
 TEST(CaptureSerializer, GenerateCaptureInfo) {
   int32_t process_id = 42;
   std::string process_name = "p";
-  auto process = std::make_shared<Process>();
-  process->SetName(process_name);
-  process->SetID(process_id);
+  ProcessInfo process_info;
+  process_info.set_name(process_name);
+  process_info.set_pid(process_id);
+  std::unique_ptr<ProcessData> process = ProcessData::Create(process_info);
+
+  absl::flat_hash_map<std::string, ModuleData*> empty_module_map;
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   FunctionInfo selected_function;
@@ -71,7 +79,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_functions[FunctionUtils::GetAbsoluteAddress(selected_function)] = selected_function;
 
   TracepointInfoSet selected_tracepoints;
-  CaptureData capture_data{process_id, process_name, process, selected_functions,
+  CaptureData capture_data{std::move(process), std::move(empty_module_map), selected_functions,
                            selected_tracepoints};
 
   LinuxAddressInfo address_info;
