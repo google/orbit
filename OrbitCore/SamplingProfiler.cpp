@@ -6,7 +6,6 @@
 
 #include "CaptureData.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "OrbitModule.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -241,8 +240,7 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
 void SamplingProfiler::MapAddressToFunctionAddress(uint64_t absolute_address,
                                                    const CaptureData& capture_data) {
   const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
-  const FunctionInfo* function =
-      capture_data.process()->GetFunctionFromAddress(absolute_address, false);
+  const FunctionInfo* function = capture_data.FindFunctionByAddress(absolute_address, false);
 
   // Find the start address of the function this address falls inside.
   // Use the Function returned by Process::GetFunctionFromAddress, and
@@ -287,7 +285,8 @@ void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capt
       function.absolute_address = absolute_address;
       function.module_path = capture_data.GetModulePathByAddress(absolute_address);
 
-      const FunctionInfo* function_info = capture_data.GetFunctionInfoByAddress(absolute_address);
+      const FunctionInfo* function_info =
+          capture_data.FindFunctionByAddress(absolute_address, false);
       if (function_info != nullptr) {
         function.line = function_info->line();
         function.file = function_info->file();

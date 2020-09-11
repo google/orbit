@@ -2,11 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <memory>
 #include <vector>
 
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "absl/base/casts.h"
 #include "capture_data.pb.h"
+#include "gmock/gmock-actions.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -28,6 +32,7 @@ using ::testing::IsEmpty;
 using ::testing::Matcher;
 using ::testing::NotNull;
 using ::testing::SaveArg;
+using ::testing::Unused;
 
 using ::testing::InvokeWithoutArgs;
 namespace {
@@ -36,7 +41,8 @@ class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(
       void, OnCaptureStarted,
-      (int32_t /*process_id*/, std::string /*process_name*/, std::shared_ptr<Process> /*process*/,
+      (std::unique_ptr<ProcessData> /*process*/,
+       (absl::flat_hash_map<std::string, ModuleData*> &&) /*module_map*/,
        (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
        TracepointInfoSet /*selected_tracepoints*/),
       (override));
@@ -85,7 +91,6 @@ TEST(CaptureDeserializer, LoadNoVersion) {
   stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
          << serialized_header;
 
-  // std::istream test;
   capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
 
   std::string expected_error_message =
@@ -154,12 +159,27 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   uint8_t empty_data = 0;
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> actual_selected_functions;
   // There will be no call to OnCaptureStarted other then the one specified next.
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(listener, OnCaptureStarted(42, "process", NotNull(), _, IsEmpty()))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, IsEmpty()))
       .Times(1)
-      .WillOnce(SaveArg<3>(&actual_selected_functions));
+      .WillOnce([selected_function](std::unique_ptr<ProcessData> process, Unused,
+                                    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
+                                        actual_selected_functions,
+                                    Unused) {
+        ASSERT_NE(process, nullptr);
+        EXPECT_EQ(process->name(), "process");
+        EXPECT_EQ(process->pid(), 42);
+
+        ASSERT_EQ(actual_selected_functions.size(), 1);
+        ASSERT_TRUE(actual_selected_functions.contains(selected_function->address()));
+        FunctionInfo actual_function_info =
+            actual_selected_functions.at(selected_function->address());
+
+        EXPECT_EQ(actual_function_info.name(), selected_function->name());
+        EXPECT_EQ(actual_function_info.pretty_name(), selected_function->pretty_name());
+        EXPECT_EQ(actual_function_info.size(), selected_function->size());
+      });
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
   EXPECT_CALL(listener, OnCaptureFailed).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
@@ -169,14 +189,6 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
 
   capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
                                                   &cancellation_requested);
-
-  ASSERT_EQ(actual_selected_functions.size(), 1);
-  ASSERT_TRUE(actual_selected_functions.contains(selected_function->address()));
-  FunctionInfo actual_function_info = actual_selected_functions.at(selected_function->address());
-
-  EXPECT_EQ(actual_function_info.name(), selected_function->name());
-  EXPECT_EQ(actual_function_info.pretty_name(), selected_function->pretty_name());
-  EXPECT_EQ(actual_function_info.size(), selected_function->size());
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {

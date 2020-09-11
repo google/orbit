@@ -28,9 +28,6 @@ inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func
 
 bool IsOrbitFunc(const orbit_client_protos::FunctionInfo& func);
 
-std::shared_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
-    std::string name, std::string pretty_name, uint64_t address, uint64_t load_bias, uint64_t size,
-    std::string file, uint32_t line, std::string loaded_module_path, uint64_t module_base_address);
 std::unique_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
     const orbit_grpc_protos::SymbolInfo& symbol_info, uint64_t load_bias,
     const std::string& module_path, uint64_t module_base_address);

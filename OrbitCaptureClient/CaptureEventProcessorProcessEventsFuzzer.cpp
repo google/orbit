@@ -7,6 +7,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "OrbitClientData/ProcessData.h"
 #include "TracepointCustom.h"
 #include "absl/flags/flag.h"
 #include "services.pb.h"
@@ -24,7 +25,8 @@ using orbit_client_protos::TimerInfo;
 class MyCaptureListener : public CaptureListener {
  private:
   void OnCaptureStarted(
-      int32_t /*process_id*/, std::string /*process_name*/, std::shared_ptr<Process> /*process*/,
+      std::unique_ptr<ProcessData> /*process*/,
+      absl::flat_hash_map<std::string, ModuleData*>&& /*module_map*/,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> /*selected_functions*/,
       TracepointInfoSet /*selected_tracepoints*/) override {}
   void OnCaptureComplete() override {}

@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "Callstack.h"
-#include "OrbitProcess.h"
 #include "Path.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"

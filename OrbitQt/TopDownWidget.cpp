@@ -12,6 +12,7 @@
 
 #include "App.h"
 #include "FunctionsDataView.h"
+#include "OrbitClientData/ProcessData.h"
 #include "TopDownViewItemModel.h"
 
 using orbit_client_protos::FunctionInfo;
@@ -125,11 +126,8 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
   }
 }
 
-static std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
-    OrbitApp* app, const std::vector<QModelIndex>& indices) {
-  const std::shared_ptr<Process>& process = app->GetCaptureData().process();
-  CHECK(process != nullptr);
-
+static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
+                                                      const std::vector<QModelIndex>& indices) {
   std::set<std::string> unique_module_paths;
   for (const auto& index : indices) {
     std::string module_path =
@@ -141,34 +139,32 @@ static std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
     unique_module_paths.insert(module_path);
   }
 
-  std::vector<std::shared_ptr<Module>> modules;
+  std::vector<ModuleData*> modules;
   for (const std::string& module_path : unique_module_paths) {
-    std::shared_ptr<Module> module = process->GetModuleFromPath(module_path);
+    ModuleData* module = app->GetMutableModuleByPath(module_path);
     if (module != nullptr) {
-      modules.emplace_back(std::move(module));
+      modules.emplace_back(module);
     }
   }
   return modules;
 }
 
-static std::vector<FunctionInfo*> GetFunctionsFromIndices(OrbitApp* app,
-                                                          const std::vector<QModelIndex>& indices) {
-  const std::shared_ptr<Process>& process = app->GetCaptureData().process();
-  CHECK(process != nullptr);
-
-  absl::flat_hash_set<FunctionInfo*> functions_set;
+static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
+    OrbitApp* app, const std::vector<QModelIndex>& indices) {
+  absl::flat_hash_set<const FunctionInfo*> functions_set;
   for (const auto& index : indices) {
     uint64_t absolute_address =
         index.model()
             ->index(index.row(), TopDownViewItemModel::kFunctionAddress, index.parent())
             .data(Qt::EditRole)
             .toLongLong();
-    FunctionInfo* function = process->GetFunctionFromAddress(absolute_address);
+    const FunctionInfo* function =
+        app->GetCaptureData().FindFunctionByAddress(absolute_address, false);
     if (function != nullptr) {
       functions_set.insert(function);
     }
   }
-  return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
+  return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
 void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
@@ -203,18 +199,18 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     }
   }
 
-  std::vector<std::shared_ptr<Module>> modules_to_load;
+  std::vector<ModuleData*> modules_to_load;
   for (const auto& module : GetModulesFromIndices(app_, selected_tree_indices)) {
-    if (!module->IsLoaded()) {
+    if (!module->is_loaded()) {
       modules_to_load.push_back(module);
     }
   }
   bool enable_load = !modules_to_load.empty();
 
-  std::vector<FunctionInfo*> functions = GetFunctionsFromIndices(app_, selected_tree_indices);
+  std::vector<const FunctionInfo*> functions = GetFunctionsFromIndices(app_, selected_tree_indices);
   bool enable_select = false;
   bool enable_deselect = false;
-  for (FunctionInfo* function : functions) {
+  for (const FunctionInfo* function : functions) {
     enable_select |= !app_->IsFunctionSelected(*function);
     enable_deselect |= app_->IsFunctionSelected(*function);
   }
@@ -276,15 +272,15 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   } else if (action->text() == kActionLoadSymbols) {
     app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
   } else if (action->text() == kActionSelect) {
-    for (FunctionInfo* function : functions) {
+    for (const FunctionInfo* function : functions) {
       app_->SelectFunction(*function);
     }
   } else if (action->text() == kActionDeselect) {
-    for (FunctionInfo* function : functions) {
+    for (const FunctionInfo* function : functions) {
       app_->DeselectFunction(*function);
     }
   } else if (action->text() == kActionDisassembly) {
-    for (FunctionInfo* function : functions) {
+    for (const FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
     }
   } else if (action->text() == kActionCopySelection) {

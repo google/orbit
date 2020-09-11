@@ -6,8 +6,6 @@
 
 #include "App.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "OrbitProcess.h"
-#include "Pdb.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
@@ -35,13 +33,11 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
 }
 
 std::string FunctionsDataView::GetValue(int row, int column) {
-  ScopeLock lock(GOrbitApp->GetSelectedProcess()->GetDataMutex());
-
   if (row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
-  const FunctionInfo& function = GetFunction(row);
+  const FunctionInfo& function = *GetFunction(row);
 
   switch (column) {
     case kColumnSelected:
@@ -64,14 +60,14 @@ std::string FunctionsDataView::GetValue(int row, int column) {
   }
 }
 
-#define ORBIT_FUNC_SORT(Member)                                                        \
-  [&](int a, int b) {                                                                  \
-    return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, ascending); \
+#define ORBIT_FUNC_SORT(Member)                                                          \
+  [&](int a, int b) {                                                                    \
+    return OrbitUtils::Compare(functions_[a]->Member, functions_[b]->Member, ascending); \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                 \
-  [&](int a, int b) {                                                                \
-    return OrbitUtils::Compare(Func(*functions[a]), Func(*functions[b]), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                   \
+  [&](int a, int b) {                                                                  \
+    return OrbitUtils::Compare(Func(*functions_[a]), Func(*functions_[b]), ascending); \
   }
 
 void FunctionsDataView::DoSort() {
@@ -84,9 +80,6 @@ void FunctionsDataView::DoSort() {
   // OrbitService.h
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
-
-  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      GOrbitApp->GetSelectedProcess()->GetFunctions();
 
   switch (sorting_column_) {
     case kColumnSelected:
@@ -128,7 +121,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
   for (int index : selected_indices) {
-    const FunctionInfo& function = GetFunction(index);
+    const FunctionInfo& function = *GetFunction(index);
     enable_select |= !GOrbitApp->IsFunctionSelected(function);
     enable_unselect |= GOrbitApp->IsFunctionSelected(function);
   }
@@ -145,16 +138,15 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (int i : item_indices) {
-      GOrbitApp->SelectFunction(GetFunction(i));
+      GOrbitApp->SelectFunction(*GetFunction(i));
     }
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
-      GOrbitApp->DeselectFunction(GetFunction(i));
+      GOrbitApp->DeselectFunction(*GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = GOrbitApp->GetSelectedProcessId();
     for (int i : item_indices) {
-      GOrbitApp->Disassemble(pid, GetFunction(i));
+      GOrbitApp->Disassemble(GOrbitApp->GetSelectedProcess()->pid(), *GetFunction(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
@@ -162,13 +154,6 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 void FunctionsDataView::DoFilter() {
-  // TODO(antonrohr) This filter function can take a lot of time when a large
-  // number of functions is used (several seconds). This function is currently
-  // executed on the main thread and therefore freezes the UI and interrupts the
-  // ssh watchdog signals that are sent to the service. Therefore this should
-  // not be called on the main thread and as soon as this is done the watchdog
-  // timeout should be rolled back from 25 seconds to 10 seconds in
-  // OrbitService.h
   m_FilterTokens = absl::StrSplit(ToLower(filter_), ' ');
 
 #ifdef WIN32
@@ -176,8 +161,7 @@ void FunctionsDataView::DoFilter() {
 #else
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
-  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      GOrbitApp->GetSelectedProcess()->GetFunctions();
+  const std::vector<const FunctionInfo*>& functions(functions_);
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
     std::string name = ToLower(FunctionUtils::GetDisplayName(*function)) +
@@ -205,8 +189,7 @@ void FunctionsDataView::DoFilter() {
 
 void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
-  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      GOrbitApp->GetSelectedProcess()->GetFunctions();
+  const std::vector<const FunctionInfo*>& functions(functions_);
   const auto prio = oqpi::task_priority::normal;
   auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
   // int numWorkers = oqpi::thread::hardware_concurrency();
@@ -245,21 +228,17 @@ void FunctionsDataView::ParallelFilter() {
 #endif
 }
 
-void FunctionsDataView::OnDataChanged() {
-  ScopeLock lock(GOrbitApp->GetSelectedProcess()->GetDataMutex());
-
-  size_t num_functions = GOrbitApp->GetSelectedProcess()->GetFunctions().size();
-  indices_.resize(num_functions);
-  for (size_t i = 0; i < num_functions; ++i) {
+void FunctionsDataView::AddFunctions(
+    std::vector<const orbit_client_protos::FunctionInfo*> functions) {
+  functions_.insert(functions_.end(), functions.begin(), functions.end());
+  indices_.resize(functions_.size());
+  for (size_t i = 0; i < indices_.size(); ++i) {
     indices_[i] = i;
   }
-
-  DataView::OnDataChanged();
+  OnDataChanged();
 }
 
-FunctionInfo& FunctionsDataView::GetFunction(int row) const {
-  ScopeLock lock(GOrbitApp->GetSelectedProcess()->GetDataMutex());
-  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
-      GOrbitApp->GetSelectedProcess()->GetFunctions();
-  return *functions[indices_[row]];
+void FunctionsDataView::ClearFunctions() {
+  functions_.clear();
+  OnDataChanged();
 }

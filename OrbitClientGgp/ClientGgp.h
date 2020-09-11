@@ -14,8 +14,8 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "OrbitClientData/ProcessData.h"
 #include "OrbitClientServices/ProcessClient.h"
-#include "OrbitProcess.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"
 #include "grpcpp/grpcpp.h"
@@ -30,7 +30,8 @@ class ClientGgp final : public CaptureListener {
 
   // CaptureListener implementation
   void OnCaptureStarted(
-      int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+      std::unique_ptr<ProcessData> process,
+      absl::flat_hash_map<std::string, ModuleData*>&& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
@@ -49,14 +50,17 @@ class ClientGgp final : public CaptureListener {
  private:
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  std::shared_ptr<Process> target_process_;
+  std::unique_ptr<ProcessData> target_process_;
+  absl::flat_hash_set<std::unique_ptr<ModuleData>> modules_;
+  absl::flat_hash_map<std::string, ModuleData*> module_map_;
+  ModuleData* main_module_;
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
   CaptureData capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 
-  ErrorMessageOr<std::shared_ptr<Process>> GetOrbitProcessByPid(int32_t pid);
+  ErrorMessageOr<std::unique_ptr<ProcessData>> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
   std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);

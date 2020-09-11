@@ -15,6 +15,7 @@
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
+#include "process.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
@@ -22,6 +23,7 @@ using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::ProcessInfo;
 
 namespace capture_deserializer {
 
@@ -119,9 +121,14 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     capture_listener->OnCaptureCancelled();
     return;
   }
-  capture_listener->OnCaptureStarted(capture_info.process_id(), capture_info.process_name(),
-                                     std::make_shared<Process>(), std::move(selected_functions),
-                                     std::move(selected_tracepoints));
+
+  ProcessInfo process_info;
+  process_info.set_pid(capture_info.process_id());
+  process_info.set_name(capture_info.process_name());
+  std::unique_ptr<ProcessData> process = ProcessData::Create(process_info);
+  capture_listener->OnCaptureStarted(
+      std::move(process), absl::flat_hash_map<std::string, ModuleData*>(),
+      std::move(selected_functions), std::move(selected_tracepoints));
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {

@@ -26,8 +26,7 @@ void DataManager::UpdateProcessInfos(const std::vector<ProcessInfo>& process_inf
     if (it != process_map_.end()) {
       it->second->SetProcessInfo(info);
     } else {
-      auto [inserted_it, success] =
-          process_map_.try_emplace(process_id, std::make_unique<ProcessData>(info));
+      auto [inserted_it, success] = process_map_.try_emplace(process_id, ProcessData::Create(info));
       CHECK(success);
     }
   }
@@ -61,11 +60,6 @@ void DataManager::SelectFunction(uint64_t function_address) {
 void DataManager::DeselectFunction(uint64_t function_address) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_functions_.erase(function_address);
-}
-
-void DataManager::set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_functions_ = std::move(selected_functions);
 }
 
 void DataManager::set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions) {
@@ -103,7 +97,7 @@ void DataManager::ClearSelectedFunctions() {
   selected_functions_ = absl::flat_hash_set<uint64_t>();
 }
 
-ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
+const ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   auto it = process_map_.find(process_id);
@@ -114,7 +108,11 @@ ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
   return it->second.get();
 }
 
-[[nodiscard]] ModuleData* DataManager::GetMutableModuleByPath(const std::string& path) const {
+const ModuleData* DataManager::GetModuleByPath(const std::string& path) const {
+  return GetMutableModuleByPath(path);
+}
+
+ModuleData* DataManager::GetMutableModuleByPath(const std::string& path) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   auto it = module_map_.find(path);
@@ -130,18 +128,47 @@ bool DataManager::IsFunctionSelected(uint64_t function_address) const {
   return selected_functions_.contains(function_address);
 }
 
-const absl::flat_hash_set<uint64_t>& DataManager::selected_functions() const {
+std::vector<const FunctionInfo*> DataManager::GetSelectedFunctions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  return selected_functions_;
+  std::vector<const FunctionInfo*> result;
+  if (selected_functions_.empty()) return result;
+
+  CHECK(selected_process_ != nullptr);
+  for (const uint64_t absolute_address : selected_functions_) {
+    const FunctionInfo* function =
+        FindFunctionByAddress(selected_process_->pid(), absolute_address, true);
+    CHECK(function != nullptr);
+    result.push_back(function);
+  }
+  return result;
 }
 
-void DataManager::set_selected_process(std::shared_ptr<Process> process) {
+std::vector<const FunctionInfo*> DataManager::GetSelectedAndOrbitFunctions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(selected_process_ != nullptr);
+
+  std::vector<const FunctionInfo*> result = GetSelectedFunctions();
+
+  // Collect OrbitFunctions
+  for (const auto& [module_path, memory_space] : selected_process_->GetMemoryMap()) {
+    const ModuleData* module = module_map_.at(module_path).get();
+    if (!module->is_loaded()) continue;
+
+    std::vector<const FunctionInfo*> orbit_functions = module->GetOrbitFunctions();
+    result.insert(result.end(), orbit_functions.begin(), orbit_functions.end());
+  }
+
+  return result;
+}
+
+void DataManager::set_selected_process(int32_t pid) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  const ProcessData* process = GetProcessByPid(pid);
   CHECK(process != nullptr);
-  selected_process_ = std::move(process);
+  selected_process_ = process;
 }
 
-const std::shared_ptr<Process>& DataManager::selected_process() const {
+const ProcessData* DataManager::selected_process() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_process_;
 }
@@ -161,8 +188,8 @@ bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
 
 const TracepointInfoSet& DataManager::selected_tracepoints() const { return selected_tracepoints_; }
 
-[[nodiscard]] ModuleData* DataManager::FindModuleByAddress(int32_t process_id,
-                                                           uint64_t absolute_address) {
+[[nodiscard]] const ModuleData* DataManager::FindModuleByAddress(int32_t process_id,
+                                                                 uint64_t absolute_address) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   const ProcessData* process = GetProcessByPid(process_id);
@@ -194,4 +221,16 @@ const FunctionInfo* DataManager::FindFunctionByAddress(int32_t process_id,
 
   const uint64_t relative_address = absolute_address - module_base_address;
   return module->FindFunctionByRelativeAddress(relative_address, is_exact);
+}
+
+[[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> DataManager::GetModulesLoadedByProcess(
+    const ProcessData* process) const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+
+  absl::flat_hash_map<std::string, ModuleData*> result;
+  for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {
+    result[module_path] = module_map_.at(module_path).get();
+  }
+
+  return result;
 }

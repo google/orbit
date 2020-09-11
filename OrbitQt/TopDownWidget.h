@@ -14,6 +14,7 @@
 
 #include "TopDownView.h"
 #include "TopDownViewItemModel.h"
+#include "absl/strings/str_split.h"
 #include "ui_TopDownWidget.h"
 
 class OrbitApp;

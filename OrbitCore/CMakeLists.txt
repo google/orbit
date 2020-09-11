@@ -16,11 +16,8 @@ target_sources(
          CallstackData.h
          CallstackTypes.h
          CaptureData.h
-         OrbitModule.h
-         OrbitProcess.h
          Params.h
          Path.h
-         Pdb.h
          RingBuffer.h
          SamplingProfiler.h
          ScopeTimer.h
@@ -36,11 +33,8 @@ target_sources(
   OrbitCore
   PRIVATE CallstackData.cpp
           CaptureData.cpp
-          OrbitModule.cpp
-          OrbitProcess.cpp
           Params.cpp
           Path.cpp
-          Pdb.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
           StringManager.cpp
@@ -93,10 +87,6 @@ target_sources(OrbitCoreTests PRIVATE
     TracepointEventBufferTest.cpp
     TracepointInfoManagerTest.cpp
     UtilsTest.cpp)
-
-if(NOT WIN32)
-  target_sources(OrbitCoreTests PRIVATE OrbitModuleTest.cpp)
-endif()
 
 target_link_libraries(
   OrbitCoreTests

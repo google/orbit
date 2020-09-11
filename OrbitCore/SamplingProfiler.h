@@ -15,7 +15,6 @@
 #include "Callstack.h"
 #include "CallstackData.h"
 #include "CallstackTypes.h"
-#include "OrbitProcess.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -33,7 +32,7 @@ struct SampledFunction {
   float inclusive = 0;
   int line = 0;
   uint64_t absolute_address = 0;
-  orbit_client_protos::FunctionInfo* function = nullptr;
+  const orbit_client_protos::FunctionInfo* function = nullptr;
 };
 
 struct ThreadSampleData {

@@ -6,7 +6,6 @@
 #define ORBIT_GL_PROCESSES_DATA_VIEW
 
 #include "DataView.h"
-#include "OrbitProcess.h"
 #include "process.pb.h"
 
 class ProcessesDataView final : public DataView {

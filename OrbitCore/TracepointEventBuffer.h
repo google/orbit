@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "SamplingProfiler.h"
+#include "Threading.h"
 #include "capture_data.pb.h"
 
 class TracepointEventBuffer {

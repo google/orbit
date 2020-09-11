@@ -33,6 +33,7 @@
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "OrbitClientServices/TracepointServiceClient.h"
@@ -96,7 +97,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted(
-      int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+      std::unique_ptr<ProcessData> process,
+      absl::flat_hash_map<std::string, ModuleData*>&& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
@@ -112,7 +114,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                               orbit_grpc_protos::TracepointInfo tracepoint_info) override;
   void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
 
-  void OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate);
+  void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
 
   void RegisterCaptureWindow(CaptureWindow* capture);
 
@@ -124,8 +126,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
       bool has_summary);
   void SetTopDownView(const CaptureData& capture_data);
+  void ClearTopDownView();
   void SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
                                const CaptureData& capture_data);
+  void ClearSelectionTopDownView();
 
   bool SelectProcess(const std::string& process);
 
@@ -225,10 +229,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  void LoadModules(const std::shared_ptr<Process>& process,
-                   const std::vector<std::shared_ptr<Module>>& modules,
+  // TODO(antonrohr) get rid of ProcessData here, the process should not be needed to load a module.
+  // Also remove shared_ptr from PresetFile. Also consider references instead of pointers
+  void LoadModules(const ProcessData* process, const std::vector<ModuleData*>& modules,
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
-  void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
+  // TODO(antonrohr) get rid of Process
+  void LoadModulesFromPreset(const ProcessData* process,
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
 
@@ -248,11 +254,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
-  [[nodiscard]] std::shared_ptr<Process> FindProcessByPid(int32_t pid);
-  [[nodiscard]] int32_t GetSelectedProcessId() const {
-    return data_manager_->selected_process()->GetId();
-  }
-  [[nodiscard]] const std::shared_ptr<Process>& GetSelectedProcess() const {
+  [[nodiscard]] const ProcessData* GetSelectedProcess() const {
     return data_manager_->selected_process();
   }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
@@ -288,31 +290,22 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
 
-  [[nodiscard]] const TracepointInfoSet& GetSelectedTracepoints() const {
-    return data_manager_->selected_tracepoints();
-  }
-
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
-  void LoadSymbols(const std::filesystem::path& symbols_path,
-                   const std::shared_ptr<Process>& process, const std::shared_ptr<Module>& module,
-                   const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  void LoadModuleOnRemote(const std::shared_ptr<Process>& process,
-                          const std::shared_ptr<Module>& module,
-                          const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void LoadSymbols(const std::filesystem::path& symbols_path, const ProcessData* process,
+                   ModuleData* module_data, const orbit_client_protos::PresetModule* preset_module);
+  void LoadModuleOnRemote(const ProcessData* process, ModuleData* module_data,
+                          const orbit_client_protos::PresetModule* preset_module);
+  ErrorMessageOr<void> SelectFunctionsFromPreset(const ModuleData* module,
+                                                 const orbit_client_protos::PresetModule& preset);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(const std::string& filename);
 
-  [[nodiscard]] absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-  GetSelectedFunctionsAndOrbitFunctions() const;
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
   ApplicationOptions options_;
-
-  absl::Mutex process_map_mutex_;
-  absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
 

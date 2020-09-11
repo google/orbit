@@ -5,7 +5,7 @@
 #ifndef ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_
 #define ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_
 
-#include "OrbitModule.h"
+#include "OrbitClientData/ModuleData.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 
@@ -28,7 +28,7 @@ class FramePointerValidatorClient {
   FramePointerValidatorClient(FramePointerValidatorClient&&) = delete;
   FramePointerValidatorClient& operator=(FramePointerValidatorClient&&) = delete;
 
-  void AnalyzeModules(const std::vector<std::shared_ptr<Module>>& modules);
+  void AnalyzeModules(const std::vector<const ModuleData*>& modules);
 
  private:
   OrbitApp* app_;

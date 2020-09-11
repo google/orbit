@@ -8,8 +8,10 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
+#include "process.pb.h"
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
@@ -19,6 +21,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTypeFromOrbitType(
@@ -34,8 +37,8 @@ static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTyp
 }
 
 ErrorMessageOr<void> CaptureClient::StartCapture(
-    ThreadPool* thread_pool, int32_t process_id, std::string process_name,
-    std::shared_ptr<Process> process,
+    ThreadPool* thread_pool, const ProcessData& process,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints) {
   absl::MutexLock lock(&state_mutex_);
@@ -46,19 +49,27 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   }
 
   state_ = State::kStarting;
-  thread_pool->Schedule([this, process_id, process_name = std::move(process_name),
-                         process = std::move(process),
-                         selected_functions = std::move(selected_functions),
-                         selected_tracepoints = std::move(selected_tracepoints)]() mutable {
-    Capture(process_id, std::move(process_name), std::move(process), std::move(selected_functions),
-            std::move(selected_tracepoints));
-  });
+
+  std::unique_ptr<ProcessData> process_copy = process.CreateCopy();
+
+  // TODO(168797897) Here a copy of the module_map is created. This module_map likely was downloaded
+  // when the process was selected, which might be a while back. Between then and now the loaded
+  // modules might have changed. Up to date information about which modules are loaded should be
+  // used here. (Even better: while taking a capture this should always be up to date)
+  absl::flat_hash_map<std::string, ModuleData*> module_map_copy = module_map;
+
+  thread_pool->Schedule(
+      [this, process = std::move(process_copy), module_map = std::move(module_map_copy),
+       selected_functions = std::move(selected_functions), selected_tracepoints]() mutable {
+        Capture(std::move(process), std::move(module_map), std::move(selected_functions),
+                std::move(selected_tracepoints));
+      });
 
   return outcome::success();
 }
 
-void CaptureClient::Capture(int32_t process_id, std::string process_name,
-                            std::shared_ptr<Process> process,
+void CaptureClient::Capture(std::unique_ptr<ProcessData> process,
+                            absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints) {
   CHECK(reader_writer_ == nullptr);
@@ -69,7 +80,7 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
-  capture_options->set_pid(process_id);
+  capture_options->set_pid(process->pid());
   uint16_t sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
   if (sampling_rate == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
@@ -116,7 +127,7 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
 
   CaptureEventProcessor event_processor(capture_listener_);
 
-  capture_listener_->OnCaptureStarted(process_id, std::move(process_name), std::move(process),
+  capture_listener_->OnCaptureStarted(std::move(process), std::move(module_map),
                                       std::move(selected_functions),
                                       std::move(selected_tracepoints));
 

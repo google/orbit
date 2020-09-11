@@ -4,12 +4,13 @@
 
 #include <libfuzzer/libfuzzer_macro.h>
 
-#include "OrbitModule.h"
+#include "OrbitClientData/ModuleData.h"
+#include "module.pb.h"
 #include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 
 DEFINE_PROTO_FUZZER(const ModuleSymbols& symbols) {
-  Module module{};
-  module.LoadSymbols(symbols);
+  ModuleData module{orbit_grpc_protos::ModuleInfo{}};
+  module.AddSymbols(symbols, 0);
 }

@@ -15,13 +15,17 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "SamplingProfiler.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
+#include "module.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -64,7 +68,7 @@ bool ClientGgp::InitClient() {
 
 // Client requests to start the capture
 bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
-  int32_t pid = target_process_->GetId();
+  int32_t pid = target_process_->pid();
   if (pid == -1) {
     ERROR(
         "Error starting capture: "
@@ -91,9 +95,8 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
 
-  ErrorMessageOr<void> result =
-      capture_client_->StartCapture(thread_pool, pid, target_process_->GetName(), target_process_,
-                                    selected_functions, selected_tracepoints);
+  ErrorMessageOr<void> result = capture_client_->StartCapture(
+      thread_pool, *(target_process_.get()), module_map_, selected_functions, selected_tracepoints);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -127,7 +130,7 @@ bool ClientGgp::SaveCapture() {
   return true;
 }
 
-ErrorMessageOr<std::shared_ptr<Process>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
+ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   // We retrieve the information of the process to later get the module corresponding to its binary
   OUTCOME_TRY(process_infos, process_client_->GetProcessList());
   LOG("List of processes:");
@@ -141,68 +144,65 @@ ErrorMessageOr<std::shared_ptr<Process>> ClientGgp::GetOrbitProcessByPid(int32_t
     return ErrorMessage(absl::StrFormat("Error: Process with pid %d not found", pid));
   }
   LOG("Found process by pid, set target process");
-  std::shared_ptr<Process> process = std::make_shared<Process>();
-  process->SetID(process_it->pid());
-  process->SetName(process_it->name());
-  process->SetFullPath(process_it->full_path());
-  process->SetIs64Bit(process_it->is_64_bit());
-  LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->GetId(), process->GetName(),
-      process->GetFullPath(), process->GetIs64Bit());
-  return process;
+  std::unique_ptr<ProcessData> process = ProcessData::Create(*process_it);
+  LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->pid(), process->name(),
+      process->full_path(), process->is_64_bit());
+  return std::move(process);
 }
 
 ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load modules for target_process_
-  OUTCOME_TRY(module_infos, process_client_->LoadModuleList(target_process_->GetId()));
+  OUTCOME_TRY(module_infos, process_client_->LoadModuleList(target_process_->pid()));
+
+  // Process name can be arbitrary so we use the path to find the module corresponding to the binary
+  // of target_process_
+  std::string_view main_executable_path = target_process_->full_path();
+  main_module_ = nullptr;
+
   LOG("List of modules");
   for (const ModuleInfo& info : module_infos) {
     LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s", info.name(),
         info.file_path(), info.file_size(), info.address_start(), info.address_end(),
         info.build_id());
+
+    auto [inserted_module_it, success_0] = modules_.insert(std::make_unique<ModuleData>(info));
+    CHECK(success_0);
+    ModuleData* module = inserted_module_it->get();
+    const auto [it, success_1] = module_map_.try_emplace(info.file_path(), module);
+    CHECK(success_1);
+
+    if (info.file_path() == main_executable_path) {
+      main_module_ = module;
+    }
   }
-  // Process name can be arbitrary so we use the path to find the module corresponding to the binary
-  // of target_process_
-  std::string_view main_executable_path = target_process_->GetFullPath();
-  auto module_it = find_if(module_infos.begin(), module_infos.end(),
-                           [&main_executable_path](const ModuleInfo& info) {
-                             return info.file_path() == main_executable_path;
-                           });
-  if (module_it == module_infos.end()) {
+  if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }
   LOG("Found module correspondent to process binary");
-  std::shared_ptr<Module> module = std::make_shared<Module>();
-  module->m_Name = module_it->name();
-  module->m_FullName = module_it->file_path();
-  module->m_PdbSize = module_it->file_size();
-  module->m_AddressStart = module_it->address_start();
-  module->m_AddressEnd = module_it->address_end();
-  module->m_DebugSignature = module_it->build_id();
-  target_process_->AddModule(module);
-  LOG("Module info: name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s",
-      module->m_Name, module->m_FullName, module->m_PdbSize, module->m_AddressStart,
-      module->m_AddressEnd, module->m_DebugSignature);
+  LOG("Module info: name:%s, path:%s, size:%d, build_id:%s", main_module_->name(),
+      main_module_->file_path(), main_module_->file_size(), main_module_->build_id());
+
+  target_process_->UpdateModuleInfos(module_infos);
 
   // Load symbols for the module
-  const std::string& module_path = module->m_FullName;
+  const std::string& module_path = main_module_->file_path();
   LOG("Looking for debug info file for %s", module_path);
   OUTCOME_TRY(main_executable_debug_file, process_client_->FindDebugInfoFile(module_path));
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
   OUTCOME_TRY(symbols, SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
-  module->LoadSymbols(symbols);
-  target_process_->AddFunctions(module->m_Pdb->GetFunctions());
+  target_process_->AddSymbols(main_module_, symbols);
   return outcome::success();
 }
 
 bool ClientGgp::InitCapture() {
-  ErrorMessageOr<std::shared_ptr<Process>> target_process_result =
+  ErrorMessageOr<std::unique_ptr<ProcessData>> target_process_result =
       GetOrbitProcessByPid(options_.capture_pid);
   if (target_process_result.has_error()) {
     ERROR("Not able to set target process: %s", target_process_result.error().message());
     return false;
   }
-  target_process_ = target_process_result.value();
+  target_process_ = std::move(target_process_result.value());
   // Load the module and symbols
   ErrorMessageOr<void> result = LoadModuleAndSymbols();
   if (result.has_error()) {
@@ -238,7 +238,7 @@ std::string ClientGgp::SelectedFunctionMatch(const FunctionInfo& func) {
 absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
   absl::flat_hash_set<std::string> capture_functions_used;
-  for (const auto& func : target_process_->GetFunctions()) {
+  for (const FunctionInfo* func : main_module_->GetFunctions()) {
     const std::string& selected_function_match = SelectedFunctionMatch(*func);
     if (!selected_function_match.empty()) {
       uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
@@ -256,11 +256,12 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
-    int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
+    std::unique_ptr<ProcessData> process,
+    absl::flat_hash_map<std::string, ModuleData*>&& module_map,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints) {
-  capture_data_ =
-      CaptureData(process_id, process_name, process, selected_functions, selected_tracepoints);
+  capture_data_ = CaptureData(std::move(process), std::move(module_map),
+                              std::move(selected_functions), std::move(selected_tracepoints));
   LOG("Capture started");
 }
 
@@ -276,8 +277,8 @@ void ClientGgp::OnCaptureFailed(ErrorMessage /*error_message*/) {}
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
-    FunctionInfo* func =
-        capture_data_.process()->GetFunctionFromAddress(timer_info.function_address());
+    const FunctionInfo* func =
+        capture_data_.FindFunctionByAddress(timer_info.function_address(), false);
     // For timers, the function must be present in the process
     CHECK(func != nullptr);
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();

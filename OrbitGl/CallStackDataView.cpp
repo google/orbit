@@ -39,8 +39,8 @@ std::string CallStackDataView::GetValue(int row, int column) {
   }
 
   CallStackDataViewFrame frame = GetFrameFromRow(row);
-  FunctionInfo* function = frame.function;
-  Module* module = frame.module.get();
+  const FunctionInfo* function = frame.function;
+  const ModuleData* module = frame.module;
 
   switch (column) {
     case kColumnSelected:
@@ -60,7 +60,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
         return FunctionUtils::GetLoadedModuleName(*function);
       }
       if (module != nullptr) {
-        return module->m_Name;
+        return module->name();
       }
       return Path::GetFileName(GOrbitApp->GetCaptureData().GetModulePathByAddress(frame.address));
     case kColumnAddress:
@@ -83,14 +83,14 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   bool enable_disassembly = false;
   for (int index : selected_indices) {
     CallStackDataViewFrame frame = GetFrameFromRow(index);
-    FunctionInfo* function = frame.function;
-    Module* module = frame.module.get();
+    const FunctionInfo* function = frame.function;
+    const ModuleData* module = frame.module;
 
     if (frame.function != nullptr) {
       enable_select |= !GOrbitApp->IsFunctionSelected(*function);
       enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
       enable_disassembly = true;
-    } else if (module != nullptr && !module->IsLoaded()) {
+    } else if (module != nullptr && !module->is_loaded()) {
       enable_load = true;
     }
   }
@@ -107,26 +107,28 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
 void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
-    const std::shared_ptr<Process>& process = GOrbitApp->GetCaptureData().process();
+    std::vector<ModuleData*> modules_to_load;
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
-      std::shared_ptr<Module> module = frame.module;
-      if (module != nullptr && !module->IsLoaded()) {
-        GOrbitApp->LoadModules(process, {module});
+      ModuleData* module = frame.module;
+      if (module != nullptr && !module->is_loaded()) {
+        modules_to_load.push_back(module);
       }
     }
+    const ProcessData* process = GOrbitApp->GetCaptureData().process();
+    GOrbitApp->LoadModules(process, modules_to_load);
 
   } else if (action == kMenuActionSelect) {
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
-      FunctionInfo* function = frame.function;
+      const FunctionInfo* function = frame.function;
       GOrbitApp->SelectFunction(*function);
     }
 
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
-      FunctionInfo* function = frame.function;
+      const FunctionInfo* function = frame.function;
       GOrbitApp->DeselectFunction(*function);
     }
 
@@ -151,7 +153,7 @@ void CallStackDataView::DoFilter() {
 
   for (size_t i = 0; i < callstack_.GetFramesCount(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
-    FunctionInfo* function = frame.function;
+    const FunctionInfo* function = frame.function;
     std::string name = ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                                    : frame.fallback_name);
     bool match = true;
@@ -192,15 +194,9 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   }
 
   uint64_t address = callstack_.GetFrame(index_in_callstack);
-  FunctionInfo* function = nullptr;
-  std::shared_ptr<Module> module = nullptr;
 
-  const std::shared_ptr<Process> process = GOrbitApp->GetCaptureData().process();
-  CHECK(process != nullptr);
-  // TODO(kuebler): Get rid of locks on caller side
-  ScopeLock lock(process->GetDataMutex());
-  function = process->GetFunctionFromAddress(address, false);
-  module = process->GetModuleFromAddress(address);
+  const FunctionInfo* function = GOrbitApp->GetCaptureData().FindFunctionByAddress(address, false);
+  ModuleData* module = GOrbitApp->GetCaptureData().FindModuleByAddress(address);
 
   if (function != nullptr) {
     return CallStackDataViewFrame(address, function, module);
