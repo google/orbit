@@ -20,14 +20,11 @@ class TracepointInfoManager {
 
   bool AddUniqueTracepointEventInfo(uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint);
 
-  void AddTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info);
-
   [[nodiscard]] std::optional<orbit_grpc_protos::TracepointInfo> Get(uint64_t key) const;
   [[nodiscard]] bool Contains(uint64_t key) const;
 
  private:
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> unique_tracepoint_;
-  BlockChain<orbit_client_protos::TracepointEventInfo, 16 * 1024> tracepoint_events_;
   mutable absl::Mutex unique_tracepoints_mutex_;
 };
 

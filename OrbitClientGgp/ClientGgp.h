@@ -18,7 +18,6 @@
 #include "OrbitProcess.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"
-#include "TracepointInfoManager.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {
@@ -50,7 +49,6 @@ class ClientGgp final : public CaptureListener {
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::shared_ptr<Process> target_process_;
   std::shared_ptr<StringManager> string_manager_;
-  std::shared_ptr<TracepointInfoManager> tracepoint_info_manager_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
   CaptureData capture_data_;

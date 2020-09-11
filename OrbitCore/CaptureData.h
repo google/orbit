@@ -12,6 +12,8 @@
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
 #include "TracepointCustom.h"
+#include "TracepointEventBuffer.h"
+#include "TracepointInfoManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -27,7 +29,9 @@ class CaptureData {
         selected_functions_{std::move(selected_functions)},
         selected_tracepoints_{std::move(selected_tracepoints)},
         callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()) {
+        selection_callstack_data_(std::make_unique<CallstackData>()),
+        tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {
     CHECK(process_ != nullptr);
   }
   explicit CaptureData(
@@ -40,6 +44,8 @@ class CaptureData {
         selected_functions_{std::move(selected_functions)},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
+        tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()),
         functions_stats_{std::move(functions_stats)} {
     CHECK(process_ != nullptr);
   }
@@ -47,7 +53,9 @@ class CaptureData {
   explicit CaptureData()
       : process_{std::make_shared<Process>()},
         callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()){};
+        selection_callstack_data_(std::make_unique<CallstackData>()),
+        tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()){};
 
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
@@ -132,6 +140,16 @@ class CaptureData {
     callstack_data_->AddCallstackEvent(std::move(callstack_event));
   }
 
+  void AddUniqueTracepointEventInfo(uint64_t key,
+                                    orbit_grpc_protos::TracepointInfo tracepoint_info) {
+    tracepoint_info_manager_->AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+  }
+
+  void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
+                                         int32_t thread_id) {
+    tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(time, tracepoint_hash, thread_id);
+  }
+
   [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {
     return selection_callstack_data_.get();
   };
@@ -160,6 +178,9 @@ class CaptureData {
   std::unique_ptr<CallstackData> callstack_data_;
   // selection_callstack_data_ is subset of callstack_data_
   std::unique_ptr<CallstackData> selection_callstack_data_;
+
+  std::unique_ptr<TracepointInfoManager> tracepoint_info_manager_;
+  std::unique_ptr<TracepointEventBuffer> tracepoint_event_buffer_;
 
   SamplingProfiler sampling_profiler_;
 

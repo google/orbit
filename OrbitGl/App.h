@@ -47,7 +47,6 @@
 #include "Threading.h"
 #include "TopDownView.h"
 #include "TracepointCustom.h"
-#include "TracepointInfoManager.h"
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -339,7 +338,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   absl::flat_hash_set<std::string> modules_currently_loading_;
 
   std::shared_ptr<StringManager> string_manager_;
-  std::shared_ptr<TracepointInfoManager> tracepoint_info_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
