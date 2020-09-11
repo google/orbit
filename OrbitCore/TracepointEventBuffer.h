@@ -8,9 +8,7 @@
 #include <limits>
 #include <set>
 
-#include "BlockChain.h"
 #include "SamplingProfiler.h"
-#include "Threading.h"
 #include "capture_data.pb.h"
 
 class TracepointEventBuffer {
@@ -19,11 +17,11 @@ class TracepointEventBuffer {
 
   std::vector<orbit_client_protos::TracepointEventInfo> GetTracepointEvents(
       uint64_t time_begin, uint64_t time_end,
-      ThreadID thread_id = SamplingProfiler::kAllThreadsFakeTid);
+      int32_t thread_id = SamplingProfiler::kAllThreadsFakeTid);
 
-  void AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash, ThreadID thread_id);
+  void AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t thread_id);
 
-  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
   tracepoint_events();
 
   Mutex& mutex();
@@ -32,9 +30,6 @@ class TracepointEventBuffer {
   uint64_t min_time() const;
 
   bool HasEvent() const;
-  size_t GetNumEvents() const;
-
-  void Reset();
 
  private:
   void RegisterTime(uint64_t time);
@@ -42,7 +37,7 @@ class TracepointEventBuffer {
   mutable Mutex mutex_;
   std::atomic<uint64_t> max_time_;
   std::atomic<uint64_t> min_time_;
-  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
       tracepoint_events_;
 };
 
