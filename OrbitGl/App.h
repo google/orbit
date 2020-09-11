@@ -341,8 +341,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::shared_ptr<StringManager> string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
-  std::unique_ptr<TracepointEventBuffer> tracepoint_event_buffer_;
-
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;
