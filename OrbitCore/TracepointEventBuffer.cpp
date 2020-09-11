@@ -51,6 +51,7 @@ void TracepointEventBuffer::AddTracepointEvent(uint64_t time, uint64_t tracepoin
 }
 
 size_t TracepointEventBuffer::GetNumEvents() const {
+  ScopeLock lock(mutex_);
   size_t num_events = 0;
   for (const auto& pair : tracepoint_events_) {
     num_events += pair.second.size();
@@ -59,21 +60,30 @@ size_t TracepointEventBuffer::GetNumEvents() const {
   return num_events;
 }
 
-const bool TracepointEventBuffer::HasEvent() {
+bool TracepointEventBuffer::HasEvent() const {
   ScopeLock lock(mutex_);
-  return !tracepoint_events_.empty();
+  if (tracepoint_events_.empty()) {
+    return false;
+  }
+  for (const auto& pair : tracepoint_events_) {
+    if (!pair.second.empty()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void TracepointEventBuffer::Reset() {
+  ScopeLock lock(mutex_);
   tracepoint_events_.clear();
-  min_time_ = std::numeric_limits<long long int>::max();
+  min_time_ = std::numeric_limits<uint64_t>::max();
   max_time_ = 0;
 }
 
 uint64_t TracepointEventBuffer::max_time() const { return max_time_; }
 uint64_t TracepointEventBuffer::min_time() const { return min_time_; }
 
-std::map<ThreadID, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
+std::map<ThreadID, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
 TracepointEventBuffer::tracepoint_events() {
   return tracepoint_events_;
 }
@@ -82,3 +92,5 @@ void TracepointEventBuffer::RegisterTime(uint64_t time) {
   if (time > max_time_) max_time_ = time;
   if (time > 0 && time < min_time_) min_time_ = time;
 }
+
+Mutex& TracepointEventBuffer::mutex() { return mutex_; }

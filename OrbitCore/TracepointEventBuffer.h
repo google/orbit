@@ -15,7 +15,7 @@
 
 class TracepointEventBuffer {
  public:
-  TracepointEventBuffer() : max_time_(0), min_time_(std::numeric_limits<long long int>::max()) {}
+  TracepointEventBuffer() : max_time_(0), min_time_(std::numeric_limits<uint64_t>::max()) {}
 
   std::vector<orbit_client_protos::TracepointEventInfo> GetTracepointEvents(
       uint64_t time_begin, uint64_t time_end,
@@ -23,13 +23,15 @@ class TracepointEventBuffer {
 
   void AddTracepointEvent(uint64_t time, uint64_t tracepoint_hash, ThreadID thread_id);
 
-  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
+  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
   tracepoint_events();
+
+  Mutex& mutex();
 
   uint64_t max_time() const;
   uint64_t min_time() const;
 
-  const bool HasEvent();
+  bool HasEvent() const;
   size_t GetNumEvents() const;
 
   void Reset();
