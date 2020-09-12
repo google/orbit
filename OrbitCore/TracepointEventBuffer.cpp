@@ -66,6 +66,16 @@ bool TracepointEventBuffer::HasEvent() const {
   return false;
 }
 
+[[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
+TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
+  static std::map<uint64_t, orbit_client_protos::TracepointEventInfo> empty;
+  const auto& it = tracepoint_events_.find(thread_id);
+  if (it == tracepoint_events_.end()) {
+    return empty;
+  }
+  return it->second;
+}
+
 uint64_t TracepointEventBuffer::max_time() const { return max_time_; }
 uint64_t TracepointEventBuffer::min_time() const { return min_time_; }
 

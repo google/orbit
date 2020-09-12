@@ -19,7 +19,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Pic
   ScopeLock lock(GOrbitApp->GetCaptureData().GetTracepointEventBufferMutex());
 
   const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
-      GOrbitApp->GetCaptureData().GetTracepointEventBufferTracepoints().at(thread_id_);
+      GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_);
 
   const Color kWhite(255, 255, 255, 255);
 
