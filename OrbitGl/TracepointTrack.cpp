@@ -18,16 +18,18 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Pic
 
   ScopeLock lock(GOrbitApp->GetCaptureData().GetTracepointEventBufferMutex());
 
-  std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
+  const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
       GOrbitApp->GetCaptureData().GetTracepointEventBufferTracepoints().at(thread_id_);
 
   const Color kWhite(255, 255, 255, 255);
 
-  for (auto& pair : tracepoints) {
-    uint64_t time = pair.first;
-    if (time > min_tick && time < max_tick) {
+  for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.end(); ++it) {
+    uint64_t time = it->first;
+    if (time < max_tick) {
       Vec2 pos(time_graph_->GetWorldFromTick(time), position_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kWhite);
+    } else {
+      return;
     }
   }
 }

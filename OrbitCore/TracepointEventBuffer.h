@@ -24,7 +24,7 @@ class TracepointEventBuffer {
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
                                          int32_t thread_id);
 
-  std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  const std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
   tracepoint_events();
 
   Mutex& mutex();

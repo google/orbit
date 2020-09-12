@@ -121,7 +121,8 @@ class CaptureData {
     return tracepoint_event_buffer_->mutex();
   }
 
-  [[nodiscard]] std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  [[nodiscard]] const std::map<int32_t,
+                               std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
   GetTracepointEventBufferTracepoints() const {
     return tracepoint_event_buffer_->tracepoint_events();
   }

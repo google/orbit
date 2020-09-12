@@ -69,7 +69,7 @@ bool TracepointEventBuffer::HasEvent() const {
 uint64_t TracepointEventBuffer::max_time() const { return max_time_; }
 uint64_t TracepointEventBuffer::min_time() const { return min_time_; }
 
-std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+const std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
 TracepointEventBuffer::tracepoint_events() {
   return tracepoint_events_;
 }
