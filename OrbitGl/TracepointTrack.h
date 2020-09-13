@@ -20,12 +20,6 @@ class TracepointTrack : public Track {
 
   // TODO(msandru): Override Track::Draw, Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
 
- protected:
-  int32_t thread_id_;
-  Vec2 position_;
-  TextBox thread_name_;
-  Vec2 size_;
-  Color color_;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_

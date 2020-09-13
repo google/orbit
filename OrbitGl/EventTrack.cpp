@@ -12,9 +12,9 @@
 using orbit_client_protos::CallstackEvent;
 
 EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
-  m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
-  m_Picked = false;
-  m_Color = Color(0, 255, 0, 255);
+  mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
+  picked_ = false;
+  color_ = Color(0, 255, 0, 255);
 }
 
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
@@ -28,38 +28,38 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // This simulates "click-through" behavior.
   const float eventBarZ = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
                                                               : GlCanvas::kZValueEventBar;
-  Color color = m_Color;
-  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
+  Color color = color_;
+  Box box(pos_, Vec2(size_[0], -size_[1]), eventBarZ);
   batcher->AddBox(box, color, shared_from_this());
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 
-  float x0 = m_Pos[0];
-  float y0 = m_Pos[1];
-  float x1 = x0 + m_Size[0];
-  float y1 = y0 - m_Size[1];
+  float x0 = pos_[0];
+  float y0 = pos_[1];
+  float x1 = x0 + size_[0];
+  float y1 = y0 - size_[1];
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::kZValueEventBar, color, shared_from_this());
+  batcher->AddLine(pos_, Vec2(x1, y0), GlCanvas::kZValueEventBar, color, shared_from_this());
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::kZValueEventBar, color,
                    shared_from_this());
 
-  if (m_Picked) {
-    Vec2& from = m_MousePos[0];
-    Vec2& to = m_MousePos[1];
+  if (picked_) {
+    Vec2& from = mouse_pos_[0];
+    Vec2& to = mouse_pos_[1];
 
     x0 = from[0];
-    y0 = m_Pos[1];
+    y0 = pos_[1];
     x1 = to[0];
-    y1 = y0 - m_Size[1];
+    y1 = y0 - size_[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), GlCanvas::kZValueUi);
+    Box box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi);
     batcher->AddBox(box, picked_color, shared_from_this());
   }
 
-  m_Canvas = canvas;
+  canvas_ = canvas;
 }
 
 void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
@@ -81,7 +81,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     for (auto& pair : callstacks) {
       uint64_t time = pair.first;
       if (time > min_tick && time < max_tick) {
-        Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
+        Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
         batcher->AddVerticalLine(pos, -track_height, z, kWhite);
       }
     }
@@ -90,7 +90,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     Color selectedColor[2];
     Fill(selectedColor, kGreenSelection);
     for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(thread_id_)) {
-      Vec2 pos(time_graph_->GetWorldFromTick(event.time()), m_Pos[1]);
+      Vec2 pos(time_graph_->GetWorldFromTick(event.time()), pos_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
     }
   } else {
@@ -103,7 +103,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       uint64_t time = pair.first;
       if (time > min_tick && time < max_tick) {
         Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
-                 m_Pos[1] - track_height + 1);
+                 pos_[1] - track_height + 1);
         Vec2 size(kPickingBoxWidth, track_height);
         auto user_data = std::make_unique<PickingUserData>(
             nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
@@ -115,37 +115,37 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
 }
 
 void EventTrack::SetPos(float a_X, float a_Y) {
-  m_Pos = Vec2(a_X, a_Y);
-  m_ThreadName.SetPos(Vec2(a_X, a_Y));
-  m_ThreadName.SetSize(Vec2(m_Size[0] * 0.3f, m_Size[1]));
+  pos_ = Vec2(a_X, a_Y);
+  thread_name_.SetPos(Vec2(a_X, a_Y));
+  thread_name_.SetSize(Vec2(size_[0] * 0.3f, size_[1]));
 }
 
-void EventTrack::SetSize(float a_SizeX, float a_SizeY) { m_Size = Vec2(a_SizeX, a_SizeY); }
+void EventTrack::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 
 void EventTrack::OnPick(int x, int y) {
   GOrbitApp->set_selected_thread_id(thread_id_);
-  Vec2& mouse_pos = m_MousePos[0];
-  m_Canvas->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
-  m_MousePos[1] = m_MousePos[0];
-  m_Picked = true;
+  Vec2& mouse_pos = mouse_pos_[0];
+  canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
+  mouse_pos_[1] = mouse_pos_[0];
+  picked_ = true;
 }
 
 void EventTrack::OnRelease() {
-  if (m_Picked) {
+  if (picked_) {
     SelectEvents();
   }
 
-  m_Picked = false;
+  picked_ = false;
 }
 
 void EventTrack::OnDrag(int a_X, int a_Y) {
-  Vec2& to = m_MousePos[1];
-  m_Canvas->ScreenToWorld(a_X, a_Y, to[0], to[1]);
+  Vec2& to = mouse_pos_[1];
+  canvas_->ScreenToWorld(a_X, a_Y, to[0], to[1]);
 }
 
 void EventTrack::SelectEvents() {
-  Vec2& from = m_MousePos[0];
-  Vec2& to = m_MousePos[1];
+  Vec2& from = mouse_pos_[0];
+  Vec2& to = mouse_pos_[1];
 
   time_graph_->SelectEvents(from[0], to[0], thread_id_);
 }

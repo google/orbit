@@ -14,34 +14,34 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   float trackWidth = canvas->GetWorldWidth();
 
-  m_Pos[0] = canvas->GetWorldTopLeftX();
+  pos_[0] = canvas->GetWorldTopLeftX();
   SetSize(trackWidth, GetHeight());
   Track::Draw(canvas, picking_mode);
 
-  float x0 = m_Pos[0];
-  float x1 = x0 + m_Size[0];
+  float x0 = pos_[0];
+  float x1 = x0 + size_[0];
 
-  float y0 = m_Pos[1];
-  float y1 = y0 - m_Size[1];
+  float y0 = pos_[1];
+  float y1 = y0 - size_[1];
 
   const Color kPickedColor(0, 128, 255, 128);
-  Color color = m_Color;
-  if (m_Picked) {
-    // TODO: Is this really used? Is m_Picked even a thing?
+  Color color = color_;
+  if (picked_) {
+    // TODO: Is this really used? Is picked_ even a thing?
     color = kPickedColor;
   }
 
   float track_z = GlCanvas::kZValueTrack;
   float text_z = GlCanvas::kZValueText;
 
-  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
+  Box box(pos_, Vec2(size_[0], -size_[1]), track_z);
   batcher->AddBox(box, color, shared_from_this());
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, shared_from_this());
+  batcher->AddLine(pos_, Vec2(x1, y0), track_z, color, shared_from_this());
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, shared_from_this());
 
   const Color kLineColor(0, 128, 255, 128);
@@ -61,11 +61,11 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     if (previous_time > max_ns) break;
     uint64_t time = it->first;
     double normalized_value = (it->second - min_) * inv_value_range_;
-    float base_y = m_Pos[1] - m_Size[1];
+    float base_y = pos_[1] - size_[1];
     float x0 = time_graph_->GetWorldFromTick(previous_time);
     float x1 = time_graph_->GetWorldFromTick(time);
-    float y0 = base_y + static_cast<float>(last_normalized_value) * m_Size[1];
-    float y1 = base_y + static_cast<float>(normalized_value) * m_Size[1];
+    float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
+    float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
     time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z, kLineColor);
 
     previous_time = time;

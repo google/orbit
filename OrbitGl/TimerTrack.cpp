@@ -33,7 +33,7 @@ void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float track_height = GetHeight();
   float track_width = canvas->GetWorldWidth();
 
-  SetPos(canvas->GetWorldTopLeftX(), m_Pos[1]);
+  SetPos(canvas->GetWorldTopLeftX(), pos_[1]);
   SetSize(track_width, track_height);
 
   Track::Draw(canvas, picking_mode);
@@ -55,7 +55,7 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
     box_height /= static_cast<float>(depth_);
   }
 
-  return m_Pos[1] - layout.GetEventTrackHeight() - layout.GetSpaceBetweenTracksAndThread() -
+  return pos_[1] - layout.GetEventTrackHeight() - layout.GetSpaceBetweenTracksAndThread() -
          box_height * (depth + 1);
 }
 
