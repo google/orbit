@@ -11,7 +11,7 @@
 
 #include "CaptureData.h"
 #include "OrbitBase/Result.h"
-#include "TimeGraph.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
@@ -19,15 +19,19 @@
 
 namespace capture_deserializer {
 
-ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph);
-ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph);
+ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener,
+                          std::atomic<bool>* cancellation_requested);
+ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener,
+                          std::atomic<bool>* cancellation_requested);
 
 namespace internal {
 
 bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
-[[nodiscard]] CaptureData GenerateCaptureData(const orbit_client_protos::CaptureInfo& capture_info,
-                                              StringManager* string_manager);
+void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
+                     CaptureListener* capture_listener,
+                     google::protobuf::io::CodedInputStream* coded_input,
+                     std::atomic<bool>* cancellation_requested);
 
 inline const std::string kRequiredCaptureVersion = "1.52";
 

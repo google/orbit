@@ -14,7 +14,6 @@ target_sources(
   PUBLIC App.h
          Batcher.h
          CallStackDataView.h
-         CaptureDeserializer.h
          CaptureWindow.h
          CodeReport.h
          CoreMath.h
@@ -64,7 +63,6 @@ target_sources(
   PRIVATE App.cpp
           Batcher.cpp
           CallStackDataView.cpp
-          CaptureDeserializer.cpp
           CaptureWindow.cpp
           DataManager.cpp
           DataView.cpp

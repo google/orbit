@@ -34,21 +34,6 @@ class CaptureData {
         tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {
     CHECK(process_ != nullptr);
   }
-  explicit CaptureData(
-      int32_t process_id, std::string process_name, std::shared_ptr<Process> process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats)
-      : process_id_{process_id},
-        process_name_{std::move(process_name)},
-        process_{std::move(process)},
-        selected_functions_{std::move(selected_functions)},
-        callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()),
-        tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
-        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()),
-        functions_stats_{std::move(functions_stats)} {
-    CHECK(process_ != nullptr);
-  }
 
   explicit CaptureData()
       : process_{std::make_shared<Process>()},

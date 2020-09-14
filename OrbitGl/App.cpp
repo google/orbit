@@ -17,7 +17,6 @@
 
 #include "CallStackDataView.h"
 #include "Callstack.h"
-#include "CaptureDeserializer.h"
 #include "CaptureWindow.h"
 #include "Disassembler.h"
 #include "DisassemblyReport.h"
@@ -30,6 +29,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "Path.h"
 #include "Pdb.h"
@@ -170,12 +170,11 @@ void OrbitApp::OnCaptureComplete() {
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
-    FunctionInfo* func =
-        GetCaptureData().process()->GetFunctionFromAddress(timer_info.function_address());
-    CHECK(func != nullptr);
+    const FunctionInfo& func =
+        GetCaptureData().selected_functions().at(timer_info.function_address());
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-    capture_data_.UpdateFunctionStats(*func, elapsed_nanos);
-    GCurrentTimeGraph->ProcessTimer(timer_info, func);
+    capture_data_.UpdateFunctionStats(func, elapsed_nanos);
+    GCurrentTimeGraph->ProcessTimer(timer_info, &func);
   } else {
     GCurrentTimeGraph->ProcessTimer(timer_info, nullptr);
   }
@@ -638,13 +637,40 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
                                   timers_it_end);
 }
 
-ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
+void OrbitApp::OnLoadCapture(const std::string& file_name) {
+  if (open_capture_callback_) {
+    open_capture_callback_();
+  }
   ClearCapture();
+  string_manager_->Clear();
+  thread_pool_->Schedule([this, file_name]() mutable {
+    capture_loading_cancellation_requested_ = false;
+    ErrorMessageOr<void> result =
+        capture_deserializer::Load(file_name, this, &capture_loading_cancellation_requested_);
 
-  OUTCOME_TRY(capture_deserializer::Load(file_name, GCurrentTimeGraph));
+    if (result.has_error()) {
+      if (open_capture_failed_callback_) {
+        open_capture_failed_callback_();
+      }
+      SendErrorToUi("Error loading capture",
+                    absl::StrFormat("Could not load capture from \"%s\":\n%s", file_name,
+                                    result.error().message()));
+    }
+
+    if (open_capture_finished_callback_) {
+      open_capture_finished_callback_();
+    }
+  });
 
   DoZoom = true;  // TODO: remove global, review logic
-  return outcome::success();
+}
+
+void OrbitApp::OnLoadCatpureCanceled() {
+  capture_loading_cancellation_requested_ = true;
+  if (open_capture_failed_callback_) {
+    open_capture_failed_callback_();
+  }
+  ClearCapture();
 }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {

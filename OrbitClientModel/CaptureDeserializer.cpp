@@ -2,19 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureDeserializer.h"
+#include "OrbitClientModel/CaptureDeserializer.h"
 
 #include <fstream>
 #include <memory>
 
-#include "App.h"
 #include "Callstack.h"
-#include "EventTracer.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
-#include "OrbitProcess.h"
-#include "SamplingProfiler.h"
-#include "TimeGraph.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
@@ -26,25 +21,12 @@ using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
-
-namespace {
-
-static void FillEventBuffer(const CaptureData& capture_data) {
-  GEventTracer.GetEventBuffer().Reset();
-  for (const CallstackEvent& callstack_event :
-       capture_data.GetCallstackData()->callstack_events()) {
-    GEventTracer.GetEventBuffer().AddCallstackEvent(
-        callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
-  }
-}
-
-}  // namespace
 
 namespace capture_deserializer {
 
-ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph) {
+ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener,
+                          std::atomic<bool>* cancellation_requested) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
   // Binary
@@ -54,10 +36,11 @@ ErrorMessageOr<void> Load(const std::string& filename, TimeGraph* time_graph) {
     return ErrorMessage("Error opening the file for reading");
   }
 
-  return Load(file, time_graph);
+  return Load(file, capture_listener, cancellation_requested);
 }
 
-ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
+ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener,
+                          std::atomic<bool>* cancellation_requested) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
@@ -85,34 +68,9 @@ ErrorMessageOr<void> Load(std::istream& stream, TimeGraph* time_graph) {
     ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
-  time_graph->Clear();
-  StringManager* string_manager = time_graph->GetStringManager();
-  CaptureData capture_data = internal::GenerateCaptureData(capture_info, string_manager);
 
-  // Timers
-  TimerInfo timer_info;
-  while (internal::ReadMessage(&timer_info, &coded_input)) {
-    if (timer_info.function_address() > 0) {
-      const FunctionInfo& func =
-          capture_data.selected_functions().at(timer_info.function_address());
-      time_graph->ProcessTimer(timer_info, &func);
-    } else {
-      time_graph->ProcessTimer(timer_info, nullptr);
-    }
-  }
+  internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input, cancellation_requested);
 
-  // Clear the old capture and set the new one
-  GOrbitApp->ClearSelectedFunctions();
-  absl::flat_hash_set<uint64_t> visible_functions;
-  for (auto const& [address, selected_function] : capture_data.selected_functions()) {
-    visible_functions.insert(address);
-  }
-  GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
-  GOrbitApp->SetSamplingReport(capture_data.sampling_profiler(),
-                               capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
-  GOrbitApp->SetTopDownView(capture_data);
-  GOrbitApp->SetCaptureData(std::move(capture_data));
-  GOrbitApp->FireRefreshCallbacks();
   return outcome::success();
 }
 
@@ -134,45 +92,73 @@ bool ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-CaptureData GenerateCaptureData(const CaptureInfo& capture_info, StringManager* string_manager) {
+void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
+                     google::protobuf::io::CodedInputStream* coded_input,
+                     std::atomic<bool>* cancellation_requested) {
+  CHECK(capture_listener != nullptr);
+
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
     selected_functions[address] = function;
   }
+  TracepointInfoSet selected_tracepoints;
 
-  absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
-      capture_info.function_stats().begin(), capture_info.function_stats().end()};
-  CaptureData capture_data(capture_info.process_id(), capture_info.process_name(),
-                           std::make_shared<Process>(), std::move(selected_functions),
-                           std::move(functions_stats));
+  if (*cancellation_requested) {
+    return;
+  }
+  capture_listener->OnCaptureStarted(capture_info.process_id(), capture_info.process_name(),
+                                     std::make_shared<Process>(), std::move(selected_functions),
+                                     std::move(selected_tracepoints));
 
   for (const auto& address_info : capture_info.address_infos()) {
-    capture_data.InsertAddressInfo(address_info);
+    if (*cancellation_requested) {
+      return;
+    }
+    capture_listener->OnAddressInfo(address_info);
   }
 
-  absl::flat_hash_map<int32_t, std::string> thread_names{capture_info.thread_names().begin(),
-                                                         capture_info.thread_names().end()};
-  capture_data.set_thread_names(thread_names);
+  for (const auto& thread_id_and_name : capture_info.thread_names()) {
+    if (*cancellation_requested) {
+      return;
+    }
+    capture_listener->OnThreadName(thread_id_and_name.first, thread_id_and_name.second);
+  }
 
   for (const CallstackInfo& callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
-    capture_data.AddUniqueCallStack(std::move(unique_callstack));
+    if (*cancellation_requested) {
+      return;
+    }
+    capture_listener->OnUniqueCallStack(std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
-    capture_data.AddCallstackEvent(std::move(callstack_event));
-  }
-  SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
-  capture_data.set_sampling_profiler(sampling_profiler);
-
-  string_manager->Clear();
-  for (const auto& entry : capture_info.key_to_string()) {
-    string_manager->AddIfNotPresent(entry.first, entry.second);
+    if (*cancellation_requested) {
+      return;
+    }
+    capture_listener->OnCallstackEvent(std::move(callstack_event));
   }
 
-  FillEventBuffer(capture_data);
+  for (const auto& key_to_string : capture_info.key_to_string()) {
+    if (*cancellation_requested) {
+      return;
+    }
+    capture_listener->OnKeyAndString(key_to_string.first, key_to_string.second);
+  }
 
-  return capture_data;
+  // Timers
+  TimerInfo timer_info;
+  while (internal::ReadMessage(&timer_info, coded_input)) {
+    if (*cancellation_requested) {
+      return;
+    }
+    capture_listener->OnTimer(timer_info);
+  }
+
+  if (*cancellation_requested) {
+    return;
+  }
+  capture_listener->OnCaptureComplete();
 }
 
 }  // namespace internal

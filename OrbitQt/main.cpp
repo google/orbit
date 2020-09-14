@@ -143,7 +143,7 @@ static outcome::result<void> RunUiInstance(
   }();
 
   if (!capture_path.isEmpty()) {
-    OUTCOME_TRY(w.OpenCapture(capture_path.toStdString()));
+    w.OpenCapture(capture_path.toStdString());
   }
 
   QApplication::exec();
