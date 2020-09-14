@@ -13,6 +13,7 @@
 #include <thread>
 
 #include "../Orbit.h"
+#include "absl/strings/str_format.h"
 
 #if __linux__
 #define NO_INLINE __attribute__((noinline))
@@ -132,6 +133,11 @@ void OrbitTest::ManualInstrumentationApiTest() {
     static double double_var = 0.0;
     static volatile double cos_coeff = 0.1;
     ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), orbit::Color::kPurple);
+
+    for (int i = 0; i < 5; ++i) {
+      std::string track_name = absl::StrFormat("DynamicName_%u", i);
+      ORBIT_DOUBLE(track_name.c_str(), cos(double_var * static_cast<double>(i)));
+    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15));
   }

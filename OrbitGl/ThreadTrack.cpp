@@ -4,9 +4,11 @@
 
 #include "ThreadTrack.h"
 
+#include "../Orbit.h"
 #include "App.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
+#include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
@@ -55,11 +57,9 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
   std::string function_name;
   bool is_manual = func->type() == orbit_client_protos::FunctionInfo::kOrbitTimerStart;
   if (is_manual) {
-    constexpr int kStringArgumentIndex = 0;
     const TimerInfo& timer_info = text_box->GetTimerInfo();
-    CHECK(timer_info.registers_size() > kStringArgumentIndex);
-    uint64_t string_address = timer_info.registers(kStringArgumentIndex);
-    function_name = time_graph_->GetManualInstrumentationString(string_address);
+    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    function_name = api_event.name;
   } else {
     function_name = FunctionUtils::GetDisplayName(*func);
   }
@@ -90,12 +90,12 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
     return std::optional<Color>{};
   }
 
-  // See Orbit.h for more information about the manual instrumentation API.
-  constexpr int kColorArgumentIndex = 2;
-  constexpr uint64_t kColorAuto = 0x00000001;
-  CHECK(timer_info.registers_size() > kColorArgumentIndex);
-  uint64_t color_arg = timer_info.registers(kColorArgumentIndex);
-  return color_arg != kColorAuto ? ToColor(color_arg) : std::optional<Color>{};
+  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+  if (event.color == orbit::Color::kAuto) {
+    return std::optional<Color>{};
+  }
+
+  return ToColor(static_cast<uint64_t>(event.color));
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
@@ -166,12 +166,8 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;
       if (func->type() == FunctionInfo::kOrbitTimerStart) {
-        name = time_graph_->GetManualInstrumentationString(timer_info.registers(0));
-        if (name.empty()) {
-          // The remote string hasn't been retrieved yet,
-          // early out and try again on next update.
-          return;
-        }
+        auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+        name = api_event.name;
       } else {
         name = FunctionUtils::GetDisplayName(*func);
       }

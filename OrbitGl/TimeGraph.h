@@ -44,8 +44,7 @@ class TimeGraph {
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo* function);
-  void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo& function,
-                                 const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void UpdateMaxTimeStamp(uint64_t a_Time);
 
   float GetThreadTotalHeight();
@@ -128,7 +127,6 @@ class TimeGraph {
   const TextBox* FindDown(const TextBox* from);
 
   Color GetThreadColor(int32_t tid) const;
-  [[nodiscard]] std::string GetManualInstrumentationString(uint64_t string_address) const;
 
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
@@ -146,10 +144,8 @@ class TimeGraph {
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
-  GraphTrack* GetOrCreateGraphTrack(uint64_t graph_id);
+  GraphTrack* GetOrCreateGraphTrack(const std::string& name);
 
-  void ProcessOrbitFunctionTimer(const orbit_client_protos::FunctionInfo* function,
-                                 const Timer& timer);
   void ProcessManualIntrumentationTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
@@ -200,7 +196,7 @@ class TimeGraph {
   mutable Mutex m_Mutex;
   std::vector<std::shared_ptr<Track>> tracks_;
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<GraphTrack>> graph_tracks_;
+  std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
   // Mapping from timeline hash to GPU tracks.
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
