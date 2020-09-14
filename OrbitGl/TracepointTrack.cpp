@@ -23,7 +23,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Pic
 
   const Color kWhite(255, 255, 255, 255);
 
-  for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.end(); ++it) {
+  for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick); ++it) {
     uint64_t time = it->first;
     if (time < max_tick) {
       Vec2 pos(time_graph_->GetWorldFromTick(time), position_[1]);
