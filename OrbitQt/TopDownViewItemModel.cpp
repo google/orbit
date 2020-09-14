@@ -31,8 +31,6 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
         return QString::fromStdString(absl::StrFormat(
             "%.2f%% (%llu)", thread_item->GetInclusivePercent(top_down_view_->sample_count()),
             thread_item->sample_count()));
-      case kOfParent:
-        return QString::fromStdString(absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
@@ -71,8 +69,6 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
         return thread_item->thread_id();
       case kInclusive:
         return thread_item->GetInclusivePercent(top_down_view_->sample_count());
-      case kOfParent:
-        return thread_item->GetPercentOfParent();
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
