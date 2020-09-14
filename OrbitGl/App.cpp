@@ -168,6 +168,23 @@ void OrbitApp::OnCaptureComplete() {
       });
 }
 
+void OrbitApp::OnCaptureCanceled() {
+  main_thread_executor_->Schedule([this]() mutable {
+    if (open_capture_failed_callback_) {
+      open_capture_failed_callback_();
+    }
+    ClearCapture();
+  });
+}
+
+void OrbitApp::OnCaptureFailed(std::string error_message) {
+  if (open_capture_failed_callback_) {
+    open_capture_failed_callback_();
+  }
+  SendErrorToUi("Error loading capture",
+                absl::StrFormat("Could not load capture:\n%s", error_message));
+}
+
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
     const FunctionInfo& func =
@@ -645,17 +662,7 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   string_manager_->Clear();
   thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancellation_requested_ = false;
-    ErrorMessageOr<void> result =
-        capture_deserializer::Load(file_name, this, &capture_loading_cancellation_requested_);
-
-    if (result.has_error()) {
-      if (open_capture_failed_callback_) {
-        open_capture_failed_callback_();
-      }
-      SendErrorToUi("Error loading capture",
-                    absl::StrFormat("Could not load capture from \"%s\":\n%s", file_name,
-                                    result.error().message()));
-    }
+    capture_deserializer::Load(file_name, this, &capture_loading_cancellation_requested_);
 
     if (open_capture_finished_callback_) {
       open_capture_finished_callback_();
@@ -665,12 +672,8 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   DoZoom = true;  // TODO: remove global, review logic
 }
 
-void OrbitApp::OnLoadCatpureCanceled() {
+void OrbitApp::OnLoadCaptureCancellationRequest() {
   capture_loading_cancellation_requested_ = true;
-  if (open_capture_failed_callback_) {
-    open_capture_failed_callback_();
-  }
-  ClearCapture();
 }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {

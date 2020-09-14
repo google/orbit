@@ -19,10 +19,10 @@
 
 namespace capture_deserializer {
 
-ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener,
-                          std::atomic<bool>* cancellation_requested);
-ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener,
-                          std::atomic<bool>* cancellation_requested);
+void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
+          std::atomic<bool>* cancellation_requested);
+void Load(const std::string& file_name, CaptureListener* capture_listener,
+          std::atomic<bool>* cancellation_requested);
 
 namespace internal {
 

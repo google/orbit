@@ -81,7 +81,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
   void OnLoadCapture(const std::string& file_name);
-  void OnLoadCatpureCanceled();
+  void OnLoadCaptureCancellationRequest();
   [[nodiscard]] bool IsCapturing() const;
   bool StartCapture();
   void StopCapture();
@@ -100,6 +100,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
+  void OnCaptureCanceled() override;
+  void OnCaptureFailed(std::string error_message) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallStack(CallStack callstack) override;

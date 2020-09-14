@@ -146,7 +146,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   loading_capture_cancel_button->setText("Cancel");
   QObject::connect(loading_capture_cancel_button, &QPushButton::clicked, this,
                    [loading_capture_dialog]() {
-                     GOrbitApp->OnLoadCatpureCanceled();
+                     GOrbitApp->OnLoadCaptureCancellationRequest();
                      loading_capture_dialog->close();
                    });
   loading_capture_dialog->setCancelButton(loading_capture_cancel_button);
