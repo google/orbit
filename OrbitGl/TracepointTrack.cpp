@@ -6,9 +6,7 @@
 
 #include "App.h"
 
-TracepointTrack::TracepointTrack(TimeGraph* time_graph) : Track(time_graph) {
-  color_ = Color(0, 255, 0, 255);
-}
+TracepointTrack::TracepointTrack(TimeGraph* time_graph) : EventTrack(time_graph) {}
 
 void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode) {
   Batcher* batcher = &time_graph_->GetBatcher();
