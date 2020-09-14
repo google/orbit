@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_TRACEPOINT_TRACK_H_
 #define ORBIT_GL_TRACEPOINT_TRACK_H_
 
+#include "GlCanvas.h"
+#include "TimeGraph.h"
 #include "Track.h"
 
 class TracepointTrack : public Track {
