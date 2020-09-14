@@ -29,7 +29,7 @@ class MyCaptureListener : public CaptureListener {
       TracepointInfoSet /*selected_tracepoints*/) override {}
   void OnCaptureComplete() override {}
   void OnCaptureCancelled() override {}
-  void OnCaptureFailed(ErrorMessage /*error_message*/) override {}
+  void OnCaptureFailed(ErrorMessage) override {}
   void OnTimer(const TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
   void OnUniqueCallStack(CallStack) override {}
