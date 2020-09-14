@@ -34,7 +34,7 @@ void Load(const std::string& file_name, CaptureListener* capture_listener,
   if (file.fail()) {
     ERROR("Loading capture from \"%s\": %s", file_name, "file.fail()");
     capture_listener->OnCaptureFailed(
-        absl::StrFormat("Error opening the file \"%s\"for reading", file_name));
+        ErrorMessage(absl::StrFormat("Error opening file \"%s\"for reading", file_name)));
     return;
   }
 
@@ -55,7 +55,7 @@ void Load(std::istream& stream, const std::string& file_name, CaptureListener* c
   CaptureHeader header;
   if (!internal::ReadMessage(&header, &coded_input) || header.version().empty()) {
     ERROR("%s", error_message);
-    capture_listener->OnCaptureFailed(std::move(error_message));
+    capture_listener->OnCaptureFailed(ErrorMessage(std::move(error_message)));
     return;
   }
   if (header.version() != internal::kRequiredCaptureVersion) {
@@ -64,14 +64,14 @@ void Load(std::istream& stream, const std::string& file_name, CaptureListener* c
         "Orbit version %s.",
         file_name, header.version());
     ERROR("%s", incompatible_version_error_message);
-    capture_listener->OnCaptureFailed(std::move(incompatible_version_error_message));
+    capture_listener->OnCaptureFailed(ErrorMessage(std::move(incompatible_version_error_message)));
     return;
   }
 
   CaptureInfo capture_info;
   if (!internal::ReadMessage(&capture_info, &coded_input)) {
     ERROR("%s", error_message);
-    capture_listener->OnCaptureFailed(std::move(error_message));
+    capture_listener->OnCaptureFailed(ErrorMessage(std::move(error_message)));
     return;
   }
 
@@ -109,7 +109,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   TracepointInfoSet selected_tracepoints;
 
   if (*cancellation_requested) {
-    capture_listener->OnCaptureCanceled();
+    capture_listener->OnCaptureCancelled();
     return;
   }
   capture_listener->OnCaptureStarted(capture_info.process_id(), capture_info.process_name(),
@@ -118,7 +118,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {
-      capture_listener->OnCaptureCanceled();
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnAddressInfo(address_info);
@@ -126,7 +126,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   for (const auto& thread_id_and_name : capture_info.thread_names()) {
     if (*cancellation_requested) {
-      capture_listener->OnCaptureCanceled();
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnThreadName(thread_id_and_name.first, thread_id_and_name.second);
@@ -135,14 +135,14 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   for (const CallstackInfo& callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     if (*cancellation_requested) {
-      capture_listener->OnCaptureCanceled();
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnUniqueCallStack(std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     if (*cancellation_requested) {
-      capture_listener->OnCaptureCanceled();
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnCallstackEvent(std::move(callstack_event));
@@ -150,7 +150,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   for (const auto& key_to_string : capture_info.key_to_string()) {
     if (*cancellation_requested) {
-      capture_listener->OnCaptureCanceled();
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnKeyAndString(key_to_string.first, key_to_string.second);
@@ -160,7 +160,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   TimerInfo timer_info;
   while (internal::ReadMessage(&timer_info, coded_input)) {
     if (*cancellation_requested) {
-      capture_listener->OnCaptureCanceled();
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnTimer(timer_info);

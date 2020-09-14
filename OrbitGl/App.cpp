@@ -163,13 +163,19 @@ void OrbitApp::OnCaptureComplete() {
         if (capture_stopped_callback_) {
           capture_stopped_callback_();
         }
+        if (open_capture_finished_callback_) {
+          open_capture_finished_callback_();
+        }
 
         FireRefreshCallbacks();
       });
 }
 
-void OrbitApp::OnCaptureCanceled() {
+void OrbitApp::OnCaptureCancelled() {
   main_thread_executor_->Schedule([this]() mutable {
+    if (capture_failed_callback_) {
+      capture_failed_callback_();
+    }
     if (open_capture_failed_callback_) {
       open_capture_failed_callback_();
     }
@@ -177,12 +183,17 @@ void OrbitApp::OnCaptureCanceled() {
   });
 }
 
-void OrbitApp::OnCaptureFailed(std::string error_message) {
-  if (open_capture_failed_callback_) {
-    open_capture_failed_callback_();
-  }
-  SendErrorToUi("Error loading capture",
-                absl::StrFormat("Could not load capture:\n%s", error_message));
+void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
+  main_thread_executor_->Schedule([this, error_message = std::move(error_message)]() mutable {
+    if (capture_failed_callback_) {
+      capture_failed_callback_();
+    }
+    if (open_capture_failed_callback_) {
+      open_capture_failed_callback_();
+    }
+    ClearCapture();
+    SendErrorToUi("Error in capture", error_message.message());
+  });
 }
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
@@ -663,18 +674,12 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancellation_requested_ = false;
     capture_deserializer::Load(file_name, this, &capture_loading_cancellation_requested_);
-
-    if (open_capture_finished_callback_) {
-      open_capture_finished_callback_();
-    }
   });
 
   DoZoom = true;  // TODO: remove global, review logic
 }
 
-void OrbitApp::OnLoadCaptureCancellationRequest() {
-  capture_loading_cancellation_requested_ = true;
-}
+void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_requested_ = true; }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   for (DataView* panel : panels_) {

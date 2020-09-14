@@ -7,6 +7,7 @@
 
 #include "Callstack.h"
 #include "EventBuffer.h"
+#include "OrbitBase/Result.h"
 #include "OrbitProcess.h"
 #include "ScopeTimer.h"
 #include "TracepointCustom.h"
@@ -27,9 +28,9 @@ class CaptureListener {
   virtual void OnCaptureComplete() = 0;
 
   // Called when capture is cancelled (not stopped). Mostly relevant for capture loading.
-  virtual void OnCaptureCanceled() = 0;
+  virtual void OnCaptureCancelled() = 0;
   // Called when an internal error occurred that makes the capture invalid.
-  virtual void OnCaptureFailed(std::string error_message) = 0;
+  virtual void OnCaptureFailed(ErrorMessage error_message) = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;

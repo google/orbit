@@ -95,7 +95,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
     ui->actionToggle_Capture->setDisabled(true);
     finalizing_capture_dialog->show();
   });
-  GOrbitApp->SetCaptureStoppedCallback([this, finalizing_capture_dialog] {
+  auto capture_finished_callback = [this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
     ui->actionToggle_Capture->setDisabled(false);
     ui->actionToggle_Capture->setIcon(icon_start_capture_);
@@ -105,8 +105,41 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
     ui->actionOpen_Preset->setDisabled(false);
     ui->actionSave_Preset_As->setDisabled(false);
     ui->HomeTab->setDisabled(false);
-  });
+  };
+  GOrbitApp->SetCaptureStoppedCallback(capture_finished_callback);
+  GOrbitApp->SetCaptureFailedCallback(capture_finished_callback);
   GOrbitApp->SetCaptureClearedCallback([this] { OnCaptureCleared(); });
+
+  auto loading_capture_dialog =
+      new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
+  loading_capture_dialog->setWindowTitle("Loading capture");
+  loading_capture_dialog->setModal(true);
+  loading_capture_dialog->setWindowFlags(
+      (loading_capture_dialog->windowFlags() | Qt::CustomizeWindowHint) &
+      ~Qt::WindowCloseButtonHint & ~Qt::WindowSystemMenuHint);
+  loading_capture_dialog->setFixedSize(loading_capture_dialog->size());
+
+  auto loading_capture_cancel_button = QPointer{new QPushButton{this}};
+  loading_capture_cancel_button->setText("Cancel");
+  QObject::connect(loading_capture_cancel_button, &QPushButton::clicked, this,
+                   [loading_capture_dialog]() {
+                     GOrbitApp->OnLoadCaptureCancelRequested();
+                     loading_capture_dialog->close();
+                   });
+  loading_capture_dialog->setCancelButton(loading_capture_cancel_button);
+
+  loading_capture_dialog->close();
+
+  GOrbitApp->SetOpenCaptureCallback([this, loading_capture_dialog] {
+    setWindowTitle({});
+    loading_capture_dialog->show();
+  });
+  GOrbitApp->SetOpenCaptureFailedCallback([this, loading_capture_dialog] {
+    setWindowTitle({});
+    loading_capture_dialog->close();
+  });
+  GOrbitApp->SetOpenCaptureFinishedCallback(
+      [loading_capture_dialog] { loading_capture_dialog->close(); });
 
   GOrbitApp->SetRefreshCallback([this](DataViewType a_Type) {
     this->OnRefreshDataViewPanels(a_Type);
@@ -133,52 +166,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
       });
 
-  auto loading_capture_dialog =
-      new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
-  loading_capture_dialog->setWindowTitle("Loading capture");
-  loading_capture_dialog->setModal(true);
-  loading_capture_dialog->setWindowFlags(
-      (loading_capture_dialog->windowFlags() | Qt::CustomizeWindowHint) &
-      ~Qt::WindowCloseButtonHint & ~Qt::WindowSystemMenuHint);
-  loading_capture_dialog->setFixedSize(loading_capture_dialog->size());
-
-  auto loading_capture_cancel_button = QPointer{new QPushButton{this}};
-  loading_capture_cancel_button->setText("Cancel");
-  QObject::connect(loading_capture_cancel_button, &QPushButton::clicked, this,
-                   [loading_capture_dialog]() {
-                     GOrbitApp->OnLoadCaptureCancellationRequest();
-                     loading_capture_dialog->close();
-                   });
-  loading_capture_dialog->setCancelButton(loading_capture_cancel_button);
-
-  loading_capture_dialog->close();
-
-  GOrbitApp->SetOpenCaptureCallback([this, loading_capture_dialog] {
-    ui->actionToggle_Capture->setIcon(icon_stop_capture_);
-    ui->actionToggle_Capture->setDisabled(true);
-    ui->actionClear_Capture->setDisabled(true);
-    ui->actionOpen_Capture->setDisabled(true);
-    ui->actionSave_Capture->setDisabled(true);
-    ui->actionOpen_Preset->setDisabled(true);
-    ui->actionSave_Preset_As->setDisabled(true);
-    ui->HomeTab->setDisabled(true);
-    setWindowTitle({});
-    loading_capture_dialog->show();
-  });
-  GOrbitApp->SetOpenCaptureFailedCallback([this, loading_capture_dialog] {
-    ui->actionToggle_Capture->setIcon(icon_start_capture_);
-    ui->actionToggle_Capture->setDisabled(false);
-    ui->actionClear_Capture->setDisabled(false);
-    ui->actionOpen_Capture->setDisabled(false);
-    ui->actionSave_Capture->setDisabled(false);
-    ui->actionOpen_Preset->setDisabled(false);
-    ui->actionSave_Preset_As->setDisabled(false);
-    ui->HomeTab->setDisabled(false);
-    setWindowTitle({});
-    loading_capture_dialog->close();
-  });
-  GOrbitApp->SetOpenCaptureFinishedCallback(
-      [loading_capture_dialog] { loading_capture_dialog->close(); });
   GOrbitApp->SetSaveCaptureCallback([this] { on_actionSave_Capture_triggered(); });
   GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
