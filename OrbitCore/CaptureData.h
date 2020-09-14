@@ -140,8 +140,10 @@ class CaptureData {
   }
 
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
-                                         int32_t thread_id) {
-    tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(time, tracepoint_hash, thread_id);
+                                         int32_t process_id, int32_t thread_id,
+                                         bool is_same_pid_as_target) {
+    tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(time, tracepoint_hash, process_id,
+                                                                thread_id, is_same_pid_as_target);
   }
 
   [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {

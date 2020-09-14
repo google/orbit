@@ -287,7 +287,10 @@ void ClientGgp::OnUniqueTracepointInfo(uint64_t key,
 }
 
 void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  capture_data_.AddTracepointEventAndMapToThreads(tracepoint_event_info.time(),
-                                                  tracepoint_event_info.tracepoint_info_key(),
-                                                  tracepoint_event_info.tid());
+  int32_t capture_process_id = capture_data_.process_id();
+  bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
+
+  capture_data_.AddTracepointEventAndMapToThreads(
+      tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
+      tracepoint_event_info.pid(), tracepoint_event_info.tid(), is_same_pid_as_target);
 }
