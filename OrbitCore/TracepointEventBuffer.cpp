@@ -8,8 +8,12 @@ using orbit_client_protos::TracepointEventInfo;
 
 void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
                                                               uint64_t tracepoint_hash,
-                                                              int32_t thread_id,
+                                                              int32_t thread_id, int32_t process_id,
                                                               bool is_same_pid_as_target) {
+  if (!is_same_pid_as_target) {
+    return;
+  }
+
   ScopeLock lock(mutex_);
   std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& event_map =
       tracepoint_events_[thread_id];
@@ -17,18 +21,18 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
   event.set_time(time);
   event.set_tracepoint_info_key(tracepoint_hash);
   event.set_tid(thread_id);
+  event.set_pid(process_id);
   event_map[time] = std::move(event);
 
-  if (is_same_pid_as_target) {
-    // Add all tracepoint events to "all threads".
-    std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& event_map_all_threads =
-        tracepoint_events_[SamplingProfiler::kAllThreadsFakeTid];
-    orbit_client_protos::TracepointEventInfo event_all_threads;
-    event_all_threads.set_time(time);
-    event_all_threads.set_tracepoint_info_key(tracepoint_hash);
-    event_all_threads.set_tid(SamplingProfiler::kAllThreadsFakeTid);
-    event_map_all_threads[time] = std::move(event);
-  }
+  std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& event_map_all_threads =
+      tracepoint_events_[SamplingProfiler::kAllThreadsFakeTid];
+  orbit_client_protos::TracepointEventInfo event_all_threads;
+  event_all_threads.set_time(time);
+  event_all_threads.set_tracepoint_info_key(tracepoint_hash);
+  event_all_threads.set_tid(thread_id);
+  event_all_threads.set_pid(process_id);
+  event_map_all_threads[time] = std::move(event);
+
   RegisterTime(time);
 }
 
