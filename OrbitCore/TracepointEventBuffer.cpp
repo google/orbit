@@ -8,11 +8,14 @@ using orbit_client_protos::TracepointEventInfo;
 
 void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
                                                               uint64_t tracepoint_hash,
-                                                              int32_t thread_id, int32_t process_id,
+                                                              int32_t process_id, int32_t thread_id,
                                                               bool is_same_pid_as_target) {
   if (!is_same_pid_as_target) {
     return;
   }
+
+  /*TODO: tracepoint events with !is_same_pid_as_target will also have to be
+   * stored when implementing the track showing tracepoint events from all processes in the system*/
 
   ScopeLock lock(mutex_);
   std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& event_map =
