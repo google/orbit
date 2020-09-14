@@ -17,8 +17,8 @@ class TracepointEventBuffer {
  public:
   TracepointEventBuffer() : max_time_(0), min_time_(std::numeric_limits<uint64_t>::max()) {}
 
-  void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
-                                         int32_t thread_id);
+  void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash, int32_t thread_id,
+                                         bool is_same_pid_as_target);
 
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const;
