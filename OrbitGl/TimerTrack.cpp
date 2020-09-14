@@ -55,8 +55,13 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
     box_height /= static_cast<float>(depth_);
   }
 
-  return pos_[1] - layout.GetEventTrackHeight() - layout.GetSpaceBetweenTracksAndThread() -
-         box_height * (depth + 1);
+  float tracepoint_track_space = tracepoint_track_->GetEventTrackHeightAndExtraSpace();
+  float space_between_tracks_and_thread = layout.GetSpaceBetweenTracksAndThread();
+
+  return pos_[1] - layout.GetEventTrackHeight() - space_between_tracks_and_thread -
+         box_height * (depth + 1) -
+         (tracepoint_track_space > 0 ? tracepoint_track_space + space_between_tracks_and_thread
+                                     : 0);
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
@@ -172,16 +177,6 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
 std::string TimerTrack::GetTooltip() const {
   return "Shows collected samples and timings from dynamically instrumented "
          "functions";
-}
-
-float TimerTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
-  bool is_collapsed = collapse_toggle_->IsCollapsed();
-  uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
-  uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
-  return layout.GetTextBoxHeight() * depth +
-         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
-         layout.GetTrackBottomMargin();
 }
 
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {

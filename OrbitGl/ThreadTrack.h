@@ -39,7 +39,10 @@ class ThreadTrack : public TimerTrack {
                         TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
+  [[nodiscard]] float GetHeight() const override;
+
   std::shared_ptr<EventTrack> event_track_;
+  std::shared_ptr<TracepointTrack> tracepoint_track_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

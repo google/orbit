@@ -18,6 +18,9 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id) : TimerTrack(
   thread_id_ = thread_id;
   event_track_ = std::make_shared<EventTrack>(time_graph);
   event_track_->SetThreadId(thread_id);
+
+  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph);
+  tracepoint_track_->SetThreadId(thread_id);
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
@@ -130,7 +133,9 @@ void ThreadTrack::UpdateBoxHeight() {
   }
 }
 
-bool ThreadTrack::IsEmpty() const { return (GetNumTimers() == 0) && (event_track_->IsEmpty()); }
+bool ThreadTrack::IsEmpty() const {
+  return (GetNumTimers() == 0) && (event_track_->IsEmpty()) && tracepoint_track_->IsEmpty();
+}
 
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
@@ -139,17 +144,27 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   event_track_->SetPos(pos_[0], pos_[1]);
   event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
   event_track_->Draw(canvas, picking_mode);
+
+  tracepoint_track_->SetPos(pos_[0], pos_[1]);
+  tracepoint_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
+  tracepoint_track_->Draw(canvas, picking_mode);
 }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
   event_track_->SetPos(pos_[0], pos_[1]);
   event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+
+  tracepoint_track_->SetPos(pos_[0], pos_[1]);
+  tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+
+  TimerTrack::SetTracepointTrack(tracepoint_track_);
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
 }
 
 void ThreadTrack::SetEventTrackColor(Color color) {
   ScopeLock lock(mutex_);
   event_track_->SetColor(color);
+  tracepoint_track_->SetColor(color);
 }
 
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
@@ -205,4 +220,14 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
 std::string ThreadTrack::GetTooltip() const {
   return "Shows collected samples and timings from dynamically instrumented "
          "functions";
+}
+
+float ThreadTrack::GetHeight() const {
+  TimeGraphLayout& layout = time_graph_->GetLayout();
+  bool is_collapsed = collapse_toggle_->IsCollapsed();
+  uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
+  uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
+  return layout.GetTextBoxHeight() * depth +
+         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
+         layout.GetTrackBottomMargin() + tracepoint_track_->GetHeight();
 }
