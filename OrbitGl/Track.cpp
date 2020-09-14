@@ -14,15 +14,15 @@ Track::Track(TimeGraph* time_graph)
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
           [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)) {
-  m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
-  m_Pos = Vec2(0, 0);
-  m_Size = Vec2(0, 0);
-  m_PickingOffset = Vec2(0, 0);
-  m_Picked = false;
-  m_Moving = false;
-  m_Canvas = nullptr;
+  mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
+  pos_ = Vec2(0, 0);
+  size_ = Vec2(0, 0);
+  picking_offset_ = Vec2(0, 0);
+  picked_ = false;
+  moving_ = false;
+  canvas_ = nullptr;
   const Color kDarkGrey(50, 50, 50, 255);
-  m_Color = kDarkGrey;
+  color_ = kDarkGrey;
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -79,10 +79,10 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   const Color kTabColor(50, 50, 50, 255);
   const bool picking = picking_mode != PickingMode::kNone;
 
-  float x0 = m_Pos[0];
-  float x1 = x0 + m_Size[0];
-  float y0 = m_Pos[1];
-  float y1 = y0 - m_Size[1];
+  float x0 = pos_[0];
+  float x1 = x0 + size_[0];
+  float y0 = pos_[1];
+  float y1 = y0 - size_[1];
   float track_z = GlCanvas::kZValueTrack;
   float text_z = GlCanvas::kZValueText;
   float top_margin = layout.GetTrackTopMargin();
@@ -90,7 +90,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // Draw track background.
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
-      Box box(Vec2(x0, y0 + top_margin), Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
+      Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
       batcher->AddBox(box, kTabColor, shared_from_this());
     }
   }
@@ -140,7 +140,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Draw collapsing triangle.
   float button_offset = layout.GetCollapseButtonOffset();
-  float toggle_y_pos = m_Pos[1] + half_label_height;
+  float toggle_y_pos = pos_[1] + half_label_height;
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos);
   collapse_toggle_->Draw(canvas, picking_mode);
@@ -155,25 +155,25 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
                     kTextWhite, label_width - label_offset_x);
   }
 
-  m_Canvas = canvas;
+  canvas_ = canvas;
 }
 
 void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/,
                              PickingMode /*  picking_mode*/) {}
 
 void Track::SetPos(float a_X, float a_Y) {
-  if (!m_Moving) {
-    m_Pos = Vec2(a_X, a_Y);
+  if (!moving_) {
+    pos_ = Vec2(a_X, a_Y);
   }
 }
 
 void Track::SetY(float y) {
-  if (!m_Moving) {
-    m_Pos[1] = y;
+  if (!moving_) {
+    pos_[1] = y;
   }
 }
 
-void Track::SetSize(float a_SizeX, float a_SizeY) { m_Size = Vec2(a_SizeX, a_SizeY); }
+void Track::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 
 void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
   time_graph_->NeedsUpdate();
@@ -181,30 +181,30 @@ void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
 }
 
 void Track::OnPick(int a_X, int a_Y) {
-  if (!m_PickingEnabled) return;
+  if (!picking_enabled_) return;
 
-  Vec2& mousePos = m_MousePos[0];
-  m_Canvas->ScreenToWorld(a_X, a_Y, mousePos[0], mousePos[1]);
-  m_PickingOffset = mousePos - m_Pos;
-  m_MousePos[1] = m_MousePos[0];
-  m_Picked = true;
+  Vec2& mousePos = mouse_pos_[0];
+  canvas_->ScreenToWorld(a_X, a_Y, mousePos[0], mousePos[1]);
+  picking_offset_ = mousePos - pos_;
+  mouse_pos_[1] = mouse_pos_[0];
+  picked_ = true;
 }
 
 void Track::OnRelease() {
-  if (!m_PickingEnabled) return;
+  if (!picking_enabled_) return;
 
-  m_Picked = false;
-  m_Moving = false;
+  picked_ = false;
+  moving_ = false;
   time_graph_->NeedsUpdate();
 }
 
 void Track::OnDrag(int a_X, int a_Y) {
-  if (!m_PickingEnabled) return;
+  if (!picking_enabled_) return;
 
-  m_Moving = true;
+  moving_ = true;
   float x = 0.f;
-  m_Canvas->ScreenToWorld(a_X, a_Y, x, m_Pos[1]);
-  m_MousePos[1] = m_Pos;
-  m_Pos[1] -= m_PickingOffset[1];
+  canvas_->ScreenToWorld(a_X, a_Y, x, pos_[1]);
+  mouse_pos_[1] = pos_;
+  pos_[1] -= picking_offset_[1];
   time_graph_->NeedsUpdate();
 }

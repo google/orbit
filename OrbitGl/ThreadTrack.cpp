@@ -14,8 +14,8 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id)
-    : TimerTrack(time_graph), thread_id_(thread_id) {
+ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id) : TimerTrack(time_graph) {
+  thread_id_ = thread_id;
   event_track_ = std::make_shared<EventTrack>(time_graph);
   event_track_->SetThreadId(thread_id);
 }
@@ -136,13 +136,13 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
 
   float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
-  event_track_->SetPos(m_Pos[0], m_Pos[1]);
+  event_track_->SetPos(pos_[0], pos_[1]);
   event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
   event_track_->Draw(canvas, picking_mode);
 }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
-  event_track_->SetPos(m_Pos[0], m_Pos[1]);
+  event_track_->SetPos(pos_[0], pos_[1]);
   event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
 }

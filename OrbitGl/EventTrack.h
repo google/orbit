@@ -25,26 +25,17 @@ class EventTrack : public Track {
   void OnRelease() override;
   void OnDrag(int a_X, int a_Y) override;
   bool Draggable() override { return true; }
-  float GetHeight() const override { return m_Size[1]; }
+  float GetHeight() const override { return size_[1]; }
 
   void SetThreadId(ThreadID thread_id) { thread_id_ = thread_id; }
   void SetTimeGraph(TimeGraph* a_TimeGraph) { time_graph_ = a_TimeGraph; }
   void SetPos(float a_X, float a_Y);
   void SetSize(float a_SizeX, float a_SizeY);
-  void SetColor(Color color) { m_Color = color; }
+  void SetColor(Color color) { color_ = color; }
   bool IsEmpty() const;
 
  protected:
   void SelectEvents();
   std::string GetSampleTooltip(PickingId id) const;
 
- protected:
-  TextBox m_ThreadName;
-  GlCanvas* m_Canvas;
-  int32_t thread_id_;
-  Vec2 m_Pos;
-  Vec2 m_Size;
-  Vec2 m_MousePos[2];
-  bool m_Picked;
-  Color m_Color;
 };

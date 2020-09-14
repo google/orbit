@@ -106,7 +106,7 @@ float GpuTrack::GetYFromDepth(uint32_t depth) const {
   if (collapse_toggle_->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
-  return m_Pos[1] - time_graph_->GetLayout().GetTextBoxHeight() * (adjusted_depth + 1.f);
+  return pos_[1] - time_graph_->GetLayout().GetTextBoxHeight() * (adjusted_depth + 1.f);
 }
 
 // When track is collapsed, only draw "hardware execution" timers.

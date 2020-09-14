@@ -6,9 +6,7 @@
 
 #include "App.h"
 
-TracepointTrack::TracepointTrack(TimeGraph* time_graph) : Track(time_graph) {
-  color_ = Color(0, 255, 0, 255);
-}
+TracepointTrack::TracepointTrack(TimeGraph* time_graph) : EventTrack(time_graph) {}
 
 void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode) {
   Batcher* batcher = &time_graph_->GetBatcher();
@@ -26,16 +24,10 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Pic
   for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick); ++it) {
     uint64_t time = it->first;
     if (time < max_tick) {
-      Vec2 pos(time_graph_->GetWorldFromTick(time), position_[1]);
+      Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kWhite);
     } else {
       return;
     }
   }
-}
-
-void TracepointTrack::SetPos(float x, float y) {
-  position_ = Vec2(x, y);
-  thread_name_.SetPos(Vec2(x, y));
-  thread_name_.SetSize(Vec2(size_[0] * 0.3f, size_[1]));
 }

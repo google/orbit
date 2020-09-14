@@ -47,7 +47,7 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
 float SchedulerTrack::GetYFromDepth(uint32_t depth) const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   uint32_t num_gaps = depth;
-  return m_Pos[1] - (layout.GetTextCoresHeight() * (depth + 1)) -
+  return pos_[1] - (layout.GetTextCoresHeight() * (depth + 1)) -
          num_gaps * layout.GetSpaceBetweenCores();
 }
 
