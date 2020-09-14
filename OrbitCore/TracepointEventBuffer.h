@@ -17,14 +17,13 @@ class TracepointEventBuffer {
  public:
   TracepointEventBuffer() : max_time_(0), min_time_(std::numeric_limits<uint64_t>::max()) {}
 
-  std::vector<orbit_client_protos::TracepointEventInfo> GetTracepointEventsInTimeRangeForThreadId(
-      uint64_t time_begin, uint64_t time_end,
-      int32_t thread_id = SamplingProfiler::kAllThreadsFakeTid);
-
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
                                          int32_t thread_id);
 
-  std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
+  GetTracepointsOfThread(int32_t thread_id) const;
+
+  const std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
   tracepoint_events();
 
   Mutex& mutex();

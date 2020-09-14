@@ -6,29 +6,6 @@
 
 using orbit_client_protos::TracepointEventInfo;
 
-std::vector<TracepointEventInfo> TracepointEventBuffer::GetTracepointEventsInTimeRangeForThreadId(
-    uint64_t time_begin, uint64_t time_end, int32_t thread_id /*= kAllThreadsFakeTid*/) {
-  ScopeLock lock(mutex_);
-  std::vector<TracepointEventInfo> tracepoint_events;
-  for (auto& pair : tracepoint_events_) {
-    const int32_t tracepoint_thread_id = pair.first;
-    std::map<uint64_t, TracepointEventInfo>& tracepoints = pair.second;
-
-    if (thread_id == SamplingProfiler::kAllThreadsFakeTid || tracepoint_thread_id == thread_id) {
-      for (auto it = tracepoints.lower_bound(time_begin); it != tracepoints.end(); ++it) {
-        uint64_t time = it->first;
-        if (time < time_end) {
-          tracepoint_events.push_back(it->second);
-        } else {
-          break;
-        }
-      }
-    }
-  }
-
-  return tracepoint_events;
-}
-
 void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
                                                               uint64_t tracepoint_hash,
                                                               int32_t thread_id) {
@@ -66,10 +43,20 @@ bool TracepointEventBuffer::HasEvent() const {
   return false;
 }
 
+[[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
+TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
+  static std::map<uint64_t, orbit_client_protos::TracepointEventInfo> empty;
+  const auto& it = tracepoint_events_.find(thread_id);
+  if (it == tracepoint_events_.end()) {
+    return empty;
+  }
+  return it->second;
+}
+
 uint64_t TracepointEventBuffer::max_time() const { return max_time_; }
 uint64_t TracepointEventBuffer::min_time() const { return min_time_; }
 
-std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+const std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
 TracepointEventBuffer::tracepoint_events() {
   return tracepoint_events_;
 }
