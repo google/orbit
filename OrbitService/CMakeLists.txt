@@ -21,6 +21,8 @@ target_sources(OrbitServiceLib PRIVATE
         OrbitGrpcServer.h
         OrbitService.cpp
         OrbitService.h
+        Process.cpp
+        Process.h
         ProcessList.cpp
         ProcessList.h
         ProcessServiceImpl.cpp
@@ -67,7 +69,8 @@ strip_symbols(OrbitService)
 add_executable(OrbitServiceTests)
 target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp Utils.cpp)
+target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp
+                                         ProcessTest.cpp)
 
 target_link_libraries(OrbitServiceTests PRIVATE 
         OrbitServiceLib
@@ -78,6 +81,7 @@ add_custom_command(TARGET OrbitServiceTests POST_BUILD
         $<TARGET_FILE_DIR:OrbitServiceTests>/testdata)
 
 register_test(OrbitServiceTests)
+set_tests_properties(OrbitService PROPERTIES TIMEOUT 10)
 
 add_fuzzer(OrbitServiceUtilsFindSymbolsFilePathFuzzer
            OrbitServiceUtilsFindSymbolsFilePathFuzzer.cpp)

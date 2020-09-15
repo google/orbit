@@ -9,20 +9,24 @@
 #include <vector>
 
 #include "OrbitBase/Result.h"
-#include "process.pb.h"
+#include "Process.h"
 
 namespace orbit_service {
 
 class ProcessList {
  public:
   [[nodiscard]] ErrorMessageOr<void> Refresh();
-  [[nodiscard]] const std::vector<orbit_grpc_protos::ProcessInfo>& GetProcesses() {
-    return processes_;
+  [[nodiscard]] std::vector<orbit_grpc_protos::ProcessInfo> GetProcesses() const {
+    std::vector<orbit_grpc_protos::ProcessInfo> processes;
+    processes.reserve(processes_.size());
+    std::copy(processes_.begin(), processes_.end(), std::back_inserter(processes));
+
+    return processes;
   }
 
  private:
-  std::vector<orbit_grpc_protos::ProcessInfo> processes_;
-  std::unordered_map<int32_t, orbit_grpc_protos::ProcessInfo*> processes_map_;
+  std::vector<Process> processes_;
+  std::unordered_map<int32_t, Process*> processes_map_;
 };
 
 }  // namespace orbit_service
