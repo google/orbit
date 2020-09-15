@@ -14,6 +14,7 @@
 #include "TextBox.h"
 #include "Threading.h"
 #include "TimerChain.h"
+#include "TracepointTrack.h"
 #include "Track.h"
 #include "capture_data.pb.h"
 
@@ -33,7 +34,6 @@ class TimerTrack : public Track {
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                         PickingMode /*picking_mode*/) override;
   [[nodiscard]] Type GetType() const override { return kTimerTrack; }
-  [[nodiscard]] float GetHeight() const override;
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
@@ -65,6 +65,8 @@ class TimerTrack : public Track {
 
   virtual void UpdateBoxHeight();
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
+
+  [[nodiscard]] virtual float GetHeaderHeight() const;
 
  protected:
   [[nodiscard]] virtual bool IsTimerActive(

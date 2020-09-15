@@ -5,19 +5,23 @@
 #ifndef ORBIT_GL_TRACEPOINT_TRACK_H_
 #define ORBIT_GL_TRACEPOINT_TRACK_H_
 
-#include "GlCanvas.h"
-#include "TimeGraph.h"
-#include "Track.h"
+#include "EventTrack.h"
 
 class TracepointTrack : public EventTrack {
  public:
-  explicit TracepointTrack(TimeGraph* time_graph);
+  explicit TracepointTrack(TimeGraph* time_graph, int32_t thread_id);
+
+  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
 
   void SetPos(float x, float y);
 
-  // TODO(msandru): Override Track::Draw, Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
+  [[nodiscard]] float GetHeight() const override;
+
+  // TODO(msandru): Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
+ private:
+  [[nodiscard]] bool HasTracepoints() const;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_

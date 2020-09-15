@@ -26,7 +26,7 @@ class ThreadTrack : public TimerTrack {
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 
   void UpdateBoxHeight() override;
-  void SetEventTrackColor(Color color);
+  void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
@@ -39,7 +39,12 @@ class ThreadTrack : public TimerTrack {
                         TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
+  [[nodiscard]] float GetHeight() const override;
+
+  [[nodiscard]] float GetHeaderHeight() const override;
+
   std::shared_ptr<EventTrack> event_track_;
+  std::shared_ptr<TracepointTrack> tracepoint_track_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

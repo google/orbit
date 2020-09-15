@@ -55,7 +55,7 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
     box_height /= static_cast<float>(depth_);
   }
 
-  return pos_[1] - layout.GetEventTrackHeight() - layout.GetSpaceBetweenTracksAndThread() -
+  return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
          box_height * (depth + 1);
 }
 
@@ -174,16 +174,6 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-float TimerTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
-  bool is_collapsed = collapse_toggle_->IsCollapsed();
-  uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
-  uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
-  return layout.GetTextBoxHeight() * depth +
-         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
-         layout.GetTrackBottomMargin();
-}
-
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
   std::vector<std::shared_ptr<TimerChain>> timers;
   ScopeLock lock(mutex_);
@@ -257,3 +247,8 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
 std::string TimerTrack::GetBoxTooltip(PickingId /*id*/) const { return ""; }
+
+float TimerTrack::GetHeaderHeight() const {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  return layout.GetEventTrackHeight();
+}
