@@ -290,7 +290,7 @@ void TimeGraph::OnDrag(float a_Ratio) {
   m_MaxTimeUs = m_MinTimeUs + timeWindow;
 }
 
-double TimeGraph::GetTime(double a_Ratio) {
+double TimeGraph::GetTime(double a_Ratio) const {
   double CurrentWidth = m_MaxTimeUs - m_MinTimeUs;
   double Delta = a_Ratio * CurrentWidth;
   return m_MinTimeUs + Delta;
@@ -475,7 +475,7 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
   return TicksToMicroseconds(capture_min_timestamp_, time) - m_MinTimeUs;
 }
 
-uint64_t TimeGraph::GetTickFromWorld(float world_x) {
+uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
   double ratio =
       m_WorldWidth != 0 ? static_cast<double>((world_x - m_WorldStartX) / m_WorldWidth) : 0;
   uint64_t time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
@@ -612,6 +612,8 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
 }
 
 void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+  current_mouse_time_ns_ = GetTickFromWorld(m_Canvas->GetMouseX());
+
   const bool picking = picking_mode != PickingMode::kNone;
   if ((!picking && m_NeedsUpdatePrimitives) || picking) {
     UpdatePrimitives(picking_mode);

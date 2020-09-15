@@ -35,6 +35,13 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float text_z = GlCanvas::kZValueText;
 
   Box box(pos_, Vec2(size_[0], -size_[1]), track_z);
+
+  // Draw label with graph value at current mouse position.
+  const Color kLabelTextColor(255, 255, 255, 255);
+  double graph_value = GetValueAtTime(time_graph_->GetCurrentMouseTimeNs());
+  canvas->GetTextRenderer().AddText(std::to_string(graph_value).c_str(), canvas->GetMouseX(), y0,
+                                    text_z, kLabelTextColor);
+
   batcher->AddBox(box, color, shared_from_this());
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
