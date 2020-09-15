@@ -24,7 +24,6 @@ class TracepointTrack : public EventTrack {
 
   std::string GetSampleTooltip(PickingId id) const;
 
-  // TODO(msandru): Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
  private:
   [[nodiscard]] bool HasTracepoints() const;
 };
