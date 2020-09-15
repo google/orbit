@@ -55,13 +55,8 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
     box_height /= static_cast<float>(depth_);
   }
 
-  float tracepoint_track_space = tracepoint_track_->GetEventTrackHeightAndExtraSpace();
-  float space_between_tracks_and_thread = layout.GetSpaceBetweenTracksAndThread();
-
-  return pos_[1] - layout.GetEventTrackHeight() - space_between_tracks_and_thread -
-         box_height * (depth + 1) -
-         (tracepoint_track_space > 0 ? tracepoint_track_space + space_between_tracks_and_thread
-                                     : 0);
+  return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
+         box_height * (depth + 1);
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
@@ -252,3 +247,8 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
 std::string TimerTrack::GetBoxTooltip(PickingId /*id*/) const { return ""; }
+
+const float TimerTrack::GetHeaderHeight() const {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  return layout.GetEventTrackHeight();
+}

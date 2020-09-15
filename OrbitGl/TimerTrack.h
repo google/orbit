@@ -66,6 +66,8 @@ class TimerTrack : public Track {
   virtual void UpdateBoxHeight();
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 
+  virtual const float GetHeaderHeight() const;
+
  protected:
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
@@ -92,13 +94,6 @@ class TimerTrack : public Track {
 
   [[nodiscard]] virtual std::string GetBoxTooltip(PickingId id) const;
   float box_height_;
-
-  void SetTracepointTrack(std::shared_ptr<TracepointTrack> tracepoint_track) {
-    this->tracepoint_track_ = tracepoint_track;
-  }
-
- private:
-  std::shared_ptr<TracepointTrack> tracepoint_track_;
 };
 
 #endif  // ORBIT_GL_TIMER_TRACK_H_

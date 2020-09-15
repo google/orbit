@@ -19,7 +19,7 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id) : TimerTrack(
   event_track_ = std::make_shared<EventTrack>(time_graph);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph);
+  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id);
   tracepoint_track_->SetThreadId(thread_id);
 }
 
@@ -157,7 +157,6 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
   tracepoint_track_->SetPos(pos_[0], pos_[1]);
   tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
 
-  TimerTrack::SetTracepointTrack(tracepoint_track_);
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
 }
 
@@ -230,4 +229,10 @@ float ThreadTrack::GetHeight() const {
   return layout.GetTextBoxHeight() * depth +
          (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
          layout.GetTrackBottomMargin() + tracepoint_track_->GetHeight();
+}
+
+const float ThreadTrack::GetHeaderHeight() const {
+  TimeGraphLayout& layout = time_graph_->GetLayout();
+
+  return layout.GetEventTrackHeight() + tracepoint_track_->GetHeight();
 }

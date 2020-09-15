@@ -9,7 +9,7 @@
 
 class TracepointTrack : public EventTrack {
  public:
-  explicit TracepointTrack(TimeGraph* time_graph);
+  explicit TracepointTrack(TimeGraph* time_graph, int32_t thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 
@@ -19,11 +19,10 @@ class TracepointTrack : public EventTrack {
 
   [[nodiscard]] float GetHeight() const override;
 
-  float GetEventTrackHeightAndExtraSpace() const;
-
   // TODO(msandru): Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
  private:
-  bool were_tracepoints_hit_per_thread_ = false;
+  void HasTracepoints();
+  bool has_tracepoints_ = false;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_
