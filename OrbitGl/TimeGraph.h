@@ -53,7 +53,7 @@ class TimeGraph {
   int GetMarginInPixels() const { return m_Margin; }
   float GetWorldFromTick(uint64_t a_Time) const;
   float GetWorldFromUs(double a_Micros) const;
-  uint64_t GetTickFromWorld(float a_WorldX);
+  uint64_t GetTickFromWorld(float a_WorldX) const;
   uint64_t GetTickFromUs(double a_MicroSeconds) const;
   double GetUsFromTick(uint64_t time) const;
   double GetTimeWindowUs() const { return m_TimeWindowUs; }
@@ -77,7 +77,7 @@ class TimeGraph {
   void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
                                 double distance = 0.3);
   void VerticallyMoveIntoView(const TextBox* text_box);
-  double GetTime(double a_Ratio);
+  double GetTime(double a_Ratio) const;
   double GetTimeIntervalMicro(double a_Ratio);
   void Select(const TextBox* text_box);
   enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
@@ -139,8 +139,9 @@ class TimeGraph {
     NeedsRedraw();
   }
 
-  uint64_t GetCaptureMin() { return capture_min_timestamp_; }
-  uint64_t GetCaptureMax() { return capture_max_timestamp_; }
+  uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
+  uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
+  uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
@@ -167,6 +168,7 @@ class TimeGraph {
   double m_MaxTimeUs = 0;
   uint64_t capture_min_timestamp_ = 0;
   uint64_t capture_max_timestamp_ = 0;
+  uint64_t current_mouse_time_ns_ = 0;
   std::map<int32_t, uint32_t> m_EventCount;
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;
