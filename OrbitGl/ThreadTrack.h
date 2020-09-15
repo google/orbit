@@ -41,7 +41,7 @@ class ThreadTrack : public TimerTrack {
 
   [[nodiscard]] float GetHeight() const override;
 
-  const float GetHeaderHeight() const override;
+  [[nodiscard]] float GetHeaderHeight() const override;
 
   std::shared_ptr<EventTrack> event_track_;
   std::shared_ptr<TracepointTrack> tracepoint_track_;

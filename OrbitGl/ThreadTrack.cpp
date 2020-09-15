@@ -230,7 +230,7 @@ float ThreadTrack::GetHeight() const {
          layout.GetTrackBottomMargin() + tracepoint_track_->GetHeight();
 }
 
-const float ThreadTrack::GetHeaderHeight() const {
+float ThreadTrack::GetHeaderHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
 
   return layout.GetEventTrackHeight() + tracepoint_track_->GetHeight();

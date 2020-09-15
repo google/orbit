@@ -248,7 +248,7 @@ bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
 std::string TimerTrack::GetBoxTooltip(PickingId /*id*/) const { return ""; }
 
-const float TimerTrack::GetHeaderHeight() const {
+float TimerTrack::GetHeaderHeight() const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   return layout.GetEventTrackHeight();
 }

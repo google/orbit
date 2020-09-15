@@ -79,6 +79,6 @@ float TracepointTrack::GetHeight() const {
                           : 0;
 }
 
-const bool TracepointTrack::HasTracepoints() const {
+bool TracepointTrack::HasTracepoints() const {
   return !GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_).empty();
 }

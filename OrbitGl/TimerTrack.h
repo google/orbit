@@ -66,7 +66,7 @@ class TimerTrack : public Track {
   virtual void UpdateBoxHeight();
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 
-  virtual const float GetHeaderHeight() const;
+  [[nodiscard]] virtual float GetHeaderHeight() const;
 
  protected:
   [[nodiscard]] virtual bool IsTimerActive(
