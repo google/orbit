@@ -4,7 +4,6 @@
 
 #include "ProcessList.h"
 
-#include <absl/strings/ascii.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 
@@ -18,14 +17,7 @@
 namespace orbit_service {
 
 ErrorMessageOr<void> ProcessList::Refresh() {
-  auto cpu_result = utils::GetCpuUtilization();
-  if (!cpu_result) {
-    return outcome::failure(absl::StrFormat("Unable to retrieve cpu usage of processes: %s",
-                                            cpu_result.error().message()));
-  }
-  std::unordered_map<int32_t, double> cpu_usage_map = std::move(cpu_result.value());
-
-  std::vector<Process> updated_processes;
+  absl::flat_hash_map<pid_t, Process> updated_processes{};
 
   // TODO(b/161423785): This for loop should be refactored. For example, when
   //  parts are in a separate function, OUTCOME_TRY could be used to simplify
@@ -39,17 +31,28 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     uint32_t pid;
     if (!absl::SimpleAtoi(folder_name, &pid)) continue;
 
-    auto iter = processes_map_.find(pid);
-    if (iter != processes_map_.end()) {
-      Process& process = *(iter->second);
-      process.set_cpu_usage(cpu_usage_map[process.pid()]);
-      updated_processes.push_back(process);
+    const auto iter = processes_.find(pid);
+    if (iter != processes_.end()) {
+      auto process = processes_.extract(iter);
+
+      const auto total_cpu_time = utils::GetCumulativeTotalCpuTime();
+      const auto cpu_time = utils::GetCumulativeCpuTimeFromProcess(process.key());
+      if (cpu_time && total_cpu_time) {
+        process.mapped().UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
+      } else {
+        // We don't fail in this case. This could be a permission problem which might occur when not
+        // running as root.
+        ERROR("Could not update the CPU usage of process %d", process.key());
+      }
+
+      updated_processes.insert(std::move(process));
       continue;
     }
 
-    auto process = Process::FromPidAndCpuUsage(pid, cpu_usage_map[pid]);
+    auto process = Process::FromPid(pid);
+
     if (process) {
-      updated_processes.emplace_back(std::move(process.value()));
+      updated_processes.emplace(pid, std::move(process.value()));
     } else {
       // We don't fail in this case. This could be a permission problem which is restricted to a
       // small amount of processes.
@@ -58,9 +61,10 @@ ErrorMessageOr<void> ProcessList::Refresh() {
   }
 
   processes_ = std::move(updated_processes);
-  processes_map_.clear();
-  for (auto& process : processes_) {
-    processes_map_[process.pid()] = &process;
+
+  if (processes_.empty()) {
+    return ErrorMessage{
+        "Could not determine a single process from the proc-filesystem. Something seems to wrong."};
   }
 
   return outcome::success();

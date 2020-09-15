@@ -6,6 +6,7 @@
 
 #include <deque>
 
+#include "OrbitBase/Logging.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
 #include "gmock/gmock-matchers.h"
@@ -93,45 +94,57 @@ TEST(Utils, ParseMaps) {
     EXPECT_EQ(no_symbols_module_info->build_id(), "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
     EXPECT_EQ(no_symbols_module_info->load_bias(), 0x400000);
   }
+}
 
-}  // namespace orbit_service::utils
+TEST(Utils, GetAllPids) {
+  const auto pids = GetAllPids();
 
-TEST(Utils, GetCpuUtilization) {
-  {
-    // Wrong data
-    const auto result =
-        GetCpuUtilization(std::string_view{"random example test data\nwith new line"});
-    EXPECT_FALSE(result) << result.error().message();
-  }
+  // At least the test process needs to show up
+  ASSERT_TRUE(pids.size() >= 1);
 
   {
-    // Empty data
-    const auto result = GetCpuUtilization(std::string_view{""});
-    ASSERT_TRUE(result);
-    EXPECT_TRUE(result.value().empty());
+    const auto result = std::find(pids.begin(), pids.end(), getpid());
+    ASSERT_NE(result, pids.end());
   }
 
+  // We also assume PID 1 is always present
   {
-    // Currently running
-    const auto result = GetCpuUtilization();
-    EXPECT_TRUE(result) << result.error().message();
+    const auto result = std::find(pids.begin(), pids.end(), 1);
+    ASSERT_NE(result, pids.end());
   }
-  {
-    // Valid Example Data
-    std::string_view top_data{
-        "2636625,userA,20,0,4960340,271400,131228,R,118.8,0.4,7533:11,chrome\n"
-        "1,root,20,0,171340,12688,8456,S,0.0,0.0,6:37.00,systemd\n"
-        "2,root,20,0,0,0,0,S,0.0,0.0,0:00.61,kthreadd\n"
-        "3,root,0,-20,0,0,0,I,0.0,0.0,0:00.00,rcu_gp\n"};
-    const auto result = GetCpuUtilization(top_data);
-    ASSERT_TRUE(result);
-    EXPECT_EQ(result.value().size(), 4);
+}
 
-    EXPECT_DOUBLE_EQ(result.value().at(2636625), 118.8);
-    EXPECT_DOUBLE_EQ(result.value().at(1), 0.0);
-    EXPECT_DOUBLE_EQ(result.value().at(2), 0.0);
-    EXPECT_DOUBLE_EQ(result.value().at(3), 0.0);
-  }
+TEST(Utils, GetCumulativeTotalCpuTime) {
+  // There is not much invariance here which we can test.
+  // We know the optional should return a value and we know it's positive and
+  // monotonically increasing.
+
+  const auto& jiffies1 = GetCumulativeTotalCpuTime();
+  ASSERT_TRUE(jiffies1.has_value());
+  ASSERT_TRUE(jiffies1->value > 0ul);
+
+  const auto& jiffies2 = GetCumulativeTotalCpuTime();
+  ASSERT_TRUE(jiffies2.has_value());
+  ASSERT_TRUE(jiffies2->value > 0ul);
+
+  ASSERT_TRUE(jiffies2->value >= jiffies1->value);
+}
+
+TEST(Utils, GetCumulativeCpuTimeFromProcess) {
+  const auto& jiffies1 = GetCumulativeCpuTimeFromProcess(getpid());
+  ASSERT_TRUE(jiffies1.has_value());
+
+  const auto& jiffies2 = GetCumulativeCpuTimeFromProcess(getpid());
+  ASSERT_TRUE(jiffies2.has_value());
+
+  ASSERT_TRUE(jiffies2->value >= jiffies1->value);
+
+  const auto& jiffies_total = GetCumulativeTotalCpuTime();
+  ASSERT_TRUE(jiffies_total.has_value());
+  ASSERT_TRUE(jiffies_total->value > 0ul);
+
+  // A single process should never have consumed more CPU cycles than the total CPU time
+  ASSERT_TRUE(jiffies2->value <= jiffies_total->value);
 }
 
 TEST(Utils, GetExecutablePath) {

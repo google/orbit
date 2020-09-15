@@ -24,8 +24,18 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t p
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints();
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
     std::string_view proc_maps_data);
-ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization();
-ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization(std::string_view top_data);
+std::vector<pid_t> GetAllPids();
+
+// In the linux world, Jiffies is a global counter which increments on tick (caused by a CPU timer
+// interrupt). This struct is a poor man's strong type to ensure that this measure is not mistakenly
+// interpreted as nanoseconds.
+struct Jiffies {
+  uint64_t value;
+};
+
+std::optional<Jiffies> GetCumulativeTotalCpuTime();
+std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
+
 ErrorMessageOr<Path> GetExecutablePath(int32_t pid);
 ErrorMessageOr<std::string> ReadFileToString(const Path& file_name);
 ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,

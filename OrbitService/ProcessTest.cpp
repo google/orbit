@@ -12,7 +12,7 @@ constexpr int kTaskCommLength = 16;
 namespace orbit_service {
 
 TEST(Process, FromPid) {
-  auto potential_process = Process::FromPidAndCpuUsage(getpid(), 0.0);
+  auto potential_process = Process::FromPid(getpid());
   ASSERT_TRUE(potential_process);
 
   auto& process = potential_process.value();

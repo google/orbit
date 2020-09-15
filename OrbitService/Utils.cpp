@@ -15,7 +15,10 @@
 
 #include <charconv>
 #include <cstdlib>
+#include <filesystem>
+#include <functional>
 #include <memory>
+#include <numeric>
 #include <string>
 
 #include "ElfUtils/ElfFile.h"
@@ -33,9 +36,7 @@ using ::ElfUtils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
-namespace {
-
-const char* kLinuxTracingEvents = "/sys/kernel/debug/tracing/events/";
+static const char* kLinuxTracingEvents = "/sys/kernel/debug/tracing/events/";
 
 ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
   struct stat stat_buf {};
@@ -46,24 +47,6 @@ ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
   }
   return stat_buf.st_size;
 }
-
-ErrorMessageOr<std::string> ExecuteCommand(const std::string& cmd) {
-  // TODO (antonrohr): check exit code of executed cmd. If exit code is not 0,
-  //  return failure
-  std::array<char, 128> buffer{};
-  std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
-  if (!pipe) {
-    ERROR("Failed to execute command \"%s\": %s", cmd.c_str(), SafeStrerror(errno));
-    return ErrorMessage(
-        absl::StrFormat("Failed to execute command \"%s\": %s", cmd, SafeStrerror(errno)));
-  }
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-    result += buffer.data();
-  }
-  return result;
-}
-}  // namespace
 
 ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
   std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%d/maps", pid)};
@@ -175,29 +158,149 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   return result;
 }
 
-ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization() {
-  const std::string cmd = "top -b -n 1 -w512 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
-  OUTCOME_TRY(top_data, ExecuteCommand(cmd));
-  return GetCpuUtilization(top_data);
-}
-
-ErrorMessageOr<std::unordered_map<pid_t, double>> GetCpuUtilization(std::string_view top_data) {
-  std::unordered_map<pid_t, double> process_map;
-  for (const auto& line : absl::StrSplit(top_data, '\n')) {
-    if (line.empty()) continue;
-    std::vector<std::string> tokens = absl::StrSplit(line, ',');
-    if (tokens.size() != 12) {
-      return ErrorMessage(
-          "Unable to determine cpu utilization, wrong format from top "
-          "command.");
-    }
-
-    pid_t pid = strtol(tokens[0].c_str(), nullptr, 10);
-    double cpu = strtod(tokens[8].c_str(), nullptr);
-    process_map[pid] = cpu;
+static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
+  if (!entry.is_directory()) {
+    return std::nullopt;
   }
 
-  return process_map;
+  int potential_pid;
+  if (!absl::SimpleAtoi(entry.path().filename().string(), &potential_pid)) {
+    return std::nullopt;
+  }
+
+  if (potential_pid <= 0) {
+    return std::nullopt;
+  }
+
+  return static_cast<pid_t>(potential_pid);
+}
+
+std::vector<pid_t> GetAllPids() {
+  const auto emplace_back_if_has_value = [](auto vec, const auto& val) {
+    if (val.has_value()) {
+      vec.emplace_back(std::move(val.value()));
+    }
+
+    return std::move(vec);
+  };
+
+  fs::directory_iterator proc{"/proc"};
+  return std::transform_reduce(begin(proc), end(proc), std::vector<pid_t>{},
+                               emplace_back_if_has_value, ProcEntryToPid);
+}
+
+std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
+  const auto stat = std::filesystem::path{"/proc"} / std::to_string(pid) / "stat";
+
+  // /proc/[pid]/stat looks like so (example - all in one line):
+  // 1395261 (sleep) S 5273 1160 1160 0 -1 1077936128 101 0 0 0 0 0 0 0 20 0 1 0 42187401 5431296
+  // 131 18446744073709551615 94702955896832 94702955911385 140735167078224 0 0 0 0 0 0 0 0 0 17 10
+  // 0 0 0 0 0 94702955928880 94702955930112 94702967197696 140735167083224 140735167083235
+  // 140735167083235 140735167086569 0
+  //
+  // This code reads field 13 (user time) and 14 (kernel time) to determine the process's cpu usage.
+  // Older kernels might have less fields than in the example. Over time fields had been added to
+  // the end, but field indexes stayed stable.
+
+  if (!std::filesystem::exists(stat)) {
+    return {};
+  }
+
+  std::ifstream stream{stat.string()};
+  if (!stream.good()) {
+    LOG("Could not open %s", stat.string());
+    return {};
+  }
+
+  std::string first_line{};
+  std::getline(stream, first_line);
+
+  std::vector<std::string_view> fields = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
+
+  constexpr size_t kUtimeIndex = 13;
+  constexpr size_t kStimeIndex = 14;
+
+  if (fields.size() <= std::max(kUtimeIndex, kStimeIndex)) {
+    return {};
+  }
+
+  size_t utime{};
+  if (!absl::SimpleAtoi(fields[kUtimeIndex], &utime)) {
+    return {};
+  }
+
+  size_t stime{};
+  if (!absl::SimpleAtoi(fields[kStimeIndex], &stime)) {
+    return {};
+  }
+
+  return Jiffies{utime + stime};
+}
+
+std::optional<Jiffies> GetCumulativeTotalCpuTime() {
+  std::ifstream stat_stream{"/proc/stat"};
+
+  // /proc/stat looks like so (example):
+  // cpu  2939645 2177780 3213131 495750308 128031 0 469660 0 0 0
+  // cpu0 238392 136574 241698 41376123 10562 0 285529 0 0 0
+  // cpu1 250552 255075 339032 41161047 10580 0 74924 0 0 0
+  // cpu2 259751 189964 284201 41275484 10515 0 25803 0 0 0
+  // cpu3 262709 274244 360158 41021080 11391 0 49734 0 0 0
+  // cpu4 259346 334285 391229 41021734 10923 0 6862 0 0 0
+  // cpu5 257605 236852 317990 41186809 11006 0 4687 0 0 0
+  // cpu6 244450 197610 258522 41315244 10772 0 3679 0 0 0
+  // cpu7 239533 118254 209752 41453567 10417 0 3216 0 0 0
+  // cpu8 228352 104140 203956 41495612 9605 0 2898 0 0 0
+  // cpu9 231930 91346 199315 41507207 10363 0 2620 0 0 0
+  // cpu10 231707 130839 201517 41467968 10920 0 2616 0 0 0
+  // cpu11 235314 108593 205757 41468427 10972 0 7087 0 0 0
+  // intr 1137887578 7 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ...
+  // ctxt 2193055270
+  // btime 1599751494
+  // processes 1402492
+  // procs_running 3
+  // procs_blocked 0
+  // softirq 786377709 150 321427815 783165 48655285 46 0 1068082 323211116 5742 91226308
+  //
+  // This code reads the first line to determine the overall amount of Jiffies that have been
+  // counted. It also reads the lines beginning with "cpu*" to determine the number of logical CPUs
+  // in the system.
+
+  std::string first_line;
+  std::getline(stat_stream, first_line);
+
+  if (!absl::StartsWith(first_line, "cpu ")) {
+    return {};
+  }
+
+  // This is counting the number of CPUs
+  std::string current_line;
+  size_t cpus = 0;
+  while (true) {
+    std::string current_line;
+    std::getline(stat_stream, current_line);
+    if (!absl::StartsWith(current_line, "cpu")) {
+      break;
+    }
+    cpus++;
+  }
+
+  if (cpus == 0) {
+    return {};
+  }
+
+  std::vector<std::string_view> splits = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
+
+  return Jiffies{std::accumulate(splits.begin() + 1, splits.end(), 0ul,
+                                 [](auto sum, const auto& str) {
+                                   int potential_time = 0;
+                                   if (absl::SimpleAtoi(str, &potential_time)) {
+                                     sum += potential_time;
+                                   }
+
+                                   return sum;
+                                 }) /
+                 cpus};
 }
 
 ErrorMessageOr<Path> GetExecutablePath(int32_t pid) {

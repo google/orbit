@@ -19,7 +19,26 @@
 
 namespace orbit_service {
 
-ErrorMessageOr<Process> Process::FromPidAndCpuUsage(pid_t pid, double cpu_usage) {
+void Process::UpdateCpuUsage(utils::Jiffies process_cpu_time, utils::Jiffies total_cpu_time) {
+  const auto diff_process_cpu_time =
+      static_cast<double>(process_cpu_time.value - previous_process_cpu_time_.value);
+  const auto diff_total_cpu_time =
+      static_cast<double>(total_cpu_time.value - previous_total_cpu_time_.value);
+
+  // When the counters wrap, `cpu_usage` might be smaller than 0.0 or larger than 1.0,
+  // depending on the signedness of `Jiffies`. Reference implementations like top and htop usually
+  // clamp in this case. So that's what we're also doing here.
+  const auto cpu_usage = std::clamp(diff_process_cpu_time / diff_total_cpu_time, 0.0, 1.0);
+
+  // TODO(hebecker): Rename cpu_usage to cpu_usage_rate and normalize. Being in percent was
+  // surprising
+  set_cpu_usage(cpu_usage * 100.0);
+
+  previous_process_cpu_time_ = process_cpu_time;
+  previous_total_cpu_time_ = total_cpu_time;
+}
+
+ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   const auto path = std::filesystem::path{"/proc"} / std::to_string(pid);
 
   if (!std::filesystem::is_directory(path)) {
@@ -43,7 +62,14 @@ ErrorMessageOr<Process> Process::FromPidAndCpuUsage(pid_t pid, double cpu_usage)
   Process process{};
   process.set_pid(pid);
   process.set_name(name);
-  process.set_cpu_usage(cpu_usage);
+
+  const auto total_cpu_time = utils::GetCumulativeTotalCpuTime();
+  const auto cpu_time = utils::GetCumulativeCpuTimeFromProcess(process.pid());
+  if (cpu_time && total_cpu_time) {
+    process.UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
+  } else {
+    LOG("Could not update the CPU usage of process %d", process.pid());
+  }
 
   // "The command-line arguments appear [...] as a set of strings
   // separated by null bytes ('\0')".
