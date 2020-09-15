@@ -26,7 +26,7 @@ class ThreadTrack : public TimerTrack {
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 
   void UpdateBoxHeight() override;
-  void SetEventTrackColor(Color color);
+  void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;

@@ -810,7 +810,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
     track = std::make_shared<ThreadTrack>(this, tid);
     tracks_.emplace_back(track);
     thread_tracks_[tid] = track;
-    track->SetEventTrackColor(GetThreadColor(tid));
+    track->SetTrackColor(GetThreadColor(tid));
   }
   return track;
 }

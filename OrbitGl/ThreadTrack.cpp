@@ -159,7 +159,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
 }
 
-void ThreadTrack::SetEventTrackColor(Color color) {
+void ThreadTrack::SetTrackColor(Color color) {
   ScopeLock lock(mutex_);
   event_track_->SetColor(color);
   tracepoint_track_->SetColor(color);
@@ -222,9 +222,9 @@ std::string ThreadTrack::GetTooltip() const {
 
 float ThreadTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  bool is_collapsed = collapse_toggle_->IsCollapsed();
-  uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
-  uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
+  const bool is_collapsed = collapse_toggle_->IsCollapsed();
+  const uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
+  const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
   return layout.GetTextBoxHeight() * depth +
          (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
          layout.GetTrackBottomMargin() + tracepoint_track_->GetHeight();

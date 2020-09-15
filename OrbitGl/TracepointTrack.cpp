@@ -12,9 +12,7 @@ TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
 }
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  HasTracepoints();
-
-  if (!has_tracepoints_) {
+  if (!HasTracepoints()) {
     return;
   }
 
@@ -77,13 +75,10 @@ void TracepointTrack::SetPos(float x, float y) {
 float TracepointTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
 
-  return has_tracepoints_ == true
-             ? layout.GetEventTrackHeight() + layout.GetSpaceBetweenTracksAndThread()
-             : 0;
+  return HasTracepoints() ? layout.GetEventTrackHeight() + layout.GetSpaceBetweenTracksAndThread()
+                          : 0;
 }
 
-void TracepointTrack::HasTracepoints() {
-  if (!has_tracepoints_) {
-    has_tracepoints_ = !GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_).empty();
-  }
+const bool TracepointTrack::HasTracepoints() const {
+  return !GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_).empty();
 }

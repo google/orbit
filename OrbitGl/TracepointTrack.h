@@ -21,8 +21,7 @@ class TracepointTrack : public EventTrack {
 
   // TODO(msandru): Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
  private:
-  void HasTracepoints();
-  bool has_tracepoints_ = false;
+  const bool HasTracepoints() const;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_
