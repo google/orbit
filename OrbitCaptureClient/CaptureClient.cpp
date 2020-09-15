@@ -6,8 +6,10 @@
 
 #include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
@@ -98,6 +100,7 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
     ERROR("Sending CaptureRequest on Capture's gRPC stream");
     reader_writer_->WritesDone();
     FinishCapture();
+    capture_listener_->OnCaptureFailed(ErrorMessage("Error sending capture request."));
     return;
   }
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start "
@@ -147,6 +150,7 @@ bool CaptureClient::StopCapture() {
     ERROR(
         "WritesDone on Capture's gRPC stream failed: unable to finish the "
         "capture in orderly manner, initiating emergency stop");
+    capture_listener_->OnCaptureFailed(ErrorMessage("Error while stopping capture."));
     force_stop_ = true;
   } else {
     LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
@@ -164,6 +168,8 @@ void CaptureClient::FinishCapture() {
   grpc::Status status = reader_writer_->Finish();
   if (!status.ok()) {
     ERROR("Finishing gRPC call to Capture: %s", status.error_message());
+    capture_listener_->OnCaptureFailed(
+        ErrorMessage(absl::StrFormat("Error while finishing capture: %s", status.error_message())));
   }
   reader_writer_.reset();
 
