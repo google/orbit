@@ -27,7 +27,7 @@ using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
 namespace {
-inline const std::string kFileOrbitExtension = ".orbit";
+inline constexpr std::string_view kFileOrbitExtension = ".orbit";
 }
 
 namespace capture_serializer {
@@ -41,10 +41,8 @@ void WriteMessage(const google::protobuf::Message* message,
 
 std::string GetCaptureFileName(const CaptureData& capture_data) {
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string result;
-  result.append(Path::StripExtension(capture_data.process_name()));
-  result.append("_");
-  result.append(OrbitUtils::FormatTime(timestamp));
+  std::string result = absl::StrCat(Path::StripExtension(capture_data.process_name()), "_",
+                                    OrbitUtils::FormatTime(timestamp));
   IncludeOrbitExtensionInFile(result);
   return result;
 }
