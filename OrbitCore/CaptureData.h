@@ -121,6 +121,10 @@ class CaptureData {
     return tracepoint_event_buffer_->mutex();
   }
 
+  [[nodiscard]] orbit_grpc_protos::TracepointInfo* GetTracepointInfo(uint64_t key) const {
+    return tracepoint_info_manager_->Get(key);
+  }
+
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const {
     return tracepoint_event_buffer_->GetTracepointsOfThread(thread_id);
@@ -140,10 +144,10 @@ class CaptureData {
   }
 
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
-                                         int32_t process_id, int32_t thread_id,
+                                         int32_t process_id, int32_t thread_id, int32_t cpu,
                                          bool is_same_pid_as_target) {
-    tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(time, tracepoint_hash, process_id,
-                                                                thread_id, is_same_pid_as_target);
+    tracepoint_event_buffer_->AddTracepointEventAndMapToThreads(
+        time, tracepoint_hash, process_id, thread_id, cpu, is_same_pid_as_target);
   }
 
   [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {

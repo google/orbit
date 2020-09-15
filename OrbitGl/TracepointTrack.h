@@ -19,6 +19,11 @@ class TracepointTrack : public EventTrack {
 
   [[nodiscard]] float GetHeight() const override;
 
+  void OnPick(int x, int y) override;
+  void OnRelease() override;
+
+  std::string GetSampleTooltip(PickingId id) const;
+
   // TODO(msandru): Track::OnPick, Track::OnRelease(), Track::GetBoxTooltip()
  private:
   [[nodiscard]] bool HasTracepoints() const;

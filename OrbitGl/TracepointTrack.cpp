@@ -37,14 +37,30 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::kZValueEventBar, color,
                    shared_from_this());
 
+  if (picked_) {
+    Vec2& from = mouse_pos_[0];
+    Vec2& to = mouse_pos_[1];
+
+    x0 = from[0];
+    y0 = pos_[1];
+    x1 = to[0];
+    y1 = y0 - size_[1];
+
+    Color picked_color(0, 128, 255, 128);
+    Box box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi);
+    batcher->AddBox(box, picked_color, shared_from_this());
+  }
+
   canvas_ = canvas;
 }
 
-void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode) {
+void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                                       PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent;
   float track_height = layout.GetEventTrackHeight();
+  const bool picking = picking_mode != PickingMode::kNone;
 
   ScopeLock lock(GOrbitApp->GetCaptureData().GetTracepointEventBufferMutex());
 
@@ -53,13 +69,35 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Pic
 
   const Color kWhite(255, 255, 255, 255);
 
-  for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick); ++it) {
-    uint64_t time = it->first;
-    if (time < max_tick) {
-      Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite);
-    } else {
-      return;
+  const Color kGreenSelection(0, 255, 0, 255);
+
+  if (!picking) {
+    for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
+         ++it) {
+      uint64_t time = it->first;
+      if (time < max_tick) {
+        Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+        batcher->AddVerticalLine(pos, -track_height, z, kWhite);
+      } else {
+        return;
+      }
+    }
+  } else {
+    constexpr const float kPickingBoxWidth = 9.0f;
+    constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
+
+    for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
+         ++it) {
+      uint64_t time = it->first;
+      if (time > min_tick && time < max_tick) {
+        Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+                 pos_[1] - track_height + 1);
+        Vec2 size(kPickingBoxWidth, track_height);
+        auto user_data = std::make_unique<PickingUserData>(
+            nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+        user_data->custom_data_ = &it->second;
+        batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+      }
     }
   }
 }
@@ -81,4 +119,37 @@ float TracepointTrack::GetHeight() const {
 
 bool TracepointTrack::HasTracepoints() const {
   return !GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_).empty();
+}
+
+void TracepointTrack::OnPick(int x, int y) {
+  Vec2& mouse_pos = mouse_pos_[0];
+  canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
+  mouse_pos_[1] = mouse_pos_[0];
+  picked_ = true;
+}
+
+void TracepointTrack::OnRelease() { picked_ = false; }
+
+std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
+  static const std::string unknown_return_text = "Linux tracepoint event information missing";
+
+  auto user_data = time_graph_->GetBatcher().GetUserData(id);
+  if (!user_data || !user_data->custom_data_) {
+    return unknown_return_text;
+  }
+
+  const auto* tracepoint_event_info =
+      static_cast<const orbit_client_protos::TracepointEventInfo*>(user_data->custom_data_);
+
+  uint64_t tracepoint_info_key = tracepoint_event_info->tracepoint_info_key();
+
+  TracepointInfo* tracepoint_info =
+      GOrbitApp->GetCaptureData().GetTracepointInfo(tracepoint_info_key);
+
+  return absl::StrFormat(
+      "<b>CPU Core activity</b><br/>"
+      "<br/>"
+      "<b>Core:</b> %d<br/>"
+      "<b>Name:</b> %s [%s]<br/>",
+      tracepoint_event_info->cpu(), tracepoint_info->name(), tracepoint_info->category());
 }

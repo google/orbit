@@ -20,7 +20,7 @@ class TracepointInfoManager {
 
   bool AddUniqueTracepointEventInfo(uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint);
 
-  [[nodiscard]] std::optional<orbit_grpc_protos::TracepointInfo> Get(uint64_t key) const;
+  [[nodiscard]] orbit_grpc_protos::TracepointInfo* Get(uint64_t key) const;
   [[nodiscard]] bool Contains(uint64_t key) const;
 
  private:
