@@ -14,7 +14,7 @@ ABSL_FLAG(int32_t, pid, 0, "pid to capture");
 ABSL_FLAG(uint32_t, capture_length, 10, "duration of capture in seconds");
 ABSL_FLAG(std::vector<std::string>, functions, {},
           "Comma-separated list of functions to hook to the capture");
-ABSL_FLAG(std::string, file_name, "", "Set file name for saving the capture.");
+ABSL_FLAG(std::string, file_name, "", "File name used for saving the capture");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
