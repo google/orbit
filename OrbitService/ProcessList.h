@@ -10,6 +10,8 @@
 
 #include "OrbitBase/Result.h"
 #include "Process.h"
+#include "absl/container/flat_hash_map.h"
+#include "process.pb.h"
 
 namespace orbit_service {
 
@@ -19,14 +21,24 @@ class ProcessList {
   [[nodiscard]] std::vector<orbit_grpc_protos::ProcessInfo> GetProcesses() const {
     std::vector<orbit_grpc_protos::ProcessInfo> processes;
     processes.reserve(processes_.size());
-    std::copy(processes_.begin(), processes_.end(), std::back_inserter(processes));
 
+    std::transform(
+        processes_.begin(), processes_.end(), std::back_inserter(processes),
+        [](const auto& pair) { return static_cast<orbit_grpc_protos::ProcessInfo>(pair.second); });
     return processes;
   }
 
+  [[nodiscard]] std::optional<const Process*> GetProcessByPid(pid_t pid) const {
+    const auto it = processes_.find(pid);
+    if (it != processes_.end()) {
+      return &it->second;
+    } else {
+      return std::nullopt;
+    }
+  }
+
  private:
-  std::vector<Process> processes_;
-  std::unordered_map<int32_t, Process*> processes_map_;
+  absl::flat_hash_map<pid_t, Process> processes_;
 };
 
 }  // namespace orbit_service
