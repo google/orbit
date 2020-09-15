@@ -120,10 +120,14 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
   while (!force_stop_ && reader_writer_->Read(&response)) {
     event_processor.ProcessEvents(response.capture_events());
   }
-  LOG("Finished reading from Capture's gRPC stream: all capture data has been "
-      "received");
-
-  capture_listener_->OnCaptureComplete();
+  if (force_stop_) {
+    capture_listener_->OnCaptureFailed(
+        ErrorMessage("WritesDone on Capture's gRPC stream failed: unable to finish the "
+                     "capture in orderly manner, initiating emergency stop"));
+  } else {
+    LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
+    capture_listener_->OnCaptureComplete();
+  }
   FinishCapture();
 }
 
@@ -150,7 +154,6 @@ bool CaptureClient::StopCapture() {
     ERROR(
         "WritesDone on Capture's gRPC stream failed: unable to finish the "
         "capture in orderly manner, initiating emergency stop");
-    capture_listener_->OnCaptureFailed(ErrorMessage("Error while stopping capture."));
     force_stop_ = true;
   } else {
     LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
@@ -168,8 +171,6 @@ void CaptureClient::FinishCapture() {
   grpc::Status status = reader_writer_->Finish();
   if (!status.ok()) {
     ERROR("Finishing gRPC call to Capture: %s", status.error_message());
-    capture_listener_->OnCaptureFailed(
-        ErrorMessage(absl::StrFormat("Error while finishing capture: %s", status.error_message())));
   }
   reader_writer_.reset();
 
