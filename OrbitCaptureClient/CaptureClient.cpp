@@ -123,7 +123,7 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
   if (force_stop_) {
     capture_listener_->OnCaptureFailed(
         ErrorMessage("WritesDone on Capture's gRPC stream failed: unable to finish the "
-                     "capture in orderly manner, initiating emergency stop"));
+                     "capture in orderly manner, performing emergency stop."));
   } else {
     LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
     capture_listener_->OnCaptureComplete();
