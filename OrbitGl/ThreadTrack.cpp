@@ -20,7 +20,6 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id) : TimerTrack(
   event_track_->SetThreadId(thread_id);
 
   tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id);
-  tracepoint_track_->SetThreadId(thread_id);
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
