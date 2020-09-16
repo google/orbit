@@ -78,11 +78,9 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kWhite);
     }
-  }
-
-  else {
-    constexpr const float kPickingBoxWidth = 9.0f;
-    constexpr const float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
+  } else {
+    constexpr float kPickingBoxWidth = 9.0f;
+    constexpr float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
 
     for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
          ++it) {
@@ -127,8 +125,6 @@ void TracepointTrack::OnPick(int x, int y) {
 void TracepointTrack::OnRelease() { picked_ = false; }
 
 std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
-  static const std::string unknown_return_text = "Linux tracepoint event information missing";
-
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
   CHECK(user_data && user_data->custom_data_);
 
