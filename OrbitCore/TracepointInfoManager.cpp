@@ -14,13 +14,13 @@ bool TracepointInfoManager::AddUniqueTracepointEventInfo(
   return true;
 }
 
-std::optional<orbit_grpc_protos::TracepointInfo> TracepointInfoManager::Get(uint64_t key) const {
+orbit_grpc_protos::TracepointInfo TracepointInfoManager::Get(uint64_t key) const {
   absl::MutexLock lock{&unique_tracepoints_mutex_};
   auto it = unique_tracepoint_.find(key);
   if (it != unique_tracepoint_.end()) {
     return it->second;
   } else {
-    return std::optional<orbit_grpc_protos::TracepointInfo>{};
+    return orbit_grpc_protos::TracepointInfo{};
   }
 }
 

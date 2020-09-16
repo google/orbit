@@ -241,7 +241,8 @@ void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracep
 
   capture_data_.AddTracepointEventAndMapToThreads(
       tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
-      tracepoint_event_info.pid(), tracepoint_event_info.tid(), is_same_pid_as_target);
+      tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
+      is_same_pid_as_target);
 }
 
 void OrbitApp::OnValidateFramePointers(std::vector<std::shared_ptr<Module>> modules_to_validate) {

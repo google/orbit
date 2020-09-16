@@ -9,6 +9,7 @@ using orbit_client_protos::TracepointEventInfo;
 void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
                                                               uint64_t tracepoint_hash,
                                                               int32_t process_id, int32_t thread_id,
+                                                              int32_t cpu,
                                                               bool is_same_pid_as_target) {
   if (!is_same_pid_as_target) {
     return;
@@ -25,6 +26,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
   event.set_tracepoint_info_key(tracepoint_hash);
   event.set_tid(thread_id);
   event.set_pid(process_id);
+  event.set_cpu(cpu);
   event_map[time] = std::move(event);
 
   std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& event_map_all_threads =
@@ -34,7 +36,8 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
   event_all_threads.set_tracepoint_info_key(tracepoint_hash);
   event_all_threads.set_tid(thread_id);
   event_all_threads.set_pid(process_id);
-  event_map_all_threads[time] = std::move(event);
+  event_all_threads.set_cpu(cpu);
+  event_map_all_threads[time] = std::move(event_all_threads);
 
   RegisterTime(time);
 }
