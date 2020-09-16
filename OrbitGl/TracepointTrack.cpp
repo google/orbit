@@ -141,7 +141,7 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
       GOrbitApp->GetCaptureData().GetTracepointInfo(tracepoint_info_key);
 
   return absl::StrFormat(
-      "<b>Tracepoint activity</b><br/>"
+      "<b>Tracepoint event</b><br/>"
       "<br/>"
       "<b>Core:</b> %d<br/>"
       "<b>Name:</b> %s [%s]<br/>",
