@@ -27,7 +27,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   OrbitGrpcServerImpl(const OrbitGrpcServerImpl&) = delete;
   OrbitGrpcServerImpl& operator=(OrbitGrpcServerImpl&) = delete;
 
-  void Init(std::string_view server_address);
+  [[nodiscard]] bool Init(std::string_view server_address);
 
   void Shutdown() override;
   void Wait() override;
@@ -41,7 +41,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   std::unique_ptr<grpc::Server> server_;
 };
 
-void OrbitGrpcServerImpl::Init(std::string_view server_address) {
+bool OrbitGrpcServerImpl::Init(std::string_view server_address) {
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
@@ -57,6 +57,8 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
   }
 
   server_ = builder.BuildAndStart();
+
+  return server_ != nullptr;
 }
 
 void OrbitGrpcServerImpl::Shutdown() { server_->Shutdown(); }
@@ -68,7 +70,9 @@ void OrbitGrpcServerImpl::Wait() { server_->Wait(); }
 std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(std::string_view server_address) {
   std::unique_ptr<OrbitGrpcServerImpl> server_impl = std::make_unique<OrbitGrpcServerImpl>();
 
-  server_impl->Init(server_address);
+  if (!server_impl->Init(server_address)) {
+    return nullptr;
+  }
 
   return std::move(server_impl);
 }
