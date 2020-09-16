@@ -5,9 +5,13 @@
 #include <vector>
 
 #include "ClientGgp.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/flags/usage_config.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");
@@ -18,7 +22,22 @@ ABSL_FLAG(std::string, file_name, "", "File name used for saving the capture");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
+namespace {
+
+std::string GetLogFilePath() {
+  std::filesystem::path var_log{"/var/log"};
+  std::filesystem::create_directory(var_log);
+  const std::string log_file_path = var_log / "OrbitClientGgp.log";
+  return log_file_path;
+}
+
+}  // namespace
+
 int main(int argc, char** argv) {
+  InitLogFile(GetLogFilePath());
+
+  absl::SetProgramUsageMessage("Orbit CPU Profiler Ggp Client");
+  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
   if (!absl::GetFlag(FLAGS_pid)) {
