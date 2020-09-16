@@ -44,9 +44,14 @@ namespace orbit_service {
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
   LOG("Running Orbit Service version %s", OrbitCore::GetVersion());
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
-  LOG("Starting GRPC server at %s", grpc_address);
+  LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server;
   grpc_server = OrbitGrpcServer::Create(grpc_address);
+  if (grpc_server == nullptr) {
+    ERROR("Unable to start gRPC server");
+    return;
+  }
+  LOG("gRPC server is running");
 
   // Make stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
