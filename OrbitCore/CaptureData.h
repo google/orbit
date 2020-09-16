@@ -121,7 +121,7 @@ class CaptureData {
     return tracepoint_event_buffer_->mutex();
   }
 
-  [[nodiscard]] orbit_grpc_protos::TracepointInfo* GetTracepointInfo(uint64_t key) const {
+  [[nodiscard]] orbit_grpc_protos::TracepointInfo GetTracepointInfo(uint64_t key) const {
     return tracepoint_info_manager_->Get(key);
   }
 

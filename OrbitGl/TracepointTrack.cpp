@@ -75,29 +75,25 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
     for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
          ++it) {
       uint64_t time = it->first;
-      if (time < max_tick) {
-        Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-        batcher->AddVerticalLine(pos, -track_height, z, kWhite);
-      } else {
-        return;
-      }
+      Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+      batcher->AddVerticalLine(pos, -track_height, z, kWhite);
     }
-  } else {
+  }
+
+  else {
     constexpr const float kPickingBoxWidth = 9.0f;
-    constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
+    constexpr const float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
 
     for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
          ++it) {
       uint64_t time = it->first;
-      if (time > min_tick && time < max_tick) {
-        Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
-                 pos_[1] - track_height + 1);
-        Vec2 size(kPickingBoxWidth, track_height);
-        auto user_data = std::make_unique<PickingUserData>(
-            nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
-        user_data->custom_data_ = &it->second;
-        batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
-      }
+
+      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
+      Vec2 size(kPickingBoxWidth, track_height);
+      auto user_data = std::make_unique<PickingUserData>(
+          nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+      user_data->custom_data_ = &it->second;
+      batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     }
   }
 }
@@ -134,22 +130,20 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
   static const std::string unknown_return_text = "Linux tracepoint event information missing";
 
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
-  if (!user_data || !user_data->custom_data_) {
-    return unknown_return_text;
-  }
+  CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =
       static_cast<const orbit_client_protos::TracepointEventInfo*>(user_data->custom_data_);
 
   uint64_t tracepoint_info_key = tracepoint_event_info->tracepoint_info_key();
 
-  TracepointInfo* tracepoint_info =
+  TracepointInfo tracepoint_info =
       GOrbitApp->GetCaptureData().GetTracepointInfo(tracepoint_info_key);
 
   return absl::StrFormat(
-      "<b>CPU Core activity</b><br/>"
+      "<b>Tracepoint activity</b><br/>"
       "<br/>"
       "<b>Core:</b> %d<br/>"
       "<b>Name:</b> %s [%s]<br/>",
-      tracepoint_event_info->cpu(), tracepoint_info->name(), tracepoint_info->category());
+      tracepoint_event_info->cpu(), tracepoint_info.name(), tracepoint_info.category());
 }
