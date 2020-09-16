@@ -25,53 +25,57 @@ using orbit_client_protos::TimerInfo;
 
 namespace capture_deserializer {
 
-ErrorMessageOr<void> Load(const std::string& filename, CaptureListener* capture_listener,
-                          std::atomic<bool>* cancellation_requested) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
+void Load(const std::string& file_name, CaptureListener* capture_listener,
+          std::atomic<bool>* cancellation_requested) {
+  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", file_name));
 
   // Binary
-  std::ifstream file(filename, std::ios::binary);
+  std::ifstream file(file_name, std::ios::binary);
   if (file.fail()) {
-    ERROR("Loading capture from \"%s\": %s", filename, "file.fail()");
-    return ErrorMessage("Error opening the file for reading");
+    ERROR("Loading capture from \"%s\": %s", file_name, "file.fail()");
+    capture_listener->OnCaptureFailed(
+        ErrorMessage(absl::StrFormat("Error opening file \"%s\"for reading", file_name)));
+    return;
   }
 
-  return Load(file, capture_listener, cancellation_requested);
+  return Load(file, file_name, capture_listener, cancellation_requested);
 }
 
-ErrorMessageOr<void> Load(std::istream& stream, CaptureListener* capture_listener,
-                          std::atomic<bool>* cancellation_requested) {
+void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
+          std::atomic<bool>* cancellation_requested) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
-  std::string error_message =
-      "Error parsing the capture.\nNote: If the capture "
+  std::string error_message = absl::StrFormat(
+      "Error parsing the capture from \"%s\".\nNote: If the capture "
       "was taken with a previous Orbit version, it could be incompatible. "
-      "Please check release notes for more information.";
+      "Please check release notes for more information.",
+      file_name);
 
   CaptureHeader header;
   if (!internal::ReadMessage(&header, &coded_input) || header.version().empty()) {
     ERROR("%s", error_message);
-    return ErrorMessage(error_message);
+    capture_listener->OnCaptureFailed(ErrorMessage(std::move(error_message)));
+    return;
   }
   if (header.version() != internal::kRequiredCaptureVersion) {
     std::string incompatible_version_error_message = absl::StrFormat(
-        "This capture format is no longer supported but could be opened with "
+        "The format of capture \"%s\" is no longer supported but could be opened with "
         "Orbit version %s.",
-        header.version());
+        file_name, header.version());
     ERROR("%s", incompatible_version_error_message);
-    return ErrorMessage(incompatible_version_error_message);
+    capture_listener->OnCaptureFailed(ErrorMessage(std::move(incompatible_version_error_message)));
+    return;
   }
 
   CaptureInfo capture_info;
   if (!internal::ReadMessage(&capture_info, &coded_input)) {
     ERROR("%s", error_message);
-    return ErrorMessage(error_message);
+    capture_listener->OnCaptureFailed(ErrorMessage(std::move(error_message)));
+    return;
   }
 
   internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input, cancellation_requested);
-
-  return outcome::success();
 }
 
 namespace internal {
@@ -105,6 +109,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   TracepointInfoSet selected_tracepoints;
 
   if (*cancellation_requested) {
+    capture_listener->OnCaptureCancelled();
     return;
   }
   capture_listener->OnCaptureStarted(capture_info.process_id(), capture_info.process_name(),
@@ -113,6 +118,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnAddressInfo(address_info);
@@ -120,6 +126,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   for (const auto& thread_id_and_name : capture_info.thread_names()) {
     if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnThreadName(thread_id_and_name.first, thread_id_and_name.second);
@@ -128,12 +135,14 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   for (const CallstackInfo& callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnUniqueCallStack(std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnCallstackEvent(std::move(callstack_event));
@@ -141,6 +150,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   for (const auto& key_to_string : capture_info.key_to_string()) {
     if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnKeyAndString(key_to_string.first, key_to_string.second);
@@ -150,14 +160,12 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   TimerInfo timer_info;
   while (internal::ReadMessage(&timer_info, coded_input)) {
     if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
       return;
     }
     capture_listener->OnTimer(timer_info);
   }
 
-  if (*cancellation_requested) {
-    return;
-  }
   capture_listener->OnCaptureComplete();
 }
 

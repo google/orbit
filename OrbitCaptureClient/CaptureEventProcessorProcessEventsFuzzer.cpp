@@ -4,6 +4,7 @@
 
 #include <libfuzzer/libfuzzer_macro.h>
 
+#include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "TracepointCustom.h"
@@ -27,6 +28,8 @@ class MyCaptureListener : public CaptureListener {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> /*selected_functions*/,
       TracepointInfoSet /*selected_tracepoints*/) override {}
   void OnCaptureComplete() override {}
+  void OnCaptureCancelled() override {}
+  void OnCaptureFailed(ErrorMessage) override {}
   void OnTimer(const TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
   void OnUniqueCallStack(CallStack) override {}

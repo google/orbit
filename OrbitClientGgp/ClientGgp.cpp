@@ -270,6 +270,10 @@ void ClientGgp::OnCaptureComplete() {
   capture_data_.set_sampling_profiler(sampling_profiler);
 }
 
+void ClientGgp::OnCaptureCancelled() {}
+
+void ClientGgp::OnCaptureFailed(ErrorMessage /*error_message*/) {}
+
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
     FunctionInfo* func =

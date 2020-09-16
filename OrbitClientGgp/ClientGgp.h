@@ -34,6 +34,8 @@ class ClientGgp final : public CaptureListener {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
+  void OnCaptureCancelled() override;
+  void OnCaptureFailed(ErrorMessage error_message) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallStack(CallStack callstack) override;
