@@ -93,6 +93,7 @@ target_sources(OrbitCoreTests PRIVATE
     RingBufferTest.cpp
     StringManagerTest.cpp
     SymbolHelperTest.cpp
+    TracepointEventBufferTest.cpp
     TracepointInfoManagerTest.cpp
     UtilsTest.cpp)
 
