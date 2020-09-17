@@ -163,10 +163,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetOpenCaptureFinishedCallback(OpenCaptureFinishedCallback callback) {
     open_capture_finished_callback_ = std::move(callback);
   }
-  using SaveCaptureCallback = std::function<void()>;
-  void SetSaveCaptureCallback(SaveCaptureCallback callback) {
-    save_capture_callback_ = std::move(callback);
-  }
   using SelectLiveTabCallback = std::function<void()>;
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
@@ -213,7 +209,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
-
   using SecureCopyCallback =
       std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
   void SetSecureCopyCallback(SecureCopyCallback callback) {
@@ -314,30 +309,40 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
 
-  CaptureStartedCallback capture_started_callback_;
-  CaptureStopRequestedCallback capture_stop_requested_callback_;
-  CaptureStoppedCallback capture_stopped_callback_;
-  CaptureFailedCallback capture_failed_callback_;
-  CaptureClearedCallback capture_cleared_callback_;
-  OpenCaptureCallback open_capture_callback_;
-  OpenCaptureFailedCallback open_capture_failed_callback_;
-  OpenCaptureFinishedCallback open_capture_finished_callback_;
-  SaveCaptureCallback save_capture_callback_;
-  SelectLiveTabCallback select_live_tab_callback_;
-  DisassemblyCallback disassembly_callback_;
-  ErrorMessageCallback error_message_callback_;
-  WarningMessageCallback warning_message_callback_;
-  InfoMessageCallback info_message_callback_;
-  TooltipCallback tooltip_callback_;
-  RefreshCallback refresh_callback_;
-  SamplingReportCallback sampling_reports_callback_;
-  SamplingReportCallback selection_report_callback_;
-  TopDownViewCallback top_down_view_callback_;
-  TopDownViewCallback selection_top_down_view_callback_;
+  CaptureStartedCallback capture_started_callback_ = []() {};
+  CaptureStopRequestedCallback capture_stop_requested_callback_ = []() {};
+  CaptureStoppedCallback capture_stopped_callback_ = []() {};
+  CaptureFailedCallback capture_failed_callback_ = []() {};
+  CaptureClearedCallback capture_cleared_callback_ = []() {};
+  OpenCaptureCallback open_capture_callback_ = []() {};
+  OpenCaptureFailedCallback open_capture_failed_callback_ = []() {};
+  OpenCaptureFinishedCallback open_capture_finished_callback_ = []() {};
+  SelectLiveTabCallback select_live_tab_callback_ = []() {};
+  DisassemblyCallback disassembly_callback_ = [](std::string /*disassembly*/,
+                                                 DisassemblyReport /*report*/) {};
+  ErrorMessageCallback error_message_callback_ = [](const std::string& /*title*/,
+                                                    const std::string& /*text*/) {};
+  WarningMessageCallback warning_message_callback_ = [](const std::string& /*title*/,
+                                                        const std::string& /*text*/) {};
+  InfoMessageCallback info_message_callback_ = [](const std::string& /*title*/,
+                                                  const std::string& /*text*/) {};
+  TooltipCallback tooltip_callback_ = [](const std::string& /*tooltip*/) {};
+  RefreshCallback refresh_callback_ = [](DataViewType /*type*/) {};
+  SamplingReportCallback sampling_reports_callback_ =
+      [](DataView* /*view*/, std::shared_ptr<SamplingReport> /*report*/) {};
+  SamplingReportCallback selection_report_callback_ =
+      [](DataView* /*view*/, std::shared_ptr<SamplingReport> /*report*/) {};
+  TopDownViewCallback top_down_view_callback_ = [](std::unique_ptr<TopDownView> /*view*/) {};
+  TopDownViewCallback selection_top_down_view_callback_ =
+      [](std::unique_ptr<TopDownView> /*view*/) {};
+  SaveFileCallback save_file_callback_ = [](const std::string& /*extension*/) { return ""; };
+  ClipboardCallback clipboard_callback_ = [](const std::string& /*text*/) {};
+  SecureCopyCallback secure_copy_callback_ = [](std::string_view /*source*/,
+                                                std::string_view /*destination*/) {
+    return outcome::success();
+  };
+
   std::vector<DataView*> panels_;
-  SaveFileCallback save_file_callback_;
-  ClipboardCallback clipboard_callback_;
-  SecureCopyCallback secure_copy_callback_;
 
   std::unique_ptr<ProcessesDataView> processes_data_view_;
   std::unique_ptr<ModulesDataView> modules_data_view_;
