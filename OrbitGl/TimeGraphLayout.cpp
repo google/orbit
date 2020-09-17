@@ -15,6 +15,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_TrackBottomMargin = 5.f;
   m_TrackTopMargin = 5.f;
   m_SpaceBetweenCores = 2.f;
+  space_between_gpu_depths_ = 2.f;
   m_SpaceBetweenTracks = 40.f;
   m_SpaceBetweenTracksAndThread = 5.f;
   m_SpaceBetweenThreadBlocks = 35.f;
@@ -53,6 +54,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(m_EventTrackHeight);
   FLOAT_SLIDER(m_GraphTrackHeight);
   FLOAT_SLIDER(m_SpaceBetweenCores);
+  FLOAT_SLIDER(space_between_gpu_depths_);
   FLOAT_SLIDER(m_SpaceBetweenTracks);
   FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
   FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
