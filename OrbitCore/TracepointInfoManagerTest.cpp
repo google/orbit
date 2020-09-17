@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gtest/gtest.h>
-
 #include "TracepointInfoManager.h"
+#include "gtest/gtest.h"
 
 TEST(TracepointInfoManager, Contains) {
   TracepointInfoManager tracepoint_info_manager;
