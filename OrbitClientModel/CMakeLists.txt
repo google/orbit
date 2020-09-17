@@ -25,3 +25,18 @@ target_link_libraries(OrbitClientModel PUBLIC
         OrbitCaptureClient
         OrbitCore
         OrbitProtos)
+
+add_executable(OrbitClientModelTests)
+
+target_compile_options(OrbitClientModelTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+
+target_sources(OrbitClientModelTests PRIVATE
+               CaptureDeserializerTest.cpp)
+
+target_link_libraries(
+  OrbitClientModelTests
+  PRIVATE OrbitClientModel
+          GTest::Main)
+
+register_test(OrbitClientModelTests)

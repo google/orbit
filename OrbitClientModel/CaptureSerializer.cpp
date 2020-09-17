@@ -4,27 +4,18 @@
 
 #include "OrbitClientModel/CaptureSerializer.h"
 
-#include <fstream>
 #include <memory>
 
 #include "Callstack.h"
-#include "EventTracer.h"
-#include "FunctionUtils.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitProcess.h"
 #include "Path.h"
-#include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
-#include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
 
-using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
-using orbit_client_protos::TimerInfo;
 
 namespace {
 inline constexpr std::string_view kFileOrbitExtension = ".orbit";
