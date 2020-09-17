@@ -93,8 +93,8 @@ target_sources(OrbitCoreTests PRIVATE
     RingBufferTest.cpp
     StringManagerTest.cpp
     SymbolHelperTest.cpp
-    TracepointInfoManagerTest.cpp
-    UtilsTest.cpp)
+    UtilsTest.cpp
+    TracepointInfoManagerTest.cpp)
 
 if(NOT WIN32)
   target_sources(OrbitCoreTests PRIVATE OrbitModuleTest.cpp)

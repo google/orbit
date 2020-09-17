@@ -39,6 +39,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
   event_all_threads.set_cpu(cpu);
   event_map_all_threads[time] = std::move(event_all_threads);
 
+  RegisterTime(time);
 }
 
 [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
@@ -49,6 +50,11 @@ TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
     return empty;
   }
   return it->second;
+}
+
+void TracepointEventBuffer::RegisterTime(uint64_t time) {
+  if (time > max_time_) max_time_ = time;
+  if (time > 0 && time < min_time_) min_time_ = time;
 }
 
 Mutex& TracepointEventBuffer::mutex() { return mutex_; }
