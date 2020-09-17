@@ -519,7 +519,7 @@
     ]
    },
    "39": {
-    "pref": "double-conversion/3.1.5#0:479e5c321685f6e20cbbf93c38ae334c54ade580",
+    "pref": "double-conversion/3.1.5#cd80931bb31c05a4a85e9a8dff64c83d:479e5c321685f6e20cbbf93c38ae334c54ade580",
     "options": "shared=False",
     "build_requires": [
      "52"
