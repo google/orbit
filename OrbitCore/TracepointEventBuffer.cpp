@@ -42,19 +42,6 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
   RegisterTime(time);
 }
 
-bool TracepointEventBuffer::HasEvent() const {
-  ScopeLock lock(mutex_);
-  if (tracepoint_events_.empty()) {
-    return false;
-  }
-  for (const auto& pair : tracepoint_events_) {
-    if (!pair.second.empty()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
 TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
   static std::map<uint64_t, orbit_client_protos::TracepointEventInfo> empty;
@@ -63,14 +50,6 @@ TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
     return empty;
   }
   return it->second;
-}
-
-uint64_t TracepointEventBuffer::max_time() const { return max_time_; }
-uint64_t TracepointEventBuffer::min_time() const { return min_time_; }
-
-const std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
-TracepointEventBuffer::tracepoint_events() {
-  return tracepoint_events_;
 }
 
 void TracepointEventBuffer::RegisterTime(uint64_t time) {

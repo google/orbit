@@ -24,15 +24,7 @@ class TracepointEventBuffer {
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const;
 
-  const std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >&
-  tracepoint_events();
-
   Mutex& mutex();
-
-  uint64_t max_time() const;
-  uint64_t min_time() const;
-
-  bool HasEvent() const;
 
  private:
   void RegisterTime(uint64_t time);

@@ -94,7 +94,7 @@ target_sources(OrbitCoreTests PRIVATE
     StringManagerTest.cpp
     SymbolHelperTest.cpp
     UtilsTest.cpp
-)
+    TracepointInfoManagerTest.cpp)
 
 if(NOT WIN32)
   target_sources(OrbitCoreTests PRIVATE OrbitModuleTest.cpp)
