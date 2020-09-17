@@ -87,12 +87,12 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
                                                               const FunctionInfo& function_info) {
   FunctionInfo::OrbitType type = function_info.type();
   if (type != FunctionInfo::kOrbitTimerStart && type != FunctionInfo::kOrbitTimerStartAsync) {
-    return std::optional<Color>{};
+    return std::nullopt;
   }
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   if (event.color == orbit::Color::kAuto) {
-    return std::optional<Color>{};
+    return std::nullopt;
   }
 
   return ToColor(static_cast<uint64_t>(event.color));

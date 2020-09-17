@@ -27,8 +27,6 @@ class ManualInstrumentationManager {
     orbit_api::EncodedEvent encoded_event(arg_0, arg_1, arg_2, arg_3, arg_4, arg_5);
     return encoded_event.event;
   }
-
-  void OnTimerInfo(const orbit_client_protos::TimerInfo& timer_info);
 };
 
 #endif  // ORBIT_GL_MANUAL_INSTRUMENTATION_MANAGER_H_

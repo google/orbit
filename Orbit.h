@@ -155,17 +155,18 @@ struct Event {
 union EncodedEvent {
   EncodedEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t value = 0,
                orbit::Color color = orbit::Color::kAuto, uint32_t id = 0) {
-    static_assert(sizeof(EncodedEvent) == 48, "EncodedEvent should be 48 bytes.");
-    memset(this, 0, sizeof(*this));
-    event.id = id;
-    event.color = color;
-    event.value = value;
+    static_assert(sizeof(EncodedEvent) == 48, "orbit_api::EncodedEvent should be 48 bytes.");
+    static_assert(sizeof(Event) == 48, "orbit_api::Event should be 48 bytes.");
     event.version = kVersion;
     event.type = static_cast<uint8_t>(type);
+    memset(event.name, 0, kMaxEventStringSize);
     if (name != nullptr) {
       std::strncpy(event.name, name, kMaxEventStringSize - 1);
       event.name[kMaxEventStringSize - 1] = 0;
     }
+    event.value = value;
+    event.color = color;
+    event.id = id;
   }
 
   EncodedEvent(uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5) {

@@ -3,7 +3,3 @@
 // found in the LICENSE file.
 
 #include "ManualInstrumentationManager.h"
-
-using orbit_client_protos::TimerInfo;
-
-void ManualInstrumentationManager::OnTimerInfo(const TimerInfo&) {}
