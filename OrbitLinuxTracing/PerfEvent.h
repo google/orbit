@@ -386,6 +386,29 @@ class TaskRenamePerfEvent : public TracepointPerfEvent {
   }
 };
 
+class SchedSwitchPerfEvent : public TracepointPerfEvent {
+ public:
+  explicit SchedSwitchPerfEvent(uint32_t tracepoint_size) : TracepointPerfEvent(tracepoint_size) {}
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  const char* GetPrevComm() const {
+    return GetTypedTracepointData<sched_switch_tracepoint>().prev_comm;
+  }
+
+  pid_t GetPrevTid() const { return GetTypedTracepointData<sched_switch_tracepoint>().prev_pid; }
+
+  int64_t GetPrevState() const {
+    return GetTypedTracepointData<sched_switch_tracepoint>().prev_state;
+  }
+
+  const char* GetNextComm() const {
+    return GetTypedTracepointData<sched_switch_tracepoint>().next_comm;
+  }
+
+  pid_t GetNextTid() const { return GetTypedTracepointData<sched_switch_tracepoint>().next_pid; }
+};
+
 class GpuPerfEvent : public TracepointPerfEvent {
  public:
   explicit GpuPerfEvent(uint32_t tracepoint_size) : TracepointPerfEvent(tracepoint_size) {}

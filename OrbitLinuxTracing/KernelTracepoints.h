@@ -33,6 +33,18 @@ struct __attribute__((__packed__)) task_rename_tracepoint {
   int16_t oom_score_adj;
 };
 
+struct __attribute__((__packed__)) sched_switch_tracepoint {
+  tracepoint_common common;
+  char prev_comm[16];
+  int32_t prev_pid;
+  int32_t prev_prio;
+  int64_t prev_state;
+  char next_comm[16];
+  int32_t next_pid;
+  int32_t next_prio;
+  uint32_t reserved;  // These four bytes are not documented in the format file.
+};
+
 struct __attribute__((__packed__)) amdgpu_cs_ioctl_tracepoint {
   tracepoint_common common;
   uint64_t sched_job_id;

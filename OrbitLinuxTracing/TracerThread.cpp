@@ -410,6 +410,14 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
       &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
+bool TracerThread::OpenThreadStateTracepoints(const std::vector<int32_t>& cpus) {
+  absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
+  return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
+      {{"sched", "sched_switch", &sched_switch_ids_}}, cpus, &tracing_fds_,
+      THREAD_STATE_RING_BUFFER_SIZE_KB, &thread_state_tracepoint_ring_buffer_fds_per_cpu,
+      &ring_buffers_);
+}
+
 bool TracerThread::InitGpuTracepointEventProcessor() {
   gpu_event_processor_ = std::make_unique<GpuTracepointEventProcessor>();
   gpu_event_processor_->SetListener(listener_);
@@ -511,6 +519,10 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 
   perf_event_open_errors |= !OpenThreadNameTracepoints(all_cpus);
+
+  if (trace_thread_state_) {
+    perf_event_open_errors |= !OpenThreadStateTracepoints(all_cpus);
+  }
 
   bool gpu_event_open_errors = false;
   if (trace_gpu_driver_) {
@@ -741,14 +753,16 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
   bool is_task_newtask = task_newtask_ids_.contains(stream_id);
   bool is_task_rename = task_rename_ids_.contains(stream_id);
+  bool is_sched_switch = sched_switch_ids_.contains(stream_id);
   bool is_amdgpu_cs_ioctl_event = amdgpu_cs_ioctl_ids_.contains(stream_id);
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_user_instrumented_tracepoint = ids_to_tracepoint_info_.contains(stream_id);
 
   CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_callchain_sample + is_task_newtask +
-            is_task_rename + is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
-            is_dma_fence_signaled_event + is_user_instrumented_tracepoint <=
+            is_task_rename + is_sched_switch + is_amdgpu_cs_ioctl_event +
+            is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
+            is_user_instrumented_tracepoint <=
         1);
 
   int fd = ring_buffer->GetFileDescriptor();
@@ -834,6 +848,16 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_name(event->GetNewComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
+
+  } else if (is_sched_switch) {
+    auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
+    if (event->GetPrevTid() == pid_ || event->GetNextTid() == pid_ ||
+        (event->GetPrevState() & 0xFF80)) {
+      LOG("sched/sched_switch | prev_comm: %s, prev_pid: %d, prev_state: %#lx; next_comm: %s, "
+          "next_pid: %d",
+          event->GetPrevComm(), event->GetPrevTid(), event->GetPrevState(), event->GetNextComm(),
+          event->GetNextTid());
+    }
 
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
@@ -951,6 +975,7 @@ void TracerThread::Reset() {
   callchain_sampling_ids_.clear();
   task_newtask_ids_.clear();
   task_rename_ids_.clear();
+  sched_switch_ids_.clear();
   amdgpu_cs_ioctl_ids_.clear();
   amdgpu_sched_run_job_ids_.clear();
   dma_fence_signaled_ids_.clear();
