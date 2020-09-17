@@ -34,7 +34,7 @@ void Load(const std::string& file_name, CaptureListener* capture_listener,
   if (file.fail()) {
     ERROR("Loading capture from \"%s\": %s", file_name, "file.fail()");
     capture_listener->OnCaptureFailed(
-        ErrorMessage(absl::StrFormat("Error opening file \"%s\"for reading", file_name)));
+        ErrorMessage(absl::StrFormat("Error opening file \"%s\" for reading", file_name)));
     return;
   }
 

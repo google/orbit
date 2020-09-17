@@ -57,18 +57,21 @@ class MockCaptureListener : public CaptureListener {
 TEST(CaptureDeserializer, LoadFileNotExists) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
-  EXPECT_CALL(listener, OnCaptureFailed).Times(1);
+  ErrorMessage actual_error;
+  EXPECT_CALL(listener, OnCaptureFailed).Times(1).WillOnce(SaveArg<0>(&actual_error));
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
   EXPECT_CALL(listener, OnCaptureComplete).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
   capture_deserializer::Load("not_existing_test_file", &listener, &cancellation_requested);
+
+  EXPECT_EQ("Error opening file \"not_existing_test_file\" for reading", actual_error.message());
 }
 
 TEST(CaptureDeserializer, LoadNoVersion) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
   ErrorMessage actual_error;
-  EXPECT_CALL(listener, OnCaptureFailed).Times(1);
+  EXPECT_CALL(listener, OnCaptureFailed).Times(1).WillOnce(SaveArg<0>(&actual_error));
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
   EXPECT_CALL(listener, OnCaptureComplete).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
@@ -83,7 +86,14 @@ TEST(CaptureDeserializer, LoadNoVersion) {
          << serialized_header;
 
   // std::istream test;
-  capture_deserializer::Load(stream, "not_existing_test_file", &listener, &cancellation_requested);
+  capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
+
+  std::string expected_error_message =
+      "Error parsing the capture from \"file_name\".\nNote: If the capture "
+      "was taken with a previous Orbit version, it could be incompatible. "
+      "Please check release notes for more information.";
+
+  EXPECT_EQ(expected_error_message, actual_error.message());
 }
 
 TEST(CaptureDeserializer, LoadOldVersion) {
@@ -104,7 +114,7 @@ TEST(CaptureDeserializer, LoadOldVersion) {
   stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
          << serialized_header;
 
-  capture_deserializer::Load(stream, "not_existing_test_file", &listener, &cancellation_requested);
+  capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
 
   EXPECT_THAT(actual_error.message(), HasSubstr("1.51"));
 }
@@ -127,7 +137,7 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
   stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
          << serialized_header;
 
-  capture_deserializer::Load(stream, "not_existing_test_file", &listener, &cancellation_requested);
+  capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
@@ -183,8 +193,8 @@ TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {
   LinuxAddressInfo address_info_2;
   address_info_2.set_function_name("bar");
   address_info_2.set_module_path("/path");
-  address_info_2.set_offset_in_function(0);
-  address_info_2.set_absolute_address(123);
+  address_info_2.set_offset_in_function(6);
+  address_info_2.set_absolute_address(243);
   capture_info.add_address_infos()->CopyFrom(address_info_2);
 
   std::atomic<bool> cancellation_requested = false;
@@ -294,7 +304,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   CallstackEvent* callstack_event_2 = capture_info.add_callstack_events();
   callstack_event_2->set_thread_id(2);
   callstack_event_2->set_time(3);
-  callstack_event_2->set_callstack_hash(callstack_1.GetHash());
+  callstack_event_2->set_callstack_hash(callstack_2.GetHash());
 
   std::atomic<bool> cancellation_requested = false;
   uint8_t empty_data = 0;
