@@ -32,14 +32,7 @@ message FunctionInfo {
     kOrbitTimerStop = 2;
     kOrbitTimerStartAsync = 3;
     kOrbitTimerStopAsync = 4;
-    kOrbitTrackInt = 5;
-    kOrbitTrackInt64 = 6;
-    kOrbitTrackUint = 7;
-    kOrbitTrackUint64 = 8;
-    kOrbitTrackFloat = 9;
-    kOrbitTrackDouble = 10;
-    kOrbitTrackFloatAsInt = 11;
-    kOrbitTrackDoubleAsInt64 = 12;
+    kOrbitTrackValue = 5;
   }
   OrbitType type = 10;
 }

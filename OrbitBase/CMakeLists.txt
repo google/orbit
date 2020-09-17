@@ -45,6 +45,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitBaseTests PRIVATE
     UniqueResourceTest.cpp
+    OrbitApiTest.cpp
     ProfilingTest.cpp
     TracingTest.cpp
 )

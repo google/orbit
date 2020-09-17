@@ -13,16 +13,10 @@
 
 using orbit::tracing::Listener;
 using orbit::tracing::Scope;
-using orbit::tracing::ScopeType;
 using orbit::tracing::TimerCallback;
 
 ABSL_CONST_INIT static absl::Mutex global_tracing_mutex(absl::kConstInit);
 ABSL_CONST_INIT static Listener* global_tracing_listener = nullptr;
-
-static std::vector<Scope>& GetThreadLocalScopes() {
-  thread_local std::vector<Scope> thread_local_scopes;
-  return thread_local_scopes;
-}
 
 namespace orbit::tracing {
 
@@ -65,9 +59,16 @@ void Listener::DeferScopeProcessing(const Scope& scope) {
   });
 }
 
+#ifdef ORBIT_API_INTERNAL_IMPL
+
+static std::vector<Scope>& GetThreadLocalScopes() {
+  thread_local std::vector<Scope> thread_local_scopes;
+  return thread_local_scopes;
+}
+
 namespace orbit_api {
 
-void Start(const char* name, uint8_t, orbit::Color color) {
+void Start(const char* name, orbit::Color color) {
   GetThreadLocalScopes().emplace_back(orbit::tracing::Scope());
   auto& scope = GetThreadLocalScopes().back();
   scope.name = name;
@@ -80,7 +81,7 @@ void Stop() {
   scope.end = MonotonicTimestampNs();
   scope.depth = GetThreadLocalScopes().size() - 1;
   scope.tid = GetCurrentThreadId();
-  scope.type = ScopeType::kScope;
+  scope.type = orbit_api::EventType::kScopeStop;
   Listener::DeferScopeProcessing(scope);
   GetThreadLocalScopes().pop_back();
 }
@@ -89,7 +90,7 @@ void Stop() {
 void StartAsync(const char*, uint64_t, orbit::Color) { CHECK(0); }
 void StopAsync(uint64_t) { CHECK(0); }
 
-void TrackScope(const char* name, uint64_t value, orbit::Color color, ScopeType type) {
+void TrackScope(const char* name, uint64_t value, orbit::Color color, orbit_api::EventType type) {
   orbit::tracing::Scope scope;
   scope.begin = MonotonicTimestampNs();
   scope.name = name;
@@ -100,36 +101,10 @@ void TrackScope(const char* name, uint64_t value, orbit::Color color, ScopeType 
   Listener::DeferScopeProcessing(scope);
 }
 
-template <typename Dest, typename Source>
-inline Dest Encode(const Source& source) {
-  static_assert(sizeof(Source) <= sizeof(Dest));
-  Dest dest = 0;
-  std::memcpy(&dest, &source, sizeof(Source));
-  return dest;
-}
-
-void TrackInt(const char* name, int32_t value, orbit::Color color) {
-  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackInt);
-}
-
-void TrackInt64(const char* name, int64_t value, orbit::Color color) {
-  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackInt64);
-}
-
-void TrackUint(const char* name, uint32_t value, orbit::Color color) {
-  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackUint);
-}
-
-void TrackUint64(const char* name, uint64_t value, orbit::Color color) {
-  TrackScope(name, value, color, ScopeType::kTrackUint64);
-}
-
-void TrackFloat(const char* name, float value, orbit::Color color) {
-  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackFloatAsInt);
-}
-
-void TrackDouble(const char* name, double value, orbit::Color color) {
-  TrackScope(name, Encode<uint64_t>(value), color, ScopeType::kTrackDoubleAsInt64);
+void TrackValue(orbit_api::EventType type, const char* name, uint64_t value, orbit::Color color) {
+  TrackScope(name, value, color, type);
 }
 
 }  // namespace orbit_api
+
+#endif

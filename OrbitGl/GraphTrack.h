@@ -14,7 +14,7 @@ class TimeGraph;
 
 class GraphTrack : public Track {
  public:
-  explicit GraphTrack(TimeGraph* time_graph, uint64_t graph_id);
+  explicit GraphTrack(TimeGraph* time_graph, std::string name);
   [[nodiscard]] Type GetType() const override { return kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) override;
   [[nodiscard]] float GetHeight() const override;
@@ -27,7 +27,7 @@ class GraphTrack : public Track {
   double max_ = std::numeric_limits<double>::lowest();
   double value_range_ = 0;
   double inv_value_range_ = 0;
-  uint64_t graph_id_ = 0;
+  std::string name_;
 };
 
 #endif

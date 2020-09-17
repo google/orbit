@@ -16,20 +16,6 @@
 
 namespace orbit::tracing {
 
-enum ScopeType : int {
-  kNone = 0,
-  kScope = 1,
-  kScopeAsync = 2,
-  kTrackInt = 3,
-  kTrackInt64 = 4,
-  kTrackUint = 5,
-  kTrackUint64 = 6,
-  kTrackFloat = 7,
-  kTrackDouble = 8,
-  kTrackFloatAsInt = 9,
-  kTrackDoubleAsInt64 = 10
-};
-
 struct Scope {
   uint64_t begin = 0;
   uint64_t end = 0;
@@ -38,7 +24,7 @@ struct Scope {
   uint32_t tid = 0;
   orbit::Color color = orbit::Color::kAuto;
   const char* name = nullptr;
-  ScopeType type = kNone;
+  orbit_api::EventType type = orbit_api::kNone;
 };
 
 using TimerCallback = std::function<void(const Scope& scope)>;

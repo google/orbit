@@ -6,8 +6,8 @@
 
 #include "GlCanvas.h"
 
-GraphTrack::GraphTrack(TimeGraph* time_graph, uint64_t graph_id)
-    : Track(time_graph), graph_id_(graph_id) {}
+GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name)
+    : Track(time_graph), name_(std::move(name)) {}
 
 void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();

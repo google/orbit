@@ -52,15 +52,7 @@ const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>& GetFunctionName
       {"Stop(", FunctionInfo::kOrbitTimerStop},
       {"StartAsync(", FunctionInfo::kOrbitTimerStartAsync},
       {"StopAsync(", FunctionInfo::kOrbitTimerStopAsync},
-      {"TrackInt(", FunctionInfo::kOrbitTrackInt},
-      {"TrackInt64(", FunctionInfo::kOrbitTrackInt64},
-      {"TrackUint(", FunctionInfo::kOrbitTrackUint},
-      {"TrackUint64(", FunctionInfo::kOrbitTrackUint64},
-      {"TrackFloat(", FunctionInfo::kOrbitTrackFloat},
-      {"TrackDouble(", FunctionInfo::kOrbitTrackDouble},
-      {"TrackFloatAsInt(", FunctionInfo::kOrbitTrackFloatAsInt},
-      {"TrackDoubleAsInt64(", FunctionInfo::kOrbitTrackDoubleAsInt64},
-  };
+      {"TrackValue(", FunctionInfo::kOrbitTrackValue}};
   return function_name_to_type_map;
 }
 

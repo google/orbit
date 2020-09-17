@@ -35,6 +35,7 @@ target_sources(
          ImGuiOrbit.h
          LiveFunctionsController.h
          LiveFunctionsDataView.h
+         ManualInstrumentationManager.h
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
@@ -81,6 +82,7 @@ target_sources(
           GraphTrack.cpp
           ImGuiOrbit.cpp
           LiveFunctionsDataView.cpp
+          ManualInstrumentationManager.cpp
           ModulesDataView.cpp
           PickingManager.cpp
           PresetsDataView.cpp
