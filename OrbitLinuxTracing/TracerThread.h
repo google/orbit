@@ -74,6 +74,7 @@ class TracerThread {
   void OpenUserSpaceProbesRingBuffers();
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
@@ -110,6 +111,7 @@ class TracerThread {
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
   static constexpr uint64_t THREAD_NAMES_RING_BUFFER_SIZE_KB = 64;
+  static constexpr uint64_t THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
 
@@ -138,6 +140,7 @@ class TracerThread {
   absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
   absl::flat_hash_set<uint64_t> task_newtask_ids_;
   absl::flat_hash_set<uint64_t> task_rename_ids_;
+  absl::flat_hash_set<uint64_t> sched_switch_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_cs_ioctl_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_sched_run_job_ids_;
   absl::flat_hash_set<uint64_t> dma_fence_signaled_ids_;
