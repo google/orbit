@@ -42,6 +42,22 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   }
 
   OrbitApp::Init({}, nullptr);
+
+  GOrbitApp->SetCaptureStartedCallback([]() {});
+  GOrbitApp->SetCaptureStoppedCallback([]() {});
+  GOrbitApp->SetCaptureFailedCallback([]() {});
+  GOrbitApp->SetCaptureClearedCallback([]() {});
+  GOrbitApp->SetOpenCaptureCallback([]() {});
+  GOrbitApp->SetOpenCaptureFailedCallback([]() {});
+  GOrbitApp->SetOpenCaptureFinishedCallback([]() {});
+  GOrbitApp->SetSelectLiveTabCallback([]() {});
+  GOrbitApp->SetErrorMessageCallback(
+      [](const std::string& /*title*/, const std::string& /*text*/) {});
+  GOrbitApp->SetRefreshCallback([](DataViewType /*type*/) {});
+  GOrbitApp->SetSamplingReportCallback(
+      [](DataView* /*view*/, std::shared_ptr<SamplingReport> /*report*/) {});
+  GOrbitApp->SetTopDownViewCallback([](std::unique_ptr<TopDownView> /*view*/) {});
+
   TimeGraph time_graph{};
   GCurrentTimeGraph = &time_graph;
   auto string_manager = std::make_shared<StringManager>();

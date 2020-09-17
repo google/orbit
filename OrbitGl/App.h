@@ -163,10 +163,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetOpenCaptureFinishedCallback(OpenCaptureFinishedCallback callback) {
     open_capture_finished_callback_ = std::move(callback);
   }
-  using SaveCaptureCallback = std::function<void()>;
-  void SetSaveCaptureCallback(SaveCaptureCallback callback) {
-    save_capture_callback_ = std::move(callback);
-  }
   using SelectLiveTabCallback = std::function<void()>;
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
@@ -213,7 +209,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
-
   using SecureCopyCallback =
       std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
   void SetSecureCopyCallback(SecureCopyCallback callback) {
@@ -322,7 +317,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   OpenCaptureCallback open_capture_callback_;
   OpenCaptureFailedCallback open_capture_failed_callback_;
   OpenCaptureFinishedCallback open_capture_finished_callback_;
-  SaveCaptureCallback save_capture_callback_;
   SelectLiveTabCallback select_live_tab_callback_;
   DisassemblyCallback disassembly_callback_;
   ErrorMessageCallback error_message_callback_;
@@ -334,10 +328,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SamplingReportCallback selection_report_callback_;
   TopDownViewCallback top_down_view_callback_;
   TopDownViewCallback selection_top_down_view_callback_;
-  std::vector<DataView*> panels_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;
+
+  std::vector<DataView*> panels_;
 
   std::unique_ptr<ProcessesDataView> processes_data_view_;
   std::unique_ptr<ModulesDataView> modules_data_view_;

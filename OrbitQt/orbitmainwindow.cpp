@@ -167,7 +167,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
       });
 
-  GOrbitApp->SetSaveCaptureCallback([this] { on_actionSave_Capture_triggered(); });
   GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
   GOrbitApp->SetDisassemblyCallback([this](std::string disassembly, DisassemblyReport report) {
