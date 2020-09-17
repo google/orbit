@@ -131,11 +131,9 @@ void OrbitApp::OnCaptureStarted(int32_t process_id, std::string process_name,
         capture_data_ = CaptureData(process_id, std::move(process_name), std::move(process),
                                     std::move(selected_functions), std::move(selected_tracepoints));
 
-        CHECK(capture_started_callback_);
         capture_started_callback_();
 
         if (has_selected_functions) {
-          CHECK(select_live_tab_callback_);
           select_live_tab_callback_();
         }
 
@@ -160,10 +158,8 @@ void OrbitApp::OnCaptureComplete() {
                           GetCaptureData().GetCallstackData()->GetUniqueCallstacksCopy());
         SetTopDownView(GetCaptureData());
 
-        CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
 
-        CHECK(open_capture_finished_callback_);
         open_capture_finished_callback_();
 
         FireRefreshCallbacks();
@@ -172,10 +168,8 @@ void OrbitApp::OnCaptureComplete() {
 
 void OrbitApp::OnCaptureCancelled() {
   main_thread_executor_->Schedule([this]() mutable {
-    CHECK(capture_failed_callback_);
     capture_failed_callback_();
 
-    CHECK(open_capture_failed_callback_);
     open_capture_failed_callback_();
 
     ClearCapture();
@@ -184,10 +178,8 @@ void OrbitApp::OnCaptureCancelled() {
 
 void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
   main_thread_executor_->Schedule([this, error_message = std::move(error_message)]() mutable {
-    CHECK(capture_failed_callback_);
     capture_failed_callback_();
 
-    CHECK(open_capture_failed_callback_);
     open_capture_failed_callback_();
 
     ClearCapture();
@@ -496,7 +488,6 @@ void OrbitApp::SetSamplingReport(
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
   auto report =
       std::make_shared<SamplingReport>(std::move(sampling_profiler), std::move(unique_callstacks));
-  CHECK(sampling_reports_callback_);
   DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
   sampling_reports_callback_(callstack_data_view, report);
 
@@ -511,7 +502,6 @@ void OrbitApp::SetSelectionReport(
     SamplingProfiler sampling_profiler,
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
     bool has_summary) {
-  CHECK(selection_report_callback_);
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler),
                                                  std::move(unique_callstacks), has_summary);
   DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
@@ -526,7 +516,6 @@ void OrbitApp::SetSelectionReport(
 }
 
 void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
-  CHECK(top_down_view_callback_);
   std::unique_ptr<TopDownView> top_down_view =
       TopDownView::CreateFromSamplingProfiler(capture_data.sampling_profiler(), capture_data);
   top_down_view_callback_(std::move(top_down_view));
@@ -534,7 +523,6 @@ void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
 
 void OrbitApp::SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
                                        const CaptureData& capture_data) {
-  CHECK(selection_top_down_view_callback_);
   std::unique_ptr<TopDownView> selection_top_down_view =
       TopDownView::CreateFromSamplingProfiler(selection_sampling_profiler, capture_data);
   selection_top_down_view_callback_(std::move(selection_top_down_view));
@@ -546,14 +534,10 @@ std::string OrbitApp::GetCaptureTime() {
 }
 
 std::string OrbitApp::GetSaveFile(const std::string& extension) {
-  CHECK(save_file_callback_);
   return save_file_callback_(extension);
 }
 
-void OrbitApp::SetClipboard(const std::string& text) {
-  CHECK(clipboard_callback_);
-  clipboard_callback_(text);
-}
+void OrbitApp::SetClipboard(const std::string& text) { clipboard_callback_(text); }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   OUTCOME_TRY(SavePreset(filename));
@@ -654,7 +638,6 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 }
 
 void OrbitApp::OnLoadCapture(const std::string& file_name) {
-  CHECK(open_capture_callback_);
   open_capture_callback_();
   ClearCapture();
   string_manager_->Clear();
@@ -675,7 +658,6 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
     }
   }
 
-  CHECK(refresh_callback_);
   refresh_callback_(type);
 }
 
@@ -724,7 +706,6 @@ void OrbitApp::StopCapture() {
     return;
   }
 
-  CHECK(capture_stop_requested_callback_);
   capture_stop_requested_callback_();
 }
 
@@ -739,7 +720,6 @@ void OrbitApp::ClearCapture() {
     GCurrentTimeGraph->Clear();
   }
 
-  CHECK(capture_cleared_callback_);
   capture_cleared_callback_();
 
   FireRefreshCallbacks();
@@ -770,37 +750,24 @@ bool OrbitApp::SelectProcess(const std::string& process) {
 void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport report) {
   main_thread_executor_->Schedule(
       [this, disassembly = std::move(disassembly), report = std::move(report)]() mutable {
-        CHECK(disassembly_callback_);
         disassembly_callback_(std::move(disassembly), std::move(report));
       });
 }
 
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
-  main_thread_executor_->Schedule([this, tooltip] {
-    CHECK(tooltip_callback_);
-    tooltip_callback_(tooltip);
-  });
+  main_thread_executor_->Schedule([this, tooltip] { tooltip_callback_(tooltip); });
 }
 
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
-  main_thread_executor_->Schedule([this, title, text] {
-    CHECK(info_message_callback_);
-    info_message_callback_(title, text);
-  });
+  main_thread_executor_->Schedule([this, title, text] { info_message_callback_(title, text); });
 }
 
 void OrbitApp::SendWarningToUi(const std::string& title, const std::string& text) {
-  main_thread_executor_->Schedule([this, title, text] {
-    CHECK(warning_message_callback_);
-    warning_message_callback_(title, text);
-  });
+  main_thread_executor_->Schedule([this, title, text] { warning_message_callback_(title, text); });
 }
 
 void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) {
-  main_thread_executor_->Schedule([this, title, text] {
-    CHECK(error_message_callback_);
-    error_message_callback_(title, text);
-  });
+  main_thread_executor_->Schedule([this, title, text] { error_message_callback_(title, text); });
 }
 
 void OrbitApp::LoadModuleOnRemote(const std::shared_ptr<Process>& process,

@@ -131,87 +131,115 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
   void SetCaptureStartedCallback(CaptureStartedCallback callback) {
+    CHECK(callback);
     capture_started_callback_ = std::move(callback);
   }
   using CaptureStopRequestedCallback = std::function<void()>;
   void SetCaptureStopRequestedCallback(CaptureStopRequestedCallback callback) {
+    CHECK(callback);
     capture_stop_requested_callback_ = std::move(callback);
   }
   using CaptureStoppedCallback = std::function<void()>;
   void SetCaptureStoppedCallback(CaptureStoppedCallback callback) {
+    CHECK(callback);
     capture_stopped_callback_ = std::move(callback);
   }
   using CaptureFailedCallback = std::function<void()>;
   void SetCaptureFailedCallback(CaptureFailedCallback callback) {
+    CHECK(callback);
     capture_failed_callback_ = std::move(callback);
   }
 
   using CaptureClearedCallback = std::function<void()>;
   void SetCaptureClearedCallback(CaptureClearedCallback callback) {
+    CHECK(callback);
     capture_cleared_callback_ = std::move(callback);
   }
 
   using OpenCaptureCallback = std::function<void()>;
   void SetOpenCaptureCallback(OpenCaptureCallback callback) {
+    CHECK(callback);
     open_capture_callback_ = std::move(callback);
   }
   using OpenCaptureFailedCallback = std::function<void()>;
   void SetOpenCaptureFailedCallback(OpenCaptureFailedCallback callback) {
+    CHECK(callback);
     open_capture_failed_callback_ = std::move(callback);
   }
   using OpenCaptureFinishedCallback = std::function<void()>;
   void SetOpenCaptureFinishedCallback(OpenCaptureFinishedCallback callback) {
+    CHECK(callback);
     open_capture_finished_callback_ = std::move(callback);
   }
   using SelectLiveTabCallback = std::function<void()>;
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
+    CHECK(callback);
     select_live_tab_callback_ = std::move(callback);
   }
   using DisassemblyCallback = std::function<void(std::string, DisassemblyReport)>;
   void SetDisassemblyCallback(DisassemblyCallback callback) {
+    CHECK(callback);
     disassembly_callback_ = std::move(callback);
   }
   using ErrorMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetErrorMessageCallback(ErrorMessageCallback callback) {
+    CHECK(callback);
     error_message_callback_ = std::move(callback);
   }
   using WarningMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetWarningMessageCallback(WarningMessageCallback callback) {
+    CHECK(callback);
     warning_message_callback_ = std::move(callback);
   }
   using InfoMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetInfoMessageCallback(InfoMessageCallback callback) {
+    CHECK(callback);
     info_message_callback_ = std::move(callback);
   }
   using TooltipCallback = std::function<void(const std::string&)>;
-  void SetTooltipCallback(TooltipCallback callback) { tooltip_callback_ = std::move(callback); }
+  void SetTooltipCallback(TooltipCallback callback) {
+    CHECK(callback);
+    tooltip_callback_ = std::move(callback);
+  }
   using RefreshCallback = std::function<void(DataViewType type)>;
-  void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
+  void SetRefreshCallback(RefreshCallback callback) {
+    CHECK(callback);
+    refresh_callback_ = std::move(callback);
+  }
   using SamplingReportCallback = std::function<void(DataView*, std::shared_ptr<SamplingReport>)>;
   void SetSamplingReportCallback(SamplingReportCallback callback) {
+    CHECK(callback);
     sampling_reports_callback_ = std::move(callback);
   }
   void SetSelectionReportCallback(SamplingReportCallback callback) {
+    CHECK(callback);
     selection_report_callback_ = std::move(callback);
   }
   using TopDownViewCallback = std::function<void(std::unique_ptr<TopDownView>)>;
   void SetTopDownViewCallback(TopDownViewCallback callback) {
+    CHECK(callback);
     top_down_view_callback_ = std::move(callback);
   }
   void SetSelectionTopDownViewCallback(TopDownViewCallback callback) {
+    CHECK(callback);
     selection_top_down_view_callback_ = std::move(callback);
   }
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
-  void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
+  void SetSaveFileCallback(SaveFileCallback callback) {
+    CHECK(callback);
+    save_file_callback_ = std::move(callback);
+  }
   void FireRefreshCallbacks(DataViewType type = DataViewType::kAll);
   void Refresh(DataViewType type = DataViewType::kAll) { FireRefreshCallbacks(type); }
   using ClipboardCallback = std::function<void(const std::string&)>;
   void SetClipboardCallback(ClipboardCallback callback) {
+    CHECK(callback);
     clipboard_callback_ = std::move(callback);
   }
   using SecureCopyCallback =
       std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
   void SetSecureCopyCallback(SecureCopyCallback callback) {
+    CHECK(callback);
     secure_copy_callback_ = std::move(callback);
   }
 
