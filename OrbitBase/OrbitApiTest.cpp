@@ -6,8 +6,8 @@
 
 #include "../Orbit.h"
 
-orbit_api::Event Decode(uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5,
-                        uint64_t a6) {
+static orbit_api::Event Decode(uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5,
+                               uint64_t a6) {
   orbit_api::EncodedEvent encoded_event(a1, a2, a3, a4, a5, a6);
   return encoded_event.event;
 }
