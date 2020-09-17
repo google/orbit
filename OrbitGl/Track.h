@@ -31,6 +31,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
     kGraphTrack,
     kGpuTrack,
     kSchedulerTrack,
+    kAsyncTrack,
     kUnknown,
   };
 

@@ -8,12 +8,15 @@
 #include <unordered_map>
 #include <utility>
 
+#include "../Orbit.h"
+#include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
 #include "EventBuffer.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
+#include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
 #include "SchedulerTrack.h"
 #include "ScopeTimer.h"
@@ -44,7 +47,6 @@ class TimeGraph {
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo* function);
-  void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void UpdateMaxTimeStamp(uint64_t a_Time);
 
   float GetThreadTotalHeight();
@@ -126,7 +128,10 @@ class TimeGraph {
   const TextBox* FindTop(const TextBox* from);
   const TextBox* FindDown(const TextBox* from);
 
-  Color GetThreadColor(int32_t tid) const;
+  [[nodiscard]] Color GetColor(uint32_t id) const;
+  [[nodiscard]] Color GetColor(uint64_t id) const;
+  [[nodiscard]] Color GetColor(const std::string& str) const;
+  [[nodiscard]] Color GetThreadColor(int32_t tid) const;
 
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
@@ -141,12 +146,22 @@ class TimeGraph {
   uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
   uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
+  ManualInstrumentationManager* GetManualInstrumentationManager() {
+    return manual_instrumentation_manager_.get();
+  }
+
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(const std::string& name);
+  AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
 
+  void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
+                                 const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessAsyncTimer(const std::string& track_name,
+                         const orbit_client_protos::TimerInfo& timer_info);
   void ProcessManualIntrumentationTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
@@ -198,6 +213,7 @@ class TimeGraph {
   mutable Mutex m_Mutex;
   std::vector<std::shared_ptr<Track>> tracks_;
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
+  std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
   // Mapping from timeline hash to GPU tracks.
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
@@ -213,6 +229,7 @@ class TimeGraph {
 
   std::shared_ptr<StringManager> string_manager_;
   StringManager manual_instrumentation_string_manager_;
+  std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

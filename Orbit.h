@@ -36,6 +36,8 @@
 #define ORBIT_START_ASYNC(name, id) ORBIT_START_ASYNC_WITH_COLOR(name, id, orbit::Color::kAuto)
 #define ORBIT_START_ASYNC_WITH_COLOR(name, id, col) orbit_api::StartAsync(name, id, col)
 #define ORBIT_STOP_ASYNC(id) orbit_api::StopAsync(id)
+#define ORBIT_ASYNC_STRING(str, id) orbit_api::AsyncString(str, id, orbit::Color::kAuto)
+#define ORBIT_ASYNC_STRING_WITH_COLOR(str, id, col) orbit_api::AsyncString(str, id, col)
 
 // ORBIT_[type]: graph variables.
 #define ORBIT_INT(name, val) ORBIT_INT_WITH_COLOR(name, val, orbit::Color::kAuto)
@@ -57,7 +59,7 @@ namespace orbit {
 
 // Material Design Colors #500
 enum class Color : uint32_t {
-  kAuto = 0x00000001,
+  kAuto = 0x00000000,
   kRed = 0xf44336ff,
   kPink = 0xe91e63ff,
   kPurple = 0x9c27b0ff,
@@ -88,6 +90,8 @@ enum class Color : uint32_t {
 #define ORBIT_STOP()
 #define ORBIT_START_ASYNC(name, id)
 #define ORBIT_STOP_ASYNC(id)
+#define ORBIT_ASYNC_STRING(str, id)
+#define ORBIT_ASYNC_STRING_WITH_COLOR(str, id, col)
 #define ORBIT_INT(name, value)
 #define ORBIT_INT64(name, value)
 #define ORBIT_UINT(name, value)
@@ -140,6 +144,7 @@ enum EventType : uint8_t {
   kTrackUint64 = 8,
   kTrackFloat = 9,
   kTrackDouble = 10,
+  kString = 11,
 };
 
 constexpr size_t kMaxEventStringSize = 30;
@@ -224,13 +229,27 @@ inline void Stop() {
 }
 
 inline void StartAsync(const char* name, uint64_t id, orbit::Color color) {
-  EncodedEvent e(EventType::kScopeStartAsync, name, id, color);
+  EncodedEvent e(EventType::kScopeStartAsync, name, /*value*/ 0, color, id);
   StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
 inline void StopAsync(uint64_t id) {
-  EncodedEvent e(EventType::kScopeStopAsync, nullptr, id);
+  EncodedEvent e(EventType::kScopeStopAsync, /*name*/ nullptr, /*value*/ 0, orbit::Color::kAuto,
+                 id);
   StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+}
+
+inline void AsyncString(const char* str, uint32_t id, orbit::Color color) {
+  if (str == nullptr) return;
+  constexpr size_t chunk_size = kMaxEventStringSize - 1;
+  const char* end = str + strlen(str);
+  while (str < end) {
+    EncodedEvent e(EventType::kString, /*name*/ nullptr, /*value*/ 0, color, id);
+    std::strncpy(e.event.name, str, chunk_size);
+    e.event.name[chunk_size] = 0;
+    TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+    str += chunk_size;
+  }
 }
 
 inline void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color) {
@@ -244,6 +263,7 @@ void Start(const char* name, orbit::Color color);
 void Stop();
 void StartAsync(const char* name, uint32_t id, orbit::Color color);
 void StopAsync(uint32_t id);
+void AsyncString(const char* str, uint32_t id);
 void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color);
 
 #endif  // ORBIT_API_INTERNAL_IMPL

@@ -12,6 +12,7 @@ target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   OrbitGl
   PUBLIC App.h
+         AsyncTrack.h
          Batcher.h
          CallStackDataView.h
          CaptureWindow.h
@@ -63,6 +64,7 @@ target_sources(
 target_sources(
   OrbitGl
   PRIVATE App.cpp
+          AsyncTrack.cpp
           Batcher.cpp
           CallStackDataView.cpp
           CaptureWindow.cpp

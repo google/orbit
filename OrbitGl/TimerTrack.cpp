@@ -23,10 +23,6 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 
 TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
-
-  num_timers_ = 0;
-  min_time_ = std::numeric_limits<uint64_t>::max();
-  max_time_ = std::numeric_limits<uint64_t>::min();
 }
 
 void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
@@ -167,6 +163,16 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
   ++num_timers_;
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();
   if (timer_info.end() > max_time_) max_time_ = timer_info.end();
+}
+
+float TimerTrack::GetHeight() const {
+  TimeGraphLayout& layout = time_graph_->GetLayout();
+  bool is_collapsed = collapse_toggle_->IsCollapsed();
+  uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
+  uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
+  return layout.GetTextBoxHeight() * depth +
+         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
+         layout.GetTrackBottomMargin();
 }
 
 std::string TimerTrack::GetTooltip() const {

@@ -46,20 +46,31 @@ TimeGraph::TimeGraph() : m_Batcher(BatcherId::kTimeGraph) {
 
   // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
+
+  manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>(
+      [this](const std::string& name, const TimerInfo& timer_info) {
+        ProcessAsyncTimer(name, timer_info);
+      });
 }
 
-Color TimeGraph::GetThreadColor(int32_t tid) const {
-  static unsigned char a = 255;
-  static std::vector<Color> s_ThreadColors{
-      Color(231, 68, 53, a),    // red
-      Color(43, 145, 175, a),   // blue
-      Color(185, 117, 181, a),  // purple
-      Color(87, 166, 74, a),    // green
-      Color(215, 171, 105, a),  // beige
-      Color(248, 101, 22, a)    // orange
+Color TimeGraph::GetColor(uint32_t id) const {
+  constexpr unsigned char kAlpha = 255;
+  static std::vector<Color> colors{
+      Color(231, 68, 53, kAlpha),    // red
+      Color(43, 145, 175, kAlpha),   // blue
+      Color(185, 117, 181, kAlpha),  // purple
+      Color(87, 166, 74, kAlpha),    // green
+      Color(215, 171, 105, kAlpha),  // beige
+      Color(248, 101, 22, kAlpha)    // orange
   };
-  return s_ThreadColors[tid % s_ThreadColors.size()];
+  return colors[id % colors.size()];
 }
+
+Color TimeGraph::GetColor(uint64_t id) const { return GetColor(static_cast<uint32_t>(id)); }
+
+Color TimeGraph::GetColor(const std::string& str) const { return GetColor(StringHash(str)); }
+
+Color TimeGraph::GetThreadColor(int32_t tid) const { return GetColor(static_cast<uint32_t>(tid)); }
 
 void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
   string_manager_ = std::move(str_manager);
@@ -91,6 +102,7 @@ void TimeGraph::Clear() {
   thread_tracks_.clear();
   gpu_tracks_.clear();
   graph_tracks_.clear();
+  async_tracks_.clear();
 
   cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
@@ -308,9 +320,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     capture_max_timestamp_ = timer_info.end();
   }
 
-  if (function != nullptr && function->type() == FunctionInfo::kOrbitTrackValue) {
-    ProcessValueTrackingTimer(timer_info);
-    return;
+  if (function != nullptr && function->type() != FunctionInfo::kNone) {
+    ProcessOrbitFunctionTimer(function->type(), timer_info);
   }
 
   if (timer_info.type() == TimerInfo::kGpuActivity) {
@@ -336,8 +347,29 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   NeedsUpdate();
 }
 
+void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
+                                          const TimerInfo& timer_info) {
+  switch (type) {
+    case FunctionInfo::kOrbitTrackValue:
+      ProcessValueTrackingTimer(timer_info);
+      break;
+    case FunctionInfo::kOrbitTimerStartAsync:
+    case FunctionInfo::kOrbitTimerStopAsync:
+      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      break;
+    default:
+      break;
+  }
+}
+
 void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+
+  if (event.type == orbit_api::kString) {
+    manual_instrumentation_manager_->ProcessStringEvent(event);
+    return;
+  }
+
   auto track = GetOrCreateGraphTrack(event.name);
   uint64_t time = timer_info.start();
 
@@ -364,6 +396,11 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
       ERROR("Unsupported value tracking type [%u]", event.type);
       break;
   }
+}
+
+void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo& timer_info) {
+  auto track = GetOrCreateAsyncTrack(track_name);
+  track->OnTimer(timer_info);
 }
 
 uint32_t TimeGraph::GetNumTimers() const {
@@ -793,6 +830,18 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(const std::string& name) {
   return track.get();
 }
 
+AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
+  ScopeLock lock(m_Mutex);
+  std::shared_ptr<AsyncTrack> track = async_tracks_[name];
+  if (track == nullptr) {
+    track = std::make_shared<AsyncTrack>(this, name);
+    tracks_.emplace_back(track);
+    async_tracks_[name] = track;
+  }
+
+  return track.get();
+}
+
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
   m_ThreadFilter = a_Filter;
   NeedsUpdate();
@@ -868,6 +917,11 @@ void TimeGraph::SortTracks() {
     // Graph Tracks.
     for (const auto& graph_track : graph_tracks_) {
       sorted_tracks_.emplace_back(graph_track.second);
+    }
+
+    // Async Tracks.
+    for (const auto& async_track : async_tracks_) {
+      sorted_tracks_.emplace_back(async_track.second);
     }
 
     // Process Track.
