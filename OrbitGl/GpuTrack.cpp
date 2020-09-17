@@ -102,11 +102,13 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
 }
 
 float GpuTrack::GetYFromDepth(uint32_t depth) const {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
   float adjusted_depth = static_cast<float>(depth);
   if (collapse_toggle_->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
-  return pos_[1] - time_graph_->GetLayout().GetTextBoxHeight() * (adjusted_depth + 1.f);
+  return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f) -
+         adjusted_depth * layout.GetSpaceBetweenGpuDepths();
 }
 
 // When track is collapsed, only draw "hardware execution" timers.
@@ -155,7 +157,9 @@ float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   bool collapsed = collapse_toggle_->IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
-  return layout.GetTextBoxHeight() * depth + layout.GetTrackBottomMargin();
+  uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
+  return layout.GetTextBoxHeight() * depth + (num_gaps * layout.GetSpaceBetweenGpuDepths()) +
+         layout.GetTrackBottomMargin();
 }
 
 const TextBox* GpuTrack::GetLeft(const TextBox* text_box) const {

@@ -31,6 +31,7 @@ class TimeGraphLayout {
   float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset * scale_; }
   float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks * scale_; }
   float GetSpaceBetweenCores() const { return m_SpaceBetweenCores * scale_; }
+  float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
   float GetSpaceBetweenTracksAndThread() const { return m_SpaceBetweenTracksAndThread * scale_; }
   float GetToolbarIconHeight() const { return m_ToolbarIconHeight; }
   float GetScale() const { return scale_; }
@@ -63,6 +64,7 @@ class TimeGraphLayout {
   float m_SchedulerTrackOffset;
 
   float m_SpaceBetweenCores;
+  float space_between_gpu_depths_;
   float m_SpaceBetweenTracks;
   float m_SpaceBetweenTracksAndThread;
   float m_SpaceBetweenThreadBlocks;
