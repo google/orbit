@@ -47,14 +47,14 @@ class TimeGraph {
   void UpdateMaxTimeStamp(uint64_t a_Time);
 
   float GetThreadTotalHeight();
-  float GetTextBoxHeight() const { return m_Layout.GetTextBoxHeight(); }
-  int GetMarginInPixels() const { return m_Margin; }
+  float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
+  int GetMarginInPixels() const { return margin_; }
   float GetWorldFromTick(uint64_t a_Time) const;
   float GetWorldFromUs(double a_Micros) const;
   uint64_t GetTickFromWorld(float a_WorldX) const;
   uint64_t GetTickFromUs(double a_MicroSeconds) const;
   double GetUsFromTick(uint64_t time) const;
-  double GetTimeWindowUs() const { return m_TimeWindowUs; }
+  double GetTimeWindowUs() const { return time_window_us_; }
   void GetWorldMinMax(float& a_Min, float& a_Max) const;
   bool UpdateCaptureMinMaxTimestamps();
 
@@ -88,35 +88,35 @@ class TimeGraph {
   void SelectAndZoom(const TextBox* a_TextBox);
   double GetCaptureTimeSpanUs();
   double GetCurrentTimeSpanUs();
-  void NeedsRedraw() { m_NeedsRedraw = true; }
-  bool IsRedrawNeeded() const { return m_NeedsRedraw; }
-  void ToggleDrawText() { m_DrawText = !m_DrawText; }
+  void NeedsRedraw() { needs_redraw_ = true; }
+  bool IsRedrawNeeded() const { return needs_redraw_; }
+  void ToggleDrawText() { draw_text_ = !draw_text_; }
   void SetThreadFilter(const std::string& a_Filter);
 
   bool IsFullyVisible(uint64_t min, uint64_t max) const;
   bool IsPartlyVisible(uint64_t min, uint64_t max) const;
   bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
-  int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
-  void SetTextRenderer(TextRenderer* a_TextRenderer) { m_TextRenderer = a_TextRenderer; }
-  TextRenderer* GetTextRenderer() { return &m_TextRendererStatic; }
+  int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
+  void SetTextRenderer(TextRenderer* a_TextRenderer) { text_renderer_ = a_TextRenderer; }
+  TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
   StringManager* GetStringManager() { return string_manager_.get(); }
   void SetCanvas(GlCanvas* a_Canvas);
-  GlCanvas* GetCanvas() { return m_Canvas; }
+  GlCanvas* GetCanvas() { return canvas_; }
   void SetFontSize(int a_FontSize);
   int GetFontSize() { return GetTextRenderer()->GetFontSize(); }
-  Batcher& GetBatcher() { return m_Batcher; }
+  Batcher& GetBatcher() { return batcher_; }
   uint32_t GetNumTimers() const;
   uint32_t GetNumCores() const;
   std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
 
   void OnDrag(float a_Ratio);
-  double GetMinTimeUs() const { return m_MinTimeUs; }
-  double GetMaxTimeUs() const { return m_MaxTimeUs; }
-  const TimeGraphLayout& GetLayout() const { return m_Layout; }
-  TimeGraphLayout& GetLayout() { return m_Layout; }
+  double GetMinTimeUs() const { return min_time_us_; }
+  double GetMaxTimeUs() const { return max_time_us_; }
+  const TimeGraphLayout& GetLayout() const { return layout_; }
+  TimeGraphLayout& GetLayout() { return layout_; }
   float GetRightMargin() const { return right_margin_; }
   void SetRightMargin(float margin) { right_margin_ = margin; }
 
@@ -149,59 +149,59 @@ class TimeGraph {
   void ProcessManualIntrumentationTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
-  TextRenderer m_TextRendererStatic;
-  TextRenderer* m_TextRenderer = nullptr;
-  GlCanvas* m_Canvas = nullptr;
-  int m_NumDrawnTextBoxes = 0;
+  TextRenderer text_renderer_static_;
+  TextRenderer* text_renderer_ = nullptr;
+  GlCanvas* canvas_ = nullptr;
+  int num_drawn_text_boxes_ = 0;
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
   absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> iterator_functions_;
 
-  double m_RefTimeUs = 0;
-  double m_MinTimeUs = 0;
-  double m_MaxTimeUs = 0;
+  double ref_time_us_ = 0;
+  double min_time_us_ = 0;
+  double max_time_us_ = 0;
   uint64_t capture_min_timestamp_ = 0;
   uint64_t capture_max_timestamp_ = 0;
   uint64_t current_mouse_time_ns_ = 0;
-  std::map<int32_t, uint32_t> m_EventCount;
-  double m_TimeWindowUs = 0;
-  float m_WorldStartX = 0;
-  float m_WorldWidth = 0;
+  std::map<int32_t, uint32_t> event_count_;
+  double time_window_us_ = 0;
+  float world_start_x_ = 0;
+  float world_width_ = 0;
   float min_y_ = 0;
-  int m_Margin = 0;
+  int margin_ = 0;
   float right_margin_ = 0;
 
-  double m_ZoomValue = 0;
-  double m_MouseRatio = 0;
+  double zoom_value_ = 0;
+  double mouse_ratio_ = 0;
 
-  TimeGraphLayout m_Layout;
+  TimeGraphLayout layout_;
 
-  std::map<int32_t, uint32_t> m_ThreadCountMap;
+  std::map<int32_t, uint32_t> thread_count_map_;
 
   // Be careful when directly changing these members without using the
   // methods NeedsRedraw() or NeedsUpdate():
-  // m_NeedsUpdatePrimitives should always imply m_NeedsRedraw, that is
-  // m_NeedsUpdatePrimitives => m_NeedsRedraw is an invariant of this
+  // needs_update_primitives_ should always imply needs_redraw_, that is
+  // needs_update_primitives_ => needs_redraw_ is an invariant of this
   // class. When updating the primitives, which computes the primitives
   // to be drawn and their coordinates, we always have to redraw the
   // timeline.
-  bool m_NeedsUpdatePrimitives = false;
-  bool m_NeedsRedraw = false;
+  bool needs_update_primitives_ = false;
+  bool needs_redraw_ = false;
 
-  bool m_DrawText = true;
+  bool draw_text_ = true;
 
-  Batcher m_Batcher;
-  Timer m_LastThreadReorder;
+  Batcher batcher_;
+  Timer last_thread_reorder_;
 
-  mutable Mutex m_Mutex;
+  mutable Mutex mutex_;
   std::vector<std::shared_ptr<Track>> tracks_;
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
   // Mapping from timeline hash to GPU tracks.
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
-  std::string m_ThreadFilter;
+  std::string thread_filter_;
 
   std::set<uint32_t> cores_seen_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
