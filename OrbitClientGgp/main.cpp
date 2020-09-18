@@ -19,26 +19,32 @@ ABSL_FLAG(uint32_t, capture_length, 10, "duration of capture in seconds");
 ABSL_FLAG(std::vector<std::string>, functions, {},
           "Comma-separated list of functions to hook to the capture");
 ABSL_FLAG(std::string, file_name, "", "File name used for saving the capture");
+ABSL_FLAG(std::string, debug_path, "",
+          "Path to locate debug file. By default only stdout is used for logs");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
 namespace {
 
-std::string GetLogFilePath() {
-  std::filesystem::path var_log{"/var/log"};
-  std::filesystem::create_directory(var_log);
-  const std::string log_file_path = var_log / "OrbitClientGgp.log";
+std::string GetLogFilePath(const std::string& path) {
+  std::filesystem::path debug_path{path};
+  std::filesystem::create_directory(debug_path);
+  const std::string log_file_path = debug_path / "OrbitClientGgp.log";
+  LOG("Log file located at %s", debug_path);
   return log_file_path;
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
-  InitLogFile(GetLogFilePath());
-
   absl::SetProgramUsageMessage("Orbit CPU Profiler Ggp Client");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
+
+  const std::string debug_path = absl::GetFlag(FLAGS_debug_path);
+  if (!debug_path.empty()) {
+    InitLogFile(GetLogFilePath(debug_path));
+  }
 
   if (!absl::GetFlag(FLAGS_pid)) {
     FATAL("pid to capture not provided; set using -pid");
