@@ -156,6 +156,7 @@ void OrbitApp::OnCaptureStarted(std::unique_ptr<ProcessData> process,
 }
 
 void OrbitApp::OnCaptureComplete() {
+  capture_data_.FilterBrokenCallstacks();
   SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
   capture_data_.set_sampling_profiler(sampling_profiler);
   main_thread_executor_->Schedule(
