@@ -40,18 +40,21 @@ class CallstackData {
 
   [[nodiscard]] uint32_t GetCallstackEventsCount() const;
 
+  [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsInTimeRange(
+      uint64_t time_begin, uint64_t time_end) const;
+
   [[nodiscard]] absl::flat_hash_map<int32_t, uint32_t> GetCallstackEventsCountsPerTid() const;
 
   [[nodiscard]] uint32_t GetCallstackEventsOfTidCount(int32_t thread_id) const;
 
   [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsOfTidInTimeRange(
-      int32_t desired_tid, uint64_t time_begin, uint64_t time_end) const;
+      int32_t tid, uint64_t time_begin, uint64_t time_end) const;
 
   void ForEachCallstackEvent(
       const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
 
   void ForEachCallstackEventOfTid(
-      int32_t desired_tid,
+      int32_t tid,
       const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
 
   [[nodiscard]] uint64_t max_time() const {

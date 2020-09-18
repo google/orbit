@@ -5,7 +5,6 @@
 #include "CallstackData.h"
 
 #include "Callstack.h"
-#include "SamplingProfiler.h"
 
 using orbit_client_protos::CallstackEvent;
 
@@ -39,6 +38,24 @@ uint32_t CallstackData::GetCallstackEventsCount() const {
   return count;
 }
 
+std::vector<orbit_client_protos::CallstackEvent> CallstackData::GetCallstackEventsInTimeRange(
+    uint64_t time_begin, uint64_t time_end) const {
+  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::vector<CallstackEvent> callstack_events;
+  for (const auto& tid_and_events : callstack_events_by_tid_) {
+    const std::map<uint64_t, CallstackEvent>& events = tid_and_events.second;
+    for (auto event_it = events.lower_bound(time_begin); event_it != events.end(); ++event_it) {
+      uint64_t time = event_it->first;
+      if (time < time_end) {
+        callstack_events.push_back(event_it->second);
+      } else {
+        break;
+      }
+    }
+  }
+  return callstack_events;
+}
+
 absl::flat_hash_map<int32_t, uint32_t> CallstackData::GetCallstackEventsCountsPerTid() const {
   absl::MutexLock lock(&callstack_events_by_tid_mutex_);
   absl::flat_hash_map<int32_t, uint32_t> counts;
@@ -49,10 +66,6 @@ absl::flat_hash_map<int32_t, uint32_t> CallstackData::GetCallstackEventsCountsPe
 }
 
 uint32_t CallstackData::GetCallstackEventsOfTidCount(int32_t thread_id) const {
-  if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
-    return GetCallstackEventsCount();
-  }
-
   absl::MutexLock lock(&callstack_events_by_tid_mutex_);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(thread_id);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
@@ -62,23 +75,22 @@ uint32_t CallstackData::GetCallstackEventsOfTidCount(int32_t thread_id) const {
 }
 
 std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
-    int32_t desired_tid, uint64_t time_begin, uint64_t time_end) const {
+    int32_t tid, uint64_t time_begin, uint64_t time_end) const {
   absl::MutexLock lock(&callstack_events_by_tid_mutex_);
   std::vector<CallstackEvent> callstack_events;
-  for (const auto& tid_and_events : callstack_events_by_tid_) {
-    const int32_t tid = tid_and_events.first;
-    if (desired_tid != SamplingProfiler::kAllThreadsFakeTid && tid != desired_tid) {
-      continue;
-    }
-    const std::map<uint64_t, CallstackEvent>& events = tid_and_events.second;
 
-    for (auto event_it = events.lower_bound(time_begin); event_it != events.end(); ++event_it) {
-      uint64_t time = event_it->first;
-      if (time < time_end) {
-        callstack_events.push_back(event_it->second);
-      } else {
-        break;
-      }
+  auto tid_and_events_it = callstack_events_by_tid_.find(tid);
+  if (tid_and_events_it == callstack_events_by_tid_.end()) {
+    return callstack_events;
+  }
+
+  const std::map<uint64_t, CallstackEvent>& events = tid_and_events_it->second;
+  for (auto event_it = events.lower_bound(time_begin); event_it != events.end(); ++event_it) {
+    uint64_t time = event_it->first;
+    if (time < time_end) {
+      callstack_events.push_back(event_it->second);
+    } else {
+      break;
     }
   }
   return callstack_events;
@@ -95,15 +107,10 @@ void CallstackData::ForEachCallstackEvent(
 }
 
 void CallstackData::ForEachCallstackEventOfTid(
-    int32_t desired_tid,
+    int32_t tid,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
-  if (desired_tid == SamplingProfiler::kAllThreadsFakeTid) {
-    ForEachCallstackEvent(action);
-    return;
-  }
-
   absl::MutexLock lock(&callstack_events_by_tid_mutex_);
-  const auto& tid_and_events_it = callstack_events_by_tid_.find(desired_tid);
+  const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
     return;
   }
