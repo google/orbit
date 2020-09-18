@@ -28,6 +28,6 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
 
   it = tracepoints_all_threads.end();
   --it;
-  ASSERT_TRUE(it->first == 2 && it->second.time() == 2 && it->second.tracepoint_info_key() == 3 && it->second.pid() == 2 &&
-              it->second.cpu() == 1);
+  ASSERT_TRUE(it->first == 2 && it->second.time() == 2 && it->second.tracepoint_info_key() == 3 &&
+              it->second.pid() == 2 && it->second.cpu() == 1);
 }
