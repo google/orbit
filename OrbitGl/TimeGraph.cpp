@@ -539,8 +539,10 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float wor
   uint64_t t1 = GetTickFromWorld(world_end);
 
   std::vector<CallstackEvent> selected_callstack_events =
-      GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsOfTidInTimeRange(thread_id,
-                                                                                         t0, t1);
+      (thread_id == SamplingProfiler::kAllThreadsFakeTid)
+          ? GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsInTimeRange(t0, t1)
+          : GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsOfTidInTimeRange(
+                thread_id, t0, t1);
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
