@@ -16,7 +16,6 @@ target_sources(
          CallstackData.h
          CallstackTypes.h
          CaptureData.h
-         EventBuffer.h
          FunctionUtils.h
          OrbitModule.h
          OrbitProcess.h
@@ -38,7 +37,6 @@ target_sources(
   OrbitCore
   PRIVATE CallstackData.cpp
           CaptureData.cpp
-          EventBuffer.cpp
           FunctionUtils.cpp
           OrbitModule.cpp
           OrbitProcess.cpp

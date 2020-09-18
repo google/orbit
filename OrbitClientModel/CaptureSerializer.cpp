@@ -83,11 +83,12 @@ CaptureInfo GenerateCaptureInfo(
         *callstack->mutable_data() = {call_stack.GetFrames().begin(), call_stack.GetFrames().end()};
       });
 
-  const auto& callstacks = capture_data.GetCallstackData()->callstack_events();
-  capture_info.mutable_callstack_events()->Reserve(callstacks.size());
-  for (const auto& callstack : callstacks) {
-    capture_info.add_callstack_events()->CopyFrom(callstack);
-  }
+  capture_info.mutable_callstack_events()->Reserve(
+      capture_data.GetCallstackData()->GetCallstackEventsCount());
+  capture_data.GetCallstackData()->ForEachCallstackEvent(
+      [&capture_info](const orbit_client_protos::CallstackEvent& event) {
+        capture_info.add_callstack_events()->CopyFrom(event);
+      });
 
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 

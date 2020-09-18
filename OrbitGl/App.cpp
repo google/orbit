@@ -20,7 +20,6 @@
 #include "CaptureWindow.h"
 #include "Disassembler.h"
 #include "DisassemblyReport.h"
-#include "EventTracer.h"
 #include "FunctionUtils.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -216,8 +215,6 @@ void OrbitApp::OnUniqueCallStack(CallStack callstack) {
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
-  GEventTracer.GetEventBuffer().AddCallstackEvent(
-      callstack_event.time(), callstack_event.callstack_hash(), callstack_event.thread_id());
   capture_data_.AddCallstackEvent(std::move(callstack_event));
 }
 
@@ -452,7 +449,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     const SamplingProfiler& profiler = capture_data.sampling_profiler();
 
     DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler,
-                             capture_data.GetCallstackData()->GetCallstackEventsSize());
+                             capture_data.GetCallstackData()->GetCallstackEventsCount());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }

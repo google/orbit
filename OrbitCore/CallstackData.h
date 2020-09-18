@@ -32,63 +32,64 @@ class CallstackData {
   void AddCallStackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
                                           const CallstackData* known_callstack_data);
 
-  [[nodiscard]] const BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024>& callstack_events()
-      const {
-    return callstack_events_;
-  };
-
-  [[nodiscard]] uint32_t GetCallstackEventsSize() const { return callstack_events_.size(); };
-
-  [[nodiscard]] const CallStack* GetCallStack(CallstackID callstack_id) const {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    auto it = unique_callstacks_.find(callstack_id);
-    if (it != unique_callstacks_.end()) {
-      return it->second.get();
-    }
-    return nullptr;
-  };
-
-  [[nodiscard]] bool HasCallStack(CallstackID callstack_id) const {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    return unique_callstacks_.count(callstack_id) > 0;
+  [[nodiscard]] const absl::flat_hash_map<int32_t,
+                                          std::map<uint64_t, orbit_client_protos::CallstackEvent>>&
+  callstack_events_by_tid() const {
+    return callstack_events_by_tid_;
   }
 
-  void ForEachUniqueCallstack(const std::function<void(const CallStack&)>& action) const {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    for (const auto& it : unique_callstacks_) {
-      action(*it.second);
-    }
+  [[nodiscard]] uint32_t GetCallstackEventsCount() const;
+
+  [[nodiscard]] absl::flat_hash_map<int32_t, uint32_t> GetCallstackEventsCountsPerTid() const;
+
+  [[nodiscard]] uint32_t GetCallstackEventsOfTidCount(int32_t thread_id) const;
+
+  [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsOfTidInTimeRange(
+      int32_t desired_tid, uint64_t time_begin, uint64_t time_end) const;
+
+  void ForEachCallstackEvent(
+      const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
+
+  void ForEachCallstackEventOfTid(
+      int32_t desired_tid,
+      const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
+
+  [[nodiscard]] uint64_t max_time() const {
+    absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+    return max_time_;
   }
+
+  [[nodiscard]] uint64_t min_time() const {
+    absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+    return min_time_;
+  }
+
+  [[nodiscard]] const CallStack* GetCallStack(CallstackID callstack_id) const;
+
+  [[nodiscard]] bool HasCallStack(CallstackID callstack_id) const;
+
+  void ForEachUniqueCallstack(const std::function<void(const CallStack&)>& action) const;
 
   void ForEachFrameInCallstack(uint64_t callstack_id,
-                               const std::function<void(uint64_t)>& action) const {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    for (uint64_t frame : unique_callstacks_.at(callstack_id)->GetFrames()) {
-      action(frame);
-    }
-  }
+                               const std::function<void(uint64_t)>& action) const;
 
   [[nodiscard]] absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
-  GetUniqueCallstacksCopy() const {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    return unique_callstacks_;
-  }
+  GetUniqueCallstacksCopy() const;
 
  private:
-  [[nodiscard]] std::shared_ptr<CallStack> GetCallstackPtr(CallstackID callstack_id) const {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    auto it = unique_callstacks_.find(callstack_id);
-    if (it != unique_callstacks_.end()) {
-      return unique_callstacks_.at(callstack_id);
-    }
-    return nullptr;
-  };
+  [[nodiscard]] std::shared_ptr<CallStack> GetCallstackPtr(CallstackID callstack_id) const;
 
- private:
-  BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024> callstack_events_;
+  void RegisterTime(uint64_t time);
 
   mutable absl::Mutex unique_callstacks_mutex_;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
+
+  mutable absl::Mutex callstack_events_by_tid_mutex_;
+  absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
+      callstack_events_by_tid_;
+
+  uint64_t max_time_ = 0;
+  uint64_t min_time_ = std::numeric_limits<uint64_t>::max();
 };
 
 #endif  // ORBIT_CORE_CALLSTACK_DATA_H_

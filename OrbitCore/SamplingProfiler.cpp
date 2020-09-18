@@ -120,28 +120,28 @@ void SamplingProfiler::SortByThreadUsage() {
 void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data,
                                       const CaptureData& capture_data, bool generate_summary) {
   // Unique call stacks and per thread data
-  for (const CallstackEvent& callstack : callstack_data.callstack_events()) {
-    CHECK(callstack_data.HasCallStack(callstack.callstack_hash()));
+  callstack_data.ForEachCallstackEvent(
+      [this, &callstack_data, generate_summary](const CallstackEvent& event) {
+        CHECK(callstack_data.HasCallStack(event.callstack_hash()));
 
-    ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[callstack.thread_id()];
-    thread_sample_data->samples_count++;
-    thread_sample_data->callstack_count[callstack.callstack_hash()]++;
+        ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
+        thread_sample_data->samples_count++;
+        thread_sample_data->callstack_count[event.callstack_hash()]++;
+        callstack_data.ForEachFrameInCallstack(event.callstack_hash(),
+                                               [&thread_sample_data](uint64_t address) {
+                                                 thread_sample_data->raw_address_count[address]++;
+                                               });
 
-    callstack_data.ForEachFrameInCallstack(callstack.callstack_hash(),
-                                           [&thread_sample_data](uint64_t address) {
-                                             thread_sample_data->raw_address_count[address]++;
-                                           });
-
-    if (generate_summary) {
-      ThreadSampleData* all_thread_sample_data = &thread_id_to_sample_data_[kAllThreadsFakeTid];
-      all_thread_sample_data->samples_count++;
-      all_thread_sample_data->callstack_count[callstack.callstack_hash()]++;
-      callstack_data.ForEachFrameInCallstack(callstack.callstack_hash(),
-                                             [&all_thread_sample_data](uint64_t address) {
-                                               all_thread_sample_data->raw_address_count[address]++;
-                                             });
-    }
-  }
+        if (generate_summary) {
+          ThreadSampleData* all_thread_sample_data = &thread_id_to_sample_data_[kAllThreadsFakeTid];
+          all_thread_sample_data->samples_count++;
+          all_thread_sample_data->callstack_count[event.callstack_hash()]++;
+          callstack_data.ForEachFrameInCallstack(
+              event.callstack_hash(), [&all_thread_sample_data](uint64_t address) {
+                all_thread_sample_data->raw_address_count[address]++;
+              });
+        }
+      });
 
   ResolveCallstacks(callstack_data, capture_data);
 

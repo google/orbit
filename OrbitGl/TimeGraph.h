@@ -10,7 +10,6 @@
 
 #include "Batcher.h"
 #include "BlockChain.h"
-#include "EventBuffer.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
