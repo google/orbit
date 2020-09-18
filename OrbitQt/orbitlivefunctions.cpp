@@ -37,7 +37,8 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
   all_events_iterator_->SetFunctionName("All functions");
   all_events_iterator_->HideDeleteButton();
   all_events_iterator_->DisableButtons();
-  ui->iteratorLayout->addWidget(all_events_iterator_);
+  dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
+      ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
 }
 
 OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui; }
@@ -72,7 +73,7 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
   iterator_ui->SetDeleteButtonCallback([this, id]() {
     this->live_functions_.OnDeleteButton(id);
     auto it = this->iterator_uis.find(id);
-    ui->iteratorLayout->removeWidget(it->second);
+    ui->iteratorFrame->layout()->removeWidget(it->second);
     it->second->deleteLater();
     iterator_uis.erase(id);
     if (iterator_uis.empty()) {
@@ -80,7 +81,7 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
     }
   });
   iterator_ui->SetFunctionName(function->pretty_name());
-
+  
   iterator_ui->SetMinMaxTime(live_functions_.GetCaptureMin(), live_functions_.GetCaptureMax());
   iterator_ui->SetCurrentTime(live_functions_.GetStartTime(id));
 
@@ -88,7 +89,8 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
 
   all_events_iterator_->EnableButtons();
 
-  ui->iteratorLayout->addWidget(iterator_ui);
+  dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
+      ->insertWidget(ui->iteratorFrame->layout()->count() - 1, iterator_ui);
 }
 
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
@@ -99,7 +101,7 @@ void OrbitLiveFunctions::Reset() {
   live_functions_.Reset();
 
   for (auto& [_, iterator_ui] : iterator_uis) {
-    ui->iteratorLayout->removeWidget(iterator_ui);
+    ui->iteratorFrame->layout()->removeWidget(iterator_ui);
     delete iterator_ui;
   }
   iterator_uis.clear();
