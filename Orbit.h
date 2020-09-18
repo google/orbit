@@ -218,6 +218,12 @@ ORBIT_STUB void TrackValue(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uin
 // NOTE: Do not use these directly, use corresponding macros instead.
 #ifndef ORBIT_API_INTERNAL_IMPL
 
+// Default values.
+constexpr const char* kNameNullPtr = nullptr;
+constexpr uint32_t kIdZero = 0;
+constexpr uint64_t kValueZero = 0;
+constexpr orbit::Color kColorAuto = orbit::Color::kAuto;
+
 inline void Start(const char* name, orbit::Color color) {
   EncodedEvent e(EventType::kScopeStart, name, 0, color);
   Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
@@ -228,14 +234,13 @@ inline void Stop() {
   Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void StartAsync(const char* name, uint64_t id, orbit::Color color) {
-  EncodedEvent e(EventType::kScopeStartAsync, name, /*value*/ 0, color, id);
+inline void StartAsync(const char* name, uint32_t id, orbit::Color color) {
+  EncodedEvent e(EventType::kScopeStartAsync, name, kValueZero, color, id);
   StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void StopAsync(uint64_t id) {
-  EncodedEvent e(EventType::kScopeStopAsync, /*name*/ nullptr, /*value*/ 0, orbit::Color::kAuto,
-                 id);
+inline void StopAsync(uint32_t id) {
+  EncodedEvent e(EventType::kScopeStopAsync, kNameNullPtr, kValueZero, kColorAuto, id);
   StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
@@ -244,7 +249,7 @@ inline void AsyncString(const char* str, uint32_t id, orbit::Color color) {
   constexpr size_t chunk_size = kMaxEventStringSize - 1;
   const char* end = str + strlen(str);
   while (str < end) {
-    EncodedEvent e(EventType::kString, /*name*/ nullptr, /*value*/ 0, color, id);
+    EncodedEvent e(EventType::kString, kNameNullPtr, kValueZero, color, id);
     std::strncpy(e.event.name, str, chunk_size);
     e.event.name[chunk_size] = 0;
     TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
