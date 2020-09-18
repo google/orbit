@@ -69,6 +69,8 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   const Color kWhite(255, 255, 255, 255);
 
+  const Color kTracepoint(255, 255, 255, 155);
+
   const Color kGreenSelection(0, 255, 0, 255);
 
   if (!picking) {
@@ -76,7 +78,27 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
          ++it) {
       uint64_t time = it->first;
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite);
+      batcher->AddVerticalLine(pos, -track_height, z, kTracepoint);
+      pos[1] -= track_height / 2;
+
+      float x_pos = pos[0];
+      float y_pos = pos[1];
+      float radius = track_height / 2.5;
+      const float steps = 1000;
+      const float angle = (kPiFloat * 2.f) / steps;
+      float prev_x = x_pos;
+      float prev_y = y_pos - radius;
+      for (int i = 1; i <= steps; i++) {
+        float new_x = pos[0] + radius * sinf(angle * i);
+        float new_y = pos[1] - radius * cosf(angle * i);
+        Vec3 x_1 = Vec3(pos[0], pos[1], z);
+        Vec3 x_2 = Vec3(prev_x, prev_y, z);
+        Vec3 x_3 = Vec3(new_x, new_y, z);
+        Triangle triangle(x_1, x_2, x_3);
+        batcher->AddTriangle(triangle, kTracepoint);
+        prev_x = new_x;
+        prev_y = new_y;
+      }
     }
   } else {
     constexpr float kPickingBoxWidth = 9.0f;
