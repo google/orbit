@@ -5,6 +5,7 @@
 #include "CallstackData.h"
 
 #include "Callstack.h"
+#include "absl/container/flat_hash_set.h"
 
 using orbit_client_protos::CallstackEvent;
 
@@ -174,4 +175,60 @@ std::shared_ptr<CallStack> CallstackData::GetCallstackPtr(CallstackID callstack_
     return unique_callstacks_.at(callstack_id);
   }
   return nullptr;
+}
+
+void CallstackData::FilterCallstackEventsBasedOnMajorityStart() {
+  std::lock_guard lock(mutex_);
+  uint32_t count_before_filtering = GetCallstackEventsCount();
+
+  for (auto& tid_and_events : callstack_events_by_tid_) {
+    std::map<uint64_t, CallstackEvent>& callstack_events = tid_and_events.second;
+
+    // Count the number of occurrences of each outer frame for this thread.
+    absl::flat_hash_map<uint64_t, uint64_t> count_by_outer_frame;
+    for (const auto& time_and_event : callstack_events) {
+      const CallstackEvent& event = time_and_event.second;
+      const std::vector<uint64_t>& frames =
+          unique_callstacks_.at(event.callstack_hash())->GetFrames();
+      if (frames.empty()) {
+        continue;
+      }
+      uint64_t outer_frame = *frames.rbegin();
+      ++count_by_outer_frame[outer_frame];
+    }
+
+    // Find the outer frame with the most occurrences.
+    if (count_by_outer_frame.empty()) {
+      continue;
+    }
+    uint64_t majority_outer_frame = 0;
+    uint64_t majority_outer_frame_count = 0;
+    for (const auto& outer_frame_and_count : count_by_outer_frame) {
+      CHECK(outer_frame_and_count.second > 0);
+      if (outer_frame_and_count.second > majority_outer_frame_count) {
+        majority_outer_frame = outer_frame_and_count.first;
+        majority_outer_frame_count = outer_frame_and_count.second;
+      }
+    }
+
+    // Discard the CallstackEvents whose outer frame doesn't match the majority outer frame.
+    for (auto time_and_event_it = callstack_events.begin();
+         time_and_event_it != callstack_events.end();) {
+      const CallstackEvent& event = time_and_event_it->second;
+      const std::vector<uint64_t>& frames =
+          unique_callstacks_.at(event.callstack_hash())->GetFrames();
+      if (frames.empty() || *frames.rbegin() != majority_outer_frame) {
+        time_and_event_it = callstack_events.erase(time_and_event_it);
+      } else {
+        ++time_and_event_it;
+      }
+    }
+  }
+
+  uint32_t count_after_filtering = GetCallstackEventsCount();
+  CHECK(count_after_filtering <= count_before_filtering);
+  uint32_t filtered_out_count = count_before_filtering - count_after_filtering;
+  LOG("Filtered out %u CallstackEvents of the original %u (%.2f%%), remaining %u",
+      filtered_out_count, count_before_filtering,
+      100.0f * filtered_out_count / count_before_filtering, count_after_filtering);
 }

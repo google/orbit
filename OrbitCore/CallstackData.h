@@ -79,6 +79,11 @@ class CallstackData {
   [[nodiscard]] absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
   GetUniqueCallstacksCopy() const;
 
+  // Assuming that, for each thread, the outermost frame of each callstack is always the same,
+  // filters out all the callstacks that have the outermost frame not matching the majority
+  // outermost frame. This is a way to filter unwinding errors that were not reported as such.
+  void FilterCallstackEventsBasedOnMajorityStart();
+
  private:
   [[nodiscard]] std::shared_ptr<CallStack> GetCallstackPtr(CallstackID callstack_id) const;
 

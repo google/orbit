@@ -140,6 +140,8 @@ class CaptureData {
     callstack_data_->AddCallstackEvent(std::move(callstack_event));
   }
 
+  void FilterBrokenCallstacks() { callstack_data_->FilterCallstackEventsBasedOnMajorityStart(); }
+
   void AddUniqueTracepointEventInfo(uint64_t key,
                                     orbit_grpc_protos::TracepointInfo tracepoint_info) {
     tracepoint_info_manager_->AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
