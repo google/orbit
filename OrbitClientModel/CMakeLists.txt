@@ -32,11 +32,12 @@ target_compile_options(OrbitClientModelTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 
 target_sources(OrbitClientModelTests PRIVATE
-               CaptureDeserializerTest.cpp)
+        CaptureDeserializerTest.cpp
+        CaptureSerializerTest.cpp)
 
 target_link_libraries(
-  OrbitClientModelTests
-  PRIVATE OrbitClientModel
-          GTest::Main)
+        OrbitClientModelTests
+        PRIVATE OrbitClientModel
+        GTest::Main)
 
 register_test(OrbitClientModelTests)
