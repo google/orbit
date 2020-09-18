@@ -41,7 +41,7 @@ OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t slee
 }
 
 void OrbitTest::Init() {
-  const size_t kNumWorkers = 10;
+  const size_t kNumWorkers = 100;
   thread_pool_ = ThreadPool::Create(kNumWorkers, kNumWorkers, absl::Milliseconds(500));
 }
 
@@ -108,7 +108,6 @@ static void ExecuteTask(uint32_t id) {
   static const std::vector<uint32_t> sleep_times_ms = {10, 200, 20,  300, 60,  100, 150,
                                                        20, 30,  320, 380, 400, 450, 500};
   uint32_t sleep_time = sleep_times_ms[id % sleep_times_ms.size()];
-  ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
   std::string str = absl::StrFormat(
       "This is a very long dynamic string: The quick brown fox jumps over the lazy dog. This "
@@ -167,6 +166,7 @@ void OrbitTest::ManualInstrumentationApiTest() {
     size_t kNumTasksToSchedule = 10;
     for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
       uint32_t id = ++task_id;
+      ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
       thread_pool_->Schedule([id]() { ExecuteTask(id); });
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
