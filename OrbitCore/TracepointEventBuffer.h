@@ -23,6 +23,16 @@ class TracepointEventBuffer {
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const;
 
+  const std::deque<orbit_client_protos::TracepointEventInfo> GetTracepointEvents() {
+    std::deque<orbit_client_protos::TracepointEventInfo> tracepoint_events;
+    for (auto const& entry : tracepoint_events_) {
+      for (auto const& time_to_tracepoint_event : entry.second) {
+        tracepoint_events.push_back(time_to_tracepoint_event.second);
+      }
+    }
+    return tracepoint_events;
+  }
+
   Mutex& mutex();
 
  private:

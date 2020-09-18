@@ -148,6 +148,28 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     capture_listener->OnCallstackEvent(std::move(callstack_event));
   }
 
+  for (const orbit_client_protos::TracepointInfo& tracepoint_info :
+       capture_info.tracepoint_infos()) {
+    if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
+      return;
+    }
+    orbit_grpc_protos::TracepointInfo tracepoint_info_translated;
+    tracepoint_info_translated.set_category(tracepoint_info.category());
+    tracepoint_info_translated.set_name(tracepoint_info.name());
+    capture_listener->OnUniqueTracepointInfo(tracepoint_info.tracepoint_info_key(),
+                                             std::move(tracepoint_info_translated));
+  }
+
+  for (orbit_client_protos::TracepointEventInfo tracepoint_event_info :
+       capture_info.tracepoint_event_infos()) {
+    if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
+      return;
+    }
+    capture_listener->OnTracepointEvent(std::move(tracepoint_event_info));
+  }
+
   for (const auto& key_to_string : capture_info.key_to_string()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();

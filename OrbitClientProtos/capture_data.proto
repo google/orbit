@@ -47,6 +47,12 @@ message CallstackInfo {
   repeated uint64 data = 1;
 }
 
+message TracepointInfo {
+  string name = 1;
+  string category = 2;
+  uint64 tracepoint_info_key = 3;
+}
+
 message TracepointEventInfo {
   int32 pid = 1;
   int32 tid = 2;
@@ -77,6 +83,8 @@ message CaptureInfo {
   map<uint64, string> key_to_string = 8;
   // TODO(kuebler): consider removing this field completely.
   map<uint64, FunctionStats> function_stats = 9;
+  repeated TracepointInfo tracepoint_infos = 10;
+  repeated TracepointEventInfo tracepoint_event_infos = 11;
 }
 
 message TimerInfo {
