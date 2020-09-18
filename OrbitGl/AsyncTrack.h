@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "ThreadTrack.h"
+#include "TimerTrack.h"
 
 class AsyncTrack : public TimerTrack {
  public:
@@ -24,6 +24,7 @@ class AsyncTrack : public TimerTrack {
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected) const override;
 
+  // Used for determining what row can receive a new timer with no overlap.
   absl::flat_hash_map<uint32_t, uint64_t> max_span_time_by_depth_;
 };
 
