@@ -651,7 +651,16 @@ class QtConan(ConanFile):
         self.run("%s install" % self._make_program())
         with open(os.path.join(self.package_folder, "bin", "qt.conf"), 'w') as f:
             f.write('[Paths]\nPrefix = ..\n')
-        self.copy("*LICENSE*", src="qt5/", dst="licenses")
+        self.copy("*LICENSE*", dst="licenses", ignore_case=True)
+        self.copy("*LICENCE*", dst="licenses", ignore_case=True)
+        self.copy("*COPYING*", dst="licenses", ignore_case=True)
+        self.copy("*Copyright*", dst="licenses", ignore_case=True)
+        self.copy("*CREDITS*", dst="licenses", ignore_case=True)
+        self.copy("*MIT*", dst="licenses", ignore_case=True)
+        self.copy("*Ms-PL*", dst="licenses", ignore_case=True)
+        self.copy("*NOTICE*", dst="licenses", ignore_case=True)
+        self.copy("*FTL*", dst="licenses", ignore_case=True)
+        self.copy("*README.chromium", dst="licenses", ignore_case=True)
         for module in self._submodules:
             if module != 'qtbase' and not getattr(self.options, module):
                 tools.rmdir(os.path.join(self.package_folder, "licenses", module))
