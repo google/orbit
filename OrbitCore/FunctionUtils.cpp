@@ -13,8 +13,6 @@
 namespace FunctionUtils {
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
-using orbit_client_protos::TimerInfo;
 
 std::string GetLoadedModuleName(const FunctionInfo& func) {
   return Path::GetFileName(func.loaded_module_path());
