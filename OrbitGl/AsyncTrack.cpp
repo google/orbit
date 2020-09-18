@@ -52,7 +52,7 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   // Find the first row that that can receive the new timeslice with no overlap.
   // If none of the existing rows works, add a new row.
   uint32_t depth = 0;
-  while (max_span_time_by_depth_[depth] >= timer_info.start()) ++depth;
+  while (max_span_time_by_depth_[depth] > timer_info.start()) ++depth;
   max_span_time_by_depth_[depth] = timer_info.end();
 
   orbit_client_protos::TimerInfo new_timer_info = timer_info;
