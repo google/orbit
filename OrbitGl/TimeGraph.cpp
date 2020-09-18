@@ -14,7 +14,6 @@
 #include "../Orbit.h"
 #include "App.h"
 #include "Batcher.h"
-#include "EventTracer.h"
 #include "EventTrack.h"
 #include "FunctionUtils.h"
 #include "Geometry.h"
@@ -84,7 +83,6 @@ void TimeGraph::Clear() {
   capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   capture_max_timestamp_ = 0;
   m_ThreadCountMap.clear();
-  GEventTracer.GetEventBuffer().Reset();
 
   tracks_.clear();
   scheduler_track_ = nullptr;
@@ -110,7 +108,7 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
 
   m_Mutex.lock();
   for (auto& track : tracks_) {
-    if (track->GetNumTimers()) {
+    if (track->GetNumTimers() > 0) {
       uint64_t min = track->GetMinTime();
       if (min > 0 && min < capture_min_timestamp_) {
         capture_min_timestamp_ = min;
@@ -119,11 +117,11 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
   }
   m_Mutex.unlock();
 
-  if (GEventTracer.GetEventBuffer().HasEvent()) {
-    capture_min_timestamp_ =
-        std::min(capture_min_timestamp_, GEventTracer.GetEventBuffer().GetMinTime());
-    capture_max_timestamp_ =
-        std::max(capture_max_timestamp_, GEventTracer.GetEventBuffer().GetMaxTime());
+  if (GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount() > 0) {
+    capture_min_timestamp_ = std::min(capture_min_timestamp_,
+                                      GOrbitApp->GetCaptureData().GetCallstackData()->min_time());
+    capture_max_timestamp_ = std::max(capture_max_timestamp_,
+                                      GOrbitApp->GetCaptureData().GetCallstackData()->max_time());
   }
 
   return capture_min_timestamp_ != std::numeric_limits<uint64_t>::max();
@@ -508,7 +506,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   m_Batcher.StartNewFrame();
   m_TextRendererStatic.Clear();
 
-  UpdateMaxTimeStamp(GEventTracer.GetEventBuffer().GetMaxTime());
+  UpdateMaxTimeStamp(GOrbitApp->GetCaptureData().GetCallstackData()->max_time());
 
   m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   m_WorldStartX = m_Canvas->GetWorldTopLeftX();
@@ -540,7 +538,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float wor
   uint64_t t1 = GetTickFromWorld(world_end);
 
   std::vector<CallstackEvent> selected_callstack_events =
-      GEventTracer.GetEventBuffer().GetCallstackEventsInTimeRangeForThreadId(t0, t1, thread_id);
+      GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsOfTidInTimeRange(thread_id,
+                                                                                         t0, t1);
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
@@ -800,16 +799,16 @@ void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
 
 void TimeGraph::SortTracks() {
   // Get or create thread track from events' thread id.
-  {
-    ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
-    m_EventCount.clear();
-
-    for (auto& pair : GEventTracer.GetEventBuffer().GetCallstacks()) {
-      int32_t thread_id = pair.first;
-      const std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
-      m_EventCount[thread_id] = callstacks.size();
-      GetOrCreateThreadTrack(thread_id);
-    }
+  m_EventCount.clear();
+  m_EventCount[SamplingProfiler::kAllThreadsFakeTid] =
+      GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount();
+  GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
+  for (const auto& tid_and_count :
+       GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCountsPerTid()) {
+    const int32_t thread_id = tid_and_count.first;
+    const uint32_t count = tid_and_count.second;
+    m_EventCount[thread_id] = count;
+    GetOrCreateThreadTrack(thread_id);
   }
 
   // Reorder threads once every second when capturing

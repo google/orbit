@@ -6,7 +6,6 @@
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
 #include "Callstack.h"
-#include "EventBuffer.h"
 #include "OrbitBase/Result.h"
 #include "OrbitProcess.h"
 #include "ScopeTimer.h"

@@ -5,7 +5,6 @@
 #include "CaptureWindow.h"
 
 #include "App.h"
-#include "EventTracer.h"
 #include "GlUtils.h"
 #include "absl/base/casts.h"
 
@@ -632,10 +631,10 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumTimers()));
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetThreadTotalHeight()));
 
-#ifndef WIN32
-    m_StatsWindow.AddLine(VAR_TO_STR(GEventTracer.GetEventBuffer().GetCallstacks().size()));
-    m_StatsWindow.AddLine(VAR_TO_STR(GEventTracer.GetEventBuffer().GetNumEvents()));
-#endif
+    m_StatsWindow.AddLine(VAR_TO_STR(
+        GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size()));
+    m_StatsWindow.AddLine(
+        VAR_TO_STR(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount()));
 
     m_StatsWindow.Draw("Capture Stats", &m_DrawStats);
   }

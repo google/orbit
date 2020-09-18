@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CallstackTypes.h"
-#include "EventBuffer.h"
 #include "Track.h"
 
 class GlCanvas;

@@ -5,7 +5,6 @@
 #include "EventTrack.h"
 
 #include "App.h"
-#include "EventTracer.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
 
@@ -69,22 +68,19 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 
-  ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
-  const std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacksOfThread(thread_id_);
-
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
 
   if (!picking) {
     // Sampling Events
-    for (auto& pair : callstacks) {
-      uint64_t time = pair.first;
-      if (time > min_tick && time < max_tick) {
-        Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-        batcher->AddVerticalLine(pos, -track_height, z, kWhite);
-      }
-    }
+    GOrbitApp->GetCaptureData().GetCallstackData()->ForEachCallstackEventOfTid(
+        thread_id_, [=](const orbit_client_protos::CallstackEvent& event) {
+          uint64_t time = event.time();
+          if (time > min_tick && time < max_tick) {
+            Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+            batcher->AddVerticalLine(pos, -track_height, z, kWhite);
+          }
+        });
 
     // Draw selected events
     Color selectedColor[2];
@@ -99,18 +95,19 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     constexpr const float kPickingBoxWidth = 9.0f;
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
-    for (const auto& pair : callstacks) {
-      uint64_t time = pair.first;
-      if (time > min_tick && time < max_tick) {
-        Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
-                 pos_[1] - track_height + 1);
-        Vec2 size(kPickingBoxWidth, track_height);
-        auto user_data = std::make_unique<PickingUserData>(
-            nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
-        user_data->custom_data_ = &pair.second;
-        batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
-      }
-    }
+    GOrbitApp->GetCaptureData().GetCallstackData()->ForEachCallstackEventOfTid(
+        thread_id_, [=](const orbit_client_protos::CallstackEvent& event) {
+          uint64_t time = event.time();
+          if (time > min_tick && time < max_tick) {
+            Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+                     pos_[1] - track_height + 1);
+            Vec2 size(kPickingBoxWidth, track_height);
+            auto user_data = std::make_unique<PickingUserData>(
+                nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+            user_data->custom_data_ = &event;
+            batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+          }
+        });
   }
 }
 
@@ -151,10 +148,8 @@ void EventTrack::SelectEvents() {
 }
 
 bool EventTrack::IsEmpty() const {
-  ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
-  const std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacksOfThread(thread_id_);
-  return callstacks.empty();
+  return GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_) ==
+         0;
 }
 
 static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
