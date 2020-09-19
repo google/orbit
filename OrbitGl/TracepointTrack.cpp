@@ -69,7 +69,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   const Color kWhite(255, 255, 255, 255);
 
-  const Color kTracepoint(255, 255, 255, 155);
+  const Color kTracepoint(255, 255, 255, 190);
 
   const Color kGreenSelection(0, 255, 0, 255);
 
@@ -78,13 +78,15 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
          ++it) {
       uint64_t time = it->first;
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kTracepoint);
+      batcher->AddVerticalLine(pos, -track_height / 4, z, kTracepoint);
+      batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), track_height / 4, z,
+                               kTracepoint);
       pos[1] -= track_height / 2;
 
       float x_pos = pos[0];
       float y_pos = pos[1];
-      float radius = track_height / 2.5;
-      const float steps = 1000;
+      float radius = track_height / 4;
+      const float steps = 22;
       const float angle = (kPiFloat * 2.f) / steps;
       float prev_x = x_pos;
       float prev_y = y_pos - radius;
