@@ -103,7 +103,7 @@ class OrbitConan(ConanFile):
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 
             if not self.options.system_qt:
-                self.requires("qt/5.15.1@{}#06ab6eeeb9219f8e79c2428b14e53a90".format(self._orbit_channel))
+                self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
 
 
     def configure(self):
