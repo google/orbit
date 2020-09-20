@@ -320,8 +320,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     capture_max_timestamp_ = timer_info.end();
   }
 
-  if (function != nullptr && function->type() != FunctionInfo::kNone) {
-    ProcessOrbitFunctionTimer(function->type(), timer_info);
+  if (function != nullptr && function->orbit_type() != FunctionInfo::kNone) {
+    ProcessOrbitFunctionTimer(function->orbit_type(), timer_info);
   }
 
   if (timer_info.type() == TimerInfo::kGpuActivity) {
