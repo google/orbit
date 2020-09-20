@@ -354,6 +354,7 @@ void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
       ProcessValueTrackingTimer(timer_info);
       break;
     case FunctionInfo::kOrbitTimerStartAsync:
+      [[fallthrough]];
     case FunctionInfo::kOrbitTimerStopAsync:
       manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
       break;
