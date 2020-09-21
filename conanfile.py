@@ -1,12 +1,18 @@
-# Copyright (c) 2020 The Orbit Authors. All rights reserved.
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
+# coding=utf-8
+
+"""
+Copyright (c) 2020 The Orbit Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+"""
 
 from conans import ConanFile, CMake, tools
 from conans.errors import ConanInvalidConfiguration
 import os
 import shutil
 from io import StringIO
+from contrib.python import conan_helpers
+import csv
 
 
 class OrbitConan(ConanFile):
@@ -173,6 +179,7 @@ class OrbitConan(ConanFile):
                 self.copy("v3f-t2f-c4f.*", src=path,
                           dst="{}/shaders/".format("OrbitQt/"))
         excludes = [
+                "*qt*",
                 "*licensewizard*",
                 "*checklicenses*",
                 "*.py",
@@ -194,6 +201,29 @@ class OrbitConan(ConanFile):
         ]
         self.copy("LICENSE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
         self.copy("LICENCE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
+
+        if not self.options.system_qt:
+            chromium_licenses = conan_helpers.gather_chromium_licenses(self.deps_cpp_info["qt"].rootpath)
+            chromium_licenses.sort(key=lambda license_info: license_info["name"].lower())
+
+            with open(os.path.join(self.install_folder, "NOTICE.Chromium.csv"), "w") as fd:
+                writer = csv.DictWriter(fd, fieldnames=["name", "url", "license"], extrasaction='ignore')
+                writer.writeheader()
+
+                for license in chromium_licenses:
+                    writer.writerow(license)
+
+            with open(os.path.join(self.install_folder, "NOTICE.Chromium"), "w") as fd:
+                for license in chromium_licenses:
+                    fd.write("================================================================================\n")
+                    fd.write("Name: {}\n".format(license["name"]))
+                    fd.write("URL: {}\n\n".format(license.get("url", "")))
+                    fd.write(open(license["license file"], 'r').read())
+                    fd.write("\n\n")
+
+                fd.write("================================================================================\n")
+
+
 
     def package(self):
         if self.options.debian_packaging:
@@ -251,6 +281,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("crashpad_handler.exe", src="bin/", dst="bin")
         self.copy("NOTICE")
         self.copy("NOTICE.Chromium")
+        self.copy("NOTICE.Chromium.csv")
         self.copy("LICENSE")
 
     def deploy(self):
