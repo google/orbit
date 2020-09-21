@@ -6,12 +6,12 @@
 #define ORBIT_CORE_CALLSTACK_DATA_H_
 
 #include <memory>
+#include <mutex>
 
 #include "BlockChain.h"
 #include "Callstack.h"
 #include "CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
 class CallstackData {
@@ -58,12 +58,12 @@ class CallstackData {
       const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
 
   [[nodiscard]] uint64_t max_time() const {
-    absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+    std::lock_guard lock(mutex_);
     return max_time_;
   }
 
   [[nodiscard]] uint64_t min_time() const {
-    absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+    std::lock_guard lock(mutex_);
     return min_time_;
   }
 
@@ -84,10 +84,10 @@ class CallstackData {
 
   void RegisterTime(uint64_t time);
 
-  mutable absl::Mutex unique_callstacks_mutex_;
+  // Use a reentrant mutex so that calls to the ForEach... methods can be nested.
+  // E.g., one might want to nest ForEachCallstackEvent and ForEachFrameInCallstack.
+  mutable std::recursive_mutex mutex_;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
-
-  mutable absl::Mutex callstack_events_by_tid_mutex_;
   absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
       callstack_events_by_tid_;
 

@@ -9,10 +9,9 @@
 using orbit_client_protos::CallstackEvent;
 
 void CallstackData::AddCallstackEvent(CallstackEvent callstack_event) {
+  std::lock_guard lock(mutex_);
   CallstackID hash = callstack_event.callstack_hash();
-  CHECK(HasCallStack(hash));
-
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  CHECK(unique_callstacks_.contains(hash));
   RegisterTime(callstack_event.time());
   callstack_events_by_tid_[callstack_event.thread_id()][callstack_event.time()] =
       std::move(callstack_event);
@@ -24,13 +23,13 @@ void CallstackData::RegisterTime(uint64_t time) {
 }
 
 void CallstackData::AddUniqueCallStack(CallStack call_stack) {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
+  std::lock_guard lock(mutex_);
   CallstackID hash = call_stack.GetHash();
   unique_callstacks_[hash] = std::make_shared<CallStack>(std::move(call_stack));
 }
 
 uint32_t CallstackData::GetCallstackEventsCount() const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   uint32_t count = 0;
   for (const auto& tid_and_events : callstack_events_by_tid_) {
     count += tid_and_events.second.size();
@@ -40,7 +39,7 @@ uint32_t CallstackData::GetCallstackEventsCount() const {
 
 std::vector<orbit_client_protos::CallstackEvent> CallstackData::GetCallstackEventsInTimeRange(
     uint64_t time_begin, uint64_t time_end) const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   std::vector<CallstackEvent> callstack_events;
   for (const auto& tid_and_events : callstack_events_by_tid_) {
     const std::map<uint64_t, CallstackEvent>& events = tid_and_events.second;
@@ -57,7 +56,7 @@ std::vector<orbit_client_protos::CallstackEvent> CallstackData::GetCallstackEven
 }
 
 absl::flat_hash_map<int32_t, uint32_t> CallstackData::GetCallstackEventsCountsPerTid() const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   absl::flat_hash_map<int32_t, uint32_t> counts;
   for (const auto& tid_and_events : callstack_events_by_tid_) {
     counts.emplace(tid_and_events.first, tid_and_events.second.size());
@@ -66,7 +65,7 @@ absl::flat_hash_map<int32_t, uint32_t> CallstackData::GetCallstackEventsCountsPe
 }
 
 uint32_t CallstackData::GetCallstackEventsOfTidCount(int32_t thread_id) const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(thread_id);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
     return 0;
@@ -76,7 +75,7 @@ uint32_t CallstackData::GetCallstackEventsOfTidCount(int32_t thread_id) const {
 
 std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
     int32_t tid, uint64_t time_begin, uint64_t time_end) const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   std::vector<CallstackEvent> callstack_events;
 
   auto tid_and_events_it = callstack_events_by_tid_.find(tid);
@@ -98,7 +97,7 @@ std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
 
 void CallstackData::ForEachCallstackEvent(
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   for (const auto& tid_and_events : callstack_events_by_tid_) {
     for (const auto& time_and_event : tid_and_events.second) {
       action(time_and_event.second);
@@ -109,7 +108,7 @@ void CallstackData::ForEachCallstackEvent(
 void CallstackData::ForEachCallstackEventOfTid(
     int32_t tid,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  std::lock_guard lock(mutex_);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
     return;
@@ -121,22 +120,20 @@ void CallstackData::ForEachCallstackEventOfTid(
 
 void CallstackData::AddCallStackFromKnownCallstackData(const CallstackEvent& event,
                                                        const CallstackData* known_callstack_data) {
+  std::lock_guard lock(mutex_);
   uint64_t hash = event.callstack_hash();
   std::shared_ptr<CallStack> unique_callstack = known_callstack_data->GetCallstackPtr(hash);
   if (unique_callstack == nullptr) {
     return;
   }
 
-  if (!HasCallStack(hash)) {
-    absl::MutexLock lock(&unique_callstacks_mutex_);
-    unique_callstacks_[hash] = std::move(unique_callstack);
-  }
-  absl::MutexLock lock(&callstack_events_by_tid_mutex_);
+  // The insertion only happens if the hash isn't already present.
+  unique_callstacks_.emplace(hash, std::move(unique_callstack));
   callstack_events_by_tid_[event.thread_id()][event.time()] = CallstackEvent(event);
 }
 
 const CallStack* CallstackData::GetCallStack(CallstackID callstack_id) const {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
+  std::lock_guard lock(mutex_);
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
     return it->second.get();
@@ -145,13 +142,13 @@ const CallStack* CallstackData::GetCallStack(CallstackID callstack_id) const {
 }
 
 bool CallstackData::HasCallStack(CallstackID callstack_id) const {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
-  return unique_callstacks_.count(callstack_id) > 0;
+  std::lock_guard lock(mutex_);
+  return unique_callstacks_.contains(callstack_id);
 }
 
 void CallstackData::ForEachUniqueCallstack(
     const std::function<void(const CallStack&)>& action) const {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
+  std::lock_guard lock(mutex_);
   for (const auto& it : unique_callstacks_) {
     action(*it.second);
   }
@@ -159,7 +156,7 @@ void CallstackData::ForEachUniqueCallstack(
 
 void CallstackData::ForEachFrameInCallstack(uint64_t callstack_id,
                                             const std::function<void(uint64_t)>& action) const {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
+  std::lock_guard lock(mutex_);
   for (uint64_t frame : unique_callstacks_.at(callstack_id)->GetFrames()) {
     action(frame);
   }
@@ -167,12 +164,11 @@ void CallstackData::ForEachFrameInCallstack(uint64_t callstack_id,
 
 absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
 CallstackData::GetUniqueCallstacksCopy() const {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
+  std::lock_guard lock(mutex_);
   return unique_callstacks_;
 }
 
 std::shared_ptr<CallStack> CallstackData::GetCallstackPtr(CallstackID callstack_id) const {
-  absl::MutexLock lock(&unique_callstacks_mutex_);
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
     return unique_callstacks_.at(callstack_id);
