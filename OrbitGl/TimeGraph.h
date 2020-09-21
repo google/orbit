@@ -32,6 +32,7 @@
 class TimeGraph {
  public:
   TimeGraph();
+  ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
   void DrawTracks(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -146,10 +147,6 @@ class TimeGraph {
   uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
   uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
-  ManualInstrumentationManager* GetManualInstrumentationManager() {
-    return manual_instrumentation_manager_.get();
-  }
-
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
@@ -228,8 +225,8 @@ class TimeGraph {
       selected_callstack_events_per_thread_;
 
   std::shared_ptr<StringManager> string_manager_;
-  StringManager manual_instrumentation_string_manager_;
-  std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
+  ManualInstrumentationManager* manual_instrumentation_manager_;
+  std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

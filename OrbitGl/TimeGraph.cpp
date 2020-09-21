@@ -21,7 +21,6 @@
 #include "GlCanvas.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
-#include "ManualInstrumentationManager.h"
 #include "Params.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
@@ -47,10 +46,17 @@ TimeGraph::TimeGraph() : m_Batcher(BatcherId::kTimeGraph) {
   // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 
-  manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>(
-      [this](const std::string& name, const TimerInfo& timer_info) {
-        ProcessAsyncTimer(name, timer_info);
-      });
+  async_timer_info_listener_ =
+      std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
+          [this](const std::string& name, const TimerInfo& timer_info) {
+            ProcessAsyncTimer(name, timer_info);
+          });
+  manual_instrumentation_manager_ = GOrbitApp->GetManualInstrumentationManager();
+  manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
+}
+
+TimeGraph::~TimeGraph() {
+  manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
 }
 
 Color TimeGraph::GetColor(uint32_t id) const {

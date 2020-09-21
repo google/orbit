@@ -27,6 +27,7 @@
 #include "FunctionsDataView.h"
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
+#include "ManualInstrumentationManager.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
@@ -254,6 +255,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] const std::shared_ptr<Process>& GetSelectedProcess() const {
     return data_manager_->selected_process();
   }
+  [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
+    return manual_instrumentation_manager_.get();
+  }
 
   // TODO(kuebler): Move them to a separate controler at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
@@ -361,6 +365,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<ProcessManager> process_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;
+  std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
   const SymbolHelper symbol_helper_;
 

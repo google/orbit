@@ -6,8 +6,14 @@
 
 using orbit_client_protos::TimerInfo;
 
-ManualInstrumentationManager::ManualInstrumentationManager(TimerInfoCallback callback) {
-  timer_info_callback_ = callback;
+void ManualInstrumentationManager::AddAsyncTimerListener(AsyncTimerInfoListener* listener) {
+  absl::MutexLock lock(&mutex_);
+  async_timer_info_listeners_.insert(listener);
+}
+
+void ManualInstrumentationManager::RemoveAsyncTimerListener(AsyncTimerInfoListener* listener) {
+  absl::MutexLock lock(&mutex_);
+  async_timer_info_listeners_.erase(listener);
 }
 
 orbit_api::Event ManualInstrumentationManager::ApiEventFromTimerInfo(
@@ -40,7 +46,8 @@ void ManualInstrumentationManager::ProcessAsyncTimer(
 
       TimerInfo async_span = start_timer_info;
       async_span.set_end(timer_info.end());
-      timer_info_callback_(start_event.name, async_span);
+      absl::MutexLock lock(&mutex_);
+      for (auto* listener : async_timer_info_listeners_) (*listener)(start_event.name, async_span);
     }
   }
 }

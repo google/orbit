@@ -100,6 +100,7 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
+  manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 }
 
 OrbitApp::~OrbitApp() {
