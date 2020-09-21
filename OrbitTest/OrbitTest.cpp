@@ -41,8 +41,9 @@ OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t slee
 }
 
 void OrbitTest::Init() {
-  const size_t kNumWorkers = 100;
-  thread_pool_ = ThreadPool::Create(kNumWorkers, kNumWorkers, absl::Milliseconds(500));
+  const size_t kMinNumWorkers = 10;
+  const size_t kMaxNumWorkers = 100;
+  thread_pool_ = ThreadPool::Create(kMinNumWorkers, kMaxNumWorkers, absl::Milliseconds(500));
 }
 
 OrbitTest::~OrbitTest() {
