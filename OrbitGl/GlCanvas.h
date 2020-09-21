@@ -62,7 +62,6 @@ class GlCanvas : public GlPanel {
   void SetWorldTopLeftY(float val) { m_WorldTopLeftY = val; }
 
   TextRenderer& GetTextRenderer() { return m_TextRenderer; }
-  void SetBackgroundColor(const Vec4& a_Color) { m_BackgroundColor = a_Color; }
 
   virtual void UpdateWheelMomentum(float a_DeltaTime);
   virtual void OnTimer();
@@ -113,6 +112,8 @@ class GlCanvas : public GlPanel {
   static float kZValueEventBar;
   static float kZValueTrack;
 
+  static const Color kBackgroundColor;
+
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
 
@@ -146,7 +147,6 @@ class GlCanvas : public GlPanel {
   bool m_DrawUI;
   bool m_ImguiActive;
   int m_ID;
-  Vec4 m_BackgroundColor;
 
   Timer m_HoverTimer;
   int m_HoverDelayMs;

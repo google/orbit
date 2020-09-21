@@ -532,7 +532,6 @@ void CaptureWindow::DrawScreenSpace() {
 
   // Right vertical margin.
   time_graph_.SetRightMargin(right_margin);
-  const Color kBackgroundColor(70, 70, 70, 255);
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - right_margin;
 
@@ -544,7 +543,8 @@ void CaptureWindow::DrawScreenSpace() {
     Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
             Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
             GlCanvas::kZValueTimeBarBg);
-    ui_batcher_.AddBox(box, Color(70, 70, 70, 200));
+    ui_batcher_.AddBox(box,
+                       Color(kBackgroundColor[0], kBackgroundColor[1], kBackgroundColor[2], 200));
   }
 }
 

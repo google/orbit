@@ -33,6 +33,8 @@ float GlCanvas::kZValueBox = -0.03f;
 float GlCanvas::kZValueEventBar = -0.1f;
 float GlCanvas::kZValueTrack = -0.2f;
 
+const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
+
 GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_TextRenderer.SetCanvas(this);
 
@@ -63,7 +65,6 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_MouseRatio = 0.0;
   m_DrawUI = true;
   m_ImguiActive = false;
-  m_BackgroundColor = Vec4(70.f / 255.f, 70.f / 255.f, 70.f / 255.f, 1.0f);
 
   static int counter = 0;
   m_ID = counter++;
@@ -272,8 +273,10 @@ void GlCanvas::prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x
 /** Inits the OpenGL viewport for drawing in 2D. */
 void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
                                  int bottomrigth_y) {
-  glClearColor(m_BackgroundColor[0], m_BackgroundColor[1], m_BackgroundColor[2],
-               m_BackgroundColor[3]);
+  glClearColor(static_cast<float>(kBackgroundColor[0]) / 255.0f,
+               static_cast<float>(kBackgroundColor[1]) / 255.0f,
+               static_cast<float>(kBackgroundColor[2]) / 255.0f,
+               static_cast<float>(kBackgroundColor[3]) / 255.0f);
   if (m_Picking) glClearColor(0.f, 0.f, 0.f, 0.f);
 
   // glEnable(GL_DEBUG_OUTPUT);
