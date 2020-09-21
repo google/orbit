@@ -27,7 +27,7 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
 
   const FunctionInfo* func =
       GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
-
+  std::string module_name = FunctionUtils::GetLoadedModuleName(*func);
   std::string function_name = manual_inst_manager->GetString(event.id);
 
   return absl::StrFormat(
@@ -36,7 +36,7 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
       "<br/><br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      function_name, FunctionUtils::GetLoadedModuleName(*func),
+      function_name, module_name,
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
