@@ -22,7 +22,7 @@ uint64_t GetHash(const FunctionInfo& func) { return StringHash(func.pretty_name(
 
 uint64_t Offset(const FunctionInfo& func) { return func.address() - func.load_bias(); }
 
-bool IsOrbitFunc(const FunctionInfo& func) { return func.type() != FunctionInfo::kNone; }
+bool IsOrbitFunc(const FunctionInfo& func) { return func.orbit_type() != FunctionInfo::kNone; }
 
 std::shared_ptr<FunctionInfo> CreateFunctionInfo(std::string name, std::string pretty_name,
                                                  uint64_t address, uint64_t load_bias,
@@ -61,7 +61,7 @@ bool SetOrbitTypeFromName(FunctionInfo* func) {
   if (absl::StartsWith(name, "orbit_api::")) {
     for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(name, pair.first)) {
-        func->set_type(pair.second);
+        func->set_orbit_type(pair.second);
         return true;
       }
     }

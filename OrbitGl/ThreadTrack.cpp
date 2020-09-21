@@ -57,7 +57,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
   }
 
   std::string function_name;
-  bool is_manual = func->type() == orbit_client_protos::FunctionInfo::kOrbitTimerStart;
+  bool is_manual = func->orbit_type() == orbit_client_protos::FunctionInfo::kOrbitTimerStart;
   if (is_manual) {
     const TimerInfo& timer_info = text_box->GetTimerInfo();
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
@@ -87,7 +87,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
 
 [[nodiscard]] static inline std::optional<Color> GetUserColor(const TimerInfo& timer_info,
                                                               const FunctionInfo& function_info) {
-  FunctionInfo::OrbitType type = function_info.type();
+  FunctionInfo::OrbitType type = function_info.orbit_type();
   if (type != FunctionInfo::kOrbitTimerStart && type != FunctionInfo::kOrbitTimerStartAsync) {
     return std::nullopt;
   }
@@ -178,7 +178,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
     if (func) {
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;
-      if (func->type() == FunctionInfo::kOrbitTimerStart) {
+      if (func->orbit_type() == FunctionInfo::kOrbitTimerStart) {
         auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
         name = api_event.name;
       } else {

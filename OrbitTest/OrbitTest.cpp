@@ -33,8 +33,18 @@ void SetThreadName(const std::string& a_Name) {
 #endif
 }
 
+OrbitTest::OrbitTest() { Init(); }
+
 OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t sleep_us)
-    : num_threads_(num_threads), recurse_depth_(recurse_depth), sleep_us_(sleep_us) {}
+    : num_threads_(num_threads), recurse_depth_(recurse_depth), sleep_us_(sleep_us) {
+  Init();
+}
+
+void OrbitTest::Init() {
+  const size_t kMinNumWorkers = 10;
+  const size_t kMaxNumWorkers = 100;
+  thread_pool_ = ThreadPool::Create(kMinNumWorkers, kMaxNumWorkers, absl::Milliseconds(500));
+}
 
 OrbitTest::~OrbitTest() {
   m_ExitRequested = true;
@@ -85,14 +95,27 @@ void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
   }
 }
 
-void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+static void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
 
-void NO_INLINE SleepFor2Ms() {
+static void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kTeal);
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kOrange);
   SleepFor1Ms();
   SleepFor1Ms();
+}
+
+static void ExecuteTask(uint32_t id) {
+  static const std::vector<uint32_t> sleep_times_ms = {10, 200, 20,  300, 60,  100, 150,
+                                                       20, 30,  320, 380, 400, 450, 500};
+  uint32_t sleep_time = sleep_times_ms[id % sleep_times_ms.size()];
+  std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+  std::string str = absl::StrFormat(
+      "This is a very long dynamic string: The quick brown fox jumps over the lazy dog. This "
+      "string is associated with task id %u. We slept for %u ms.",
+      id, sleep_time);
+  ORBIT_ASYNC_STRING(str.c_str(), id);
+  ORBIT_STOP_ASYNC(id);
 }
 
 void OrbitTest::ManualInstrumentationApiTest() {
@@ -139,7 +162,15 @@ void OrbitTest::ManualInstrumentationApiTest() {
       ORBIT_DOUBLE(track_name.c_str(), cos(double_var * static_cast<double>(i)));
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(15));
+    // Async spans.
+    static uint32_t task_id = 0;
+    size_t kNumTasksToSchedule = 10;
+    for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
+      uint32_t id = ++task_id;
+      ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
+      thread_pool_->Schedule([id]() { ExecuteTask(id); });
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
   }
 #endif
 }

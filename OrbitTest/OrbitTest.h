@@ -7,15 +7,18 @@
 #include <thread>
 #include <vector>
 
+#include "OrbitBase/ThreadPool.h"
+
 class OrbitTest {
  public:
-  OrbitTest() = default;
+  OrbitTest();
   OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t sleep_us);
   ~OrbitTest();
 
   void Start();
 
  private:
+  void Init();
   void Loop();
   void TestFunc(uint32_t a_Depth = 0);
   void TestFunc2(uint32_t a_Depth = 0);
@@ -28,4 +31,5 @@ class OrbitTest {
   uint32_t num_threads_ = 10;
   uint32_t recurse_depth_ = 10;
   uint32_t sleep_us_ = 100'000;
+  std::unique_ptr<ThreadPool> thread_pool_;
 };

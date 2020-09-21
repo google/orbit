@@ -23,6 +23,9 @@ Track::Track(TimeGraph* time_graph)
   canvas_ = nullptr;
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
+  num_timers_ = 0;
+  min_time_ = std::numeric_limits<uint64_t>::max();
+  max_time_ = std::numeric_limits<uint64_t>::min();
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {

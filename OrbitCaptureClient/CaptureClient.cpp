@@ -90,7 +90,8 @@ void CaptureClient::Capture(int32_t process_id, std::string process_name,
     instrumented_function->set_file_path(function.loaded_module_path());
     instrumented_function->set_file_offset(FunctionUtils::Offset(function));
     instrumented_function->set_absolute_address(FunctionUtils::GetAbsoluteAddress(function));
-    instrumented_function->set_function_type(IntrumentedFunctionTypeFromOrbitType(function.type()));
+    instrumented_function->set_function_type(
+        IntrumentedFunctionTypeFromOrbitType(function.orbit_type()));
   }
 
   for (const auto& tracepoint : selected_tracepoints) {

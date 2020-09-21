@@ -74,8 +74,8 @@ inline std::string GetEnvVar(const char* a_Var) {
   return var;
 }
 
-inline unsigned long long StringHash(const std::string& a_String) {
-  return XXH64(a_String.data(), a_String.size(), 0xBADDCAFEDEAD10CC);
+inline uint64_t StringHash(std::string_view str) {
+  return XXH64(str.data(), str.size(), 0xBADDCAFEDEAD10CC);
 }
 
 template <typename T, typename U>

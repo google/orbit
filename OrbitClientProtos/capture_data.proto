@@ -34,7 +34,7 @@ message FunctionInfo {
     kOrbitTimerStopAsync = 4;
     kOrbitTrackValue = 5;
   }
-  OrbitType type = 10;
+  OrbitType orbit_type = 10;
 }
 
 message CallstackEvent {
