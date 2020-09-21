@@ -99,11 +99,10 @@ CaptureInfo GenerateCaptureInfo(
         new_tracepoint_info->set_tracepoint_info_key(tracepoint_info.tracepoint_info_key());
       });
 
-  const auto& tracepoint_events = capture_data.GetTracepointEvents();
-  capture_info.mutable_callstack_events()->Reserve(tracepoint_events.size());
-  for (const auto& tracepoint_event : tracepoint_events) {
-    capture_info.add_tracepoint_event_infos()->CopyFrom(tracepoint_event);
-  }
+  capture_data.GetTracepointEventBuffer()->ForEachTracepointEvent(
+      [&capture_info](const orbit_client_protos::TracepointEventInfo& tracepoint_event_info) {
+        capture_info.add_tracepoint_event_infos()->CopyFrom(tracepoint_event_info);
+      });
 
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 
