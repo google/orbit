@@ -101,9 +101,10 @@ void TextRenderer::Display(Batcher* batcher) {
   if (!m_Initialized) {
     Init();
   }
-  
-  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
+
+  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_BLEND);
+  glDepthMask(GL_FALSE);
   glBlendEquation(GL_FUNC_ADD);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBindTexture(GL_TEXTURE_2D, m_Atlas->id);

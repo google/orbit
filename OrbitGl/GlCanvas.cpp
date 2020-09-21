@@ -389,12 +389,12 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   DrawScreenSpace();
 
+  // Draw remaining elements collected with the batcher.
+  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
+
   m_TextRenderer.Display(&ui_batcher_);
   RenderText();
   RenderUI();
-
-  // Draw remaining elements collected with the batcher.
-  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
 
   glFlush();
   cleanupGlState();
