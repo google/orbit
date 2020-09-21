@@ -108,8 +108,6 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // Draw rounded corners.
   if (!picking) {
     float right_margin = time_graph_->GetRightMargin();
-    const Color kBackgroundColor(70, 70, 70, 255);
-
     float radius = std::min(layout.GetRoundingRadius(), half_label_height);
     radius = std::min(radius, half_label_width);
     uint32_t sides = static_cast<uint32_t>(layout.GetRoundingNumSides() + 0.5f);
@@ -123,12 +121,12 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float z = GlCanvas::kZValueRoundingCorner;
 
     glColor4ubv(&kTabColor[0]);
-    DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, z);
     DrawTriangleFan(batcher, rounded_corner, bottom_right, kTabColor, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f, z);
-    DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f, z);
-    DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
-    DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, z);
+    DrawTriangleFan(batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f, z);
+    DrawTriangleFan(batcher, rounded_corner, end_top, GlCanvas::kBackgroundColor, 180.f, z);
   }
 
   // Collapse toggle state management.
