@@ -81,7 +81,7 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
     }
   });
   iterator_ui->SetFunctionName(function->pretty_name());
-  
+
   iterator_ui->SetMinMaxTime(live_functions_.GetCaptureMin(), live_functions_.GetCaptureMax());
   iterator_ui->SetCurrentTime(live_functions_.GetStartTime(id));
 
