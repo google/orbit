@@ -32,13 +32,13 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
     Triangle triangle;
     if (state_ == State::kCollapsed) {
-      triangle =
-          Triangle(position + Vec3(-half_h, half_w, 0.f), position + Vec3(-half_h, -half_w, 0.f),
-                   position + Vec3(half_w, 0.f, 0.f));
+      triangle = Triangle(position + Vec3(-half_h, half_w, GlCanvas::kZValueUi),
+                          position + Vec3(-half_h, -half_w, GlCanvas::kZValueUi),
+                          position + Vec3(half_w, 0.f, GlCanvas::kZValueUi));
     } else {
-      triangle =
-          Triangle(position + Vec3(half_w, half_h, 0.f), position + Vec3(-half_w, half_h, 0.f),
-                   position + Vec3(0.f, -half_w, 0.f));
+      triangle = Triangle(position + Vec3(half_w, half_h, GlCanvas::kZValueUi),
+                          position + Vec3(-half_w, half_h, GlCanvas::kZValueUi),
+                          position + Vec3(0.f, -half_w, GlCanvas::kZValueUi));
     }
     batcher->AddTriangle(triangle, color, shared_from_this());
   } else {

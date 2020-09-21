@@ -159,7 +159,12 @@ void Batcher::StartNewFrame() {
 
 void Batcher::Draw(bool picking) const {
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (picking) {
+    glDisable(GL_BLEND);
+  } else {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
   glDisable(GL_CULL_FACE);
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);

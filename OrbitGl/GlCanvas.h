@@ -26,9 +26,10 @@ class GlCanvas : public GlPanel {
   int getWidth() const;
   int getHeight() const;
 
-  void prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y);
   void prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y);
   void prepareScreenSpaceViewport();
+  void prepareGlState();
+  void cleanupGlState();
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
   void WorldToScreen(float wx, float wy, int& x, int& y) const;
   int WorldToScreenHeight(float a_Height) const;
