@@ -25,6 +25,8 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
   auto* manual_inst_manager = GOrbitApp->GetManualInstrumentationManager();
   orbit_api::Event event = manual_inst_manager->ApiEventFromTimerInfo(text_box->GetTimerInfo());
 
+  // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
+  // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
   const FunctionInfo* func =
       GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
   std::string module_name = FunctionUtils::GetLoadedModuleName(*func);

@@ -162,7 +162,7 @@ void OrbitTest::ManualInstrumentationApiTest() {
       ORBIT_DOUBLE(track_name.c_str(), cos(double_var * static_cast<double>(i)));
     }
 
-    // Asyn spans.
+    // Async spans.
     static uint32_t task_id = 0;
     size_t kNumTasksToSchedule = 10;
     for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
