@@ -768,7 +768,7 @@ void CaptureWindow::RenderTimeBar() {
     float dummy, worldY;
     ScreenToWorld(0, screenY, dummy, worldY);
 
-    float height = ScreenToWorldHeight(static_cast<int>(GParams.font_size) + pixelMargin);
+    float height = time_graph_.GetLayout().GetTimeBarHeight() - pixelMargin;
     float xMargin = ScreenToworldWidth(4);
 
     for (int i = 0; i < numTimePoints; ++i) {
@@ -781,7 +781,7 @@ void CaptureWindow::RenderTimeBar() {
                              Color(255, 255, 255, 255));
 
       Vec2 pos(worldX, worldY);
-      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueUi, Color(255, 255, 255, 255));
+      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTextUi, Color(255, 255, 255, 255));
     }
   }
 }

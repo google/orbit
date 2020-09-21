@@ -101,7 +101,11 @@ void TextRenderer::Display(Batcher* batcher) {
   if (!m_Initialized) {
     Init();
   }
-
+  
+  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBindTexture(GL_TEXTURE_2D, m_Atlas->id);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -134,6 +138,8 @@ void TextRenderer::Display(Batcher* batcher) {
 
   glBindTexture(GL_TEXTURE_2D, 0);
   glUseProgram(0);
+
+  glPopAttrib();
 }
 
 void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {

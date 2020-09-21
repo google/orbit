@@ -20,10 +20,10 @@ RingBuffer<float, 512> GDeltaTimeBuffer;
 float GlCanvas::kZValueSlider = 0.03f;
 float GlCanvas::kZValueSliderBg = 0.02f;
 float GlCanvas::kZValueMargin = 0.01f;
-float GlCanvas::kZValueTextUi = 0.0f;
+float GlCanvas::kZValueTextUi = 0.005f;
+float GlCanvas::kZValueTimeBarBg = 0.004f;
 float GlCanvas::kZValueUi = 0.0f;
 float GlCanvas::kZValueEventBarPicking = -0.001f;
-float GlCanvas::kZValueTimeBarBg = -0.002f;
 float GlCanvas::kZValueText = -0.003f;
 float GlCanvas::kZValueOverlay = -0.004f;
 float GlCanvas::kZValueOverlayBg = -0.005f;
@@ -249,47 +249,9 @@ void GlCanvas::OnTimer() {
   UpdateWheelMomentum(m_DeltaTime);
 }
 
-/** Inits the OpenGL viewport for drawing in 3D. */
-void GlCanvas::prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
-                                 int bottomrigth_y) {
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  // Black Background
-  glClearDepth(1.0f);                    // Depth Buffer Setup
-  glEnable(GL_DEPTH_TEST);               // Enables Depth Testing
-  glDepthFunc(GL_LEQUAL);                // The Type Of Depth Testing To Do
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-  glEnable(GL_COLOR_MATERIAL);
-
-  glViewport(topleft_x, topleft_y, bottomrigth_x - topleft_x, bottomrigth_y - topleft_y);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-
-  float ratio_w_h = static_cast<float>(bottomrigth_x - topleft_x) / bottomrigth_y - topleft_y;
-  gluPerspective(45 /*view angle*/, ratio_w_h, 0.1 /*clip close*/, 200 /*clip far*/);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-}
-
 /** Inits the OpenGL viewport for drawing in 2D. */
 void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
                                  int bottomrigth_y) {
-  glClearColor(static_cast<float>(kBackgroundColor[0]) / 255.0f,
-               static_cast<float>(kBackgroundColor[1]) / 255.0f,
-               static_cast<float>(kBackgroundColor[2]) / 255.0f,
-               static_cast<float>(kBackgroundColor[3]) / 255.0f);
-  if (m_Picking) glClearColor(0.f, 0.f, 0.f, 0.f);
-
-  // glEnable(GL_DEBUG_OUTPUT);
-
-  glDisable(GL_LIGHTING);
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_COLOR_MATERIAL);
-  m_Picking ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
-  glEnable(GL_DEPTH_TEST);  // Enables Depth Testing
-  glDepthFunc(GL_LEQUAL);   // The Type Of Depth Testing To Do
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
   glViewport(topleft_x, topleft_y, bottomrigth_x - topleft_x, bottomrigth_y - topleft_y);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -338,6 +300,28 @@ void GlCanvas::prepareScreenSpaceViewport() {
   glLoadIdentity();
 }
 
+void GlCanvas::prepareGlState() {
+  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
+
+  glClearColor(static_cast<float>(kBackgroundColor[0]) / 255.0f,
+               static_cast<float>(kBackgroundColor[1]) / 255.0f,
+               static_cast<float>(kBackgroundColor[2]) / 255.0f,
+               static_cast<float>(kBackgroundColor[3]) / 255.0f);
+  if (m_Picking) glClearColor(0.f, 0.f, 0.f, 0.f);
+
+  // glEnable(GL_DEBUG_OUTPUT);
+  glDisable(GL_LIGHTING);
+  glEnable(GL_TEXTURE_2D);
+  glEnable(GL_COLOR_MATERIAL);
+  m_Picking ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);  // Enables Depth Testing
+  glDepthFunc(GL_LEQUAL);   // The Type Of Depth Testing To Do
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+}
+
+void GlCanvas::cleanupGlState() { glPopAttrib(); }
+
 void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
   wx = m_WorldTopLeftX + (static_cast<float>(x) / getWidth()) * m_WorldWidth;
   wy = m_WorldTopLeftY - (static_cast<float>(y) / getHeight()) * m_WorldHeight;
@@ -382,8 +366,8 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   Timer timer;
   timer.Start();
 
+  prepareGlState();
   prepare2DViewport(0, 0, getWidth(), getHeight());
-  glLoadIdentity();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -413,6 +397,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
 
   glFlush();
+  cleanupGlState();
 
   timer.Stop();
 
