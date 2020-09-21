@@ -46,10 +46,13 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   }
 
   state_ = State::kStarting;
-  thread_pool->Schedule(
-      [this, process_id, process_name, process, selected_functions, selected_tracepoints]() {
-        Capture(process_id, process_name, process, selected_functions, selected_tracepoints);
-      });
+  thread_pool->Schedule([this, process_id, process_name = std::move(process_name),
+                         process = std::move(process),
+                         selected_functions = std::move(selected_functions),
+                         selected_tracepoints = std::move(selected_tracepoints)]() mutable {
+    Capture(process_id, std::move(process_name), std::move(process), std::move(selected_functions),
+            std::move(selected_tracepoints));
+  });
 
   return outcome::success();
 }
