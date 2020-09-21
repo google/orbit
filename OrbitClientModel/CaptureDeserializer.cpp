@@ -107,6 +107,13 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     selected_functions[address] = function;
   }
   TracepointInfoSet selected_tracepoints;
+  for (const orbit_client_protos::TracepointInfo& tracepoint_info :
+       capture_info.tracepoint_infos()) {
+    orbit_grpc_protos::TracepointInfo tracepoint_info_translated;
+    tracepoint_info_translated.set_category(tracepoint_info.category());
+    tracepoint_info_translated.set_name(tracepoint_info.name());
+    selected_tracepoints.emplace(tracepoint_info_translated);
+  }
 
   if (*cancellation_requested) {
     capture_listener->OnCaptureCancelled();
