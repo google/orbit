@@ -23,6 +23,18 @@ class TracepointInfoManager {
   [[nodiscard]] orbit_grpc_protos::TracepointInfo Get(uint64_t key) const;
   [[nodiscard]] bool Contains(uint64_t key) const;
 
+  void ForEachUniqueTracepointInfo(
+      const std::function<void(const orbit_client_protos::TracepointInfo&)>& action) const {
+    absl::MutexLock lock(&unique_tracepoints_mutex_);
+    for (const auto& it : unique_tracepoint_) {
+      orbit_client_protos::TracepointInfo tracepoint_info;
+      tracepoint_info.set_category(it.second.category());
+      tracepoint_info.set_name(it.second.name());
+      tracepoint_info.set_tracepoint_info_key(it.first);
+      action(tracepoint_info);
+    }
+  }
+
  private:
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> unique_tracepoint_;
   mutable absl::Mutex unique_tracepoints_mutex_;

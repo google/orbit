@@ -23,6 +23,16 @@ class TracepointEventBuffer {
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const;
 
+  void ForEachTracepointEvent(
+      const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
+    ScopeLock lock(mutex_);
+    for (auto const& entry : tracepoint_events_) {
+      for (auto const& time_to_tracepoint_event : entry.second) {
+        action(time_to_tracepoint_event.second);
+      }
+    }
+  }
+
   Mutex& mutex();
 
  private:

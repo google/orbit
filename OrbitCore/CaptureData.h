@@ -125,6 +125,14 @@ class CaptureData {
     return tracepoint_info_manager_->Get(key);
   }
 
+  [[nodiscard]] const TracepointInfoManager* GetTracepointInfoManager() const {
+    return tracepoint_info_manager_.get();
+  };
+
+  [[nodiscard]] const TracepointEventBuffer* GetTracepointEventBuffer() const {
+    return tracepoint_event_buffer_.get();
+  }
+
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const {
     return tracepoint_event_buffer_->GetTracepointsOfThread(thread_id);

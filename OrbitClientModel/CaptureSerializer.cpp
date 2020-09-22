@@ -90,6 +90,20 @@ CaptureInfo GenerateCaptureInfo(
         capture_info.add_callstack_events()->CopyFrom(event);
       });
 
+  capture_data.GetTracepointInfoManager()->ForEachUniqueTracepointInfo(
+      [&capture_info](const orbit_client_protos::TracepointInfo& tracepoint_info) {
+        orbit_client_protos::TracepointInfo* new_tracepoint_info =
+            capture_info.add_tracepoint_infos();
+        *new_tracepoint_info->mutable_category() = tracepoint_info.category();
+        *new_tracepoint_info->mutable_name() = tracepoint_info.name();
+        new_tracepoint_info->set_tracepoint_info_key(tracepoint_info.tracepoint_info_key());
+      });
+
+  capture_data.GetTracepointEventBuffer()->ForEachTracepointEvent(
+      [&capture_info](const orbit_client_protos::TracepointEventInfo& tracepoint_event_info) {
+        capture_info.add_tracepoint_event_infos()->CopyFrom(tracepoint_event_info);
+      });
+
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 
   return capture_info;
