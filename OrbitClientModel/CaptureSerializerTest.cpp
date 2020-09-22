@@ -85,6 +85,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_category("sched");
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
+
   CaptureData capture_data{std::move(process), std::move(empty_module_map), selected_functions,
                            selected_tracepoints};
 
@@ -106,10 +107,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   callstack_event.set_callstack_hash(callstack.GetHash());
   capture_data.AddCallstackEvent(callstack_event);
 
-  TracepointInfo tracepoint_info;
-  tracepoint_info.set_category("sched");
-  tracepoint_info.set_name("sched_switch");
-  capture_data.AddUniqueTracepointEventInfo(0, tracepoint_info);
+  capture_data.AddUniqueTracepointEventInfo(0, selected_tracepoint_info);
 
   TracepointEventInfo tracepoint_event;
   tracepoint_event.set_tracepoint_info_key(1);
@@ -161,8 +159,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ASSERT_EQ(1, capture_info.tracepoint_infos_size());
   const orbit_client_protos::TracepointInfo& actual_tracepoint_info =
       capture_info.tracepoint_infos(0);
-  ASSERT_EQ(actual_tracepoint_info.category(), tracepoint_info.category());
-  ASSERT_EQ(actual_tracepoint_info.name(), tracepoint_info.name());
+  ASSERT_EQ(actual_tracepoint_info.category(), selected_tracepoint_info.category());
+  ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
   ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 0);
 
   ASSERT_EQ(2, capture_info.tracepoint_event_infos_size());
