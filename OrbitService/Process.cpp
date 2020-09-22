@@ -77,7 +77,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   auto cmdline_file_result = utils::ReadFileToString(cmdline_file_path);
   if (!cmdline_file_result) {
     return ErrorMessage{absl::StrFormat("Failed to read %s: %s", cmdline_file_path.string(),
-                                        name_file_result.error().message())};
+                                        cmdline_file_result.error().message())};
   }
 
   std::string cmdline = std::move(cmdline_file_result.value());
