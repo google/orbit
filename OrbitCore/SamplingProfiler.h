@@ -36,7 +36,7 @@ struct SampledFunction {
 };
 
 struct ThreadSampleData {
-  ThreadSampleData() { thread_usage.push_back(0); }
+  ThreadSampleData() = default;
   [[nodiscard]] uint32_t GetCountForAddress(uint64_t address) const;
   absl::flat_hash_map<CallstackID, uint32_t> callstack_count;
   absl::flat_hash_map<uint64_t, uint32_t> address_count;
@@ -45,8 +45,6 @@ struct ThreadSampleData {
   std::multimap<uint32_t, uint64_t> address_count_sorted;
   uint32_t samples_count = 0;
   std::vector<SampledFunction> sampled_function;
-  std::vector<float> thread_usage;
-  float average_thread_usage = 0;
   ThreadID thread_id = 0;
 };
 
@@ -80,7 +78,7 @@ class SamplingProfiler {
 
   [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddress(uint64_t address,
                                                                          ThreadID thread_id) const;
-  [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
+  [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstackReportFromAddress(
       uint64_t address, ThreadID thread_id) const;
 
   [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
@@ -95,10 +93,8 @@ class SamplingProfiler {
     return &it->second;
   }
 
-  void SortByThreadUsage();
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
-
   static const int32_t kAllThreadsFakeTid;
 
  private:
@@ -107,6 +103,7 @@ class SamplingProfiler {
   void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
   void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
   void FillThreadSampleDataSampleReports(const CaptureData& capture_data);
+  void SortByThreadUsage();
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;

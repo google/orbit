@@ -27,18 +27,6 @@ std::multimap<int, CallstackID> SortCallstacks(const ThreadSampleData& data,
   return sorted_callstacks;
 }
 
-void ComputeAverageThreadUsage(ThreadSampleData* data) {
-  data->average_thread_usage = 0.f;
-
-  if (!data->thread_usage.empty()) {
-    for (float thread_usage : data->thread_usage) {
-      data->average_thread_usage += thread_usage;
-    }
-
-    data->average_thread_usage /= data->thread_usage.size();
-  }
-}
-
 }  // namespace
 
 uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
@@ -68,7 +56,7 @@ const CallStack& SamplingProfiler::GetResolvedCallstack(CallstackID raw_callstac
   return *resolved_callstack_it->second;
 }
 
-std::unique_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFromAddress(
+std::unique_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstackReportFromAddress(
     uint64_t address, ThreadID thread_id) const {
   std::unique_ptr<SortedCallstackReport> report = std::make_unique<SortedCallstackReport>();
   std::multimap<int, CallstackID> multi_map = GetCallstacksFromAddress(address, thread_id);
@@ -89,14 +77,7 @@ std::unique_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFrom
 const int32_t SamplingProfiler::kAllThreadsFakeTid = -1;
 
 void SamplingProfiler::SortByThreadUsage() {
-  sorted_thread_sample_data_.clear();
   sorted_thread_sample_data_.reserve(thread_id_to_sample_data_.size());
-
-  // If "All" exists, set to 100% usage
-  auto all_threads_it = thread_id_to_sample_data_.find(kAllThreadsFakeTid);
-  if (all_threads_it != thread_id_to_sample_data_.end()) {
-    all_threads_it->second.average_thread_usage = 100.f;
-  }
 
   for (auto& pair : thread_id_to_sample_data_) {
     ThreadSampleData& data = pair.second;
@@ -106,7 +87,7 @@ void SamplingProfiler::SortByThreadUsage() {
 
   sort(sorted_thread_sample_data_.begin(), sorted_thread_sample_data_.end(),
        [](const ThreadSampleData& a, const ThreadSampleData& b) {
-         return a.average_thread_usage > b.average_thread_usage;
+         return a.samples_count > b.samples_count;
        });
 }
 
@@ -140,8 +121,6 @@ void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data,
 
   for (auto& sample_data_it : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &sample_data_it.second;
-
-    ComputeAverageThreadUsage(thread_sample_data);
 
     // Address count per sample per thread
     for (const auto& callstack_count_it : thread_sample_data->callstack_count) {
@@ -268,11 +247,11 @@ void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capt
     ThreadSampleData* thread_sample_data = &data.second;
     std::vector<SampledFunction>* sampled_functions = &thread_sample_data->sampled_function;
 
-    for (auto sortedIt = thread_sample_data->address_count_sorted.rbegin();
-         sortedIt != thread_sample_data->address_count_sorted.rend(); ++sortedIt) {
-      uint32_t numOccurences = sortedIt->first;
-      uint64_t absolute_address = sortedIt->second;
-      float inclusive_percent = 100.f * numOccurences / thread_sample_data->samples_count;
+    for (auto sorted_it = thread_sample_data->address_count_sorted.rbegin();
+         sorted_it != thread_sample_data->address_count_sorted.rend(); ++sorted_it) {
+      uint32_t num_occurences = sorted_it->first;
+      uint64_t absolute_address = sorted_it->second;
+      float inclusive_percent = 100.f * num_occurences / thread_sample_data->samples_count;
 
       SampledFunction function;
       function.name = capture_data.GetFunctionNameByAddress(absolute_address);
