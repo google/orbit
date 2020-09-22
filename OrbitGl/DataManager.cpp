@@ -8,6 +8,7 @@
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::TracepointInfo;
 
 void DataManager::UpdateProcessInfos(const std::vector<ProcessInfo>& process_infos) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
@@ -48,11 +49,6 @@ void DataManager::SelectFunction(uint64_t function_address) {
 void DataManager::DeselectFunction(uint64_t function_address) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_functions_.erase(function_address);
-}
-
-void DataManager::set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_functions_ = std::move(selected_functions);
 }
 
 void DataManager::set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions) {
