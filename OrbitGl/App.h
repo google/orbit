@@ -131,6 +131,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                                const CaptureData& capture_data);
   void ClearSelectionTopDownView();
 
+  void SetBottomUpView(const CaptureData& capture_data);
+  void ClearBottomUpView();
+  void SetSelectionBottomUpView(const SamplingProfiler& selection_sampling_profiler,
+                                const CaptureData& capture_data);
+  void ClearSelectionBottomUpView();
+
   bool SelectProcess(const std::string& process);
 
   // Callbacks
@@ -192,6 +198,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetTooltipCallback(TooltipCallback callback) { tooltip_callback_ = std::move(callback); }
   using RefreshCallback = std::function<void(DataViewType type)>;
   void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
+
   using SamplingReportCallback = std::function<void(DataView*, std::shared_ptr<SamplingReport>)>;
   void SetSamplingReportCallback(SamplingReportCallback callback) {
     sampling_reports_callback_ = std::move(callback);
@@ -199,6 +206,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectionReportCallback(SamplingReportCallback callback) {
     selection_report_callback_ = std::move(callback);
   }
+
   using CallTreeViewCallback = std::function<void(std::unique_ptr<CallTreeView>)>;
   void SetTopDownViewCallback(CallTreeViewCallback callback) {
     top_down_view_callback_ = std::move(callback);
@@ -206,6 +214,13 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectionTopDownViewCallback(CallTreeViewCallback callback) {
     selection_top_down_view_callback_ = std::move(callback);
   }
+  void SetBottomUpViewCallback(CallTreeViewCallback callback) {
+    bottom_up_view_callback_ = std::move(callback);
+  }
+  void SetSelectionBottomUpViewCallback(CallTreeViewCallback callback) {
+    selection_bottom_up_view_callback_ = std::move(callback);
+  }
+
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
   void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
   void FireRefreshCallbacks(DataViewType type = DataViewType::kAll);
@@ -328,6 +343,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SamplingReportCallback selection_report_callback_;
   CallTreeViewCallback top_down_view_callback_;
   CallTreeViewCallback selection_top_down_view_callback_;
+  CallTreeViewCallback bottom_up_view_callback_;
+  CallTreeViewCallback selection_bottom_up_view_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;

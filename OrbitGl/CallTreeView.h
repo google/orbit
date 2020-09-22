@@ -112,6 +112,9 @@ class CallTreeView : public CallTreeNode {
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromSamplingProfiler(
       const SamplingProfiler& sampling_profiler, const CaptureData& capture_data);
 
+  [[nodiscard]] static std::unique_ptr<CallTreeView> CreateBottomUpViewFromSamplingProfiler(
+      const SamplingProfiler& sampling_profiler, const CaptureData& capture_data);
+
   CallTreeView() : CallTreeNode{nullptr} {}
 };
 

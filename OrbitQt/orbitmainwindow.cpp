@@ -146,6 +146,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
     this->OnRefreshDataViewPanels(a_Type);
     this->ui->liveFunctions->OnDataChanged();
   });
+
   GOrbitApp->SetSamplingReportCallback(
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
@@ -165,6 +166,16 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
   GOrbitApp->SetSelectionTopDownViewCallback(
       [this](std::unique_ptr<CallTreeView> selection_top_down_view) {
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
+      });
+
+  GOrbitApp->SetBottomUpViewCallback([this](std::unique_ptr<CallTreeView> bottom_up_view) {
+    this->OnNewBottomUpView(std::move(bottom_up_view));
+  });
+
+  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab), false);
+  GOrbitApp->SetSelectionBottomUpViewCallback(
+      [this](std::unique_ptr<CallTreeView> selection_bottom_up_view) {
+        this->OnNewSelectionBottomUpView(std::move(selection_bottom_up_view));
       });
 
   GOrbitApp->SetSelectLiveTabCallback(
@@ -236,6 +247,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
 
   ui->topDownWidget->Initialize(GOrbitApp.get());
   ui->selectionTopDownWidget->Initialize(GOrbitApp.get());
+  ui->bottomUpWidget->Initialize(GOrbitApp.get());
+  ui->selectionBottomUpWidget->Initialize(GOrbitApp.get());
 
   setWindowTitle({});
   std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
@@ -341,12 +354,15 @@ void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
                                            std::shared_ptr<SamplingReport> sampling_report) {
   if (sampling_report->HasSamples()) {
     ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), true);
-    // This condition and the corresponding one in OnNewSelectionTopDownView need to be
-    // complementary, such that one doesn't cause switching away from or to a tab that the other
-    // method would switch from when such a tab is selected. Otherwise, which tab ends up being
-    // selected would depend on the order in which these two methods are called.
+    // This condition and the corresponding ones in OnNewSelectionTopDownView,
+    // OnNewSelectionBottomUpView need to be complementary, such that one doesn't cause switching
+    // away from or to a tab that the other method would switch from when such a tab is selected.
+    // Otherwise, which tab ends up being selected would depend on the order in which these two
+    // methods are called.
     if (ui->RightTabWidget->currentWidget() != ui->topDownTab &&
-        ui->RightTabWidget->currentWidget() != ui->selectionTopDownTab) {
+        ui->RightTabWidget->currentWidget() != ui->selectionTopDownTab &&
+        ui->RightTabWidget->currentWidget() != ui->bottomUpTab &&
+        ui->RightTabWidget->currentWidget() != ui->selectionBottomUpTab) {
       ui->RightTabWidget->setCurrentWidget(ui->selectionSamplingTab);
     }
   } else {
@@ -375,10 +391,10 @@ void OrbitMainWindow::OnNewSelectionTopDownView(
     std::unique_ptr<CallTreeView> selection_top_down_view) {
   if (selection_top_down_view->child_count() > 0) {
     ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), true);
-    // This condition and the corresponding one in OnNewSelectionReport need to be complementary,
-    // such that one doesn't cause switching away from or to a tab that the other method would
-    // switch from when such a tab is selected. Otherwise, which tab ends up being selected would
-    // depend on the order in which these two methods are called.
+    // This condition and the corresponding ones in OnNewSelectionReport, OnNewSelectionBottomUpView
+    // need to be complementary, such that one doesn't cause switching away from or to a tab that
+    // the other method would switch from when such a tab is selected. Otherwise, which tab ends up
+    // being selected would depend on the order in which these two methods are called.
     if (ui->RightTabWidget->currentWidget() == ui->topDownTab) {
       ui->RightTabWidget->setCurrentWidget(ui->selectionTopDownTab);
     }
@@ -392,6 +408,33 @@ void OrbitMainWindow::OnNewSelectionTopDownView(
     ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), false);
   }
   ui->selectionTopDownWidget->SetTopDownView(std::move(selection_top_down_view));
+}
+
+void OrbitMainWindow::OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
+  ui->bottomUpWidget->SetBottomUpView(std::move(bottom_up_view));
+}
+
+void OrbitMainWindow::OnNewSelectionBottomUpView(
+    std::unique_ptr<CallTreeView> selection_bottom_up_view) {
+  if (selection_bottom_up_view->child_count() > 0) {
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab), true);
+    // This condition and the corresponding ones in OnNewSelectionReport, OnNewSelectionTopDownView
+    // need to be complementary, such that one doesn't cause switching away from or to a tab that
+    // the other method would switch from when such a tab is selected. Otherwise, which tab ends up
+    // being selected would depend on the order in which these two methods are called.
+    if (ui->RightTabWidget->currentWidget() == ui->bottomUpTab) {
+      ui->RightTabWidget->setCurrentWidget(ui->selectionBottomUpTab);
+    }
+  } else {
+    // If the selection is empty, if this tab is currently selected switch to the corresponding tab
+    // for the entire capture...
+    if (ui->RightTabWidget->currentWidget() == ui->selectionBottomUpTab) {
+      ui->RightTabWidget->setCurrentWidget(ui->bottomUpTab);
+    }
+    // ...and then disable this tab.
+    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab), false);
+  }
+  ui->selectionBottomUpWidget->SetBottomUpView(std::move(selection_bottom_up_view));
 }
 
 std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {

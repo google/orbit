@@ -166,6 +166,7 @@ void OrbitApp::OnCaptureComplete() {
         SetSamplingReport(std::move(sampling_profiler),
                           GetCaptureData().GetCallstackData()->GetUniqueCallstacksCopy());
         SetTopDownView(GetCaptureData());
+        SetBottomUpView(GetCaptureData());
 
         CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
@@ -539,6 +540,33 @@ void OrbitApp::SetSelectionTopDownView(const SamplingProfiler& selection_samplin
 void OrbitApp::ClearSelectionTopDownView() {
   CHECK(selection_top_down_view_callback_);
   selection_top_down_view_callback_(std::make_unique<CallTreeView>());
+}
+
+void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
+  CHECK(bottom_up_view_callback_);
+  std::unique_ptr<CallTreeView> bottom_up_view =
+      CallTreeView::CreateBottomUpViewFromSamplingProfiler(capture_data.sampling_profiler(),
+                                                           capture_data);
+  bottom_up_view_callback_(std::move(bottom_up_view));
+}
+
+void OrbitApp::ClearBottomUpView() {
+  CHECK(bottom_up_view_callback_);
+  bottom_up_view_callback_(std::make_unique<CallTreeView>());
+}
+
+void OrbitApp::SetSelectionBottomUpView(const SamplingProfiler& selection_sampling_profiler,
+                                        const CaptureData& capture_data) {
+  CHECK(selection_bottom_up_view_callback_);
+  std::unique_ptr<CallTreeView> selection_bottom_up_view =
+      CallTreeView::CreateBottomUpViewFromSamplingProfiler(selection_sampling_profiler,
+                                                           capture_data);
+  selection_bottom_up_view_callback_(std::move(selection_bottom_up_view));
+}
+
+void OrbitApp::ClearSelectionBottomUpView() {
+  CHECK(selection_bottom_up_view_callback_);
+  selection_bottom_up_view_callback_(std::make_unique<CallTreeView>());
 }
 
 // std::string OrbitApp::GetCaptureFileName() {
@@ -1138,6 +1166,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
                                      generate_summary);
 
   SetSelectionTopDownView(sampling_profiler, GetCaptureData());
+  SetSelectionBottomUpView(sampling_profiler, GetCaptureData());
 
   SetSelectionReport(std::move(sampling_profiler),
                      capture_data_.GetSelectionCallstackData()->GetUniqueCallstacksCopy(),
@@ -1153,6 +1182,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
                                    capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
     capture_data_.set_sampling_profiler(sampling_profiler);
     SetTopDownView(capture_data);
+    SetBottomUpView(capture_data);
   }
 
   if (selection_report_ == nullptr) {
@@ -1164,6 +1194,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
                                       selection_report_->has_summary());
 
   SetSelectionTopDownView(selection_profiler, GetCaptureData());
+  SetSelectionBottomUpView(selection_profiler, GetCaptureData());
   selection_report_->UpdateReport(
       std::move(selection_profiler),
       capture_data.GetSelectionCallstackData()->GetUniqueCallstacksCopy());
@@ -1177,6 +1208,8 @@ void OrbitApp::UpdateAfterCaptureCleared() {
   SetSamplingReport(empty_profiler, empty_unique_callstacks);
   ClearTopDownView();
   ClearSelectionTopDownView();
+  ClearBottomUpView();
+  ClearSelectionBottomUpView();
   if (selection_report_) {
     SetSelectionReport(std::move(empty_profiler), empty_unique_callstacks, false);
   }

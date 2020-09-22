@@ -53,6 +53,11 @@ void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view)
   onSearchLineEditTextEdited(ui_->searchLineEdit->text());
 }
 
+void CallTreeWidget::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
+  SetTopDownView(std::move(bottom_up_view));
+  // TODO: Hide the "Exclusive" column.
+}
+
 static std::string BuildStringFromIndices(const QModelIndexList& indices) {
   std::string buffer;
   std::optional<QModelIndex> prev_index;

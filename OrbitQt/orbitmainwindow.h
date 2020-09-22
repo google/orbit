@@ -39,12 +39,18 @@ class OrbitMainWindow : public QMainWindow {
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) { m_GlWidgets.push_back(a_GlWidget); }
   void OnRefreshDataViewPanels(DataViewType a_Type);
   void UpdatePanel(DataViewType a_Type);
+
   void OnNewSamplingReport(DataView* callstack_data_view,
                            std::shared_ptr<class SamplingReport> sampling_report);
   void OnNewSelectionReport(DataView* callstack_data_view,
                             std::shared_ptr<class SamplingReport> sampling_report);
+
   void OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void OnNewSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view);
+
+  void OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
+  void OnNewSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view);
+
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
   void OpenDisassembly(std::string a_String, DisassemblyReport report);
