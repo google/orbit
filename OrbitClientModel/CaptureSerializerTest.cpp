@@ -150,20 +150,23 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
                                               actual_callstack.data().end()};
   EXPECT_THAT(actual_callstack_data, ElementsAreArray(callstack.GetFrames()));
 
-  ASSERT_EQ(1, capture_info.callstack_events_size());
+  EXPECT_EQ(1, capture_info.callstack_events_size());
   const CallstackEvent& actual_callstack_event = capture_info.callstack_events(0);
   EXPECT_EQ(callstack_event.thread_id(), actual_callstack_event.thread_id());
   EXPECT_EQ(callstack_event.time(), actual_callstack_event.time());
   EXPECT_EQ(callstack_event.callstack_hash(), actual_callstack_event.callstack_hash());
 
-  ASSERT_EQ(1, capture_info.tracepoint_infos_size());
+  EXPECT_EQ(1, capture_info.tracepoint_infos_size());
   const orbit_client_protos::TracepointInfo& actual_tracepoint_info =
       capture_info.tracepoint_infos(0);
   ASSERT_EQ(actual_tracepoint_info.category(), selected_tracepoint_info.category());
   ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
   ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 0);
 
-  ASSERT_EQ(2, capture_info.tracepoint_event_infos_size());
+  /*Note: capture_info.tracepoint_event_infos_size() is 2 and not 1 because for every call adding
+   * TracepointEventInfo, a tracepoint event is created and added twice (once for the corresponding
+   * thread and another time for all threads).*/
+  EXPECT_EQ(2, capture_info.tracepoint_event_infos_size());
   const orbit_client_protos::TracepointEventInfo& actual_tracepoint_event =
       capture_info.tracepoint_event_infos(0);
   EXPECT_EQ(tracepoint_event.tid(), actual_tracepoint_event.tid());
