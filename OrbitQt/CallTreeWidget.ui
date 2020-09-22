@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TopDownWidget</class>
- <widget class="QWidget" name="TopDownWidget">
+ <class>CallTreeWidget</class>
+ <widget class="QWidget" name="CallTreeWidget">
   <layout class="QGridLayout">
    <property name="leftMargin">
     <number>0</number>
@@ -29,7 +29,7 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="CopyKeySequenceEnabledTreeView" name="topDownTreeView">
+    <widget class="CopyKeySequenceEnabledTreeView" name="callTreeTreeView">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>

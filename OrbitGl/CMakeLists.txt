@@ -15,6 +15,7 @@ target_sources(
          AsyncTrack.h
          Batcher.h
          CallStackDataView.h
+         CallTreeView.h
          CaptureWindow.h
          CodeReport.h
          CoreMath.h
@@ -54,7 +55,6 @@ target_sources(
          TimeGraphLayout.h
          TimerChain.h
          TimerInfosIterator.h
-         TopDownView.h
          TimerTrack.h
          Track.h
          TriangleToggle.h
@@ -67,6 +67,7 @@ target_sources(
           AsyncTrack.cpp
           Batcher.cpp
           CallStackDataView.cpp
+          CallTreeView.cpp
           CaptureWindow.cpp
           DataManager.cpp
           DataView.cpp
@@ -99,7 +100,6 @@ target_sources(
           TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadTrack.cpp
-          TopDownView.cpp
           Track.cpp
           TriangleToggle.cpp
           TracepointsDataView.cpp

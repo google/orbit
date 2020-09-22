@@ -2,22 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_TOP_DOWN_VIEW_ITEM_MODEL_H_
-#define ORBIT_QT_TOP_DOWN_VIEW_ITEM_MODEL_H_
+#ifndef ORBIT_QT_CALL_TREE_VIEW_ITEM_MODEL_H_
+#define ORBIT_QT_CALL_TREE_VIEW_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
 #include <memory>
 
-#include "TopDownView.h"
+#include "CallTreeView.h"
 
-class TopDownViewItemModel : public QAbstractItemModel {
+class CallTreeViewItemModel : public QAbstractItemModel {
   Q_OBJECT
 
  public:
-  explicit TopDownViewItemModel(std::unique_ptr<TopDownView> top_down_view,
-                                QObject* parent = nullptr);
+  explicit CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_tree_view,
+                                 QObject* parent = nullptr);
 
   QVariant data(const QModelIndex& index, int role) const override;
   Qt::ItemFlags flags(const QModelIndex& index) const override;
@@ -45,7 +45,7 @@ class TopDownViewItemModel : public QAbstractItemModel {
   [[nodiscard]] QVariant GetToolTipRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetModulePathRoleData(const QModelIndex& index) const;
 
-  std::unique_ptr<TopDownView> top_down_view_;
+  std::unique_ptr<CallTreeView> call_tree_view_;
 };
 
-#endif  // ORBIT_QT_TOP_DOWN_VIEW_ITEM_MODEL_H_
+#endif  // ORBIT_QT_CALL_TREE_VIEW_ITEM_MODEL_H_

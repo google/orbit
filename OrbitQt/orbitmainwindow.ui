@@ -267,7 +267,7 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="topDownGridLayout">
          <item row="0" column="0">
-          <widget class="TopDownWidget" name="topDownWidget" native="true"/>
+          <widget class="CallTreeWidget" name="topDownWidget" native="true"/>
          </item>
         </layout>
        </widget>
@@ -287,7 +287,7 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="selectionTopDownGridLayout">
          <item row="0" column="0">
-          <widget class="TopDownWidget" name="selectionTopDownWidget" native="true"/>
+          <widget class="CallTreeWidget" name="selectionTopDownWidget" native="true"/>
          </item>
         </layout>
        </widget>
@@ -617,9 +617,9 @@ QPushButton:disabled {
    <header>orbitsamplingreport.h</header>
   </customwidget>
   <customwidget>
-   <class>TopDownWidget</class>
+   <class>CallTreeWidget</class>
    <extends>QWidget</extends>
-   <header>TopDownWidget.h</header>
+   <header>CallTreeWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>

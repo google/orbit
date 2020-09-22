@@ -56,7 +56,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   GOrbitApp->SetRefreshCallback([](DataViewType /*type*/) {});
   GOrbitApp->SetSamplingReportCallback(
       [](DataView* /*view*/, std::shared_ptr<SamplingReport> /*report*/) {});
-  GOrbitApp->SetTopDownViewCallback([](std::unique_ptr<TopDownView> /*view*/) {});
+  GOrbitApp->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
 
   TimeGraph time_graph{};
   GCurrentTimeGraph = &time_graph;

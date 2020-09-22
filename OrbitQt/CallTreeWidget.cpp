@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TopDownWidget.h"
+#include "CallTreeWidget.h"
 
 #include <QColor>
 #include <QMenu>
@@ -11,30 +11,29 @@
 #include <QStyleOption>
 
 #include "App.h"
+#include "CallTreeViewItemModel.h"
 #include "FunctionsDataView.h"
-#include "OrbitClientData/ProcessData.h"
-#include "TopDownViewItemModel.h"
 
 using orbit_client_protos::FunctionInfo;
 
-TopDownWidget::TopDownWidget(QWidget* parent)
-    : QWidget{parent}, ui_{std::make_unique<Ui::TopDownWidget>()} {
+CallTreeWidget::CallTreeWidget(QWidget* parent)
+    : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
   ui_->setupUi(this);
-  ui_->topDownTreeView->setItemDelegateForColumn(TopDownViewItemModel::kInclusive,
-                                                 new ProgressBarItemDelegate{ui_->topDownTreeView});
+  ui_->callTreeTreeView->setItemDelegateForColumn(
+      CallTreeViewItemModel::kInclusive, new ProgressBarItemDelegate{ui_->callTreeTreeView});
 
-  connect(ui_->topDownTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
-          &TopDownWidget::onCopyKeySequencePressed);
-  connect(ui_->topDownTreeView, &QTreeView::customContextMenuRequested, this,
-          &TopDownWidget::onCustomContextMenuRequested);
+  connect(ui_->callTreeTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
+          &CallTreeWidget::onCopyKeySequencePressed);
+  connect(ui_->callTreeTreeView, &QTreeView::customContextMenuRequested, this,
+          &CallTreeWidget::onCustomContextMenuRequested);
   connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
-          &TopDownWidget::onSearchLineEditTextEdited);
+          &CallTreeWidget::onSearchLineEditTextEdited);
 }
 
-void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
+void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
   CHECK(app_ != nullptr);
 
-  model_ = std::make_unique<TopDownViewItemModel>(std::move(top_down_view));
+  model_ = std::make_unique<CallTreeViewItemModel>(std::move(top_down_view));
   search_proxy_model_ = std::make_unique<HighlightCustomFilterSortFilterProxyModel>(nullptr);
   search_proxy_model_->setSourceModel(model_.get());
   search_proxy_model_->setSortRole(Qt::EditRole);
@@ -42,12 +41,12 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   hooked_proxy_model_ = std::make_unique<HookedIdentityProxyModel>(app_, nullptr);
   hooked_proxy_model_->setSourceModel(search_proxy_model_.get());
 
-  ui_->topDownTreeView->setModel(hooked_proxy_model_.get());
-  ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive, Qt::DescendingOrder);
+  ui_->callTreeTreeView->setModel(hooked_proxy_model_.get());
+  ui_->callTreeTreeView->sortByColumn(CallTreeViewItemModel::kInclusive, Qt::DescendingOrder);
 
-  // Resize columns only the first time a non-empty TopDownView is set.
+  // Resize columns only the first time a non-empty CallTreeView is set.
   if (!columns_already_resized_ && hooked_proxy_model_->rowCount(QModelIndex{}) > 0) {
-    ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
+    ui_->callTreeTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
     columns_already_resized_ = true;
   }
 
@@ -73,22 +72,22 @@ static std::string BuildStringFromIndices(const QModelIndexList& indices) {
   return buffer;
 }
 
-void TopDownWidget::onCopyKeySequencePressed() {
+void CallTreeWidget::onCopyKeySequencePressed() {
   app_->SetClipboard(
-      BuildStringFromIndices(ui_->topDownTreeView->selectionModel()->selectedIndexes()));
+      BuildStringFromIndices(ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
 }
 
-const QString TopDownWidget::kActionExpandRecursively = QStringLiteral("&Expand recursively");
-const QString TopDownWidget::kActionCollapseRecursively = QStringLiteral("&Collapse recursively");
-const QString TopDownWidget::kActionCollapseChildrenRecursively =
+const QString CallTreeWidget::kActionExpandRecursively = QStringLiteral("&Expand recursively");
+const QString CallTreeWidget::kActionCollapseRecursively = QStringLiteral("&Collapse recursively");
+const QString CallTreeWidget::kActionCollapseChildrenRecursively =
     QStringLiteral("Collapse children recursively");
-const QString TopDownWidget::kActionExpandAll = QStringLiteral("Expand all");
-const QString TopDownWidget::kActionCollapseAll = QStringLiteral("Collapse all");
-const QString TopDownWidget::kActionLoadSymbols = QStringLiteral("&Load Symbols");
-const QString TopDownWidget::kActionSelect = QStringLiteral("&Hook");
-const QString TopDownWidget::kActionDeselect = QStringLiteral("&Unhook");
-const QString TopDownWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
-const QString TopDownWidget::kActionCopySelection = QStringLiteral("Copy Selection");
+const QString CallTreeWidget::kActionExpandAll = QStringLiteral("Expand all");
+const QString CallTreeWidget::kActionCollapseAll = QStringLiteral("Collapse all");
+const QString CallTreeWidget::kActionLoadSymbols = QStringLiteral("&Load Symbols");
+const QString CallTreeWidget::kActionSelect = QStringLiteral("&Hook");
+const QString CallTreeWidget::kActionDeselect = QStringLiteral("&Unhook");
+const QString CallTreeWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
+const QString CallTreeWidget::kActionCopySelection = QStringLiteral("Copy Selection");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
@@ -132,8 +131,8 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
   for (const auto& index : indices) {
     std::string module_path =
         index.model()
-            ->index(index.row(), TopDownViewItemModel::kModule, index.parent())
-            .data(TopDownViewItemModel::kModulePathRole)
+            ->index(index.row(), CallTreeViewItemModel::kModule, index.parent())
+            .data(CallTreeViewItemModel::kModulePathRole)
             .toString()
             .toStdString();
     unique_module_paths.insert(module_path);
@@ -155,7 +154,7 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
   for (const auto& index : indices) {
     uint64_t absolute_address =
         index.model()
-            ->index(index.row(), TopDownViewItemModel::kFunctionAddress, index.parent())
+            ->index(index.row(), CallTreeViewItemModel::kFunctionAddress, index.parent())
             .data(Qt::EditRole)
             .toLongLong();
     const FunctionInfo* function =
@@ -167,16 +166,16 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
   return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
-void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
-  QModelIndex index = ui_->topDownTreeView->indexAt(point);
+void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
+  QModelIndex index = ui_->callTreeTreeView->indexAt(point);
   if (!index.isValid()) {
     return;
   }
 
   std::vector<QModelIndex> selected_tree_indices;
   for (const QModelIndex& selected_index :
-       ui_->topDownTreeView->selectionModel()->selectedIndexes()) {
-    if (selected_index.column() != TopDownViewItemModel::kThreadOrFunction) {
+       ui_->callTreeTreeView->selectionModel()->selectedIndexes()) {
+    if (selected_index.column() != CallTreeViewItemModel::kThreadOrFunction) {
       continue;
     }
     selected_tree_indices.push_back(selected_index);
@@ -193,7 +192,7 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
       // expanded, as it would otherwise be unintuitive to collapse subtrees
       // none of which is visible.
       enable_expand_recursively = true;
-      if (ui_->topDownTreeView->isExpanded(selected_index)) {
+      if (ui_->callTreeTreeView->isExpanded(selected_index)) {
         enable_collapse_recursively = true;
       }
     }
@@ -217,9 +216,9 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
 
   bool enable_disassembly = !functions.empty();
 
-  bool enable_copy = ui_->topDownTreeView->selectionModel()->hasSelection();
+  bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
-  QMenu menu{ui_->topDownTreeView};
+  QMenu menu{ui_->callTreeTreeView};
   if (enable_expand_recursively) {
     menu.addAction(kActionExpandRecursively);
   }
@@ -248,27 +247,27 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     menu.addAction(kActionCopySelection);
   }
 
-  QAction* action = menu.exec(ui_->topDownTreeView->mapToGlobal(point));
+  QAction* action = menu.exec(ui_->callTreeTreeView->mapToGlobal(point));
   if (action == nullptr) {
     return;
   }
 
   if (action->text() == kActionExpandRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
-      ExpandRecursively(ui_->topDownTreeView, selected_index);
+      ExpandRecursively(ui_->callTreeTreeView, selected_index);
     }
   } else if (action->text() == kActionCollapseRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
-      CollapseRecursively(ui_->topDownTreeView, selected_index);
+      CollapseRecursively(ui_->callTreeTreeView, selected_index);
     }
   } else if (action->text() == kActionCollapseChildrenRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
-      CollapseChildrenRecursively(ui_->topDownTreeView, selected_index);
+      CollapseChildrenRecursively(ui_->callTreeTreeView, selected_index);
     }
   } else if (action->text() == kActionExpandAll) {
-    ui_->topDownTreeView->expandAll();
+    ui_->callTreeTreeView->expandAll();
   } else if (action->text() == kActionCollapseAll) {
-    ui_->topDownTreeView->collapseAll();
+    ui_->callTreeTreeView->collapseAll();
   } else if (action->text() == kActionLoadSymbols) {
     app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
   } else if (action->text() == kActionSelect) {
@@ -285,7 +284,7 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     }
   } else if (action->text() == kActionCopySelection) {
     app_->SetClipboard(
-        BuildStringFromIndices(ui_->topDownTreeView->selectionModel()->selectedIndexes()));
+        BuildStringFromIndices(ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
   }
 }
 
@@ -315,23 +314,23 @@ static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
   }
 }
 
-void TopDownWidget::onSearchLineEditTextEdited(const QString& text) {
+void CallTreeWidget::onSearchLineEditTextEdited(const QString& text) {
   if (search_proxy_model_ == nullptr) {
     return;
   }
   search_proxy_model_->SetFilter(text.toStdString());
-  ui_->topDownTreeView->viewport()->update();
+  ui_->callTreeTreeView->viewport()->update();
   if (!text.isEmpty()) {
     ExpandCollapseBasedOnRole(
-        ui_->topDownTreeView,
-        TopDownWidget::HighlightCustomFilterSortFilterProxyModel::kMatchesCustomFilterRole);
+        ui_->callTreeTreeView,
+        CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::kMatchesCustomFilterRole);
   }
 }
 
-const QColor TopDownWidget::HighlightCustomFilterSortFilterProxyModel::kHighlightColor{Qt::green};
+const QColor CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::kHighlightColor{Qt::green};
 
-QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(const QModelIndex& index,
-                                                                        int role) const {
+QVariant CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::data(const QModelIndex& index,
+                                                                         int role) const {
   if (role == Qt::ForegroundRole) {
     if (ItemMatchesFilter(index)) {
       return kHighlightColor;
@@ -342,14 +341,14 @@ QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(const QM
   return QSortFilterProxyModel::data(index, role);
 }
 
-bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter(
+bool CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter(
     const QModelIndex& index) const {
   if (lowercase_filter_tokens_.empty()) {
     return false;
   }
   std::string haystack = absl::AsciiStrToLower(
       index.model()
-          ->index(index.row(), TopDownViewItemModel::kThreadOrFunction, index.parent())
+          ->index(index.row(), CallTreeViewItemModel::kThreadOrFunction, index.parent())
           .data()
           .toString()
           .toStdString());
@@ -361,17 +360,17 @@ bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::ItemMatchesFilter
   return true;
 }
 
-QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index, int role) const {
+QVariant CallTreeWidget::HookedIdentityProxyModel::data(const QModelIndex& index, int role) const {
   QVariant data = QIdentityProxyModel::data(index, role);
   if ((role != Qt::DisplayRole && role != Qt::ToolTipRole) ||
-      index.column() != TopDownViewItemModel::kThreadOrFunction) {
+      index.column() != CallTreeViewItemModel::kThreadOrFunction) {
     return data;
   }
 
   bool is_ulonglong = false;
   uint64_t function_address =
       index.model()
-          ->index(index.row(), TopDownViewItemModel::kFunctionAddress, index.parent())
+          ->index(index.row(), CallTreeViewItemModel::kFunctionAddress, index.parent())
           .data(Qt::EditRole)
           .toULongLong(&is_ulonglong);
   if (!is_ulonglong) {
@@ -393,9 +392,9 @@ QVariant TopDownWidget::HookedIdentityProxyModel::data(const QModelIndex& index,
   return kDisplayHookedPrefix + data.toString();
 }
 
-void TopDownWidget::ProgressBarItemDelegate::paint(QPainter* painter,
-                                                   const QStyleOptionViewItem& option,
-                                                   const QModelIndex& index) const {
+void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
+                                                    const QStyleOptionViewItem& option,
+                                                    const QModelIndex& index) const {
   bool is_float = false;
   float inclusive_percent = index.data(Qt::EditRole).toFloat(&is_float);
   if (!is_float) {

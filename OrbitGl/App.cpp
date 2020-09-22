@@ -517,27 +517,28 @@ void OrbitApp::SetSelectionReport(
 
 void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
   CHECK(top_down_view_callback_);
-  std::unique_ptr<TopDownView> top_down_view =
-      TopDownView::CreateFromSamplingProfiler(capture_data.sampling_profiler(), capture_data);
+  std::unique_ptr<CallTreeView> top_down_view = CallTreeView::CreateTopDownViewFromSamplingProfiler(
+      capture_data.sampling_profiler(), capture_data);
   top_down_view_callback_(std::move(top_down_view));
 }
 
 void OrbitApp::ClearTopDownView() {
   CHECK(top_down_view_callback_);
-  top_down_view_callback_(std::make_unique<TopDownView>());
+  top_down_view_callback_(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
                                        const CaptureData& capture_data) {
   CHECK(selection_top_down_view_callback_);
-  std::unique_ptr<TopDownView> selection_top_down_view =
-      TopDownView::CreateFromSamplingProfiler(selection_sampling_profiler, capture_data);
+  std::unique_ptr<CallTreeView> selection_top_down_view =
+      CallTreeView::CreateTopDownViewFromSamplingProfiler(selection_sampling_profiler,
+                                                          capture_data);
   selection_top_down_view_callback_(std::move(selection_top_down_view));
 }
 
 void OrbitApp::ClearSelectionTopDownView() {
   CHECK(selection_top_down_view_callback_);
-  selection_top_down_view_callback_(std::make_unique<TopDownView>());
+  selection_top_down_view_callback_(std::make_unique<CallTreeView>());
 }
 
 // std::string OrbitApp::GetCaptureFileName() {
