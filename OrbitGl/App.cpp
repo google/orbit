@@ -317,9 +317,9 @@ void OrbitApp::PostInit() {
 
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
-  /*if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     return;
-  }*/
+  }
 
   thread_pool_->Schedule([this] {
     std::unique_ptr<TracepointServiceClient> tracepoint_manager =
