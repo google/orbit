@@ -30,12 +30,17 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
           &CallTreeWidget::onSearchLineEditTextEdited);
 }
 
-void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
+void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
+                                     std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model) {
   CHECK(app_ != nullptr);
 
-  model_ = std::make_unique<CallTreeViewItemModel>(std::move(top_down_view));
+  model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
+
+  hide_values_proxy_model_ = std::move(hide_values_proxy_model);
+  hide_values_proxy_model_->setSourceModel(model_.get());
+
   search_proxy_model_ = std::make_unique<HighlightCustomFilterSortFilterProxyModel>(nullptr);
-  search_proxy_model_->setSourceModel(model_.get());
+  search_proxy_model_->setSourceModel(hide_values_proxy_model_.get());
   search_proxy_model_->setSortRole(Qt::EditRole);
 
   hooked_proxy_model_ = std::make_unique<HookedIdentityProxyModel>(app_, nullptr);
@@ -53,9 +58,49 @@ void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view)
   onSearchLineEditTextEdited(ui_->searchLineEdit->text());
 }
 
+namespace {
+
+class HideValuesForTopDownProxyModel : public QIdentityProxyModel {
+ public:
+  explicit HideValuesForTopDownProxyModel(QObject* parent) : QIdentityProxyModel(parent) {}
+
+  QVariant data(const QModelIndex& proxy_index, int role) const override {
+    // Don't show "Exclusive" and "Of parent" for the first level (the thread level).
+    if (!proxy_index.parent().isValid() && role == Qt::DisplayRole &&
+        (proxy_index.column() == CallTreeViewItemModel::kExclusive ||
+         proxy_index.column() == CallTreeViewItemModel::kOfParent)) {
+      return QVariant{};
+    }
+    return QIdentityProxyModel::data(proxy_index, role);
+  }
+};
+
+class HideValuesForBottomUpProxyModel : public QIdentityProxyModel {
+ public:
+  explicit HideValuesForBottomUpProxyModel(QObject* parent) : QIdentityProxyModel(parent) {}
+
+  QVariant data(const QModelIndex& proxy_index, int role) const override {
+    // Don't show "Of parent" for the first level (the innermost functions).
+    if (!proxy_index.parent().isValid() && role == Qt::DisplayRole &&
+        proxy_index.column() == CallTreeViewItemModel::kOfParent) {
+      return QVariant{};
+    }
+    return QIdentityProxyModel::data(proxy_index, role);
+  }
+};
+
+}  // namespace
+
+void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
+  SetCallTreeView(std::move(top_down_view),
+                  std::make_unique<HideValuesForTopDownProxyModel>(nullptr));
+}
+
 void CallTreeWidget::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
-  SetTopDownView(std::move(bottom_up_view));
-  // TODO: Hide the "Exclusive" column.
+  SetCallTreeView(std::move(bottom_up_view),
+                  std::make_unique<HideValuesForBottomUpProxyModel>(nullptr));
+  // Don't show the "Exclusive" column for the bottom-up tree, it provides no useful information.
+  ui_->callTreeTreeView->hideColumn(CallTreeViewItemModel::kExclusive);
 }
 
 static std::string BuildStringFromIndices(const QModelIndexList& indices) {

@@ -89,9 +89,13 @@ class CallTreeWidget : public QWidget {
                const QModelIndex& index) const override;
   };
 
+  void SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
+                       std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model);
+
   std::unique_ptr<Ui::CallTreeWidget> ui_;
   OrbitApp* app_ = nullptr;
   std::unique_ptr<CallTreeViewItemModel> model_;
+  std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
   std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;
   bool columns_already_resized_ = false;

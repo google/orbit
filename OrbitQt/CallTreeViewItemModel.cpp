@@ -31,6 +31,12 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
         return QString::fromStdString(absl::StrFormat(
             "%.2f%% (%llu)", thread_item->GetInclusivePercent(call_tree_view_->sample_count()),
             thread_item->sample_count()));
+      case kExclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%% (%llu)", thread_item->GetExclusivePercent(call_tree_view_->sample_count()),
+            thread_item->GetExclusiveSampleCount()));
+      case kOfParent:
+        return QString::fromStdString(absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
@@ -69,6 +75,10 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
         return thread_item->thread_id();
       case kInclusive:
         return thread_item->GetInclusivePercent(call_tree_view_->sample_count());
+      case kExclusive:
+        return thread_item->GetExclusivePercent(call_tree_view_->sample_count());
+      case kOfParent:
+        return thread_item->GetPercentOfParent();
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
