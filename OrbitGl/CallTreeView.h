@@ -2,39 +2,39 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TOP_DOWN_VIEW_H_
-#define ORBIT_GL_TOP_DOWN_VIEW_H_
+#ifndef ORBIT_GL_CALL_TREE_VIEW_H_
+#define ORBIT_GL_CALL_TREE_VIEW_H_
 
 #include "CaptureData.h"
 #include "Path.h"
 #include "absl/container/node_hash_map.h"
 
-class TopDownThread;
-class TopDownFunction;
+class CallTreeThread;
+class CallTreeFunction;
 
-class TopDownNode {
+class CallTreeNode {
  public:
-  explicit TopDownNode(TopDownNode* parent) : parent_{parent} {}
-  virtual ~TopDownNode() = default;
+  explicit CallTreeNode(CallTreeNode* parent) : parent_{parent} {}
+  virtual ~CallTreeNode() = default;
 
-  // parent(), child_count(), children() are needed by TopDownViewItemModel.
-  [[nodiscard]] const TopDownNode* parent() const { return parent_; }
+  // parent(), child_count(), children() are needed by CallTreeViewItemModel.
+  [[nodiscard]] const CallTreeNode* parent() const { return parent_; }
 
   [[nodiscard]] uint64_t child_count() const {
     return thread_children_.size() + function_children_.size();
   }
 
-  [[nodiscard]] std::vector<const TopDownNode*> children() const;
+  [[nodiscard]] std::vector<const CallTreeNode*> children() const;
 
-  [[nodiscard]] TopDownThread* GetThreadOrNull(int32_t thread_id);
+  [[nodiscard]] CallTreeThread* GetThreadOrNull(int32_t thread_id);
 
-  [[nodiscard]] TopDownThread* AddAndGetThread(int32_t thread_id, std::string thread_name);
+  [[nodiscard]] CallTreeThread* AddAndGetThread(int32_t thread_id, std::string thread_name);
 
-  [[nodiscard]] TopDownFunction* GetFunctionOrNull(uint64_t function_absolute_address);
+  [[nodiscard]] CallTreeFunction* GetFunctionOrNull(uint64_t function_absolute_address);
 
-  [[nodiscard]] TopDownFunction* AddAndGetFunction(uint64_t function_absolute_address,
-                                                   std::string function_name,
-                                                   std::string module_path);
+  [[nodiscard]] CallTreeFunction* AddAndGetFunction(uint64_t function_absolute_address,
+                                                    std::string function_name,
+                                                    std::string module_path);
 
   [[nodiscard]] uint64_t sample_count() const { return sample_count_; }
 
@@ -61,20 +61,20 @@ class TopDownNode {
 
  protected:
   // node_hash_map instead of flat_hash_map as pointer stability is needed for
-  // the TopDownNode::parent_ field.
-  absl::node_hash_map<int32_t, TopDownThread> thread_children_;
-  absl::node_hash_map<uint64_t, TopDownFunction> function_children_;
+  // the CallTreeNode::parent_ field.
+  absl::node_hash_map<int32_t, CallTreeThread> thread_children_;
+  absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
 
  private:
-  TopDownNode* parent_;
+  CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
 };
 
-class TopDownFunction : public TopDownNode {
+class CallTreeFunction : public CallTreeNode {
  public:
-  explicit TopDownFunction(uint64_t function_absolute_address, std::string function_name,
-                           std::string module_path, TopDownNode* parent)
-      : TopDownNode{parent},
+  explicit CallTreeFunction(uint64_t function_absolute_address, std::string function_name,
+                            std::string module_path, CallTreeNode* parent)
+      : CallTreeNode{parent},
         function_absolute_address_{function_absolute_address},
         function_name_{std::move(function_name)},
         module_path_{std::move(module_path)} {}
@@ -93,10 +93,10 @@ class TopDownFunction : public TopDownNode {
   std::string module_path_;
 };
 
-class TopDownThread : public TopDownNode {
+class CallTreeThread : public CallTreeNode {
  public:
-  explicit TopDownThread(int32_t thread_id, std::string thread_name, TopDownNode* parent)
-      : TopDownNode{parent}, thread_id_{thread_id}, thread_name_{std::move(thread_name)} {}
+  explicit CallTreeThread(int32_t thread_id, std::string thread_name, CallTreeNode* parent)
+      : CallTreeNode{parent}, thread_id_{thread_id}, thread_name_{std::move(thread_name)} {}
 
   [[nodiscard]] int32_t thread_id() const { return thread_id_; }
 
@@ -107,12 +107,12 @@ class TopDownThread : public TopDownNode {
   std::string thread_name_;
 };
 
-class TopDownView : public TopDownNode {
+class CallTreeView : public CallTreeNode {
  public:
-  [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromSamplingProfiler(
+  [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromSamplingProfiler(
       const SamplingProfiler& sampling_profiler, const CaptureData& capture_data);
 
-  TopDownView() : TopDownNode{nullptr} {}
+  CallTreeView() : CallTreeNode{nullptr} {}
 };
 
-#endif  // ORBIT_GL_TOP_DOWN_VIEW_H_
+#endif  // ORBIT_GL_CALL_TREE_VIEW_H_

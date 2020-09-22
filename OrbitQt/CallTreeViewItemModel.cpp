@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TopDownViewItemModel.h"
+#include "CallTreeViewItemModel.h"
 
-TopDownViewItemModel::TopDownViewItemModel(std::unique_ptr<TopDownView> top_down_view,
-                                           QObject* parent)
-    : QAbstractItemModel{parent}, top_down_view_{std::move(top_down_view)} {}
+CallTreeViewItemModel::CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_tree_view,
+                                             QObject* parent)
+    : QAbstractItemModel{parent}, call_tree_view_{std::move(call_tree_view)} {}
 
-QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
-  auto* item = static_cast<TopDownNode*>(index.internalPointer());
-  auto thread_item = dynamic_cast<TopDownThread*>(item);
-  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto thread_item = dynamic_cast<CallTreeThread*>(item);
+  auto function_item = dynamic_cast<CallTreeFunction*>(item);
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -29,7 +29,7 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
         }
       case kInclusive:
         return QString::fromStdString(absl::StrFormat(
-            "%.2f%% (%llu)", thread_item->GetInclusivePercent(top_down_view_->sample_count()),
+            "%.2f%% (%llu)", thread_item->GetInclusivePercent(call_tree_view_->sample_count()),
             thread_item->sample_count()));
     }
   } else if (function_item != nullptr) {
@@ -38,11 +38,11 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
         return QString::fromStdString(function_item->function_name());
       case kInclusive:
         return QString::fromStdString(absl::StrFormat(
-            "%.2f%% (%llu)", function_item->GetInclusivePercent(top_down_view_->sample_count()),
+            "%.2f%% (%llu)", function_item->GetInclusivePercent(call_tree_view_->sample_count()),
             function_item->sample_count()));
       case kExclusive:
         return QString::fromStdString(absl::StrFormat(
-            "%.2f%% (%llu)", function_item->GetExclusivePercent(top_down_view_->sample_count()),
+            "%.2f%% (%llu)", function_item->GetExclusivePercent(call_tree_view_->sample_count()),
             function_item->GetExclusiveSampleCount()));
       case kOfParent:
         return QString::fromStdString(
@@ -57,27 +57,27 @@ QVariant TopDownViewItemModel::GetDisplayRoleData(const QModelIndex& index) cons
   return QVariant();
 }
 
-QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
-  auto* item = static_cast<TopDownNode*>(index.internalPointer());
-  auto thread_item = dynamic_cast<TopDownThread*>(item);
-  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto thread_item = dynamic_cast<CallTreeThread*>(item);
+  auto function_item = dynamic_cast<CallTreeFunction*>(item);
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
         // Threads are sorted by tid, not by name.
         return thread_item->thread_id();
       case kInclusive:
-        return thread_item->GetInclusivePercent(top_down_view_->sample_count());
+        return thread_item->GetInclusivePercent(call_tree_view_->sample_count());
     }
   } else if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
         return QString::fromStdString(function_item->function_name());
       case kInclusive:
-        return function_item->GetInclusivePercent(top_down_view_->sample_count());
+        return function_item->GetInclusivePercent(call_tree_view_->sample_count());
       case kExclusive:
-        return function_item->GetExclusivePercent(top_down_view_->sample_count());
+        return function_item->GetExclusivePercent(call_tree_view_->sample_count());
       case kOfParent:
         return function_item->GetPercentOfParent();
       case kModule:
@@ -89,10 +89,10 @@ QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
   return QVariant();
 }
 
-QVariant TopDownViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
-  auto* item = static_cast<TopDownNode*>(index.internalPointer());
-  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -104,17 +104,17 @@ QVariant TopDownViewItemModel::GetToolTipRoleData(const QModelIndex& index) cons
   return QVariant();
 }
 
-QVariant TopDownViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
-  auto* item = static_cast<TopDownNode*>(index.internalPointer());
-  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
     return QString::fromStdString(function_item->module_path());
   }
   return QVariant();
 }
 
-QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
+QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return QVariant();
   }
@@ -133,15 +133,15 @@ QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
   return QVariant();
 }
 
-Qt::ItemFlags TopDownViewItemModel::flags(const QModelIndex& index) const {
+Qt::ItemFlags CallTreeViewItemModel::flags(const QModelIndex& index) const {
   if (!index.isValid()) {
     return Qt::NoItemFlags;
   }
   return QAbstractItemModel::flags(index);
 }
 
-QVariant TopDownViewItemModel::headerData(int section, Qt::Orientation orientation,
-                                          int role) const {
+QVariant CallTreeViewItemModel::headerData(int section, Qt::Orientation orientation,
+                                           int role) const {
   if (orientation != Qt::Horizontal) {
     return QVariant();
   }
@@ -182,57 +182,57 @@ QVariant TopDownViewItemModel::headerData(int section, Qt::Orientation orientati
   return QVariant();
 }
 
-QModelIndex TopDownViewItemModel::index(int row, int column, const QModelIndex& parent) const {
+QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex& parent) const {
   if (!hasIndex(row, column, parent)) {
     return QModelIndex();
   }
 
-  TopDownNode* parent_item;
+  CallTreeNode* parent_item;
   if (!parent.isValid()) {
-    parent_item = top_down_view_.get();
+    parent_item = call_tree_view_.get();
   } else {
-    parent_item = static_cast<TopDownNode*>(parent.internalPointer());
+    parent_item = static_cast<CallTreeNode*>(parent.internalPointer());
   }
 
-  const std::vector<const TopDownNode*>& siblings = parent_item->children();
+  const std::vector<const CallTreeNode*>& siblings = parent_item->children();
   if (row < 0 || static_cast<size_t>(row) >= siblings.size()) {
     return QModelIndex();
   }
-  const TopDownNode* item = siblings[row];
-  return createIndex(row, column, const_cast<TopDownNode*>(item));
+  const CallTreeNode* item = siblings[row];
+  return createIndex(row, column, const_cast<CallTreeNode*>(item));
 }
 
-QModelIndex TopDownViewItemModel::parent(const QModelIndex& index) const {
+QModelIndex CallTreeViewItemModel::parent(const QModelIndex& index) const {
   if (!index.isValid()) {
     return QModelIndex();
   }
 
-  auto* child_item = static_cast<TopDownNode*>(index.internalPointer());
-  const TopDownNode* item = child_item->parent();
-  if (item == top_down_view_.get()) {
+  auto* child_item = static_cast<CallTreeNode*>(index.internalPointer());
+  const CallTreeNode* item = child_item->parent();
+  if (item == call_tree_view_.get()) {
     return QModelIndex();
   }
 
-  const TopDownNode* parent_item = item->parent();
+  const CallTreeNode* parent_item = item->parent();
   if (parent_item == nullptr) {
-    return createIndex(0, 0, const_cast<TopDownNode*>(item));
+    return createIndex(0, 0, const_cast<CallTreeNode*>(item));
   }
 
-  const std::vector<const TopDownNode*>& siblings = parent_item->children();
+  const std::vector<const CallTreeNode*>& siblings = parent_item->children();
   int row = static_cast<int>(
       std::distance(siblings.begin(), std::find(siblings.begin(), siblings.end(), item)));
-  return createIndex(row, 0, const_cast<TopDownNode*>(item));
+  return createIndex(row, 0, const_cast<CallTreeNode*>(item));
 }
 
-int TopDownViewItemModel::rowCount(const QModelIndex& parent) const {
+int CallTreeViewItemModel::rowCount(const QModelIndex& parent) const {
   if (parent.column() > 0) {
     return 0;
   }
   if (!parent.isValid()) {
-    return top_down_view_->child_count();
+    return call_tree_view_->child_count();
   }
-  auto* item = static_cast<TopDownNode*>(parent.internalPointer());
+  auto* item = static_cast<CallTreeNode*>(parent.internalPointer());
   return item->child_count();
 }
 
-int TopDownViewItemModel::columnCount(const QModelIndex& /*parent*/) const { return kColumnCount; }
+int CallTreeViewItemModel::columnCount(const QModelIndex& /*parent*/) const { return kColumnCount; }

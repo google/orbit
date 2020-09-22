@@ -15,6 +15,7 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
+#include "CallTreeView.h"
 #include "Callstack.h"
 #include "CallstackData.h"
 #include "CaptureWindow.h"
@@ -47,7 +48,6 @@
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
-#include "TopDownView.h"
 #include "TracepointCustom.h"
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
@@ -199,11 +199,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectionReportCallback(SamplingReportCallback callback) {
     selection_report_callback_ = std::move(callback);
   }
-  using TopDownViewCallback = std::function<void(std::unique_ptr<TopDownView>)>;
-  void SetTopDownViewCallback(TopDownViewCallback callback) {
+  using CallTreeViewCallback = std::function<void(std::unique_ptr<CallTreeView>)>;
+  void SetTopDownViewCallback(CallTreeViewCallback callback) {
     top_down_view_callback_ = std::move(callback);
   }
-  void SetSelectionTopDownViewCallback(TopDownViewCallback callback) {
+  void SetSelectionTopDownViewCallback(CallTreeViewCallback callback) {
     selection_top_down_view_callback_ = std::move(callback);
   }
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
@@ -326,8 +326,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   RefreshCallback refresh_callback_;
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;
-  TopDownViewCallback top_down_view_callback_;
-  TopDownViewCallback selection_top_down_view_callback_;
+  CallTreeViewCallback top_down_view_callback_;
+  CallTreeViewCallback selection_top_down_view_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;

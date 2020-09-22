@@ -21,13 +21,13 @@
 #include <utility>
 
 #include "App.h"
+#include "CallTreeViewItemModel.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
-#include "TopDownViewItemModel.h"
 #include "TutorialOverlay.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -157,13 +157,13 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& optio
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
 
-  GOrbitApp->SetTopDownViewCallback([this](std::unique_ptr<TopDownView> top_down_view) {
+  GOrbitApp->SetTopDownViewCallback([this](std::unique_ptr<CallTreeView> top_down_view) {
     this->OnNewTopDownView(std::move(top_down_view));
   });
 
   ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), false);
   GOrbitApp->SetSelectionTopDownViewCallback(
-      [this](std::unique_ptr<TopDownView> selection_top_down_view) {
+      [this](std::unique_ptr<CallTreeView> selection_top_down_view) {
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
       });
 
@@ -367,12 +367,12 @@ void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 }
 
-void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view) {
+void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
   ui->topDownWidget->SetTopDownView(std::move(top_down_view));
 }
 
 void OrbitMainWindow::OnNewSelectionTopDownView(
-    std::unique_ptr<TopDownView> selection_top_down_view) {
+    std::unique_ptr<CallTreeView> selection_top_down_view) {
   if (selection_top_down_view->child_count() > 0) {
     ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), true);
     // This condition and the corresponding one in OnNewSelectionReport need to be complementary,

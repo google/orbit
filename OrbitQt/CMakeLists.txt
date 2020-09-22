@@ -10,9 +10,11 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE deploymentconfigurations.h
+  PRIVATE CallTreeViewItemModel.h
+          CallTreeWidget.h
           CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
+          deploymentconfigurations.h
           ElidedLabel.h
           Error.h
           eventloop.h
@@ -33,13 +35,14 @@ target_sources(
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
-          TopDownViewItemModel.h
-          TutorialOverlay.h
-          TopDownWidget.h)
+          TutorialOverlay.h)
 
 target_sources(
   OrbitQt
-  PRIVATE Error.cpp
+  PRIVATE CallTreeViewItemModel.cpp
+          CallTreeWidget.cpp
+          CallTreeWidget.ui
+          Error.cpp
           ElidedLabel.cpp
           MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
@@ -63,9 +66,6 @@ target_sources(
           opengldetect.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
-          TopDownViewItemModel.cpp
-          TopDownWidget.cpp
-          TopDownWidget.ui
           TutorialOverlay.cpp
           TutorialOverlay.ui
           ../icons/orbiticons.qrc
@@ -138,7 +138,7 @@ target_sources(OrbitQtTests
                 TutorialOverlay.cpp
                 TutorialOverlay.ui
                 ../images/orbitimages.qrc)
-				
+
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
@@ -148,7 +148,7 @@ target_link_libraries(
           Qt5::Widgets
           Qt5::Core
           GTest::Main)
-		  
+
 set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTORCC ON)

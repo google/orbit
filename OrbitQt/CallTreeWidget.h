@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_TOP_DOWN_WIDGET_H_
-#define ORBIT_QT_TOP_DOWN_WIDGET_H_
+#ifndef ORBIT_QT_CALL_TREE_WIDGET_H_
+#define ORBIT_QT_CALL_TREE_WIDGET_H_
 
 #include <QIdentityProxyModel>
 #include <QSortFilterProxyModel>
@@ -12,22 +12,22 @@
 #include <QWidget>
 #include <memory>
 
-#include "TopDownView.h"
-#include "TopDownViewItemModel.h"
+#include "CallTreeView.h"
+#include "CallTreeViewItemModel.h"
 #include "absl/strings/str_split.h"
-#include "ui_TopDownWidget.h"
+#include "ui_CallTreeWidget.h"
 
 class OrbitApp;
 
-class TopDownWidget : public QWidget {
+class CallTreeWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit TopDownWidget(QWidget* parent = nullptr);
+  explicit CallTreeWidget(QWidget* parent = nullptr);
 
   void Initialize(OrbitApp* app) { app_ = app; }
 
-  void SetTopDownView(std::unique_ptr<TopDownView> top_down_view);
+  void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
 
  private slots:
   void onCopyKeySequencePressed();
@@ -88,12 +88,12 @@ class TopDownWidget : public QWidget {
                const QModelIndex& index) const override;
   };
 
-  std::unique_ptr<Ui::TopDownWidget> ui_;
+  std::unique_ptr<Ui::CallTreeWidget> ui_;
   OrbitApp* app_ = nullptr;
-  std::unique_ptr<TopDownViewItemModel> model_;
+  std::unique_ptr<CallTreeViewItemModel> model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
   std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;
   bool columns_already_resized_ = false;
 };
 
-#endif  // ORBIT_QT_TOP_DOWN_WIDGET_H_
+#endif  // ORBIT_QT_CALL_TREE_WIDGET_H_

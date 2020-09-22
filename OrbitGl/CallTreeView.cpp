@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TopDownView.h"
+#include "CallTreeView.h"
 
-std::vector<const TopDownNode*> TopDownNode::children() const {
-  std::vector<const TopDownNode*> ret;
+std::vector<const CallTreeNode*> CallTreeNode::children() const {
+  std::vector<const CallTreeNode*> ret;
   for (const auto& tid_and_thread : thread_children_) {
     ret.push_back(&tid_and_thread.second);
   }
@@ -15,39 +15,39 @@ std::vector<const TopDownNode*> TopDownNode::children() const {
   return ret;
 }
 
-TopDownThread* TopDownNode::GetThreadOrNull(int32_t thread_id) {
-  auto top_down_thread_it = thread_children_.find(thread_id);
-  if (top_down_thread_it == thread_children_.end()) {
+CallTreeThread* CallTreeNode::GetThreadOrNull(int32_t thread_id) {
+  auto thread_it = thread_children_.find(thread_id);
+  if (thread_it == thread_children_.end()) {
     return nullptr;
   }
-  return &top_down_thread_it->second;
+  return &thread_it->second;
 }
 
-TopDownThread* TopDownNode::AddAndGetThread(int32_t thread_id, std::string thread_name) {
+CallTreeThread* CallTreeNode::AddAndGetThread(int32_t thread_id, std::string thread_name) {
   thread_children_.insert_or_assign(thread_id,
-                                    TopDownThread{thread_id, std::move(thread_name), this});
+                                    CallTreeThread{thread_id, std::move(thread_name), this});
   return &thread_children_.at(thread_id);
 }
 
-TopDownFunction* TopDownNode::GetFunctionOrNull(uint64_t function_absolute_address) {
-  auto top_down_function_it = function_children_.find(function_absolute_address);
-  if (top_down_function_it == function_children_.end()) {
+CallTreeFunction* CallTreeNode::GetFunctionOrNull(uint64_t function_absolute_address) {
+  auto function_it = function_children_.find(function_absolute_address);
+  if (function_it == function_children_.end()) {
     return nullptr;
   }
-  return &top_down_function_it->second;
+  return &function_it->second;
 }
 
-TopDownFunction* TopDownNode::AddAndGetFunction(uint64_t function_absolute_address,
-                                                std::string function_name,
-                                                std::string module_path) {
+CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_address,
+                                                  std::string function_name,
+                                                  std::string module_path) {
   function_children_.insert_or_assign(
       function_absolute_address,
-      TopDownFunction{function_absolute_address, std::move(function_name), std::move(module_path),
-                      this});
+      CallTreeFunction{function_absolute_address, std::move(function_name), std::move(module_path),
+                       this});
   return &function_children_.at(function_absolute_address);
 }
 
-uint64_t TopDownNode::GetExclusiveSampleCount() const {
+uint64_t CallTreeNode::GetExclusiveSampleCount() const {
   uint64_t children_sample_count = 0;
   for (const auto& address_and_function : function_children_) {
     children_sample_count += address_and_function.second.sample_count();
@@ -58,10 +58,10 @@ uint64_t TopDownNode::GetExclusiveSampleCount() const {
   return sample_count() - children_sample_count;
 }
 
-[[nodiscard]] static TopDownFunction* GetOrCreateFunctionNode(
-    TopDownNode* current_thread_or_function, uint64_t frame, const std::string& function_name,
+[[nodiscard]] static CallTreeFunction* GetOrCreateTopDownFunctionNode(
+    CallTreeNode* current_thread_or_function, uint64_t frame, const std::string& function_name,
     const std::string& module_path) {
-  TopDownFunction* function_node = current_thread_or_function->GetFunctionOrNull(frame);
+  CallTreeFunction* function_node = current_thread_or_function->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
     std::string formatted_function_name;
     if (function_name != CaptureData::kUnknownFunctionOrModuleName) {
@@ -75,27 +75,27 @@ uint64_t TopDownNode::GetExclusiveSampleCount() const {
   return function_node;
 }
 
-static void AddCallstackToTopDownThread(TopDownThread* thread_node,
+static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
                                         const CallStack& resolved_callstack,
                                         uint64_t callstack_sample_count,
                                         const CaptureData& capture_data) {
-  TopDownNode* current_thread_or_function = thread_node;
+  CallTreeNode* current_thread_or_function = thread_node;
   for (auto frame_it = resolved_callstack.GetFrames().crbegin();
        frame_it != resolved_callstack.GetFrames().crend(); ++frame_it) {
     uint64_t frame = *frame_it;
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
-    TopDownFunction* function_node =
-        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name, module_path);
+    CallTreeFunction* function_node = GetOrCreateTopDownFunctionNode(
+        current_thread_or_function, frame, function_name, module_path);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
 }
 
-[[nodiscard]] static TopDownThread* GetOrCreateThreadNode(
-    TopDownView* top_down_view, int32_t tid, const std::string& process_name,
+[[nodiscard]] static CallTreeThread* GetOrCreateTopDownThreadNode(
+    CallTreeView* top_down_view, int32_t tid, const std::string& process_name,
     const absl::flat_hash_map<int32_t, std::string>& thread_names) {
-  TopDownThread* thread_node = top_down_view->GetThreadOrNull(tid);
+  CallTreeThread* thread_node = top_down_view->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
     std::string thread_name;
     if (tid == SamplingProfiler::kAllThreadsFakeTid) {
@@ -108,16 +108,16 @@ static void AddCallstackToTopDownThread(TopDownThread* thread_node,
   return thread_node;
 }
 
-std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
+std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfiler(
     const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
-  auto top_down_view = std::make_unique<TopDownView>();
+  auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
 
   for (const ThreadSampleData& thread_sample_data : sampling_profiler.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data.thread_id;
-    TopDownThread* thread_node =
-        GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
+    CallTreeThread* thread_node =
+        GetOrCreateTopDownThreadNode(top_down_view.get(), tid, process_name, thread_names);
 
     for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
       const CallStack& resolved_callstack =
