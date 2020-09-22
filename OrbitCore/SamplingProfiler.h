@@ -79,9 +79,9 @@ class SamplingProfiler {
 
   [[nodiscard]] const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
-  [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddress(
-      uint64_t address, ThreadID thread_id, int* callstacks_count) const;
-  [[nodiscard]] std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
+  [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddress(uint64_t address,
+                                                                         ThreadID thread_id) const;
+  [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
       uint64_t address, ThreadID thread_id) const;
 
   [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {

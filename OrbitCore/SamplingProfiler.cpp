@@ -15,20 +15,16 @@ using orbit_client_protos::LinuxAddressInfo;
 namespace {
 
 std::multimap<int, CallstackID> SortCallstacks(const ThreadSampleData& data,
-                                               const std::set<CallstackID>& callstacks,
-                                               int* callstacks_total_count) {
+                                               const std::set<CallstackID>& callstacks) {
   std::multimap<int, CallstackID> sorted_callstacks;
-  int callstacks_count = 0;
   for (CallstackID id : callstacks) {
     auto it = data.callstack_count.find(id);
     if (it != data.callstack_count.end()) {
       int count = it->second;
       sorted_callstacks.insert(std::make_pair(count, id));
-      callstacks_count += count;
     }
   }
 
-  *callstacks_total_count = callstacks_count;
   return sorted_callstacks;
 }
 
@@ -54,17 +50,15 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
   return (*res).second;
 }
 
-// TODO(kuebler): GetCallstacksFromAddress should not write into callstacks_count.
 std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
-    uint64_t address, ThreadID thread_id, int* callstacks_count) const {
+    uint64_t address, ThreadID thread_id) const {
   const auto& callstacks_it = function_address_to_callstack_.find(address);
   const auto& sample_data_it = thread_id_to_sample_data_.find(thread_id);
   if (callstacks_it == function_address_to_callstack_.end() ||
       sample_data_it == thread_id_to_sample_data_.end()) {
-    *callstacks_count = 0;
     return std::multimap<int, CallstackID>();
   }
-  return SortCallstacks(sample_data_it->second, callstacks_it->second, callstacks_count);
+  return SortCallstacks(sample_data_it->second, callstacks_it->second);
 }
 
 const CallStack& SamplingProfiler::GetResolvedCallstack(CallstackID raw_callstack_id) const {
@@ -75,11 +69,10 @@ const CallStack& SamplingProfiler::GetResolvedCallstack(CallstackID raw_callstac
   return *resolved_callstack_it->second;
 }
 
-std::shared_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFromAddress(
+std::unique_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFromAddress(
     uint64_t address, ThreadID thread_id) const {
-  std::shared_ptr<SortedCallstackReport> report = std::make_shared<SortedCallstackReport>();
-  std::multimap<int, CallstackID> multi_map =
-      GetCallstacksFromAddress(address, thread_id, &report->callstacks_total_count);
+  std::unique_ptr<SortedCallstackReport> report = std::make_unique<SortedCallstackReport>();
+  std::multimap<int, CallstackID> multi_map = GetCallstacksFromAddress(address, thread_id);
   size_t unique_callstacks_count = multi_map.size();
   report->callstacks_count.resize(unique_callstacks_count);
   size_t index = unique_callstacks_count;
@@ -88,6 +81,7 @@ std::shared_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstacksFrom
     CallstackCount* callstack = &report->callstacks_count[--index];
     callstack->count = pair.first;
     callstack->callstack_id = pair.second;
+    report->callstacks_total_count += callstack->count;
   }
 
   return report;

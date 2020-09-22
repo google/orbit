@@ -49,7 +49,7 @@ class SamplingReport {
 
   uint64_t selected_address_;
   ThreadID selected_thread_id_;
-  std::shared_ptr<SortedCallstackReport> selected_sorted_callstack_report_;
+  std::unique_ptr<SortedCallstackReport> selected_sorted_callstack_report_;
   size_t selected_callstack_index_;
   std::function<void()> ui_refresh_func_;
   bool has_summary_;
