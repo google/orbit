@@ -165,6 +165,7 @@ if(WITH_GUI)
   add_subdirectory(OrbitSsh)
   add_subdirectory(OrbitSshQt)
   add_subdirectory(OrbitQt)
+  add_subdirectory(WebUI)
 endif()
 
 if(WIN32)
