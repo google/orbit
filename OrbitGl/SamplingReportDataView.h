@@ -7,6 +7,7 @@
 #include "CallStackDataView.h"
 #include "DataView.h"
 #include "SamplingProfiler.h"
+#include "absl/container/flat_hash_set.h"
 
 class SamplingReportDataView : public DataView {
  public:
@@ -36,9 +37,9 @@ class SamplingReportDataView : public DataView {
   void DoFilter() override;
   const SampledFunction& GetSampledFunction(unsigned int row) const;
   SampledFunction& GetSampledFunction(unsigned int row);
-  std::vector<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
+  absl::flat_hash_set<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
       const std::vector<int>& indices);
-  [[nodiscard]] std::vector<ModuleData*> GetModulesFromIndices(
+  [[nodiscard]] absl::flat_hash_set<ModuleData*> GetModulesFromIndices(
       const std::vector<int>& indices) const;
 
  private:

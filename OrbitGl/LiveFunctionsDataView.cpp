@@ -147,14 +147,17 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
   bool enable_iterator = false;
-  bool enable_disassembly = !selected_indices.empty();
+  bool enable_disassembly = false;
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunction(index);
+    const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function);
+    const bool module_exists = capture_data.FindModuleByAddress(absolute_address) != nullptr;
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(function);
-    enable_select |= !GOrbitApp->IsFunctionSelected(function);
-    enable_unselect |= GOrbitApp->IsFunctionSelected(function);
+    enable_select |= !GOrbitApp->IsFunctionSelected(function) && module_exists;
+    enable_unselect |= GOrbitApp->IsFunctionSelected(function) && module_exists;
     enable_iterator |= stats.count() > 0;
+    enable_disassembly |= module_exists;
   }
 
   std::vector<std::string> menu;
@@ -193,10 +196,14 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       GOrbitApp->DeselectFunction(*function);
     }
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = GOrbitApp->GetCaptureData().process_id();
+    const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+    int32_t pid = capture_data.process_id();
     for (int i : item_indices) {
       const FunctionInfo& function = *GetFunction(i);
-      GOrbitApp->Disassemble(pid, function);
+      const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function);
+      if (capture_data.FindModuleByAddress(absolute_address) != nullptr) {
+        GOrbitApp->Disassemble(pid, function);
+      }
     }
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
