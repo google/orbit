@@ -44,7 +44,7 @@ void SamplingReport::FillReport() {
 
 void SamplingReport::UpdateDisplayedCallstack() {
   selected_sorted_callstack_report_ =
-      profiler_.GetSortedCallstacksFromAddress(selected_address_, selected_thread_id_);
+      profiler_.GetSortedCallstackReportFromAddress(selected_address_, selected_thread_id_);
   if (selected_sorted_callstack_report_->callstacks_count.empty()) {
     ClearReport();
   } else {
