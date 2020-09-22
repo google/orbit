@@ -191,7 +191,7 @@ QModelIndex TopDownViewItemModel::index(int row, int column, const QModelIndex& 
   if (!parent.isValid()) {
     parent_item = top_down_view_.get();
   } else {
-    parent_item = static_cast<TopDownInternalNode*>(parent.internalPointer());
+    parent_item = static_cast<TopDownNode*>(parent.internalPointer());
   }
 
   const std::vector<const TopDownNode*>& siblings = parent_item->children();
