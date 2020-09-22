@@ -80,6 +80,7 @@ target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCoreTests PRIVATE
     BlockChainTest.cpp
+    CallstackDataTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
     StringManagerTest.cpp
