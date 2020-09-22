@@ -8,6 +8,7 @@
 #include <string>
 
 #include "TimerTrack.h"
+#include "absl/container/flat_hash_map.h"
 
 class AsyncTrack : public TimerTrack {
  public:
