@@ -840,7 +840,7 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(const std::string& name) {
 }
 
 AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
-  ScopeLock lock(m_Mutex);
+  ScopeLock lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<AsyncTrack>(this, name);
