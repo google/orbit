@@ -271,6 +271,16 @@ QPushButton:disabled {
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="bottomUpTab">
+        <attribute name="title">
+         <string>Bottom-Up</string>
+        </attribute>
+        <layout class="QGridLayout" name="bottomUpGridLayout">
+         <item row="0" column="0">
+          <widget class="CallTreeWidget" name="bottomUpWidget" native="true"/>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="selectionSamplingTab">
         <attribute name="title">
          <string>Sampling (selection)</string>
@@ -288,6 +298,16 @@ QPushButton:disabled {
         <layout class="QGridLayout" name="selectionTopDownGridLayout">
          <item row="0" column="0">
           <widget class="CallTreeWidget" name="selectionTopDownWidget" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="selectionBottomUpTab">
+        <attribute name="title">
+         <string>Bottom-Up (selection)</string>
+        </attribute>
+        <layout class="QGridLayout" name="selectionBottomUpGridLayout">
+         <item row="0" column="0">
+          <widget class="CallTreeWidget" name="selectionBottomUpWidget" native="true"/>
          </item>
         </layout>
        </widget>

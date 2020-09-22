@@ -134,3 +134,9 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
   }
   return top_down_view;
 }
+
+std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfiler(
+    const SamplingProfiler& /*sampling_profiler*/, const CaptureData& /*capture_data*/) {
+  // TODO: Implement.
+  return std::unique_ptr<CallTreeView>();
+}

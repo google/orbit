@@ -28,6 +28,7 @@ class CallTreeWidget : public QWidget {
   void Initialize(OrbitApp* app) { app_ = app; }
 
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
+  void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
 
  private slots:
   void onCopyKeySequencePressed();
