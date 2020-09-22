@@ -58,10 +58,11 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
   return sample_count() - children_sample_count;
 }
 
-[[nodiscard]] static CallTreeFunction* GetOrCreateTopDownFunctionNode(
-    CallTreeNode* current_thread_or_function, uint64_t frame, const std::string& function_name,
-    const std::string& module_path) {
-  CallTreeFunction* function_node = current_thread_or_function->GetFunctionOrNull(frame);
+[[nodiscard]] static CallTreeFunction* GetOrCreateFunctionNode(CallTreeNode* current_node,
+                                                               uint64_t frame,
+                                                               const std::string& function_name,
+                                                               const std::string& module_path) {
+  CallTreeFunction* function_node = current_node->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
     std::string formatted_function_name;
     if (function_name != CaptureData::kUnknownFunctionOrModuleName) {
@@ -69,8 +70,8 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
     } else {
       formatted_function_name = absl::StrFormat("[unknown@%#llx]", frame);
     }
-    function_node = current_thread_or_function->AddAndGetFunction(
-        frame, std::move(formatted_function_name), module_path);
+    function_node =
+        current_node->AddAndGetFunction(frame, std::move(formatted_function_name), module_path);
   }
   return function_node;
 }
@@ -85,17 +86,17 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
     uint64_t frame = *frame_it;
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
-    CallTreeFunction* function_node = GetOrCreateTopDownFunctionNode(
-        current_thread_or_function, frame, function_name, module_path);
+    CallTreeFunction* function_node =
+        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name, module_path);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
 }
 
-[[nodiscard]] static CallTreeThread* GetOrCreateTopDownThreadNode(
-    CallTreeView* top_down_view, int32_t tid, const std::string& process_name,
+[[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
+    CallTreeNode* current_node, int32_t tid, const std::string& process_name,
     const absl::flat_hash_map<int32_t, std::string>& thread_names) {
-  CallTreeThread* thread_node = top_down_view->GetThreadOrNull(tid);
+  CallTreeThread* thread_node = current_node->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
     std::string thread_name;
     if (tid == SamplingProfiler::kAllThreadsFakeTid) {
@@ -103,7 +104,7 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
     } else if (auto thread_name_it = thread_names.find(tid); thread_name_it != thread_names.end()) {
       thread_name = thread_name_it->second;
     }
-    thread_node = top_down_view->AddAndGetThread(tid, std::move(thread_name));
+    thread_node = current_node->AddAndGetThread(tid, std::move(thread_name));
   }
   return thread_node;
 }
@@ -117,7 +118,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
   for (const ThreadSampleData& thread_sample_data : sampling_profiler.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data.thread_id;
     CallTreeThread* thread_node =
-        GetOrCreateTopDownThreadNode(top_down_view.get(), tid, process_name, thread_names);
+        GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
 
     for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
       const CallStack& resolved_callstack =
@@ -135,8 +136,46 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
   return top_down_view;
 }
 
+[[nodiscard]] static CallTreeNode* AddReversedCallstackToBottomUpViewAndReturnLastFunction(
+    CallTreeView* bottom_up_view, const CallStack& resolved_callstack,
+    uint64_t callstack_sample_count, const CaptureData& capture_data) {
+  CallTreeNode* current_node = bottom_up_view;
+  for (uint64_t frame : resolved_callstack.GetFrames()) {
+    const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
+    const std::string& module_path = capture_data.GetModulePathByAddress(frame);
+    CallTreeFunction* function_node =
+        GetOrCreateFunctionNode(current_node, frame, function_name, module_path);
+    function_node->IncreaseSampleCount(callstack_sample_count);
+    current_node = function_node;
+  }
+  return current_node;
+}
+
 std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfiler(
-    const SamplingProfiler& /*sampling_profiler*/, const CaptureData& /*capture_data*/) {
-  // TODO: Implement.
-  return std::unique_ptr<CallTreeView>();
+    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
+  auto bottom_up_view = std::make_unique<CallTreeView>();
+  const std::string& process_name = capture_data.process_name();
+  const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
+
+  for (const ThreadSampleData& thread_sample_data : sampling_profiler.GetThreadSampleData()) {
+    const int32_t tid = thread_sample_data.thread_id;
+    if (tid == SamplingProfiler::kAllThreadsFakeTid) {
+      continue;
+    }
+
+    for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
+      const CallStack& resolved_callstack =
+          sampling_profiler.GetResolvedCallstack(callstack_id_and_count.first);
+      const uint64_t sample_count = callstack_id_and_count.second;
+      bottom_up_view->IncreaseSampleCount(sample_count);
+
+      CallTreeNode* last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
+          bottom_up_view.get(), resolved_callstack, sample_count, capture_data);
+      CallTreeThread* thread_node =
+          GetOrCreateThreadNode(last_node, tid, process_name, thread_names);
+      thread_node->IncreaseSampleCount(sample_count);
+    }
+  }
+
+  return bottom_up_view;
 }
