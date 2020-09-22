@@ -20,8 +20,6 @@
 // every method of this class should be called
 // on the main thread.
 
-using orbit_grpc_protos::TracepointInfo;
-
 class DataManager final {
  public:
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
@@ -34,7 +32,6 @@ class DataManager final {
   void SelectFunction(uint64_t function_address);
   void DeselectFunction(uint64_t function_address);
   void ClearSelectedFunctions();
-  void set_selected_functions(absl::flat_hash_set<uint64_t> selected_functions);
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
   void set_selected_thread_id(int32_t thread_id);
   void set_selected_text_box(const TextBox* text_box);
@@ -51,10 +48,10 @@ class DataManager final {
   [[nodiscard]] const TextBox* selected_text_box() const;
   [[nodiscard]] const std::shared_ptr<Process>& selected_process() const;
 
-  void SelectTracepoint(const TracepointInfo& info);
-  void DeselectTracepoint(const TracepointInfo& info);
+  void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
+  void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
 
-  [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
+  [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
 
   [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
 
