@@ -73,11 +73,6 @@ class CaptureData {
   [[nodiscard]] const orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
       uint64_t absolute_address) const;
 
-  void set_address_infos(
-      absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos) {
-    address_infos_ = std::move(address_infos);
-  }
-
   void InsertAddressInfo(orbit_client_protos::LinuxAddressInfo address_info);
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
@@ -97,19 +92,16 @@ class CaptureData {
     return it != thread_names_.end() ? it->second : kEmptyString;
   }
 
-  void set_thread_names(absl::flat_hash_map<int32_t, std::string> thread_names) {
-    thread_names_ = std::move(thread_names);
-  }
-
   void AddOrAssignThreadName(int32_t thread_id, std::string thread_name) {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
-  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>& functions_stats() const {
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
+  functions_stats() const {
     return functions_stats_;
   }
 
-  const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
+  [[nodiscard]] const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
       const orbit_client_protos::FunctionInfo& function) const;
 
   void UpdateFunctionStats(const orbit_client_protos::FunctionInfo& function,
