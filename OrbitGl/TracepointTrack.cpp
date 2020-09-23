@@ -9,6 +9,14 @@
 TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
     : EventTrack(time_graph) {
   thread_id_ = thread_id;
+
+  constexpr float kSteps = 22;
+  const float angle = (kPiFloat * 2.f) / kSteps;
+  for (int i = 1; i <= kSteps; i++) {
+    float new_x = sinf(angle * i);
+    float new_y = cosf(angle * i);
+    circle_points.emplace_back(std::make_pair(new_x, new_y));
+  }
 }
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
@@ -77,23 +85,29 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
     for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
          ++it) {
       uint64_t time = it->first;
+      float radius = track_height / 4;
+
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height / 4, z, kTracepoint);
-      batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), track_height / 4, z,
-                               kTracepoint);
+      batcher->AddVerticalLine(pos, -radius, z, kTracepoint);
+      batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z, kTracepoint);
+
+      std::deque<std::pair<float, float>> circle_points_scaled_by_radius;
+      std::transform(circle_points.begin(), circle_points.end(),
+                     std::back_inserter(circle_points_scaled_by_radius),
+                     [&radius](const std::pair<float, float>& p) -> std::pair<float, float> {
+                       return std::make_pair(p.first * radius, p.second * radius);
+                     });
+
       pos[1] -= track_height / 2;
 
       float x_pos = pos[0];
       float y_pos = pos[1];
-      float radius = track_height / 4;
-      const float steps = 22;
-      const float angle = (kPiFloat * 2.f) / steps;
       float prev_x = x_pos;
       float prev_y = y_pos - radius;
-      for (int i = 1; i <= steps; i++) {
-        float new_x = pos[0] + radius * sinf(angle * i);
-        float new_y = pos[1] - radius * cosf(angle * i);
-        Vec3 x_1 = Vec3(pos[0], pos[1], z);
+      Vec3 x_1 = Vec3(pos[0], pos[1], z);
+      for (unsigned int i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
+        float new_x = pos[0] + circle_points_scaled_by_radius[i].first;
+        float new_y = pos[1] - circle_points_scaled_by_radius[i].second;
         Vec3 x_2 = Vec3(prev_x, prev_y, z);
         Vec3 x_3 = Vec3(new_x, new_y, z);
         Triangle triangle(x_1, x_2, x_3);
