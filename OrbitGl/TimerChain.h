@@ -41,7 +41,7 @@ class TimerBlock {
   // Tests if [min, max] intersects with [min_timestamp, max_timestamp], where
   // {min, max}_timestamp are the minimum and maximum timestamp of the timers
   // that have so far been added to this block.
-  bool Intersects(uint64_t min, uint64_t max);
+  bool Intersects(uint64_t min, uint64_t max) const;
 
   uint64_t size() const { return size_; }
 

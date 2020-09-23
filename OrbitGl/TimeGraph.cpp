@@ -11,23 +11,18 @@
 #include <algorithm>
 #include <utility>
 
-#include "../Orbit.h"
 #include "App.h"
-#include "Batcher.h"
-#include "EventTrack.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "Params.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
-#include "TextRenderer.h"
 #include "ThreadTrack.h"
 #include "Utils.h"
 #include "absl/flags/flag.h"
@@ -59,39 +54,20 @@ TimeGraph::~TimeGraph() {
   manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
 }
 
-Color TimeGraph::GetColor(uint32_t id) const {
-  constexpr unsigned char kAlpha = 255;
-  static std::vector<Color> colors{
-      Color(231, 68, 53, kAlpha),    // red
-      Color(43, 145, 175, kAlpha),   // blue
-      Color(185, 117, 181, kAlpha),  // purple
-      Color(87, 166, 74, kAlpha),    // green
-      Color(215, 171, 105, kAlpha),  // beige
-      Color(248, 101, 22, kAlpha)    // orange
-  };
-  return colors[id % colors.size()];
-}
-
-Color TimeGraph::GetColor(uint64_t id) const { return GetColor(static_cast<uint32_t>(id)); }
-
-Color TimeGraph::GetColor(const std::string& str) const { return GetColor(StringHash(str)); }
-
-Color TimeGraph::GetThreadColor(int32_t tid) const { return GetColor(static_cast<uint32_t>(tid)); }
-
 void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
   string_manager_ = std::move(str_manager);
 }
 
-void TimeGraph::SetCanvas(GlCanvas* a_Canvas) {
-  canvas_ = a_Canvas;
-  text_renderer_->SetCanvas(a_Canvas);
-  text_renderer_static_.SetCanvas(a_Canvas);
-  batcher_.SetPickingManager(&a_Canvas->GetPickingManager());
+void TimeGraph::SetCanvas(GlCanvas* canvas) {
+  canvas_ = canvas;
+  text_renderer_->SetCanvas(canvas);
+  text_renderer_static_.SetCanvas(canvas);
+  batcher_.SetPickingManager(&canvas->GetPickingManager());
 }
 
-void TimeGraph::SetFontSize(int a_FontSize) {
-  text_renderer_->SetFontSize(a_FontSize);
-  text_renderer_static_.SetFontSize(a_FontSize);
+void TimeGraph::SetFontSize(int font_size) {
+  text_renderer_->SetFontSize(font_size);
+  text_renderer_static_.SetFontSize(font_size);
 }
 
 void TimeGraph::Clear() {
@@ -166,8 +142,8 @@ void TimeGraph::Zoom(uint64_t min, uint64_t max) {
   SetMinMax(mid - extent, mid + extent);
 }
 
-void TimeGraph::Zoom(const TextBox* a_TextBox) {
-  const TimerInfo& timer_info = a_TextBox->GetTimerInfo();
+void TimeGraph::Zoom(const TextBox* text_box) {
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
   Zoom(timer_info.start(), timer_info.end());
 }
 
@@ -181,33 +157,30 @@ double TimeGraph::GetCaptureTimeSpanUs() {
 
 double TimeGraph::GetCurrentTimeSpanUs() { return max_time_us_ - min_time_us_; }
 
-void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
-  zoom_value_ = a_ZoomValue;
-  mouse_ratio_ = a_MouseRatio;
+void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
+  static double increment_ratio = 0.1;
+  double scale = (zoom_value > 0) ? (1 + increment_ratio) : (1 / (1 + increment_ratio));
 
-  static double incrementRatio = 0.1;
-  double scale = (a_ZoomValue > 0) ? (1 + incrementRatio) : (1 / (1 + incrementRatio));
+  double current_time_window_us = max_time_us_ - min_time_us_;
+  ref_time_us_ = min_time_us_ + mouse_ratio * current_time_window_us;
 
-  double CurrentTimeWindowUs = max_time_us_ - min_time_us_;
-  ref_time_us_ = min_time_us_ + a_MouseRatio * CurrentTimeWindowUs;
+  double time_left = std::max(ref_time_us_ - min_time_us_, 0.0);
+  double time_right = std::max(max_time_us_ - ref_time_us_, 0.0);
 
-  double timeLeft = std::max(ref_time_us_ - min_time_us_, 0.0);
-  double timeRight = std::max(max_time_us_ - ref_time_us_, 0.0);
+  double min_time_us = ref_time_us_ - scale * time_left;
+  double max_time_us = ref_time_us_ + scale * time_right;
 
-  double minTimeUs = ref_time_us_ - scale * timeLeft;
-  double maxTimeUs = ref_time_us_ + scale * timeRight;
-
-  if (maxTimeUs - minTimeUs < 0.001 /*1 ns*/) {
+  if (max_time_us - min_time_us < 0.001 /*1 ns*/) {
     return;
   }
 
-  SetMinMax(minTimeUs, maxTimeUs);
+  SetMinMax(min_time_us, max_time_us);
 }
 
 void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
-  constexpr float increment_ratio = 0.1f;
+  constexpr float kIncrementRatio = 0.1f;
 
-  const float ratio = (zoom_value > 0) ? (1 + increment_ratio) : (1 / (1 + increment_ratio));
+  const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
   const float world_height = canvas_->GetWorldHeight();
   const float y_mouse_position =
@@ -231,21 +204,21 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
   layout_.SetScale(old_scale / ratio);
 }
 
-void TimeGraph::SetMinMax(double a_MinTimeUs, double a_MaxTimeUs) {
-  double desiredTimeWindow = a_MaxTimeUs - a_MinTimeUs;
-  min_time_us_ = std::max(a_MinTimeUs, 0.0);
-  max_time_us_ = std::min(min_time_us_ + desiredTimeWindow, GetCaptureTimeSpanUs());
+void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
+  double desired_time_window = max_time_us - min_time_us;
+  min_time_us_ = std::max(min_time_us, 0.0);
+  max_time_us_ = std::min(min_time_us_ + desired_time_window, GetCaptureTimeSpanUs());
 
   NeedsUpdate();
 }
 
-void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width, double a_InitialTime) {
+void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_time) {
   time_window_us_ = max_time_us_ - min_time_us_;
-  double initialLocalTime = static_cast<double>(a_InitialX) / a_Width * time_window_us_;
-  double dt = static_cast<double>(a_CurrentX - a_InitialX) / a_Width * time_window_us_;
-  double currentTime = a_InitialTime - dt;
+  double initial_local_time = static_cast<double>(initial_x) / width * time_window_us_;
+  double dt = static_cast<double>(current_x - initial_x) / width * time_window_us_;
+  double current_time = initial_time - dt;
   min_time_us_ =
-      clamp(currentTime - initialLocalTime, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
+      clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
   max_time_us_ = min_time_us_ + time_window_us_;
 
   NeedsUpdate();
@@ -260,9 +233,9 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, 
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
   double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
-  double CurrentTimeWindowUs = max_time_us_ - min_time_us_;
+  double current_time_window_us = max_time_us_ - min_time_us_;
 
-  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)) {
+  if (vis_type == VisibilityType::kFullyVisible && current_time_window_us < (end - start)) {
     Zoom(min, max);
     return;
   }
@@ -274,7 +247,7 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, 
     distance = 1 - distance;
   }
 
-  SetMinMax(mid - CurrentTimeWindowUs * (1 - distance), mid + CurrentTimeWindowUs * distance);
+  SetMinMax(mid - current_time_window_us * (1 - distance), mid + current_time_window_us * distance);
 
   NeedsUpdate();
 }
@@ -303,22 +276,17 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   NeedsUpdate();
 }
 
-void TimeGraph::OnDrag(float a_Ratio) {
-  double timeSpan = GetCaptureTimeSpanUs();
-  double timeWindow = max_time_us_ - min_time_us_;
-  min_time_us_ = a_Ratio * (timeSpan - timeWindow);
-  max_time_us_ = min_time_us_ + timeWindow;
+void TimeGraph::OnDrag(float ratio) {
+  double time_span = GetCaptureTimeSpanUs();
+  double time_window = max_time_us_ - min_time_us_;
+  min_time_us_ = ratio * (time_span - time_window);
+  max_time_us_ = min_time_us_ + time_window;
 }
 
-double TimeGraph::GetTime(double a_Ratio) const {
-  double CurrentWidth = max_time_us_ - min_time_us_;
-  double Delta = a_Ratio * CurrentWidth;
-  return min_time_us_ + Delta;
-}
-
-double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
-  double CurrentWidth = max_time_us_ - min_time_us_;
-  return a_Ratio * CurrentWidth;
+double TimeGraph::GetTime(double ratio) const {
+  double current_width = max_time_us_ - min_time_us_;
+  double delta = ratio * current_width;
+  return min_time_us_ + delta;
 }
 
 void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* function) {
@@ -411,12 +379,12 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
 }
 
 uint32_t TimeGraph::GetNumTimers() const {
-  uint32_t numTimers = 0;
+  uint32_t num_timers = 0;
   ScopeLock lock(mutex_);
   for (const auto& track : tracks_) {
-    numTimers += track->GetNumTimers();
+    num_timers += track->GetNumTimers();
   }
-  return numTimers;
+  return num_timers;
 }
 
 uint32_t TimeGraph::GetNumCores() const {
@@ -440,27 +408,27 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains
   return chains;
 }
 
-void TimeGraph::UpdateMaxTimeStamp(uint64_t a_Time) {
-  if (a_Time > capture_max_timestamp_) {
-    capture_max_timestamp_ = a_Time;
+void TimeGraph::UpdateMaxTimeStamp(uint64_t time) {
+  if (time > capture_max_timestamp_) {
+    capture_max_timestamp_ = time;
   }
 };
 
 float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
 
-float TimeGraph::GetWorldFromTick(uint64_t a_Time) const {
+float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
-    double start = TicksToMicroseconds(capture_min_timestamp_, a_Time) - min_time_us_;
-    double normalizedStart = start / time_window_us_;
-    float pos = float(world_start_x_ + normalizedStart * world_width_);
+    double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
+    double normalized_start = start / time_window_us_;
+    auto pos = float(world_start_x_ + normalized_start * world_width_);
     return pos;
   }
 
   return 0;
 }
 
-float TimeGraph::GetWorldFromUs(double a_Micros) const {
-  return GetWorldFromTick(GetTickFromUs(a_Micros));
+float TimeGraph::GetWorldFromUs(double micros) const {
+  return GetWorldFromTick(GetTickFromUs(micros));
 }
 
 double TimeGraph::GetUsFromTick(uint64_t time) const {
@@ -470,18 +438,18 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
   double ratio =
       world_width_ != 0 ? static_cast<double>((world_x - world_start_x_) / world_width_) : 0;
-  uint64_t time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
+  auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
 
 uint64_t TimeGraph::GetTickFromUs(double micros) const {
-  uint64_t nanos = static_cast<uint64_t>(1000 * micros);
+  auto nanos = static_cast<uint64_t>(1000 * micros);
   return capture_min_timestamp_ + nanos;
 }
 
-void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
-  a_Min = GetWorldFromTick(capture_min_timestamp_);
-  a_Max = GetWorldFromTick(capture_max_timestamp_);
+void TimeGraph::GetWorldMinMax(float* min, float* max) const {
+  *min = GetWorldFromTick(capture_min_timestamp_);
+  *max = GetWorldFromTick(capture_max_timestamp_);
 }
 
 void TimeGraph::Select(const TextBox* text_box) {
@@ -491,20 +459,19 @@ void TimeGraph::Select(const TextBox* text_box) {
 }
 
 const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, uint64_t current_time,
-                                                   std::optional<int32_t> thread_ID) const {
-  TextBox* previous_box = nullptr;
+                                                   std::optional<int32_t> thread_id) const {
+  const TextBox* previous_box = nullptr;
   uint64_t previous_box_time = std::numeric_limits<uint64_t>::lowest();
   std::vector<std::shared_ptr<TimerChain>> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
+    for (const auto& block : *chain) {
       if (!block.Intersects(previous_box_time, current_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
+        const TextBox& box = block[i];
         auto box_time = box.GetTimerInfo().end();
         if ((box.GetTimerInfo().function_address() == function_address) &&
-            (!thread_ID || thread_ID.value() == box.GetTimerInfo().thread_id()) &&
+            (!thread_id || thread_id.value() == box.GetTimerInfo().thread_id()) &&
             (box_time < current_time) && (previous_box_time < box_time)) {
           previous_box = &box;
           previous_box_time = box_time;
@@ -516,20 +483,19 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, ui
 }
 
 const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
-                                               std::optional<int32_t> thread_ID) const {
-  TextBox* next_box = nullptr;
+                                               std::optional<int32_t> thread_id) const {
+  const TextBox* next_box = nullptr;
   uint64_t next_box_time = std::numeric_limits<uint64_t>::max();
   std::vector<std::shared_ptr<TimerChain>> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
+    for (const auto& block : *chain) {
       if (!block.Intersects(current_time, next_box_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
+        const TextBox& box = block[i];
         auto box_time = box.GetTimerInfo().end();
         if ((box.GetTimerInfo().function_address() == function_address) &&
-            (!thread_ID || thread_ID.value() == box.GetTimerInfo().thread_id()) &&
+            (!thread_id || thread_id.value() == box.GetTimerInfo().thread_id()) &&
             (box_time > current_time) && (next_box_time > box_time)) {
           next_box = &box;
           next_box_time = box_time;
@@ -625,8 +591,8 @@ namespace {
 
 [[nodiscard]] std::string GetLabelBetweenIterators(const FunctionInfo& function_a,
                                                    const FunctionInfo& function_b) {
-  std::string function_from = FunctionUtils::GetDisplayName(function_a);
-  std::string function_to = FunctionUtils::GetDisplayName(function_b);
+  const std::string& function_from = FunctionUtils::GetDisplayName(function_a);
+  const std::string& function_to = FunctionUtils::GetDisplayName(function_b);
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
@@ -670,7 +636,7 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 }  // namespace
 
 void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
-  if (picking_mode != PickingMode::kNone || iterator_text_boxes_.size() == 0) {
+  if (picking_mode != PickingMode::kNone || iterator_text_boxes_.empty()) {
     return;
   }
 
@@ -703,7 +669,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
     double start_us = GetUsFromTick(timer_info.start());
     double normalized_start = start_us * inv_time_window;
-    float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
+    auto world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
 
     Vec2 pos(world_timer_x, world_start_y);
     x_coords.push_back(pos[0]);
@@ -852,8 +818,8 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
-void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
-  thread_filter_ = a_Filter;
+void TimeGraph::SetThreadFilter(const std::string& filter) {
+  thread_filter_ = filter;
   NeedsUpdate();
 }
 
@@ -873,43 +839,45 @@ void TimeGraph::SortTracks() {
 
   // Reorder threads once every second when capturing
   if (!GOrbitApp->IsCapturing() || last_thread_reorder_.QueryMillis() > 1000.0) {
-    std::vector<int32_t> sortedThreadIds;
+    std::vector<int32_t> sorted_thread_ids;
 
     // Show threads with instrumented functions first
-    std::vector<std::pair<int32_t, uint32_t>> sortedThreads =
+    std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
         OrbitUtils::ReverseValueSort(thread_count_map_);
-    for (auto& pair : sortedThreads) {
+    for (auto& pair : sorted_threads) {
       // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
       // separately.
-      if (pair.first != SamplingProfiler::kAllThreadsFakeTid) sortedThreadIds.push_back(pair.first);
+      if (pair.first != SamplingProfiler::kAllThreadsFakeTid) {
+        sorted_thread_ids.push_back(pair.first);
+      }
     }
 
     // Then show threads sorted by number of events
-    std::vector<std::pair<int32_t, uint32_t>> sortedByEvents =
+    std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
         OrbitUtils::ReverseValueSort(event_count_);
-    for (auto& pair : sortedByEvents) {
+    for (auto& pair : sorted_by_events) {
       // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
       // separately.
       if (pair.first == SamplingProfiler::kAllThreadsFakeTid) continue;
       if (thread_count_map_.find(pair.first) == thread_count_map_.end()) {
-        sortedThreadIds.push_back(pair.first);
+        sorted_thread_ids.push_back(pair.first);
       }
     }
 
     // Filter thread ids if needed
     if (!thread_filter_.empty()) {
       std::vector<std::string> filters = absl::StrSplit(thread_filter_, ' ');
-      std::vector<int32_t> filteredThreadIds;
-      for (int32_t tid : sortedThreadIds) {
+      std::vector<int32_t> filtered_thread_ids;
+      for (int32_t tid : sorted_thread_ids) {
         std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(tid);
 
         for (auto& filter : filters) {
           if (track && absl::StrContains(track->GetName(), filter)) {
-            filteredThreadIds.push_back(tid);
+            filtered_thread_ids.push_back(tid);
           }
         }
       }
-      sortedThreadIds = filteredThreadIds;
+      sorted_thread_ids = filtered_thread_ids;
     }
 
     ScopeLock lock(mutex_);
@@ -941,7 +909,7 @@ void TimeGraph::SortTracks() {
     }
 
     // Thread Tracks.
-    for (auto thread_id : sortedThreadIds) {
+    for (auto thread_id : sorted_thread_ids) {
       std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(thread_id);
       if (!track->IsEmpty()) {
         sorted_tracks_.emplace_back(track);
@@ -1016,10 +984,8 @@ const TextBox* TimeGraph::FindPrevious(const TextBox* from) {
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
     return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetLeft(from);
-  } else {
-    return GetOrCreateThreadTrack(timer_info.thread_id())->GetLeft(from);
   }
-  return nullptr;
+  return GetOrCreateThreadTrack(timer_info.thread_id())->GetLeft(from);
 }
 
 const TextBox* TimeGraph::FindNext(const TextBox* from) {
@@ -1027,10 +993,8 @@ const TextBox* TimeGraph::FindNext(const TextBox* from) {
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
     return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetRight(from);
-  } else {
-    return GetOrCreateThreadTrack(timer_info.thread_id())->GetRight(from);
   }
-  return nullptr;
+  return GetOrCreateThreadTrack(timer_info.thread_id())->GetRight(from);
 }
 
 const TextBox* TimeGraph::FindTop(const TextBox* from) {
@@ -1038,10 +1002,8 @@ const TextBox* TimeGraph::FindTop(const TextBox* from) {
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
     return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetUp(from);
-  } else {
-    return GetOrCreateThreadTrack(timer_info.thread_id())->GetUp(from);
   }
-  return nullptr;
+  return GetOrCreateThreadTrack(timer_info.thread_id())->GetUp(from);
 }
 
 const TextBox* TimeGraph::FindDown(const TextBox* from) {
@@ -1049,10 +1011,8 @@ const TextBox* TimeGraph::FindDown(const TextBox* from) {
   const TimerInfo& timer_info = from->GetTimerInfo();
   if (timer_info.type() == TimerInfo::kGpuActivity) {
     return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetDown(from);
-  } else {
-    return GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
   }
-  return nullptr;
+  return GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
 }
 
 void TimeGraph::DrawText(GlCanvas* canvas) {
@@ -1072,13 +1032,9 @@ bool TimeGraph::IsPartlyVisible(uint64_t min, uint64_t max) const {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
   double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
-  double startUs = min_time_us_;
+  double start_us = min_time_us_;
 
-  if (startUs > end || max_time_us_ < start) {
-    return false;
-  }
-
-  return true;
+  return !(start_us > end || max_time_us_ < start);
 }
 
 bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const {

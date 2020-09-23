@@ -28,7 +28,7 @@ void TimerBlock::Add(const TextBox& item) {
   max_timestamp_ = std::max(item.GetTimerInfo().end(), max_timestamp_);
 }
 
-bool TimerBlock::Intersects(uint64_t min, uint64_t max) {
+bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
   return (min <= max_timestamp_ && max >= min_timestamp_);
 }
 
