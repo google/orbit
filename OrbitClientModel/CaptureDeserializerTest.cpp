@@ -375,6 +375,104 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   EXPECT_EQ(callstack_event_2->time(), actual_callstack_event_2.time());
 }
 
+TEST(CaptureDeserializer, LoadCaptureInfoTracepoints) {
+  MockCaptureListener listener;
+  CaptureInfo capture_info;
+
+  // Add two tracepoints with same hash:
+  orbit_client_protos::TracepointInfo* tracepoint_info_1 = capture_info.add_tracepoint_infos();
+  tracepoint_info_1->set_tracepoint_info_key(1);
+
+  TracepointEventInfo* tracepoint_event_1_1 = capture_info.add_tracepoint_event_infos();
+  tracepoint_event_1_1->set_tracepoint_info_key(tracepoint_info_1->tracepoint_info_key());
+  tracepoint_event_1_1->set_pid(1);
+  tracepoint_event_1_1->set_tid(2);
+  tracepoint_event_1_1->set_time(3);
+  tracepoint_event_1_1->set_cpu(4);
+
+  TracepointEventInfo* tracepoint_event_1_2 = capture_info.add_tracepoint_event_infos();
+  tracepoint_event_1_2->set_tracepoint_info_key(tracepoint_info_1->tracepoint_info_key());
+  tracepoint_event_1_2->set_pid(5);
+  tracepoint_event_1_2->set_tid(6);
+  tracepoint_event_1_2->set_time(7);
+  tracepoint_event_1_2->set_cpu(8);
+
+  // Add one additional tracepoint event with a different hash:
+  orbit_client_protos::TracepointInfo* tracepoint_info_2 = capture_info.add_tracepoint_infos();
+  tracepoint_info_2->set_tracepoint_info_key(2);
+
+  TracepointEventInfo* tracepoint_event_2 = capture_info.add_tracepoint_event_infos();
+  tracepoint_event_2->set_tracepoint_info_key(tracepoint_info_2->tracepoint_info_key());
+  tracepoint_event_2->set_pid(9);
+  tracepoint_event_2->set_tid(10);
+  tracepoint_event_2->set_time(11);
+  tracepoint_event_2->set_cpu(12);
+
+  std::atomic<bool> cancellation_requested = false;
+  uint8_t empty_data = 0;
+  google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
+
+  bool hash_added_1 = false;
+  bool hash_present_1_1 = false;
+  bool hash_present_1_2 = false;
+
+  bool hash_added_2 = false;
+  bool hash_present_2 = false;
+
+  TracepointInfo actual_tracepoint_1;
+  TracepointInfo actual_tracepoint_2;
+  EXPECT_CALL(listener, OnUniqueTracepointInfo(_, _))
+      .Times(2)
+      .WillOnce(DoAll(SaveArg<1>(&actual_tracepoint_1), Assign(&hash_added_1, true)))
+      .WillOnce(DoAll(SaveArg<1>(&actual_tracepoint_2), Assign(&hash_added_2, true)));
+
+  TracepointEventInfo actual_tracepoint_event_1_1;
+  TracepointEventInfo actual_tracepoint_event_1_2;
+  TracepointEventInfo actual_tracepoint_event_2;
+
+  auto check_hash_present_1 = [&hash_present_1_1, &hash_added_1]() mutable {
+    hash_present_1_1 = hash_added_1;
+  };
+  auto check_hash_present_1_2 = [&hash_present_1_2, &hash_added_1]() mutable {
+    hash_present_1_2 = hash_added_1;
+  };
+  auto check_hash_present_2 = [&hash_present_2, &hash_added_2]() mutable {
+    hash_present_2 = hash_added_2;
+  };
+
+  EXPECT_CALL(listener, OnTracepointEvent(_))
+      .Times(3)
+      .WillOnce(
+          DoAll(SaveArg<0>(&actual_tracepoint_event_1_1), InvokeWithoutArgs(check_hash_present_1)))
+      .WillOnce(DoAll(SaveArg<0>(&actual_tracepoint_event_1_2),
+                      InvokeWithoutArgs(check_hash_present_1_2)))
+      .WillOnce(
+          DoAll(SaveArg<0>(&actual_tracepoint_event_2), InvokeWithoutArgs(check_hash_present_2)));
+
+  EXPECT_CALL(listener, OnCaptureStarted).Times(1);
+  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
+
+  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
+                                                  &cancellation_requested);
+  EXPECT_TRUE(hash_added_1);
+  EXPECT_TRUE(hash_added_2);
+  EXPECT_TRUE(hash_present_1_1);
+  EXPECT_TRUE(hash_present_1_2);
+  EXPECT_TRUE(hash_present_2);
+
+  auto check_tracepoint_equality = [](const auto& tracepoint_event_info_lhs,
+                                      const auto& tracepoint_event_info_rhs) {
+    return tracepoint_event_info_lhs->pid() == tracepoint_event_info_rhs.pid() &&
+           tracepoint_event_info_lhs->tid() == tracepoint_event_info_rhs.tid() &&
+           tracepoint_event_info_lhs->time() == tracepoint_event_info_rhs.time() &&
+           tracepoint_event_info_lhs->cpu() == tracepoint_event_info_rhs.cpu();
+  };
+
+  EXPECT_TRUE(check_tracepoint_equality(tracepoint_event_1_1, actual_tracepoint_event_1_1));
+  EXPECT_TRUE(check_tracepoint_equality(tracepoint_event_1_2, actual_tracepoint_event_1_2));
+  EXPECT_TRUE(check_tracepoint_equality(tracepoint_event_2, actual_tracepoint_event_2));
+}
+
 TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
