@@ -190,7 +190,6 @@ class TimeGraph {
   float world_start_x_ = 0;
   float world_width_ = 0;
   float min_y_ = 0;
-  int margin_ = 0;
   float right_margin_ = 0;
 
   TimeGraphLayout layout_;
