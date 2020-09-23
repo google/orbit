@@ -189,8 +189,7 @@ bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
 
 const TracepointInfoSet& DataManager::selected_tracepoints() const { return selected_tracepoints_; }
 
-[[nodiscard]] const ModuleData* DataManager::FindModuleByAddress(int32_t process_id,
-                                                                 uint64_t absolute_address) {
+const ModuleData* DataManager::FindModuleByAddress(int32_t process_id, uint64_t absolute_address) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   const ProcessData* process = GetProcessByPid(process_id);

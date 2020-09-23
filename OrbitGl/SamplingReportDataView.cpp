@@ -4,14 +4,13 @@
 
 #include "SamplingReportDataView.h"
 
-#include <memory>
 #include <set>
 
 #include "App.h"
 #include "CallStackDataView.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "Path.h"
-#include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
@@ -138,14 +137,15 @@ void SamplingReportDataView::DoSort() {
   std::sort(indices_.begin(), indices_.end(), combined_sorter);
 }
 
-std::vector<const FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
+absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
     const std::vector<int>& indices) {
-  std::set<const FunctionInfo*> functions_set;
+  absl::flat_hash_set<const FunctionInfo*> functions_set;
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
     if (sampled_function.function == nullptr) {
-      const FunctionInfo* func = GOrbitApp->GetCaptureData().FindFunctionByAddress(
-          sampled_function.absolute_address, false);
+      const FunctionInfo* func =
+          capture_data.FindFunctionByAddress(sampled_function.absolute_address, false);
       sampled_function.function = func;
     }
 
@@ -155,19 +155,20 @@ std::vector<const FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices
     }
   }
 
-  return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
+  return functions_set;
 }
 
-std::vector<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
+absl::flat_hash_set<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) const {
-  std::vector<ModuleData*> modules;
+  absl::flat_hash_set<ModuleData*> modules;
   for (int index : indices) {
     const SampledFunction& sampled_function = GetSampledFunction(index);
     CHECK(sampled_function.absolute_address != 0);
     ModuleData* module =
         GOrbitApp->GetCaptureData().FindModuleByAddress(sampled_function.absolute_address);
-    CHECK(module != nullptr);
-    modules.push_back(module);
+    if (module != nullptr) {
+      modules.insert(module);
+    }
   }
 
   return modules;
@@ -183,7 +184,8 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
 
-  std::vector<const FunctionInfo*> selected_functions = GetFunctionsFromIndices(selected_indices);
+  absl::flat_hash_set<const FunctionInfo*> selected_functions =
+      GetFunctionsFromIndices(selected_indices);
 
   bool enable_disassembly = !selected_functions.empty();
 
@@ -193,7 +195,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   }
 
   bool enable_load = false;
-  for (const auto& module : GetModulesFromIndices(selected_indices)) {
+  for (const ModuleData* module : GetModulesFromIndices(selected_indices)) {
     if (!module->is_loaded()) {
       enable_load = true;
     }
