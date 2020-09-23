@@ -98,7 +98,7 @@ if [ -n "$1" ]; then
   # That's a temporary solution. The docker containers should have the
   # correct version of conan already preinstalled. This step will be removed
   # when the docker containers are restructured and versioned.
-  pip3 install conan==1.27.1
+  pip3 install conan==1.29.2
 
   echo "Installing conan configuration (profiles, settings, etc.)..."
   ${REPO_ROOT}/third_party/conan/configs/install.sh
@@ -119,25 +119,19 @@ if [ -n "$1" ]; then
   # Building Orbit
   mkdir -p "${REPO_ROOT}/build/"
 
-  # Patching the lockfile is a temporary work-around. As soon as we move to
-  # conan-1.28's base-lockfiles, this will be gone.
-  cp -v "${REPO_ROOT}/third_party/conan/lockfiles/${OS}/${CONAN_PROFILE}/conan.lock" \
-        "${REPO_ROOT}/build/conan.lock"
-  sed -i -e "s|crashdump_server=|crashdump_server=$CRASHDUMP_SERVER|" \
-            "${REPO_ROOT}/build/conan.lock"
-
   if [[ $CONAN_PROFILE == ggp_* ]]; then
     readonly PACKAGING_OPTION="-o debian_packaging=True"
-    sed -i -e "s/debian_packaging=False/debian_packaging=True/" \
-      "${REPO_ROOT}/build/conan.lock"
   else
     readonly PACKAGING_OPTION=""
   fi
 
-  conan install -u -pr ${CONAN_PROFILE} -if "${REPO_ROOT}/build/" \
+  conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
+    --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -u -pr ${CONAN_PROFILE} \
+    -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
+    --lockfile-out="${REPO_ROOT}/build/conan.lock" || exit $?
+
+  conan install -if "${REPO_ROOT}/build/" \
           --build outdated \
-          -o crashdump_server="$CRASHDUMP_SERVER" \
-          $PACKAGING_OPTION \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
           "${REPO_ROOT}"
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
