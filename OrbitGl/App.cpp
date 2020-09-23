@@ -413,7 +413,9 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
-  const bool is_64_bit = data_manager_->GetProcessByPid(pid)->is_64_bit();
+  const ProcessData* process = data_manager_->GetProcessByPid(pid);
+  CHECK(process != nullptr);
+  const bool is_64_bit = process->is_64_bit();
   thread_pool_->Schedule([this, is_64_bit, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
         pid, FunctionUtils::GetAbsoluteAddress(function), function.size());
