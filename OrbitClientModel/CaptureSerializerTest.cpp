@@ -23,7 +23,9 @@ using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::TracepointInfo;
 using ::testing::ElementsAreArray;
 
 TEST(CaptureSerializer, GetCaptureFileName) {
@@ -79,6 +81,11 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_functions[FunctionUtils::GetAbsoluteAddress(selected_function)] = selected_function;
 
   TracepointInfoSet selected_tracepoints;
+  TracepointInfo selected_tracepoint_info;
+  selected_tracepoint_info.set_category("sched");
+  selected_tracepoint_info.set_name("sched_switch");
+  selected_tracepoints.insert(selected_tracepoint_info);
+
   CaptureData capture_data{std::move(process), std::move(empty_module_map), selected_functions,
                            selected_tracepoints};
 
@@ -99,6 +106,18 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   callstack_event.set_thread_id(123);
   callstack_event.set_callstack_hash(callstack.GetHash());
   capture_data.AddCallstackEvent(callstack_event);
+
+  capture_data.AddUniqueTracepointEventInfo(0, selected_tracepoint_info);
+
+  TracepointEventInfo tracepoint_event;
+  tracepoint_event.set_tracepoint_info_key(1);
+  tracepoint_event.set_pid(0);
+  tracepoint_event.set_tid(1);
+  tracepoint_event.set_cpu(2);
+  tracepoint_event.set_time(3);
+  capture_data.AddTracepointEventAndMapToThreads(
+      tracepoint_event.time(), tracepoint_event.tracepoint_info_key(), tracepoint_event.pid(),
+      tracepoint_event.tid(), tracepoint_event.cpu(), true);
 
   capture_data.UpdateFunctionStats(selected_function, 100);
   capture_data.UpdateFunctionStats(selected_function, 110);
@@ -131,11 +150,28 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
                                               actual_callstack.data().end()};
   EXPECT_THAT(actual_callstack_data, ElementsAreArray(callstack.GetFrames()));
 
-  ASSERT_EQ(1, capture_info.callstack_events_size());
+  EXPECT_EQ(1, capture_info.callstack_events_size());
   const CallstackEvent& actual_callstack_event = capture_info.callstack_events(0);
   EXPECT_EQ(callstack_event.thread_id(), actual_callstack_event.thread_id());
   EXPECT_EQ(callstack_event.time(), actual_callstack_event.time());
   EXPECT_EQ(callstack_event.callstack_hash(), actual_callstack_event.callstack_hash());
+
+  EXPECT_EQ(1, capture_info.tracepoint_infos_size());
+  const orbit_client_protos::TracepointInfo& actual_tracepoint_info =
+      capture_info.tracepoint_infos(0);
+  ASSERT_EQ(actual_tracepoint_info.category(), selected_tracepoint_info.category());
+  ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
+  ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 0);
+
+  /*Note: capture_info.tracepoint_event_infos_size() is 2 and not 1 because for every call adding
+   * TracepointEventInfo, a tracepoint event is created and added twice (once for the corresponding
+   * thread and another time for all threads).*/
+  EXPECT_EQ(2, capture_info.tracepoint_event_infos_size());
+  const orbit_client_protos::TracepointEventInfo& actual_tracepoint_event =
+      capture_info.tracepoint_event_infos(0);
+  EXPECT_EQ(tracepoint_event.tid(), actual_tracepoint_event.tid());
+  EXPECT_EQ(tracepoint_event.time(), actual_tracepoint_event.time());
+  EXPECT_EQ(tracepoint_event.tracepoint_info_key(), actual_tracepoint_event.tracepoint_info_key());
 
   ASSERT_EQ(1, capture_info.function_stats_size());
   ASSERT_TRUE(
