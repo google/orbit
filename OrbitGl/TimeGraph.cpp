@@ -912,6 +912,7 @@ void TimeGraph::SortTracks() {
       sortedThreadIds = filteredThreadIds;
     }
 
+    ScopeLock lock(mutex_);
     sorted_tracks_.clear();
 
     // Scheduler Track.
