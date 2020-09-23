@@ -183,6 +183,7 @@ void CallstackData::FilterCallstackEventsBasedOnMajorityStart() {
 
   for (auto& tid_and_events : callstack_events_by_tid_) {
     std::map<uint64_t, CallstackEvent>& callstack_events = tid_and_events.second;
+    const uint64_t count_for_this_thread = callstack_events.size();
 
     // Count the number of occurrences of each outer frame for this thread.
     absl::flat_hash_map<uint64_t, uint64_t> count_by_outer_frame;
@@ -211,7 +212,16 @@ void CallstackData::FilterCallstackEventsBasedOnMajorityStart() {
       }
     }
 
-    // Discard the CallstackEvents whose outer frame doesn't match the majority outer frame.
+    static constexpr double kFilterSupermajorityThreshold = 0.6;
+    if (majority_outer_frame_count < count_for_this_thread * kFilterSupermajorityThreshold) {
+      ERROR(
+          "Skipping filtering CallstackEvents for tid %d: majority outer frame has only %lu "
+          "occurrences out of %lu",
+          tid_and_events.first, majority_outer_frame_count, count_for_this_thread);
+      continue;
+    }
+
+    // Discard the CallstackEvents whose outer frame doesn't match the (super)majority outer frame.
     for (auto time_and_event_it = callstack_events.begin();
          time_and_event_it != callstack_events.end();) {
       const CallstackEvent& event = time_and_event_it->second;

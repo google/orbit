@@ -19,7 +19,8 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
   CallstackData callstack_data;
 
   const int32_t tid = 42;
-  const int32_t other_tid = 43;
+  const int32_t tid_with_broken_only = 43;
+  const int32_t tid_without_supermajority = 44;
 
   const uint64_t cs1_outer = 0x10;
   const uint64_t cs1_inner = 0x11;
@@ -70,9 +71,23 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
   const uint64_t time5 = 500;
   orbit_client_protos::CallstackEvent event5;
   event5.set_time(time5);
-  event5.set_thread_id(other_tid);
+  event5.set_thread_id(tid_with_broken_only);
   event5.set_callstack_hash(broken_hash);
   callstack_data.AddCallstackEvent(event5);
+
+  const uint64_t time6 = 600;
+  orbit_client_protos::CallstackEvent event6;
+  event6.set_time(time6);
+  event6.set_thread_id(tid_without_supermajority);
+  event6.set_callstack_hash(hash1);
+  callstack_data.AddCallstackEvent(event6);
+
+  const uint64_t time7 = 700;
+  orbit_client_protos::CallstackEvent event7;
+  event7.set_time(time7);
+  event7.set_thread_id(tid_without_supermajority);
+  event7.set_callstack_hash(broken_hash);
+  callstack_data.AddCallstackEvent(event7);
 
   callstack_data.FilterCallstackEventsBasedOnMajorityStart();
 
@@ -83,7 +98,12 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
                          std::vector<orbit_client_protos::CallstackEvent>{event1, event3, event4}));
 
   EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
-                  other_tid, 0, std::numeric_limits<uint64_t>::max()),
+                  tid_with_broken_only, 0, std::numeric_limits<uint64_t>::max()),
               testing::Pointwise(CallstackEventEq(),
                                  std::vector<orbit_client_protos::CallstackEvent>{event5}));
+
+  EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
+                  tid_without_supermajority, 0, std::numeric_limits<uint64_t>::max()),
+              testing::Pointwise(CallstackEventEq(),
+                                 std::vector<orbit_client_protos::CallstackEvent>{event6, event7}));
 }
