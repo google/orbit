@@ -15,7 +15,7 @@
 // instrumentation is still possible using the macros below. These macros call empty functions that
 // Orbit dynamically instruments.
 //
-// Note: We currently only support strings smaller than 30 characters, longer strings will be
+// Note: We currently only support strings smaller than 34 characters, longer strings will be
 //       truncated. An upcoming update will allow for arbitrarily long strings.
 
 // To disable manual instrumentation macros, define ORBIT_API_ENABLED as 0.
@@ -147,19 +147,18 @@ enum EventType : uint8_t {
   kString = 11,
 };
 
-constexpr size_t kMaxEventStringSize = 30;
+constexpr size_t kMaxEventStringSize = 34;
 struct Event {
   uint8_t version;                 // 1
   uint8_t type;                    // 1
-  char name[kMaxEventStringSize];  // 30
-  uint64_t value;                  // 8
+  char name[kMaxEventStringSize];  // 34
   orbit::Color color;              // 4
-  uint32_t id;                     // 4
+  uint64_t data;                   // 8
 };
 
 union EncodedEvent {
-  EncodedEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t value = 0,
-               orbit::Color color = orbit::Color::kAuto, uint32_t id = 0) {
+  EncodedEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
+               orbit::Color color = orbit::Color::kAuto) {
     static_assert(sizeof(EncodedEvent) == 48, "orbit_api::EncodedEvent should be 48 bytes.");
     static_assert(sizeof(Event) == 48, "orbit_api::Event should be 48 bytes.");
     event.version = kVersion;
@@ -169,9 +168,8 @@ union EncodedEvent {
       std::strncpy(event.name, name, kMaxEventStringSize - 1);
       event.name[kMaxEventStringSize - 1] = 0;
     }
-    event.value = value;
+    event.data = data;
     event.color = color;
-    event.id = id;
   }
 
   EncodedEvent(uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5) {
@@ -220,12 +218,11 @@ ORBIT_STUB void TrackValue(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uin
 
 // Default values.
 constexpr const char* kNameNullPtr = nullptr;
-constexpr uint32_t kIdZero = 0;
-constexpr uint64_t kValueZero = 0;
+constexpr uint64_t kDataZero = 0;
 constexpr orbit::Color kColorAuto = orbit::Color::kAuto;
 
 inline void Start(const char* name, orbit::Color color) {
-  EncodedEvent e(EventType::kScopeStart, name, 0, color);
+  EncodedEvent e(EventType::kScopeStart, name, kDataZero, color);
   Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
@@ -234,22 +231,22 @@ inline void Stop() {
   Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void StartAsync(const char* name, uint32_t id, orbit::Color color) {
-  EncodedEvent e(EventType::kScopeStartAsync, name, kValueZero, color, id);
+inline void StartAsync(const char* name, uint64_t id, orbit::Color color) {
+  EncodedEvent e(EventType::kScopeStartAsync, name, id, color);
   StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void StopAsync(uint32_t id) {
-  EncodedEvent e(EventType::kScopeStopAsync, kNameNullPtr, kValueZero, kColorAuto, id);
+inline void StopAsync(uint64_t id) {
+  EncodedEvent e(EventType::kScopeStopAsync, kNameNullPtr, id, kColorAuto);
   StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void AsyncString(const char* str, uint32_t id, orbit::Color color) {
+inline void AsyncString(const char* str, uint64_t id, orbit::Color color) {
   if (str == nullptr) return;
   constexpr size_t chunk_size = kMaxEventStringSize - 1;
   const char* end = str + strlen(str);
   while (str < end) {
-    EncodedEvent e(EventType::kString, kNameNullPtr, kValueZero, color, id);
+    EncodedEvent e(EventType::kString, kNameNullPtr, id, color);
     std::strncpy(e.event.name, str, chunk_size);
     e.event.name[chunk_size] = 0;
     TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
@@ -266,9 +263,9 @@ inline void TrackValue(EventType type, const char* name, uint64_t value, orbit::
 
 void Start(const char* name, orbit::Color color);
 void Stop();
-void StartAsync(const char* name, uint32_t id, orbit::Color color);
-void StopAsync(uint32_t id);
-void AsyncString(const char* str, uint32_t id);
+void StartAsync(const char* name, uint64_t id, orbit::Color color);
+void StopAsync(uint64_t id);
+void AsyncString(const char* str, uint64_t id);
 void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color);
 
 #endif  // ORBIT_API_INTERNAL_IMPL

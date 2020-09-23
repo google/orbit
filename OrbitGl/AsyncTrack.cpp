@@ -30,7 +30,8 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
   const FunctionInfo* func =
       GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
   std::string module_name = FunctionUtils::GetLoadedModuleName(*func);
-  std::string function_name = manual_inst_manager->GetString(event.id);
+  const uint64_t event_id = event.data;
+  std::string function_name = manual_inst_manager->GetString(event_id);
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
@@ -69,7 +70,8 @@ void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
   text_box->SetElapsedTimeTextLength(time.length());
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-  std::string name = GOrbitApp->GetManualInstrumentationManager()->GetString(event.id);
+  const uint64_t event_id = event.data;
+  std::string name = GOrbitApp->GetManualInstrumentationManager()->GetString(event_id);
   std::string text = absl::StrFormat("%s %s", name, time.c_str());
   text_box->SetText(text);
 
@@ -93,7 +95,8 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) c
   }
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-  std::string name = GOrbitApp->GetManualInstrumentationManager()->GetString(event.id);
+  const uint64_t event_id = event.data;
+  std::string name = GOrbitApp->GetManualInstrumentationManager()->GetString(event_id);
   Color color = time_graph_->GetColor(name);
 
   constexpr uint8_t kOddAlpha = 210;
