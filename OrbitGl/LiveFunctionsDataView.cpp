@@ -153,14 +153,14 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
     const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(selected_function);
 
-    // Is that function actually inside module of the process (i.e. can we disassemble?)
+    // Is that function actually inside a module of the process (i.e. can we disassemble)?
     const FunctionInfo* actual_function =
         capture_data.FindFunctionByAddress(absolute_address, false);
     const bool function_exists = actual_function != nullptr;
 
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
-    enable_select |= !GOrbitApp->IsFunctionSelected(selected_function) && function_exists;
-    enable_unselect |= GOrbitApp->IsFunctionSelected(selected_function) && function_exists;
+    enable_select |= function_exists && !GOrbitApp->IsFunctionSelected(selected_function);
+    enable_unselect |= function_exists && GOrbitApp->IsFunctionSelected(selected_function);
     enable_iterator |= stats.count() > 0;
     enable_disassembly |= function_exists;
   }
@@ -196,16 +196,17 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     for (int i : item_indices) {
       FunctionInfo* selected_function = GetSelectedFunction(i);
       const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(*selected_function);
-      // Is that function actually inside module of the process?
-      if (capture_data.FindFunctionByAddress(absolute_address, false) != nullptr) {
-        if (action == kMenuActionSelect) {
-          GOrbitApp->SelectFunction(*selected_function);
-        } else if (action == kMenuActionUnselect) {
-          GOrbitApp->DeselectFunction(*selected_function);
-        } else if (action == kMenuActionDisassembly) {
-          int32_t pid = capture_data.process_id();
-          GOrbitApp->Disassemble(pid, *selected_function);
-        }
+      // Is that function actually inside a module of the process?
+      if (capture_data.FindFunctionByAddress(absolute_address, false) == nullptr) {
+        continue;
+      }
+      if (action == kMenuActionSelect) {
+        GOrbitApp->SelectFunction(*selected_function);
+      } else if (action == kMenuActionUnselect) {
+        GOrbitApp->DeselectFunction(*selected_function);
+      } else if (action == kMenuActionDisassembly) {
+        int32_t pid = capture_data.process_id();
+        GOrbitApp->Disassemble(pid, *selected_function);
       }
     }
   } else if (action == kMenuActionJumpToFirst) {
