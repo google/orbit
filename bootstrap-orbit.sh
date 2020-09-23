@@ -79,7 +79,7 @@ echo "Checking if conan is available..."
 which conan >/dev/null
 if [ $? -ne 0 ]; then
   echo "Couldn't find conan. Trying to install via pip..."
-  pip3 install --user conan==1.27.1 || exit $?
+  pip3 install --user conan==1.29.2 || exit $?
 
   which conan >/dev/null
   if [ $? -ne 0 ]; then
@@ -99,11 +99,11 @@ else
   CONAN_VERSION_MINOR="$(echo "$CONAN_VERSION" | cut -d'.' -f2)"
 
   CONAN_VERSION_MAJOR_REQUIRED=1
-  CONAN_VERSION_MINOR_MIN=27
+  CONAN_VERSION_MINOR_MIN=29
 
   if [ "$CONAN_VERSION_MAJOR" -eq $CONAN_VERSION_MAJOR_REQUIRED -a "$CONAN_VERSION_MINOR" -lt $CONAN_VERSION_MINOR_MIN ]; then
     echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
-    pip3 install --upgrade --user conan
+    pip3 install --upgrade --user conan==1.29.2
     if [ $? -ne 0 ]; then
       echo "The upgrade of your conan installation failed. Probably because conan was not installed by this script."
       echo "Please manually update conan to at least version $CONAN_VERSION_MAJOR_REQUIRED.$CONAN_VERSION_MINOR_MIN."
