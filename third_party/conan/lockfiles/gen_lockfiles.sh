@@ -2,21 +2,16 @@
 
 REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&1 && pwd )"
 
-if [ "$(uname -s)" == "Linux" ]; then
-  subdirectory="linux"
-  profiles=({ggp,clang{7,8,9},gcc{8,9}}_{release,relwithdebinfo,debug})
-else
-  subdirectory="windows"
-  profiles=({ggp_{release,relwithdebinfo,debug},msvc{2017,2019}_{release,relwithdebinfo,debug}{,_x86}})
-fi
-if [ "$#" -ne 0 ]; then
-  profiles=( "$@" )
+if [[ $(uname -s) != Linux ]]; then
+  echo "Generating the lockfiles on Windows is unfortunately broken"
+  echo "at the moment due to a bug in the Qt package. Please use Linux"
+  echo "for now"
+  exit 1
 fi
 
-for profile in ${profiles[@]}; do
-  tmpfile="$(mktemp -d)"
-  conan graph lock "$REPO_ROOT" -pr $profile -u --build '*' "--lockfile=$tmpfile" || exit $?
-  jq --indent 1 'del(.graph_lock.nodes."0".path)' < "$tmpfile/conan.lock" \
-    > "$REPO_ROOT/third_party/conan/lockfiles/$subdirectory/$profile/conan.lock" || exit $?
-  rm -rf "$tmpfile"
-done
+conan lock create ${REPO_ROOT}/conanfile.py \
+  -o system_qt=False -o system_mesa=False  \
+  -s os=Linux \
+  --user=orbitdeps --channel=stable \
+  --lockfile-out=${REPO_ROOT}/third_party/conan/lockfiles/base.lock \
+  --base
