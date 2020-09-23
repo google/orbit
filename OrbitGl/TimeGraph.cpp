@@ -382,22 +382,22 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 
   switch (event.type) {
     case orbit_api::kTrackInt: {
-      track->AddValue(orbit_api::Decode<int32_t>(event.value), time);
+      track->AddValue(orbit_api::Decode<int32_t>(event.data), time);
     } break;
     case orbit_api::kTrackInt64: {
-      track->AddValue(orbit_api::Decode<int64_t>(event.value), time);
+      track->AddValue(orbit_api::Decode<int64_t>(event.data), time);
     } break;
     case orbit_api::kTrackUint: {
-      track->AddValue(orbit_api::Decode<uint32_t>(event.value), time);
+      track->AddValue(orbit_api::Decode<uint32_t>(event.data), time);
     } break;
     case orbit_api::kTrackUint64: {
-      track->AddValue(event.value, time);
+      track->AddValue(event.data, time);
     } break;
     case orbit_api::kTrackFloat: {
-      track->AddValue(orbit_api::Decode<float>(event.value), time);
+      track->AddValue(orbit_api::Decode<float>(event.data), time);
     } break;
     case orbit_api::kTrackDouble: {
-      track->AddValue(orbit_api::Decode<double>(event.value), time);
+      track->AddValue(orbit_api::Decode<double>(event.data), time);
     } break;
     default:
       ERROR("Unsupported value tracking type [%u]", event.type);

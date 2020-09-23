@@ -36,10 +36,11 @@ orbit_api::Event ManualInstrumentationManager::ApiEventFromTimerInfo(
 void ManualInstrumentationManager::ProcessAsyncTimer(
     const orbit_client_protos::TimerInfo& timer_info) {
   orbit_api::Event event = ApiEventFromTimerInfo(timer_info);
+  const uint64_t event_id = event.data;
   if (event.type == orbit_api::kScopeStartAsync) {
-    async_timer_info_start_by_id_[event.id] = timer_info;
+    async_timer_info_start_by_id_[event_id] = timer_info;
   } else if (event.type == orbit_api::kScopeStopAsync) {
-    auto it = async_timer_info_start_by_id_.find(event.id);
+    auto it = async_timer_info_start_by_id_.find(event_id);
     if (it != async_timer_info_start_by_id_.end()) {
       const TimerInfo& start_timer_info = it->second;
       orbit_api::Event start_event = ApiEventFromTimerInfo(start_timer_info);
@@ -54,10 +55,11 @@ void ManualInstrumentationManager::ProcessAsyncTimer(
 
 void ManualInstrumentationManager::ProcessStringEvent(const orbit_api::Event& event) {
   // A string can be sent in chunks so we append the current value to any existing one.
-  auto result = string_manager_.Get(event.id);
+  const uint64_t event_id = event.data;
+  auto result = string_manager_.Get(event_id);
   if (result.has_value()) {
-    string_manager_.AddOrReplace(event.id, result.value() + event.name);
+    string_manager_.AddOrReplace(event_id, result.value() + event.name);
   } else {
-    string_manager_.AddOrReplace(event.id, event.name);
+    string_manager_.AddOrReplace(event_id, event.name);
   }
 }
