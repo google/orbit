@@ -269,33 +269,19 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->callTreeTreeView};
-  if (enable_expand_recursively) {
-    menu.addAction(kActionExpandRecursively);
-  }
-  if (enable_collapse_recursively) {
-    menu.addAction(kActionCollapseRecursively);
-    menu.addAction(kActionCollapseChildrenRecursively);
-  }
+  menu.addAction(kActionExpandRecursively)->setEnabled(enable_expand_recursively);
+  menu.addAction(kActionCollapseRecursively)->setEnabled(enable_collapse_recursively);
+  menu.addAction(kActionCollapseChildrenRecursively)->setEnabled(enable_collapse_recursively);
   menu.addSeparator();
   menu.addAction(kActionExpandAll);
   menu.addAction(kActionCollapseAll);
   menu.addSeparator();
-  if (enable_load) {
-    menu.addAction(kActionLoadSymbols);
-  }
-  if (enable_select) {
-    menu.addAction(kActionSelect);
-  }
-  if (enable_deselect) {
-    menu.addAction(kActionDeselect);
-  }
-  if (enable_disassembly) {
-    menu.addAction(kActionDisassembly);
-  }
+  menu.addAction(kActionLoadSymbols)->setEnabled(enable_load);
+  menu.addAction(kActionSelect)->setEnabled(enable_select);
+  menu.addAction(kActionDeselect)->setEnabled(enable_deselect);
+  menu.addAction(kActionDisassembly)->setEnabled(enable_disassembly);
   menu.addSeparator();
-  if (enable_copy) {
-    menu.addAction(kActionCopySelection);
-  }
+  menu.addAction(kActionCopySelection)->setEnabled(enable_copy);
 
   QAction* action = menu.exec(ui_->callTreeTreeView->mapToGlobal(point));
   if (action == nullptr) {
