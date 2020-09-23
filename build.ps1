@@ -44,10 +44,19 @@ foreach ($profile in $profiles) {
     Write-Host "Creating conan profile $profile"
     conan_create_profile $profile
   }
-  
+ 
   Write-Host "Building Orbit in build_$profile/ with conan profile $profile"
+  New-Item -ItemType Directory -Path ".\build_$profile\"
 
-  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "install","--update","-pr",$profile,"-o","system_qt=False","-if","build_$profile/","--build","outdated",$PSScriptRoot
+  $conan.Path lock create "$PSScriptRoot\conanfile.py" --user=orbitdeps --channel=stable `
+    --lockfile="$PSScriptRoot\third_party\conan\lockfiles\base.lock" -u -pr $profile -o system_qt=False`
+    --lockfile-out=.\build_$profile\conan.lock
+  if ($process.ExitCode -ne 0) {
+    Throw "Error while running conan lock create."
+  }
+ 
+  conan install -if build_$profile\ --build outdated --lockfile=build_$profile\conan.lock "$PSScriptRoot"
+
   if ($process.ExitCode -ne 0) {
     Throw "Error while running conan install."
   }
