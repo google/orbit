@@ -663,6 +663,9 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 void OrbitApp::OnLoadCapture(const std::string& file_name) {
   CHECK(open_capture_callback_);
   open_capture_callback_();
+  if (capture_window_ != nullptr) {
+    capture_window_->set_draw_help(false);
+  }
   ClearCapture();
   string_manager_->Clear();
   thread_pool_->Schedule([this, file_name]() mutable {
