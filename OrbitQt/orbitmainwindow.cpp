@@ -22,6 +22,7 @@
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
+#include "MainThreadExecutorImpl.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
