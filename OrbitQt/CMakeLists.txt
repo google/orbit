@@ -162,3 +162,9 @@ if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
   message(STATUS "Disabling OrbitQt-tests since they don't work in a headless setup")
   set_tests_properties(OrbitQt PROPERTIES DISABLED TRUE)
 endif()
+
+if (NOT WIN32)
+  # On Linux we can always run the tests with offscreen rendering. That won't do any harm
+  # and it avoid test failures in headless environments like SSH-sessions.
+  set_tests_properties(OrbitQt PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+endif()
