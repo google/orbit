@@ -68,7 +68,7 @@ void TimeGraph::SetCanvas(GlCanvas* canvas) {
   batcher_.SetPickingManager(&canvas->GetPickingManager());
 }
 
-void TimeGraph::SetFontSize(int font_size) {
+void TimeGraph::SetFontSize(uint32_t font_size) {
   text_renderer_->SetFontSize(font_size);
   text_renderer_static_.SetFontSize(font_size);
 }
@@ -622,7 +622,7 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
   float max_size = size[0];
   canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
       text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine, GlCanvas::kZValueText,
-      Color(255, 255, 255, 255), time.length(), max_size);
+      Color(255, 255, 255, 255), time.length(), GParams.font_size, max_size);
 
   constexpr const float kOffsetBelowText = kAdditionalSpaceForLine / 2.f;
   Vec2 line_from(pos[0], text_y + kOffsetBelowText);

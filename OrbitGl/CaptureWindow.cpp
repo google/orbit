@@ -768,7 +768,7 @@ void CaptureWindow::RenderTimeBar() {
       std::string text = GetPrettyTime(absl::Microseconds(current_micros));
       float world_x = time_graph_.GetWorldFromUs(current_micros);
       m_TextRenderer.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTextUi,
-                             Color(255, 255, 255, 255));
+                             Color(255, 255, 255, 255), GParams.font_size);
 
       Vec2 pos(world_x, world_y);
       ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTextUi, Color(255, 255, 255, 255));
@@ -798,7 +798,7 @@ void CaptureWindow::RenderSelectionOverlay() {
     float pos_x = pos[0] + size[0];
 
     m_TextRenderer.AddText(text.c_str(), pos_x, select_stop_[1], GlCanvas::kZValueText, text_color,
-                           size[0], true);
+                           GParams.font_size, size[0], true);
 
     const unsigned char g = 100;
     Color grey(g, g, g, 255);

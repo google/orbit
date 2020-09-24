@@ -5,8 +5,10 @@
 #ifndef ORBIT_CORE_PARAMS_H_
 #define ORBIT_CORE_PARAMS_H_
 
+#include <stdint.h>
+
 struct Params {
-  const float font_size = 14.f;
+  const uint32_t font_size = 14;
 };
 
 extern Params GParams;

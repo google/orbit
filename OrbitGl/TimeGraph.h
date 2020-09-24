@@ -17,6 +17,7 @@
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
+#include "Params.h"
 #include "SchedulerTrack.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
@@ -106,8 +107,11 @@ class TimeGraph {
   [[nodiscard]] StringManager* GetStringManager() { return string_manager_.get(); }
   void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
-  void SetFontSize(int font_size);
-  [[nodiscard]] int GetFontSize() { return GetTextRenderer()->GetFontSize(); }
+  void SetFontSize(uint32_t font_size);
+  [[nodiscard]] uint32_t GetFontSize() const { return text_renderer_static_.GetFontSize(); }
+  [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
+    return lround((GParams.font_size) * layout_.GetScale());
+  }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
   [[nodiscard]] uint32_t GetNumCores() const;
