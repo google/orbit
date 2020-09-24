@@ -58,11 +58,10 @@ void TextRenderer::Init() {
   const auto exe_dir = Path::GetExecutableDir();
   const auto fontFileName = exe_dir + "fonts/Vera.ttf";
 
-  static float fsize = GParams.font_size;
+  current_font_size_ = GParams.font_size;
   m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
-  m_Font = texture_font_new_from_file(m_Atlas, fsize, fontFileName.c_str());
-  current_font_size_ = static_cast<int>(fsize);
-  for (int i = 10; i <= 100; i += 1) {
+  m_Font = texture_font_new_from_file(m_Atlas, current_font_size_, fontFileName.c_str());
+  for (int i = 1; i <= 100; i += 1) {
     m_FontsBySize[i] = texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }
 
@@ -82,15 +81,23 @@ void TextRenderer::Init() {
   m_Initialized = true;
 }
 
-void TextRenderer::SetFontSize(int size) {
-  texture_font_t* font = m_FontsBySize[size];
-  if (font) {
-    m_Font = font;
-    current_font_size_ = size;
+void TextRenderer::SetFontSize(uint32_t size) {
+  CHECK(!m_FontsBySize.empty());
+  if (!m_FontsBySize.count(size)) {
+    auto iterator_next = m_FontsBySize.upper_bound(size);
+    // If there isn't that font_size in the map, we will search for the next one or previous one
+    if (iterator_next != m_FontsBySize.end()) {
+      size = iterator_next->first;
+    } else if (iterator_next != m_FontsBySize.begin()) {
+      size = (--iterator_next)->first;
+    }
   }
+  texture_font_t* font = m_FontsBySize[size];
+  m_Font = font;
+  current_font_size_ = size;
 }
 
-int TextRenderer::GetFontSize() { return current_font_size_; }
+uint32_t TextRenderer::GetFontSize() const { return current_font_size_; }
 
 void TextRenderer::Display(Batcher* batcher) {
   if (m_DrawOutline) {
@@ -215,7 +222,9 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
 }
 
 void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
-                           const Color& a_Color, float a_MaxSize, bool a_RightJustified) {
+                           const Color& a_Color, uint32_t font_size, float a_MaxSize,
+                           bool a_RightJustified) {
+  if (!font_size) return;
   ToScreenSpace(a_X, a_Y, m_Pen.x, m_Pen.y);
 
   if (a_RightJustified) {
@@ -223,13 +232,15 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
     int stringWidth = GetStringWidth(a_Text);
     m_Pen.x -= stringWidth;
   }
+  SetFontSize(font_size);
 
   AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z);
 }
 
 void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y,
                                                    float a_Z, const Color& a_Color,
-                                                   size_t a_TrailingCharsLength, float a_MaxSize) {
+                                                   size_t a_TrailingCharsLength, uint32_t font_size,
+                                                   float a_MaxSize) {
   if (!m_Initialized) {
     Init();
   }
@@ -284,7 +295,7 @@ void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X
                          (fittingCharsCount > (a_TrailingCharsLength + ELLIPSIS_BUFFER_SIZE));
 
   if (!useEllipsisText) {
-    AddText(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize);
+    AddText(a_Text, a_X, a_Y, a_Z, a_Color, font_size, a_MaxSize);
   } else {
     auto leadingCharCount = fittingCharsCount - (a_TrailingCharsLength + ELLIPSIS_TEXT_LEN);
 
@@ -294,7 +305,7 @@ void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X
     auto timePosition = textLen - a_TrailingCharsLength;
     modifiedText.append(&a_Text[timePosition], a_TrailingCharsLength);
 
-    AddText(modifiedText.c_str(), a_X, a_Y, a_Z, a_Color, a_MaxSize);
+    AddText(modifiedText.c_str(), a_X, a_Y, a_Z, a_Color, font_size, a_MaxSize);
   }
 }
 

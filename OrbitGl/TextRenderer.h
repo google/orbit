@@ -25,10 +25,10 @@ class TextRenderer {
   void Init();
   void Display(Batcher* batcher);
   void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
-               float a_MaxSize = -1.f, bool a_RightJustified = false);
+               uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false);
   void AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y, float a_Z,
                                        const Color& a_Color, size_t a_TrailingCharsLength,
-                                       float a_MaxSize);
+                                       uint32_t font_size, float a_MaxSize);
   int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
                 float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
@@ -39,8 +39,8 @@ class TextRenderer {
   GlCanvas* GetCanvas() { return m_Canvas; }
   int GetNumCharacters() const;
   void ToggleDrawOutline() { m_DrawOutline = !m_DrawOutline; }
-  void SetFontSize(int a_Size);
-  int GetFontSize();
+  void SetFontSize(uint32_t a_Size);
+  uint32_t GetFontSize() const;
 
  protected:
   void AddTextInternal(texture_font_t* font, const char* text, const vec4& color, vec2* pen,
@@ -54,7 +54,7 @@ class TextRenderer {
   vertex_buffer_t* m_Buffer;
   texture_font_t* m_Font;
   std::map<int, texture_font_t*> m_FontsBySize;
-  int current_font_size_;
+  uint32_t current_font_size_;
   GlCanvas* m_Canvas;
   GLuint m_Shader;
   mat4 m_Model;

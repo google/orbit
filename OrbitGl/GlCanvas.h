@@ -8,7 +8,6 @@
 #include "GlPanel.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
-#include "Params.h"
 #include "PickingManager.h"
 #include "ScopeTimer.h"
 #include "TextRenderer.h"

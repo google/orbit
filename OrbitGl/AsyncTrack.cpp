@@ -82,7 +82,8 @@ void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
-      GlCanvas::kZValueText, kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
+      GlCanvas::kZValueText, kTextWhite, text_box->GetElapsedTimeTextLength(),
+      time_graph_->CalculateZoomedFontSize(), max_size);
 }
 
 Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
