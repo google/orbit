@@ -181,12 +181,14 @@ if [ -n "$1" ]; then
     echo "No access token available. Won't upload packages."
   fi
 
-  # Package the Debian package and the signature into a zip for integration in the installer.
+  # Package the Debian package, the signature and the ggp client into a zip for integration in the 
+  # installer.
   if [ -f ${KEYSTORE_PATH}/74938_SigningPrivateGpg ] && [[ $CONAN_PROFILE == ggp_* ]]; then
     pushd "${REPO_ROOT}/build/package" > /dev/null
     mkdir -p Orbit/collector
     cp -v OrbitProfiler*.deb Orbit/collector/
     cp -v OrbitProfiler*.deb.asc Orbit/collector/
+    cp -v OrbitClientGgp Orbit/collector/
     zip Collector.zip -r Orbit/
     rm -rf Orbit/
     popd > /dev/null
