@@ -8,6 +8,7 @@
 #include "GlPanel.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
+#include "Params.h"
 #include "PickingManager.h"
 #include "ScopeTimer.h"
 #include "TextRenderer.h"
@@ -75,11 +76,6 @@ class GlCanvas : public GlPanel {
 
   Vec2 ToScreenSpace(const Vec2& a_Point);
   Vec2 ToWorldSpace(const Vec2& a_Point);
-
-  void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
-               float a_MaxSize = -1.f, bool a_RightJustified = false);
-  int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
-                float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
   void ResetHoverTimer();
 

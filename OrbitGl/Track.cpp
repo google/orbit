@@ -151,8 +151,9 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float label_offset_y = GCurrentTimeGraph->GetFontSize() / 3.f;
     const Color kColor =
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
-    canvas->AddText(label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z,
-                    kColor, label_width - label_offset_x);
+    canvas->GetTextRenderer().AddText(label_.c_str(), tab_x0 + label_offset_x,
+                                      toggle_y_pos - label_offset_y, text_z, kColor,
+                                      label_width - label_offset_x);
   }
 
   canvas_ = canvas;
