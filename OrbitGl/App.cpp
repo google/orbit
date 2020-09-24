@@ -757,7 +757,7 @@ void OrbitApp::StopCapture() {
 
 void OrbitApp::ClearCapture() {
   capture_data_ = CaptureData();
-  set_selected_thread_id(-1);
+  set_selected_thread_id(SamplingProfiler::kAllThreadsFakeTid);
   SelectTextBox(nullptr);
 
   UpdateAfterCaptureCleared();
