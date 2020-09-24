@@ -9,6 +9,14 @@
 TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
     : EventTrack(time_graph) {
   thread_id_ = thread_id;
+
+  constexpr float kSteps = 22;
+  const float angle = (kPiFloat * 2.f) / kSteps;
+  for (int i = 1; i <= kSteps; i++) {
+    float new_x = sinf(angle * i);
+    float new_y = cosf(angle * i);
+    circle_points.emplace_back(Vec2(new_x, new_y));
+  }
 }
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
@@ -62,38 +70,67 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 
-  ScopeLock lock(GOrbitApp->GetCaptureData().GetTracepointEventBufferMutex());
+  GOrbitApp->GetCaptureData().ForEachTracepointEventPerThread(
+      thread_id_,
+      [&](const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints) {
+        const Color kWhite(255, 255, 255, 255);
 
-  const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
-      GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_);
+        const Color kTracepoint(255, 255, 255, 190);
 
-  const Color kWhite(255, 255, 255, 255);
+        const Color kGreenSelection(0, 255, 0, 255);
 
-  const Color kGreenSelection(0, 255, 0, 255);
+        if (!picking) {
+          for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
+               ++it) {
+            uint64_t time = it->first;
+            float radius = track_height / 4;
 
-  if (!picking) {
-    for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
-         ++it) {
-      uint64_t time = it->first;
-      Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite);
-    }
-  } else {
-    constexpr float kPickingBoxWidth = 9.0f;
-    constexpr float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
+            Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+            batcher->AddVerticalLine(pos, -radius, z, kTracepoint);
+            batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z, kTracepoint);
 
-    for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
-         ++it) {
-      uint64_t time = it->first;
+            std::vector<Vec2> circle_points_scaled_by_radius;
+            std::transform(
+                circle_points.begin(), circle_points.end(),
+                std::back_inserter(circle_points_scaled_by_radius),
+                [&radius](const Vec2& p) -> Vec2 { return Vec2(p[0] * radius, p[1] * radius); });
 
-      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
-      Vec2 size(kPickingBoxWidth, track_height);
-      auto user_data = std::make_unique<PickingUserData>(
-          nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
-      user_data->custom_data_ = &it->second;
-      batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
-    }
-  }
+            pos[1] -= track_height / 2;
+
+            float x_pos = pos[0];
+            float y_pos = pos[1];
+            float prev_x = x_pos;
+            float prev_y = y_pos - radius;
+            Vec3 x_1 = Vec3(pos[0], pos[1], z);
+            for (unsigned int i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
+              float new_x = pos[0] + circle_points_scaled_by_radius[i][0];
+              float new_y = pos[1] - circle_points_scaled_by_radius[i][1];
+              Vec3 x_2 = Vec3(prev_x, prev_y, z);
+              Vec3 x_3 = Vec3(new_x, new_y, z);
+              Triangle triangle(x_1, x_2, x_3);
+              batcher->AddTriangle(triangle, kTracepoint);
+              prev_x = new_x;
+              prev_y = new_y;
+            }
+          }
+        } else {
+          constexpr float kPickingBoxWidth = 9.0f;
+          constexpr float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
+
+          for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
+               ++it) {
+            uint64_t time = it->first;
+
+            Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+                     pos_[1] - track_height + 1);
+            Vec2 size(kPickingBoxWidth, track_height);
+            auto user_data = std::make_unique<PickingUserData>(
+                nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+            user_data->custom_data_ = &it->second;
+            batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+          }
+        }
+      });
 }
 
 void TracepointTrack::SetPos(float x, float y) {

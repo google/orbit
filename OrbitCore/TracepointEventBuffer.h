@@ -34,10 +34,13 @@ class TracepointEventBuffer {
     }
   }
 
-  Mutex& mutex();
+  void ForEachTracepointEventPerThread(
+      int32_t thread_id,
+      const std::function<
+          void(const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&)>& action) const;
 
  private:
-
+  const int32_t kAllTracepointsNotInTargetProcessFakeTid = -1;
   mutable Mutex mutex_;
   std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
       tracepoint_events_;
