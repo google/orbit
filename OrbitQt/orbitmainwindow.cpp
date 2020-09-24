@@ -22,7 +22,6 @@
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
-#include "MainThreadExecutorImpl.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
@@ -49,11 +48,9 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
-OrbitMainWindow::OrbitMainWindow(QApplication* a_App, ApplicationOptions&& options,
+OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
                                  OrbitQt::ServiceDeployManager* service_deploy_manager)
     : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
-  OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
-
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
   ui->setupUi(this);

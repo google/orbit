@@ -18,7 +18,6 @@
 #include <string>
 #include <vector>
 
-#include "ApplicationOptions.h"
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
 #include "StatusListener.h"
@@ -32,8 +31,7 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(QApplication* a_App, ApplicationOptions&& options,
-                  OrbitQt::ServiceDeployManager* service_deploy_manager);
+  OrbitMainWindow(QApplication* a_App, OrbitQt::ServiceDeployManager* service_deploy_manager);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) { m_GlWidgets.push_back(a_GlWidget); }
