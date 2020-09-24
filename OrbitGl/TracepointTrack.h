@@ -26,7 +26,6 @@ class TracepointTrack : public EventTrack {
 
  private:
   [[nodiscard]] bool HasTracepoints() const;
-  std::vector<Vec2> circle_points;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_
