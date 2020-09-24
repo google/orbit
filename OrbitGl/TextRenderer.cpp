@@ -220,8 +220,7 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
 
   if (a_RightJustified) {
     a_MaxSize = FLT_MAX;
-    int stringWidth, stringHeight;
-    GetStringSize(a_Text, stringWidth, stringHeight);
+    int stringWidth = GetStringWidth(a_Text);
     m_Pen.x -= stringWidth;
   }
 
@@ -302,8 +301,7 @@ void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X
 int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
                             float a_MaxSize, bool a_RightJustified, bool a_InvertY) {
   if (a_RightJustified) {
-    int stringWidth, stringHeight;
-    GetStringSize(a_Text, stringWidth, stringHeight);
+    int stringWidth = GetStringWidth(a_Text);
     a_X -= stringWidth;
   }
 
@@ -315,9 +313,8 @@ int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, con
   return a_X;
 }
 
-void TextRenderer::GetStringSize(const char* a_Text, int& a_Width, int& a_Height) {
+int TextRenderer::GetStringWidth(const char* a_Text) const {
   float stringWidth = 0;
-  float stringHeight = 0;
 
   std::size_t len = strlen(a_Text);
   for (std::size_t i = 0; i < len; ++i) {
@@ -330,19 +327,10 @@ void TextRenderer::GetStringSize(const char* a_Text, int& a_Width, int& a_Height
 
       stringWidth += kerning;
       stringWidth += glyph->advance_x;
-
-      if (glyph->height > stringHeight) stringHeight = glyph->height;
     }
   }
 
-  a_Width = static_cast<int>(stringWidth);
-  a_Height = static_cast<int>(stringHeight);
-}
-
-int TextRenderer::GetStringHeight(const char* a_Text) {
-  int w, h;
-  GetStringSize(a_Text, w, h);
-  return h;
+  return static_cast<int>(ceil(stringWidth));
 }
 
 void TextRenderer::ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y) {

@@ -13,6 +13,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
   float trackWidth = canvas->GetWorldWidth();
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
 
   pos_[0] = canvas->GetWorldTopLeftX();
   SetSize(trackWidth, GetHeight());
@@ -32,15 +33,31 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   }
 
   float track_z = GlCanvas::kZValueTrack;
-  float text_z = GlCanvas::kZValueText;
 
   Box box(pos_, Vec2(size_[0], -size_[1]), track_z);
 
   // Draw label with graph value at current mouse position.
-  const Color kLabelTextColor(255, 255, 255, 255);
+  const Color kWhiteColor(255, 255, 255, 255);
+  const Color kBlackColor(0, 0, 0, 255);
   double graph_value = GetValueAtTime(time_graph_->GetCurrentMouseTimeNs());
-  canvas->GetTextRenderer().AddText(std::to_string(graph_value).c_str(), canvas->GetMouseX(), y0,
-                                    text_z, kLabelTextColor);
+
+  int white_text_box_width =
+      canvas->GetTextRenderer().GetStringWidth(std::to_string(graph_value).c_str());
+
+  Vec2 white_text_box_size(white_text_box_width, layout.GetTextBoxHeight());
+  auto rightmost_x_position = canvas->GetWorldTopLeftX() + canvas->GetWorldWidth() -
+                              layout.GetRightMargin() - layout.GetSliderWidth() -
+                              white_text_box_size[0];
+  Vec2 white_text_box_position(
+      std::min(canvas->GetMouseX(), rightmost_x_position),
+      y0 - static_cast<float>((max_ - graph_value) * size_[1] / value_range_) -
+          white_text_box_size[1] / 2.f);
+
+  canvas->GetTextRenderer().AddText(std::to_string(graph_value).c_str(), white_text_box_position[0],
+                                    white_text_box_position[1] + layout.GetTextOffset(),
+                                    GlCanvas::kZValueTextUi, kBlackColor, white_text_box_size[0]);
+  Box white_text_box(white_text_box_position, white_text_box_size, GlCanvas::kZValueUi);
+  batcher->AddBox(white_text_box, kWhiteColor, shared_from_this());
 
   batcher->AddBox(box, color, shared_from_this());
 
@@ -73,7 +90,8 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float x1 = time_graph_->GetWorldFromTick(time);
     float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
     float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
-    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z, kLineColor);
+    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), GlCanvas::kZValueText,
+                                      kLineColor);
 
     previous_time = time;
     last_normalized_value = normalized_value;
