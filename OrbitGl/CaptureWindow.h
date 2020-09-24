@@ -70,6 +70,9 @@ class CaptureWindow : public GlCanvas {
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
 
+  bool click_was_drag_ = false;
+  bool background_clicked_ = false;
+
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;
   static const std::string MENU_ACTION_GO_TO_SOURCE;
 };
