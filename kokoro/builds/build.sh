@@ -188,7 +188,7 @@ if [ -n "$1" ]; then
     mkdir -p Orbit/collector
     cp -v OrbitProfiler*.deb Orbit/collector/
     cp -v OrbitProfiler*.deb.asc Orbit/collector/
-    cp -v OrbitClientGgp Orbit/collector/
+    cp -v bin/OrbitClientGgp Orbit/collector/
     zip Collector.zip -r Orbit/
     rm -rf Orbit/
     popd > /dev/null
