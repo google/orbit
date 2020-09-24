@@ -12,6 +12,7 @@
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
+#include "FrameTrack.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
@@ -162,12 +163,16 @@ class TimeGraph {
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
   [[nodiscard]] uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
+  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
+  std::shared_ptr<FrameTrack> GetOrCreateFrameTrack(
+      const orbit_client_protos::FunctionInfo& function);
 
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
                                  const orbit_client_protos::TimerInfo& timer_info);
@@ -224,6 +229,9 @@ class TimeGraph {
   std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
   // Mapping from timeline hash to GPU tracks.
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
+  // Mapping from function address to frame tracks.
+  std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
+
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
   std::string thread_filter_;
 

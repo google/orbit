@@ -25,6 +25,7 @@ target_sources(
          DisassemblyReport.h
          EventTrack.h
          FramePointerValidatorClient.h
+         FrameTrack.h
          FunctionsDataView.h
          Geometry.h
          GlCanvas.h
@@ -75,6 +76,7 @@ target_sources(
           DisassemblyReport.cc
           EventTrack.cpp
           FramePointerValidatorClient.cpp
+          FrameTrack.cpp
           LiveFunctionsController.cpp
           FunctionsDataView.cpp
           GlCanvas.cpp

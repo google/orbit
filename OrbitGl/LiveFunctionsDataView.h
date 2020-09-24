@@ -34,6 +34,7 @@ class LiveFunctionsDataView : public DataView {
       const orbit_client_protos::FunctionInfo& function) const;
 
   std::vector<orbit_client_protos::FunctionInfo> functions_;
+  std::set<uint64_t> added_frame_tracks_;
 
   LiveFunctionsController* live_functions_;
 
@@ -58,6 +59,8 @@ class LiveFunctionsDataView : public DataView {
   static const std::string kMenuActionJumpToMax;
   static const std::string kMenuActionDisassembly;
   static const std::string kMenuActionIterate;
+  static const std::string kMenuActionFrameTrack;
+  static const std::string kMenuActionRemoveFrameTrack;
 };
 
 #endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
