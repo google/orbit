@@ -34,6 +34,8 @@ float GlCanvas::kZValueEventBar = -0.1f;
 float GlCanvas::kZValueTrack = -0.2f;
 
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
+const Color GlCanvas::kTabColor = Color(50, 50, 50, 255);
+const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
 GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_TextRenderer.SetCanvas(this);

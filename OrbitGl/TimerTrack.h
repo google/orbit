@@ -61,8 +61,6 @@ class TimerTrack : public Track {
 
   [[nodiscard]] bool IsCollapsable() const override { return depth_ > 1; }
 
-  [[nodiscard]] float GetTextBoxHeight() const;
-
   virtual void UpdateBoxHeight();
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 

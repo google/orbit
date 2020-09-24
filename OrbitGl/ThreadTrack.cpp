@@ -81,6 +81,11 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return GOrbitApp->IsFunctionVisible(timer_info.function_address());
 }
 
+bool ThreadTrack::IsTrackSelected() const {
+  return thread_id_ != SamplingProfiler::kAllThreadsFakeTid &&
+         GOrbitApp->selected_thread_id() == thread_id_;
+}
+
 [[nodiscard]] static inline Color ToColor(uint64_t val) {
   return Color((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
 }
@@ -148,6 +153,8 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   tracepoint_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
   tracepoint_track_->Draw(canvas, picking_mode);
 }
+
+void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_id(thread_id_); }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
   event_track_->SetPos(pos_[0], pos_[1]);

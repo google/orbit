@@ -114,6 +114,8 @@ class GlCanvas : public GlPanel {
   static float kZValueTrack;
 
   static const Color kBackgroundColor;
+  static const Color kTabColor;
+  static const Color kTabTextColorSelected;
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();

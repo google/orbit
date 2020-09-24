@@ -84,6 +84,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
 
+  [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
+
   GlCanvas* canvas_;
   TimeGraph* time_graph_;
   Vec2 pos_;
