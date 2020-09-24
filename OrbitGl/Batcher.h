@@ -101,8 +101,7 @@ class Batcher {
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
 
-  void AddCircle(const float& z, const float& radius, const float& x_pos, const float& y_pos,
-                 const Color& color);
+  void AddCircle(Vec2 position, float radius, float z, Color color);
   virtual void Draw(bool picking = false) const;
 
   void ResetElements();

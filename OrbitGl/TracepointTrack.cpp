@@ -82,7 +82,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
       batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
       batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z, kWhiteTransparent);
-      batcher->AddCircle(z, radius, pos[0], pos[1] - track_height / 2, kWhiteTransparent);
+      batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z, kWhiteTransparent);
     }
   } else {
     constexpr float kPickingBoxWidth = 9.0f;
