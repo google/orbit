@@ -11,15 +11,15 @@
 
 // Orbit Manual Instrumentation API (header-only)
 //
-// While Orbit's main feature is dynamic instrumentation, manual instrumentation can be extremely
-// useful. The macros below allow you to profile sections of functions, track "async" operations,
-// and graph interesting values in Orbit's main capture window.
+// While dynamic instrumentation is one of Orbit's core features, manual instrumentation can also be
+// extremely useful. The macros below allow you to profile sections of functions, track "async"
+// operations, and graph interesting values directly in Orbit's main capture window.
 //
-// Summary:
+// API Summary:
 // ORBIT_SCOPE: Profile current scope.
 // ORBIT_START/ORBIT_STOP: Profile sections inside a scope.
 // ORBIT_START_ASYNC/ORBIT_STOP_ASYNC: Profile time spans across scopes or threads.
-// ORBIT_ASYNC_STRING: Provide additional information for an async time span.
+// ORBIT_ASYNC_STRING: Provide custom string for an async time span.
 // ORBIT_INT: Graph int values.
 // ORBIT_INT64: Graph int64_t values.
 // ORBIT_UINT: Graph uint32_t values.
@@ -27,10 +27,28 @@
 // ORBIT_FLOAT: Graph float values.
 // ORBIT_DOUBLE: Graph double values.
 //
+// Colors:
+// Note that all of the macros above have a "_WITH_COLOR" variant that allow users to specify
+// a custom color for time slices, async strings and graph elements. A set of predefined colors can
+// be found below, see "orbit::Color". Custom colors can be set using the "orbit::Color(0xff0000ff)"
+// syntax (rgba).
+//
 // Implementation:
 // The manual instrumentation macros call empty "ORBIT_STUB" functions that Orbit dynamically
 // instruments. For manual instrumentation to appear in your Orbit capture, make sure that symbols
 // have been loaded for the manually instrumented modules.
+//
+// Performance:
+// On Linux/Stadia, our current dynamic instrumentation implementation, which relies on uprobes and
+// uretprobes, incur some non-negligible overhead (>5us per instrumented function call). Please
+// note that instrumenting too many functions will possibly cause some noticeable performance
+// degradation. Reducing overhead is our highest priority and we are actively working on a new
+// implementation that should be at least one order of magnitude faster.
+//
+// Integration:
+// To integrate the manual instrumentation API in your code base, simply include this header file.
+//
+// Please note that this feature is still considered "experimental".
 
 // To disable manual instrumentation macros, define ORBIT_API_ENABLED as 0.
 #define ORBIT_API_ENABLED 1
@@ -44,7 +62,7 @@
 //
 // Note:
 // We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize". This
-// limitation will be lifted as we roll out a new dynamic instrumentation implementation on Linux.
+// limitation may be lifted as we roll out a new dynamic instrumentation implementation.
 //
 // Example Usage: Profile sections of a function:
 //
@@ -61,7 +79,7 @@
 //
 // Parameters:
 // name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
-// col: [orbit::Color] User defined color for the current time slice.
+// col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
 //
 #define ORBIT_SCOPE(name) ORBIT_SCOPE_WITH_COLOR(name, orbit::Color::kAuto)
 #define ORBIT_SCOPE_WITH_COLOR(name, col) orbit_api::Scope ORBIT_VAR(name, col)
@@ -76,8 +94,7 @@
 //    need to happen in different scopes or threads, use ORBIT_ASYNC_START/ORBIT_ASYNC_STOP.
 //
 // 2. We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize".
-//    This limitation will be lifted as we roll out a new dynamic instrumentation implementation on
-//    Linux.
+//    This limitation may be lifted as we roll out a new dynamic instrumentation implementation.
 //
 // Example Usage: Profile sections of a function:
 //
@@ -95,7 +112,7 @@
 //
 // Parameters:
 // name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
-// col: [orbit::Color] User defined color for the current time slice.
+// col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
 //
 #define ORBIT_START(name) ORBIT_START_WITH_COLOR(name, orbit::Color::kAuto)
 #define ORBIT_START_WITH_COLOR(name, col) orbit_api::Start(name, col)
@@ -104,43 +121,52 @@
 // ORBIT_START_ASYNC/ORBIT_STOP_ASYNC: Profile time spans across scopes or threads.
 //
 // Overview:
-// Async time spans can be started in one scope and stopped on another. They will be displayed
+// Async time spans can be started in one scope and stopped in another. They will be displayed
 // in Orbit on a track uniquely identified by the "name" parameter. Note that those time slices
 // do not represent hierarchical information.
 //
 // Note:
 // We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize". This
-// limitation will be lifted as we roll out a new dynamic instrumentation implementation on Linux.
-// It is possible however to add per-time slice additional information using the ASYNC_STRING macro.
+// limitation may be lifted as we roll out a new dynamic instrumentation implementation.
+// It is possible however to add per-time-slice strings using the ASYNC_STRING macro.
 //
 // Example usage: Tracking "File IO" operations.
 // Thread 1: ORBIT_START_ASYNC("File IO", unique_64_bit_id);  // File IO request site.
 // Thread 1 or 2: ORBIT_ASYNC_STRING(unique_64_bit_id, "My very long file path");
 // Thread 1 or 2: ORBIT_STOP_ASYNC(unique_64_bit_id);  // File IO result site.
+// Result: Multiple time slices labeled with the results of "io_request->GetFileName()" will appear
+//         on a single "async" track named "File IO".
 //
 // Parameters:
 // name: [const char*] Name of the *track* that will display the async events in Orbit.
-// id: [uint64_t] A user-provided unique id for the time slice.
-// col: [orbit::Color] User defined color for the current time slice.
+// id: [uint64_t] A user-provided unique id for the time slice. This unique id is used to match the
+//     ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique for the current track.
+// col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
 //
 #define ORBIT_START_ASYNC(name, id) ORBIT_START_ASYNC_WITH_COLOR(name, id, orbit::Color::kAuto)
 #define ORBIT_START_ASYNC_WITH_COLOR(name, id, col) orbit_api::StartAsync(name, id, col)
 #define ORBIT_STOP_ASYNC(id) orbit_api::StopAsync(id)
 
-// ORBIT_ASYNC_STRING: Provide additional information for an async time span.
+// ORBIT_ASYNC_STRING: Provide an additional string for an async time span.
 //
 // Overview:
-// Provide additional information to be displayed on the time slice corresponding to "id".
+// Provide additional string to be displayed on the time slice corresponding to "id".
+//
+// Note: There is a performance overhead incurred by using the ASYNC_STRING macro. The arbitrarily
+//       long input string will be chunked into substrings of "kMaxEventStringSize" length that will
+//       individually be emitted as multiple profiling events.
 //
 // Example usage: Tracking "File IO" operations.
-// Thread 1: ORBIT_START_ASYNC("File IO", unique_64_bit_id);
+// Thread 1: ORBIT_START_ASYNC("File IO", unique_64_bit_id);  // File IO request site.
 // Thread 1 or 2: ORBIT_ASYNC_STRING(unique_64_bit_id, "My very long file path");
-// Thread 1 or 2: ORBIT_STOP_ASYNC(unique_64_bit_id);
+// Thread 1 or 2: ORBIT_STOP_ASYNC(unique_64_bit_id);  // File IO result site.
+// Result: Multiple time slices labeled with the results of "io_request->GetFileName()" will appear
+//         on a single "async" track named "File IO".
 //
 // Parameters:
-// str: [const char*] Arbitrary length string to display in the time slice corresponding to "id".
+// str: [const char*] String of arbitrary length to display in the time slice corresponding to "id".
 // id: [uint64_t] A user-provided unique id for the time slice.
-// col: [orbit::Color] User defined color for the current string.
+// col: [orbit::Color] User-defined color for the current string (see orbit::Color below).
 //
 #define ORBIT_ASYNC_STRING(str, id) orbit_api::AsyncString(str, id, orbit::Color::kAuto)
 #define ORBIT_ASYNC_STRING_WITH_COLOR(str, id, col) orbit_api::AsyncString(str, id, col)
@@ -148,26 +174,30 @@
 // ORBIT_[type]: Graph variables.
 //
 // Overview:
-// Send values to be plotted in a track uniquely identified by "name".
+// Send values to be plotted over time in a track uniquely identified by "name".
 //
 // Note:
 // We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize". This
-// limitation will be lifted as we roll out a new dynamic instrumentation implementation on Linux.
+// limitation may be lifted as we roll out a new dynamic instrumentation implementation.
 //
-// Example usage: Graph state of interesting variables over time:
+// Example usage: Graph the state of interesting variables over time:
 //
 // void MainLoop() {
 //   for(instance : instances_) {
 //     ORBIT_FLOAT(instance->GetName(), instance->GetHealth());
 //   }
 //
-//   ORBIT_UINT64("LiveAllocations", MemManager::GetNumLiveAllocs());
+//   ORBIT_UINT64("Live Allocations", MemManager::GetNumLiveAllocs());
 // }
+// Result: Given that instances have unique names, as many graph tracks as there are unique
+//         instances will be created and they will graph their individual instance health over time.
+//         A single "Live Allocations" track will be created and will graph the the result of
+//         "MemManager::GetNumLiveAllocs()" over time.
 //
 // Parameters:
 // name: [const char*] Name of the track that will display the graph in Orbit.
 // val: [int, int64_t, uint32_t, uint64_t, float, double] Value to be plotted.
-// col: [orbit::Color] User defined color for the current value.
+// col: [orbit::Color] User-defined color for the current value (see orbit::Color below).
 //
 #define ORBIT_INT(name, val) ORBIT_INT_WITH_COLOR(name, val, orbit::Color::kAuto)
 #define ORBIT_INT64(name, val) ORBIT_INT64_WITH_COLOR(name, val, orbit::Color::kAuto)
