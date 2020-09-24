@@ -29,6 +29,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                            -Werror=sign-compare)
 endif()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(WITH_ORBITGL "Setting this option will enable the OrbitGL component." ON)
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
