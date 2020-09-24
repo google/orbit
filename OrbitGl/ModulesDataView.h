@@ -37,7 +37,7 @@ class ModulesDataView : public DataView {
  private:
   [[nodiscard]] ModuleData* GetModule(uint32_t row) const { return modules_[indices_[row]]; }
 
-  // TODO(antonrohr) Saving this process_ here is currently only necessary because symbol loading
+  // TODO(169309553) Saving this process_ here is currently only necessary because symbol loading
   // involves the process (see GOrbitApp->LoadSymbols). The plan is not involve the process in
   // symbol loading anymore, once this changed, remove this process_ field.
   const ProcessData* process_ = nullptr;

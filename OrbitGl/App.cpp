@@ -1064,11 +1064,10 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       return;
     }
 
-    main_thread_executor_->Schedule([pid, result, this] {
+    main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
+      data_manager_->UpdateModuleInfos(pid, module_infos);
       // Make sure that pid is actually what user has selected at
       // the moment we arrive here. If not - ignore the result.
-      const std::vector<ModuleInfo>& module_infos = result.value();
-      data_manager_->UpdateModuleInfos(pid, module_infos);
       if (pid != processes_data_view_->GetSelectedProcessId()) {
         return;
       }
@@ -1079,19 +1078,16 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // propagate the changes to the UI.
 
       // If no process was selected before, or the process changed
-      const ProcessData* selected_process = data_manager_->selected_process();
-      if (selected_process == nullptr || pid != selected_process->pid()) {
+      if (GetSelectedProcess() == nullptr || pid != GetSelectedProcess()->pid()) {
         data_manager_->ClearSelectedFunctions();
         data_manager_->set_selected_process(pid);
-        functions_data_view_->ClearFunctions();
+      }
 
-        for (const auto& [module_path, memory_space] : GetSelectedProcess()->GetMemoryMap()) {
-          ModuleData* module = data_manager_->GetMutableModuleByPath(module_path);
-          if (module->is_loaded()) {
-            // TODO(antonrohr) As soon as FunctionInfo does not contain an absolute address anymore,
-            // do not clear the symbols here, but add them to functions_data_view.
-            module->ClearSymbols();
-          }
+      functions_data_view_->ClearFunctions();
+      for (const auto& [module_path, _] : GetSelectedProcess()->GetMemoryMap()) {
+        ModuleData* module = data_manager_->GetMutableModuleByPath(module_path);
+        if (module->is_loaded()) {
+          functions_data_view_->AddFunctions(module->GetFunctions());
         }
       }
 

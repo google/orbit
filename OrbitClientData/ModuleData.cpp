@@ -75,13 +75,11 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   is_loaded_ = true;
 }
 
-void ModuleData::ClearSymbols() {
+void ModuleData::UpdateFunctionsModuleBaseAddress(uint64_t module_base_address) {
   absl::MutexLock lock(&mutex_);
-
-  CHECK(is_loaded_);
-  functions_.clear();
-  hash_to_function_map_.clear();
-  is_loaded_ = false;
+  for (auto& [_, function] : functions_) {
+    function->set_module_base_address(module_base_address);
+  }
 }
 
 const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromHash(uint64_t hash) const {
