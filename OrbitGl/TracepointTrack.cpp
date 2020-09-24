@@ -15,7 +15,7 @@ TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
   for (int i = 1; i <= kSteps; i++) {
     float new_x = sinf(angle * i);
     float new_y = cosf(angle * i);
-    circle_points.emplace_back(std::make_pair(new_x, new_y));
+    circle_points.emplace_back(Vec2(new_x, new_y));
   }
 }
 
@@ -91,12 +91,11 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       batcher->AddVerticalLine(pos, -radius, z, kTracepoint);
       batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z, kTracepoint);
 
-      std::deque<std::pair<float, float>> circle_points_scaled_by_radius;
-      std::transform(circle_points.begin(), circle_points.end(),
-                     std::back_inserter(circle_points_scaled_by_radius),
-                     [&radius](const std::pair<float, float>& p) -> std::pair<float, float> {
-                       return std::make_pair(p.first * radius, p.second * radius);
-                     });
+      std::vector<Vec2> circle_points_scaled_by_radius;
+      std::transform(
+          circle_points.begin(), circle_points.end(),
+          std::back_inserter(circle_points_scaled_by_radius),
+          [&radius](const Vec2& p) -> Vec2 { return Vec2(p[0] * radius, p[1] * radius); });
 
       pos[1] -= track_height / 2;
 
@@ -106,8 +105,8 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       float prev_y = y_pos - radius;
       Vec3 x_1 = Vec3(pos[0], pos[1], z);
       for (unsigned int i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
-        float new_x = pos[0] + circle_points_scaled_by_radius[i].first;
-        float new_y = pos[1] - circle_points_scaled_by_radius[i].second;
+        float new_x = pos[0] + circle_points_scaled_by_radius[i][0];
+        float new_y = pos[1] - circle_points_scaled_by_radius[i][1];
         Vec3 x_2 = Vec3(prev_x, prev_y, z);
         Vec3 x_3 = Vec3(new_x, new_y, z);
         Triangle triangle(x_1, x_2, x_3);

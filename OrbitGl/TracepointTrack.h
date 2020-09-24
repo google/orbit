@@ -5,8 +5,6 @@
 #ifndef ORBIT_GL_TRACEPOINT_TRACK_H_
 #define ORBIT_GL_TRACEPOINT_TRACK_H_
 
-#include <deque>
-
 #include "EventTrack.h"
 
 class TracepointTrack : public EventTrack {
@@ -28,7 +26,7 @@ class TracepointTrack : public EventTrack {
 
  private:
   [[nodiscard]] bool HasTracepoints() const;
-  std::deque<std::pair<float, float>> circle_points;
+  std::vector<Vec2> circle_points;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_
