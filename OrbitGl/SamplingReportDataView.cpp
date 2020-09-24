@@ -265,9 +265,9 @@ void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFuncti
 void SamplingReportDataView::SetThreadID(ThreadID tid) {
   tid_ = tid;
   if (tid == SamplingProfiler::kAllThreadsFakeTid) {
-    name_ = "All";
+    name_ = absl::StrFormat("%s\n(all threads)", GOrbitApp->GetCaptureData().process_name());
   } else {
-    name_ = absl::StrFormat("%d", tid_);
+    name_ = absl::StrFormat("%s\n[%d]", GOrbitApp->GetCaptureData().GetThreadName(tid_), tid_);
   }
 }
 
