@@ -63,12 +63,32 @@ void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickabl
   AddBox(box, colors, picking_color, nullptr);
 }
 
+void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color) {
+  AddShadedBox(pos, size, z, color, std::unique_ptr<PickingUserData>(),
+               ShadingDirection::kLeftToRight);
+}
+
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
-                           std::unique_ptr<PickingUserData> user_data) {
+                           ShadingDirection shading_direction) {
+  AddShadedBox(pos, size, z, color, std::unique_ptr<PickingUserData>(), shading_direction);
+}
+
+void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
+                           std::unique_ptr<PickingUserData> user_data,
+                           ShadingDirection shading_direction) {
   std::array<Color, 4> colors;
-  GetBoxGradientColors(color, &colors);
+  GetBoxGradientColors(color, &colors, shading_direction);
   Box box(pos, size, z);
   AddBox(box, colors, std::move(user_data));
+}
+
+void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
+                           std::shared_ptr<Pickable> pickable, ShadingDirection shading_direction) {
+  std::array<Color, 4> colors;
+  GetBoxGradientColors(color, &colors, shading_direction);
+  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+  Box box(pos, size, z);
+  AddBox(box, colors, picking_color, nullptr);
 }
 
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
@@ -155,14 +175,41 @@ const TextBox* Batcher::GetTextBox(PickingId id) {
   return nullptr;
 }
 
-void Batcher::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors) {
+void Batcher::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
+                                   ShadingDirection shading_direction) {
   const float kGradientCoeff = 0.94f;
   Vec3 dark = Vec3(color[0], color[1], color[2]) * kGradientCoeff;
-  (*colors)[0] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
-                       static_cast<uint8_t>(dark[2]), color[3]);
-  (*colors)[1] = (*colors)[0];
-  (*colors)[2] = color;
-  (*colors)[3] = color;
+
+  switch (shading_direction) {
+    case ShadingDirection::kLeftToRight:
+      (*colors)[0] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
+                           static_cast<uint8_t>(dark[2]), color[3]);
+      (*colors)[1] = (*colors)[0];
+      (*colors)[2] = color;
+      (*colors)[3] = color;
+      break;
+    case ShadingDirection::kRightToLeft:
+      (*colors)[2] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
+                           static_cast<uint8_t>(dark[2]), color[3]);
+      (*colors)[3] = (*colors)[2];
+      (*colors)[0] = color;
+      (*colors)[1] = color;
+      break;
+    case ShadingDirection::kTopToBottom:
+      (*colors)[0] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
+                           static_cast<uint8_t>(dark[2]), color[3]);
+      (*colors)[3] = (*colors)[0];
+      (*colors)[1] = color;
+      (*colors)[2] = color;
+      break;
+    case ShadingDirection::kBottomToTop:
+      (*colors)[1] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
+                           static_cast<uint8_t>(dark[2]), color[3]);
+      (*colors)[2] = (*colors)[1];
+      (*colors)[0] = color;
+      (*colors)[3] = color;
+      break;
+  }
 }
 
 void Batcher::ResetElements() {

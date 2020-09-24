@@ -63,6 +63,8 @@ struct TriangleBuffer {
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
 };
 
+enum class ShadingDirection { kLeftToRight, kRightToLeft, kTopToBottom, kBottomToTop };
+
 class Batcher {
  public:
   explicit Batcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
@@ -93,8 +95,16 @@ class Batcher {
   void AddBox(const Box& box, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable);
+
+  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
-                    std::unique_ptr<PickingUserData> user_data = nullptr);
+                    ShadingDirection shading_direction);
+  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
+                    std::unique_ptr<PickingUserData> user_data,
+                    ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
+  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
+                    std::shared_ptr<Pickable> pickable,
+                    ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -120,7 +130,8 @@ class Batcher {
   void DrawBoxBuffer(bool picking) const;
   void DrawTriangleBuffer(bool picking) const;
 
-  void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors);
+  void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
+                            ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
