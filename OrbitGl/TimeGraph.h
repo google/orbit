@@ -41,28 +41,27 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
-  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(float world_start, float world_end,
-                                                                int32_t thread_id);
+  void SelectEvents(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo* function);
   void UpdateMaxTimeStamp(uint64_t time);
 
-  float GetThreadTotalHeight();
-  float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
-  float GetWorldFromTick(uint64_t time) const;
-  float GetWorldFromUs(double micros) const;
-  uint64_t GetTickFromWorld(float world_x) const;
-  uint64_t GetTickFromUs(double micros) const;
-  double GetUsFromTick(uint64_t time) const;
-  double GetTimeWindowUs() const { return time_window_us_; }
-  void GetWorldMinMax(float* min, float* max) const;
-  bool UpdateCaptureMinMaxTimestamps();
+  [[nodiscard]] float GetThreadTotalHeight() const;
+  [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
+  [[nodiscard]] float GetWorldFromTick(uint64_t time) const;
+  [[nodiscard]] float GetWorldFromUs(double micros) const;
+  [[nodiscard]] uint64_t GetTickFromWorld(float world_x) const;
+  [[nodiscard]] uint64_t GetTickFromUs(double micros) const;
+  [[nodiscard]] double GetUsFromTick(uint64_t time) const;
+  [[nodiscard]] double GetTimeWindowUs() const { return time_window_us_; }
+  void GetWorldMinMax(float& min, float& max) const;
+  [[nodiscard]] bool UpdateCaptureMinMaxTimestamps();
 
   void Clear();
   void ZoomAll();
-  void Zoom(const TextBox* text_box);
+  void Zoom(const orbit_client_protos::TimerInfo& timer_info);
   void Zoom(uint64_t min, uint64_t max);
   void ZoomTime(float zoom_value, double mouse_ratio);
   void VerticalZoom(float zoom_value, float mouse_ratio);
@@ -74,56 +73,59 @@ class TimeGraph {
   };
   void HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, uint64_t max,
                                 double distance = 0.3);
-  void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
+  void HorizontallyMoveIntoView(VisibilityType vis_type,
+                                const orbit_client_protos::TimerInfo& timer_info,
                                 double distance = 0.3);
-  void VerticallyMoveIntoView(const TextBox* text_box);
-  double GetTime(double ratio) const;
+  void VerticallyMoveIntoView(const orbit_client_protos::TimerInfo& timer_info);
+  [[nodiscard]] double GetTime(double ratio) const;
   void Select(const TextBox* text_box);
   enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
-  const TextBox* FindPreviousFunctionCall(uint64_t function_address, uint64_t current_time,
-                                          std::optional<int32_t> thread_id = std::nullopt) const;
-  const TextBox* FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
-                                      std::optional<int32_t> thread_id = std::nullopt) const;
+  [[nodiscard]] const TextBox* FindPreviousFunctionCall(
+      uint64_t function_address, uint64_t current_time,
+      std::optional<int32_t> thread_id = std::nullopt) const;
+  [[nodiscard]] const TextBox* FindNextFunctionCall(
+      uint64_t function_address, uint64_t current_time,
+      std::optional<int32_t> thread_id = std::nullopt) const;
   void SelectAndZoom(const TextBox* text_box);
-  double GetCaptureTimeSpanUs();
-  double GetCurrentTimeSpanUs();
+  [[nodiscard]] double GetCaptureTimeSpanUs();
+  [[nodiscard]] double GetCurrentTimeSpanUs() const;
   void NeedsRedraw() { needs_redraw_ = true; }
-  bool IsRedrawNeeded() const { return needs_redraw_; }
+  [[nodiscard]] bool IsRedrawNeeded() const { return needs_redraw_; }
   void SetThreadFilter(const std::string& filter);
 
-  bool IsFullyVisible(uint64_t min, uint64_t max) const;
-  bool IsPartlyVisible(uint64_t min, uint64_t max) const;
-  bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
+  [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
+  [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
+  [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
-  int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
+  [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
   void SetTextRenderer(TextRenderer* text_renderer) { text_renderer_ = text_renderer; }
-  TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
+  [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
-  StringManager* GetStringManager() { return string_manager_.get(); }
+  [[nodiscard]] StringManager* GetStringManager() { return string_manager_.get(); }
   void SetCanvas(GlCanvas* canvas);
-  GlCanvas* GetCanvas() { return canvas_; }
+  [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   void SetFontSize(int font_size);
-  int GetFontSize() { return GetTextRenderer()->GetFontSize(); }
-  Batcher& GetBatcher() { return batcher_; }
-  uint32_t GetNumTimers() const;
-  uint32_t GetNumCores() const;
-  std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
-  std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
+  [[nodiscard]] int GetFontSize() { return GetTextRenderer()->GetFontSize(); }
+  [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
+  [[nodiscard]] uint32_t GetNumTimers() const;
+  [[nodiscard]] uint32_t GetNumCores() const;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
 
   void OnDrag(float ratio);
-  double GetMinTimeUs() const { return min_time_us_; }
-  double GetMaxTimeUs() const { return max_time_us_; }
-  const TimeGraphLayout& GetLayout() const { return layout_; }
-  TimeGraphLayout& GetLayout() { return layout_; }
-  float GetRightMargin() const { return right_margin_; }
+  [[nodiscard]] double GetMinTimeUs() const { return min_time_us_; }
+  [[nodiscard]] double GetMaxTimeUs() const { return max_time_us_; }
+  [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
+  [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
+  [[nodiscard]] float GetRightMargin() const { return right_margin_; }
   void SetRightMargin(float margin) { right_margin_ = margin; }
 
-  const TextBox* FindPrevious(const TextBox* from);
-  const TextBox* FindNext(const TextBox* from);
-  const TextBox* FindTop(const TextBox* from);
-  const TextBox* FindDown(const TextBox* from);
+  [[nodiscard]] const TextBox* FindPrevious(const TextBox* from);
+  [[nodiscard]] const TextBox* FindNext(const TextBox* from);
+  [[nodiscard]] const TextBox* FindTop(const TextBox* from);
+  [[nodiscard]] const TextBox* FindDown(const TextBox* from);
 
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
@@ -152,9 +154,9 @@ class TimeGraph {
     NeedsRedraw();
   }
 
-  uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
-  uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
-  uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
+  [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
+  [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
+  [[nodiscard]] uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();

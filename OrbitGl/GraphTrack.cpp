@@ -99,7 +99,7 @@ double GraphTrack::GetValueAtTime(uint64_t time, double default_value) const {
 }
 
 float GraphTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
   float height = layout.GetTextBoxHeight() + layout.GetSpaceBetweenTracksAndThread() +
                  layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
   return height;

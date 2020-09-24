@@ -44,7 +44,7 @@ TimerChain::~TimerChain() {
   }
 }
 
-TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) {
+TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
   TimerBlock* block = root_;
   while (block) {
     uint32_t size = block->size_;
@@ -61,28 +61,30 @@ TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) {
   return nullptr;
 }
 
-TextBox* TimerChain::GetElementAfter(const TextBox* element) {
+TextBox* TimerChain::GetElementAfter(const TextBox* element) const {
   auto block = GetBlockContaining(element);
   if (block) {
     TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
-    if (index < block->size_ - 1)
+    if (index < block->size_ - 1) {
       return &block->data_[++index];
-    else if (block->next_ && block->next_->size_)
+    }
+    if (block->next_ && block->next_->size_) {
       return &block->next_->data_[0];
+    }
   }
   return nullptr;
 }
 
-TextBox* TimerChain::GetElementBefore(const TextBox* element) {
+TextBox* TimerChain::GetElementBefore(const TextBox* element) const {
   auto block = GetBlockContaining(element);
   if (block) {
     TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
-    if (index > 0)
+    if (index > 0) {
       return &block->data_[--index];
-    else if (block->prev_)
-      return &block->prev_->data_[block->prev_->size_ - 1];
+    }
+    if (block->prev_) return &block->prev_->data_[block->prev_->size_ - 1];
   }
   return nullptr;
 }

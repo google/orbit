@@ -142,10 +142,7 @@ void TimeGraph::Zoom(uint64_t min, uint64_t max) {
   SetMinMax(mid - extent, mid + extent);
 }
 
-void TimeGraph::Zoom(const TextBox* text_box) {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
-  Zoom(timer_info.start(), timer_info.end());
-}
+void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), timer_info.end()); }
 
 double TimeGraph::GetCaptureTimeSpanUs() {
   if (UpdateCaptureMinMaxTimestamps()) {
@@ -155,7 +152,7 @@ double TimeGraph::GetCaptureTimeSpanUs() {
   return 0.0;
 }
 
-double TimeGraph::GetCurrentTimeSpanUs() { return max_time_us_ - min_time_us_; }
+double TimeGraph::GetCurrentTimeSpanUs() const { return max_time_us_ - min_time_us_; }
 
 void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   static double increment_ratio = 0.1;
@@ -252,15 +249,12 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, 
   NeedsUpdate();
 }
 
-void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
+void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInfo& timer_info,
                                          double distance) {
-  HorizontallyMoveIntoView(vis_type, text_box->GetTimerInfo().start(),
-                           text_box->GetTimerInfo().end(), distance);
+  HorizontallyMoveIntoView(vis_type, timer_info.start(), timer_info.end(), distance);
 }
 
-void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
-  CHECK(text_box != nullptr);
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
   auto thread_track = GetOrCreateThreadTrack(timer_info.thread_id());
   auto text_box_y_position = thread_track->GetYFromDepth(timer_info.depth());
 
@@ -414,7 +408,7 @@ void TimeGraph::UpdateMaxTimeStamp(uint64_t time) {
   }
 };
 
-float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
+float TimeGraph::GetThreadTotalHeight() const { return std::abs(min_y_); }
 
 float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
@@ -447,15 +441,17 @@ uint64_t TimeGraph::GetTickFromUs(double micros) const {
   return capture_min_timestamp_ + nanos;
 }
 
-void TimeGraph::GetWorldMinMax(float* min, float* max) const {
-  *min = GetWorldFromTick(capture_min_timestamp_);
-  *max = GetWorldFromTick(capture_max_timestamp_);
+void TimeGraph::GetWorldMinMax(float& min, float& max) const {
+  min = GetWorldFromTick(capture_min_timestamp_);
+  max = GetWorldFromTick(capture_max_timestamp_);
 }
 
 void TimeGraph::Select(const TextBox* text_box) {
+  CHECK(text_box != nullptr);
   GOrbitApp->SelectTextBox(text_box);
-  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, text_box);
-  VerticallyMoveIntoView(text_box);
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, timer_info);
+  VerticallyMoveIntoView(timer_info);
 }
 
 const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, uint64_t current_time,
@@ -540,8 +536,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   needs_update_primitives_ = false;
 }
 
-std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float world_end,
-                                                    int32_t thread_id) {
+void TimeGraph::SelectEvents(float world_start, float world_end, int32_t thread_id) {
   if (world_start > world_end) {
     std::swap(world_end, world_start);
   }
@@ -564,8 +559,6 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float world_start, float wor
   GOrbitApp->SelectCallstackEvents(selected_callstack_events, thread_id);
 
   NeedsUpdate();
-
-  return selected_callstack_events;
 }
 
 const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t tid) {
@@ -596,9 +589,8 @@ namespace {
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
-std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
-  absl::Duration duration =
-      TicksToDuration(box_a->GetTimerInfo().start(), box_b->GetTimerInfo().start());
+std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
+  absl::Duration duration = TicksToDuration(timer_a.start(), timer_b.start());
 
   return GetPrettyTime(duration);
 }
@@ -691,7 +683,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     CHECK(iterator_functions_.find(id_b) != iterator_functions_.end());
     const std::string& label =
         GetLabelBetweenIterators(*(iterator_functions_[id_a]), *(iterator_functions_[id_b]));
-    const std::string& time = GetTimeString(boxes[k - 1].second, boxes[k].second);
+    const std::string& time =
+        GetTimeString(boxes[k - 1].second->GetTimerInfo(), boxes[k].second->GetTimerInfo());
 
     // Distance from the bottom where we don't want to draw.
     float bottom_margin = layout_.GetBottomMargin();
@@ -716,7 +709,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     float size_x = x_coords[last_index] - pos[0];
     Vec2 size(size_x, world_height);
 
-    std::string time = GetTimeString(boxes[0].second, boxes[last_index].second);
+    std::string time =
+        GetTimeString(boxes[0].second->GetTimerInfo(), boxes[last_index].second->GetTimerInfo());
     std::string label("Total");
 
     float text_y = pos[1] + (world_height / 2.f);
@@ -922,7 +916,7 @@ void TimeGraph::SortTracks() {
 
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {
   CHECK(text_box);
-  Zoom(text_box);
+  Zoom(text_box->GetTimerInfo());
   Select(text_box);
 }
 
@@ -1032,9 +1026,7 @@ bool TimeGraph::IsPartlyVisible(uint64_t min, uint64_t max) const {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
   double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
-  double start_us = min_time_us_;
-
-  return !(start_us > end || max_time_us_ < start);
+  return !(min_time_us_ > end || max_time_us_ < start);
 }
 
 bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const {

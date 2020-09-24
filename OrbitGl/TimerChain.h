@@ -104,18 +104,18 @@ class TimerChain {
   ~TimerChain();
 
   void push_back(const TextBox& item) { current_->Add(item); }
-  bool empty() const { return num_items_ == 0; }
-  uint64_t size() const { return num_items_; }
+  [[nodiscard]] bool empty() const { return num_items_ == 0; }
+  [[nodiscard]] uint64_t size() const { return num_items_; }
 
-  TimerBlock* GetBlockContaining(const TextBox* element);
+  [[nodiscard]] TimerBlock* GetBlockContaining(const TextBox* element) const;
 
-  TextBox* GetElementAfter(const TextBox* element);
+  [[nodiscard]] TextBox* GetElementAfter(const TextBox* element) const;
 
-  TextBox* GetElementBefore(const TextBox* element);
+  [[nodiscard]] TextBox* GetElementBefore(const TextBox* element) const;
 
-  TimerChainIterator begin() { return TimerChainIterator(root_); }
+  [[nodiscard]] TimerChainIterator begin() { return TimerChainIterator(root_); }
 
-  TimerChainIterator end() { return TimerChainIterator(nullptr); }
+  [[nodiscard]] TimerChainIterator end() { return TimerChainIterator(nullptr); }
 
  private:
   TimerBlock* root_;
