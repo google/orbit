@@ -452,7 +452,6 @@ void OrbitApp::OnExit() {
   thread_pool_->ShutdownAndWait();
 
   GOrbitApp = nullptr;
-  Orbit_ImGui_Shutdown();
 }
 
 Timer GMainTimer;
