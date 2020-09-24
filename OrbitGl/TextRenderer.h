@@ -32,8 +32,7 @@ class TextRenderer {
   int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
                 float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
-  void GetStringSize(const char* a_Text, int& a_Width, int& a_Height);
-  int GetStringHeight(const char* a_Text);
+  int GetStringWidth(const char* a_Text) const;
   void Clear();
   void SetCanvas(class GlCanvas* a_Canvas) { m_Canvas = a_Canvas; }
   const GlCanvas* GetCanvas() const { return m_Canvas; }
