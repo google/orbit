@@ -151,18 +151,30 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : selected_indices) {
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
+    enable_iterator |= stats.count() > 0;
+
     const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(selected_function);
 
-    // Is that function actually inside a module of the process (i.e. can we disassemble)?
+    // Is that function actually inside a module of the process?
+    const ProcessData* process = GOrbitApp->GetSelectedProcess();
+    if (process == nullptr) {
+      continue;
+    }
+    const int32_t process_id = process->pid();
+    if (capture_data.process_id() != process_id) {
+      continue;
+    }
     const FunctionInfo* actual_function =
-        capture_data.FindFunctionByAddress(absolute_address, false);
-    const bool function_exists = actual_function != nullptr;
+        GOrbitApp->FindFunctionByAddress(process_id, absolute_address, false);
+    // Can we select/unselect or disassemble the function?
+    if (actual_function == nullptr) {
+      continue;
+    }
 
-    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
-    enable_select |= function_exists && !GOrbitApp->IsFunctionSelected(selected_function);
-    enable_unselect |= function_exists && GOrbitApp->IsFunctionSelected(selected_function);
-    enable_iterator |= stats.count() > 0;
-    enable_disassembly |= function_exists;
+    enable_select |= !GOrbitApp->IsFunctionSelected(selected_function);
+    enable_unselect |= GOrbitApp->IsFunctionSelected(selected_function);
+    enable_disassembly = true;
   }
 
   std::vector<std::string> menu;
@@ -197,9 +209,21 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       FunctionInfo* selected_function = GetSelectedFunction(i);
       const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(*selected_function);
       // Is that function actually inside a module of the process?
-      if (capture_data.FindFunctionByAddress(absolute_address, false) == nullptr) {
+      const ProcessData* process = GOrbitApp->GetSelectedProcess();
+      if (process == nullptr) {
         continue;
       }
+      const int32_t process_id = process->pid();
+      if (capture_data.process_id() != process_id) {
+        continue;
+      }
+      const FunctionInfo* actual_function =
+          GOrbitApp->FindFunctionByAddress(process_id, absolute_address, false);
+      // Can we select/unselect or disassemble the function?
+      if (actual_function == nullptr) {
+        continue;
+      }
+
       if (action == kMenuActionSelect) {
         GOrbitApp->SelectFunction(*selected_function);
       } else if (action == kMenuActionUnselect) {

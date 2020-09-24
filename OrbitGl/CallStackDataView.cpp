@@ -8,7 +8,6 @@
 #include "Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "Path.h"
-#include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
@@ -193,15 +192,26 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
     return CallStackDataViewFrame();
   }
 
-  uint64_t address = callstack_.GetFrame(index_in_callstack);
+  uint64_t absolute_address = callstack_.GetFrame(index_in_callstack);
+  std::string fallback_name =
+      GOrbitApp->GetCaptureData().GetFunctionNameByAddress(absolute_address);
 
-  const FunctionInfo* function = GOrbitApp->GetCaptureData().FindFunctionByAddress(address, false);
-  ModuleData* module = GOrbitApp->GetCaptureData().FindModuleByAddress(address);
-
-  if (function != nullptr) {
-    return CallStackDataViewFrame(address, function, module);
-  } else {
-    std::string fallback_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(address);
-    return CallStackDataViewFrame(address, fallback_name, module);
+  // Is that function actually inside a module of the process?
+  const ProcessData* process = GOrbitApp->GetSelectedProcess();
+  if (process == nullptr) {
+    return CallStackDataViewFrame(absolute_address, fallback_name, nullptr);
   }
+  const int32_t process_id = process->pid();
+  if (GOrbitApp->GetCaptureData().process_id() != process_id) {
+    return CallStackDataViewFrame(absolute_address, fallback_name, nullptr);
+  }
+  ModuleData* module = GOrbitApp->FindMutableModuleByAddress(process_id, absolute_address);
+  const FunctionInfo* function =
+      GOrbitApp->FindFunctionByAddress(process_id, absolute_address, false);
+  // Can we select/unselect or disassemble the function?
+  if (function == nullptr) {
+    return CallStackDataViewFrame(absolute_address, fallback_name, module);
+  }
+
+  return CallStackDataViewFrame(absolute_address, function, module);
 }

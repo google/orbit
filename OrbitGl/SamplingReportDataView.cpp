@@ -144,15 +144,27 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
     if (sampled_function.function == nullptr) {
+      // Is that function actually inside a module of the process?
+      const ProcessData* process = GOrbitApp->GetSelectedProcess();
+      if (process == nullptr) {
+        continue;
+      }
+      const int32_t process_id = process->pid();
+      if (capture_data.process_id() != process_id) {
+        continue;
+      }
       const FunctionInfo* func =
-          capture_data.FindFunctionByAddress(sampled_function.absolute_address, false);
+          GOrbitApp->FindFunctionByAddress(process_id, sampled_function.absolute_address, false);
+
+      if (func == nullptr) {
+        continue;
+      }
       sampled_function.function = func;
     }
 
     const FunctionInfo* function = sampled_function.function;
-    if (function != nullptr) {
-      functions_set.insert(function);
-    }
+    CHECK(function != nullptr);
+    functions_set.insert(function);
   }
 
   return functions_set;
@@ -161,11 +173,21 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
 absl::flat_hash_set<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) const {
   absl::flat_hash_set<ModuleData*> modules;
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : indices) {
     const SampledFunction& sampled_function = GetSampledFunction(index);
     CHECK(sampled_function.absolute_address != 0);
+    // Is that function actually inside a module of the process?
+    const ProcessData* process = GOrbitApp->GetSelectedProcess();
+    if (process == nullptr) {
+      continue;
+    }
+    const int32_t process_id = process->pid();
+    if (capture_data.process_id() != process_id) {
+      continue;
+    }
     ModuleData* module =
-        GOrbitApp->GetCaptureData().FindModuleByAddress(sampled_function.absolute_address);
+        GOrbitApp->FindMutableModuleByAddress(process_id, sampled_function.absolute_address);
     if (module != nullptr) {
       modules.insert(module);
     }
@@ -227,9 +249,13 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules_to_load.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(GOrbitApp->GetCaptureData().process(), modules_to_load);
+    const ProcessData* process = GOrbitApp->GetSelectedProcess();
+    CHECK(process != nullptr);
+    GOrbitApp->LoadModules(process, modules_to_load);
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = GOrbitApp->GetCaptureData().process_id();
+    const ProcessData* process = GOrbitApp->GetSelectedProcess();
+    CHECK(process != nullptr);
+    int32_t pid = process->pid();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->Disassemble(pid, *function);
     }

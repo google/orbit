@@ -152,17 +152,30 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
 static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
     OrbitApp* app, const std::vector<QModelIndex>& indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
+  const CaptureData& capture_data = app->GetCaptureData();
   for (const auto& index : indices) {
     uint64_t absolute_address =
         index.model()
             ->index(index.row(), TopDownViewItemModel::kFunctionAddress, index.parent())
             .data(Qt::EditRole)
             .toLongLong();
-    const FunctionInfo* function =
-        app->GetCaptureData().FindFunctionByAddress(absolute_address, false);
-    if (function != nullptr) {
-      functions_set.insert(function);
+    // Is that function actually inside a module of the process?
+    const ProcessData* process = GOrbitApp->GetSelectedProcess();
+    if (process == nullptr) {
+      continue;
     }
+    const int32_t process_id = process->pid();
+    if (capture_data.process_id() != process_id) {
+      continue;
+    }
+    const FunctionInfo* function =
+        GOrbitApp->FindFunctionByAddress(process_id, absolute_address, false);
+
+    if (function == nullptr) {
+      continue;
+    }
+
+    functions_set.insert(function);
   }
   return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
@@ -270,7 +283,9 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   } else if (action->text() == kActionCollapseAll) {
     ui_->topDownTreeView->collapseAll();
   } else if (action->text() == kActionLoadSymbols) {
-    app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
+    const ProcessData* process = app_->GetSelectedProcess();
+    CHECK(process != nullptr);
+    app_->LoadModules(process, modules_to_load);
   } else if (action->text() == kActionSelect) {
     for (const FunctionInfo* function : functions) {
       app_->SelectFunction(*function);
@@ -280,8 +295,10 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
       app_->DeselectFunction(*function);
     }
   } else if (action->text() == kActionDisassembly) {
+    const ProcessData* process = app_->GetSelectedProcess();
+    CHECK(process != nullptr);
     for (const FunctionInfo* function : functions) {
-      app_->Disassemble(app_->GetCaptureData().process_id(), *function);
+      app_->Disassemble(process->pid(), *function);
     }
   } else if (action->text() == kActionCopySelection) {
     app_->SetClipboard(

@@ -238,6 +238,16 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
 
+  [[nodiscard]] ModuleData* FindMutableModuleByAddress(int32_t process_id,
+                                                       uint64_t absolute_address) {
+    return data_manager_->FindMutableModuleByAddress(process_id, absolute_address);
+  }
+
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
+      int32_t process_id, uint64_t absolute_address, bool is_exact) const {
+    return data_manager_->FindFunctionByAddress(process_id, absolute_address, is_exact);
+  }
+
   void UpdateAfterSymbolLoading();
   void UpdateAfterCaptureCleared();
 

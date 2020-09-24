@@ -39,8 +39,8 @@ class DataManager final {
   [[nodiscard]] const ProcessData* GetProcessByPid(int32_t process_id) const;
   [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const;
   [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const;
-  [[nodiscard]] const ModuleData* FindModuleByAddress(int32_t process_id,
-                                                      uint64_t absolute_address);
+  [[nodiscard]] ModuleData* FindMutableModuleByAddress(int32_t process_id,
+                                                       uint64_t absolute_address) const;
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       int32_t process_id, uint64_t absolute_address, bool is_exact) const;
   [[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> GetModulesLoadedByProcess(
