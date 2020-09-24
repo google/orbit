@@ -149,7 +149,7 @@ std::string GpuTrack::GetTooltip() const {
 }
 
 float GpuTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
   bool collapsed = collapse_toggle_->IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;

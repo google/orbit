@@ -73,15 +73,15 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, 
 
   // Pan
   if (a_Left && !m_ImguiActive && !m_PickingManager.IsDragging() && !GOrbitApp->IsCapturing()) {
-    float worldMin;
-    float worldMax;
+    float world_min;
+    float world_max;
 
-    time_graph_.GetWorldMinMax(worldMin, worldMax);
+    time_graph_.GetWorldMinMax(world_min, world_max);
 
     m_WorldTopLeftX = m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
     m_WorldTopLeftY = m_WorldClickY + static_cast<float>(mousey) / getHeight() * m_WorldHeight;
 
-    m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
+    m_WorldTopLeftX = clamp(m_WorldTopLeftX, world_min, world_max - m_WorldWidth);
     m_WorldTopLeftY =
         clamp(m_WorldTopLeftY, m_WorldHeight - time_graph_.GetThreadTotalHeight(), m_WorldMaxY);
 
@@ -175,7 +175,7 @@ void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   FindCode(address);
 
   if (m_DoubleClicking) {
-    time_graph_.Zoom(text_box);
+    time_graph_.Zoom(timer_info);
   }
 }
 
