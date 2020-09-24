@@ -136,22 +136,22 @@ TEST(ProcessData, MemorySpace) {
 
 TEST(ProcessData, IsModuleLoaded) {
   const std::string file_path_1 = "filepath1";
-  uint64_t start_address1 = 0;
+  uint64_t start_address_1 = 0;
   uint64_t end_address_1 = 10;
-  ModuleInfo module_info1;
-  module_info1.set_file_path(file_path_1);
-  module_info1.set_address_start(start_address1);
-  module_info1.set_address_end(end_address_1);
+  ModuleInfo module_info_1;
+  module_info_1.set_file_path(file_path_1);
+  module_info_1.set_address_start(start_address_1);
+  module_info_1.set_address_end(end_address_1);
 
   const std::string file_path_2 = "filepath2";
   uint64_t start_address_2 = 100;
   uint64_t end_address_2 = 110;
-  ModuleInfo module_info2;
-  module_info2.set_file_path(file_path_2);
-  module_info2.set_address_start(start_address_2);
-  module_info1.set_address_end(end_address_2);
+  ModuleInfo module_info_2;
+  module_info_2.set_file_path(file_path_2);
+  module_info_2.set_address_start(start_address_2);
+  module_info_1.set_address_end(end_address_2);
 
-  std::vector<ModuleInfo> module_infos{module_info1, module_info2};
+  std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
   std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
   process->UpdateModuleInfos(module_infos);
@@ -159,6 +159,33 @@ TEST(ProcessData, IsModuleLoaded) {
   EXPECT_TRUE(process->IsModuleLoaded(file_path_1));
   EXPECT_TRUE(process->IsModuleLoaded(file_path_2));
   EXPECT_FALSE(process->IsModuleLoaded("not/loaded/module"));
+}
+
+TEST(ProcessData, GetModuleBaseAddress) {
+  const std::string file_path_1 = "filepath1";
+  uint64_t start_address_1 = 0;
+  uint64_t end_address_1 = 10;
+  ModuleInfo module_info_1;
+  module_info_1.set_file_path(file_path_1);
+  module_info_1.set_address_start(start_address_1);
+  module_info_1.set_address_end(end_address_1);
+
+  const std::string file_path_2 = "filepath2";
+  uint64_t start_address_2 = 100;
+  uint64_t end_address_2 = 110;
+  ModuleInfo module_info_2;
+  module_info_2.set_file_path(file_path_2);
+  module_info_2.set_address_start(start_address_2);
+  module_info_1.set_address_end(end_address_2);
+
+  std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
+
+  std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
+  process->UpdateModuleInfos(module_infos);
+
+  EXPECT_EQ(process->GetModuleBaseAddress(file_path_1), start_address_1);
+  EXPECT_EQ(process->GetModuleBaseAddress(file_path_2), start_address_2);
+  EXPECT_DEATH(process->GetModuleBaseAddress("does/not/exist"), "Check failed");
 }
 
 TEST(ProcessData, CreateCopy) {
