@@ -37,18 +37,31 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
                                     const std::vector<ModuleInfo>& module_infos) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
+  auto process_it = process_map_.find(process_id);
+  CHECK(process_it != process_map_.end());
+  ProcessData* process = process_it->second.get();
+
   for (const auto& module_info : module_infos) {
-    if (module_map_.find(module_info.file_path()) == module_map_.end()) {
+    auto module_it = module_map_.find(module_info.file_path());
+    if (module_it == module_map_.end()) {
       const auto [inserted_it, success] = module_map_.try_emplace(
           module_info.file_path(), std::make_unique<ModuleData>(module_info));
       CHECK(success);
+    } else {
+      ModuleData* module = (*module_it).second.get();
+      if (!module->is_loaded()) continue;
+      // When a module is already loaded (has loaded symbols), it could be the case that the
+      // modules base address changed. Since the module base address is *currently* saved in
+      // FunctionInfo, these need to be updated.
+      // TODO(169309553): As soon as module base address is not part of FunctionInfo anymore, remove
+      // the following.
+      if (module_info.address_start() != process->GetModuleBaseAddress(module->file_path())) {
+        module->UpdateFunctionsModuleBaseAddress(module_info.address_start());
+      }
     }
   }
 
-  auto it = process_map_.find(process_id);
-  CHECK(it != process_map_.end());
-
-  it->second->UpdateModuleInfos(module_infos);
+  process->UpdateModuleInfos(module_infos);
 }
 
 void DataManager::SelectFunction(uint64_t function_address) {
@@ -151,7 +164,7 @@ std::vector<const FunctionInfo*> DataManager::GetSelectedAndOrbitFunctions() con
   std::vector<const FunctionInfo*> result = GetSelectedFunctions();
 
   // Collect OrbitFunctions
-  for (const auto& [module_path, memory_space] : selected_process_->GetMemoryMap()) {
+  for (const auto& [module_path, _] : selected_process_->GetMemoryMap()) {
     const ModuleData* module = module_map_.at(module_path).get();
     if (!module->is_loaded()) continue;
 
@@ -228,7 +241,7 @@ const FunctionInfo* DataManager::FindFunctionByAddress(int32_t process_id,
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   absl::flat_hash_map<std::string, ModuleData*> result;
-  for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {
+  for (const auto& [module_path, _] : process->GetMemoryMap()) {
     result[module_path] = module_map_.at(module_path).get();
   }
 

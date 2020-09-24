@@ -82,16 +82,33 @@ TEST(ModuleData, LoadSymbols) {
   EXPECT_EQ(function->line(), 0);
 }
 
-TEST(ModuleData, ClearSymbols) {
+TEST(ModuleData, UpdateFunctionsModuleBaseAddress) {
   ModuleData module{ModuleInfo{}};
-  module.AddSymbols(ModuleSymbols(), 0);
-  EXPECT_TRUE(module.is_loaded());
-  module.ClearSymbols();
-  EXPECT_FALSE(module.is_loaded());
-  EXPECT_EQ(module.GetFunctions().size(), 0);
 
-  // don't clear when no symbols are loaded
-  EXPECT_DEATH(module.ClearSymbols(), "Check failed");
+  ModuleSymbols symbols{};
+  SymbolInfo* symbol = symbols.add_symbol_infos();
+  symbol->set_name("test name");
+
+  module.AddSymbols(symbols, 0);
+
+  ASSERT_TRUE(module.is_loaded());
+  ASSERT_EQ(module.GetFunctions().size(), 1);
+
+  {
+    const FunctionInfo* function = module.GetFunctions()[0];
+    EXPECT_EQ(function->name(), "test name");
+    EXPECT_EQ(function->module_base_address(), 0);
+  }
+  module.UpdateFunctionsModuleBaseAddress(100);
+
+  ASSERT_TRUE(module.is_loaded());
+  ASSERT_EQ(module.GetFunctions().size(), 1);
+
+  {
+    const FunctionInfo* function = module.GetFunctions()[0];
+    EXPECT_EQ(function->name(), "test name");
+    EXPECT_EQ(function->module_base_address(), 100);
+  }
 }
 
 TEST(ModuleData, FindFunctionByRelativeAddress) {

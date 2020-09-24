@@ -54,9 +54,13 @@ class ProcessData final {
   [[nodiscard]] ErrorMessageOr<std::pair<std::string, uint64_t>> FindModuleByAddress(
       uint64_t absolute_address) const;
 
-  // TODO(antonrohr): remove this function and add symbols directly into a module, as soon as the
+  // TODO(169309553): remove this function and add symbols directly into a module, as soon as the
   // module_base_address is not needed anymore (FunctionInfo needs to be changed)
   void AddSymbols(ModuleData* module, const orbit_grpc_protos::ModuleSymbols& module_symbols) const;
+  uint64_t GetModuleBaseAddress(const std::string& module_path) const {
+    CHECK(module_memory_map_.contains(module_path));
+    return module_memory_map_.at(module_path).start;
+  }
   const absl::flat_hash_map<std::string, MemorySpace>& GetMemoryMap() const {
     return module_memory_map_;
   }
