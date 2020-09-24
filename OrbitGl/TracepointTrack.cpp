@@ -61,9 +61,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   float z = GlCanvas::kZValueEvent;
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
-
-  ScopeLock lock(GOrbitApp->GetCaptureData().GetTracepointEventBufferMutex());
-
+  
   const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
       GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_);
 
