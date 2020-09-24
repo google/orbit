@@ -24,15 +24,17 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
   world_top_left_y_ = 0;
   world_max_y_ = 0;
 
-  slider_ = std::make_shared<GlSlider>();
-  vertical_slider_ = std::make_shared<GlSlider>();
+  slider_ = std::make_shared<GlHorizontalSlider>();
+  vertical_slider_ = std::make_shared<GlVerticalSlider>();
 
   slider_->SetCanvas(this);
   slider_->SetDragCallback([&](float ratio) { this->OnDrag(ratio); });
 
   vertical_slider_->SetCanvas(this);
-  vertical_slider_->SetVertical();
   vertical_slider_->SetDragCallback([&](float ratio) { this->OnVerticalDrag(ratio); });
+
+  vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
+  slider_->SetOrthogonalSliderSize(vertical_slider_->GetPixelHeight());
 
   GOrbitApp->RegisterCaptureWindow(this);
 }
@@ -534,6 +536,9 @@ void CaptureWindow::DrawScreenSpace() {
       vertical_slider_->Draw(this, picking_mode);
       right_margin += slider_width;
     }
+
+    vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
+    slider_->SetOrthogonalSliderSize(vertical_slider_->GetPixelHeight());
   }
 
   // Right vertical margin.
