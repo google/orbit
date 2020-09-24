@@ -80,7 +80,6 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
 
   m_ImGuiContext = ImGui::CreateContext();
   ScopeImguiContext state(m_ImGuiContext);
-  Orbit_ImGui_Init();
 }
 
 GlCanvas::~GlCanvas() {

@@ -24,6 +24,7 @@
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "Error.h"
+#include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
@@ -122,32 +123,44 @@ static outcome::result<void> RunUiInstance(
     service_deploy_manager_ptr = &service_deploy_manager.value();
   }
 
-  OrbitMainWindow w(app, std::move(options), service_deploy_manager_ptr);
-  // "resize" is required to make "showMaximized" work properly.
-  w.resize(1280, 720);
-  w.showMaximized();
-
   std::optional<std::error_code> error;
-  auto error_handler = [&]() -> ScopedConnection {
-    if (!service_deploy_manager) {
-      return ScopedConnection();
+
+  OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
+
+  {  // Scoping of QT UI Resources
+    OrbitMainWindow w(app, service_deploy_manager_ptr);
+
+    Orbit_ImGui_Init();
+
+    // "resize" is required to make "showMaximized" work properly.
+    w.resize(1280, 720);
+    w.showMaximized();
+
+    auto error_handler = [&]() -> ScopedConnection {
+      if (!service_deploy_manager) {
+        return ScopedConnection();
+      }
+
+      return OrbitSshQt::ScopedConnection{QObject::connect(
+          &service_deploy_manager.value(), &ServiceDeployManager::socketErrorOccurred,
+          &service_deploy_manager.value(), [&](std::error_code e) {
+            error = e;
+            w.close();
+            QApplication::quit();
+          })};
+    }();
+
+    if (!capture_path.isEmpty()) {
+      w.OpenCapture(capture_path.toStdString());
     }
 
-    return OrbitSshQt::ScopedConnection{QObject::connect(
-        &service_deploy_manager.value(), &ServiceDeployManager::socketErrorOccurred,
-        &service_deploy_manager.value(), [&](std::error_code e) {
-          error = e;
-          w.close();
-          QApplication::quit();
-        })};
-  }();
+    QApplication::exec();
 
-  if (!capture_path.isEmpty()) {
-    w.OpenCapture(capture_path.toStdString());
+    Orbit_ImGui_Shutdown();
   }
 
-  QApplication::exec();
   GOrbitApp->OnExit();
+
   if (error) {
     return outcome::failure(error.value());
   } else {
