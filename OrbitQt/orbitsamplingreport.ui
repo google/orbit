@@ -44,6 +44,9 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QTabBar::tab { height: 40px; }</string>
+      </property>
       <property name="currentIndex">
        <number>-1</number>
       </property>
