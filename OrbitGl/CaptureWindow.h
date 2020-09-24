@@ -52,18 +52,18 @@ class CaptureWindow : public GlCanvas {
   void OnVerticalDrag(float a_Ratio);
   void NeedsUpdate();
   void OnCaptureStarted();
-  float GetTopBarTextY();
   std::vector<std::string> GetContextMenu() override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex) override;
   void UpdateVerticalSlider();
   void ToggleDrawHelp();
+  void set_draw_help(bool draw_help);
 
   Batcher& GetBatcherById(BatcherId batcher_id);
 
  private:
   TimeGraph time_graph_;
   OutputWindow m_StatsWindow;
-  bool m_DrawHelp;
+  bool draw_help_;
   bool m_DrawFilter;
   bool m_FirstHelpDraw;
   bool m_DrawStats;

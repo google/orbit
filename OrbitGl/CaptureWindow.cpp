@@ -15,7 +15,7 @@ CaptureWindow::CaptureWindow() : GlCanvas() {
   time_graph_.SetTextRenderer(&m_TextRenderer);
   time_graph_.SetCanvas(this);
   m_DrawUI = false;
-  m_DrawHelp = true;
+  draw_help_ = true;
   m_DrawFilter = false;
   m_FirstHelpDraw = true;
   m_DrawStats = false;
@@ -398,11 +398,11 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift
         m_DrawStats = !m_DrawStats;
         break;
       case 'H':
-        m_DrawHelp = !m_DrawHelp;
+        draw_help_ = !draw_help_;
         break;
       case 'X':
         GOrbitApp->ToggleCapture();
-        m_DrawHelp = false;
+        draw_help_ = false;
 #ifdef __linux__
         ZoomAll();
 #endif
@@ -567,8 +567,10 @@ void CaptureWindow::UpdateVerticalSlider() {
   vertical_slider_->SetSliderRatio(ratio);
 }
 
-void CaptureWindow::ToggleDrawHelp() {
-  m_DrawHelp = !m_DrawHelp;
+void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
+
+void CaptureWindow::set_draw_help(bool draw_help) {
+  draw_help_ = draw_help;
   NeedsRedraw();
 }
 
@@ -586,10 +588,6 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
 void CaptureWindow::NeedsUpdate() {
   time_graph_.NeedsUpdate();
   m_NeedsRedraw = true;
-}
-
-float CaptureWindow::GetTopBarTextY() {
-  return slider_->GetPixelHeight() * 0.5f + m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
 }
 
 template <class T>
@@ -641,7 +639,7 @@ void CaptureWindow::RenderUI() {
 
 #undef VAR_TO_STR
 
-  if (m_DrawHelp) {
+  if (draw_help_) {
     RenderHelpUi();
 
     if (m_FirstHelpDraw) {
@@ -677,7 +675,7 @@ void CaptureWindow::RenderHelpUi() {
   ColorToFloat(slider_->GetBarColor(), &color.x);
   ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
 
-  if (!ImGui::Begin("Help Overlay", &m_DrawHelp, ImVec2(0, 0), 1.f,
+  if (!ImGui::Begin("Help Overlay", &draw_help_, ImVec2(0, 0), 1.f,
                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
     ImGui::PopStyleColor();
