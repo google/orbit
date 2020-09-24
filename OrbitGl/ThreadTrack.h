@@ -25,6 +25,8 @@ class ThreadTrack : public TimerTrack {
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 
+  void OnPick(int x, int y) override;
+
   void UpdateBoxHeight() override;
   void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
@@ -33,6 +35,8 @@ class ThreadTrack : public TimerTrack {
 
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
+  [[nodiscard]] virtual bool IsTrackSelected() const override;
+
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
                                     bool is_selected) const override;
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,

@@ -79,7 +79,6 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  const Color kTabColor(50, 50, 50, 255);
   const bool picking = picking_mode != PickingMode::kNone;
 
   float x0 = pos_[0];
@@ -94,7 +93,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
-      batcher->AddBox(box, kTabColor, shared_from_this());
+      batcher->AddBox(box, GlCanvas::kTabColor, shared_from_this());
     }
   }
 
@@ -106,7 +105,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, kTabColor, shared_from_this());
+  batcher->AddBox(box, GlCanvas::kTabColor, shared_from_this());
 
   // Draw rounded corners.
   if (!picking) {
@@ -123,9 +122,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 end_top(x1 - right_margin, y0 + top_margin);
     float z = GlCanvas::kZValueRoundingCorner;
 
-    glColor4ubv(&kTabColor[0]);
     DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, bottom_right, kTabColor, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_right, GlCanvas::kTabColor, 0, z);
     DrawTriangleFan(batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f, z);
     DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, z);
     DrawTriangleFan(batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f, z);
@@ -151,9 +149,10 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float label_offset_x = layout.GetTrackLabelOffsetX();
     // Vertical offset for the text to be aligned to the center of the triangle.
     float label_offset_y = GCurrentTimeGraph->GetFontSize() / 3.f;
-    const Color kTextWhite(255, 255, 255, 255);
+    const Color kColor =
+        IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
     canvas->AddText(label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z,
-                    kTextWhite, label_width - label_offset_x);
+                    kColor, label_width - label_offset_x);
   }
 
   canvas_ = canvas;
