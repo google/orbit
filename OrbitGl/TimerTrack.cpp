@@ -45,7 +45,7 @@ std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float box_height = layout.GetTextBoxHeight();
+  float box_height = box_height_;
   if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
     box_height /= static_cast<float>(depth_);
   }
@@ -55,6 +55,8 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
+
+float TimerTrack::GetTextBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
 
 void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                   PickingMode /*picking_mode*/) {
@@ -112,7 +114,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         bool is_selected = &text_box == GOrbitApp->selected_text_box();
 
         Vec2 pos(world_timer_x, world_timer_y);
-        Vec2 size(world_timer_width, box_height_);
+        Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
         float z = GlCanvas::kZValueBox;
         Color color = GetTimerColor(timer_info, is_selected);
         text_box.SetPos(pos);

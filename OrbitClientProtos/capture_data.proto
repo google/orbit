@@ -99,6 +99,7 @@ message TimerInfo {
     kCoreActivity = 1;
     kIntrospection = 2;
     kGpuActivity = 3;
+    kFrame = 4;
   }
   Type type = 6;
 

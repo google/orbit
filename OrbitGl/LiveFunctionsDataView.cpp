@@ -141,6 +141,8 @@ const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
 const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
 const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
+const std::string LiveFunctionsDataView::kMenuActionFrameTrack = "Add frame track(s)";
+const std::string LiveFunctionsDataView::kMenuActionRemoveFrameTrack = "Remove frame track(s)";
 
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -148,6 +150,9 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_unselect = false;
   bool enable_iterator = false;
   bool enable_disassembly = false;
+  bool enable_frame_track = false;
+  bool enable_remove_frame_track = false;
+
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : selected_indices) {
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
@@ -161,7 +166,12 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
     enable_select |= function_exists && !GOrbitApp->IsFunctionSelected(selected_function);
     enable_unselect |= function_exists && GOrbitApp->IsFunctionSelected(selected_function);
+    // We need at least one function call to a function so that adding iterators makes sense.
     enable_iterator |= stats.count() > 0;
+    // We need at least two function calls to a function so that it's possible to use it
+    // as a frame marker.
+    enable_frame_track |= stats.count() > 1 && added_frame_tracks_.count(absolute_address) == 0;
+    enable_remove_frame_track |= added_frame_tracks_.count(absolute_address) > 0;
     enable_disassembly |= function_exists;
   }
 
@@ -172,6 +182,12 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
 
   if (enable_iterator) {
     menu.emplace_back(kMenuActionIterate);
+  }
+  if (enable_frame_track) {
+    menu.emplace_back(kMenuActionFrameTrack);
+  }
+  if (enable_remove_frame_track) {
+    menu.emplace_back(kMenuActionRemoveFrameTrack);
   }
 
   // For now, these actions only make sense when one function is selected,
@@ -250,6 +266,25 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
         live_functions_->AddIterator(selected_function);
       }
     }
+  } else if (action == kMenuActionFrameTrack) {
+    for (int i : item_indices) {
+      FunctionInfo* function = GetSelectedFunction(i);
+      const FunctionStats& stats = GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(*function);
+      uint64_t function_address = FunctionUtils::GetAbsoluteAddress(*function);
+      if (stats.count() > 1 && added_frame_tracks_.count(function_address) == 0) {
+        live_functions_->AddFrameTrack(*function);
+        added_frame_tracks_.insert(function_address);
+      }
+    }
+  } else if (action == kMenuActionRemoveFrameTrack) {
+    for (int i : item_indices) {
+      FunctionInfo* function = GetSelectedFunction(i);
+      uint64_t function_address = FunctionUtils::GetAbsoluteAddress(*function);
+      if (added_frame_tracks_.count(function_address) > 0) {
+        added_frame_tracks_.erase(function_address);
+        live_functions_->RemoveFrameTrack(*function);
+      }
+    }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
   }
@@ -291,6 +326,7 @@ void LiveFunctionsDataView::DoFilter() {
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
+  added_frame_tracks_.clear();
   const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
       GOrbitApp->GetCaptureData().selected_functions();
   size_t functions_count = selected_functions.size();

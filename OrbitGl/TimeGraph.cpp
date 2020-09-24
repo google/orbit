@@ -87,6 +87,7 @@ void TimeGraph::Clear() {
   gpu_tracks_.clear();
   graph_tracks_.clear();
   async_tracks_.clear();
+  frame_tracks_.clear();
 
   cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
@@ -301,6 +302,9 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   if (timer_info.type() == TimerInfo::kGpuActivity) {
     uint64_t timeline_hash = timer_info.timeline_hash();
     std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
+    track->OnTimer(timer_info);
+  } else if (timer_info.type() == TimerInfo::kFrame) {
+    std::shared_ptr<FrameTrack> track = GetOrCreateFrameTrack(*function);
     track->OnTimer(timer_info);
   } else {
     std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(timer_info.thread_id());
@@ -821,6 +825,17 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
+std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo& function) {
+  ScopeLock lock(mutex_);
+  std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
+  if (track == nullptr) {
+    track = std::make_shared<FrameTrack>(this, function);
+    tracks_.emplace_back(track);
+    frame_tracks_[function.address()] = track;
+  }
+  return track;
+}
+
 void TimeGraph::SetThreadFilter(const std::string& filter) {
   thread_filter_ = filter;
   NeedsUpdate();
@@ -894,6 +909,10 @@ void TimeGraph::SortTracks() {
     // Gpu Tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
       sorted_tracks_.emplace_back(timeline_and_track.second);
+    }
+
+    for (const auto& name_and_track : frame_tracks_) {
+      sorted_tracks_.emplace_back(name_and_track.second);
     }
 
     // Graph Tracks.
@@ -1051,4 +1070,9 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
     default:
       return false;
   }
+}
+
+void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) {
+  frame_tracks_.erase(function.address());
+  NeedsUpdate();
 }
