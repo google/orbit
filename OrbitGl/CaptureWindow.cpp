@@ -88,6 +88,8 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, 
     time_graph_.PanTime(m_ScreenClickX, a_X, getWidth(), static_cast<double>(m_RefTimeClick));
     UpdateVerticalSlider();
     NeedsUpdate();
+
+    click_was_drag_ = true;
   }
 
   if (m_IsSelecting) {
@@ -118,12 +120,18 @@ void CaptureWindow::LeftDown(int a_X, int a_Y) {
   Orbit_ImGui_MouseButtonCallback(this, 0, true);
 
   m_Picking = true;
+  click_was_drag_ = false;
   NeedsRedraw();
 }
 
 void CaptureWindow::LeftUp() {
   GlCanvas::LeftUp();
-  NeedsRedraw();
+
+  if (!click_was_drag_ && background_clicked_) {
+    GOrbitApp->SelectTextBox(nullptr);
+    GOrbitApp->set_selected_thread_id(-1);
+    NeedsUpdate();
+  }
 }
 
 void CaptureWindow::LeftDoubleClick() {
@@ -145,9 +153,6 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   std::memcpy(&value, &pixels[0], sizeof(uint32_t));
   PickingId pickId = PickingId::FromPixelValue(value);
 
-  GOrbitApp->SelectTextBox(nullptr);
-  GOrbitApp->set_selected_thread_id(-1);
-
   Pick(pickId, a_X, a_Y);
 
   NeedsUpdate();
@@ -155,6 +160,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 
 void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
   PickingType type = a_PickingID.type;
+  background_clicked_ = false;
 
   Batcher& batcher = GetBatcherById(a_PickingID.batcher_id);
   const TextBox* text_box = batcher.GetTextBox(a_PickingID);
@@ -162,6 +168,11 @@ void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
     SelectTextBox(text_box);
   } else if (type == PickingType::kPickable) {
     m_PickingManager.Pick(a_PickingID, a_X, a_Y);
+  } else {
+    // If the background is clicked: The selection should only be cleared
+    // if the user doesn't drag around the capture window.
+    // This is handled later in CaptureWindow::LeftUp()
+    background_clicked_ = true;
   }
 }
 
