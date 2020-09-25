@@ -27,11 +27,11 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
   slider_ = std::make_shared<GlHorizontalSlider>();
   vertical_slider_ = std::make_shared<GlVerticalSlider>();
 
-  slider_->SetCanvas(this);
   slider_->SetDragCallback([&](float ratio) { this->OnDrag(ratio); });
+  slider_->SetCanvas(this);
 
-  vertical_slider_->SetCanvas(this);
   vertical_slider_->SetDragCallback([&](float ratio) { this->OnVerticalDrag(ratio); });
+  vertical_slider_->SetCanvas(this);
 
   vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
   slider_->SetOrthogonalSliderSize(vertical_slider_->GetPixelHeight());
