@@ -18,41 +18,41 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   GlSlider();
   ~GlSlider(){};
 
-  bool Draggable() override { return true; }
-  void SetSliderRatio(float a_Start);       // [0,1]
-  void SetSliderWidthRatio(float a_Ratio);  // [0,1]
-  void SetCanvas(GlCanvas* a_Canvas) { m_Canvas = a_Canvas; }
-  Color GetBarColor() const { return m_SliderColor; }
-  void SetPixelHeight(float height) { m_PixelHeight = height; }
-  float GetPixelHeight() const { return m_PixelHeight; }
+  [[nodiscard]] bool Draggable() override { return true; }
+
+  void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
+  void SetSliderRatio(float start);  // [0,1]
+
+  void SetSliderWidthRatio(float ratio);  // [0,1]
+  [[nodiscard]] Color GetBarColor() const { return slider_color_; }
+  void SetPixelHeight(float height) { pixel_height_ = height; }
+  [[nodiscard]] float GetPixelHeight() const { return pixel_height_; }
 
   void SetOrthogonalSliderSize(float size) { orthogonal_slider_size_ = size; }
-  float GetOrthogonalSliderSize() { return orthogonal_slider_size_; }
+  [[nodiscard]] float GetOrthogonalSliderSize() { return orthogonal_slider_size_; }
 
   typedef std::function<void(float)> DragCallback;
-  void SetDragCallback(DragCallback a_Callback) { m_DragCallback = a_Callback; }
+  void SetDragCallback(DragCallback callback) { drag_callback_ = callback; }
 
  protected:
   static Color GetLighterColor(const Color& color);
   static Color GetDarkerColor(const Color& color);
 
   void DrawBackground(GlCanvas* canvas, float x, float y, float width, float height);
-  void DrawSlider(GlCanvas* canvas, float x, float y, float width, float height, bool picking,
+  void DrawSlider(GlCanvas* canvas, float x, float y, float width, float height,
                   ShadingDirection shading_direction);
 
  protected:
-  TextBox m_Slider;
-  TextBox m_Bar;
-  GlCanvas* m_Canvas;
-  float m_Ratio;
-  float m_Length;
-  float m_PickingRatio;
-  DragCallback m_DragCallback;
-  Color m_SelectedColor;
-  Color m_SliderColor;
-  Color m_BarColor;
-  float m_MinSliderPixelWidth;
-  float m_PixelHeight;
+  GlCanvas* canvas_;
+  float ratio_;
+  float length_;
+  float picking_ratio_;
+  DragCallback drag_callback_;
+  Color selected_color_;
+  Color slider_color_;
+  Color bar_color_;
+  float min_slider_pixel_width_;
+  float pixel_height_;
   float orthogonal_slider_size_;
 };
 
@@ -63,7 +63,7 @@ class GlVerticalSlider : public GlSlider {
 
   void OnPick(int x, int y) override;
   void OnDrag(int x, int y) override;
-  void Draw(GlCanvas* a_Canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 };
 
 class GlHorizontalSlider : public GlSlider {
@@ -73,5 +73,5 @@ class GlHorizontalSlider : public GlSlider {
 
   void OnPick(int x, int y) override;
   void OnDrag(int x, int y) override;
-  void Draw(GlCanvas* a_Canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 };
