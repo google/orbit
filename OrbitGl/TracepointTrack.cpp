@@ -61,7 +61,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   float z = GlCanvas::kZValueEvent;
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
-  
+
   const Color kWhite(255, 255, 255, 255);
 
   const Color kWhiteTransparent(255, 255, 255, 190);
@@ -69,7 +69,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   const Color kGreenSelection(0, 255, 0, 255);
 
   if (!picking) {
-    GOrbitApp->GetCaptureData().ForEachTracepointEventOfThread(
+    GOrbitApp->GetCaptureData().ForEachTracepointEventOfThreadInTimeRange(
         thread_id_, min_tick, max_tick,
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
@@ -85,7 +85,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
     constexpr float kPickingBoxWidth = 9.0f;
     constexpr float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
 
-    GOrbitApp->GetCaptureData().ForEachTracepointEventOfThread(
+    GOrbitApp->GetCaptureData().ForEachTracepointEventOfThreadInTimeRange(
         thread_id_, min_tick, max_tick,
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();

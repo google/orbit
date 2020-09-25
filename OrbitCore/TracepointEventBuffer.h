@@ -23,13 +23,8 @@ class TracepointEventBuffer {
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
   GetTracepointsOfThread(int32_t thread_id) const;
 
-  void ForEachTracepointEventOfThread(
-      int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
-      const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const;
-
   void ForEachTracepointEventOfThreadInTimeRange(
-      uint64_t min_tick, uint64_t max_tick,
-      const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& time_to_tracepoint_events,
+      int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const;
 
   void ForEachTracepointEvent(
