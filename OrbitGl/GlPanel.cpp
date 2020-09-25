@@ -6,17 +6,8 @@
 
 #include "CaptureWindow.h"
 
-std::unique_ptr<GlPanel> GlPanel::Create(Type a_Type) {
-  // Intended to be a factory method creating different types of
-  // GlPanels, but right now there's only CAPTURE
-  if (a_Type != CAPTURE) {
-    return nullptr;
-  }
-
-  std::unique_ptr<GlPanel> panel = std::make_unique<CaptureWindow>();
-  panel->m_Type = a_Type;
-
-  return panel;
+std::unique_ptr<GlPanel> GlPanel::Create(StatsMode stats_mode) {
+  return std::make_unique<CaptureWindow>(stats_mode);
 }
 
 GlPanel::GlPanel() {

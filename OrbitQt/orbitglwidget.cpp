@@ -36,8 +36,8 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   return false;
 }
 
-void OrbitGLWidget::Initialize(GlPanel::Type a_Type, OrbitMainWindow* a_MainWindow) {
-  m_OrbitPanel = GlPanel::Create(a_Type);
+void OrbitGLWidget::Initialize(GlPanel::StatsMode stats_mode, OrbitMainWindow* a_MainWindow) {
+  m_OrbitPanel = GlPanel::Create(stats_mode);
 
   if (a_MainWindow) {
     a_MainWindow->RegisterGlWidget(this);

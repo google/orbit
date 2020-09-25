@@ -10,7 +10,8 @@
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow() : GlCanvas() {
+CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
+    : GlCanvas(), stats_enabled_(stats_mode == StatsMode::kEnabled) {
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&m_TextRenderer);
   time_graph_.SetCanvas(this);
@@ -406,7 +407,7 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift
         m_DrawFilter = !m_DrawFilter;
         break;
       case 'I':
-        m_DrawStats = !m_DrawStats;
+        m_DrawStats = !m_DrawStats && stats_enabled_;
         break;
       case 'H':
         draw_help_ = !draw_help_;
