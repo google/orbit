@@ -51,9 +51,8 @@ class TracerThread {
     if (period_ns_dbl > 0 &&
         period_ns_dbl <= static_cast<double>(std::numeric_limits<uint64_t>::max())) {
       return std::optional<uint64_t>(period_ns_dbl);
-    } else {
-      return std::nullopt;
     }
+    return std::nullopt;
   }
 
   bool OpenContextSwitches(const std::vector<int32_t>& cpus);
@@ -74,22 +73,12 @@ class TracerThread {
 
   void OpenUserSpaceProbesRingBuffers();
 
-  static void OpenRingBuffersOrRedirectOnExisting(
-      const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
-      absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
-      std::vector<PerfEventRingBuffer>* ring_buffers, uint64_t ring_buffer_size_kb,
-      std::string_view buffer_name_prefix);
-
-  static bool OpenRingBuffersForTracepoint(
-      const char* tracepoint_category, const char* tracepoint_name,
-      const std::vector<int32_t>& cpus, std::vector<int>* tracing_fds,
-      absl::flat_hash_set<uint64_t>* tracepoint_ids,
-      absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu,
-      std::vector<PerfEventRingBuffer>* ring_buffers);
-  bool OpenTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
+
+  bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
 
   void ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
                                         PerfEventRingBuffer* ring_buffer);
@@ -120,8 +109,9 @@ class TracerThread {
   static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 8 * 1024;
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
-  static constexpr uint64_t TRACEPOINTS_RING_BUFFER_SIZE_KB = 256;
+  static constexpr uint64_t THREAD_NAMES_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
+  static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
 
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 1000;

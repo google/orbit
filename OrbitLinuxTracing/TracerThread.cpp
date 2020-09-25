@@ -304,7 +304,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   return true;
 }
 
-void TracerThread::OpenRingBuffersOrRedirectOnExisting(
+static void OpenRingBuffersOrRedirectOnExisting(
     const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
     absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
     std::vector<PerfEventRingBuffer>* ring_buffers, uint64_t ring_buffer_size_kb,
@@ -327,59 +327,88 @@ void TracerThread::OpenRingBuffersOrRedirectOnExisting(
   }
 }
 
-bool TracerThread::OpenRingBuffersForTracepoint(
-    const char* tracepoint_category, const char* tracepoint_name, const std::vector<int32_t>& cpus,
-    std::vector<int>* tracing_fds, absl::flat_hash_set<uint64_t>* tracepoint_ids,
-    absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu,
+namespace {
+
+struct TracepointToOpen {
+  TracepointToOpen(const char* tracepoint_category, const char* tracepoint_name,
+                   absl::flat_hash_set<uint64_t>* tracepoint_stream_ids)
+      : tracepoint_category{tracepoint_category},
+        tracepoint_name{tracepoint_name},
+        tracepoint_stream_ids{tracepoint_stream_ids} {}
+
+  const char* const tracepoint_category;
+  const char* const tracepoint_name;
+  absl::flat_hash_set<uint64_t>* const tracepoint_stream_ids;
+};
+
+}  // namespace
+
+static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
+    const std::vector<TracepointToOpen>& tracepoints_to_open, const std::vector<int32_t>& cpus,
+    std::vector<int>* tracing_fds, uint64_t ring_buffer_size_kb,
+    absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu_for_redirection,
     std::vector<PerfEventRingBuffer>* ring_buffers) {
-  absl::flat_hash_map<int32_t, int> tracepoint_fds_per_cpu;
-  for (int32_t cpu : cpus) {
-    int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
-    if (fd < 0) {
-      ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name, cpu);
-      for (const auto& open_fd : tracepoint_fds_per_cpu) {
-        close(open_fd.second);
+  absl::flat_hash_map<size_t, absl::flat_hash_map<int32_t, int>> index_to_tracepoint_fds_per_cpu;
+  bool tracepoint_event_open_errors = false;
+  for (size_t tracepoint_index = 0;
+       tracepoint_index < tracepoints_to_open.size() && !tracepoint_event_open_errors;
+       ++tracepoint_index) {
+    const char* tracepoint_category = tracepoints_to_open[tracepoint_index].tracepoint_category;
+    const char* tracepoint_name = tracepoints_to_open[tracepoint_index].tracepoint_name;
+    for (int32_t cpu : cpus) {
+      int tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+      if (tracepoint_fd == -1) {
+        ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name, cpu);
+        tracepoint_event_open_errors = true;
+        break;
       }
-      return false;
+      index_to_tracepoint_fds_per_cpu[tracepoint_index].emplace(cpu, tracepoint_fd);
     }
-    tracepoint_fds_per_cpu.emplace(cpu, fd);
   }
 
-  for (const auto& fd : tracepoint_fds_per_cpu) {
-    tracing_fds->push_back(fd.second);
-    uint64_t stream_id = perf_event_get_id(fd.second);
-    tracepoint_ids->insert(stream_id);
+  if (tracepoint_event_open_errors) {
+    for (const auto& index_and_tracepoint_fds_per_cpu : index_to_tracepoint_fds_per_cpu) {
+      for (const auto& cpu_and_fd : index_and_tracepoint_fds_per_cpu.second) {
+        close(cpu_and_fd.second);
+      }
+    }
+    return false;
   }
 
-  OpenRingBuffersOrRedirectOnExisting(tracepoint_fds_per_cpu, tracepoint_ring_buffer_fds_per_cpu,
-                                      ring_buffers, TRACEPOINTS_RING_BUFFER_SIZE_KB, "tracepoints");
+  // Since all tracepoints could successfully be opened, we can now commit all file descriptors and
+  // ring buffers to TracerThread's members.
+  for (const auto& index_and_tracepoint_fds_per_cpu : index_to_tracepoint_fds_per_cpu) {
+    const size_t tracepoint_index = index_and_tracepoint_fds_per_cpu.first;
+    absl::flat_hash_set<uint64_t>* tracepoint_stream_ids =
+        tracepoints_to_open[tracepoint_index].tracepoint_stream_ids;
+
+    for (const auto& cpu_and_fd : index_and_tracepoint_fds_per_cpu.second) {
+      tracing_fds->push_back(cpu_and_fd.second);
+      tracepoint_stream_ids->insert(perf_event_get_id(cpu_and_fd.second));
+    }
+  }
+
+  // Redirect on the same ring buffer all the tracepoint events that are open on each CPU.
+  for (const auto& index_and_tracepoint_fds_per_cpu : index_to_tracepoint_fds_per_cpu) {
+    const size_t tracepoint_index = index_and_tracepoint_fds_per_cpu.first;
+    const char* tracepoint_category = tracepoints_to_open[tracepoint_index].tracepoint_category;
+    const char* tracepoint_name = tracepoints_to_open[tracepoint_index].tracepoint_name;
+    const absl::flat_hash_map<int32_t, int>& tracepoint_fds_per_cpu =
+        index_and_tracepoint_fds_per_cpu.second;
+
+    OpenRingBuffersOrRedirectOnExisting(
+        tracepoint_fds_per_cpu, tracepoint_ring_buffer_fds_per_cpu_for_redirection, ring_buffers,
+        ring_buffer_size_kb, absl::StrFormat("%s:%s", tracepoint_category, tracepoint_name));
+  }
   return true;
 }
 
-bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
-  bool tracepoint_event_open_errors = false;
-  absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
-
-  tracepoint_event_open_errors |=
-      !OpenRingBuffersForTracepoint("task", "task_newtask", cpus, &tracing_fds_, &task_newtask_ids_,
-                                    &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
-
-  tracepoint_event_open_errors |=
-      !OpenRingBuffersForTracepoint("task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
-                                    &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
-
-  for (const auto& selected_tracepoint : instrumented_tracepoints_) {
-    absl::flat_hash_set<uint64_t> stream_ids;
-    tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
-        selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), cpus,
-        &tracing_fds_, &stream_ids, &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
-
-    for (const auto& stream_id : stream_ids) {
-      ids_to_tracepoint_info_.emplace(stream_id, selected_tracepoint);
-    }
-  }
-
-  return !tracepoint_event_open_errors;
+bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
+  absl::flat_hash_map<int32_t, int> thread_name_tracepoint_ring_buffer_fds_per_cpu;
+  return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
+      {{"task", "task_newtask", &task_newtask_ids_}, {"task", "task_rename", &task_rename_ids_}},
+      cpus, &tracing_fds_, THREAD_NAMES_RING_BUFFER_SIZE_KB,
+      &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
 bool TracerThread::InitGpuTracepointEventProcessor() {
@@ -388,92 +417,45 @@ bool TracerThread::InitGpuTracepointEventProcessor() {
   return true;
 }
 
-// This method enables events for GPU event tracing. We trace three events that
-// correspond to the following GPU driver events:
-// - A GPU job (command buffer submission) is scheduled by the application. This
-//   is tracked by the event "amdgpu_cs_ioctl".
+// This method enables events for GPU event tracing. We trace three events that correspond to the
+// following GPU driver events:
+// - A GPU job (command buffer submission) is scheduled by the application. This is tracked by the
+//   event "amdgpu_cs_ioctl".
 // - A GPU job is scheduled to run on the hardware. This is tracked by the event
 //   "amdgpu_sched_run_job".
-// - A GPU job is finished by the hardware. This is tracked by the corresponding
-//   DMA fence being signaled and is tracked by the event "dma_fence_signaled".
-// A single job execution thus correponds to three events, one of each type
-// above, that share the same timeline, context, and seqno.
-// We have to record events system-wide (per CPU) to ensure we record all
-// relevant events.
+// - A GPU job is finished by the hardware. This is tracked by the corresponding DMA fence being
+//   signaled and is tracked by the event "dma_fence_signaled".
+// A single job execution thus corresponds to three events, one of each type above, that share the
+// same timeline, context, and seqno.
+// We have to record events system-wide (per CPU) to ensure we record all relevant events.
 // This method returns true on success, otherwise false.
 bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
-  absl::flat_hash_map<int32_t, int> amdgpu_cs_ioctl_fds_per_cpu;
-  absl::flat_hash_map<int32_t, int> amdgpu_sched_run_job_fds_per_cpu;
-  absl::flat_hash_map<int32_t, int> dma_fence_signaled_fds_per_cpu;
-  bool tracepoint_event_open_errors = false;
-  for (int32_t cpu : cpus) {
-    int amdgpu_cs_ioctl_fd = tracepoint_event_open("amdgpu", "amdgpu_cs_ioctl", -1, cpu);
-    if (amdgpu_cs_ioctl_fd == -1) {
-      ERROR("Opening amdgpu:amdgpu_cs_ioctl tracepoint for cpu %d", cpu);
-      tracepoint_event_open_errors = true;
-      break;
-    }
-    amdgpu_cs_ioctl_fds_per_cpu.emplace(cpu, amdgpu_cs_ioctl_fd);
-
-    int amdgpu_sched_run_job_fd = tracepoint_event_open("amdgpu", "amdgpu_sched_run_job", -1, cpu);
-    if (amdgpu_sched_run_job_fd == -1) {
-      ERROR("Opening amdgpu:amdgpu_sched_run_job tracepoint for cpu %d", cpu);
-      tracepoint_event_open_errors = true;
-      break;
-    }
-    amdgpu_sched_run_job_fds_per_cpu.emplace(cpu, amdgpu_sched_run_job_fd);
-
-    int dma_fence_signaled_fd = tracepoint_event_open("dma_fence", "dma_fence_signaled", -1, cpu);
-    if (dma_fence_signaled_fd == -1) {
-      ERROR("Opening dma_fence:dma_fence_signaled tracepoint for cpu %d", cpu);
-      tracepoint_event_open_errors = true;
-      break;
-    }
-    dma_fence_signaled_fds_per_cpu.emplace(cpu, dma_fence_signaled_fd);
-  }
-
-  if (tracepoint_event_open_errors) {
-    for (const auto& cpu_and_fd : amdgpu_cs_ioctl_fds_per_cpu) {
-      close(cpu_and_fd.second);
-    }
-    for (const auto& cpu_and_fd : amdgpu_sched_run_job_fds_per_cpu) {
-      close(cpu_and_fd.second);
-    }
-    for (const auto& cpu_and_fd : dma_fence_signaled_fds_per_cpu) {
-      close(cpu_and_fd.second);
-    }
-    return false;
-  }
-
-  // Since all tracepoints could successfully be opened, we can now commit all
-  // file descriptors and ring buffers to the TracerThread members.
-  for (const auto& cpu_and_fd : amdgpu_cs_ioctl_fds_per_cpu) {
-    tracing_fds_.push_back(cpu_and_fd.second);
-    amdgpu_cs_ioctl_ids_.insert(perf_event_get_id(cpu_and_fd.second));
-  }
-  for (const auto& cpu_and_fd : amdgpu_sched_run_job_fds_per_cpu) {
-    tracing_fds_.push_back(cpu_and_fd.second);
-    amdgpu_sched_run_job_ids_.insert(perf_event_get_id(cpu_and_fd.second));
-  }
-  for (const auto& cpu_and_fd : dma_fence_signaled_fds_per_cpu) {
-    tracing_fds_.push_back(cpu_and_fd.second);
-    dma_fence_signaled_ids_.insert(perf_event_get_id(cpu_and_fd.second));
-  }
-
-  // Redirect on the same ring buffer all the three GPU events that are open on
-  // each CPU.
   absl::flat_hash_map<int32_t, int> gpu_tracepoint_ring_buffer_fds_per_cpu;
-  OpenRingBuffersOrRedirectOnExisting(
-      amdgpu_cs_ioctl_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_,
-      GPU_TRACING_RING_BUFFER_SIZE_KB, absl::StrFormat("%s:%s", "amdgpu", "amdgpu_cs_ioctl"));
-  OpenRingBuffersOrRedirectOnExisting(
-      amdgpu_sched_run_job_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_,
-      GPU_TRACING_RING_BUFFER_SIZE_KB, absl::StrFormat("%s:%s", "amdgpu", "amdgpu_sched_run_job"));
-  OpenRingBuffersOrRedirectOnExisting(
-      dma_fence_signaled_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_,
-      GPU_TRACING_RING_BUFFER_SIZE_KB, absl::StrFormat("%s:%s", "dma_fence", "dma_fence_signaled"));
+  return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
+      {{"amdgpu", "amdgpu_cs_ioctl", &amdgpu_cs_ioctl_ids_},
+       {"amdgpu", "amdgpu_sched_run_job", &amdgpu_sched_run_job_ids_},
+       {"dma_fence", "dma_fence_signaled", &dma_fence_signaled_ids_}},
+      cpus, &tracing_fds_, GPU_TRACING_RING_BUFFER_SIZE_KB, &gpu_tracepoint_ring_buffer_fds_per_cpu,
+      &ring_buffers_);
+}
 
-  return true;
+bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
+  bool tracepoint_event_open_errors = false;
+  absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
+
+  for (const auto& selected_tracepoint : instrumented_tracepoints_) {
+    absl::flat_hash_set<uint64_t> stream_ids;
+    tracepoint_event_open_errors |= !OpenFileDescriptorsAndRingBuffersForAllTracepoints(
+        {{selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), &stream_ids}},
+        cpus, &tracing_fds_, INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB,
+        &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+
+    for (const auto& stream_id : stream_ids) {
+      ids_to_tracepoint_info_.emplace(stream_id, selected_tracepoint);
+    }
+  }
+
+  return !tracepoint_event_open_errors;
 }
 
 void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested) {
@@ -518,8 +500,6 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  perf_event_open_errors |= !OpenTracepoints(cpuset_cpus);
-
   // This takes an initial snapshot of the maps. Call it after OpenUprobes, as
   // calling perf_event_open for uprobes (just calling it, it is not necessary
   // to enable the file descriptor) causes a new [uprobes] map entry, and we
@@ -530,6 +510,8 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
       unwinding_method_ == CaptureOptions::kDwarf) {
     perf_event_open_errors |= !OpenSampling(cpuset_cpus);
   }
+
+  perf_event_open_errors |= !OpenThreadNameTracepoints(all_cpus);
 
   bool gpu_event_open_errors = false;
   if (trace_gpu_driver_) {
@@ -546,6 +528,8 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   if (gpu_event_open_errors) {
     LOG("There were errors opening GPU tracepoint events");
   }
+
+  perf_event_open_errors |= !OpenInstrumentedTracepoints(all_cpus);
 
   if (uprobes_event_open_errors) {
     LOG("There were errors with perf_event_open, including for uprobes: did "
