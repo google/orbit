@@ -103,6 +103,25 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Co
   user_data_.push_back(std::move(user_data));
 }
 
+void Batcher::AddCircle(Vec2 position, float radius, float z, Color color) {
+  std::vector<Vec2> circle_points_scaled_by_radius;
+  for (auto& point : circle_points) {
+    circle_points_scaled_by_radius.emplace_back(radius * point);
+  }
+
+  Vec3 prev_point(position[0], position[1] - radius, z);
+  Vec3 point_0 = Vec3(position[0], position[1], z);
+  for (size_t i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
+    Vec3 new_point(position[0] + circle_points_scaled_by_radius[i][0],
+                   position[1] - circle_points_scaled_by_radius[i][1], z);
+    Vec3 point_1 = Vec3(prev_point[0], prev_point[1], z);
+    Vec3 point_2 = Vec3(new_point[0], new_point[1], z);
+    Triangle triangle(point_0, point_1, point_2);
+    AddTriangle(triangle, color);
+    prev_point = new_point;
+  }
+}
+
 const PickingUserData* Batcher::GetUserData(PickingId id) const {
   CHECK(id.element_id >= 0);
   CHECK(id.batcher_id == batcher_id_);

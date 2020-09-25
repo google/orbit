@@ -66,7 +66,15 @@ struct TriangleBuffer {
 class Batcher {
  public:
   explicit Batcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
-      : batcher_id_(batcher_id), picking_manager_(picking_manager) {}
+      : batcher_id_(batcher_id), picking_manager_(picking_manager) {
+    constexpr float kSteps = 22;
+    const float angle = (kPiFloat * 2.f) / kSteps;
+    for (int i = 1; i <= kSteps; i++) {
+      float new_x = sinf(angle * i);
+      float new_y = cosf(angle * i);
+      circle_points.emplace_back(Vec2(new_x, new_y));
+    }
+  }
 
   Batcher() = delete;
   Batcher(const Batcher&) = delete;
@@ -93,6 +101,7 @@ class Batcher {
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
 
+  void AddCircle(Vec2 position, float radius, float z, Color color);
   virtual void Draw(bool picking = false) const;
 
   void ResetElements();
@@ -127,6 +136,8 @@ class Batcher {
   TriangleBuffer triangle_buffer_;
 
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
+
+  std::vector<Vec2> circle_points;
 };
 
 #endif
