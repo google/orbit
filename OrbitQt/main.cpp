@@ -238,6 +238,11 @@ static void DisplayErrorToUser(const QString& message) {
   QMessageBox::critical(nullptr, QApplication::applicationName(), message);
 }
 
+static bool DevModeEnabledViaEnvironmentVariable() {
+  const auto env = QProcessEnvironment::systemEnvironment();
+  return env.contains("ORBIT_DEV_MODE") || env.contains("ORBIT_DEVELOPER_MODE");
+}
+
 int main(int argc, char* argv[]) {
   // Will be filled by QApplication once instantiated.
   QString path_to_executable;
@@ -267,6 +272,10 @@ int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
     QApplication::setApplicationName("orbitprofiler");
+
+    if (DevModeEnabledViaEnvironmentVariable()) {
+      absl::SetFlag(&FLAGS_devmode, true);
+    }
 
     // The application display name is automatically appended to all window titles when shown in the
     // title bar: <specific window title> - <application display name>
