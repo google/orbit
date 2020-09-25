@@ -109,6 +109,11 @@ const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address
 
 const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address,
                                                        bool is_exact) const {
+  // TODO(antonrohr) Maybe do a CHECK(process_ != nullptr) here instead of returning -1. Currently
+  // CaptureSerializerTest is the only scenario where this is actually needed.
+  if (process_ == nullptr) {
+    return nullptr;
+  }
   const auto result = process_->FindModuleByAddress(absolute_address);
   if (!result) return nullptr;
   const std::string& module_path = result.value().first;
@@ -121,6 +126,11 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 }
 
 [[nodiscard]] ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
+  // TODO(antonrohr) Maybe do a CHECK(process_ != nullptr) here instead of returning -1. Currently
+  // CaptureSerializerTest is the only scenario where this is actually needed.
+  if (process_ == nullptr) {
+    return nullptr;
+  }
   const auto result = process_->FindModuleByAddress(absolute_address);
   if (!result) return nullptr;
   return module_map_.at(result.value().first);
