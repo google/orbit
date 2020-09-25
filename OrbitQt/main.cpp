@@ -280,9 +280,13 @@ int main(int argc, char* argv[]) {
     // The application display name is automatically appended to all window titles when shown in the
     // title bar: <specific window title> - <application display name>
     const auto version_string = QString::fromStdString(OrbitCore::GetVersion());
-    QApplication::setApplicationDisplayName(
-        QString{"Orbit Profiler %1 [BETA]"}.arg(version_string));
+    auto display_name = QString{"Orbit Profiler %1 [BETA]"}.arg(version_string);
 
+    if (absl::GetFlag(FLAGS_devmode)) {
+      display_name.append(" [DEVELOPER MODE]");
+    }
+
+    QApplication::setApplicationDisplayName(display_name);
     QApplication::setApplicationVersion(version_string);
     path_to_executable = QCoreApplication::applicationFilePath();
 
