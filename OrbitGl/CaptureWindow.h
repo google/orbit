@@ -28,7 +28,6 @@ class CaptureWindow : public GlCanvas {
   void Pick(int x, int y);
   void Pick(PickingId picking_id, int x, int y);
   void Hover(int x, int y) override;
-  void FindCode(uint64_t address);
   void RightDown(int x, int y) override;
   bool RightUp() override;
   void MiddleDown(int x, int y) override;
@@ -73,8 +72,4 @@ class CaptureWindow : public GlCanvas {
 
   bool click_was_drag_ = false;
   bool background_clicked_ = false;
-
-  static const std::string MENU_ACTION_GO_TO_CALLSTACK;
-  static const std::string MENU_ACTION_GO_TO_SOURCE;
-
 };
