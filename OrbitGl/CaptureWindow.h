@@ -11,7 +11,7 @@
 
 class CaptureWindow : public GlCanvas {
  public:
-  CaptureWindow();
+  explicit CaptureWindow(StatsMode stats_mode);
   ~CaptureWindow() override;
 
   void Initialize() override;
@@ -67,6 +67,7 @@ class CaptureWindow : public GlCanvas {
   bool m_DrawFilter;
   bool m_FirstHelpDraw;
   bool m_DrawStats;
+  bool stats_enabled_;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
 

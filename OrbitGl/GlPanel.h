@@ -12,9 +12,10 @@ class GlPanel {
   GlPanel();
   virtual ~GlPanel() = default;
 
-  enum Type { CAPTURE };
-
-  static std::unique_ptr<GlPanel> Create(Type a_Type);
+  // Determines if the panel should show debug statistics when the user requests them.
+  // This is usually only enabled when Orbit runs in developer mode.
+  enum class StatsMode { kEnabled, kDisabled };
+  static std::unique_ptr<GlPanel> Create(StatsMode stats_mode);
 
   virtual void Initialize();
   virtual void Resize(int a_Width, int a_Height);
@@ -53,12 +54,10 @@ class GlPanel {
   bool GetIsMouseOver() const { return is_mouse_over_; }
   void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
-  Type GetType() const { return m_Type; }
   virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
   void NeedsRedraw() { m_NeedsRedraw = true; }
 
  protected:
-  Type m_Type;
   int m_WindowOffset[2];
   int m_MainWindowWidth;
   int m_MainWindowHeight;

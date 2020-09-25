@@ -8,7 +8,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
-#include "../OrbitGl/GlPanel.h"
+#include "GlPanel.h"
 
 class QOpenGLDebugMessage;
 class QOpenGLDebugLogger;
@@ -18,7 +18,7 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  void Initialize(GlPanel::Type a_Type, class OrbitMainWindow* a_MainWindow);
+  void Initialize(GlPanel::StatsMode stats_mode, class OrbitMainWindow* a_MainWindow);
   void initializeGL() override;
   void resizeGL(int w, int h) override;
   void paintGL() override;
