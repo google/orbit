@@ -109,11 +109,11 @@ void Batcher::AddCircle(Vec2 position, float radius, float z, Color color) {
     circle_points_scaled_by_radius.emplace_back(radius * point);
   }
 
-  Vec2 prev_point(position[0], position[1] - radius);
+  Vec3 prev_point(position[0], position[1] - radius, z);
   Vec3 point_0 = Vec3(position[0], position[1], z);
   for (size_t i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
-    Vec2 new_point(position[0] + circle_points_scaled_by_radius[i][0],
-                   position[1] - circle_points_scaled_by_radius[i][1]);
+    Vec3 new_point(position[0] + circle_points_scaled_by_radius[i][0],
+                   position[1] - circle_points_scaled_by_radius[i][1], z);
     Vec3 point_1 = Vec3(prev_point[0], prev_point[1], z);
     Vec3 point_2 = Vec3(new_point[0], new_point[1], z);
     Triangle triangle(point_0, point_1, point_2);
