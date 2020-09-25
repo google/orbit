@@ -56,6 +56,7 @@ static void ForEachTracepointEventInEventMapInTimeRange(
     action(time_to_tracepoint_event->second);
   }
 }
+
 void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
     int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
