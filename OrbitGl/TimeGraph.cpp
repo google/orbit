@@ -38,6 +38,8 @@ TimeGraph::TimeGraph() : batcher_(BatcherId::kTimeGraph) {
   last_thread_reorder_.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
+  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllTracepointsFakeTid);
+
   // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 
@@ -87,6 +89,8 @@ void TimeGraph::Clear() {
 
   cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
+
+  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllTracepointsFakeTid);
 
   // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
@@ -730,7 +734,10 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
     if (track->GetType() == Track::kThreadTrack) {
       auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
       int32_t tid = thread_track->GetThreadId();
-      if (tid == SamplingProfiler::kAllThreadsFakeTid) {
+      if (tid == SamplingProfiler::kAllTracepointsFakeTid) {
+        thread_track->SetName("all tracepoints");
+        thread_track->SetLabel("all tracepoints");
+      } else if (tid == SamplingProfiler::kAllThreadsFakeTid) {
         // This is the process_track_.
         std::string process_name = GOrbitApp->GetCaptureData().process_name();
         thread_track->SetName(process_name);
@@ -895,6 +902,10 @@ void TimeGraph::SortTracks() {
     // Async Tracks.
     for (const auto& async_track : async_tracks_) {
       sorted_tracks_.emplace_back(async_track.second);
+    }
+
+    if (!tracepoints_system_wide_track_->IsEmpty()) {
+      sorted_tracks_.emplace_back(tracepoints_system_wide_track_);
     }
 
     // Process Track.

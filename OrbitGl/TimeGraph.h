@@ -226,6 +226,7 @@ class TimeGraph {
   std::set<uint32_t> cores_seen_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
+  std::shared_ptr<ThreadTrack> tracepoints_system_wide_track_;
 
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;

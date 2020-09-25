@@ -38,6 +38,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
 
 [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
 TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
+  ScopeLock lock(mutex_);
   static std::map<uint64_t, orbit_client_protos::TracepointEventInfo> empty;
   const auto& it = tracepoint_events_.find(thread_id);
   if (it == tracepoint_events_.end()) {
@@ -61,7 +62,11 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
     int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
   ScopeLock lock(mutex_);
-  if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
+  if (thread_id == SamplingProfiler::kAllTracepointsFakeTid) {
+    for (const auto& entry : tracepoint_events_) {
+      ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
+    }
+  } else if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
     for (const auto& entry : tracepoint_events_) {
       if (entry.first != kNotTargetProcessThreadId) {
         ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
@@ -71,4 +76,24 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
   }
   ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, GetTracepointsOfThread(thread_id),
                                               action);
+}
+
+uint32_t TracepointEventBuffer::GetTracepointsEventsCount(int32_t thread_id) const {
+  ScopeLock lock(mutex_);
+  uint32_t count = 0;
+
+  if (thread_id == SamplingProfiler::kAllTracepointsFakeTid) {
+    for (const auto& entry : tracepoint_events_) {
+      count += entry.second.size();
+    }
+  } else if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
+    for (const auto& entry : tracepoint_events_) {
+      if (entry.first != kNotTargetProcessThreadId) {
+        count += entry.second.size();
+      }
+    }
+  } else
+    count += GetTracepointsOfThread(thread_id).size();
+
+  return count;
 }

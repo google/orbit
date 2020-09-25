@@ -75,6 +75,7 @@ std::unique_ptr<SortedCallstackReport> SamplingProfiler::GetSortedCallstackRepor
 }
 
 const int32_t SamplingProfiler::kAllThreadsFakeTid = -1;
+const int32_t SamplingProfiler::kAllTracepointsFakeTid = -3;
 
 void SamplingProfiler::SortByThreadUsage() {
   sorted_thread_sample_data_.reserve(thread_id_to_sample_data_.size());

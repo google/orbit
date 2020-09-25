@@ -23,9 +23,7 @@ class TracepointTrack : public EventTrack {
   void OnRelease() override;
 
   std::string GetSampleTooltip(PickingId id) const;
-
- private:
-  [[nodiscard]] bool HasTracepoints() const;
+  bool IsEmpty() const;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_
