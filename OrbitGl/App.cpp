@@ -501,15 +501,16 @@ void OrbitApp::SetSelectionReport(
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
     bool has_summary) {
   CHECK(selection_report_callback_);
+  // clear old selection report
+  if (selection_report_ != nullptr) {
+    selection_report_->ClearReport();
+  }
+
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler),
                                                  std::move(unique_callstacks), has_summary);
   DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
   selection_report_callback_(callstack_data_view, report);
 
-  // clear old selection report
-  if (selection_report_ != nullptr) {
-    selection_report_->ClearReport();
-  }
   selection_report_ = report;
   FireRefreshCallbacks();
 }
@@ -1164,7 +1165,6 @@ void OrbitApp::UpdateAfterCaptureCleared() {
   SamplingProfiler empty_profiler;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> empty_unique_callstacks;
 
-  // callstack_data_view_->ClearCallstack();
   SetSamplingReport(empty_profiler, empty_unique_callstacks);
   ClearTopDownView();
   ClearSelectionTopDownView();
