@@ -26,6 +26,7 @@ class PerfEventVisitor {
   virtual void visit(TaskNewtaskPerfEvent*) {}
   virtual void visit(TaskRenamePerfEvent*) {}
   virtual void visit(SchedSwitchPerfEvent*) {}
+  virtual void visit(SchedWakeupPerfEvent*) {}
   virtual void visit(AmdgpuCsIoctlPerfEvent*) {}
   virtual void visit(AmdgpuSchedRunJobPerfEvent*) {}
   virtual void visit(DmaFenceSignaledPerfEvent*) {}

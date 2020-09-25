@@ -38,6 +38,8 @@ void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(thi
 
 void SchedSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
+void SchedWakeupPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+
 void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }

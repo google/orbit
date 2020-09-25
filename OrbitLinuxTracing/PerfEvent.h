@@ -409,6 +409,20 @@ class SchedSwitchPerfEvent : public TracepointPerfEvent {
   pid_t GetNextTid() const { return GetTypedTracepointData<sched_switch_tracepoint>().next_pid; }
 };
 
+class SchedWakeupPerfEvent : public TracepointPerfEvent {
+ public:
+  explicit SchedWakeupPerfEvent(uint32_t tracepoint_size) : TracepointPerfEvent(tracepoint_size) {}
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  pid_t GetWakerPid() const { return ring_buffer_record.sample_id.pid; }
+
+  pid_t GetWakerTid() const { return ring_buffer_record.sample_id.tid; }
+
+  // The tracepoint format calls this "pid" but it's effectively the thread id.
+  pid_t GetWokenTid() const { return GetTypedTracepointData<sched_wakeup_tracepoint>().pid; }
+};
+
 class GpuPerfEvent : public TracepointPerfEvent {
  public:
   explicit GpuPerfEvent(uint32_t tracepoint_size) : TracepointPerfEvent(tracepoint_size) {}

@@ -45,6 +45,15 @@ struct __attribute__((__packed__)) sched_switch_tracepoint {
   uint32_t reserved;  // These four bytes are not documented in the format file.
 };
 
+struct __attribute__((__packed__)) sched_wakeup_tracepoint {
+  tracepoint_common common;
+  char comm[16];
+  int32_t pid;
+  int32_t prio;
+  int32_t success;
+  int32_t target_cpu;
+};
+
 struct __attribute__((__packed__)) amdgpu_cs_ioctl_tracepoint {
   tracepoint_common common;
   uint64_t sched_job_id;
