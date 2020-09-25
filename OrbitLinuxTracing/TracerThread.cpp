@@ -412,10 +412,12 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
 
 bool TracerThread::OpenThreadStateTracepoints(const std::vector<int32_t>& cpus) {
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
+  // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
-      {{"sched", "sched_switch", &sched_switch_ids_}}, cpus, &tracing_fds_,
-      THREAD_STATE_RING_BUFFER_SIZE_KB, &thread_state_tracepoint_ring_buffer_fds_per_cpu,
-      &ring_buffers_);
+      {{"sched", "sched_switch", &sched_switch_ids_},
+       {"sched", "sched_wakeup", &sched_wakeup_ids_}},
+      cpus, &tracing_fds_, THREAD_STATE_RING_BUFFER_SIZE_KB,
+      &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
 bool TracerThread::InitGpuTracepointEventProcessor() {
@@ -754,13 +756,14 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_task_newtask = task_newtask_ids_.contains(stream_id);
   bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_sched_switch = sched_switch_ids_.contains(stream_id);
+  bool is_sched_wakeup = sched_wakeup_ids_.contains(stream_id);
   bool is_amdgpu_cs_ioctl_event = amdgpu_cs_ioctl_ids_.contains(stream_id);
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_user_instrumented_tracepoint = ids_to_tracepoint_info_.contains(stream_id);
 
   CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_callchain_sample + is_task_newtask +
-            is_task_rename + is_sched_switch + is_amdgpu_cs_ioctl_event +
+            is_task_rename + is_sched_switch + is_sched_wakeup + is_amdgpu_cs_ioctl_event +
             is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
             is_user_instrumented_tracepoint <=
         1);
@@ -858,6 +861,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
           event->GetPrevComm(), event->GetPrevTid(), event->GetPrevState(), event->GetNextComm(),
           event->GetNextTid());
     }
+  } else if (is_sched_wakeup) {
+    auto event = ConsumeTracepointPerfEvent<SchedWakeupPerfEvent>(ring_buffer, header);
+    LOG("sched/sched_wakeup | (waker)pid: %d, (waker)tid: %d; (woken)tid: %d", event->GetWakerPid(),
+        event->GetWakerTid(), event->GetWokenTid());
 
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
@@ -976,6 +983,7 @@ void TracerThread::Reset() {
   task_newtask_ids_.clear();
   task_rename_ids_.clear();
   sched_switch_ids_.clear();
+  sched_wakeup_ids_.clear();
   amdgpu_cs_ioctl_ids_.clear();
   amdgpu_sched_run_job_ids_.clear();
   dma_fence_signaled_ids_.clear();
