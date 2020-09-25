@@ -76,8 +76,10 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
 
     time_graph_.GetWorldMinMax(world_min, world_max);
 
-    world_top_left_x_ = world_click_x_ - static_cast<float>(x) / getWidth() * m_WorldWidth;
-    world_top_left_y_ = world_click_y_ + static_cast<float>(y) / getHeight() * m_WorldHeight;
+    auto width = static_cast<float>(getWidth());
+
+    world_top_left_x_ = world_click_x_ - static_cast<float>(x) / width * m_WorldWidth;
+    world_top_left_y_ = world_click_y_ + static_cast<float>(y) / width * m_WorldHeight;
 
     world_top_left_x_ = clamp(world_top_left_x_, world_min, world_max - m_WorldWidth);
     world_top_left_y_ =
@@ -179,8 +181,6 @@ void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   GOrbitApp->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
-  uint64_t address = timer_info.function_address();
-  FindCode(address);
 
   if (m_DoubleClicking) {
     time_graph_.Zoom(timer_info);
@@ -195,7 +195,7 @@ void CaptureWindow::Hover(int x, int y) {
   auto pick_id = absl::bit_cast<PickingId>(pixels);
   Batcher& batcher = GetBatcherById(pick_id.batcher_id);
 
-  std::string tooltip = "";
+  std::string tooltip;
 
   if (pick_id.type == PickingType::kPickable) {
     auto pickable = GetPickingManager().GetPickableFromId(pick_id);
@@ -212,8 +212,6 @@ void CaptureWindow::Hover(int x, int y) {
 
   GOrbitApp->SendTooltipToUi(tooltip);
 }
-
-void CaptureWindow::FindCode(uint64_t /*address*/) {}
 
 void CaptureWindow::PreRender() {
   // TODO: Move to GlCanvas?
@@ -305,6 +303,7 @@ void CaptureWindow::Zoom(int delta) {
   if (delta == 0) return;
 
   delta = -delta;
+  auto delta_float = static_cast<float>(delta);
 
   float world_x;
   float world_y;
@@ -312,16 +311,17 @@ void CaptureWindow::Zoom(int delta) {
   ScreenToWorld(mouse_pos_x_, mouse_pos_y_, world_x, world_y);
   m_MouseRatio = static_cast<double>(mouse_pos_x_) / getWidth();
 
-  time_graph_.ZoomTime(delta, m_MouseRatio);
-  m_WheelMomentum = delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta;
+  time_graph_.ZoomTime(delta_float, m_MouseRatio);
+  m_WheelMomentum = delta_float * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta_float;
 
   NeedsUpdate();
 }
 
 void CaptureWindow::Pan(float ratio) {
   double ref_time = time_graph_.GetTime(static_cast<double>(mouse_pos_x_) / getWidth());
-  time_graph_.PanTime(mouse_pos_x_, mouse_pos_x_ + static_cast<int>(ratio * getWidth()), getWidth(),
-                      ref_time);
+  time_graph_.PanTime(mouse_pos_x_,
+                      mouse_pos_x_ + static_cast<int>(ratio * static_cast<float>(getWidth())),
+                      getWidth(), ref_time);
   NeedsUpdate();
 }
 
@@ -467,7 +467,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
   io.KeyShift = shift;
   io.KeyAlt = alt;
 
-  Orbit_ImGui_KeyCallback(this, key_code, true);
+  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), true);
 
   NeedsRedraw();
 }
@@ -538,7 +538,7 @@ void CaptureWindow::DrawScreenSpace() {
 
   // Right vertical margin.
   time_graph_.SetRightMargin(right_margin);
-  float margin_x1 = getWidth();
+  auto margin_x1 = static_cast<float>(getWidth());
   float margin_x0 = margin_x1 - right_margin;
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height), GlCanvas::kZValueMargin);
@@ -587,9 +587,9 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
       return time_graph_.GetBatcher();
     case BatcherId::kUi:
       return ui_batcher_;
+    default:
+      UNREACHABLE();
   }
-
-  UNREACHABLE();
 }
 
 void CaptureWindow::NeedsUpdate() {
@@ -670,7 +670,7 @@ void CaptureWindow::RenderText() {
 
 void ColorToFloat(Color color, float* output) {
   for (size_t i = 0; i < 4; ++i) {
-    output[i] = color[i] / 255.f;
+    output[i] = static_cast<float>(color[i]) / 255.f;
   }
 }
 
@@ -702,57 +702,36 @@ void CaptureWindow::RenderHelpUi() {
   ImGui::PopStyleColor();
 }
 
-ImTextureID TextureId(uint64_t id) {
-  return absl::bit_cast<ImTextureID>(static_cast<uintptr_t>(id));
-}
-
-bool IconButton(uint64_t texture_id, const char* tooltip, ImVec2 size, bool enabled) {
-  ImTextureID imgui_texture_id = TextureId(texture_id);
-
-  if (!enabled) {
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.4f);
-  }
-
-  bool clicked = ImGui::ImageButton(imgui_texture_id, size);
-
-  if (tooltip != nullptr && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-    ImGui::SetTooltip("%s", tooltip);
-  }
-
-  if (!enabled) {
-    ImGui::PopItemFlag();
-    ImGui::PopStyleVar();
-  }
-
-  return clicked;
-}
-
 inline double GetIncrementMs(double milli_seconds) {
-  const double kDay = 24 * 60 * 60 * 1000;
-  const double kHour = 60 * 60 * 1000;
-  const double kMinute = 60 * 1000;
-  const double kSecond = 1000;
-  const double kMilli = 1;
-  const double kMicro = 0.001;
-  const double kNano = 0.000001;
+  constexpr double kDay = 24 * 60 * 60 * 1000;
+  constexpr double kHour = 60 * 60 * 1000;
+  constexpr double kMinute = 60 * 1000;
+  constexpr double kSecond = 1000;
+  constexpr double kMilli = 1;
+  constexpr double kMicro = 0.001;
+  constexpr double kNano = 0.000001;
 
   std::string res;
 
-  if (milli_seconds < kMicro)
+  if (milli_seconds < kMicro) {
     return kNano;
-  else if (milli_seconds < kMilli)
+  }
+  if (milli_seconds < kMilli) {
     return kMicro;
-  else if (milli_seconds < kSecond)
+  }
+  if (milli_seconds < kSecond) {
     return kMilli;
-  else if (milli_seconds < kMinute)
+  }
+  if (milli_seconds < kMinute) {
     return kSecond;
-  else if (milli_seconds < kHour)
+  }
+  if (milli_seconds < kHour) {
     return kMinute;
-  else if (milli_seconds < kDay)
+  }
+  if (milli_seconds < kDay) {
     return kHour;
-  else
-    return kDay;
+  }
+  return kDay;
 }
 
 void CaptureWindow::RenderTimeBar() {
@@ -768,9 +747,10 @@ void CaptureWindow::RenderTimeBar() {
     double start_ms = time_graph_.GetMinTimeUs() * 0.001;
     double norm_start_us = 1000.0 * static_cast<int>(start_ms / norm_inc) * norm_inc;
 
-    static int kPixelMargin = 2;
+    static constexpr int kPixelMargin = 2;
     int screen_y = getHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
-    float dummy, world_y;
+    float dummy;
+    float world_y;
     ScreenToWorld(0, screen_y, dummy, world_y);
 
     float height = time_graph_.GetLayout().GetTimeBarHeight() - kPixelMargin;
