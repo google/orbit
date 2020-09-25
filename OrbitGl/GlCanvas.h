@@ -57,21 +57,21 @@ class GlCanvas : public GlPanel {
   void SetWorldWidth(float val) { m_WorldWidth = val; }
   float GetWorldHeight() const { return m_WorldHeight; }
   void SetWorldHeight(float val) { m_WorldHeight = val; }
-  float GetWorldTopLeftX() const { return m_WorldTopLeftX; }
-  void SetWorldTopLeftX(float val) { m_WorldTopLeftX = val; }
-  float GetWorldTopLeftY() const { return m_WorldTopLeftY; }
-  void SetWorldTopLeftY(float val) { m_WorldTopLeftY = val; }
+  float GetWorldTopLeftX() const { return world_top_left_x_; }
+  void SetWorldTopLeftX(float val) { world_top_left_x_ = val; }
+  float GetWorldTopLeftY() const { return world_top_left_y_; }
+  void SetWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
   TextRenderer& GetTextRenderer() { return m_TextRenderer; }
 
   virtual void UpdateWheelMomentum(float a_DeltaTime);
   virtual void OnTimer();
 
-  float GetMouseX() const { return m_MouseX; }
-  float GetMouseY() const { return m_MouseY; }
+  float GetMouseX() const { return mouse_x_; }
+  float GetMouseY() const { return mouse_y_; }
 
-  float GetMousePosX() const { return m_MousePosX; }
-  float GetMousePosY() const { return m_MousePosY; }
+  float GetMousePosX() const { return mouse_pos_x_; }
+  float GetMousePosY() const { return mouse_pos_y_; }
 
   Vec2 ToScreenSpace(const Vec2& a_Point);
   Vec2 ToWorldSpace(const Vec2& a_Point);
@@ -95,7 +95,7 @@ class GlCanvas : public GlPanel {
   ImGuiContext* GetImGuiContext() { return m_ImGuiContext; }
   Batcher* GetBatcher() { return &ui_batcher_; }
 
-  PickingManager& GetPickingManager() { return m_PickingManager; }
+  PickingManager& GetPickingManager() { return picking_manager_; }
 
   static float kZValueSlider;
   static float kZValueSliderBg;
@@ -124,30 +124,30 @@ class GlCanvas : public GlPanel {
   int m_Height;
   float m_WorldWidth;
   float m_WorldHeight;
-  float m_WorldTopLeftX;
-  float m_WorldTopLeftY;
-  float m_WorldMaxY;
+  float world_top_left_x_;
+  float world_top_left_y_;
+  float world_max_y_;
   float m_WorldMinWidth;
-  float m_WorldClickX;
-  float m_WorldClickY;
-  float m_MouseX;
-  float m_MouseY;
-  int m_MousePosX;
-  int m_MousePosY;
-  Vec2 m_SelectStart;
-  Vec2 m_SelectStop;
+  float world_click_x_;
+  float world_click_y_;
+  float mouse_x_;
+  float mouse_y_;
+  int mouse_pos_x_;
+  int mouse_pos_y_;
+  Vec2 select_start_;
+  Vec2 select_stop_;
   uint64_t m_TimeStart;
-  uint64_t m_TimeStop;
-  int m_ScreenClickX;
-  int m_ScreenClickY;
+  uint64_t time_stop;
+  int screen_click_x_;
+  int screen_click_y_;
   int m_MinWheelDelta;
   int m_MaxWheelDelta;
   float m_WheelMomentum;
   float m_DeltaTime;
   double m_DeltaTimeMs;
-  bool m_IsSelecting;
+  bool is_selecting_;
   double m_MouseRatio;
-  bool m_DrawUI;
+  bool draw_ui_;
   bool m_ImguiActive;
   int m_ID;
 
@@ -157,12 +157,12 @@ class GlCanvas : public GlPanel {
   bool m_CanHover;
 
   ImGuiContext* m_ImGuiContext;
-  uint64_t m_RefTimeClick;
+  uint64_t ref_time_click_;
   uint64_t m_SelectedInterval;
   TextRenderer m_TextRenderer;
   Timer m_UpdateTimer;
-  PickingManager m_PickingManager;
-  bool m_Picking;
+  PickingManager picking_manager_;
+  bool picking_;
   bool m_DoubleClicking;
   bool m_ControlKey;
   bool m_ShiftKey;

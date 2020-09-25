@@ -37,22 +37,22 @@ const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabColor = Color(50, 50, 50, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
+GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
   m_TextRenderer.SetCanvas(this);
 
   m_Width = 0;
   m_Height = 0;
   m_WorldWidth = 0;
   m_WorldHeight = 0;
-  m_WorldTopLeftX = -5.f;
-  m_WorldTopLeftY = 5.f;
+  world_top_left_x_ = -5.f;
+  world_top_left_y_ = 5.f;
   m_WorldMinWidth = 1.f;
-  m_SelectStart = Vec2(0.f, 0.f);
-  m_SelectStop = Vec2(0.f, 0.f);
+  select_start_ = Vec2(0.f, 0.f);
+  select_stop_ = Vec2(0.f, 0.f);
   m_TimeStart = 0.0;
-  m_TimeStop = 0.0;
-  m_IsSelecting = false;
-  m_Picking = false;
+  time_stop = 0.0;
+  is_selecting_ = false;
+  picking_ = false;
   m_DoubleClicking = false;
   m_ControlKey = false;
   m_ShiftKey = false;
@@ -65,7 +65,7 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_DeltaTime = 0.0f;
   m_DeltaTimeMs = 0;
   m_MouseRatio = 0.0;
-  m_DrawUI = true;
+  draw_ui_ = true;
   m_ImguiActive = false;
 
   static int counter = 0;
@@ -112,19 +112,19 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, bool 
   float worldx, worldy;
   ScreenToWorld(mousex, mousey, worldx, worldy);
 
-  m_MouseX = worldx;
-  m_MouseY = worldy;
-  m_MousePosX = mousex;
-  m_MousePosY = mousey;
+  mouse_x_ = worldx;
+  mouse_y_ = worldy;
+  mouse_pos_x_ = mousex;
+  mouse_pos_y_ = mousey;
 
   // Pan
   if (a_Left && !m_ImguiActive) {
-    m_WorldTopLeftX = m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
-    m_WorldTopLeftY = m_WorldClickY + static_cast<float>(mousey) / getHeight() * m_WorldHeight;
+    world_top_left_x_ = world_click_x_ - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
+    world_top_left_y_ = world_click_y_ + static_cast<float>(mousey) / getHeight() * m_WorldHeight;
   }
 
-  if (m_IsSelecting) {
-    m_SelectStop = Vec2(worldx, worldy);
+  if (is_selecting_) {
+    select_stop_ = Vec2(worldx, worldy);
   }
 
   ResetHoverTimer();
@@ -133,10 +133,10 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/, bool 
 
 void GlCanvas::LeftDown(int a_X, int a_Y) {
   // Store world clicked pos for panning
-  ScreenToWorld(a_X, a_Y, m_WorldClickX, m_WorldClickY);
-  m_ScreenClickX = a_X;
-  m_ScreenClickY = a_Y;
-  m_IsSelecting = false;
+  ScreenToWorld(a_X, a_Y, world_click_x_, world_click_y_);
+  screen_click_x_ = a_X;
+  screen_click_y_ = a_Y;
+  is_selecting_ = false;
 
   Orbit_ImGui_MouseButtonCallback(this, 0, true);
 
@@ -172,7 +172,7 @@ void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
 }
 
 void GlCanvas::LeftUp() {
-  m_PickingManager.Release();
+  picking_manager_.Release();
   Orbit_ImGui_MouseButtonCallback(this, 0, false);
   NeedsRedraw();
 }
@@ -187,8 +187,8 @@ void GlCanvas::RightDown(int a_X, int a_Y) {
   float worldx, worldy;
   ScreenToWorld(a_X, a_Y, worldx, worldy);
 
-  m_SelectStart = m_SelectStop = Vec2(worldx, worldy);
-  m_IsSelecting = true;
+  select_start_ = select_stop_ = Vec2(worldx, worldy);
+  is_selecting_ = true;
 
   Orbit_ImGui_MouseButtonCallback(this, 1, true);
   NeedsRedraw();
@@ -196,7 +196,7 @@ void GlCanvas::RightDown(int a_X, int a_Y) {
 
 bool GlCanvas::RightUp() {
   Orbit_ImGui_MouseButtonCallback(this, 1, false);
-  m_IsSelecting = true;
+  is_selecting_ = true;
   NeedsRedraw();
   return false;
 }
@@ -286,8 +286,8 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x
   if (m_WorldWidth <= 0) m_WorldWidth = 1.f;
   if (m_WorldHeight <= 0) m_WorldHeight = 1.f;
 
-  gluOrtho2D(m_WorldTopLeftX, m_WorldTopLeftX + m_WorldWidth, m_WorldTopLeftY - m_WorldHeight,
-             m_WorldTopLeftY);
+  gluOrtho2D(world_top_left_x_, world_top_left_x_ + m_WorldWidth, world_top_left_y_ - m_WorldHeight,
+             world_top_left_y_);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -308,13 +308,13 @@ void GlCanvas::prepareGlState() {
                static_cast<float>(kBackgroundColor[1]) / 255.0f,
                static_cast<float>(kBackgroundColor[2]) / 255.0f,
                static_cast<float>(kBackgroundColor[3]) / 255.0f);
-  if (m_Picking) glClearColor(0.f, 0.f, 0.f, 0.f);
+  if (picking_) glClearColor(0.f, 0.f, 0.f, 0.f);
 
   // glEnable(GL_DEBUG_OUTPUT);
   glDisable(GL_LIGHTING);
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_COLOR_MATERIAL);
-  m_Picking ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
+  picking_ ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);  // Enables Depth Testing
   glDepthFunc(GL_LEQUAL);   // The Type Of Depth Testing To Do
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -324,14 +324,14 @@ void GlCanvas::prepareGlState() {
 void GlCanvas::cleanupGlState() { glPopAttrib(); }
 
 void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
-  wx = m_WorldTopLeftX + (static_cast<float>(x) / getWidth()) * m_WorldWidth;
-  wy = m_WorldTopLeftY - (static_cast<float>(y) / getHeight()) * m_WorldHeight;
+  wx = world_top_left_x_ + (static_cast<float>(x) / getWidth()) * m_WorldWidth;
+  wy = world_top_left_y_ - (static_cast<float>(y) / getHeight()) * m_WorldHeight;
 }
 
 void GlCanvas::WorldToScreen(float wx, float wy, int& x, int& y) const {
-  x = static_cast<int>((wx - m_WorldTopLeftX) / m_WorldWidth) * getWidth();
+  x = static_cast<int>((wx - world_top_left_x_) / m_WorldWidth) * getWidth();
 
-  float bottomY = m_WorldTopLeftY - m_WorldHeight;
+  float bottomY = world_top_left_y_ - m_WorldHeight;
   y = static_cast<int>((1.f - ((wy - bottomY) / m_WorldHeight)) * getHeight());
 }
 
@@ -406,7 +406,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   PostRender();
 
-  m_Picking = false;
+  picking_ = false;
   m_DoubleClicking = false;
 }
 
@@ -447,7 +447,7 @@ void GlCanvas::ResetHoverTimer() {
 }
 
 [[nodiscard]] PickingMode GlCanvas::GetPickingMode() {
-  if (m_Picking && !m_IsHovering) {
+  if (picking_ && !m_IsHovering) {
     return PickingMode::kClick;
   }
   if (m_IsHovering) {

@@ -16,26 +16,26 @@ class CaptureWindow : public GlCanvas {
 
   void Initialize() override;
   void ZoomAll();
-  void Zoom(int a_Delta);
-  void Pan(float a_Ratio);
+  void Zoom(int delta);
+  void Pan(float ratio);
 
-  void UpdateWheelMomentum(float a_DeltaTime) override;
-  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right, bool a_Middle) override;
+  void UpdateWheelMomentum(float delta_time) override;
+  void MouseMoved(int x, int y, bool left, bool right, bool middle) override;
   void LeftDoubleClick() override;
-  void LeftDown(int a_X, int a_Y) override;
+  void LeftDown(int x, int y) override;
   void LeftUp() override;
   void Pick();
-  void Pick(int a_X, int a_Y);
-  void Pick(PickingId a_ID, int a_X, int a_Y);
-  void Hover(int a_X, int a_Y) override;
+  void Pick(int x, int y);
+  void Pick(PickingId picking_id, int x, int y);
+  void Hover(int x, int y) override;
   void FindCode(uint64_t address);
-  void RightDown(int a_X, int a_Y) override;
+  void RightDown(int x, int y) override;
   bool RightUp() override;
-  void MiddleDown(int a_X, int a_Y) override;
-  void MiddleUp(int a_X, int a_Y) override;
-  void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
-  void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
-  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) override;
+  void MiddleDown(int x, int y) override;
+  void MiddleUp(int x, int y) override;
+  void MouseWheelMoved(int x, int y, int delta, bool ctrl) override;
+  void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) override;
+  void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
   void OnTimer() override;
   void Draw() override;
   void DrawScreenSpace() override;
@@ -43,17 +43,17 @@ class CaptureWindow : public GlCanvas {
   void RenderText() override;
   void PreRender() override;
   void PostRender() override;
-  void Resize(int a_Width, int a_Height) override;
+  void Resize(int width, int height) override;
   void RenderHelpUi();
   void RenderTimeBar();
   void RenderSelectionOverlay();
   void SelectTextBox(const TextBox* text_box);
-  void OnDrag(float a_Ratio);
-  void OnVerticalDrag(float a_Ratio);
+  void OnDrag(float ratio);
+  void OnVerticalDrag(float ratio);
   void NeedsUpdate();
   void OnCaptureStarted();
   std::vector<std::string> GetContextMenu() override;
-  void OnContextMenu(const std::string& a_Action, int a_MenuIndex) override;
+  void OnContextMenu(const std::string& action, int menu_index) override;
   void UpdateVerticalSlider();
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
@@ -64,9 +64,9 @@ class CaptureWindow : public GlCanvas {
   TimeGraph time_graph_;
   OutputWindow m_StatsWindow;
   bool draw_help_;
-  bool m_DrawFilter;
-  bool m_FirstHelpDraw;
-  bool m_DrawStats;
+  bool draw_filter_;
+  bool first_help_draw_;
+  bool draw_stats_;
   bool stats_enabled_;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
@@ -76,4 +76,5 @@ class CaptureWindow : public GlCanvas {
 
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;
   static const std::string MENU_ACTION_GO_TO_SOURCE;
+
 };
