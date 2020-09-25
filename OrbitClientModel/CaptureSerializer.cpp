@@ -4,6 +4,8 @@
 
 #include "OrbitClientModel/CaptureSerializer.h"
 
+#include <OrbitClientData/FunctionUtils.h>
+
 #include <memory>
 
 #include "Callstack.h"
@@ -64,9 +66,15 @@ CaptureInfo GenerateCaptureInfo(
   for (const auto& address_info : capture_data.address_infos()) {
     orbit_client_protos::LinuxAddressInfo* added_address_info = capture_info.add_address_infos();
     added_address_info->CopyFrom(address_info.second);
-    // Fix names in address infos (some might only be in process):
-    added_address_info->set_function_name(
-        capture_data.GetFunctionNameByAddress(added_address_info->absolute_address()));
+    const orbit_client_protos::FunctionInfo* function =
+        capture_data.FindFunctionByAddress(added_address_info->absolute_address(), false);
+    if (function == nullptr) {
+      continue;
+    }
+    // Fix names/offset/module in address infos (some might only be in process):
+    added_address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
+    added_address_info->set_offset_in_function(FunctionUtils::Offset(*function));
+    added_address_info->set_module_path(function->loaded_module_path());
   }
 
   const absl::flat_hash_map<uint64_t, FunctionStats>& functions_stats =
