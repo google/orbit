@@ -23,11 +23,4 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
   ASSERT_TRUE(it->second.time() == 0 && it->second.tracepoint_info_key() == 1 &&
               it->second.pid() == 2 && it->second.cpu() == 3);
 
-  const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints_all_threads =
-      tracepoint_event_buffer.GetTracepointsOfThread(SamplingProfiler::kAllThreadsFakeTid);
-
-  it = tracepoints_all_threads.end();
-  --it;
-  ASSERT_TRUE(it->first == 2 && it->second.time() == 2 && it->second.tracepoint_info_key() == 3 &&
-              it->second.pid() == 2 && it->second.cpu() == 1);
 }

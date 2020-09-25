@@ -62,11 +62,6 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 
-  ScopeLock lock(GOrbitApp->GetCaptureData().GetTracepointEventBufferMutex());
-
-  const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
-      GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_);
-
   const Color kWhite(255, 255, 255, 255);
 
   const Color kWhiteTransparent(255, 255, 255, 190);
@@ -74,31 +69,34 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   const Color kGreenSelection(0, 255, 0, 255);
 
   if (!picking) {
-    for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
-         ++it) {
-      uint64_t time = it->first;
-      float radius = track_height / 4;
+    GOrbitApp->GetCaptureData().ForEachTracepointEventOfThreadInTimeRange(
+        thread_id_, min_tick, max_tick,
+        [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
+          uint64_t time = tracepoint.time();
+          float radius = track_height / 4;
+          Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+          batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
+          batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
+                                   kWhiteTransparent);
+          batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z, kWhiteTransparent);
+        });
 
-      Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
-      batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z, kWhiteTransparent);
-      batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z, kWhiteTransparent);
-    }
   } else {
     constexpr float kPickingBoxWidth = 9.0f;
     constexpr float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
 
-    for (auto it = tracepoints.lower_bound(min_tick); it != tracepoints.upper_bound(max_tick);
-         ++it) {
-      uint64_t time = it->first;
-
-      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
-      Vec2 size(kPickingBoxWidth, track_height);
-      auto user_data = std::make_unique<PickingUserData>(
-          nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
-      user_data->custom_data_ = &it->second;
-      batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
-    }
+    GOrbitApp->GetCaptureData().ForEachTracepointEventOfThreadInTimeRange(
+        thread_id_, min_tick, max_tick,
+        [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
+          uint64_t time = tracepoint.time();
+          Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+                   pos_[1] - track_height + 1);
+          Vec2 size(kPickingBoxWidth, track_height);
+          auto user_data = std::make_unique<PickingUserData>(
+              nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+          user_data->custom_data_ = &tracepoint;
+          batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+        });
   }
 }
 

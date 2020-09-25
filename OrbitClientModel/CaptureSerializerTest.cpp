@@ -163,10 +163,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
   ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 0);
 
-  /*Note: capture_info.tracepoint_event_infos_size() is 2 and not 1 because for every call adding
-   * TracepointEventInfo, a tracepoint event is created and added twice (once for the corresponding
-   * thread and another time for all threads).*/
-  EXPECT_EQ(2, capture_info.tracepoint_event_infos_size());
+  EXPECT_EQ(1, capture_info.tracepoint_event_infos_size());
   const orbit_client_protos::TracepointEventInfo& actual_tracepoint_event =
       capture_info.tracepoint_event_infos(0);
   EXPECT_EQ(tracepoint_event.tid(), actual_tracepoint_event.tid());
