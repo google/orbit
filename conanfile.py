@@ -66,6 +66,7 @@ class OrbitConan(ConanFile):
         self.build_requires('protoc_installer/3.9.1@bincrafters/stable#0')
         self.build_requires('grpc_codegen/1.27.3@orbitdeps/stable#ec39b3cf6031361be942257523c1839a')
         self.build_requires('gtest/1.10.0#ef88ba8e54f5ffad7d706062d0731a40', force_host_context=True)
+        self.build_requires('nodejs/13.6.0@{}#d07f6d3db886419fa9d0f65495ca23eb'.format(self._orbit_channel))
 
     def requirements(self):
         if self.settings.os != "Windows" and self.options.with_gui and not self.options.system_qt and self.options.system_mesa:
