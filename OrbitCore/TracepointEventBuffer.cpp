@@ -14,8 +14,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
   ScopeLock lock(mutex_);
   if (!is_same_pid_as_target) {
     std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
-        event_map_tracepoints_not_in_target_process =
-            tracepoint_events_[kAllTracepointsNotInTargetProcessFakeTid];
+        event_map_tracepoints_not_in_target_process = tracepoint_events_[kNotTargetProcessThreadId];
     orbit_client_protos::TracepointEventInfo event;
     event.set_time(time);
     event.set_tracepoint_info_key(tracepoint_hash);
@@ -63,7 +62,7 @@ void TracepointEventBuffer::ForEachTracepointEventOfThread(
   ScopeLock lock(mutex_);
   if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
     for (const auto& entry : tracepoint_events_) {
-      if (entry.first != kAllTracepointsNotInTargetProcessFakeTid) {
+      if (entry.first != kNotTargetProcessThreadId) {
         ForEachTracepointEventOfThreadInTimeRange(min_tick, max_tick, entry.second, action);
       }
     }
