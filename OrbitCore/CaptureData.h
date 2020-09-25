@@ -123,11 +123,11 @@ class CaptureData {
     return tracepoint_event_buffer_.get();
   }
 
-  void ForEachTracepointEventPerThread(
-      int32_t thread_id,
-      const std::function<void(
-          const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&)>& action) const {
-    return tracepoint_event_buffer_->ForEachTracepointEventPerThread(thread_id, action);
+  void ForEachTracepointEventOfThread(
+      int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
+      const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
+    return tracepoint_event_buffer_->ForEachTracepointEventOfThread(thread_id, min_tick, max_tick,
+                                                                    action);
   }
 
   [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&

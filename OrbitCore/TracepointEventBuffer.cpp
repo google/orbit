@@ -47,18 +47,28 @@ TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
   return it->second;
 }
 
-void TracepointEventBuffer::ForEachTracepointEventPerThread(
-    int32_t thread_id,
-    const std::function<void(const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&)>&
-        action) const {
+void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
+    uint64_t min_tick, uint64_t max_tick,
+    const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& time_to_tracepoint_events,
+    const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
+  for (auto time_to_tracepoint_event = time_to_tracepoint_events.lower_bound(min_tick);
+       time_to_tracepoint_event != time_to_tracepoint_events.upper_bound(max_tick);
+       ++time_to_tracepoint_event) {
+    action(time_to_tracepoint_event->second);
+  }
+}
+void TracepointEventBuffer::ForEachTracepointEventOfThread(
+    int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
+    const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
   ScopeLock lock(mutex_);
   if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
-    for (const auto& it : tracepoint_events_) {
-      if (it.first != kAllTracepointsNotInTargetProcessFakeTid) {
-        action(it.second);
+    for (const auto& entry : tracepoint_events_) {
+      if (entry.first != kAllTracepointsNotInTargetProcessFakeTid) {
+        ForEachTracepointEventOfThreadInTimeRange(min_tick, max_tick, entry.second, action);
       }
     }
     return;
   }
-  action(GetTracepointsOfThread(thread_id));
+  ForEachTracepointEventOfThreadInTimeRange(min_tick, max_tick, GetTracepointsOfThread(thread_id),
+                                            action);
 }
