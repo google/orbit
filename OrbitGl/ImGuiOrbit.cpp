@@ -629,6 +629,7 @@ uint32_t LoadTextureFromFile(const char* file_name) {
 
 bool Orbit_ImGui_Init() {
   ImGuiIO& io = ImGui::GetIO();
+  io.IniFilename = nullptr;
 
   // http://doc.qt.io/qt-4.8/qt.html#Key-enum
 
