@@ -12,6 +12,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
                                                               int32_t cpu,
                                                               bool is_same_pid_as_target) {
   ScopeLock lock(mutex_);
+  no_total_tracepoints_++;
   if (!is_same_pid_as_target) {
     std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
         event_map_tracepoints_not_in_target_process = tracepoint_events_[kNotTargetProcessThreadId];
@@ -22,6 +23,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
     event.set_pid(process_id);
     event.set_cpu(cpu);
     event_map_tracepoints_not_in_target_process[time] = std::move(event);
+    no_tracepoints_not_in_target_process_++;
     return;
   }
 
@@ -80,21 +82,13 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
 
 uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) const {
   ScopeLock lock(mutex_);
-  uint32_t count = 0;
 
   if (thread_id == SamplingProfiler::kAllTracepointsFakeTid) {
-    for (const auto& entry : tracepoint_events_) {
-      count += entry.second.size();
-    }
+    return no_total_tracepoints_;
   } else if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
-    for (const auto& entry : tracepoint_events_) {
-      if (entry.first != kNotTargetProcessThreadId) {
-        count += entry.second.size();
-      }
-    }
+    return no_total_tracepoints_ - no_tracepoints_not_in_target_process_;
   } else {
-    count += GetTracepointsOfThread(thread_id).size();
+    return GetTracepointsOfThread(thread_id).size();
   }
 
-  return count;
 }
