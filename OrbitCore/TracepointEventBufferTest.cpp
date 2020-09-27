@@ -14,6 +14,21 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
   tracepoint_event_buffer.AddTracepointEventAndMapToThreads(7, 1, 2, 1, 3, true);
 
   tracepoint_event_buffer.AddTracepointEventAndMapToThreads(0, 1, 2, 6, 3, false);
+  tracepoint_event_buffer.AddTracepointEventAndMapToThreads(10, 1, 2, 1, 3, false);
+
+  EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(1), 3);
+  EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(0), 1);
+
+  /*The number of threacepoints for thread id 6 is 0 because this tracepoint does not belong in the
+   * target process*/
+  EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(6), 0);
+
+  EXPECT_EQ(
+      tracepoint_event_buffer.GetNumTracepointsForThreadId(SamplingProfiler::kAllThreadsFakeTid),
+      4);
+  EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(
+                SamplingProfiler::kAllTracepointsFakeTid),
+            6);
 
   /*Check the tracepoint events associated to the threads in the target process*/
   const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =

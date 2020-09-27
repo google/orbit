@@ -169,9 +169,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
 
 void ThreadTrack::SetTrackColor(Color color) {
   ScopeLock lock(mutex_);
-
   event_track_->SetColor(color);
-
   tracepoint_track_->SetColor(color);
 }
 
