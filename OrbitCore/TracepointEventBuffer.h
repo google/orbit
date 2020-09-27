@@ -37,7 +37,7 @@ class TracepointEventBuffer {
     }
   }
 
-  uint32_t GetTracepointsEventsCount(int32_t thread_id) const;
+  uint32_t GetNumTracepointsForThreadId(int32_t thread_id) const;
 
  private:
   int32_t kNotTargetProcessThreadId = -2;

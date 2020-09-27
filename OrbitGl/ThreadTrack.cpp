@@ -138,18 +138,17 @@ void ThreadTrack::UpdateBoxHeight() {
 }
 
 bool ThreadTrack::IsEmpty() const {
-  return (GetNumTimers() == 0) && (event_track_->IsEmpty()) && tracepoint_track_->IsEmpty();
+  return (GetNumTimers() == 0) && event_track_->IsEmpty() && tracepoint_track_->IsEmpty();
 }
 
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
 
   float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
-  if (thread_id_ != SamplingProfiler::kAllTracepointsFakeTid) {
-    event_track_->SetPos(pos_[0], pos_[1]);
-    event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
-    event_track_->Draw(canvas, picking_mode);
-  }
+
+  event_track_->SetPos(pos_[0], pos_[1]);
+  event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
+  event_track_->Draw(canvas, picking_mode);
 
   tracepoint_track_->SetPos(pos_[0], pos_[1]);
   tracepoint_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
@@ -159,10 +158,8 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_id(thread_id_); }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
-  if (thread_id_ != SamplingProfiler::kAllTracepointsFakeTid) {
-    event_track_->SetPos(pos_[0], pos_[1]);
-    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
-  }
+  event_track_->SetPos(pos_[0], pos_[1]);
+  event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
 
   tracepoint_track_->SetPos(pos_[0], pos_[1]);
   tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
@@ -172,9 +169,9 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
 
 void ThreadTrack::SetTrackColor(Color color) {
   ScopeLock lock(mutex_);
-  if (thread_id_ != SamplingProfiler::kAllTracepointsFakeTid) {
-    event_track_->SetColor(color);
-  }
+
+  event_track_->SetColor(color);
+
   tracepoint_track_->SetColor(color);
 }
 
@@ -236,9 +233,8 @@ float ThreadTrack::GetHeight() const {
   const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
   return layout.GetTextBoxHeight() * depth +
          (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) +
-         (thread_id_ != SamplingProfiler::kAllTracepointsFakeTid
-              ? layout.GetEventTrackHeight() + layout.GetTrackBottomMargin()
-              : 0) +
+         (!event_track_->IsEmpty() ? layout.GetEventTrackHeight() + layout.GetTrackBottomMargin()
+                                   : 0) +
          tracepoint_track_->GetHeight();
 }
 

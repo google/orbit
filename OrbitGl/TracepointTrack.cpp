@@ -146,5 +146,5 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
 }
 
 bool TracepointTrack::IsEmpty() const {
-  return GOrbitApp->GetCaptureData().GetTracepointsEventsCount(thread_id_) == 0;
+  return GOrbitApp->GetCaptureData().GetNumTracepointsForThreadId(thread_id_) == 0;
 }

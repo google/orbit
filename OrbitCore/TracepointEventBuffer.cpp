@@ -78,7 +78,7 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
                                               action);
 }
 
-uint32_t TracepointEventBuffer::GetTracepointsEventsCount(int32_t thread_id) const {
+uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) const {
   ScopeLock lock(mutex_);
   uint32_t count = 0;
 
@@ -92,8 +92,9 @@ uint32_t TracepointEventBuffer::GetTracepointsEventsCount(int32_t thread_id) con
         count += entry.second.size();
       }
     }
-  } else
+  } else {
     count += GetTracepointsOfThread(thread_id).size();
+  }
 
   return count;
 }
