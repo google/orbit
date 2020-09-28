@@ -13,7 +13,7 @@ REPO_ROOT_WIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&
 SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh"
 
 if [ "$1" ]; then
-  pip3 install conan==1.27.1
+  pip3 install conan==1.29.2
   export QT_QPA_PLATFORM=offscreen
 
   $REPO_ROOT/third_party/conan/configs/install.sh || exit $?
@@ -34,9 +34,15 @@ if [ "$1" ]; then
       platform="windows"
     fi
 
-    LOCKFILE="$REPO_ROOT/third_party/conan/lockfiles/$platform/$profile/conan.lock"
+    mkdir -p build_$profile/ || exit $?
+    conan lock create "$REPO_ROOT/conanfile.py" --user=orbitdeps --channel=stable \
+      --build=outdated \
+      --lockfile="$REPO_ROOT/third_party/conan/lockfiles/base.lock" -pr $profile \
+      --lockfile-out=build_$profile/conan.lock || exit $?
 
-    PACKAGES=$(conan info -pr $profile -l $LOCKFILE $REPO_ROOT -j 2>/dev/null \
+    LOCKFILE="$(pwd)/build_$profile/conan.lock"
+
+    PACKAGES=$(conan info -l $LOCKFILE $REPO_ROOT -j 2>/dev/null \
                | grep build_id \
                | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache" and .binary != "Skip") | .reference + ":" + .id' \
                | grep -v 'llvm/' \
@@ -49,7 +55,7 @@ if [ "$1" ]; then
     else
       echo -e "The following binary packages need to be uploaded:\n$PACKAGES"
 
-      conan install -pr $profile -if build_$profile/ --build outdated -l $LOCKFILE $REPO_ROOT || exit $?
+      conan install -if build_$profile/ --build=outdated -l $LOCKFILE $REPO_ROOT || exit $?
       conan build -bf build_$profile/ $REPO_ROOT || exit $?
 
       echo "$PACKAGES" | while read package; do
