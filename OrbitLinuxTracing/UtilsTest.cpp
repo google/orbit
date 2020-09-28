@@ -23,15 +23,6 @@ TEST(ReadFile, ProcPidCommOfOrbitLinuxTracingTests) {
   EXPECT_EQ(returned_comm.value(), expected_comm);
 }
 
-TEST(ExecuteCommand, EchoHelloWorld) {
-  std::string string_to_echo = "Hello, World!";
-  std::optional<std::string> returned_result =
-      ExecuteCommand(absl::StrFormat("echo %s", string_to_echo));
-  std::string expected_result = string_to_echo + "\n";
-  ASSERT_TRUE(returned_result.has_value());
-  EXPECT_EQ(returned_result.value(), expected_result);
-}
-
 TEST(GetAllPids, OrbitLinuxTracingTestsAndSystemd) {
   const auto pids = GetAllPids();
 
@@ -84,6 +75,15 @@ TEST(GetThreadName, OrbitLinuxTracingTests) {
   std::string expected_name = std::string{"OrbitLinuxTracingTests"}.substr(0, 15);
   std::string returned_name = GetThreadName(getpid());
   EXPECT_EQ(returned_name, expected_name);
+}
+
+TEST(ExecuteCommand, EchoHelloWorld) {
+  std::string string_to_echo = "Hello, World!";
+  std::optional<std::string> returned_result =
+      ExecuteCommand(absl::StrFormat("echo %s", string_to_echo));
+  std::string expected_result = string_to_echo + "\n";
+  ASSERT_TRUE(returned_result.has_value());
+  EXPECT_EQ(returned_result.value(), expected_result);
 }
 
 TEST(ExtractCpusetFromCgroup, NoCpuset) {
