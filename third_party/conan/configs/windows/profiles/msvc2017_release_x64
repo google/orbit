@@ -10,7 +10,7 @@ build_type=Release
 [options]
 OrbitProfiler:system_qt=False
 [build_requires]
-cmake_installer/3.16.3@conan/stable
+&: cmake_installer/3.16.3@conan/stable
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=8.1
 LDFLAGS=$LINKER_FLAGS
