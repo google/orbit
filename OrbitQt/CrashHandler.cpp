@@ -4,10 +4,10 @@
 
 #include "CrashHandler.h"
 
+#include "CoreUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "ScopeTimer.h"
-#include "Utils.h"
 #include "client/settings.h"
 
 namespace {

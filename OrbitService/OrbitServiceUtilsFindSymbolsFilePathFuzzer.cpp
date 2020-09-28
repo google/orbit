@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "Utils.h"
+#include "ServiceUtils.h"
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
   (void)orbit_service::utils::FindSymbolsFilePath(

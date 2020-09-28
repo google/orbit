@@ -10,7 +10,7 @@
 #include <mutex>
 #include <thread>
 
-#include "Utils.h"
+#include "LinuxTracingUtils.h"
 #include "absl/synchronization/mutex.h"
 
 namespace LinuxTracing {

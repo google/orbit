@@ -11,7 +11,7 @@
 #include <cerrno>
 
 #include "Function.h"
-#include "Utils.h"
+#include "LinuxTracingUtils.h"
 #include "absl/base/casts.h"
 
 namespace LinuxTracing {

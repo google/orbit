@@ -7,8 +7,8 @@
 #include <filesystem>
 #include <string>
 
+#include "CoreUtils.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "Utils.h"
 #include "absl/flags/flag.h"
 
 #ifdef _WIN32

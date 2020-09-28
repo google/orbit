@@ -9,8 +9,8 @@
 #include <memory>
 #include <queue>
 
+#include "LinuxTracingUtils.h"
 #include "PerfEvent.h"
-#include "Utils.h"
 
 namespace LinuxTracing {
 

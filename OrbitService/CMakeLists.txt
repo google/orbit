@@ -29,8 +29,8 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessServiceImpl.h
         TracepointServiceImpl.h
         TracepointServiceImpl.cpp
-        Utils.cpp
-        Utils.h)
+        ServiceUtils.cpp
+        ServiceUtils.h)
 
 if (NOT WIN32)
   target_sources(OrbitServiceLib PRIVATE
@@ -69,9 +69,9 @@ strip_symbols(OrbitService)
 add_executable(OrbitServiceTests)
 target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(OrbitServiceTests PRIVATE UtilsTest.cpp
-                                         ProcessListTest.cpp
-                                         ProcessTest.cpp)
+target_sources(OrbitServiceTests PRIVATE ProcessListTest.cpp
+                                         ProcessTest.cpp
+                                         ServiceUtilsTest.cpp)
 
 target_link_libraries(OrbitServiceTests PRIVATE 
         OrbitServiceLib

@@ -5,7 +5,7 @@
 #include "TracepointServiceImpl.h"
 
 #include "OrbitBase/Logging.h"
-#include "Utils.h"
+#include "ServiceUtils.h"
 #include "grpcpp/grpcpp.h"
 #include "services.pb.h"
 

@@ -32,6 +32,8 @@ target_sources(OrbitLinuxTracing PRIVATE
         KernelTracepoints.h
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
+        LinuxTracingUtils.h
+        LinuxTracingUtils.cpp
         ManualInstrumentationConfig.h
         PerfEvent.cpp
         PerfEvent.h
@@ -51,9 +53,7 @@ target_sources(OrbitLinuxTracing PRIVATE
         UprobesFunctionCallManager.h
         UprobesReturnAddressManager.h
         UprobesUnwindingVisitor.cpp
-        UprobesUnwindingVisitor.h
-        Utils.h
-        Utils.cpp)
+        UprobesUnwindingVisitor.h)
 
 target_link_libraries(OrbitLinuxTracing PUBLIC
         OrbitBase
@@ -69,10 +69,10 @@ target_compile_options(OrbitLinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             ContextSwitchManagerTest.cpp
+            LinuxTracingUtilsTest.cpp
             PerfEventProcessorTest.cpp
             UprobesFunctionCallManagerTest.cpp
-            UprobesReturnAddressManagerTest.cpp
-            UtilsTest.cpp)
+            UprobesReturnAddressManagerTest.cpp)
 endif()
 
 target_link_libraries(OrbitLinuxTracingTests PRIVATE

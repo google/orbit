@@ -11,8 +11,8 @@
 #include <QRegion>
 #include <QTabBar>
 
+#include "CoreUtils.h"
 #include "OrbitBase/Logging.h"
-#include "Utils.h"
 #include "absl/strings/str_format.h"
 #include "ui_TutorialOverlay.h"
 

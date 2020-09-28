@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_CORE_UTILS_H_
+#define ORBIT_CORE_CORE_UTILS_H_
 
 #include <xxhash.h>
 
@@ -315,3 +316,5 @@ std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
 
 std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
+
+#endif  // ORBIT_CORE_CORE_UTILS_H_

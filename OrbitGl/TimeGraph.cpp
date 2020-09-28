@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "App.h"
+#include "CoreUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GpuTrack.h"
@@ -24,7 +25,6 @@
 #include "StringManager.h"
 #include "TextBox.h"
 #include "ThreadTrack.h"
-#include "Utils.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 

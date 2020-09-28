@@ -7,7 +7,7 @@
 #include <deque>
 
 #include "OrbitBase/Logging.h"
-#include "Utils.h"
+#include "ServiceUtils.h"
 #include "absl/strings/str_format.h"
 #include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
@@ -16,12 +16,12 @@ namespace orbit_service::utils {
 
 using Path = std::filesystem::path;
 
-TEST(Utils, ReadModules) {
+TEST(ServiceUtils, ReadModules) {
   const auto result = ReadModules(getpid());
   EXPECT_TRUE(result) << result.error().message();
 }
 
-TEST(Utils, ParseMaps) {
+TEST(ServiceUtils, ParseMaps) {
   using orbit_grpc_protos::ModuleInfo;
 
   {
@@ -96,7 +96,7 @@ TEST(Utils, ParseMaps) {
   }
 }
 
-TEST(Utils, GetCumulativeTotalCpuTime) {
+TEST(ServiceUtils, GetCumulativeTotalCpuTime) {
   // There is not much invariance here which we can test.
   // We know the optional should return a value and we know it's positive and
   // monotonically increasing.
@@ -112,7 +112,7 @@ TEST(Utils, GetCumulativeTotalCpuTime) {
   ASSERT_TRUE(jiffies2->value >= jiffies1->value);
 }
 
-TEST(Utils, GetCumulativeCpuTimeFromProcess) {
+TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
   const auto& jiffies1 = GetCumulativeCpuTimeFromProcess(getpid());
   ASSERT_TRUE(jiffies1.has_value());
 
@@ -129,13 +129,13 @@ TEST(Utils, GetCumulativeCpuTimeFromProcess) {
   ASSERT_TRUE(jiffies2->value <= jiffies_total->value);
 }
 
-TEST(Utils, GetExecutablePath) {
+TEST(ServiceUtils, GetExecutablePath) {
   const auto result = GetExecutablePath(getpid());
   ASSERT_TRUE(result) << result.error().message();
   EXPECT_EQ(result.value().filename(), "OrbitServiceTests");
 }
 
-TEST(Utils, ReadFileToString) {
+TEST(ServiceUtils, ReadFileToString) {
   {
     const auto result = ReadFileToString("non/existing/filename");
     ASSERT_FALSE(result);
@@ -151,7 +151,7 @@ TEST(Utils, ReadFileToString) {
   }
 }
 
-TEST(Utils, FindSymbolsFilePath) {
+TEST(ServiceUtils, FindSymbolsFilePath) {
   const auto executable_path = GetExecutablePath(getpid());
   ASSERT_TRUE(executable_path) << executable_path.error().message();
   const Path test_path = executable_path.value().parent_path() / "testdata";
@@ -198,7 +198,7 @@ TEST(Utils, FindSymbolsFilePath) {
   }
 }
 
-TEST(LinuxUtils, CategoriesTracepoints) {
+TEST(ServiceUtils, CategoriesTracepoints) {
   using orbit_grpc_protos::TracepointInfo;
 
   if (getuid() != 0) {
@@ -230,7 +230,7 @@ TEST(LinuxUtils, CategoriesTracepoints) {
   }
 }
 
-TEST(LinuxUtils, NamesTracepoints) {
+TEST(ServiceUtils, NamesTracepoints) {
   using orbit_grpc_protos::TracepointInfo;
 
   if (getuid() != 0) {
