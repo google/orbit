@@ -13,7 +13,7 @@ build_type=Release
 OrbitProfiler:with_gui=False
 OrbitProfiler:with_orbitgl=False
 [build_requires]
-cmake_installer/3.16.3@conan/stable
+&: cmake_installer/3.16.3@conan/stable
 ggp_sdk/1.43.0.14282@orbitdeps/stable
 
 [env]

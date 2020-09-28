@@ -12,7 +12,7 @@ OrbitProfiler:system_qt=False
 OrbitProfiler:with_gui=False
 OrbitProfiler:with_orbitgl=False
 [build_requires]
-cmake_installer/3.16.3@conan/stable
+&: cmake_installer/3.16.3@conan/stable
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=8.1
 LDFLAGS=$LINKER_FLAGS

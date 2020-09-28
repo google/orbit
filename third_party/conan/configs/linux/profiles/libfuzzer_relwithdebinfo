@@ -21,7 +21,7 @@ OrbitProfiler:run_tests=False
 llvm_object:allow_undefined_symbols=True
 llvm_symbolize:allow_undefined_symbols=True
 [build_requires]
-cmake_installer/3.16.3@conan/stable
+&: cmake_installer/3.16.3@conan/stable
 [env]
 CC=clang-9
 CXX=clang++-9
