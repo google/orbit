@@ -11,8 +11,8 @@
 
 #include <utility>
 
+#include "LinuxTracingUtils.h"
 #include "PerfEventOpen.h"
-#include "Utils.h"
 
 namespace LinuxTracing {
 

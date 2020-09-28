@@ -4,8 +4,8 @@
 
 #include "Batcher.h"
 
+#include "CoreUtils.h"
 #include "OpenGl.h"
-#include "Utils.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {

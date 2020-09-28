@@ -6,7 +6,7 @@
 #define ORBIT_SERVICE_PROCESS_H_
 
 #include "OrbitBase/Result.h"
-#include "Utils.h"
+#include "ServiceUtils.h"
 #include "process.pb.h"
 
 namespace orbit_service {

@@ -25,7 +25,7 @@ using oqpi_tk = oqpi::default_helpers;
 #include <Windows.h>
 #endif
 
-#include "Utils.h"
+#include "CoreUtils.h"
 
 // Typedefs
 typedef std::recursive_mutex Mutex;

@@ -8,7 +8,7 @@
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
-#include "Utils.h"
+#include "ServiceUtils.h"
 #include "symbol.pb.h"
 
 namespace orbit_service {

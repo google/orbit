@@ -4,7 +4,7 @@
 
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 
-#include "Utils.h"
+#include "CoreUtils.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;

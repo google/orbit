@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "Utils.h"
+#include "CoreUtils.h"
 
-TEST(Utils, TestEllipsis) {
+TEST(CoreUtils, TestEllipsis) {
   EXPECT_EQ(ShortenStringWithEllipsis("17 char long text", 18), "17 char long text");
   EXPECT_EQ(ShortenStringWithEllipsis("17 char long text", 17), "17 char long text");
   EXPECT_EQ(ShortenStringWithEllipsis("17 char long text", 7), "17...xt");

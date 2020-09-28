@@ -15,7 +15,7 @@
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "Utils.h"
+#include "ServiceUtils.h"
 
 namespace orbit_service {
 

@@ -16,6 +16,7 @@ target_sources(
          CallstackData.h
          CallstackTypes.h
          CaptureData.h
+         CoreUtils.h
          Params.h
          Path.h
          RingBuffer.h
@@ -26,13 +27,13 @@ target_sources(
          Threading.h
          TracepointCustom.h
          TracepointEventBuffer.h
-         TracepointInfoManager.h
-         Utils.h)
+         TracepointInfoManager.h)
 
 target_sources(
   OrbitCore
   PRIVATE CallstackData.cpp
           CaptureData.cpp
+          CoreUtils.cpp
           Params.cpp
           Path.cpp
           SamplingProfiler.cpp
@@ -40,8 +41,7 @@ target_sources(
           StringManager.cpp
           SymbolHelper.cpp
           TracepointEventBuffer.cpp
-          TracepointInfoManager.cpp
-          Utils.cpp)
+          TracepointInfoManager.cpp)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
@@ -81,13 +81,13 @@ target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitCoreTests PRIVATE
     BlockChainTest.cpp
     CallstackDataTest.cpp
+    CoreUtilsTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
     StringManagerTest.cpp
     SymbolHelperTest.cpp
     TracepointEventBufferTest.cpp
-    TracepointInfoManagerTest.cpp
-    UtilsTest.cpp)
+    TracepointInfoManagerTest.cpp)
 
 target_link_libraries(
   OrbitCoreTests

@@ -63,7 +63,7 @@
 
 #include "App.h"
 #include "Path.h"
-#include "Utils.h"
+#include "CoreUtils.h"
 #include "absl/strings/str_format.h"
 
 OrbitCodeEditor* OrbitCodeEditor::GFileMapEditor;

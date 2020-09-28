@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_UTILS_H_
-#define ORBIT_SERVICE_UTILS_H_
+#ifndef ORBIT_SERVICE_SERVICE_UTILS_H_
+#define ORBIT_SERVICE_SERVICE_UTILS_H_
 
 #include <filesystem>
 #include <functional>
@@ -47,4 +47,4 @@ bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t si
                        uint64_t* num_bytes_read);
 }  // namespace orbit_service::utils
 
-#endif  // ORBIT_SERVICE_UTILS_H_
+#endif  // ORBIT_SERVICE_SERVICE_UTILS_H_

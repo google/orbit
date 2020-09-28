@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LINUX_TRACING_UTILS_H_
-#define ORBIT_LINUX_TRACING_UTILS_H_
+#ifndef ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
+#define ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
 
 #include <OrbitBase/Logging.h>
 #include <unistd.h>
@@ -78,4 +78,4 @@ inline size_t GetPageSize() {
 }
 }  // namespace LinuxTracing
 
-#endif  // ORBIT_LINUX_TRACING_UTILS_H_
+#endif  // ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
