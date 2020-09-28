@@ -545,7 +545,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 
   // Get the initial thread names and notify the listener_.
-  RetrieveThreadNames();
+  RetrieveThreadNamesSystemWide();
 
   stats_.Reset();
 
@@ -921,9 +921,9 @@ void TracerThread::ProcessDeferredEvents() {
   }
 }
 
-void TracerThread::RetrieveThreadNames() {
+void TracerThread::RetrieveThreadNamesSystemWide() {
   uint64_t timestamp_ns = MonotonicTimestampNs();
-  for (pid_t tid : GetTidsOfProcess(pid_)) {
+  for (pid_t tid : GetAllTids()) {
     std::string name = GetThreadName(tid);
     if (name.empty()) {
       continue;
