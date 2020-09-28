@@ -15,7 +15,6 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&text_renderer_);
   time_graph_.SetCanvas(this);
-  draw_ui_ = false;
   draw_help_ = true;
   draw_filter_ = false;
   first_help_draw_ = true;
