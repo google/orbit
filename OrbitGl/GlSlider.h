@@ -43,6 +43,8 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
                   ShadingDirection shading_direction);
 
  protected:
+  static const float kGradientFactor;
+
   GlCanvas* canvas_;
   float ratio_;
   float length_;

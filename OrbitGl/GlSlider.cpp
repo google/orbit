@@ -9,6 +9,8 @@
 #include "GlCanvas.h"
 #include "PickingManager.h"
 
+const float GlSlider::kGradientFactor = 0.25f;
+
 GlSlider::GlSlider()
     : canvas_(nullptr),
       ratio_(0),
@@ -33,31 +35,29 @@ void GlSlider::SetSliderWidthRatio(float width_radio)  // [0,1]
 }
 
 Color GlSlider::GetLighterColor(const Color& color) {
-  return Color(static_cast<unsigned char>(color[0] * 1.25),
-               static_cast<unsigned char>(color[1] * 1.25),
-               static_cast<unsigned char>(color[2] * 1.25), 255);
+  const float kLocalGradientFactor = 1.0f + kGradientFactor;
+  return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
+               static_cast<unsigned char>(color[1] * kLocalGradientFactor),
+               static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
 }
 
 Color GlSlider::GetDarkerColor(const Color& color) {
-  return Color(static_cast<unsigned char>(color[0] * 0.75),
-               static_cast<unsigned char>(color[1] * 0.75),
-               static_cast<unsigned char>(color[2] * 0.75), 255);
+  const float kLocalGradientFactor = 1.0f - kGradientFactor;
+  return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
+               static_cast<unsigned char>(color[1] * kLocalGradientFactor),
+               static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
 }
 
 void GlSlider::DrawBackground(GlCanvas* canvas, float x, float y, float width, float height) {
   Batcher* batcher = canvas->GetBatcher();
   const Color dark_border_color = GetDarkerColor(bar_color_);
+  const float kEpsilon = 0.0001f;
 
-  // Dark border
-  {
-    Box box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSliderBg - 0.0001f);
-    batcher->AddBox(box, dark_border_color, shared_from_this());
-  }
-  // Background itself
-  {
-    Box box(Vec2(x + 1, y + 1), Vec2(width - 2, height - 2), GlCanvas::kZValueSliderBg);
-    batcher->AddBox(box, bar_color_, shared_from_this());
-  }
+  Box border_box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSliderBg - kEpsilon);
+  batcher->AddBox(border_box, dark_border_color, shared_from_this());
+
+  Box bar_box(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f), GlCanvas::kZValueSliderBg);
+  batcher->AddBox(bar_box, bar_color_, shared_from_this());
 }
 
 void GlSlider::DrawSlider(GlCanvas* canvas, float x, float y, float width, float height,
@@ -67,23 +67,20 @@ void GlSlider::DrawSlider(GlCanvas* canvas, float x, float y, float width, float
       canvas->GetPickingManager().IsThisElementPicked(this) ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
+  const float kEpsilon = 0.0001f;
 
-  // Slider
-  {
-    // Dark border
-    Box box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSlider - 0.0002f);
+  Box dark_border_box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSlider - 2 * kEpsilon);
 
-    batcher->AddBox(box, dark_border_color, shared_from_this());
-  }
-  {
-    // Light inner border
-    Box box(Vec2(x + 1, y + 1), Vec2(width - 2, height - 2), GlCanvas::kZValueSlider - 0.0001f);
+  batcher->AddBox(dark_border_box, dark_border_color, shared_from_this());
 
-    batcher->AddBox(box, light_border_color, shared_from_this());
-  }
+  Box light_border_box(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f),
+                       GlCanvas::kZValueSlider - kEpsilon);
+
+  batcher->AddBox(light_border_box, light_border_color, shared_from_this());
+
   // Slider itself
-  batcher->AddShadedBox(Vec2(x + 2, y + 2), Vec2(width - 4, height - 4), GlCanvas::kZValueSlider,
-                        color, shared_from_this(), shading_direction);
+  batcher->AddShadedBox(Vec2(x + 2.f, y + 2.f), Vec2(width - 4.f, height - 4.f),
+                        GlCanvas::kZValueSlider, color, shared_from_this(), shading_direction);
 }
 
 void GlVerticalSlider::OnPick(int /*x*/, int y) {

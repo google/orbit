@@ -179,34 +179,32 @@ void Batcher::GetBoxGradientColors(const Color& color, std::array<Color, 4>* col
                                    ShadingDirection shading_direction) {
   const float kGradientCoeff = 0.94f;
   Vec3 dark = Vec3(color[0], color[1], color[2]) * kGradientCoeff;
+  Color dark_color = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
+                           static_cast<uint8_t>(dark[2]), color[3]);
 
   switch (shading_direction) {
     case ShadingDirection::kLeftToRight:
-      (*colors)[0] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
-                           static_cast<uint8_t>(dark[2]), color[3]);
-      (*colors)[1] = (*colors)[0];
+      (*colors)[0] = dark_color;
+      (*colors)[1] = dark_color;
       (*colors)[2] = color;
       (*colors)[3] = color;
       break;
     case ShadingDirection::kRightToLeft:
-      (*colors)[2] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
-                           static_cast<uint8_t>(dark[2]), color[3]);
-      (*colors)[3] = (*colors)[2];
       (*colors)[0] = color;
       (*colors)[1] = color;
+      (*colors)[2] = dark_color;
+      (*colors)[3] = dark_color;
       break;
     case ShadingDirection::kTopToBottom:
-      (*colors)[0] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
-                           static_cast<uint8_t>(dark[2]), color[3]);
-      (*colors)[3] = (*colors)[0];
+      (*colors)[0] = dark_color;
       (*colors)[1] = color;
       (*colors)[2] = color;
+      (*colors)[3] = dark_color;
       break;
     case ShadingDirection::kBottomToTop:
-      (*colors)[1] = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
-                           static_cast<uint8_t>(dark[2]), color[3]);
-      (*colors)[2] = (*colors)[1];
       (*colors)[0] = color;
+      (*colors)[1] = dark_color;
+      (*colors)[2] = dark_color;
       (*colors)[3] = color;
       break;
   }
