@@ -96,24 +96,6 @@ TEST(Utils, ParseMaps) {
   }
 }
 
-TEST(Utils, GetAllPids) {
-  const auto pids = GetAllPids();
-
-  // At least the test process needs to show up
-  ASSERT_TRUE(pids.size() >= 1);
-
-  {
-    const auto result = std::find(pids.begin(), pids.end(), getpid());
-    ASSERT_NE(result, pids.end());
-  }
-
-  // We also assume PID 1 is always present
-  {
-    const auto result = std::find(pids.begin(), pids.end(), 1);
-    ASSERT_NE(result, pids.end());
-  }
-}
-
 TEST(Utils, GetCumulativeTotalCpuTime) {
   // There is not much invariance here which we can test.
   // We know the optional should return a value and we know it's positive and
