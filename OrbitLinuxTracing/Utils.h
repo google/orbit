@@ -27,6 +27,8 @@ std::vector<pid_t> GetAllPids();
 
 std::vector<pid_t> GetTidsOfProcess(pid_t pid);
 
+std::vector<pid_t> GetAllTids();
+
 std::string GetThreadName(pid_t tid);
 
 std::optional<std::string> ExecuteCommand(const std::string& cmd);

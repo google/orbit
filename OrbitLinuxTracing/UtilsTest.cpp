@@ -11,6 +11,7 @@
 #include <thread>
 
 #include "Utils.h"
+#include "absl/synchronization/mutex.h"
 
 namespace LinuxTracing {
 
@@ -66,8 +67,31 @@ TEST(GetTidsOfProcess, OrbitLinuxTracingTestsMainAndAnother) {
   thread.join();
 
   std::vector<pid_t> expected_tids{main_tid, thread_tid};
-  std::sort(expected_tids.begin(), expected_tids.end());
-  EXPECT_THAT(returned_tids, ::testing::ElementsAreArray(expected_tids));
+  EXPECT_THAT(returned_tids, ::testing::UnorderedElementsAreArray(expected_tids));
+}
+
+TEST(GetAllTids, OrbitLinuxTracingTestsMainAndAnotherAndSystemd) {
+  pid_t main_tid = syscall(SYS_gettid);
+  pid_t thread_tid = -1;
+  std::vector<pid_t> returned_tids{};
+
+  absl::Mutex mutex;
+  std::thread thread{[&] {
+    thread_tid = syscall(SYS_gettid);
+    absl::MutexLock lock{&mutex};
+    mutex.Await(absl::Condition(
+        +[](std::vector<pid_t>* returned_tids) { return !returned_tids->empty(); },
+        &returned_tids));
+  }};
+
+  {
+    absl::MutexLock lock{&mutex};
+    returned_tids = GetAllTids();
+  }
+  thread.join();
+
+  std::vector<pid_t> expected_tids{1, main_tid, thread_tid};
+  EXPECT_THAT(returned_tids, ::testing::IsSupersetOf(expected_tids));
 }
 
 TEST(GetThreadName, OrbitLinuxTracingTests) {
