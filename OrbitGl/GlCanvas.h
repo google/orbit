@@ -19,52 +19,52 @@ class GlCanvas : public GlPanel {
   ~GlCanvas() override;
 
   void Initialize() override;
-  void Resize(int a_Width, int a_Height) override;
-  void Render(int a_Width, int a_Height) override;
+  void Resize(int width, int height) override;
+  void Render(int width, int height) override;
   virtual void PostRender() {}
 
-  int getWidth() const;
-  int getHeight() const;
+  int GetWidth() const;
+  int GetHeight() const;
 
-  void prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y);
-  void prepareScreenSpaceViewport();
-  void prepareGlState();
-  void cleanupGlState();
+  void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
+  void PrepareScreenSpaceViewport();
+  void PrepareGlState();
+  void CleanupGlState();
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
   void WorldToScreen(float wx, float wy, int& x, int& y) const;
-  int WorldToScreenHeight(float a_Height) const;
-  float ScreenToWorldHeight(int a_Height) const;
-  float ScreenToworldWidth(int a_Width) const;
+  int WorldToScreenHeight(float height) const;
+  float ScreenToWorldHeight(int height) const;
+  float ScreenToWorldWidth(int width) const;
 
   // events
-  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right, bool a_Middle) override;
-  void LeftDown(int a_X, int a_Y) override;
-  void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
+  void MouseMoved(int x, int y, bool left, bool right, bool middle) override;
+  void LeftDown(int x, int y) override;
+  void MouseWheelMoved(int x, int y, int delta, bool ctrl) override;
   void LeftUp() override;
   void LeftDoubleClick() override;
-  void RightDown(int a_X, int a_Y) override;
+  void RightDown(int x, int y) override;
   bool RightUp() override;
-  virtual void mouseLeftWindow();
-  void CharEvent(unsigned int a_Char) override;
-  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) override;
-  void KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt) override;
-  virtual void UpdateSpecialKeys(bool a_Ctrl, bool a_Shift, bool a_Alt);
+  virtual void MouseLeftWindow();
+  void CharEvent(unsigned int character) override;
+  void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
+  void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
+  virtual void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   virtual bool ControlPressed();
   virtual bool ShiftPressed();
   virtual bool AltPressed();
 
-  float GetWorldWidth() const { return m_WorldWidth; }
-  void SetWorldWidth(float val) { m_WorldWidth = val; }
-  float GetWorldHeight() const { return m_WorldHeight; }
-  void SetWorldHeight(float val) { m_WorldHeight = val; }
+  float GetWorldWidth() const { return world_width_; }
+  void SetWorldWidth(float val) { world_width_ = val; }
+  float GetWorldHeight() const { return world_height_; }
+  void SetWorldHeight(float val) { world_height_ = val; }
   float GetWorldTopLeftX() const { return world_top_left_x_; }
   void SetWorldTopLeftX(float val) { world_top_left_x_ = val; }
   float GetWorldTopLeftY() const { return world_top_left_y_; }
   void SetWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
-  TextRenderer& GetTextRenderer() { return m_TextRenderer; }
+  TextRenderer& GetTextRenderer() { return text_renderer_; }
 
-  virtual void UpdateWheelMomentum(float a_DeltaTime);
+  virtual void UpdateWheelMomentum(float delta_time);
   virtual void OnTimer();
 
   float GetMouseX() const { return mouse_x_; }
@@ -73,21 +73,22 @@ class GlCanvas : public GlPanel {
   float GetMousePosX() const { return mouse_pos_x_; }
   float GetMousePosY() const { return mouse_pos_y_; }
 
-  Vec2 ToScreenSpace(const Vec2& a_Point);
-  Vec2 ToWorldSpace(const Vec2& a_Point);
+  Vec2 ToScreenSpace(const Vec2& point);
+  Vec2 ToWorldSpace(const Vec2& point);
+
 
   void ResetHoverTimer();
 
-  float GetDeltaTimeSeconds() const { return m_DeltaTime; }
+  float GetDeltaTimeSeconds() const { return delta_time_; }
 
   virtual void Draw() {}
   virtual void DrawScreenSpace() {}
   virtual void RenderUI() {}
   virtual void RenderText() {}
 
-  virtual void Hover(int /*a_X*/, int /*a_Y*/) {}
+  virtual void Hover(int /*X*/, int /*Y*/) {}
 
-  ImGuiContext* GetImGuiContext() { return m_ImGuiContext; }
+  ImGuiContext* GetImGuiContext() { return im_gui_context_; }
   Batcher* GetBatcher() { return &ui_batcher_; }
 
   PickingManager& GetPickingManager() { return picking_manager_; }
@@ -115,14 +116,14 @@ class GlCanvas : public GlPanel {
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
 
-  int m_Width;
-  int m_Height;
-  float m_WorldWidth;
-  float m_WorldHeight;
+  int width_;
+  int height_;
+  float world_width_;
+  float world_height_;
   float world_top_left_x_;
   float world_top_left_y_;
   float world_max_y_;
-  float m_WorldMinWidth;
+  float world_min_width_;
   float world_click_x_;
   float world_click_y_;
   float mouse_x_;
@@ -131,37 +132,37 @@ class GlCanvas : public GlPanel {
   int mouse_pos_y_;
   Vec2 select_start_;
   Vec2 select_stop_;
-  uint64_t m_TimeStart;
-  uint64_t time_stop;
+  uint64_t time_start_;
+  uint64_t time_stop_;
   int screen_click_x_;
   int screen_click_y_;
-  int m_MinWheelDelta;
-  int m_MaxWheelDelta;
-  float m_WheelMomentum;
-  float m_DeltaTime;
-  double m_DeltaTimeMs;
+  int min_wheel_delta_;
+  int max_wheel_delta_;
+  float wheel_momentum_;
+  float delta_time_;
+  double delta_time_ms_;
   bool is_selecting_;
-  double m_MouseRatio;
+  double mouse_ratio_;
   bool draw_ui_;
-  bool m_ImguiActive;
-  int m_ID;
+  bool im_gui_active_;
+  int id_;
 
-  Timer m_HoverTimer;
-  int m_HoverDelayMs;
-  bool m_IsHovering;
-  bool m_CanHover;
+  Timer hover_timer_;
+  int hover_delay_ms_;
+  bool is_hovering_;
+  bool can_hover_;
 
-  ImGuiContext* m_ImGuiContext;
+  ImGuiContext* im_gui_context_;
   uint64_t ref_time_click_;
-  uint64_t m_SelectedInterval;
-  TextRenderer m_TextRenderer;
-  Timer m_UpdateTimer;
+  uint64_t selected_interval_;
+  TextRenderer text_renderer_;
+  Timer update_timer_;
   PickingManager picking_manager_;
   bool picking_;
-  bool m_DoubleClicking;
-  bool m_ControlKey;
-  bool m_ShiftKey;
-  bool m_AltKey;
+  bool double_clicking_;
+  bool control_key_;
+  bool shift_key_;
+  bool alt_key_;
 
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
