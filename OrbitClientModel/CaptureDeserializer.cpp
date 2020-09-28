@@ -125,7 +125,8 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   ProcessInfo process_info;
   process_info.set_pid(capture_info.process_id());
   process_info.set_name(capture_info.process_name());
-  std::unique_ptr<ProcessData> process = ProcessData::Create(process_info);
+
+  ProcessData process(process_info);
   capture_listener->OnCaptureStarted(
       std::move(process), absl::flat_hash_map<std::string, ModuleData*>(),
       std::move(selected_functions), std::move(selected_tracepoints));

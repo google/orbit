@@ -21,8 +21,7 @@
 class CaptureData {
  public:
   explicit CaptureData(
-      std::unique_ptr<ProcessData> process,
-      absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints)
       : process_(std::move(process)),
@@ -32,12 +31,11 @@ class CaptureData {
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
-        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {
-    CHECK(process_ != nullptr);
-  }
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {}
 
   explicit CaptureData()
-      : callstack_data_(std::make_unique<CallstackData>()),
+      : process_(),
+        callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
         tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()){};
@@ -59,7 +57,7 @@ class CaptureData {
 
   [[nodiscard]] int32_t process_id() const;
 
-  [[nodiscard]] const std::string process_name() const;
+  [[nodiscard]] std::string process_name() const;
 
   [[nodiscard]] const std::chrono::system_clock::time_point& capture_start_time() const {
     return capture_start_time_;
@@ -165,7 +163,7 @@ class CaptureData {
     selection_callstack_data_ = std::move(selection_callstack_data);
   }
 
-  [[nodiscard]] const ProcessData* process() const { return process_.get(); }
+  [[nodiscard]] const ProcessData* process() const { return &process_; }
 
   [[nodiscard]] const SamplingProfiler& sampling_profiler() const { return sampling_profiler_; }
 
@@ -174,7 +172,7 @@ class CaptureData {
   }
 
  private:
-  std::unique_ptr<ProcessData> process_;
+  ProcessData process_;
   absl::flat_hash_map<std::string, ModuleData*> module_map_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
 

@@ -54,8 +54,7 @@ class CaptureClient {
   }
 
  private:
-  void Capture(std::unique_ptr<ProcessData> process,
-               absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+  void Capture(ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
                TracepointInfoSet selected_tracepoints);
 

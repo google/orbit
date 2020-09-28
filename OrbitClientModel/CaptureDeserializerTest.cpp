@@ -41,8 +41,7 @@ class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(
       void, OnCaptureStarted,
-      (std::unique_ptr<ProcessData> /*process*/,
-       (absl::flat_hash_map<std::string, ModuleData*> &&) /*module_map*/,
+      (ProcessData&& /*process*/, (absl::flat_hash_map<std::string, ModuleData*> &&) /*module_map*/,
        (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
        TracepointInfoSet /*selected_tracepoints*/),
       (override));
@@ -163,13 +162,13 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
   EXPECT_CALL(listener, OnCaptureStarted(_, _, _, IsEmpty()))
       .Times(1)
-      .WillOnce([selected_function](std::unique_ptr<ProcessData> process, Unused,
+      .WillOnce([selected_function](ProcessData&& process, Unused,
                                     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
                                         actual_selected_functions,
                                     Unused) {
         ASSERT_NE(process, nullptr);
-        EXPECT_EQ(process->name(), "process");
-        EXPECT_EQ(process->pid(), 42);
+        EXPECT_EQ(process.name(), "process");
+        EXPECT_EQ(process.pid(), 42);
 
         ASSERT_EQ(actual_selected_functions.size(), 1);
         ASSERT_TRUE(actual_selected_functions.contains(selected_function->address()));

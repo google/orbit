@@ -97,8 +97,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted(
-      std::unique_ptr<ProcessData> process,
-      absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;

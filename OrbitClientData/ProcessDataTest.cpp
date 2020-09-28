@@ -30,14 +30,25 @@ TEST(ProcessData, Constructor) {
   process_info.set_command_line(command_line);
   process_info.set_is_64_bit(is_64_bit);
 
-  std::unique_ptr<ProcessData> process = ProcessData::Create(process_info);
+  ProcessData process(process_info);
 
-  EXPECT_EQ(process->pid(), pid);
-  EXPECT_EQ(process->name(), name);
-  EXPECT_EQ(process->cpu_usage(), cpu_usage);
-  EXPECT_EQ(process->full_path(), full_path);
-  EXPECT_EQ(process->command_line(), command_line);
-  EXPECT_EQ(process->is_64_bit(), is_64_bit);
+  EXPECT_EQ(process.pid(), pid);
+  EXPECT_EQ(process.name(), name);
+  EXPECT_EQ(process.cpu_usage(), cpu_usage);
+  EXPECT_EQ(process.full_path(), full_path);
+  EXPECT_EQ(process.command_line(), command_line);
+  EXPECT_EQ(process.is_64_bit(), is_64_bit);
+}
+
+TEST(ProcessData, DefaultConstructor) {
+  ProcessData process;
+
+  EXPECT_EQ(process.pid(), -1);
+  EXPECT_EQ(process.name(), "");
+  EXPECT_EQ(process.cpu_usage(), 0);
+  EXPECT_EQ(process.full_path(), "");
+  EXPECT_EQ(process.command_line(), "");
+  EXPECT_EQ(process.is_64_bit(), false);
 }
 
 TEST(ProcessData, UpdateModuleInfos) {
@@ -61,11 +72,10 @@ TEST(ProcessData, UpdateModuleInfos) {
 
     std::vector<ModuleInfo> module_infos{module_info1, module_info2};
 
-    const std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
-    process->UpdateModuleInfos(module_infos);
+    ProcessData process(ProcessInfo{});
+    process.UpdateModuleInfos(module_infos);
 
-    const absl::flat_hash_map<std::string, MemorySpace>& module_memory_map =
-        process->GetMemoryMap();
+    const absl::flat_hash_map<std::string, MemorySpace>& module_memory_map = process.GetMemoryMap();
 
     EXPECT_EQ(module_memory_map.size(), 2);
 
@@ -96,8 +106,8 @@ TEST(ProcessData, UpdateModuleInfos) {
 
     std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
-    std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
-    ASSERT_DEATH(process->UpdateModuleInfos(module_infos), "Check failed");
+    ProcessData process;
+    ASSERT_DEATH(process.UpdateModuleInfos(module_infos), "Check failed");
   }
   {
     // invalid module infos: same start address
@@ -119,8 +129,8 @@ TEST(ProcessData, UpdateModuleInfos) {
 
     std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
-    std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
-    ASSERT_DEATH(process->UpdateModuleInfos(module_infos), "Check failed");
+    ProcessData process(ProcessInfo{});
+    ASSERT_DEATH(process.UpdateModuleInfos(module_infos), "Check failed");
   }
 }
 
@@ -153,12 +163,12 @@ TEST(ProcessData, IsModuleLoaded) {
 
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
-  std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
-  process->UpdateModuleInfos(module_infos);
+  ProcessData process(ProcessInfo{});
+  process.UpdateModuleInfos(module_infos);
 
-  EXPECT_TRUE(process->IsModuleLoaded(file_path_1));
-  EXPECT_TRUE(process->IsModuleLoaded(file_path_2));
-  EXPECT_FALSE(process->IsModuleLoaded("not/loaded/module"));
+  EXPECT_TRUE(process.IsModuleLoaded(file_path_1));
+  EXPECT_TRUE(process.IsModuleLoaded(file_path_2));
+  EXPECT_FALSE(process.IsModuleLoaded("not/loaded/module"));
 }
 
 TEST(ProcessData, GetModuleBaseAddress) {
@@ -180,12 +190,12 @@ TEST(ProcessData, GetModuleBaseAddress) {
 
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
-  std::unique_ptr<ProcessData> process = ProcessData::Create(ProcessInfo{});
-  process->UpdateModuleInfos(module_infos);
+  ProcessData process(ProcessInfo{});
+  process.UpdateModuleInfos(module_infos);
 
-  EXPECT_EQ(process->GetModuleBaseAddress(file_path_1), start_address_1);
-  EXPECT_EQ(process->GetModuleBaseAddress(file_path_2), start_address_2);
-  EXPECT_DEATH(process->GetModuleBaseAddress("does/not/exist"), "Check failed");
+  EXPECT_EQ(process.GetModuleBaseAddress(file_path_1), start_address_1);
+  EXPECT_EQ(process.GetModuleBaseAddress(file_path_2), start_address_2);
+  EXPECT_DEATH(process.GetModuleBaseAddress("does/not/exist"), "Check failed");
 }
 
 TEST(ProcessData, CreateCopy) {
@@ -195,20 +205,20 @@ TEST(ProcessData, CreateCopy) {
 
   ProcessInfo info;
   info.set_name(process_name);
-  std::unique_ptr<ProcessData> process = ProcessData::Create(info);
+  ProcessData process(info);
 
   ModuleInfo module_info;
   module_info.set_file_path(module_path);
   module_info.set_address_start(start_address);
 
-  process->UpdateModuleInfos({module_info});
+  process.UpdateModuleInfos({module_info});
 
-  std::unique_ptr<ProcessData> process_copy = process->CreateCopy();
+  ProcessData process_copy = process.CreateCopy();
 
-  EXPECT_EQ(process_copy->name(), process_name);
-  EXPECT_TRUE(process_copy->IsModuleLoaded(module_path));
-  ASSERT_EQ(process_copy->GetMemoryMap().size(), 1);
-  EXPECT_EQ(process_copy->GetMemoryMap().at(module_path).start, start_address);
+  EXPECT_EQ(process_copy.name(), process_name);
+  EXPECT_TRUE(process_copy.IsModuleLoaded(module_path));
+  ASSERT_EQ(process_copy.GetMemoryMap().size(), 1);
+  EXPECT_EQ(process_copy.GetMemoryMap().at(module_path).start, start_address);
 }
 
 TEST(ProcessData, FindModuleByAddress) {
@@ -219,11 +229,11 @@ TEST(ProcessData, FindModuleByAddress) {
 
   ProcessInfo info;
   info.set_name(process_name);
-  std::unique_ptr<ProcessData> process = ProcessData::Create(info);
+  ProcessData process(info);
 
   {
     // no modules loaded yet
-    const auto result = process->FindModuleByAddress(0);
+    const auto result = process.FindModuleByAddress(0);
     ASSERT_FALSE(result);
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("unable to find module for address"));
@@ -236,11 +246,11 @@ TEST(ProcessData, FindModuleByAddress) {
   module_info.set_address_start(start_address);
   module_info.set_address_end(end_address);
 
-  process->UpdateModuleInfos({module_info});
+  process.UpdateModuleInfos({module_info});
 
   {
     // before start address
-    const auto result = process->FindModuleByAddress(start_address - 10);
+    const auto result = process.FindModuleByAddress(start_address - 10);
     EXPECT_FALSE(result);
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("unable to find module for address"));
@@ -249,28 +259,28 @@ TEST(ProcessData, FindModuleByAddress) {
   }
   {
     // start address
-    const auto result = process->FindModuleByAddress(start_address);
+    const auto result = process.FindModuleByAddress(start_address);
     ASSERT_TRUE(result);
     EXPECT_EQ(result.value().first, module_path);
     EXPECT_EQ(result.value().second, start_address);
   }
   {
     // after start address
-    const auto result = process->FindModuleByAddress(start_address + 10);
+    const auto result = process.FindModuleByAddress(start_address + 10);
     ASSERT_TRUE(result);
     EXPECT_EQ(result.value().first, module_path);
     EXPECT_EQ(result.value().second, start_address);
   }
   {
     // exactly end address
-    const auto result = process->FindModuleByAddress(end_address);
+    const auto result = process.FindModuleByAddress(end_address);
     ASSERT_TRUE(result);
     EXPECT_EQ(result.value().first, module_path);
     EXPECT_EQ(result.value().second, start_address);
   }
   {
     // after end address
-    const auto result = process->FindModuleByAddress(end_address + 10);
+    const auto result = process.FindModuleByAddress(end_address + 10);
     EXPECT_FALSE(result);
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("unable to find module for address"));

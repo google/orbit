@@ -11,9 +11,10 @@
 #include "absl/strings/str_format.h"
 #include "process.pb.h"
 
-using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::ProcessInfo;
+
+ProcessData::ProcessData() { process_info_.set_pid(-1); }
 
 void ProcessData::UpdateModuleInfos(
     const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
@@ -65,11 +66,7 @@ void ProcessData::AddSymbols(ModuleData* module, const ModuleSymbols& module_sym
   module->AddSymbols(module_symbols, module_base_address);
 }
 
-std::unique_ptr<ProcessData> ProcessData::Create(ProcessInfo process_info) {
-  return std::make_unique<ProcessData>(std::move(process_info));
-}
-
-std::unique_ptr<ProcessData> ProcessData::CreateCopy() const {
+ProcessData ProcessData::CreateCopy() const {
   ProcessInfo info;
   info.set_pid(pid());
   info.set_name(name());
@@ -77,18 +74,18 @@ std::unique_ptr<ProcessData> ProcessData::CreateCopy() const {
   info.set_command_line(command_line());
   info.set_cpu_usage(cpu_usage());
   info.set_is_64_bit(is_64_bit());
-  std::unique_ptr<ProcessData> process_copy = ProcessData::Create(info);
+  ProcessData process_copy(info);
 
   for (const auto& [module_path, memory_space] : module_memory_map_) {
     uint64_t start = memory_space.start;
     uint64_t end = memory_space.end;
     {
       const auto [it, success] =
-          process_copy->module_memory_map_.try_emplace(module_path, MemorySpace{start, end});
+          process_copy.module_memory_map_.try_emplace(module_path, MemorySpace{start, end});
       CHECK(success);
     }
     {
-      const auto [it, success] = process_copy->start_addresses_.try_emplace(start, module_path);
+      const auto [it, success] = process_copy.start_addresses_.try_emplace(start, module_path);
       CHECK(success);
     }
   }

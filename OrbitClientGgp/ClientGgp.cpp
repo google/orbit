@@ -256,8 +256,7 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
-    std::unique_ptr<ProcessData> process,
-    absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+    ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints) {
   capture_data_ = CaptureData(std::move(process), std::move(module_map),
