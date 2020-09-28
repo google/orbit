@@ -8,6 +8,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QPoint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <unordered_map>
