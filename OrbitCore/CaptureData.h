@@ -135,6 +135,10 @@ class CaptureData {
     return tracepoint_event_buffer_->GetTracepointsOfThread(thread_id);
   }
 
+  uint32_t GetNumTracepointsForThreadId(int32_t thread_id) const {
+    return tracepoint_event_buffer_->GetNumTracepointsForThreadId(thread_id);
+  }
+
   void AddUniqueCallStack(CallStack call_stack) {
     callstack_data_->AddUniqueCallStack(std::move(call_stack));
   }

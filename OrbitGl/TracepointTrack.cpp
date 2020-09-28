@@ -12,7 +12,7 @@ TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
 }
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  if (!HasTracepoints()) {
+  if (IsEmpty()) {
     return;
   }
 
@@ -75,10 +75,15 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           uint64_t time = tracepoint.time();
           float radius = track_height / 4;
           Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-          batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
-          batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
-                                   kWhiteTransparent);
-          batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z, kWhiteTransparent);
+          if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+            batcher->AddVerticalLine(pos, -track_height, z, kWhiteTransparent);
+          } else {
+            batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
+            batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
+                                     kWhiteTransparent);
+            batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
+                               kWhiteTransparent);
+          }
         });
 
   } else {
@@ -101,7 +106,9 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 }
 
 void TracepointTrack::SetPos(float x, float y) {
-  y = y - GetHeight();
+  if (thread_id_ != TracepointEventBuffer::kAllTracepointsFakeTid) {
+    y = y - GetHeight();
+  }
   pos_ = Vec2(x, y);
 
   thread_name_.SetPos(pos_);
@@ -111,12 +118,7 @@ void TracepointTrack::SetPos(float x, float y) {
 float TracepointTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
 
-  return HasTracepoints() ? layout.GetEventTrackHeight() + layout.GetSpaceBetweenTracksAndThread()
-                          : 0;
-}
-
-bool TracepointTrack::HasTracepoints() const {
-  return !GOrbitApp->GetCaptureData().GetTracepointsOfThread(thread_id_).empty();
+  return !IsEmpty() ? layout.GetEventTrackHeight() + layout.GetSpaceBetweenTracksAndThread() : 0;
 }
 
 void TracepointTrack::OnPick(int x, int y) {
@@ -146,4 +148,8 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
       "<b>Core:</b> %d<br/>"
       "<b>Name:</b> %s [%s]<br/>",
       tracepoint_event_info->cpu(), tracepoint_info.name(), tracepoint_info.category());
+}
+
+bool TracepointTrack::IsEmpty() const {
+  return GOrbitApp->GetCaptureData().GetNumTracepointsForThreadId(thread_id_) == 0;
 }

@@ -138,13 +138,14 @@ void ThreadTrack::UpdateBoxHeight() {
 }
 
 bool ThreadTrack::IsEmpty() const {
-  return (GetNumTimers() == 0) && (event_track_->IsEmpty()) && tracepoint_track_->IsEmpty();
+  return (GetNumTimers() == 0) && event_track_->IsEmpty() && tracepoint_track_->IsEmpty();
 }
 
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
 
   float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
+
   event_track_->SetPos(pos_[0], pos_[1]);
   event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
   event_track_->Draw(canvas, picking_mode);
@@ -229,8 +230,10 @@ float ThreadTrack::GetHeight() const {
   const uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
   return layout.GetTextBoxHeight() * depth +
-         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
-         layout.GetTrackBottomMargin() + tracepoint_track_->GetHeight();
+         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) +
+         (!event_track_->IsEmpty() ? layout.GetEventTrackHeight() + layout.GetTrackBottomMargin()
+                                   : 0) +
+         tracepoint_track_->GetHeight();
 }
 
 float ThreadTrack::GetHeaderHeight() const {

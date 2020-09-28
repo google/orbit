@@ -19,6 +19,10 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
 
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+    return;
+  }
+
   Batcher* batcher = canvas->GetBatcher();
 
   // The sample indicators are at z == 0 and do not respond to clicks, but
