@@ -19,7 +19,7 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
 
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  if (IsEmpty()) {
+  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
     return;
   }
 
@@ -164,8 +164,6 @@ void EventTrack::SelectEvents() {
 }
 
 bool EventTrack::IsEmpty() const {
-  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) return true;
-
   const uint32_t callstack_count =
       (thread_id_ == SamplingProfiler::kAllThreadsFakeTid)
           ? GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount()

@@ -75,10 +75,15 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           uint64_t time = tracepoint.time();
           float radius = track_height / 4;
           Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-          batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
-          batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
-                                   kWhiteTransparent);
-          batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z, kWhiteTransparent);
+          if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+            batcher->AddVerticalLine(pos, -track_height, z, kWhiteTransparent);
+          } else {
+            batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
+            batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
+                                     kWhiteTransparent);
+            batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
+                               kWhiteTransparent);
+          }
         });
 
   } else {
