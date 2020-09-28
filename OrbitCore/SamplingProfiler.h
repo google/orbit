@@ -96,7 +96,6 @@ class SamplingProfiler {
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
   static const int32_t kAllThreadsFakeTid;
-  static const int32_t kAllTracepointsFakeTid;
 
  private:
   void ProcessSamples(const CallstackData& callstack_data, const CaptureData& capture_data,

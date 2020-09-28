@@ -101,7 +101,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 }
 
 void TracepointTrack::SetPos(float x, float y) {
-  if (thread_id_ != SamplingProfiler::kAllTracepointsFakeTid) {
+  if (thread_id_ != TracepointEventBuffer::kAllTracepointsFakeTid) {
     y = y - GetHeight();
   }
   pos_ = Vec2(x, y);

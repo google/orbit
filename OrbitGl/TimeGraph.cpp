@@ -38,7 +38,8 @@ TimeGraph::TimeGraph() : batcher_(BatcherId::kTimeGraph) {
   last_thread_reorder_.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
-  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllTracepointsFakeTid);
+  tracepoints_system_wide_track_ =
+      GetOrCreateThreadTrack(TracepointEventBuffer::kAllTracepointsFakeTid);
 
   // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
@@ -90,7 +91,8 @@ void TimeGraph::Clear() {
   cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
-  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllTracepointsFakeTid);
+  tracepoints_system_wide_track_ =
+      GetOrCreateThreadTrack(TracepointEventBuffer::kAllTracepointsFakeTid);
 
   // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
   process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
@@ -734,7 +736,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
     if (track->GetType() == Track::kThreadTrack) {
       auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
       int32_t tid = thread_track->GetThreadId();
-      if (tid == SamplingProfiler::kAllTracepointsFakeTid) {
+      if (tid == TracepointEventBuffer::kAllTracepointsFakeTid) {
         thread_track->SetName("All tracepoint events");
         thread_track->SetLabel("All tracepoint events");
       } else if (tid == SamplingProfiler::kAllThreadsFakeTid) {

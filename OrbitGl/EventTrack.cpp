@@ -164,7 +164,7 @@ void EventTrack::SelectEvents() {
 }
 
 bool EventTrack::IsEmpty() const {
-  if (thread_id_ == SamplingProfiler::kAllTracepointsFakeTid) return true;
+  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) return true;
 
   const uint32_t callstack_count =
       (thread_id_ == SamplingProfiler::kAllThreadsFakeTid)

@@ -27,7 +27,7 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
       tracepoint_event_buffer.GetNumTracepointsForThreadId(SamplingProfiler::kAllThreadsFakeTid),
       4);
   EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(
-                SamplingProfiler::kAllTracepointsFakeTid),
+                TracepointEventBuffer::kAllTracepointsFakeTid),
             6);
 
   /*Check the tracepoint events associated to the threads in the target process*/
