@@ -84,6 +84,15 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
   return tids;
 }
 
+std::vector<pid_t> GetAllTids() {
+  std::vector<pid_t> all_tids;
+  for (pid_t pid : GetAllPids()) {
+    std::vector<pid_t> process_tids = GetTidsOfProcess(pid);
+    all_tids.insert(all_tids.end(), process_tids.begin(), process_tids.end());
+  }
+  return all_tids;
+}
+
 std::string GetThreadName(pid_t tid) {
   std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);
   std::optional<std::string> comm_content = ReadFile(comm_filename);
