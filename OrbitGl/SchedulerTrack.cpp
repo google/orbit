@@ -69,8 +69,11 @@ std::string SchedulerTrack::GetBoxTooltip(PickingId id) const {
       "<b>CPU Core activity</b><br/>"
       "<br/>"
       "<b>Core:</b> %d<br/>"
+      "<b>Process:</b> %s [%d]<br/>"
       "<b>Thread:</b> %s [%d]<br/>",
       text_box->GetTimerInfo().processor(),
+      GOrbitApp->GetCaptureData().GetThreadName(text_box->GetTimerInfo().process_id()),
+      text_box->GetTimerInfo().process_id(),
       GOrbitApp->GetCaptureData().GetThreadName(text_box->GetTimerInfo().thread_id()),
       text_box->GetTimerInfo().thread_id());
 }
