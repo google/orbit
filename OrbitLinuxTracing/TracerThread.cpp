@@ -923,7 +923,7 @@ void TracerThread::ProcessDeferredEvents() {
 
 void TracerThread::RetrieveThreadNames() {
   uint64_t timestamp_ns = MonotonicTimestampNs();
-  for (pid_t tid : ListThreads(pid_)) {
+  for (pid_t tid : GetTidsOfProcess(pid_)) {
     std::string name = GetThreadName(tid);
     if (name.empty()) {
       continue;

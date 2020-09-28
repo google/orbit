@@ -27,7 +27,7 @@ std::string ReadMaps(pid_t pid);
 
 std::vector<pid_t> GetAllPids();
 
-std::vector<pid_t> ListThreads(pid_t pid);
+std::vector<pid_t> GetTidsOfProcess(pid_t pid);
 
 std::string GetThreadName(pid_t tid);
 

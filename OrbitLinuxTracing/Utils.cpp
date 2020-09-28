@@ -87,20 +87,17 @@ std::vector<pid_t> GetAllPids() {
   return pids;
 }
 
-std::vector<pid_t> ListThreads(pid_t pid) {
-  std::vector<pid_t> threads;
-  std::optional<std::string> tasks = ExecuteCommand(absl::StrFormat("ls /proc/%d/task", pid));
-  if (!tasks.has_value()) {
-    return {};
+std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
+  fs::directory_iterator proc_pid_task{fs::path{"/proc"} / std::to_string(pid) / "task"};
+  std::vector<pid_t> tids;
+
+  for (const auto& entry : proc_pid_task) {
+    if (auto tid = ProcEntryToPid(entry); tid.has_value()) {
+      tids.emplace_back(tid.value());
+    }
   }
 
-  std::stringstream ss(tasks.value());
-  std::string line;
-  while (std::getline(ss, line, '\n')) {
-    threads.push_back(std::stol(line));
-  }
-
-  return threads;
+  return tids;
 }
 
 std::string GetThreadName(pid_t tid) {
