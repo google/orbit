@@ -128,12 +128,12 @@ if [ -n "$1" ]; then
   conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
     --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -u -pr ${CONAN_PROFILE} \
     -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
-    --lockfile-out="${REPO_ROOT}/build/conan.lock" || exit $?
+    --lockfile-out="${REPO_ROOT}/build/conan.lock"
 
   conan install -if "${REPO_ROOT}/build/" \
           --build outdated \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
-          "${REPO_ROOT}"
+          "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/'
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
   conan package -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
 
