@@ -29,3 +29,29 @@ if(WIN32)
             "${WINDEPLOYQT_EXECUTABLE}" --pdb "$<TARGET_FILE:QWebChannelExtractor>"
     COMMENT "Running windeployqt for QWebChannelExtractor...")
 endif()
+
+if(WIN32)
+  find_program(NPM npm.cmd)
+else()
+  find_program(NPM npm)
+endif()
+
+execute_process(COMMAND ${NPM} install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/WebUI.qrc
+                   COMMAND ${CMAKE_COMMAND}
+                     -E env "ORBIT_BUILD_FOLDER=${CMAKE_BINARY_DIR}"
+                     ${NPM} run build
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                   MAIN_DEPENDENCY webpack.config.js
+                   DEPENDS ${q_webchannel_js_output}
+                           webpack.config.js
+                           package.json
+                           package-lock.json
+                           src/dummy.js
+                   )
+
+add_library(WebUI OBJECT)
+target_sources(WebUI PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/dist/WebUI.qrc)
+target_link_libraries(WebUI PUBLIC Qt5::Core)
+set_target_properties(WebUI PROPERTIES AUTORCC 1)

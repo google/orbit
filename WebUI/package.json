@@ -1,0 +1,19 @@
+{
+  "name": "orbit-web-ui",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "serve": "webpack-dev-server --open",
+    "build": "webpack --config=webpack.config.js --mode=production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "BSD",
+  "devDependencies": {
+    "html-webpack-plugin": "^4.5.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
