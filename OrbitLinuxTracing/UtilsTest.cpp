@@ -50,7 +50,7 @@ TEST(GetAllPids, OrbitLinuxTracingTestsAndSystemd) {
   }
 }
 
-TEST(ListThreads, OrbitLinuxTracingTestsMainAndAnother) {
+TEST(GetTidsOfProcess, OrbitLinuxTracingTestsMainAndAnother) {
   pid_t main_tid = syscall(SYS_gettid);
   pid_t thread_tid = -1;
   std::vector<pid_t> returned_tids{};
@@ -69,7 +69,7 @@ TEST(ListThreads, OrbitLinuxTracingTestsMainAndAnother) {
 
   {
     std::unique_lock<std::mutex> lock(mutex);
-    returned_tids = ListThreads(getpid());
+    returned_tids = GetTidsOfProcess(getpid());
     cv_list.notify_one();
   }
   thread.join();
