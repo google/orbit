@@ -41,8 +41,8 @@ class TracepointEventBuffer {
 
  private:
   int32_t kNotTargetProcessThreadId = -2;
-  int32_t no_total_tracepoints_ = 0;
-  int32_t no_tracepoints_not_in_target_process_ = 0;
+  int32_t num_total_tracepoints_ = 0;
+  int32_t num_tracepoints_not_in_target_process_ = 0;
 
   mutable Mutex mutex_;
   std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >

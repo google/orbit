@@ -735,8 +735,8 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
       auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
       int32_t tid = thread_track->GetThreadId();
       if (tid == SamplingProfiler::kAllTracepointsFakeTid) {
-        thread_track->SetName("all tracepoints");
-        thread_track->SetLabel("all tracepoints");
+        thread_track->SetName("All tracepoint events");
+        thread_track->SetLabel("All tracepoint events");
       } else if (tid == SamplingProfiler::kAllThreadsFakeTid) {
         // This is the process_track_.
         std::string process_name = GOrbitApp->GetCaptureData().process_name();
