@@ -176,17 +176,16 @@ static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entr
 }
 
 std::vector<pid_t> GetAllPids() {
-  const auto emplace_back_if_has_value = [](auto vec, const auto& val) {
-    if (val.has_value()) {
-      vec.emplace_back(std::move(val.value()));
-    }
-
-    return std::move(vec);
-  };
-
   fs::directory_iterator proc{"/proc"};
-  return std::transform_reduce(begin(proc), end(proc), std::vector<pid_t>{},
-                               emplace_back_if_has_value, ProcEntryToPid);
+  std::vector<pid_t> pids;
+
+  for (const auto& entry : proc) {
+    if (auto pid = ProcEntryToPid(entry); pid.has_value()) {
+      pids.emplace_back(std::move(pid.value()));
+    }
+  }
+
+  return pids;
 }
 
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
