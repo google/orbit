@@ -29,10 +29,8 @@ class GlCanvas : public GlPanel {
   void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
   void PrepareScreenSpaceViewport();
   void PrepareGlState();
-  void CleanupGlState();
+  static void CleanupGlState();
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
-  void WorldToScreen(float wx, float wy, int& x, int& y) const;
-  int WorldToScreenHeight(float height) const;
   float ScreenToWorldHeight(int height) const;
   float ScreenToWorldWidth(int width) const;
 
@@ -44,21 +42,15 @@ class GlCanvas : public GlPanel {
   void LeftDoubleClick() override;
   void RightDown(int x, int y) override;
   bool RightUp() override;
-  virtual void MouseLeftWindow();
   void CharEvent(unsigned int character) override;
   void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
   void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
   virtual void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   virtual bool ControlPressed();
-  virtual bool ShiftPressed();
-  virtual bool AltPressed();
 
   float GetWorldWidth() const { return world_width_; }
-  void SetWorldWidth(float val) { world_width_ = val; }
   float GetWorldHeight() const { return world_height_; }
-  void SetWorldHeight(float val) { world_height_ = val; }
   float GetWorldTopLeftX() const { return world_top_left_x_; }
-  void SetWorldTopLeftX(float val) { world_top_left_x_ = val; }
   float GetWorldTopLeftY() const { return world_top_left_y_; }
   void SetWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
@@ -68,14 +60,9 @@ class GlCanvas : public GlPanel {
   virtual void OnTimer();
 
   float GetMouseX() const { return mouse_x_; }
-  float GetMouseY() const { return mouse_y_; }
 
-  float GetMousePosX() const { return mouse_pos_x_; }
-  float GetMousePosY() const { return mouse_pos_y_; }
-
-  Vec2 ToScreenSpace(const Vec2& point);
-  Vec2 ToWorldSpace(const Vec2& point);
-
+  float GetMousePosX() const { return static_cast<float>(mouse_pos_x_); }
+  float GetMousePosY() const { return static_cast<float>(mouse_pos_y_); }
 
   void ResetHoverTimer();
 
@@ -102,7 +89,6 @@ class GlCanvas : public GlPanel {
   static float kZValueTimeBarBg;
   static float kZValueText;
   static float kZValueOverlay;
-  static float kZValueOverlayBg;
   static float kZValueRoundingCorner;
   static float kZValueEvent;
   static float kZValueBox;
@@ -140,13 +126,9 @@ class GlCanvas : public GlPanel {
   int max_wheel_delta_;
   float wheel_momentum_;
   float delta_time_;
-  double delta_time_ms_;
   bool is_selecting_;
   double mouse_ratio_;
-  bool draw_ui_;
   bool im_gui_active_;
-  int id_;
-
   Timer hover_timer_;
   int hover_delay_ms_;
   bool is_hovering_;
@@ -154,15 +136,12 @@ class GlCanvas : public GlPanel {
 
   ImGuiContext* im_gui_context_;
   uint64_t ref_time_click_;
-  uint64_t selected_interval_;
   TextRenderer text_renderer_;
   Timer update_timer_;
   PickingManager picking_manager_;
   bool picking_;
   bool double_clicking_;
   bool control_key_;
-  bool shift_key_;
-  bool alt_key_;
 
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
