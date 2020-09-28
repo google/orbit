@@ -30,8 +30,8 @@ void GlSlider::SetSliderRatio(float ratio)  // [0,1]
 
 void GlSlider::SetSliderWidthRatio(float width_radio)  // [0,1]
 {
-  float minWidth = min_slider_pixel_width_ / static_cast<float>(canvas_->getWidth());
-  length_ = std::max(width_radio, minWidth);
+  float min_width = min_slider_pixel_width_ / static_cast<float>(canvas_->GetWidth());
+  length_ = std::max(width_radio, min_width);
 }
 
 Color GlSlider::GetLighterColor(const Color& color) {
@@ -84,7 +84,7 @@ void GlSlider::DrawSlider(GlCanvas* canvas, float x, float y, float width, float
 }
 
 void GlVerticalSlider::OnPick(int /*x*/, int y) {
-  float canvasHeight = canvas_->getHeight();
+  float canvasHeight = canvas_->GetHeight();
   float sliderHeight = length_ * canvasHeight;
   float nonSliderHeight = canvasHeight - sliderHeight;
 
@@ -93,7 +93,7 @@ void GlVerticalSlider::OnPick(int /*x*/, int y) {
 }
 
 void GlVerticalSlider::OnDrag(int /*x*/, int y) {
-  float canvasHeight = canvas_->getHeight();
+  float canvasHeight = canvas_->GetHeight();
   float sliderHeight = length_ * canvasHeight;
   float nonSliderHeight = canvasHeight - sliderHeight;
 
@@ -112,9 +112,9 @@ void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   CHECK(canvas == canvas_);
 
   const bool picking = picking_mode != PickingMode::kNone;
-  float x = canvas_->getWidth() - GetPixelHeight();
+  float x = canvas_->GetWidth() - GetPixelHeight();
 
-  float canvasHeight = canvas_->getHeight() - GetOrthogonalSliderSize();
+  float canvasHeight = canvas_->GetHeight() - GetOrthogonalSliderSize();
   float sliderHeight = length_ * canvasHeight;
   float nonSliderHeight = canvasHeight - sliderHeight;
 
@@ -131,7 +131,7 @@ void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 void GlHorizontalSlider::OnPick(int x, int /*y*/) {
-  float canvasWidth = canvas_->getWidth();
+  float canvasWidth = canvas_->GetWidth();
   float sliderWidth = length_ * canvasWidth;
   float nonSliderWidth = canvasWidth - sliderWidth;
 
@@ -140,7 +140,7 @@ void GlHorizontalSlider::OnPick(int x, int /*y*/) {
 }
 
 void GlHorizontalSlider::OnDrag(int x, int /*y*/) {
-  float canvasWidth = canvas_->getWidth();
+  float canvasWidth = canvas_->GetWidth();
   float sliderWidth = length_ * canvasWidth;
   float nonSliderWidth = canvasWidth - sliderWidth;
 
@@ -161,7 +161,7 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   canvas_ = canvas;
   static float y = 0;
 
-  float canvasWidth = canvas_->getWidth() - GetOrthogonalSliderSize();
+  float canvasWidth = canvas_->GetWidth() - GetOrthogonalSliderSize();
   float sliderWidth = length_ * canvasWidth;
   float nonSliderWidth = canvasWidth - sliderWidth;
 

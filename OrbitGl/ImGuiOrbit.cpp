@@ -676,8 +676,8 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   ImGuiIO& io = ImGui::GetIO();
 
   // Setup display size (every frame to accommodate for window resizing)
-  const int w = a_Canvas->getWidth();
-  const int h = a_Canvas->getHeight();
+  const int w = a_Canvas->GetWidth();
+  const int h = a_Canvas->GetHeight();
   io.DisplaySize = ImVec2(w, h);
 
   // Setup time step

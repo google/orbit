@@ -129,7 +129,7 @@ void TextRenderer::Display(Batcher* batcher) {
   mat4* proj = reinterpret_cast<mat4*>(&matrix[0]);
   m_Proj = *proj;
 
-  mat4_set_orthographic(&m_Proj, 0, m_Canvas->getWidth(), 0, m_Canvas->getHeight(), -1, 1);
+  mat4_set_orthographic(&m_Proj, 0, m_Canvas->GetWidth(), 0, m_Canvas->GetHeight(), -1, 1);
 
   glUseProgram(m_Shader);
   {
@@ -317,7 +317,7 @@ int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, con
   }
 
   m_Pen.x = a_X;
-  m_Pen.y = a_InvertY ? m_Canvas->getHeight() - a_Y : a_Y;
+  m_Pen.y = a_InvertY ? m_Canvas->GetHeight() - a_Y : a_Y;
 
   AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z);
 
@@ -350,12 +350,12 @@ void TextRenderer::ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y) {
   float WorldTopLeftX = m_Canvas->GetWorldTopLeftX();
   float WorldMinLeftY = m_Canvas->GetWorldTopLeftY() - WorldHeight;
 
-  o_X = ((a_X - WorldTopLeftX) / WorldWidth) * m_Canvas->getWidth();
-  o_Y = ((a_Y - WorldMinLeftY) / WorldHeight) * m_Canvas->getHeight();
+  o_X = ((a_X - WorldTopLeftX) / WorldWidth) * m_Canvas->GetWidth();
+  o_Y = ((a_Y - WorldMinLeftY) / WorldHeight) * m_Canvas->GetHeight();
 }
 
 float TextRenderer::ToScreenSpace(float a_Size) {
-  return (a_Size / m_Canvas->GetWorldWidth()) * m_Canvas->getWidth();
+  return (a_Size / m_Canvas->GetWorldWidth()) * m_Canvas->GetWidth();
 }
 
 void TextRenderer::Clear() {
