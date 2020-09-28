@@ -76,10 +76,10 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
         ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
       }
     }
-    return;
+  } else {
+    ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick,
+                                                GetTracepointsOfThread(thread_id), action);
   }
-  ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, GetTracepointsOfThread(thread_id),
-                                              action);
 }
 
 uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) {
