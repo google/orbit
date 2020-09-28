@@ -32,6 +32,24 @@ TEST(ExecuteCommand, EchoHelloWorld) {
   EXPECT_EQ(returned_result.value(), expected_result);
 }
 
+TEST(GetAllPids, OrbitLinuxTracingTestsAndSystemd) {
+  const auto pids = GetAllPids();
+
+  // At least the test process needs to show up.
+  ASSERT_FALSE(pids.empty());
+
+  {
+    const auto result = std::find(pids.begin(), pids.end(), getpid());
+    ASSERT_NE(result, pids.end());
+  }
+
+  // We also assume PID 1 is always present.
+  {
+    const auto result = std::find(pids.begin(), pids.end(), 1);
+    ASSERT_NE(result, pids.end());
+  }
+}
+
 TEST(ListThreads, OrbitLinuxTracingTestsMainAndAnother) {
   pid_t main_tid = syscall(SYS_gettid);
   pid_t thread_tid = -1;

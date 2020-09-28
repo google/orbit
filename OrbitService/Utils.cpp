@@ -158,36 +158,6 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   return result;
 }
 
-static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
-  if (!entry.is_directory()) {
-    return std::nullopt;
-  }
-
-  int potential_pid;
-  if (!absl::SimpleAtoi(entry.path().filename().string(), &potential_pid)) {
-    return std::nullopt;
-  }
-
-  if (potential_pid <= 0) {
-    return std::nullopt;
-  }
-
-  return static_cast<pid_t>(potential_pid);
-}
-
-std::vector<pid_t> GetAllPids() {
-  fs::directory_iterator proc{"/proc"};
-  std::vector<pid_t> pids;
-
-  for (const auto& entry : proc) {
-    if (auto pid = ProcEntryToPid(entry); pid.has_value()) {
-      pids.emplace_back(std::move(pid.value()));
-    }
-  }
-
-  return pids;
-}
-
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   const auto stat = std::filesystem::path{"/proc"} / std::to_string(pid) / "stat";
 

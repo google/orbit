@@ -18,6 +18,8 @@
 
 namespace LinuxTracing {
 
+namespace fs = std::filesystem;
+
 std::optional<std::string> ReadFile(std::string_view filename) {
   std::ifstream file{std::string{filename}, std::ios::in | std::ios::binary};
   if (!file) {
@@ -53,6 +55,36 @@ std::optional<std::string> ExecuteCommand(const std::string& cmd) {
     result += buffer.data();
   }
   return result;
+}
+
+static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
+  if (!entry.is_directory()) {
+    return std::nullopt;
+  }
+
+  int potential_pid;
+  if (!absl::SimpleAtoi(entry.path().filename().string(), &potential_pid)) {
+    return std::nullopt;
+  }
+
+  if (potential_pid <= 0) {
+    return std::nullopt;
+  }
+
+  return static_cast<pid_t>(potential_pid);
+}
+
+std::vector<pid_t> GetAllPids() {
+  fs::directory_iterator proc{"/proc"};
+  std::vector<pid_t> pids;
+
+  for (const auto& entry : proc) {
+    if (auto pid = ProcEntryToPid(entry); pid.has_value()) {
+      pids.emplace_back(pid.value());
+    }
+  }
+
+  return pids;
 }
 
 std::vector<pid_t> ListThreads(pid_t pid) {
