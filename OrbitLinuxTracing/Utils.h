@@ -19,8 +19,6 @@ inline uint64_t MonotonicTimestampNs() {
   return 1'000'000'000llu * ts.tv_sec + ts.tv_nsec;
 }
 
-std::optional<std::string> ExecuteCommand(const std::string& cmd);
-
 std::optional<std::string> ReadFile(std::string_view filename);
 
 std::string ReadMaps(pid_t pid);
@@ -30,6 +28,8 @@ std::vector<pid_t> GetAllPids();
 std::vector<pid_t> GetTidsOfProcess(pid_t pid);
 
 std::string GetThreadName(pid_t tid);
+
+std::optional<std::string> ExecuteCommand(const std::string& cmd);
 
 int GetNumCores();
 

@@ -37,24 +37,8 @@ std::string ReadMaps(pid_t pid) {
   std::optional<std::string> maps_content_opt = ReadFile(maps_filename);
   if (maps_content_opt.has_value()) {
     return maps_content_opt.value();
-  } else {
-    return "";
   }
-}
-
-std::optional<std::string> ExecuteCommand(const std::string& cmd) {
-  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"), pclose};
-  if (!pipe) {
-    ERROR("Could not open pipe for \"%s\"", cmd.c_str());
-    return std::optional<std::string>{};
-  }
-
-  std::array<char, 128> buffer;
-  std::string result;
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-    result += buffer.data();
-  }
-  return result;
+  return "";
 }
 
 static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
@@ -110,6 +94,21 @@ std::string GetThreadName(pid_t tid) {
     comm_content.value().pop_back();
   }
   return comm_content.value();
+}
+
+std::optional<std::string> ExecuteCommand(const std::string& cmd) {
+  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"), pclose};
+  if (!pipe) {
+    ERROR("Could not open pipe for \"%s\"", cmd.c_str());
+    return std::optional<std::string>{};
+  }
+
+  std::array<char, 128> buffer;
+  std::string result;
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+  return result;
 }
 
 int GetNumCores() {
