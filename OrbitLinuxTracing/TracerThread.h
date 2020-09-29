@@ -25,6 +25,7 @@
 #include "PerfEventProcessor.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
+#include "UprobesUnwindingVisitor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture.pb.h"
@@ -55,7 +56,7 @@ class TracerThread {
   }
 
   bool OpenContextSwitches(const std::vector<int32_t>& cpus);
-  void InitUprobesEventProcessor();
+  void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
   bool OpenUprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
                    absl::flat_hash_map<int32_t, int>* fds_per_cpu);
@@ -145,7 +146,8 @@ class TracerThread {
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
   ContextSwitchManager context_switch_manager_;
-  std::unique_ptr<PerfEventProcessor> uprobes_event_processor_;
+  std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
+  PerfEventProcessor event_processor_;
   std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
   struct EventStats {

@@ -63,29 +63,30 @@ class PerfEventQueue {
 // This class receives perf_event_open events coming from several ring buffers
 // and processes them in order according to their timestamps.
 // Its implementation builds on the assumption that we never expect events with
-// a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
+// a timestamp older than kProcessingDelayMs to be added. By not processing
 // events that are not older than this delay, we will never process events out
 // of order.
 class PerfEventProcessor {
  public:
-  // Do not process events that are more recent than 0.1 seconds. There could be
-  // events coming out of order as they are read from different perf_event_open
-  // ring buffers and this ensure that all events are processed in the correct
-  // order.
-  static constexpr uint64_t PROCESSING_DELAY_MS = 100;
-
-  explicit PerfEventProcessor(std::unique_ptr<PerfEventVisitor> visitor)
-      : visitor_(std::move(visitor)) {}
-
   void AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
 
   void ProcessAllEvents();
 
   void ProcessOldEvents();
 
+  void AddVisitor(PerfEventVisitor* visitor) { visitors_.push_back(visitor); }
+
+  void ClearVisitors() { visitors_.clear(); }
+
  private:
+  // Do not process events that are more recent than 0.1 seconds. There could be
+  // events coming out of order as they are read from different perf_event_open
+  // ring buffers and this ensure that all events are processed in the correct
+  // order.
+  static constexpr uint64_t kProcessingDelayMs = 100;
+
   PerfEventQueue event_queue_;
-  std::unique_ptr<PerfEventVisitor> visitor_;
+  std::vector<PerfEventVisitor*> visitors_;
 
 #ifndef NDEBUG
   uint64_t last_processed_timestamp_ = 0;

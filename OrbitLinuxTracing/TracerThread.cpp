@@ -9,7 +9,6 @@
 
 #include <thread>
 
-#include "UprobesUnwindingVisitor.h"
 #include "absl/strings/str_format.h"
 
 namespace LinuxTracing {
@@ -102,13 +101,12 @@ bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
   return true;
 }
 
-void TracerThread::InitUprobesEventProcessor() {
-  auto uprobes_unwinding_visitor = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
-  uprobes_unwinding_visitor->SetListener(listener_);
-  uprobes_unwinding_visitor->SetUnwindErrorsAndDiscardedSamplesCounters(
+void TracerThread::InitUprobesEventVisitor() {
+  uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
+  uprobes_unwinding_visitor_->SetListener(listener_);
+  uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       stats_.unwind_error_count, stats_.discarded_samples_in_uretprobes_count);
-  uprobes_event_processor_ =
-      std::make_unique<PerfEventProcessor>(std::move(uprobes_unwinding_visitor));
+  event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
 bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
@@ -504,7 +502,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   // calling perf_event_open for uprobes (just calling it, it is not necessary
   // to enable the file descriptor) causes a new [uprobes] map entry, and we
   // want to catch it.
-  InitUprobesEventProcessor();
+  InitUprobesEventVisitor();
 
   if (unwinding_method_ == CaptureOptions::kFramePointers ||
       unwinding_method_ == CaptureOptions::kDwarf) {
@@ -648,7 +646,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   // Finish processing all deferred events.
   stop_deferred_thread_ = true;
   deferred_events_thread.join();
-  uprobes_event_processor_->ProcessAllEvents();
+  event_processor_.ProcessAllEvents();
 
   // Stop recording.
   for (int fd : tracing_fds_) {
@@ -913,10 +911,10 @@ void TracerThread::ProcessDeferredEvents() {
     } else {
       for (auto& event : events) {
         int fd = event->GetOriginFileDescriptor();
-        uprobes_event_processor_->AddEvent(fd, std::move(event));
+        event_processor_.AddEvent(fd, std::move(event));
       }
 
-      uprobes_event_processor_->ProcessOldEvents();
+      event_processor_.ProcessOldEvents();
     }
   }
 }
@@ -941,6 +939,9 @@ void TracerThread::Reset() {
   tracing_fds_.clear();
   fds_per_cpu_.clear();
   ring_buffers_.clear();
+
+  uprobes_unwinding_visitor_.reset();
+  event_processor_.ClearVisitors();
 
   uprobes_uretprobes_ids_to_function_.clear();
   uprobes_ids_.clear();

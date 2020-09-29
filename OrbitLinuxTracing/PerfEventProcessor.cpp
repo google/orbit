@@ -58,7 +58,7 @@ std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
 void PerfEventProcessor::AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&
-      event->GetTimestamp() < last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
+      event->GetTimestamp() < last_processed_timestamp_ - kProcessingDelayMs * 1'000'000) {
     ERROR("Processed an event out of order");
   }
 #endif
@@ -66,30 +66,36 @@ void PerfEventProcessor::AddEvent(int origin_fd, std::unique_ptr<PerfEvent> even
 }
 
 void PerfEventProcessor::ProcessAllEvents() {
+  CHECK(!visitors_.empty());
   while (event_queue_.HasEvent()) {
     std::unique_ptr<PerfEvent> event = event_queue_.PopEvent();
 #ifndef NDEBUG
     last_processed_timestamp_ = event->GetTimestamp();
 #endif
-    event->Accept(visitor_.get());
+    for (PerfEventVisitor* visitor : visitors_) {
+      event->Accept(visitor);
+    }
   }
 }
 
 void PerfEventProcessor::ProcessOldEvents() {
+  CHECK(!visitors_.empty());
   uint64_t max_timestamp = MonotonicTimestampNs();
 
   while (event_queue_.HasEvent()) {
     PerfEvent* event = event_queue_.TopEvent();
 
     // Do not read the most recent events as out-of-order events could arrive.
-    if (event->GetTimestamp() + PROCESSING_DELAY_MS * 1'000'000 >= max_timestamp) {
+    if (event->GetTimestamp() + kProcessingDelayMs * 1'000'000 >= max_timestamp) {
       break;
     }
 
 #ifndef NDEBUG
     last_processed_timestamp_ = event->GetTimestamp();
 #endif
-    event->Accept(visitor_.get());
+    for (PerfEventVisitor* visitor : visitors_) {
+      event->Accept(visitor);
+    }
     event_queue_.PopEvent();
   }
 }
