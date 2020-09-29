@@ -35,6 +35,8 @@ message CaptureOptions {
 
   repeated InstrumentedFunction instrumented_functions = 5;
 
+  bool trace_thread_state = 8;
+
   bool trace_gpu_driver = 6;
 
   repeated TracepointInfo instrumented_tracepoint = 7;

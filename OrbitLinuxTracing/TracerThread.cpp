@@ -22,6 +22,7 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
       pid_{capture_options.pid()},
       unwinding_method_{capture_options.unwinding_method()},
+      trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
   if (unwinding_method_ != CaptureOptions::kUndefined) {
     std::optional<uint64_t> sampling_period_ns =

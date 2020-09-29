@@ -68,6 +68,8 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 
+ABSL_FLAG(bool, thread_state, false, "Collect thread states");
+
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
 using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;
