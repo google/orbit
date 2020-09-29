@@ -50,7 +50,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   state_ = State::kStarting;
 
-  ProcessData process_copy = process.CreateCopy();
+  ProcessData process_copy = process;
 
   // TODO(168797897) Here a copy of the module_map is created. This module_map likely was downloaded
   // when the process was selected, which might be a while back. Between then and now the loaded

@@ -213,7 +213,7 @@ TEST(ProcessData, CreateCopy) {
 
   process.UpdateModuleInfos({module_info});
 
-  ProcessData process_copy = process.CreateCopy();
+  ProcessData process_copy = process;
 
   EXPECT_EQ(process_copy.name(), process_name);
   EXPECT_TRUE(process_copy.IsModuleLoaded(module_path));

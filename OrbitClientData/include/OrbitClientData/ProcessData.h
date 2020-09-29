@@ -31,8 +31,8 @@ struct MemorySpace {
 class ProcessData final {
  public:
   ProcessData();
-  ProcessData(const ProcessData&) = delete;
-  ProcessData& operator=(const ProcessData&) = delete;
+  ProcessData(const ProcessData&) = default;
+  ProcessData& operator=(const ProcessData&) = default;
   ProcessData(ProcessData&&) = default;
   ProcessData& operator=(ProcessData&&) = default;
 
@@ -68,8 +68,6 @@ class ProcessData final {
   bool IsModuleLoaded(const std::string& module_path) const {
     return module_memory_map_.contains(module_path);
   }
-
-  ProcessData CreateCopy() const;
 
  private:
   orbit_grpc_protos::ProcessInfo process_info_;
