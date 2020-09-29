@@ -24,7 +24,7 @@ class TimeGraphLayout {
   float GetCollapseButtonOffset() const { return m_CollapseButtonOffset; }
   float GetRoundingRadius() const { return m_RoundingRadius * scale_; }
   float GetRoundingNumSides() const { return m_RoundingNumSides; }
-  float GetTextOffset() const { return m_TextOffset; }
+  float GetTextOffset() const { return m_TextOffset * scale_; }
   float GetBottomMargin() const;
   float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetRightMargin() const { return right_margin_; }
