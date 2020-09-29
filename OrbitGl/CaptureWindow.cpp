@@ -524,14 +524,14 @@ void CaptureWindow::DrawScreenSpace() {
     double ratio = GOrbitApp->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
     float slider_width = layout.GetSliderWidth();
     slider_->SetPixelHeight(slider_width);
-    slider_->SetSliderRatio(static_cast<float>(ratio));
-    slider_->SetSliderWidthRatio(static_cast<float>(width / time_span));
+    slider_->SetSliderPosRatio(static_cast<float>(ratio));
+    slider_->SetSliderLengthRatio(static_cast<float>(width / time_span));
     slider_->Draw(this, picking_mode);
 
     float vertical_ratio = world_height_ / time_graph_.GetThreadTotalHeight();
     if (vertical_ratio < 1.f) {
       vertical_slider_->SetPixelHeight(slider_width);
-      vertical_slider_->SetSliderWidthRatio(vertical_ratio);
+      vertical_slider_->SetSliderLengthRatio(vertical_ratio);
       vertical_slider_->Draw(this, picking_mode);
       right_margin += slider_width;
     }
@@ -575,7 +575,7 @@ void CaptureWindow::UpdateVerticalSlider() {
   float min = world_max_y_;
   float max = world_height_ - time_graph_.GetThreadTotalHeight();
   float ratio = (world_top_left_y_ - min) / (max - min);
-  vertical_slider_->SetSliderRatio(ratio);
+  vertical_slider_->SetSliderPosRatio(ratio);
 }
 
 void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
