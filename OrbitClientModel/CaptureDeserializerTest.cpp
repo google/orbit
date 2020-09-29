@@ -166,7 +166,6 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
                                     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
                                         actual_selected_functions,
                                     Unused) {
-        ASSERT_NE(process, nullptr);
         EXPECT_EQ(process.name(), "process");
         EXPECT_EQ(process.pid(), 42);
 
