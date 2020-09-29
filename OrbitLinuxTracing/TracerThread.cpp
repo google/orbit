@@ -410,6 +410,12 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
       &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
+void TracerThread::InitThreadStateVisitor() {
+  thread_state_visitor_ = std::make_unique<ThreadStateVisitor>();
+  thread_state_visitor_->SetListener(listener_);
+  event_processor_.AddVisitor(thread_state_visitor_.get());
+}
+
 bool TracerThread::OpenThreadStateTracepoints(const std::vector<int32_t>& cpus) {
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
   // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
@@ -523,6 +529,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   perf_event_open_errors |= !OpenThreadNameTracepoints(all_cpus);
 
   if (trace_thread_state_) {
+    InitThreadStateVisitor();
     perf_event_open_errors |= !OpenThreadStateTracepoints(all_cpus);
   }
 
@@ -559,6 +566,11 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
   // Get the initial thread names and notify the listener_.
   RetrieveThreadNamesSystemWide();
+
+  if (trace_thread_state_) {
+    // Get the initial thread states and pass them to thread_state_visitor_.
+    RetrieveThreadStatesSystemWide();
+  }
 
   stats_.Reset();
 
@@ -662,6 +674,10 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   stop_deferred_thread_ = true;
   deferred_events_thread.join();
   event_processor_.ProcessAllEvents();
+
+  if (trace_thread_state_) {
+    thread_state_visitor_->ProcessRemainingOpenStates(MonotonicTimestampNs());
+  }
 
   // Stop recording.
   for (int fd : tracing_fds_) {
@@ -844,6 +860,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     thread_name.set_name(event->GetComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
+    if (trace_thread_state_) {
+      // task:task_newtask is also used by ThreadStateVisitor for thread states.
+      event->SetOriginFileDescriptor(fd);
+      DeferEvent(std::move(event));
+    }
   } else if (is_task_rename) {
     auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
     ThreadName thread_name;
@@ -854,17 +875,12 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   } else if (is_sched_switch) {
     auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
-    if (event->GetPrevTid() == pid_ || event->GetNextTid() == pid_ ||
-        (event->GetPrevState() & 0xFF80)) {
-      LOG("sched/sched_switch | prev_comm: %s, prev_pid: %d, prev_state: %#lx; next_comm: %s, "
-          "next_pid: %d",
-          event->GetPrevComm(), event->GetPrevTid(), event->GetPrevState(), event->GetNextComm(),
-          event->GetNextTid());
-    }
+    event->SetOriginFileDescriptor(fd);
+    DeferEvent(std::move(event));
   } else if (is_sched_wakeup) {
     auto event = ConsumeTracepointPerfEvent<SchedWakeupPerfEvent>(ring_buffer, header);
-    LOG("sched/sched_wakeup | (waker)pid: %d, (waker)tid: %d; (woken)tid: %d", event->GetWakerPid(),
-        event->GetWakerTid(), event->GetWokenTid());
+    event->SetOriginFileDescriptor(fd);
+    DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
@@ -967,12 +983,24 @@ void TracerThread::RetrieveThreadNamesSystemWide() {
   }
 }
 
+void TracerThread::RetrieveThreadStatesSystemWide() {
+  for (pid_t tid : GetAllTids()) {
+    uint64_t timestamp_ns = MonotonicTimestampNs();
+    std::optional<char> state = GetThreadState(tid);
+    if (!state.has_value()) {
+      continue;
+    }
+    thread_state_visitor_->ProcessInitialState(timestamp_ns, tid, state.value());
+  }
+}
+
 void TracerThread::Reset() {
   tracing_fds_.clear();
   fds_per_cpu_.clear();
   ring_buffers_.clear();
 
   uprobes_unwinding_visitor_.reset();
+  thread_state_visitor_.reset();
   event_processor_.ClearVisitors();
 
   uprobes_uretprobes_ids_to_function_.clear();
