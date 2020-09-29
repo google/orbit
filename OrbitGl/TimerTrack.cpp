@@ -18,8 +18,7 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-// TODO: Remove this flag once we have a way to toggle the display return values
-ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
+ABSL_DECLARE_FLAG(bool, show_return_values);
 
 TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();

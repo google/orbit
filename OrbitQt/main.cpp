@@ -59,6 +59,15 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in sam
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
+// TODO(kuebler): remove this once we have the validator complete
+ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
+
+// TODO: Remove this flag once we have a way to toggle the display return values
+ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
+
+ABSL_FLAG(bool, enable_tracepoint_feature, false,
+          "Enable the setting of the panel of kernel tracepoints");
+
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
 using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;

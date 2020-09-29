@@ -8,8 +8,7 @@
 #include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 
-// TODO(kuebler): remove this once we have the validator complete
-ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
+ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
 ModulesDataView::ModulesDataView() : DataView(DataViewType::kModules) {}
 

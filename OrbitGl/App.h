@@ -60,8 +60,6 @@
 #include "services.pb.h"
 #include "symbol.pb.h"
 
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-
 class Process;
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
