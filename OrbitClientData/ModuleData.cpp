@@ -97,14 +97,14 @@ const std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
   return result;
 }
 
-const std::vector<const FunctionInfo*> ModuleData::GetOrbitFunctions() const {
+std::vector<FunctionInfo> ModuleData::GetOrbitFunctions() const {
   absl::MutexLock lock(&mutex_);
   CHECK(is_loaded_);
-  std::vector<const FunctionInfo*> result;
+  std::vector<FunctionInfo> result;
   for (const auto& pair : functions_) {
-    const FunctionInfo* function = pair.second.get();
-    if (FunctionUtils::IsOrbitFunc(*function)) {
-      result.push_back(function);
+    FunctionInfo function = *pair.second;
+    if (FunctionUtils::IsOrbitFunc(function)) {
+      result.emplace_back(std::move(function));
     }
   }
   return result;

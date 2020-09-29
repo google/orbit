@@ -64,16 +64,16 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
   process.UpdateModuleInfos(module_infos);
 }
 
-void DataManager::SelectFunction(uint64_t function_address) {
+void DataManager::SelectFunction(const FunctionInfo& function) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!selected_functions_.contains(function_address)) {
-    selected_functions_.insert(function_address);
+  if (!selected_functions_.contains(function)) {
+    selected_functions_.insert(function);
   }
 }
 
-void DataManager::DeselectFunction(uint64_t function_address) {
+void DataManager::DeselectFunction(const FunctionInfo& function) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_functions_.erase(function_address);
+  selected_functions_.erase(function);
 }
 
 void DataManager::set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions) {
@@ -108,7 +108,7 @@ void DataManager::set_selected_text_box(const TextBox* text_box) {
 
 void DataManager::ClearSelectedFunctions() {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_functions_ = absl::flat_hash_set<uint64_t>();
+  selected_functions_.clear();
 }
 
 const ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
@@ -137,38 +137,28 @@ ModuleData* DataManager::GetMutableModuleByPath(const std::string& path) const {
   return it->second.get();
 }
 
-bool DataManager::IsFunctionSelected(uint64_t function_address) const {
+bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  return selected_functions_.contains(function_address);
+  return selected_functions_.contains(function);
 }
 
-std::vector<const FunctionInfo*> DataManager::GetSelectedFunctions() const {
+std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  std::vector<const FunctionInfo*> result;
-  if (selected_functions_.empty()) return result;
-
-  CHECK(selected_process_ != nullptr);
-  for (const uint64_t absolute_address : selected_functions_) {
-    const FunctionInfo* function =
-        FindFunctionByAddress(selected_process_->pid(), absolute_address, true);
-    CHECK(function != nullptr);
-    result.push_back(function);
-  }
-  return result;
+  return std::vector<FunctionInfo>(selected_functions_.begin(), selected_functions_.end());
 }
 
-std::vector<const FunctionInfo*> DataManager::GetSelectedAndOrbitFunctions() const {
+std::vector<FunctionInfo> DataManager::GetSelectedAndOrbitFunctions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(selected_process_ != nullptr);
 
-  std::vector<const FunctionInfo*> result = GetSelectedFunctions();
+  std::vector<FunctionInfo> result = GetSelectedFunctions();
 
   // Collect OrbitFunctions
   for (const auto& [module_path, _] : selected_process_->GetMemoryMap()) {
     const ModuleData* module = module_map_.at(module_path).get();
     if (!module->is_loaded()) continue;
 
-    std::vector<const FunctionInfo*> orbit_functions = module->GetOrbitFunctions();
+    const std::vector<FunctionInfo>& orbit_functions = module->GetOrbitFunctions();
     result.insert(result.end(), orbit_functions.begin(), orbit_functions.end());
   }
 

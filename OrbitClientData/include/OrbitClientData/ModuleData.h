@@ -47,8 +47,7 @@ class ModuleData final {
   void UpdateFunctionsModuleBaseAddress(uint64_t module_base_address);
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] const std::vector<const orbit_client_protos::FunctionInfo*> GetFunctions() const;
-  [[nodiscard]] const std::vector<const orbit_client_protos::FunctionInfo*> GetOrbitFunctions()
-      const;
+  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctions() const;
 
  private:
   mutable absl::Mutex mutex_;

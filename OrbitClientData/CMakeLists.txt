@@ -13,7 +13,8 @@ target_include_directories(OrbitClientData PUBLIC
 target_include_directories(OrbitClientData PRIVATE 
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitClientData PUBLIC 
+target_sources(OrbitClientData PUBLIC
+        include/OrbitClientData/FunctionInfoSet.h
         include/OrbitClientData/FunctionUtils.h
         include/OrbitClientData/ModuleData.h
         include/OrbitClientData/ProcessData.h)
@@ -33,7 +34,8 @@ target_link_libraries(OrbitClientData PUBLIC
 add_executable(OrbitClientDataTests)
 target_compile_options(OrbitClientDataTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(OrbitClientDataTests PRIVATE 
+target_sources(OrbitClientDataTests PRIVATE
+        FunctionInfoSetTest.cpp
         ModuleDataTest.cpp
         ProcessDataTest.cpp)
 
