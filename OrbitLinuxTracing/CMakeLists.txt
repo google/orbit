@@ -47,6 +47,8 @@ target_sources(OrbitLinuxTracing PRIVATE
         PerfEventRingBuffer.cpp
         PerfEventRingBuffer.h
         PerfEventVisitor.h
+        ThreadStateVisitor.cpp
+        ThreadStateVisitor.h
         Tracer.cpp
         TracerThread.cpp
         TracerThread.h

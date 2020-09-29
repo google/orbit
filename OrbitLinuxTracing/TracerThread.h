@@ -25,6 +25,7 @@
 #include "PerfEventProcessor.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
+#include "ThreadStateVisitor.h"
 #include "UprobesUnwindingVisitor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -74,6 +75,7 @@ class TracerThread {
   void OpenUserSpaceProbesRingBuffers();
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
+  void InitThreadStateVisitor();
   bool OpenThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
@@ -94,6 +96,7 @@ class TracerThread {
   void ProcessDeferredEvents();
 
   void RetrieveThreadNamesSystemWide();
+  void RetrieveThreadStatesSystemWide();
 
   void PrintStatsIfTimerElapsed();
 
@@ -152,6 +155,7 @@ class TracerThread {
   std::mutex deferred_events_mutex_;
   ContextSwitchManager context_switch_manager_;
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
+  std::unique_ptr<ThreadStateVisitor> thread_state_visitor_;
   PerfEventProcessor event_processor_;
   std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
