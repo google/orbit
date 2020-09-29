@@ -69,7 +69,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ProcessInfo process_info;
   process_info.set_name(process_name);
   process_info.set_pid(process_id);
-  std::unique_ptr<ProcessData> process = ProcessData::Create(process_info);
+  ProcessData process(process_info);
 
   absl::flat_hash_map<std::string, ModuleData*> empty_module_map;
 

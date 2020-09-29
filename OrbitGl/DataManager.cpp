@@ -25,9 +25,9 @@ void DataManager::UpdateProcessInfos(const std::vector<ProcessInfo>& process_inf
     int32_t process_id = info.pid();
     auto it = process_map_.find(process_id);
     if (it != process_map_.end()) {
-      it->second->SetProcessInfo(info);
+      it->second.SetProcessInfo(info);
     } else {
-      auto [inserted_it, success] = process_map_.try_emplace(process_id, ProcessData::Create(info));
+      auto [inserted_it, success] = process_map_.try_emplace(process_id, info);
       CHECK(success);
     }
   }
@@ -39,7 +39,7 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
 
   auto process_it = process_map_.find(process_id);
   CHECK(process_it != process_map_.end());
-  ProcessData* process = process_it->second.get();
+  ProcessData& process = process_it->second;
 
   for (const auto& module_info : module_infos) {
     auto module_it = module_map_.find(module_info.file_path());
@@ -55,13 +55,13 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
       // FunctionInfo, these need to be updated.
       // TODO(169309553): As soon as module base address is not part of FunctionInfo anymore, remove
       // the following.
-      if (module_info.address_start() != process->GetModuleBaseAddress(module->file_path())) {
+      if (module_info.address_start() != process.GetModuleBaseAddress(module->file_path())) {
         module->UpdateFunctionsModuleBaseAddress(module_info.address_start());
       }
     }
   }
 
-  process->UpdateModuleInfos(module_infos);
+  process.UpdateModuleInfos(module_infos);
 }
 
 void DataManager::SelectFunction(uint64_t function_address) {
@@ -119,7 +119,7 @@ const ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
     return nullptr;
   }
 
-  return it->second.get();
+  return &it->second;
 }
 
 const ModuleData* DataManager::GetModuleByPath(const std::string& path) const {

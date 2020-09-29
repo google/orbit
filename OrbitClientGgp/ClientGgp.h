@@ -30,8 +30,7 @@ class ClientGgp final : public CaptureListener {
 
   // CaptureListener implementation
   void OnCaptureStarted(
-      std::unique_ptr<ProcessData> process,
-      absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
@@ -50,7 +49,7 @@ class ClientGgp final : public CaptureListener {
  private:
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  std::unique_ptr<ProcessData> target_process_;
+  ProcessData target_process_;
   absl::flat_hash_set<std::unique_ptr<ModuleData>> modules_;
   absl::flat_hash_map<std::string, ModuleData*> module_map_;
   ModuleData* main_module_;
@@ -60,7 +59,7 @@ class ClientGgp final : public CaptureListener {
   CaptureData capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 
-  ErrorMessageOr<std::unique_ptr<ProcessData>> GetOrbitProcessByPid(int32_t pid);
+  ErrorMessageOr<ProcessData> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
   std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);

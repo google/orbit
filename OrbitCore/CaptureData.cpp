@@ -109,7 +109,7 @@ const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address
 
 const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address,
                                                        bool is_exact) const {
-  const auto result = process_->FindModuleByAddress(absolute_address);
+  const auto result = process_.FindModuleByAddress(absolute_address);
   if (!result) return nullptr;
   const std::string& module_path = result.value().first;
   const uint64_t module_base_address = result.value().second;
@@ -121,19 +121,11 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 }
 
 [[nodiscard]] ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
-  const auto result = process_->FindModuleByAddress(absolute_address);
+  const auto result = process_.FindModuleByAddress(absolute_address);
   if (!result) return nullptr;
   return module_map_.at(result.value().first);
 }
 
-int32_t CaptureData::process_id() const {
-  // TODO(antonrohr) Maybe do a CHECK(process_ != nullptr) here instead of returning -1. Currently
-  // CaptureSerializerTest is the only scenario where this is actually needed.
-  return process_ != nullptr ? process_->pid() : -1;
-}
+int32_t CaptureData::process_id() const { return process_.pid(); }
 
-const std::string CaptureData::process_name() const {
-  // TODO(antonrohr) Maybe do a CHECK(process_ != nullptr) here instead of returning an empty
-  // string. Currently CaptureSerializerTest is the only scenario where this is actually needed.
-  return process_ != nullptr ? process_->name() : "";
-}
+std::string CaptureData::process_name() const { return process_.name(); }

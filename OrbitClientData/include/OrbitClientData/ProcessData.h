@@ -30,8 +30,9 @@ struct MemorySpace {
 // Contains current information about process
 class ProcessData final {
  public:
-  ProcessData(const ProcessData&) = delete;
-  ProcessData& operator=(const ProcessData&) = delete;
+  ProcessData();
+  ProcessData(const ProcessData&) = default;
+  ProcessData& operator=(const ProcessData&) = default;
   ProcessData(ProcessData&&) = default;
   ProcessData& operator=(ProcessData&&) = default;
 
@@ -67,8 +68,6 @@ class ProcessData final {
   bool IsModuleLoaded(const std::string& module_path) const {
     return module_memory_map_.contains(module_path);
   }
-  static std::unique_ptr<ProcessData> Create(orbit_grpc_protos::ProcessInfo process_info);
-  std::unique_ptr<ProcessData> CreateCopy() const;
 
  private:
   orbit_grpc_protos::ProcessInfo process_info_;

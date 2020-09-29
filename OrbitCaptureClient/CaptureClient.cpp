@@ -50,7 +50,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   state_ = State::kStarting;
 
-  std::unique_ptr<ProcessData> process_copy = process.CreateCopy();
+  ProcessData process_copy = process;
 
   // TODO(168797897) Here a copy of the module_map is created. This module_map likely was downloaded
   // when the process was selected, which might be a while back. Between then and now the loaded
@@ -68,7 +68,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   return outcome::success();
 }
 
-void CaptureClient::Capture(std::unique_ptr<ProcessData> process,
+void CaptureClient::Capture(ProcessData&& process,
                             absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints) {
@@ -80,7 +80,7 @@ void CaptureClient::Capture(std::unique_ptr<ProcessData> process,
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
-  capture_options->set_pid(process->pid());
+  capture_options->set_pid(process.pid());
   uint16_t sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
   if (sampling_rate == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);

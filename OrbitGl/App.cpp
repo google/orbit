@@ -114,7 +114,7 @@ OrbitApp::~OrbitApp() {
 #endif
 }
 
-void OrbitApp::OnCaptureStarted(std::unique_ptr<ProcessData> process,
+void OrbitApp::OnCaptureStarted(ProcessData&& process,
                                 absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                                 absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                                 TracepointInfoSet selected_tracepoints) {

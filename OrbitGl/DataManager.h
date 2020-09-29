@@ -63,7 +63,7 @@ class DataManager final {
 
  private:
   const std::thread::id main_thread_id_;
-  absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
+  absl::flat_hash_map<int32_t, ProcessData> process_map_;
   absl::flat_hash_map<std::string, std::unique_ptr<ModuleData>> module_map_;
   absl::flat_hash_set<uint64_t> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
