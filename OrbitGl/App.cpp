@@ -51,8 +51,7 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
-ABSL_FLAG(bool, enable_tracepoint_feature, false,
-          "Enable the setting of the panel of kernel tracepoints");
+ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
