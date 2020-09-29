@@ -23,7 +23,7 @@ class GpuTracepointEventProcessor {
 
  private:
   // Keys are context, seqno, and timeline
-  typedef std::tuple<uint32_t, uint32_t, std::string> Key;
+  using Key = std::tuple<uint32_t, uint32_t, std::string>;
 
   int ComputeDepthForEvent(const std::string& timeline, uint64_t start_timestamp,
                            uint64_t end_timestamp);
