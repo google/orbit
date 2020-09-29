@@ -88,8 +88,6 @@ void TracepointsDataView::DoFilter() {
   }
 
   indices_ = indices;
-
-  OnSort(sorting_column_, {});
 }
 
 std::vector<std::string> TracepointsDataView::GetContextMenu(

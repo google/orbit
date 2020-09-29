@@ -280,8 +280,6 @@ void LiveFunctionsDataView::DoFilter() {
 
   indices_ = indices;
 
-  OnSort(sorting_column_, {});
-
   // Filter drawn textboxes
   absl::flat_hash_set<uint64_t> visible_functions;
   for (size_t i = 0; i < indices_.size(); ++i) {

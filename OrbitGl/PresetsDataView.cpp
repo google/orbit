@@ -182,8 +182,6 @@ void PresetsDataView::DoFilter() {
   }
 
   indices_ = indices;
-
-  OnSort(sorting_column_, {});
 }
 
 void PresetsDataView::OnDataChanged() {

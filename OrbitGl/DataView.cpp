@@ -41,6 +41,7 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
 void DataView::OnFilter(const std::string& filter) {
   filter_ = filter;
   DoFilter();
+  OnSort(sorting_column_, {});
 }
 
 void DataView::SetUiFilterString(const std::string& filter) {
@@ -50,8 +51,8 @@ void DataView::SetUiFilterString(const std::string& filter) {
 }
 
 void DataView::OnDataChanged() {
+  DoFilter();
   OnSort(sorting_column_, std::optional<SortingOrder>{});
-  OnFilter(filter_);
 }
 
 const std::string DataView::kMenuActionCopySelection = "Copy Selection";

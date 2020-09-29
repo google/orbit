@@ -182,8 +182,6 @@ void FunctionsDataView::DoFilter() {
   }
 
   indices_ = indices;
-
-  OnSort(sorting_column_, {});
 #endif
 }
 

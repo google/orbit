@@ -166,8 +166,6 @@ void ProcessesDataView::DoFilter() {
   }
 
   indices_ = indices;
-
-  OnSort(sorting_column_, {});
 }
 
 void ProcessesDataView::UpdateProcessList() {
@@ -181,8 +179,7 @@ void ProcessesDataView::UpdateProcessList() {
 void ProcessesDataView::SetProcessList(const std::vector<ProcessInfo>& process_list) {
   process_list_ = process_list;
   UpdateProcessList();
-  OnSort(sorting_column_, {});
-  OnFilter(filter_);
+  OnDataChanged();
   SetSelectedItem();
 }
 

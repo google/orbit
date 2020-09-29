@@ -297,8 +297,6 @@ void SamplingReportDataView::DoFilter() {
   }
 
   indices_ = indices;
-
-  OnSort(sorting_column_, {});
 }
 
 const SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) const {
