@@ -15,13 +15,13 @@
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
+ABSL_DECLARE_FLAG(bool, thread_state);
 
 using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
-using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTypeFromOrbitType(
@@ -93,6 +93,7 @@ void CaptureClient::Capture(ProcessData&& process,
     }
   }
 
+  capture_options->set_trace_thread_state(absl::GetFlag(FLAGS_thread_state));
   capture_options->set_trace_gpu_driver(true);
   for (const auto& pair : selected_functions) {
     const FunctionInfo& function = pair.second;

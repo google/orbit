@@ -25,6 +25,7 @@ ABSL_FLAG(std::string, log_directory, "",
           "Path to locate debug file. By default only stdout is used for logs");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
+ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 
 namespace {
 
