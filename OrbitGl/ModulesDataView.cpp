@@ -170,8 +170,6 @@ void ModulesDataView::DoFilter() {
   }
 
   indices_ = indices;
-
-  OnSort(sorting_column_, {});
 }
 
 void ModulesDataView::SetProcess(const ProcessData* process) {
