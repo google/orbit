@@ -28,13 +28,6 @@ TextRenderer::TextRenderer()
       m_DrawOutline(false) {}
 
 TextRenderer::~TextRenderer() {
-  // Freetype-gl doesn't handle nullptr in its
-  // delete functions, hence the checks.
-
-  if (m_Font) {
-    texture_font_delete(m_Font);
-  }
-
   for (const auto& pair : m_FontsBySize) {
     texture_font_delete(pair.second);
   }
@@ -58,12 +51,12 @@ void TextRenderer::Init() {
   const auto exe_dir = Path::GetExecutableDir();
   const auto fontFileName = exe_dir + "fonts/Vera.ttf";
 
-  current_font_size_ = GParams.font_size;
   m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
-  m_Font = texture_font_new_from_file(m_Atlas, current_font_size_, fontFileName.c_str());
   for (int i = 1; i <= 100; i += 1) {
     m_FontsBySize[i] = texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }
+  current_font_size_ = GParams.font_size;
+  SetFontSize(current_font_size_);
 
   m_Pen.x = 0;
   m_Pen.y = 0;
