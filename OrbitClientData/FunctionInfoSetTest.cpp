@@ -22,7 +22,15 @@ TEST(FunctionInfoSet, EqualFunctions) {
   left.set_line(13);
 
   FunctionInfo right;
-  right.CopyFrom(left);
+  right.set_name("foo");
+  right.set_pretty_name("void foo()");
+  right.set_loaded_module_path("/path/to/module");
+  right.set_module_base_address(42);
+  right.set_address(12);
+  right.set_load_bias(4);
+  right.set_size(16);
+  right.set_file("file.cpp");
+  right.set_line(13);
 
   internal::EqualFunctionInfo eq;
   EXPECT_TRUE(eq(left, right));
@@ -51,6 +59,7 @@ TEST(FunctionInfoSet, DifferentName) {
   internal::HashFunctionInfo hash;
   EXPECT_NE(hash(left), hash(right));
 }
+
 TEST(FunctionInfoSet, DifferentPrettyName) {
   FunctionInfo left;
   left.set_name("foo");
@@ -72,6 +81,7 @@ TEST(FunctionInfoSet, DifferentPrettyName) {
   internal::HashFunctionInfo hash;
   EXPECT_NE(hash(left), hash(right));
 }
+
 TEST(FunctionInfoSet, DifferentLoadedModulePath) {
   FunctionInfo left;
   left.set_name("foo");
@@ -159,6 +169,7 @@ TEST(FunctionInfoSet, DifferentLoadBias) {
   internal::HashFunctionInfo hash;
   EXPECT_NE(hash(left), hash(right));
 }
+
 TEST(FunctionInfoSet, DifferentSize) {
   FunctionInfo left;
   left.set_name("foo");
@@ -180,6 +191,7 @@ TEST(FunctionInfoSet, DifferentSize) {
   internal::HashFunctionInfo hash;
   EXPECT_NE(hash(left), hash(right));
 }
+
 TEST(FunctionInfoSet, DifferentFile) {
   FunctionInfo left;
   left.set_name("foo");
@@ -201,6 +213,7 @@ TEST(FunctionInfoSet, DifferentFile) {
   internal::HashFunctionInfo hash;
   EXPECT_NE(hash(left), hash(right));
 }
+
 TEST(FunctionInfoSet, DifferentLine) {
   FunctionInfo left;
   left.set_name("foo");
