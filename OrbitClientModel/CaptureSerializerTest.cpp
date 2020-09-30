@@ -74,13 +74,24 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   process_info.set_pid(process_id);
   ProcessData process(process_info);
 
-  absl::flat_hash_map<std::string, ModuleData*> empty_module_map;
+  absl::flat_hash_map<std::string, ModuleData*> module_map;
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_load_bias(0);
+  module_info.set_file_path("path/to/module");
+  module_info.set_address_start(15);
+  module_info.set_address_end(1000);
+  std::vector<orbit_grpc_protos::ModuleInfo> module_infos;
+  module_infos.push_back(module_info);
+  ModuleData module(module_info);
+  module_map["path/to/module"] = &module;
+  process.UpdateModuleInfos(module_infos);
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   FunctionInfo selected_function;
   selected_function.set_name("foo");
   selected_function.set_address(123);
   selected_function.set_module_base_address(15);
+  selected_function.set_loaded_module_path("path/to/module");
   selected_functions[FunctionUtils::GetAbsoluteAddress(selected_function)] = selected_function;
 
   TracepointInfoSet selected_tracepoints;
@@ -89,7 +100,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
 
-  CaptureData capture_data{std::move(process), std::move(empty_module_map), selected_functions,
+  CaptureData capture_data{std::move(process), std::move(module_map), selected_functions,
                            selected_tracepoints};
 
   capture_data.AddOrAssignThreadName(42, "t42");

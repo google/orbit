@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 
+#include "ProcessData.h"
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
 
@@ -25,6 +26,12 @@ namespace FunctionUtils {
 [[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func);
 [[nodiscard]] inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func) {
   return func.address() + func.module_base_address() - func.load_bias();
+}
+[[nodiscard]] inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
+                                                 const ProcessData& process,
+                                                 const ModuleData& module) {
+  return func.address() + process.GetModuleBaseAddress(func.loaded_module_path()) -
+         module.load_bias();
 }
 
 [[nodiscard]] bool IsOrbitFunc(const orbit_client_protos::FunctionInfo& func);

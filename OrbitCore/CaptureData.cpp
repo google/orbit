@@ -41,8 +41,7 @@ void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
 
 const FunctionStats& CaptureData::GetFunctionStatsOrDefault(const FunctionInfo& function) const {
   static const FunctionStats kDefaultFunctionStats;
-  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function);
-  auto function_stats_it = functions_stats_.find(absolute_address);
+  auto function_stats_it = functions_stats_.find(function);
   if (function_stats_it == functions_stats_.end()) {
     return kDefaultFunctionStats;
   }
@@ -50,8 +49,7 @@ const FunctionStats& CaptureData::GetFunctionStatsOrDefault(const FunctionInfo& 
 }
 
 void CaptureData::UpdateFunctionStats(const FunctionInfo& function, uint64_t elapsed_nanos) {
-  const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function);
-  FunctionStats& stats = functions_stats_[absolute_address];
+  FunctionStats& stats = functions_stats_[function];
   stats.set_count(stats.count() + 1);
   stats.set_total_time_ns(stats.total_time_ns() + elapsed_nanos);
   stats.set_average_time_ns(stats.total_time_ns() / stats.count());
@@ -148,6 +146,12 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
   const auto result = process_.FindModuleByAddress(absolute_address);
   if (!result) return nullptr;
   return module_map_.at(result.value().first);
+}
+
+uint64_t CaptureData::GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& function) const {
+  const auto module_it = module_map_.find(function.loaded_module_path());
+  CHECK(module_it != module_map_.end());
+  return FunctionUtils::GetAbsoluteAddress(function, process_, *module_it->second);
 }
 
 int32_t CaptureData::process_id() const { return process_.pid(); }
