@@ -34,9 +34,11 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   typedef std::function<void(float)> DragCallback;
   void SetDragCallback(DragCallback callback) { drag_callback_ = callback; }
 
-  enum class ResizeDirection { kUpdateMin, kUpdateMax };
-  typedef std::function<void(float, ResizeDirection)> ResizeCallback;
+  typedef std::function<void(float)> ResizeCallback;
   void SetResizeCallback(ResizeCallback callback) { resize_callback_ = callback; }
+
+  [[nodiscard]] float GetPosRatio() { return pos_ratio_; }
+  [[nodiscard]] float GetLengthRatio() { return length_ratio_; }
 
   void OnPick(int x, int y) override;
   void OnDrag(int x, int y) override;
@@ -52,21 +54,37 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   [[nodiscard]] virtual float GetCanvasEdgeLength() = 0;
 
+  [[nodiscard]] float PixelToLen(float value) { return value / GetCanvasEdgeLength(); }
+  [[nodiscard]] float LenToPixel(float value) { return value * GetCanvasEdgeLength(); }
+  [[nodiscard]] float PixelToPos(float value) { return value / LenToPixel(1.0f - length_ratio_); }
+  [[nodiscard]] float PosToPixel(float value) { return value * LenToPixel(1.0f - length_ratio_); }
+
+  [[nodiscard]] bool HandlePageScroll(int click_value);
+
  protected:
   static const float kGradientFactor;
 
   GlCanvas* canvas_;
-  float ratio_;
-  float length_;
-  float picking_ratio_;
+
+  float pos_ratio_;
+  float right_edge_ratio_;
+  float length_ratio_;
+  float picking_pixel_offset_;
+
   DragCallback drag_callback_;
   ResizeCallback resize_callback_;
+
   Color selected_color_;
   Color slider_color_;
   Color bar_color_;
-  float min_slider_pixel_length_;
+  int min_slider_pixel_length_;
   float pixel_height_;
   float orthogonal_slider_size_;
+
+  int slider_resize_pixel_margin_;
+
+  enum class DragType { kPan, kScaleMin, kScaleMax, kNone };
+  DragType drag_type_;
 };
 
 class GlVerticalSlider : public GlSlider {
