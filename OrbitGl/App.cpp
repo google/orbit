@@ -679,7 +679,7 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   const auto& key_to_string_map = GCurrentTimeGraph->GetStringManager()->GetKeyToStringMap();
 
-  std::vector<std::shared_ptr<TimerChain>> chains = GCurrentTimeGraph->GetAllTimerChains();
+  std::vector<std::shared_ptr<TimerChain>> chains = GCurrentTimeGraph->GetAllSerializableTimerChains();
 
   TimerInfosIterator timers_it_begin(chains.begin(), chains.end());
   TimerInfosIterator timers_it_end(chains.end(), chains.end());

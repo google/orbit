@@ -249,6 +249,10 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
   return chains;
 }
 
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() {
+  return GetAllChains();
+}
+
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
 std::string TimerTrack::GetBoxTooltip(PickingId /*id*/) const { return ""; }
