@@ -240,7 +240,7 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   for (const FunctionInfo* func : main_module_->GetFunctions()) {
     const std::string& selected_function_match = SelectedFunctionMatch(*func);
     if (!selected_function_match.empty()) {
-      uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
+      uint64_t address = FunctionUtils::GetAbsoluteAddress(*func, target_process_, *main_module_);
       selected_functions[address] = *func;
       if (!capture_functions_used.contains(selected_function_match)) {
         capture_functions_used.insert(selected_function_match);

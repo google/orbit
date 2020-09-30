@@ -100,7 +100,8 @@ void CaptureClient::Capture(ProcessData&& process,
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
     instrumented_function->set_file_offset(FunctionUtils::Offset(function));
-    instrumented_function->set_absolute_address(FunctionUtils::GetAbsoluteAddress(function));
+    instrumented_function->set_absolute_address(FunctionUtils::GetAbsoluteAddress(
+        function, process, *module_map.at(function.loaded_module_path())));
     instrumented_function->set_function_type(
         IntrumentedFunctionTypeFromOrbitType(function.orbit_type()));
   }
