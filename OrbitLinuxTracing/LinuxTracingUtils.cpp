@@ -72,15 +72,21 @@ std::vector<pid_t> GetAllPids() {
 }
 
 std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
-  fs::directory_iterator proc_pid_task{fs::path{"/proc"} / std::to_string(pid) / "task"};
-  std::vector<pid_t> tids;
+  std::error_code error_code;
+  fs::directory_iterator proc_pid_task{fs::path{"/proc"} / std::to_string(pid) / "task",
+                                       error_code};
+  if (error_code) {
+    // The process with id `pid` could have stopped existing.
+    ERROR("Getting tids of threads of process %d: %s", pid, error_code.message());
+    return {};
+  }
 
+  std::vector<pid_t> tids;
   for (const auto& entry : proc_pid_task) {
     if (auto tid = ProcEntryToPid(entry); tid.has_value()) {
       tids.emplace_back(tid.value());
     }
   }
-
   return tids;
 }
 
