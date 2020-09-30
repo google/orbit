@@ -53,6 +53,7 @@ for profile in ${profiles[@]}; do
 
   mkdir -p build_$profile/ || exit $?
   conan lock create "$DIR/conanfile.py" --user=orbitdeps --channel=stable \
+    --build=outdated \
     --lockfile="$DIR/third_party/conan/lockfiles/base.lock" -u -pr $profile \
     --lockfile-out=build_$profile/conan.lock || exit $?
   conan install -if build_$profile/ --build outdated --lockfile=build_$profile/conan.lock "$DIR" || exit $?
