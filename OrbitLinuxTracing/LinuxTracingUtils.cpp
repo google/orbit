@@ -108,6 +108,29 @@ std::string GetThreadName(pid_t tid) {
   return comm_content.value();
 }
 
+std::optional<char> GetThreadState(pid_t tid) {
+  fs::path stat{fs::path{"/proc"} / std::to_string(tid) / "stat"};
+  if (!fs::exists(stat)) {
+    return std::nullopt;
+  }
+
+  std::ifstream stream{stat.string()};
+  if (!stream.good()) {
+    ERROR("Could not open \"%s\"", stat.string());
+    return std::nullopt;
+  }
+
+  std::string first_line{};
+  std::getline(stream, first_line);
+  std::vector<std::string_view> fields = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
+
+  constexpr size_t kStateIndex = 2;
+  if (fields.size() <= kStateIndex) {
+    return std::nullopt;
+  }
+  return fields[kStateIndex][0];
+}
+
 std::optional<std::string> ExecuteCommand(const std::string& cmd) {
   std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"), pclose};
   if (!pipe) {
