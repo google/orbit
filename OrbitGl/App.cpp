@@ -1118,8 +1118,15 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(uint64_t absolute_address) const {
-  int32_t pid = data_manager_->selected_process()->pid();
+  const ProcessData* process = data_manager_->selected_process();
+  if (process == nullptr) {
+    return false;
+  }
+  const int32_t pid = process->pid();
   const FunctionInfo* function = data_manager_->FindFunctionByAddress(pid, absolute_address, false);
+  if (function == nullptr) {
+    return false;
+  }
   return data_manager_->IsFunctionSelected(*function);
 }
 
