@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "CallstackData.h"
+#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ProcessData.h"
 #include "SamplingProfiler.h"
 #include "TracepointCustom.h"
@@ -79,6 +80,8 @@ class CaptureData {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       uint64_t absolute_address, bool is_exact) const;
   [[nodiscard]] ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] uint64_t GetAbsoluteAddress(
+      const orbit_client_protos::FunctionInfo& function) const;
 
   static const std::string kUnknownFunctionOrModuleName;
 
@@ -118,8 +121,7 @@ class CaptureData {
       int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const orbit_client_protos::ThreadStateSliceInfo&)>& action) const;
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
-  functions_stats() const {
+  [[nodiscard]] const FunctionInfoMap<orbit_client_protos::FunctionStats>& functions_stats() const {
     return functions_stats_;
   }
 
@@ -216,7 +218,7 @@ class CaptureData {
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
+  FunctionInfoMap<orbit_client_protos::FunctionStats> functions_stats_;
 
   absl::flat_hash_map<int32_t, std::string> thread_names_;
 

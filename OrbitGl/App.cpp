@@ -413,10 +413,12 @@ void OrbitApp::RefreshCaptureView() {
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   const ProcessData* process = data_manager_->GetProcessByPid(pid);
   CHECK(process != nullptr);
+  const ModuleData* module = data_manager_->GetModuleByPath(function.loaded_module_path());
+  CHECK(module != nullptr);
   const bool is_64_bit = process->is_64_bit();
-  thread_pool_->Schedule([this, is_64_bit, pid, function] {
-    auto result = process_manager_->LoadProcessMemory(
-        pid, FunctionUtils::GetAbsoluteAddress(function), function.size());
+  const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function, *process, *module);
+  thread_pool_->Schedule([this, absolute_address, is_64_bit, pid, function] {
+    auto result = process_manager_->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
                                                             result.error().message()));
@@ -725,7 +727,9 @@ bool OrbitApp::StartCapture() {
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
   for (const auto& function : data_manager_->GetSelectedAndOrbitFunctions()) {
-    uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function);
+    const ModuleData* module = data_manager_->GetModuleByPath(function.loaded_module_path());
+    CHECK(module != nullptr);
+    uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function, *process, *module);
     selected_functions[absolute_address] = FunctionInfo(function);
   }
 
@@ -1096,11 +1100,8 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
 }
 
 void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
-  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
-  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64 ", load_bias_= 0x%" PRIx64
-      ", base_address=0x%" PRIx64 ")",
-      func.pretty_name(), absolute_address, func.address(), func.load_bias(),
-      func.module_base_address());
+  LOG("Selected %s (address_=0x%" PRIx64 ", loaded_module_path_=%s)", func.pretty_name(),
+      func.address(), func.loaded_module_path());
   data_manager_->SelectFunction(func);
 }
 

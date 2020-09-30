@@ -5,8 +5,8 @@
 #ifndef ORBIT_CLIENT_DATA_FUNCTION_INFO_SET_H_
 #define ORBIT_CLIENT_DATA_FUNCTION_INFO_SET_H_
 
-#include <absl/container/flat_hash_set.h>
-
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
 namespace internal {
@@ -32,6 +32,11 @@ struct EqualFunctionInfo {
 
 using FunctionInfoSet =
     absl::flat_hash_set<orbit_client_protos::FunctionInfo, internal::HashFunctionInfo,
+                        internal::EqualFunctionInfo>;
+
+template <class V>
+using FunctionInfoMap =
+    absl::flat_hash_map<orbit_client_protos::FunctionInfo, V, internal::HashFunctionInfo,
                         internal::EqualFunctionInfo>;
 
 #endif  // ORBIT_CLIENT_DATA_FUNCTION_INFO_SET_H_

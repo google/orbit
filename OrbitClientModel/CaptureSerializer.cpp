@@ -16,6 +16,7 @@
 
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
+using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
 namespace {
@@ -85,14 +86,18 @@ CaptureInfo GenerateCaptureInfo(
     }
     // Fix names/offset/module in address infos (some might only be in process):
     added_address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
-    const uint64_t offset = absolute_address - FunctionUtils::GetAbsoluteAddress(*function);
+    uint64_t absolute_function_address = capture_data.GetAbsoluteAddress(*function);
+    const uint64_t offset = absolute_address - absolute_function_address;
     added_address_info->set_offset_in_function(offset);
     added_address_info->set_module_path(function->loaded_module_path());
   }
 
-  const absl::flat_hash_map<uint64_t, FunctionStats>& functions_stats =
-      capture_data.functions_stats();
-  capture_info.mutable_function_stats()->insert(functions_stats.begin(), functions_stats.end());
+  const FunctionInfoMap<FunctionStats>& functions_stats = capture_data.functions_stats();
+  for (const auto& function_to_stats : functions_stats) {
+    const FunctionInfo& function = function_to_stats.first;
+    uint64_t absolute_address = capture_data.GetAbsoluteAddress(function);
+    capture_info.mutable_function_stats()->operator[](absolute_address) = function_to_stats.second;
+  }
 
   // TODO: this is not really synchronized, since GetCallstackData processing below is not under the
   // same mutex lock we could end up having list of callstacks inconsistent with unique_callstacks.

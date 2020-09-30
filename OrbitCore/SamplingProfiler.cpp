@@ -231,7 +231,7 @@ void SamplingProfiler::MapAddressToFunctionAddress(uint64_t absolute_address,
   // considered a different function.
   uint64_t absolute_function_address;
   if (function != nullptr) {
-    absolute_function_address = FunctionUtils::GetAbsoluteAddress(*function);
+    absolute_function_address = capture_data.GetAbsoluteAddress(*function);
   } else if (address_info != nullptr) {
     absolute_function_address = absolute_address - address_info->offset_in_function();
   } else {
