@@ -52,8 +52,8 @@ void AsyncTrack::UpdateBoxHeight() {
 }
 
 std::vector<std::shared_ptr<TimerChain>> AsyncTrack::GetAllSerializableChains() {
-  // For async time slices, the start and stop events are their own individual timers and are 
-  // already serialized on their initial thread tracks. Return an empty vector so that we don't 
+  // For async time slices, the start and stop events are their own individual timers and are
+  // already serialized on their initial thread tracks. Return an empty vector so that we don't
   // serialize the async timer twice.
   return {};
 }
