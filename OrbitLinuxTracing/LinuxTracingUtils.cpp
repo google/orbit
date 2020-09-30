@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LINUX_TRACING_UTILS_H_
-#define ORBIT_LINUX_TRACING_UTILS_H_
-
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
 #include <sys/resource.h>
@@ -255,5 +252,3 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
 }
 
 }  // namespace LinuxTracing
-
-#endif  // ORBIT_LINUX_TRACING_UTILS_H_
