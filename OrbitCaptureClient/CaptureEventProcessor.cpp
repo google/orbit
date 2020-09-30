@@ -21,6 +21,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
+using orbit_grpc_protos::ThreadStateSlice;
 
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
@@ -32,12 +33,6 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
       break;
     case CaptureEvent::kCallstackSample:
       ProcessCallstackSample(event.callstack_sample());
-      break;
-    case CaptureEvent::kInternedTracepointInfo:
-      ProcessInternedTracepointInfo(event.interned_tracepoint_info());
-      break;
-    case CaptureEvent::kTracepointEvent:
-      ProcessTracepointEvent(event.tracepoint_event());
       break;
     case CaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
@@ -51,8 +46,17 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
     case CaptureEvent::kThreadName:
       ProcessThreadName(event.thread_name());
       break;
+    case CaptureEvent::kThreadStateSlice:
+      ProcessThreadStateSlice(event.thread_state_slice());
+      break;
     case CaptureEvent::kAddressInfo:
       ProcessAddressInfo(event.address_info());
+      break;
+    case CaptureEvent::kInternedTracepointInfo:
+      ProcessInternedTracepointInfo(event.interned_tracepoint_info());
+      break;
+    case CaptureEvent::kTracepointEvent:
+      ProcessTracepointEvent(event.tracepoint_event());
       break;
     case CaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
@@ -176,6 +180,11 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
 
 void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
   capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
+}
+
+void CaptureEventProcessor::ProcessThreadStateSlice(
+    const ThreadStateSlice& /*thread_state_slice*/) {
+  // TODO(dpallotti,b/168790833): Send to OrbitApp and ClientGgp.
 }
 
 void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) {

@@ -18,6 +18,7 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
+using orbit_grpc_protos::ThreadStateSlice;
 
 void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
@@ -95,6 +96,15 @@ void LinuxTracingGrpcHandler::OnGpuJob(GpuJob gpu_job) {
 void LinuxTracingGrpcHandler::OnThreadName(ThreadName thread_name) {
   CaptureEvent event;
   *event.mutable_thread_name() = std::move(thread_name);
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    event_buffer_.emplace_back(std::move(event));
+  }
+}
+
+void LinuxTracingGrpcHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice) {
+  CaptureEvent event;
+  *event.mutable_thread_state_slice() = std::move(thread_state_slice);
   {
     absl::MutexLock lock{&event_buffer_mutex_};
     event_buffer_.emplace_back(std::move(event));
