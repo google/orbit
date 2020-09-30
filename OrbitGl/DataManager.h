@@ -14,6 +14,7 @@
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/container/node_hash_map.h"
 
 // This class is responsible for storing and
 // navigating data on the client side. Note that
@@ -63,7 +64,8 @@ class DataManager final {
 
  private:
   const std::thread::id main_thread_id_;
-  absl::flat_hash_map<int32_t, ProcessData> process_map_;
+  // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
+  absl::node_hash_map<int32_t, ProcessData> process_map_;
   absl::flat_hash_map<std::string, std::unique_ptr<ModuleData>> module_map_;
   FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
