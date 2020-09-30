@@ -101,6 +101,50 @@ TEST(GetThreadName, OrbitLinuxTracingTests) {
   EXPECT_EQ(returned_name, expected_name);
 }
 
+TEST(GetThreadState, OrbitLinuxTracingTestsMainAndAnother) {
+  pid_t main_tid = syscall(SYS_gettid);
+
+  std::optional<char> main_state_initial = GetThreadState(main_tid);
+  ASSERT_TRUE(main_state_initial.has_value());
+  EXPECT_EQ('R', main_state_initial.value());
+
+  absl::Mutex mutex;
+  pid_t thread_tid = -1;
+  std::optional<char> thread_state_holding_mutex;
+  std::optional<char> main_state_waiting_mutex;
+  std::thread thread{[&] {
+    {
+      absl::MutexLock lock{&mutex};
+      thread_tid = syscall(SYS_gettid);
+      thread_state_holding_mutex = GetThreadState(thread_tid);
+      main_state_waiting_mutex = GetThreadState(main_tid);
+    }
+    // Give the main thread the time to read this thread's state before exiting.
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }};
+
+  {
+    absl::MutexLock lock{&mutex};
+    mutex.Await(absl::Condition(
+        +[](pid_t* tid) { return *tid != -1; }, &thread_tid));
+  }
+  ASSERT_TRUE(thread_state_holding_mutex.has_value());
+  EXPECT_EQ('R', thread_state_holding_mutex.value());
+  ASSERT_TRUE(main_state_waiting_mutex.has_value());
+  EXPECT_EQ('S', main_state_waiting_mutex.value());  // Interruptible sleep
+
+  // Make sure `thread` has had the time to call sleep_for.
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  std::optional<char> thread_state_sleeping = GetThreadState(thread_tid);
+  ASSERT_TRUE(thread_state_sleeping.has_value());
+  EXPECT_EQ('S', thread_state_sleeping.value());
+
+  thread.join();
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  std::optional<char> thread_state_exited = GetThreadState(thread_tid);
+  EXPECT_FALSE(thread_state_exited.has_value());
+}
+
 TEST(ExecuteCommand, EchoHelloWorld) {
   std::string string_to_echo = "Hello, World!";
   std::optional<std::string> returned_result =
