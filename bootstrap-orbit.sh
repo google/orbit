@@ -43,7 +43,7 @@ function install_required_packages {
 
 
 if [[ $IGNORE_SYS_REQUIREMENTS != "yes" ]]; then
-  if which dpkg-query >/dev/null; then
+  if which dpkg-query >/dev/null 2>&1; then
     readonly installed="$(dpkg-query --show -f'${Package}\n')"
     PACKAGES_MISSING="no"
     for package in ${REQUIRED_PACKAGES[@]}; do
@@ -67,7 +67,7 @@ if [[ $IGNORE_SYS_REQUIREMENTS != "yes" ]]; then
     cat <<EOF
 We detected you're not on a debian-based system. Orbit requires some system
 packages to be installed. Please make sure that you have those installed.
-Here are Debian package names: $PACKAGE[@].
+Here are Debian package names: ${REQUIRED_PACKAGES[@]}.
 
 On other Linux distributions the package names might be similar but not exactly
 the same!
