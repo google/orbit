@@ -72,6 +72,7 @@ if (NOT WIN32)
             ContextSwitchManagerTest.cpp
             LinuxTracingUtilsTest.cpp
             PerfEventProcessorTest.cpp
+            ThreadStateVisitorTest.cpp
             UprobesFunctionCallManagerTest.cpp
             UprobesReturnAddressManagerTest.cpp)
 endif()
