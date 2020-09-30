@@ -604,12 +604,12 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
 
-  for (const auto* function : data_manager_->GetSelectedFunctions()) {
+  for (const auto& function : data_manager_->GetSelectedFunctions()) {
     // GetSelectedFunctions should not contain orbit functions
-    CHECK(!FunctionUtils::IsOrbitFunc(*function));
+    CHECK(!FunctionUtils::IsOrbitFunc(function));
 
-    uint64_t hash = FunctionUtils::GetHash(*function);
-    (*preset.mutable_path_to_module())[function->loaded_module_path()].add_function_hashes(hash);
+    uint64_t hash = FunctionUtils::GetHash(function);
+    (*preset.mutable_path_to_module())[function.loaded_module_path()].add_function_hashes(hash);
   }
 
   std::string filename_with_ext = filename;
@@ -726,9 +726,9 @@ bool OrbitApp::StartCapture() {
   }
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
-  for (const auto* function : data_manager_->GetSelectedAndOrbitFunctions()) {
-    uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(*function);
-    selected_functions[absolute_address] = FunctionInfo(*function);
+  for (const auto& function : data_manager_->GetSelectedAndOrbitFunctions()) {
+    uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function);
+    selected_functions[absolute_address] = FunctionInfo(function);
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
@@ -1101,28 +1101,26 @@ void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
       ", base_address=0x%" PRIx64 ")",
       func.pretty_name(), absolute_address, func.address(), func.load_bias(),
       func.module_base_address());
-  data_manager_->SelectFunction(absolute_address);
+  data_manager_->SelectFunction(func);
 }
 
 void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
-  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
-  data_manager_->DeselectFunction(absolute_address);
+  data_manager_->DeselectFunction(func);
 }
-
-void OrbitApp::ClearSelectedFunctions() { data_manager_->ClearSelectedFunctions(); }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(
     const orbit_client_protos::FunctionInfo& func) const {
-  uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(func);
-  return data_manager_->IsFunctionSelected(absolute_address);
+  return data_manager_->IsFunctionSelected(func);
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(const SampledFunction& func) const {
-  return data_manager_->IsFunctionSelected(func.absolute_address);
+  return IsFunctionSelected(func.absolute_address);
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(uint64_t absolute_address) const {
-  return data_manager_->IsFunctionSelected(absolute_address);
+  int32_t pid = data_manager_->selected_process()->pid();
+  const FunctionInfo* function = data_manager_->FindFunctionByAddress(pid, absolute_address, false);
+  return data_manager_->IsFunctionSelected(*function);
 }
 
 void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions) {

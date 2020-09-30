@@ -7,6 +7,7 @@
 
 #include <thread>
 
+#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "TextBox.h"
@@ -28,8 +29,8 @@ class DataManager final {
   void UpdateModuleInfos(int32_t process_id,
                          const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
 
-  void SelectFunction(uint64_t function_address);
-  void DeselectFunction(uint64_t function_address);
+  void SelectFunction(const orbit_client_protos::FunctionInfo& function);
+  void DeselectFunction(const orbit_client_protos::FunctionInfo& function);
   void ClearSelectedFunctions();
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
   void set_selected_thread_id(int32_t thread_id);
@@ -45,10 +46,9 @@ class DataManager final {
       int32_t process_id, uint64_t absolute_address, bool is_exact) const;
   [[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> GetModulesLoadedByProcess(
       const ProcessData* process) const;
-  [[nodiscard]] bool IsFunctionSelected(uint64_t function_address) const;
-  [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetSelectedFunctions() const;
-  [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetSelectedAndOrbitFunctions()
-      const;
+  [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
+  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
+  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedAndOrbitFunctions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] int32_t selected_thread_id() const;
   [[nodiscard]] const TextBox* selected_text_box() const;
@@ -65,7 +65,7 @@ class DataManager final {
   const std::thread::id main_thread_id_;
   absl::flat_hash_map<int32_t, ProcessData> process_map_;
   absl::flat_hash_map<std::string, std::unique_ptr<ModuleData>> module_map_;
-  absl::flat_hash_set<uint64_t> selected_functions_;
+  FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 
   TracepointInfoSet selected_tracepoints_;
