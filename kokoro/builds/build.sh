@@ -126,6 +126,7 @@ if [ -n "$1" ]; then
   fi
 
   conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
+    --build=outdated \
     --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -u -pr ${CONAN_PROFILE} \
     -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
     --lockfile-out="${REPO_ROOT}/build/conan.lock"

@@ -49,6 +49,7 @@ foreach ($profile in $profiles) {
   New-Item -ItemType Directory -Force -Path ".\build_$profile\" | Out-Null
 
   & $conan.Path lock create "$PSScriptRoot\conanfile.py" --user=orbitdeps --channel=stable `
+    --build=outdated `
     --lockfile="$PSScriptRoot\third_party\conan\lockfiles\base.lock" -u -pr $profile `
     --lockfile-out=.\build_$profile\conan.lock
   if ($LastExitCode -ne 0) {
