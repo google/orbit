@@ -36,6 +36,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override;
   void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override;
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override;
+  void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override;
   void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) override;
   void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override;
 

@@ -32,10 +32,11 @@ class CaptureEventProcessor {
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
   void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
+  void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
+  void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
-  void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
   absl::flat_hash_map<uint64_t, std::string> string_intern_pool;
