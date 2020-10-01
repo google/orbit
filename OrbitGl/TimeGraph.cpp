@@ -845,7 +845,7 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
 }
 
 void TimeGraph::SetThreadFilter(const std::string& filter) {
-  thread_filter_ = filter;
+  thread_filter_ = absl::AsciiStrToLower(filter);
   NeedsUpdate();
 }
 
@@ -890,22 +890,6 @@ void TimeGraph::SortTracks() {
       }
     }
 
-    // Filter thread ids if needed
-    if (!thread_filter_.empty()) {
-      std::vector<std::string> filters = absl::StrSplit(thread_filter_, ' ');
-      std::vector<int32_t> filtered_thread_ids;
-      for (int32_t tid : sorted_thread_ids) {
-        std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(tid);
-
-        for (auto& filter : filters) {
-          if (track && absl::StrContains(track->GetName(), filter)) {
-            filtered_thread_ids.push_back(tid);
-          }
-        }
-      }
-      sorted_thread_ids = filtered_thread_ids;
-    }
-
     ScopeLock lock(mutex_);
     sorted_tracks_.clear();
 
@@ -948,6 +932,23 @@ void TimeGraph::SortTracks() {
       if (!track->IsEmpty()) {
         sorted_tracks_.emplace_back(track);
       }
+    }
+
+    // Filter tracks if needed.
+    if (!thread_filter_.empty()) {
+      std::vector<std::string> filters =
+          absl::StrSplit(thread_filter_, ' ', absl::SkipWhitespace());
+      std::vector<std::shared_ptr<Track>> filtered_tracks;
+      for (const auto& track : sorted_tracks_) {
+        std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
+        for (auto& filter : filters) {
+          if (absl::StrContains(lower_case_label, filter)) {
+            filtered_tracks.emplace_back(track);
+            break;
+          }
+        }
+      }
+      sorted_tracks_ = std::move(filtered_tracks);
     }
 
     last_thread_reorder_.Reset();
