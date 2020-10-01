@@ -100,10 +100,9 @@ CaptureInfo GenerateCaptureInfo(
   }
 
   const FunctionInfoMap<FunctionStats>& functions_stats = capture_data.functions_stats();
-  for (const auto& function_to_stats : functions_stats) {
-    const FunctionInfo& function = function_to_stats.first;
+  for (const auto& [function, stats] : functions_stats) {
     uint64_t absolute_address = capture_data.GetAbsoluteAddress(function);
-    capture_info.mutable_function_stats()->operator[](absolute_address) = function_to_stats.second;
+    capture_info.mutable_function_stats()->operator[](absolute_address) = stats;
   }
 
   // TODO: this is not really synchronized, since GetCallstackData processing below is not under the

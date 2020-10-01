@@ -36,7 +36,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     google::protobuf::io::StringOutputStream stream{&buffer};
     google::protobuf::io::CodedOutputStream coded_stream{&stream};
     orbit_client_protos::CaptureHeader capture_header{};
-    capture_header.set_version("1.52");
+    capture_header.set_version("1.54");
 
     capture_serializer::WriteMessage(&capture_header, &coded_stream);
     capture_serializer::WriteMessage(&info.capture_info(), &coded_stream);

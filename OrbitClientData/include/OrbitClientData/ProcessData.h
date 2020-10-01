@@ -69,8 +69,6 @@ class ProcessData final {
     return module_memory_map_.contains(module_path);
   }
 
-  [[nodiscard]] const orbit_grpc_protos::ProcessInfo& process_info() const { return process_info_; }
-
  private:
   orbit_grpc_protos::ProcessInfo process_info_;
 

@@ -431,8 +431,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     const std::string& memory = result.value();
     Disassembler disasm;
     disasm.AddLine(absl::StrFormat("asm: /* %s */", FunctionUtils::GetDisplayName(function)));
-    disasm.Disassemble(memory.data(), memory.size(), FunctionUtils::GetAbsoluteAddress(function),
-                       is_64_bit);
+    disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
     if (!sampling_report_) {
       DisassemblyReport empty_report(disasm);
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
@@ -441,7 +440,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     const CaptureData& capture_data = GetCaptureData();
     const SamplingProfiler& profiler = capture_data.sampling_profiler();
 
-    DisassemblyReport report(disasm, FunctionUtils::GetAbsoluteAddress(function), profiler,
+    DisassemblyReport report(disasm, absolute_address, profiler,
                              capture_data.GetCallstackData()->GetCallstackEventsCount());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
