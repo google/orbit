@@ -19,6 +19,8 @@ ABSL_FLAG(uint32_t, capture_length, 10, "duration of capture in seconds");
 ABSL_FLAG(std::vector<std::string>, functions, {},
           "Comma-separated list of functions to hook to the capture");
 ABSL_FLAG(std::string, file_name, "", "File name used for saving the capture");
+ABSL_FLAG(std::string, file_directory, "/var/game/",
+          "Path to locate debug file. By default it is /var/game/");
 ABSL_FLAG(std::string, log_directory, "",
           "Path to locate debug file. By default only stdout is used for logs");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
@@ -56,6 +58,7 @@ int main(int argc, char** argv) {
   options.capture_pid = absl::GetFlag(FLAGS_pid);
   options.capture_functions = absl::GetFlag(FLAGS_functions);
   options.capture_file_name = absl::GetFlag(FLAGS_file_name);
+  options.capture_file_directory = absl::GetFlag(FLAGS_file_directory);
 
   ClientGgp client_ggp(std::move(options));
   if (!client_ggp.InitClient()) {

@@ -16,6 +16,7 @@ struct ClientGgpOptions {
   int32_t capture_pid;
   std::vector<std::string> capture_functions;
   std::string capture_file_name;
+  std::string capture_file_directory;
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_OPTIONS_H_
