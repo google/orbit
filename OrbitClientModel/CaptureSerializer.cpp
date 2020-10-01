@@ -53,6 +53,7 @@ namespace internal {
 
 CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
   for (const auto& pair : capture_data.selected_functions()) {
@@ -67,7 +68,7 @@ CaptureInfo GenerateCaptureInfo(
   process->set_command_line(capture_data.process()->command_line());
   process->set_is_64_bit(capture_data.process()->is_64_bit());
 
-  for (const auto& [_, module] : capture_data.module_map()) {
+  for (const auto& [_, module] : module_map) {
     ModuleInfo* module_info = capture_info.add_modules();
     module_info->set_name(module->name());
     module_info->set_file_path(module->file_path());
@@ -87,13 +88,13 @@ CaptureInfo GenerateCaptureInfo(
     added_address_info->CopyFrom(address_info.second);
     const uint64_t absolute_address = added_address_info->absolute_address();
     const orbit_client_protos::FunctionInfo* function =
-        capture_data.FindFunctionByAddress(absolute_address, false);
+        capture_data.FindFunctionByAddress(absolute_address, module_map, false);
     if (function == nullptr) {
       continue;
     }
     // Fix names/offset/module in address infos (some might only be in process):
     added_address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
-    uint64_t absolute_function_address = capture_data.GetAbsoluteAddress(*function);
+    uint64_t absolute_function_address = capture_data.GetAbsoluteAddress(*function, module_map);
     const uint64_t offset = absolute_address - absolute_function_address;
     added_address_info->set_offset_in_function(offset);
     added_address_info->set_module_path(function->loaded_module_path());
@@ -101,7 +102,7 @@ CaptureInfo GenerateCaptureInfo(
 
   const FunctionInfoMap<FunctionStats>& functions_stats = capture_data.functions_stats();
   for (const auto& [function, stats] : functions_stats) {
-    uint64_t absolute_address = capture_data.GetAbsoluteAddress(function);
+    uint64_t absolute_address = capture_data.GetAbsoluteAddress(function, module_map);
     capture_info.mutable_function_stats()->operator[](absolute_address) = stats;
   }
 

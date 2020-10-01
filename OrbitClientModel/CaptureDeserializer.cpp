@@ -156,9 +156,8 @@ void LoadCaptureInfo(
   process.UpdateModuleInfos(modules);
   modules_callback(process_info, modules);
 
-  capture_listener->OnCaptureStarted(
-      std::move(process), absl::flat_hash_map<std::string, ModuleData*>(),
-      std::move(selected_functions), std::move(selected_tracepoints));
+  capture_listener->OnCaptureStarted(std::move(process), std::move(selected_functions),
+                                     std::move(selected_tracepoints));
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {

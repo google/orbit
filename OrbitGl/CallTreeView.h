@@ -110,10 +110,12 @@ class CallTreeThread : public CallTreeNode {
 class CallTreeView : public CallTreeNode {
  public:
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromSamplingProfiler(
-      const SamplingProfiler& sampling_profiler, const CaptureData& capture_data);
+      const SamplingProfiler& sampling_profiler, const CaptureData& capture_data,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map);
 
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateBottomUpViewFromSamplingProfiler(
-      const SamplingProfiler& sampling_profiler, const CaptureData& capture_data);
+      const SamplingProfiler& sampling_profiler, const CaptureData& capture_data,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map);
 
   CallTreeView() : CallTreeNode{nullptr} {}
 };

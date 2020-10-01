@@ -96,7 +96,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   TracepointInfoSet selected_tracepoints;
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool, target_process_, module_map_, selected_functions, selected_tracepoints);
+      thread_pool, target_process_, selected_functions, selected_tracepoints);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -121,8 +121,9 @@ bool ClientGgp::SaveCapture() {
     capture_serializer::IncludeOrbitExtensionInFile(file_name);
   }
 
-  ErrorMessageOr<void> result = capture_serializer::Save(
-      file_name, capture_data_, key_to_string_map, timer_infos_.begin(), timer_infos_.end());
+  ErrorMessageOr<void> result =
+      capture_serializer::Save(file_name, capture_data_, module_map_, key_to_string_map,
+                               timer_infos_.begin(), timer_infos_.end());
   if (result.has_error()) {
     ERROR("Could not save the capture: %s", result.error().message());
     return false;
@@ -255,17 +256,17 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
-    ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+    ProcessData&& process,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints) {
-  capture_data_ = CaptureData(std::move(process), std::move(module_map),
-                              std::move(selected_functions), std::move(selected_tracepoints));
+  capture_data_ = CaptureData(std::move(process), std::move(selected_functions),
+                              std::move(selected_tracepoints));
   LOG("Capture started");
 }
 
 void ClientGgp::OnCaptureComplete() {
   LOG("Capture completed");
-  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
+  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_, module_map_);
   capture_data_.set_sampling_profiler(sampling_profiler);
 }
 
@@ -276,7 +277,7 @@ void ClientGgp::OnCaptureFailed(ErrorMessage /*error_message*/) {}
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
     const FunctionInfo* func =
-        capture_data_.FindFunctionByAddress(timer_info.function_address(), false);
+        capture_data_.FindFunctionByAddress(timer_info.function_address(), module_map_, false);
     // For timers, the function must be present in the process
     CHECK(func != nullptr);
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();

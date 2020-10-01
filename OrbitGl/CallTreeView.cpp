@@ -76,16 +76,16 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
   return function_node;
 }
 
-static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
-                                        const CallStack& resolved_callstack,
-                                        uint64_t callstack_sample_count,
-                                        const CaptureData& capture_data) {
+static void AddCallstackToTopDownThread(
+    CallTreeThread* thread_node, const CallStack& resolved_callstack,
+    uint64_t callstack_sample_count, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
   CallTreeNode* current_thread_or_function = thread_node;
   for (auto frame_it = resolved_callstack.GetFrames().crbegin();
        frame_it != resolved_callstack.GetFrames().crend(); ++frame_it) {
     uint64_t frame = *frame_it;
-    const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
-    const std::string& module_path = capture_data.GetModulePathByAddress(frame);
+    const std::string& function_name = capture_data.GetFunctionNameByAddress(frame, module_map);
+    const std::string& module_path = capture_data.GetModulePathByAddress(frame, module_map);
     CallTreeFunction* function_node =
         GetOrCreateFunctionNode(current_thread_or_function, frame, function_name, module_path);
     function_node->IncreaseSampleCount(callstack_sample_count);
@@ -110,7 +110,8 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
 }
 
 std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfiler(
-    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
+    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
   auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
@@ -130,7 +131,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
       }
       thread_node->IncreaseSampleCount(sample_count);
 
-      AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count, capture_data);
+      AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count, capture_data,
+                                  module_map);
     }
   }
   return top_down_view;
@@ -138,11 +140,12 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
 
 [[nodiscard]] static CallTreeNode* AddReversedCallstackToBottomUpViewAndReturnLastFunction(
     CallTreeView* bottom_up_view, const CallStack& resolved_callstack,
-    uint64_t callstack_sample_count, const CaptureData& capture_data) {
+    uint64_t callstack_sample_count, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
   CallTreeNode* current_node = bottom_up_view;
   for (uint64_t frame : resolved_callstack.GetFrames()) {
-    const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
-    const std::string& module_path = capture_data.GetModulePathByAddress(frame);
+    const std::string& function_name = capture_data.GetFunctionNameByAddress(frame, module_map);
+    const std::string& module_path = capture_data.GetModulePathByAddress(frame, module_map);
     CallTreeFunction* function_node =
         GetOrCreateFunctionNode(current_node, frame, function_name, module_path);
     function_node->IncreaseSampleCount(callstack_sample_count);
@@ -152,7 +155,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
 }
 
 std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfiler(
-    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
+    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
   auto bottom_up_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
@@ -170,7 +174,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfil
       bottom_up_view->IncreaseSampleCount(sample_count);
 
       CallTreeNode* last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
-          bottom_up_view.get(), resolved_callstack, sample_count, capture_data);
+          bottom_up_view.get(), resolved_callstack, sample_count, capture_data, module_map);
       CallTreeThread* thread_node =
           GetOrCreateThreadNode(last_node, tid, process_name, thread_names);
       thread_node->IncreaseSampleCount(sample_count);

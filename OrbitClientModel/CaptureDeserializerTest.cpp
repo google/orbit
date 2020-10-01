@@ -42,7 +42,7 @@ class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(
       void, OnCaptureStarted,
-      (ProcessData&& /*process*/, (absl::flat_hash_map<std::string, ModuleData*> &&) /*module_map*/,
+      (ProcessData&& /*process*/,
        (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
        TracepointInfoSet /*selected_tracepoints*/),
       (override));
@@ -186,10 +186,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
   // There will be no call to OnCaptureStarted other then the one specified next.
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, IsEmpty()))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _)).Times(0);
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty()))
       .Times(1)
-      .WillOnce([selected_function](ProcessData&& process, Unused,
+      .WillOnce([selected_function](ProcessData&& process,
                                     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
                                         actual_selected_functions,
                                     Unused) {
@@ -239,7 +239,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoModulesCallback) {
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
   // There will be no call to OnCaptureStarted other then the one specified next.
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(1);
+  EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
   EXPECT_CALL(listener, OnCaptureFailed).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);

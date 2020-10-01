@@ -66,8 +66,11 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
       return GetPrettyTime(absl::Nanoseconds(stats.max_ns()));
     case kColumnModule:
       return function.loaded_module_path();
-    case kColumnAddress:
-      return absl::StrFormat("0x%llx", GOrbitApp->GetCaptureData().GetAbsoluteAddress(function));
+    case kColumnAddress: {
+      const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+      const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+      return absl::StrFormat("0x%llx", capture_data.GetAbsoluteAddress(function, modules_map));
+    }
     default:
       return "";
   }
@@ -154,13 +157,15 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_remove_frame_track = false;
 
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& module_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   for (int index : selected_indices) {
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
-    const uint64_t absolute_address = capture_data.GetAbsoluteAddress(selected_function);
+    const uint64_t absolute_address =
+        capture_data.GetAbsoluteAddress(selected_function, module_map);
 
     // Is that function actually inside a module of the process (i.e. can we disassemble)?
     const FunctionInfo* actual_function =
-        capture_data.FindFunctionByAddress(absolute_address, false);
+        capture_data.FindFunctionByAddress(absolute_address, module_map, false);
     const bool function_exists = actual_function != nullptr;
 
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
@@ -207,13 +212,15 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
 void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                           const std::vector<int>& item_indices) {
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& module_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   if (action == kMenuActionSelect || action == kMenuActionUnselect ||
       action == kMenuActionDisassembly) {
     for (int i : item_indices) {
       FunctionInfo* selected_function = GetSelectedFunction(i);
-      const uint64_t absolute_address = capture_data.GetAbsoluteAddress(*selected_function);
+      const uint64_t absolute_address =
+          capture_data.GetAbsoluteAddress(*selected_function, module_map);
       // Is that function actually inside a module of the process?
-      if (capture_data.FindFunctionByAddress(absolute_address, false) == nullptr) {
+      if (capture_data.FindFunctionByAddress(absolute_address, module_map, false) == nullptr) {
         continue;
       }
       if (action == kMenuActionSelect) {
@@ -227,7 +234,8 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     }
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
-    auto function_address = capture_data.GetAbsoluteAddress(*GetSelectedFunction(item_indices[0]));
+    auto function_address =
+        capture_data.GetAbsoluteAddress(*GetSelectedFunction(item_indices[0]), module_map);
     auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
         function_address, std::numeric_limits<uint64_t>::lowest());
     if (first_box != nullptr) {
@@ -235,7 +243,8 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     }
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
-    auto function_address = capture_data.GetAbsoluteAddress(*GetSelectedFunction(item_indices[0]));
+    auto function_address =
+        capture_data.GetAbsoluteAddress(*GetSelectedFunction(item_indices[0]), module_map);
     auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
         function_address, std::numeric_limits<uint64_t>::max());
     if (last_box != nullptr) {
@@ -267,8 +276,8 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      const FunctionStats& stats = GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(*function);
-      uint64_t function_address = capture_data.GetAbsoluteAddress(*function);
+      const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(*function);
+      uint64_t function_address = capture_data.GetAbsoluteAddress(*function, module_map);
       if (stats.count() > 1 && added_frame_tracks_.count(function_address) == 0) {
         live_functions_->AddFrameTrack(*function);
         added_frame_tracks_.insert(function_address);
@@ -277,7 +286,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionRemoveFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      uint64_t function_address = capture_data.GetAbsoluteAddress(*function);
+      uint64_t function_address = capture_data.GetAbsoluteAddress(*function, module_map);
       if (added_frame_tracks_.count(function_address) > 0) {
         added_frame_tracks_.erase(function_address);
         live_functions_->RemoveFrameTrack(*function);
@@ -316,9 +325,10 @@ void LiveFunctionsDataView::DoFilter() {
   // Filter drawn textboxes
   absl::flat_hash_set<uint64_t> visible_functions;
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   for (size_t i = 0; i < indices_.size(); ++i) {
     FunctionInfo* func = GetSelectedFunction(i);
-    visible_functions.insert(capture_data.GetAbsoluteAddress(*func));
+    visible_functions.insert(capture_data.GetAbsoluteAddress(*func, modules_map));
   }
   GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
 }
@@ -352,7 +362,9 @@ FunctionInfo* LiveFunctionsDataView::GetSelectedFunction(unsigned int row) {
 }
 
 std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInfo& function) const {
-  auto function_address = GOrbitApp->GetCaptureData().GetAbsoluteAddress(function);
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+  auto function_address = capture_data.GetAbsoluteAddress(function, modules_map);
   TextBox* min_box = nullptr;
   TextBox* max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =

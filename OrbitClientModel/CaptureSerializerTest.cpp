@@ -49,10 +49,11 @@ TEST(CaptureSerializer, IncludeOrbitExtensionInFile) {
 
 TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
   CaptureData capture_data;
+  absl::flat_hash_map<std::string, ModuleData*> module_map;
   absl::flat_hash_map<uint64_t, std::string> key_to_string_map;
 
-  CaptureInfo capture_info =
-      capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
+  CaptureInfo capture_info = capture_serializer::internal::GenerateCaptureInfo(
+      capture_data, module_map, key_to_string_map);
   EXPECT_EQ(0, capture_info.selected_functions_size());
   EXPECT_EQ(-1, capture_info.process().pid());
   EXPECT_EQ("", capture_info.process().name());
@@ -97,8 +98,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
 
-  CaptureData capture_data{std::move(process), std::move(module_map), selected_functions,
-                           selected_tracepoints};
+  CaptureData capture_data{std::move(process), selected_functions, selected_tracepoints};
 
   LinuxAddressInfo address_info;
   address_info.set_absolute_address(987);
@@ -139,8 +139,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   key_to_string_map[1] = "b";
   key_to_string_map[2] = "c";
 
-  CaptureInfo capture_info =
-      capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
+  CaptureInfo capture_info = capture_serializer::internal::GenerateCaptureInfo(
+      capture_data, module_map, key_to_string_map);
 
   ASSERT_EQ(1, capture_info.selected_functions_size());
   const FunctionInfo& actual_selected_function = capture_info.selected_functions(0);

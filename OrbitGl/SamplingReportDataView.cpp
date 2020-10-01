@@ -141,11 +141,12 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
     const std::vector<int>& indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& module_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   for (int index : indices) {
     SampledFunction& sampled_function = GetSampledFunction(index);
     if (sampled_function.function == nullptr) {
       const FunctionInfo* func =
-          capture_data.FindFunctionByAddress(sampled_function.absolute_address, false);
+          capture_data.FindFunctionByAddress(sampled_function.absolute_address, module_map, false);
       sampled_function.function = func;
     }
 
@@ -161,11 +162,13 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
 absl::flat_hash_set<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) const {
   absl::flat_hash_set<ModuleData*> modules;
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& module_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   for (int index : indices) {
     const SampledFunction& sampled_function = GetSampledFunction(index);
     CHECK(sampled_function.absolute_address != 0);
     ModuleData* module =
-        GOrbitApp->GetCaptureData().FindModuleByAddress(sampled_function.absolute_address);
+        capture_data.FindModuleByAddress(sampled_function.absolute_address, module_map);
     if (module != nullptr) {
       modules.insert(module);
     }

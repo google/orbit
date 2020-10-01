@@ -95,7 +95,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted(
-      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
@@ -249,6 +249,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void LoadModulesFromPreset(const ProcessData* process,
                              const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
+  [[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> GetModulesLoadedByProcess(
+      const ProcessData* process) const {
+    return data_manager_->GetModulesLoadedByProcess(process);
+  }
 
   void UpdateAfterSymbolLoading();
   void UpdateAfterCaptureCleared();

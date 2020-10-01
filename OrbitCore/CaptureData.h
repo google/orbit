@@ -22,11 +22,10 @@
 class CaptureData {
  public:
   explicit CaptureData(
-      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints)
       : process_(std::move(process)),
-        module_map_(std::move(module_map)),
         selected_functions_{std::move(selected_functions)},
         selected_tracepoints_{std::move(selected_tracepoints)},
         callstack_data_(std::make_unique<CallstackData>()),
@@ -74,14 +73,22 @@ class CaptureData {
 
   void InsertAddressInfo(orbit_client_protos::LinuxAddressInfo address_info);
 
-  [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
-  [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] const std::string& GetFunctionNameByAddress(
+      uint64_t absolute_address,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map) const;
+  [[nodiscard]] const std::string& GetModulePathByAddress(
+      uint64_t absolute_address,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map) const;
 
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
-      uint64_t absolute_address, bool is_exact) const;
-  [[nodiscard]] ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
+      uint64_t absolute_address, const absl::flat_hash_map<std::string, ModuleData*>& module_map,
+      bool is_exact) const;
+  [[nodiscard]] ModuleData* FindModuleByAddress(
+      uint64_t absolute_address,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map) const;
   [[nodiscard]] uint64_t GetAbsoluteAddress(
-      const orbit_client_protos::FunctionInfo& function) const;
+      const orbit_client_protos::FunctionInfo& function,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map) const;
 
   static const std::string kUnknownFunctionOrModuleName;
 
@@ -177,13 +184,8 @@ class CaptureData {
     sampling_profiler_ = std::move(sampling_profiler);
   }
 
-  [[nodiscard]] const absl::flat_hash_map<std::string, ModuleData*>& module_map() const {
-    return module_map_;
-  }
-
  private:
   ProcessData process_;
-  absl::flat_hash_map<std::string, ModuleData*> module_map_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
 
   TracepointInfoSet selected_tracepoints_;

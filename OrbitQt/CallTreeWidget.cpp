@@ -201,6 +201,8 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
 static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
     OrbitApp* app, const std::vector<QModelIndex>& indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
+  const CaptureData& capture_data = app->GetCaptureData();
+  const auto& module_map = app->GetModulesLoadedByProcess(capture_data.process());
   for (const auto& index : indices) {
     uint64_t absolute_address =
         index.model()
@@ -208,7 +210,7 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
             .data(Qt::EditRole)
             .toLongLong();
     const FunctionInfo* function =
-        app->GetCaptureData().FindFunctionByAddress(absolute_address, false);
+        capture_data.FindFunctionByAddress(absolute_address, module_map, false);
     if (function != nullptr) {
       functions_set.insert(function);
     }

@@ -91,8 +91,9 @@ void SamplingProfiler::SortByThreadUsage() {
        });
 }
 
-void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data,
-                                      const CaptureData& capture_data, bool generate_summary) {
+void SamplingProfiler::ProcessSamples(
+    const CallstackData& callstack_data, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map, bool generate_summary) {
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
@@ -117,7 +118,7 @@ void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data,
         }
       });
 
-  ResolveCallstacks(callstack_data, capture_data);
+  ResolveCallstacks(callstack_data, capture_data, module_map);
 
   for (auto& sample_data_it : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &sample_data_it.second;
@@ -152,40 +153,42 @@ void SamplingProfiler::ProcessSamples(const CallstackData& callstack_data,
     }
   }
 
-  FillThreadSampleDataSampleReports(capture_data);
+  FillThreadSampleDataSampleReports(capture_data, module_map);
 
   SortByThreadUsage();
 }
 
-void SamplingProfiler::ResolveCallstacks(const CallstackData& callstack_data,
-                                         const CaptureData& capture_data) {
-  callstack_data.ForEachUniqueCallstack([this, &capture_data](const CallStack& call_stack) {
-    // A "resolved callstack" is a callstack where every address is replaced
-    // by the start address of the function (if known).
-    std::vector<uint64_t> resolved_callstack_data;
+void SamplingProfiler::ResolveCallstacks(
+    const CallstackData& callstack_data, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
+  callstack_data.ForEachUniqueCallstack(
+      [this, &capture_data, &module_map](const CallStack& call_stack) {
+        // A "resolved callstack" is a callstack where every address is replaced
+        // by the start address of the function (if known).
+        std::vector<uint64_t> resolved_callstack_data;
 
-    for (uint64_t address : call_stack.GetFrames()) {
-      if (exact_address_to_function_address_.find(address) ==
-          exact_address_to_function_address_.end()) {
-        MapAddressToFunctionAddress(address, capture_data);
-      }
-      uint64_t function_address = exact_address_to_function_address_.at(address);
+        for (uint64_t address : call_stack.GetFrames()) {
+          if (exact_address_to_function_address_.find(address) ==
+              exact_address_to_function_address_.end()) {
+            MapAddressToFunctionAddress(address, capture_data, module_map);
+          }
+          uint64_t function_address = exact_address_to_function_address_.at(address);
 
-      resolved_callstack_data.push_back(function_address);
-      function_address_to_callstack_[function_address].insert(call_stack.GetHash());
-    }
+          resolved_callstack_data.push_back(function_address);
+          function_address_to_callstack_[function_address].insert(call_stack.GetHash());
+        }
 
-    CallStack resolved_callstack(std::move(resolved_callstack_data));
+        CallStack resolved_callstack(std::move(resolved_callstack_data));
 
-    CallstackID resolved_callstack_id = resolved_callstack.GetHash();
-    if (unique_resolved_callstacks_.find(resolved_callstack_id) ==
-        unique_resolved_callstacks_.end()) {
-      unique_resolved_callstacks_[resolved_callstack_id] =
-          std::make_shared<CallStack>(resolved_callstack);
-    }
+        CallstackID resolved_callstack_id = resolved_callstack.GetHash();
+        if (unique_resolved_callstacks_.find(resolved_callstack_id) ==
+            unique_resolved_callstacks_.end()) {
+          unique_resolved_callstacks_[resolved_callstack_id] =
+              std::make_shared<CallStack>(resolved_callstack);
+        }
 
-    original_to_resolved_callstack_[call_stack.GetHash()] = resolved_callstack_id;
-  });
+        original_to_resolved_callstack_[call_stack.GetHash()] = resolved_callstack_id;
+      });
 }
 
 const ThreadSampleData* SamplingProfiler::GetSummary() const {
@@ -216,10 +219,12 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   return result;
 }
 
-void SamplingProfiler::MapAddressToFunctionAddress(uint64_t absolute_address,
-                                                   const CaptureData& capture_data) {
+void SamplingProfiler::MapAddressToFunctionAddress(
+    uint64_t absolute_address, const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
   const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
-  const FunctionInfo* function = capture_data.FindFunctionByAddress(absolute_address, false);
+  const FunctionInfo* function =
+      capture_data.FindFunctionByAddress(absolute_address, module_map, false);
 
   // Find the start address of the function this address falls inside.
   // Use the Function returned by Process::GetFunctionFromAddress, and
@@ -231,7 +236,7 @@ void SamplingProfiler::MapAddressToFunctionAddress(uint64_t absolute_address,
   // considered a different function.
   uint64_t absolute_function_address;
   if (function != nullptr) {
-    absolute_function_address = capture_data.GetAbsoluteAddress(*function);
+    absolute_function_address = capture_data.GetAbsoluteAddress(*function, module_map);
   } else if (address_info != nullptr) {
     absolute_function_address = absolute_address - address_info->offset_in_function();
   } else {
@@ -242,7 +247,9 @@ void SamplingProfiler::MapAddressToFunctionAddress(uint64_t absolute_address,
   function_address_to_exact_addresses_[absolute_function_address].insert(absolute_address);
 }
 
-void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capture_data) {
+void SamplingProfiler::FillThreadSampleDataSampleReports(
+    const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map) {
   for (auto& data : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &data.second;
     std::vector<SampledFunction>* sampled_functions = &thread_sample_data->sampled_function;
@@ -254,7 +261,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capt
       float inclusive_percent = 100.f * num_occurences / thread_sample_data->samples_count;
 
       SampledFunction function;
-      function.name = capture_data.GetFunctionNameByAddress(absolute_address);
+      function.name = capture_data.GetFunctionNameByAddress(absolute_address, module_map);
       function.inclusive = inclusive_percent;
       function.exclusive = 0.f;
       auto it = thread_sample_data->exclusive_count.find(absolute_address);
@@ -262,10 +269,10 @@ void SamplingProfiler::FillThreadSampleDataSampleReports(const CaptureData& capt
         function.exclusive = 100.f * it->second / thread_sample_data->samples_count;
       }
       function.absolute_address = absolute_address;
-      function.module_path = capture_data.GetModulePathByAddress(absolute_address);
+      function.module_path = capture_data.GetModulePathByAddress(absolute_address, module_map);
 
       const FunctionInfo* function_info =
-          capture_data.FindFunctionByAddress(absolute_address, false);
+          capture_data.FindFunctionByAddress(absolute_address, module_map, false);
       if (function_info != nullptr) {
         function.line = function_info->line();
         function.file = function_info->file();

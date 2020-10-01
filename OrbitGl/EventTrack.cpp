@@ -5,6 +5,7 @@
 #include "EventTrack.h"
 
 #include "App.h"
+#include "CaptureData.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
 
@@ -173,7 +174,9 @@ bool EventTrack::IsEmpty() const {
 }
 
 static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
-  const std::string& function_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(addr);
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& module_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+  const std::string& function_name = capture_data.GetFunctionNameByAddress(addr, module_map);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
   }

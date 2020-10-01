@@ -37,10 +37,12 @@ inline const std::string kRequiredCaptureVersion = "1.54";
 
 orbit_client_protos::CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
+    const absl::flat_hash_map<std::string, ModuleData*>& module_map,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
 
 template <class TimersIterator>
 void Save(std::ostream& stream, const CaptureData& capture_data,
+          const absl::flat_hash_map<std::string, ModuleData*>& module_map,
           const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
           TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
@@ -51,7 +53,7 @@ void Save(std::ostream& stream, const CaptureData& capture_data,
   WriteMessage(&header, &coded_output);
 
   orbit_client_protos::CaptureInfo capture_info =
-      GenerateCaptureInfo(capture_data, key_to_string_map);
+      GenerateCaptureInfo(capture_data, module_map, key_to_string_map);
   WriteMessage(&capture_info, &coded_output);
 
   // Timers
@@ -64,6 +66,7 @@ void Save(std::ostream& stream, const CaptureData& capture_data,
 
 template <class TimersIterator>
 ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data,
+                          const absl::flat_hash_map<std::string, ModuleData*>& module_map,
                           const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
                           TimersIterator timers_iterator_begin,
                           TimersIterator timers_iterator_end) {
@@ -75,8 +78,8 @@ ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& captur
 
   {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-    internal::Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
-                   std::move(timers_iterator_end));
+    internal::Save(file, capture_data, module_map, key_to_string_map,
+                   std::move(timers_iterator_begin), std::move(timers_iterator_end));
   }
 
   return outcome::success();

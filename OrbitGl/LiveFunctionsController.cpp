@@ -100,9 +100,10 @@ bool LiveFunctionsController::OnAllNextButton() {
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   for (auto it : function_iterators_) {
     const FunctionInfo* function = it.second;
-    auto function_address = capture_data.GetAbsoluteAddress(*function);
+    auto function_address = capture_data.GetAbsoluteAddress(*function, modules_map);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(function_address,
                                                                  current_box->GetTimerInfo().end());
@@ -128,9 +129,10 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
   for (auto it : function_iterators_) {
     const FunctionInfo* function = it.second;
-    auto function_address = capture_data.GetAbsoluteAddress(*function);
+    auto function_address = capture_data.GetAbsoluteAddress(*function, modules_map);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindPreviousFunctionCall(
         function_address, current_box->GetTimerInfo().end());
@@ -152,8 +154,9 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  auto function_address =
-      GOrbitApp->GetCaptureData().GetAbsoluteAddress(*(function_iterators_[id]));
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+  auto function_address = capture_data.GetAbsoluteAddress(*(function_iterators_[id]), modules_map);
   const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
       function_address, current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
@@ -164,8 +167,9 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  auto function_address =
-      GOrbitApp->GetCaptureData().GetAbsoluteAddress(*(function_iterators_[id]));
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+  auto function_address = capture_data.GetAbsoluteAddress(*(function_iterators_[id]), modules_map);
   const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
       function_address, current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
@@ -194,7 +198,9 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
   uint64_t id = next_iterator_id_;
   ++next_iterator_id_;
 
-  auto function_address = GOrbitApp->GetCaptureData().GetAbsoluteAddress(*function);
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+  auto function_address = capture_data.GetAbsoluteAddress(*function, modules_map);
   const TextBox* box = GOrbitApp->selected_text_box();
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
@@ -213,7 +219,9 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
 }
 
 void LiveFunctionsController::AddFrameTrack(const FunctionInfo& function) {
-  auto function_address = GOrbitApp->GetCaptureData().GetAbsoluteAddress(function);
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const auto& modules_map = GOrbitApp->GetModulesLoadedByProcess(capture_data.process());
+  auto function_address = capture_data.GetAbsoluteAddress(function, modules_map);
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllThreadTrackTimerChains();
 

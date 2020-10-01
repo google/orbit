@@ -15,6 +15,7 @@
 #include "Callstack.h"
 #include "CallstackData.h"
 #include "CallstackTypes.h"
+#include "OrbitClientData/ModuleData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -65,8 +66,9 @@ class SamplingProfiler {
  public:
   explicit SamplingProfiler() = default;
   explicit SamplingProfiler(const CallstackData& callstack_data, const CaptureData& capture_data,
+                            const absl::flat_hash_map<std::string, ModuleData*>& module_map,
                             bool generate_summary = true) {
-    ProcessSamples(callstack_data, capture_data, generate_summary);
+    ProcessSamples(callstack_data, capture_data, module_map, generate_summary);
   }
   SamplingProfiler& operator=(const SamplingProfiler& other) = default;
   SamplingProfiler(const SamplingProfiler& other) = default;
@@ -99,10 +101,15 @@ class SamplingProfiler {
 
  private:
   void ProcessSamples(const CallstackData& callstack_data, const CaptureData& capture_data,
+                      const absl::flat_hash_map<std::string, ModuleData*>& module_map,
                       bool generate_summary);
-  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
-  void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
-  void FillThreadSampleDataSampleReports(const CaptureData& capture_data);
+  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data,
+                         const absl::flat_hash_map<std::string, ModuleData*>& module_map);
+  void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data,
+                                   const absl::flat_hash_map<std::string, ModuleData*>& module_map);
+  void FillThreadSampleDataSampleReports(
+      const CaptureData& capture_data,
+      const absl::flat_hash_map<std::string, ModuleData*>& module_map);
   void SortByThreadUsage();
 
   // Filled by ProcessSamples.
