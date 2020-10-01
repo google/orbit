@@ -20,7 +20,7 @@ ABSL_FLAG(std::vector<std::string>, functions, {},
           "Comma-separated list of functions to hook to the capture");
 ABSL_FLAG(std::string, file_name, "", "File name used for saving the capture");
 ABSL_FLAG(std::string, file_directory, "/var/game/",
-          "Path to locate debug file. By default it is /var/game/");
+          "Path to locate orbit file. By default it is /var/game/");
 ABSL_FLAG(std::string, log_directory, "",
           "Path to locate debug file. By default only stdout is used for logs");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
