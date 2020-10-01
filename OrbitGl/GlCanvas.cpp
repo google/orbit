@@ -22,6 +22,7 @@ float GlCanvas::kZValueTimeBarBg = 0.004f;
 float GlCanvas::kZValueUi = 0.0f;
 float GlCanvas::kZValueEventBarPicking = -0.001f;
 float GlCanvas::kZValueText = -0.003f;
+float GlCanvas::kZValueOverlayTextBackground = -0.0035f;
 float GlCanvas::kZValueOverlay = -0.004f;
 float GlCanvas::kZValueRoundingCorner = -0.01f;
 float GlCanvas::kZValueEvent = -0.02f;

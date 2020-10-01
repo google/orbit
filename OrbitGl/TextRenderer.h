@@ -26,9 +26,10 @@ class TextRenderer {
   void Display(Batcher* batcher);
   void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
                uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false);
-  void AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y, float a_Z,
-                                       const Color& a_Color, size_t a_TrailingCharsLength,
-                                       uint32_t font_size, float a_MaxSize);
+  // Returns the width of the rendered string.
+  int AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y, float a_Z,
+                                      const Color& a_Color, size_t a_TrailingCharsLength,
+                                      uint32_t font_size, float a_MaxSize);
   int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
                 float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
