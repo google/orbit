@@ -66,6 +66,8 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   const Color kWhiteTransparent(255, 255, 255, 190);
 
+  const Color kGrey(128, 128, 128, 255);
+
   const Color kGreenSelection(0, 255, 0, 255);
 
   if (!picking) {
@@ -76,7 +78,9 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           float radius = track_height / 4;
           Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
           if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
-            batcher->AddVerticalLine(pos, -track_height, z, kWhiteTransparent);
+            const Color color =
+                tracepoint.pid() == GOrbitApp->GetCaptureData().process_id() ? kGrey : kWhite;
+            batcher->AddVerticalLine(pos, -track_height, z, color);
           } else {
             batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
             batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
@@ -142,12 +146,27 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
   TracepointInfo tracepoint_info =
       GOrbitApp->GetCaptureData().GetTracepointInfo(tracepoint_info_key);
 
-  return absl::StrFormat(
-      "<b>Tracepoint event</b><br/>"
-      "<br/>"
-      "<b>Core:</b> %d<br/>"
-      "<b>Name:</b> %s [%s]<br/>",
-      tracepoint_event_info->cpu(), tracepoint_info.name(), tracepoint_info.category());
+  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+    return absl::StrFormat(
+        "<b>%s : %s</b><br/>"
+        "<i>Tracepoint event</i><br/>"
+        "<br/>"
+        "<b>Core:</b> %d<br/>"
+        "<b>Process:</b> %s [%d]<br/>"
+        "<b>Thread:</b> %s [%d]<br/>",
+        tracepoint_info.category(), tracepoint_info.name(), tracepoint_event_info->cpu(),
+        GOrbitApp->GetCaptureData().GetThreadName(tracepoint_event_info->pid()),
+        tracepoint_event_info->pid(),
+        GOrbitApp->GetCaptureData().GetThreadName(tracepoint_event_info->tid()),
+        tracepoint_event_info->tid());
+  } else {
+    return absl::StrFormat(
+        "<b>%s : %s</b><br/>"
+        "<i>Tracepoint event</i><br/>"
+        "<br/>"
+        "<b>Core:</b> %d<br/>",
+        tracepoint_info.category(), tracepoint_info.name(), tracepoint_event_info->cpu());
+  }
 }
 
 bool TracepointTrack::IsEmpty() const {
