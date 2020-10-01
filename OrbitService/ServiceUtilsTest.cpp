@@ -249,8 +249,9 @@ TEST(ServiceUtils, NamesTracepoints) {
       "sched_switch", "sched_wakeup",    "sched_process_fork", "sched_waking", "task_rename",
       "task_newtask", "signal_generate", "signal_deliver",     "timer_init",   "timer_start"};
 
-  static const std::array<std::string, 3> kNamesUnavailable = {"orbit", "profiler",
-                                                               "instrumentation"};
+  static const std::array<std::string, 5> kNamesUnavailable = {"orbit", "profiler",
+                                                               "instrumentation", "enable", 
+                                                               "filter"};
 
   for (std::string name_available : kNamesAvailable) {
     ASSERT_TRUE(find(names.begin(), names.end(), name_available) != names.end());
