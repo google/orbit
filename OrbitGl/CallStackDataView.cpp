@@ -55,14 +55,16 @@ std::string CallStackDataView::GetValue(int row, int column) {
       return function != nullptr ? function->file() : "";
     case kColumnLine:
       return function != nullptr ? absl::StrFormat("%d", function->line()) : "";
-    case kColumnModule:
+    case kColumnModule: {
       if (function != nullptr && !FunctionUtils::GetLoadedModuleName(*function).empty()) {
         return FunctionUtils::GetLoadedModuleName(*function);
       }
       if (module != nullptr) {
         return module->name();
       }
-      return Path::GetFileName(GOrbitApp->GetCaptureData().GetModulePathByAddress(frame.address));
+      const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+      return Path::GetFileName(capture_data.GetModulePathByAddress(frame.address));
+    }
     case kColumnAddress:
       return absl::StrFormat("%#llx", frame.address);
     default:
@@ -115,8 +117,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module);
       }
     }
-    const ProcessData* process = GOrbitApp->GetCaptureData().process();
-    GOrbitApp->LoadModules(process, modules_to_load);
+    GOrbitApp->LoadModules(modules_to_load);
 
   } else if (action == kMenuActionSelect) {
     for (int i : item_indices) {
@@ -189,19 +190,16 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(int
 
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
     int index_in_callstack) {
-  if (index_in_callstack >= static_cast<int>(callstack_.GetFramesCount())) {
-    return CallStackDataViewFrame();
-  }
-
+  CHECK(index_in_callstack < static_cast<int>(callstack_.GetFramesCount()));
   uint64_t address = callstack_.GetFrame(index_in_callstack);
 
-  const FunctionInfo* function = GOrbitApp->GetCaptureData().FindFunctionByAddress(address, false);
-  ModuleData* module = GOrbitApp->GetCaptureData().FindModuleByAddress(address);
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const FunctionInfo* function = capture_data.FindFunctionByAddress(address, false);
+  ModuleData* module = capture_data.FindModuleByAddress(address);
 
   if (function != nullptr) {
     return CallStackDataViewFrame(address, function, module);
-  } else {
-    std::string fallback_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(address);
-    return CallStackDataViewFrame(address, fallback_name, module);
   }
+  const std::string& fallback_name = capture_data.GetFunctionNameByAddress(address);
+  return CallStackDataViewFrame(address, fallback_name, module);
 }

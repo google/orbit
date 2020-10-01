@@ -127,9 +127,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   }
 }
 
-void EventTrack::SetPos(float a_X, float a_Y) {
-  pos_ = Vec2(a_X, a_Y);
-}
+void EventTrack::SetPos(float a_X, float a_Y) { pos_ = Vec2(a_X, a_Y); }
 
 void EventTrack::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 

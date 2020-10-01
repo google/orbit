@@ -81,9 +81,9 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
   bool enable_introspection = false;
-  ErrorMessageOr<void> result =
-      capture_client_->StartCapture(thread_pool, target_process_, module_map_, selected_functions_,
-                                    selected_tracepoints, enable_introspection);
+  ErrorMessageOr<void> result = capture_client_->StartCapture(
+      thread_pool, target_process_, module_manager_, selected_functions_, selected_tracepoints,
+      enable_introspection);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -143,27 +143,18 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load modules for target_process_
   OUTCOME_TRY(module_infos, process_client_->LoadModuleList(target_process_.pid()));
 
-  // Process name can be arbitrary so we use the path to find the module corresponding to the binary
-  // of target_process_
-  std::string_view main_executable_path = target_process_.full_path();
-  main_module_ = nullptr;
-
   LOG("List of modules");
   for (const ModuleInfo& info : module_infos) {
     LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s", info.name(),
         info.file_path(), info.file_size(), info.address_start(), info.address_end(),
         info.build_id());
-
-    auto [inserted_module_it, success_0] = modules_.insert(std::make_unique<ModuleData>(info));
-    CHECK(success_0);
-    ModuleData* module = inserted_module_it->get();
-    const auto [it, success_1] = module_map_.try_emplace(info.file_path(), module);
-    CHECK(success_1);
-
-    if (info.file_path() == main_executable_path) {
-      main_module_ = module;
-    }
   }
+
+  module_manager_.AddNewModules(module_infos);
+
+  // Process name can be arbitrary so we use the path to find the module corresponding to the binary
+  // of target_process_
+  main_module_ = module_manager_.GetMutableModuleByPath(target_process_.full_path());
   if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }
@@ -180,7 +171,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
   OUTCOME_TRY(symbols, SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
-  target_process_.AddSymbols(main_module_, symbols);
+  main_module_->AddSymbols(symbols);
   return outcome::success();
 }
 
@@ -275,11 +266,11 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
-    ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+    ProcessData&& process,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints) {
-  capture_data_ = CaptureData(std::move(process), std::move(module_map),
-                              std::move(selected_functions), std::move(selected_tracepoints));
+  capture_data_ = CaptureData(std::move(process), &module_manager_, std::move(selected_functions),
+                              std::move(selected_tracepoints));
   LOG("Capture started");
 }
 

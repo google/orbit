@@ -53,8 +53,14 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       return absl::StrFormat("%i", function.line());
     case kColumnModule:
       return FunctionUtils::GetLoadedModuleName(function);
-    case kColumnAddress:
-      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
+    case kColumnAddress: {
+      const ProcessData* process = GOrbitApp->GetSelectedProcess();
+      CHECK(process != nullptr);
+      const ModuleData* module = GOrbitApp->GetMutableModuleByPath(function.loaded_module_path());
+      CHECK(module != nullptr);
+      return absl::StrFormat("0x%llx",
+                             FunctionUtils::GetAbsoluteAddress(function, *process, *module));
+    }
     default:
       return "";
   }

@@ -22,9 +22,8 @@ struct EqualFunctionInfo {
     return left.size() == right.size() && left.name() == right.name() &&
            left.pretty_name() == right.pretty_name() &&
            left.loaded_module_path() == right.loaded_module_path() &&
-           left.module_base_address() == right.module_base_address() &&
-           left.address() == right.address() && left.load_bias() == right.load_bias() &&
-           left.file().compare(right.file()) == 0 && left.line() == right.line();
+           left.address() == right.address() && left.file().compare(right.file()) == 0 &&
+           left.line() == right.line();
   }
 };
 

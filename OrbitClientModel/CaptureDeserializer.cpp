@@ -10,6 +10,7 @@
 #include "Callstack.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
@@ -24,11 +25,12 @@ using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ProcessInfo;
+using OrbitClientData::ModuleManager;
 
 namespace capture_deserializer {
 
 void Load(const std::string& file_name, CaptureListener* capture_listener,
-          std::atomic<bool>* cancellation_requested) {
+          ModuleManager* module_manager, std::atomic<bool>* cancellation_requested) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", file_name));
 
   // Binary
@@ -40,11 +42,11 @@ void Load(const std::string& file_name, CaptureListener* capture_listener,
     return;
   }
 
-  return Load(file, file_name, capture_listener, cancellation_requested);
+  return Load(file, file_name, capture_listener, module_manager, cancellation_requested);
 }
 
 void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
-          std::atomic<bool>* cancellation_requested) {
+          ModuleManager* module_manager, std::atomic<bool>* cancellation_requested) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
@@ -77,7 +79,8 @@ void Load(std::istream& stream, const std::string& file_name, CaptureListener* c
     return;
   }
 
-  internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input, cancellation_requested);
+  internal::LoadCaptureInfo(capture_info, capture_listener, module_manager, &coded_input,
+                            cancellation_requested);
 }
 
 namespace internal {
@@ -99,13 +102,54 @@ bool ReadMessage(google::protobuf::Message* message,
 }
 
 void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
+                     ModuleManager* module_manager,
                      google::protobuf::io::CodedInputStream* coded_input,
                      std::atomic<bool>* cancellation_requested) {
   CHECK(capture_listener != nullptr);
 
+  ProcessInfo process_info;
+  process_info.set_pid(capture_info.process().pid());
+  process_info.set_name(capture_info.process().name());
+  process_info.set_cpu_usage(capture_info.process().cpu_usage());
+  process_info.set_full_path(capture_info.process().full_path());
+  process_info.set_command_line(capture_info.process().command_line());
+  process_info.set_is_64_bit(capture_info.process().is_64_bit());
+  ProcessData process(process_info);
+
+  if (*cancellation_requested) {
+    capture_listener->OnCaptureCancelled();
+    return;
+  }
+
+  std::vector<orbit_grpc_protos::ModuleInfo> modules;
+  absl::flat_hash_map<std::string, orbit_grpc_protos::ModuleInfo> module_map;
+  for (const auto& module : capture_info.modules()) {
+    orbit_grpc_protos::ModuleInfo module_info;
+    module_info.set_name(module.name());
+    module_info.set_file_path(module.file_path());
+    module_info.set_file_size(module.file_size());
+    module_info.set_address_start(module.address_start());
+    module_info.set_address_end(module.address_end());
+    module_info.set_build_id(module.build_id());
+    module_info.set_load_bias(module.load_bias());
+    modules.emplace_back(std::move(module_info));
+    module_map[module.file_path()] = modules.back();
+  }
+  process.UpdateModuleInfos(modules);
+
+  module_manager->AddNewModules(modules);
+
+  if (*cancellation_requested) {
+    capture_listener->OnCaptureCancelled();
+    return;
+  }
+
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
-    uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
+    const auto& module_it = module_map.find(function.loaded_module_path());
+    CHECK(module_it != module_map.end());
+    ModuleData module(module_it->second);
+    uint64_t address = FunctionUtils::GetAbsoluteAddress(function, process, module);
     selected_functions[address] = function;
   }
   TracepointInfoSet selected_tracepoints;
@@ -122,14 +166,8 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     return;
   }
 
-  ProcessInfo process_info;
-  process_info.set_pid(capture_info.process_id());
-  process_info.set_name(capture_info.process_name());
-
-  ProcessData process(process_info);
-  capture_listener->OnCaptureStarted(
-      std::move(process), absl::flat_hash_map<std::string, ModuleData*>(),
-      std::move(selected_functions), std::move(selected_tracepoints));
+  capture_listener->OnCaptureStarted(std::move(process), std::move(selected_functions),
+                                     std::move(selected_tracepoints));
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {

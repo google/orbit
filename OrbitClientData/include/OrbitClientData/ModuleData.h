@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_MODULE_DATA_H_
-#define ORBIT_GL_MODULE_DATA_H_
+#ifndef ORBIT_CLIENT_DATA_MODULE_DATA_H_
+#define ORBIT_CLIENT_DATA_MODULE_DATA_H_
 
 #include <cinttypes>
 #include <memory>
@@ -30,21 +30,13 @@ class ModuleData final {
   [[nodiscard]] const std::string& build_id() const { return module_info_.build_id(); }
   [[nodiscard]] uint64_t load_bias() const { return module_info_.load_bias(); }
   [[nodiscard]] bool is_loaded() const;
-
   // relative_address here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByRelativeAddress(
       uint64_t relative_address, bool is_exact) const;
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByElfAddress(
       uint64_t elf_address, bool is_exact) const;
-  // TODO(169309553): The module_base_address parameter should not be needed here, but it is
-  // because FunctionInfo still contains the field module_base_address. As soon as that field is
-  // gone, remove the parameter here
-  void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols,
-                  uint64_t module_base_address);
-  // TODO(169309553): As soon as FunctionInfo does not contain module_base_address anymore,
-  // completely remove the following method
-  void UpdateFunctionsModuleBaseAddress(uint64_t module_base_address);
+  void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] const std::vector<const orbit_client_protos::FunctionInfo*> GetFunctions() const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctions() const;

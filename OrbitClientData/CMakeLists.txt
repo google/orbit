@@ -17,11 +17,13 @@ target_sources(OrbitClientData PUBLIC
         include/OrbitClientData/FunctionInfoSet.h
         include/OrbitClientData/FunctionUtils.h
         include/OrbitClientData/ModuleData.h
+        include/OrbitClientData/ModuleManager.h
         include/OrbitClientData/ProcessData.h)
 
 target_sources(OrbitClientData PRIVATE
         FunctionUtils.cpp
         ModuleData.cpp
+        ModuleManager.cpp
         ProcessData.cpp)
 
 target_link_libraries(OrbitClientData PUBLIC 
@@ -37,6 +39,7 @@ target_compile_options(OrbitClientDataTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitClientDataTests PRIVATE
         FunctionInfoSetTest.cpp
         ModuleDataTest.cpp
+        ModuleManagerTest.cpp
         ProcessDataTest.cpp)
 
 target_link_libraries(OrbitClientDataTests PRIVATE 

@@ -60,8 +60,3 @@ ErrorMessageOr<std::pair<std::string, uint64_t>> ProcessData::FindModuleByAddres
 
   return std::make_pair(module_path, memory_space.start);
 }
-
-void ProcessData::AddSymbols(ModuleData* module, const ModuleSymbols& module_symbols) const {
-  uint64_t module_base_address = module_memory_map_.at(module->file_path()).start;
-  module->AddSymbols(module_symbols, module_base_address);
-}

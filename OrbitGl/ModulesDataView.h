@@ -27,8 +27,7 @@ class ModulesDataView : public DataView {
   std::string GetLabel() override { return "Modules"; }
   bool HasRefreshButton() const override { return true; }
   void OnRefreshButtonClicked() override;
-
-  void SetProcess(const ProcessData* process);
+  void UpdateModules(const ProcessData* process);
 
  protected:
   void DoSort() override;
@@ -37,10 +36,6 @@ class ModulesDataView : public DataView {
  private:
   [[nodiscard]] ModuleData* GetModule(uint32_t row) const { return modules_[indices_[row]]; }
 
-  // TODO(169309553) Saving this process_ here is currently only necessary because symbol loading
-  // involves the process (see GOrbitApp->LoadSymbols). The plan is not involve the process in
-  // symbol loading anymore, once this changed, remove this process_ field.
-  const ProcessData* process_ = nullptr;
   std::vector<ModuleData*> modules_;
   absl::flat_hash_map<const ModuleData*, const MemorySpace*> module_memory_;
 
