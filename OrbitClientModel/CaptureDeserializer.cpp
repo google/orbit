@@ -27,8 +27,11 @@ using orbit_grpc_protos::ProcessInfo;
 
 namespace capture_deserializer {
 
-void Load(const std::string& file_name, CaptureListener* capture_listener,
-          std::atomic<bool>* cancellation_requested) {
+void Load(
+    const std::string& file_name, CaptureListener* capture_listener,
+    const std::function<void(const orbit_grpc_protos::ProcessInfo&,
+                             const std::vector<orbit_grpc_protos::ModuleInfo>&)>& modules_callback,
+    std::atomic<bool>* cancellation_requested) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", file_name));
 
   // Binary
@@ -40,11 +43,14 @@ void Load(const std::string& file_name, CaptureListener* capture_listener,
     return;
   }
 
-  return Load(file, file_name, capture_listener, cancellation_requested);
+  return Load(file, file_name, capture_listener, modules_callback, cancellation_requested);
 }
 
-void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
-          std::atomic<bool>* cancellation_requested) {
+void Load(
+    std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
+    const std::function<void(const orbit_grpc_protos::ProcessInfo&,
+                             const std::vector<orbit_grpc_protos::ModuleInfo>&)>& modules_callback,
+    std::atomic<bool>* cancellation_requested) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
@@ -77,7 +83,8 @@ void Load(std::istream& stream, const std::string& file_name, CaptureListener* c
     return;
   }
 
-  internal::LoadCaptureInfo(capture_info, capture_listener, &coded_input, cancellation_requested);
+  internal::LoadCaptureInfo(capture_info, capture_listener, modules_callback, &coded_input,
+                            cancellation_requested);
 }
 
 namespace internal {
@@ -98,9 +105,12 @@ bool ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
-                     google::protobuf::io::CodedInputStream* coded_input,
-                     std::atomic<bool>* cancellation_requested) {
+void LoadCaptureInfo(
+    const CaptureInfo& capture_info, CaptureListener* capture_listener,
+    const std::function<void(const orbit_grpc_protos::ProcessInfo&,
+                             const std::vector<orbit_grpc_protos::ModuleInfo>&)>& modules_callback,
+    google::protobuf::io::CodedInputStream* coded_input,
+    std::atomic<bool>* cancellation_requested) {
   CHECK(capture_listener != nullptr);
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
@@ -123,10 +133,29 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   }
 
   ProcessInfo process_info;
-  process_info.set_pid(capture_info.process_id());
-  process_info.set_name(capture_info.process_name());
-
+  process_info.set_pid(capture_info.process().pid());
+  process_info.set_name(capture_info.process().name());
+  process_info.set_cpu_usage(capture_info.process().cpu_usage());
+  process_info.set_full_path(capture_info.process().full_path());
+  process_info.set_command_line(capture_info.process().command_line());
+  process_info.set_is_64_bit(capture_info.process().is_64_bit());
   ProcessData process(process_info);
+
+  std::vector<orbit_grpc_protos::ModuleInfo> modules;
+  for (const auto& module : capture_info.modules()) {
+    orbit_grpc_protos::ModuleInfo module_info;
+    module_info.set_name(module.name());
+    module_info.set_file_path(module.file_path());
+    module_info.set_file_size(module.file_size());
+    module_info.set_address_start(module.address_start());
+    module_info.set_address_end(module.address_end());
+    module_info.set_build_id(module.build_id());
+    module_info.set_load_bias(module.load_bias());
+    modules.emplace_back(std::move(module_info));
+  }
+  process.UpdateModuleInfos(modules);
+  modules_callback(process_info, modules);
+
   capture_listener->OnCaptureStarted(
       std::move(process), absl::flat_hash_map<std::string, ModuleData*>(),
       std::move(selected_functions), std::move(selected_tracepoints));

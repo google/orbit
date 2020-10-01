@@ -54,8 +54,8 @@ TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
   CaptureInfo capture_info =
       capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
   EXPECT_EQ(0, capture_info.selected_functions_size());
-  EXPECT_EQ(-1, capture_info.process_id());
-  EXPECT_EQ("", capture_info.process_name());
+  EXPECT_EQ(-1, capture_info.process().pid());
+  EXPECT_EQ("", capture_info.process().name());
   EXPECT_EQ(0, capture_info.address_infos_size());
   EXPECT_EQ(0, capture_info.callstacks_size());
   EXPECT_EQ(0, capture_info.callstack_events_size());
@@ -147,8 +147,16 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(selected_function.address(), actual_selected_function.address());
   EXPECT_EQ(selected_function.name(), actual_selected_function.name());
 
-  EXPECT_EQ(process_id, capture_info.process_id());
-  EXPECT_EQ(process_name, capture_info.process_name());
+  EXPECT_EQ(process_id, capture_info.process().pid());
+  EXPECT_EQ(process_name, capture_info.process().name());
+
+  ASSERT_EQ(1, capture_info.modules_size());
+  const orbit_client_protos::ModuleInfo& actual_module = capture_info.modules(0);
+  EXPECT_EQ(module_info.name(), actual_module.name());
+  EXPECT_EQ(module_info.file_path(), actual_module.file_path());
+  EXPECT_EQ(module_info.load_bias(), actual_module.load_bias());
+  EXPECT_EQ(module_info.address_start(), actual_module.address_start());
+  EXPECT_EQ(module_info.address_end(), actual_module.address_end());
 
   ASSERT_EQ(1, capture_info.address_infos_size());
   const LinuxAddressInfo& actual_address_info = capture_info.address_infos(0);

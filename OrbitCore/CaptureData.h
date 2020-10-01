@@ -177,6 +177,10 @@ class CaptureData {
     sampling_profiler_ = std::move(sampling_profiler);
   }
 
+  [[nodiscard]] const absl::flat_hash_map<std::string, ModuleData*>& module_map() const {
+    return module_map_;
+  }
+
  private:
   ProcessData process_;
   absl::flat_hash_map<std::string, ModuleData*> module_map_;

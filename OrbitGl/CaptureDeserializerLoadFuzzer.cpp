@@ -72,7 +72,13 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
   std::atomic<bool> cancellation_requested = false;
-  capture_deserializer::Load(input_stream, "", GOrbitApp.get(), &cancellation_requested);
+
+  // The functions called by actual callback are already fuzzed in
+  // DataManagerUpdateModuleInfosFuzzer
+  const auto& modules_callback = [](const orbit_grpc_protos::ProcessInfo&,
+                                    const std::vector<orbit_grpc_protos::ModuleInfo>&) {};
+  capture_deserializer::Load(input_stream, "", GOrbitApp.get(), modules_callback,
+                             &cancellation_requested);
 
   GOrbitApp->GetThreadPool()->ShutdownAndWait();
   GOrbitApp.reset();

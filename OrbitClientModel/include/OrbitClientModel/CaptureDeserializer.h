@@ -19,21 +19,28 @@
 
 namespace capture_deserializer {
 
-void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
-          std::atomic<bool>* cancellation_requested);
-void Load(const std::string& file_name, CaptureListener* capture_listener,
-          std::atomic<bool>* cancellation_requested);
+void Load(
+    std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
+    const std::function<void(const orbit_grpc_protos::ProcessInfo&,
+                             const std::vector<orbit_grpc_protos::ModuleInfo>&)>& modules_callback,
+    std::atomic<bool>* cancellation_requested);
+void Load(
+    const std::string& file_name, CaptureListener* capture_listener,
+    const std::function<void(const orbit_grpc_protos::ProcessInfo&,
+                             const std::vector<orbit_grpc_protos::ModuleInfo>&)>& modules_callback,
+    std::atomic<bool>* cancellation_requested);
 
 namespace internal {
 
 bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
-void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
-                     CaptureListener* capture_listener,
-                     google::protobuf::io::CodedInputStream* coded_input,
-                     std::atomic<bool>* cancellation_requested);
+void LoadCaptureInfo(
+    const orbit_client_protos::CaptureInfo& capture_info, CaptureListener* capture_listener,
+    const std::function<void(const orbit_grpc_protos::ProcessInfo&,
+                             const std::vector<orbit_grpc_protos::ModuleInfo>&)>& modules_callback,
+    google::protobuf::io::CodedInputStream* coded_input, std::atomic<bool>* cancellation_requested);
 
-inline const std::string kRequiredCaptureVersion = "1.52";
+inline const std::string kRequiredCaptureVersion = "1.54";
 
 }  // namespace internal
 

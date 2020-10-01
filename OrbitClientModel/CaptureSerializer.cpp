@@ -18,6 +18,8 @@ using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+using orbit_client_protos::ModuleInfo;
+using orbit_client_protos::ProcessInfo;
 
 namespace {
 inline constexpr std::string_view kFileOrbitExtension = ".orbit";
@@ -57,8 +59,24 @@ CaptureInfo GenerateCaptureInfo(
     capture_info.add_selected_functions()->CopyFrom(pair.second);
   }
 
-  capture_info.set_process_id(capture_data.process_id());
-  capture_info.set_process_name(capture_data.process_name());
+  ProcessInfo* process = capture_info.mutable_process();
+  process->set_pid(capture_data.process()->pid());
+  process->set_name(capture_data.process()->name());
+  process->set_cpu_usage(capture_data.process()->cpu_usage());
+  process->set_full_path(capture_data.process()->full_path());
+  process->set_command_line(capture_data.process()->command_line());
+  process->set_is_64_bit(capture_data.process()->is_64_bit());
+
+  for (const auto& [_, module] : capture_data.module_map()) {
+    ModuleInfo* module_info = capture_info.add_modules();
+    module_info->set_name(module->name());
+    module_info->set_file_path(module->file_path());
+    module_info->set_file_size(module->file_size());
+    module_info->set_address_start(module->module_info().address_start());
+    module_info->set_address_end(module->module_info().address_end());
+    module_info->set_build_id(module->build_id());
+    module_info->set_load_bias(module->load_bias());
+  }
 
   capture_info.mutable_thread_names()->insert(capture_data.thread_names().begin(),
                                               capture_data.thread_names().end());

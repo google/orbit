@@ -20,6 +20,7 @@ using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::ProcessInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::TracepointInfo;
@@ -67,7 +68,11 @@ TEST(CaptureDeserializer, LoadFileNotExists) {
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
   EXPECT_CALL(listener, OnCaptureComplete).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
-  capture_deserializer::Load("not_existing_test_file", &listener, &cancellation_requested);
+  capture_deserializer::Load(
+      "not_existing_test_file", &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &cancellation_requested);
 
   EXPECT_EQ("Error opening file \"not_existing_test_file\" for reading", actual_error.message());
 }
@@ -90,7 +95,11 @@ TEST(CaptureDeserializer, LoadNoVersion) {
   stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
          << serialized_header;
 
-  capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
+  capture_deserializer::Load(
+      stream, "file_name", &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &cancellation_requested);
 
   std::string expected_error_message =
       "Error parsing the capture from \"file_name\".\nNote: If the capture "
@@ -118,7 +127,11 @@ TEST(CaptureDeserializer, LoadOldVersion) {
   stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
          << serialized_header;
 
-  capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
+  capture_deserializer::Load(
+      stream, "file_name", &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &cancellation_requested);
 
   EXPECT_THAT(actual_error.message(), HasSubstr("1.51"));
 }
@@ -141,19 +154,33 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
   stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
          << serialized_header;
 
-  capture_deserializer::Load(stream, "file_name", &listener, &cancellation_requested);
+  capture_deserializer::Load(
+      stream, "file_name", &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &cancellation_requested);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   MockCaptureListener listener;
   CaptureInfo capture_info;
-  capture_info.set_process_id(42);
-  capture_info.set_process_name("process");
+
+  ProcessInfo* process_info = capture_info.mutable_process();
+  process_info->set_pid(42);
+  process_info->set_name("process");
+
+  orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
+  module_info->set_name("module");
+  module_info->set_file_path("path/to/module");
+  module_info->set_address_start(10);
+  module_info->set_address_end(123);
+
   FunctionInfo* selected_function = capture_info.add_selected_functions();
   selected_function->set_name("foo");
   selected_function->set_pretty_name("void foo()");
   selected_function->set_address(21);
   selected_function->set_size(12);
+
   std::atomic<bool> cancellation_requested = false;
   uint8_t empty_data = 0;
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
@@ -168,6 +195,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
                                     Unused) {
         EXPECT_EQ(process.name(), "process");
         EXPECT_EQ(process.pid(), 42);
+        EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
 
         ASSERT_EQ(actual_selected_functions.size(), 1);
         ASSERT_TRUE(actual_selected_functions.contains(selected_function->address()));
@@ -185,8 +213,59 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   EXPECT_CALL(listener, OnAddressInfo).Times(0);
   EXPECT_CALL(listener, OnThreadName).Times(0);
 
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &empty_stream, &cancellation_requested);
+}
+
+TEST(CaptureDeserializer, LoadCaptureInfoModulesCallback) {
+  MockCaptureListener listener;
+  CaptureInfo capture_info;
+
+  ProcessInfo* process_info = capture_info.mutable_process();
+  process_info->set_pid(42);
+  process_info->set_name("process");
+
+  orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
+  module_info->set_name("module");
+  module_info->set_file_path("path/to/module");
+  module_info->set_address_end(10);
+  module_info->set_address_end(123);
+
+  std::atomic<bool> cancellation_requested = false;
+  uint8_t empty_data = 0;
+  google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
+
+  // There will be no call to OnCaptureStarted other then the one specified next.
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(1);
+  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
+  EXPECT_CALL(listener, OnCaptureFailed).Times(0);
+  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
+
+  EXPECT_CALL(listener, OnAddressInfo).Times(0);
+  EXPECT_CALL(listener, OnThreadName).Times(0);
+
+  bool was_called = false;
+  auto modules_callback =
+      [module_info, &was_called](
+          const orbit_grpc_protos::ProcessInfo& actual_process,
+          const std::vector<orbit_grpc_protos::ModuleInfo>& actual_modules) mutable {
+        was_called = true;
+        EXPECT_EQ(42, actual_process.pid());
+        EXPECT_EQ("process", actual_process.name());
+        ASSERT_EQ(1, actual_modules.size());
+        const orbit_grpc_protos::ModuleInfo& actual_module = actual_modules[0];
+        EXPECT_EQ(module_info->name(), actual_module.name());
+        EXPECT_EQ(module_info->file_path(), actual_module.file_path());
+        EXPECT_EQ(module_info->address_start(), actual_module.address_start());
+        EXPECT_EQ(module_info->address_end(), actual_module.address_end());
+      };
+
+  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, modules_callback,
+                                                  &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(was_called);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {
@@ -220,8 +299,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &empty_stream, &cancellation_requested);
 
   EXPECT_EQ(actual_address_info_1.function_name(), address_info_1.function_name());
   EXPECT_EQ(actual_address_info_2.function_name(), address_info_2.function_name());
@@ -253,8 +335,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadNames) {
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &empty_stream, &cancellation_requested);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
@@ -277,8 +362,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &empty_stream, &cancellation_requested);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
@@ -360,8 +448,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &empty_stream, &cancellation_requested);
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);
   EXPECT_TRUE(hash_present_1_1);
@@ -450,8 +541,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoTracepoints) {
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &empty_stream, &cancellation_requested);
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);
   EXPECT_TRUE(hash_present_1_1);
@@ -512,8 +606,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
-  capture_deserializer::internal::LoadCaptureInfo(empty_capture_info, &listener, &coded_input,
-                                                  &cancellation_requested);
+  capture_deserializer::internal::LoadCaptureInfo(
+      empty_capture_info, &listener,
+      [](const orbit_grpc_protos::ProcessInfo&, const std::vector<orbit_grpc_protos::ModuleInfo>&) {
+      },
+      &coded_input, &cancellation_requested);
 
   EXPECT_EQ(timer_1.start(), actual_timer_1.start());
   EXPECT_EQ(timer_2.start(), actual_timer_2.start());

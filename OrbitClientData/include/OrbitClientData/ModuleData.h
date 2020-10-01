@@ -30,7 +30,7 @@ class ModuleData final {
   [[nodiscard]] const std::string& build_id() const { return module_info_.build_id(); }
   [[nodiscard]] uint64_t load_bias() const { return module_info_.load_bias(); }
   [[nodiscard]] bool is_loaded() const;
-
+  [[nodiscard]] const orbit_grpc_protos::ModuleInfo& module_info() const { return module_info_; }
   // relative_address here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByRelativeAddress(

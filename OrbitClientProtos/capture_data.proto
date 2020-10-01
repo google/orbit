@@ -14,6 +14,25 @@ message FunctionStats {
   uint64 max_ns = 5;
 }
 
+message ProcessInfo {
+  int32 pid = 1;
+  string name = 2;
+  double cpu_usage = 3;
+  string full_path = 4;
+  string command_line = 5;
+  bool is_64_bit = 6;
+}
+
+message ModuleInfo {
+  string name = 1;
+  string file_path = 2;
+  uint64 file_size = 3;
+  uint64 address_start = 4;
+  uint64 address_end = 5;
+  string build_id = 6;
+  uint64 load_bias = 7;
+}
+
 message FunctionInfo {
   reserved 11;
   string name = 1;
@@ -73,9 +92,8 @@ message CaptureHeader {
 }
 
 message CaptureInfo {
+  reserved 2, 3;
   repeated FunctionInfo selected_functions = 1;
-  int32 process_id = 2;
-  string process_name = 3;
   map<int32, string> thread_names = 4;
   repeated LinuxAddressInfo address_infos = 5;
   repeated CallstackInfo callstacks = 6;
@@ -85,6 +103,8 @@ message CaptureInfo {
   map<uint64, FunctionStats> function_stats = 9;
   repeated TracepointInfo tracepoint_infos = 10;
   repeated TracepointEventInfo tracepoint_event_infos = 11;
+  ProcessInfo process = 12;
+  repeated ModuleInfo modules = 14;
 }
 
 message TimerInfo {
