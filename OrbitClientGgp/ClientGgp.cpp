@@ -120,6 +120,8 @@ bool ClientGgp::SaveCapture() {
     // Make sure the file is saved with orbit extension
     capture_serializer::IncludeOrbitExtensionInFile(file_name);
   }
+  // Add the location where the capture is saved
+  file_name.insert(0, options_.capture_file_directory);
 
   ErrorMessageOr<void> result = capture_serializer::Save(
       file_name, capture_data_, key_to_string_map, timer_infos_.begin(), timer_infos_.end());
