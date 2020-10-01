@@ -138,6 +138,9 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   for (const auto& category : fs::directory_iterator(kLinuxTracingEvents, error_code_category)) {
     if (fs::is_directory(category)) {
       for (const auto& name : fs::directory_iterator(category, error_code_name)) {
+        if (fs::path(name).filename() == "enable" || fs::path(name).filename() == "filter") {
+          continue;
+        }
         TracepointInfo tracepoint_info;
         tracepoint_info.set_name(fs::path(name).filename());
         tracepoint_info.set_category(fs::path(category).filename());
