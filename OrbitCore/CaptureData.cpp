@@ -136,7 +136,8 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
   const std::string& module_path = result.value().first;
   const uint64_t module_base_address = result.value().second;
 
-  const ModuleData* module = module_map_.at(module_path);
+  const ModuleData* module = module_manager_->GetModuleByPath(module_path);
+  if (module == nullptr) return nullptr;
 
   const uint64_t relative_address = absolute_address - module_base_address;
   return module->FindFunctionByRelativeAddress(relative_address, is_exact);
@@ -145,13 +146,13 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 [[nodiscard]] ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
   const auto result = process_.FindModuleByAddress(absolute_address);
   if (!result) return nullptr;
-  return module_map_.at(result.value().first);
+  return module_manager_->GetMutableModuleByPath(result.value().first);
 }
 
 uint64_t CaptureData::GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& function) const {
-  const auto module_it = module_map_.find(function.loaded_module_path());
-  CHECK(module_it != module_map_.end());
-  return FunctionUtils::GetAbsoluteAddress(function, process_, *module_it->second);
+  const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
+  CHECK(module != nullptr);
+  return FunctionUtils::GetAbsoluteAddress(function, process_, *module);
 }
 
 int32_t CaptureData::process_id() const { return process_.pid(); }

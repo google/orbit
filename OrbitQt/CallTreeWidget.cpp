@@ -201,14 +201,14 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
 static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
     OrbitApp* app, const std::vector<QModelIndex>& indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
+  const CaptureData& capture_data = app->GetCaptureData();
   for (const auto& index : indices) {
     uint64_t absolute_address =
         index.model()
             ->index(index.row(), CallTreeViewItemModel::kFunctionAddress, index.parent())
             .data(Qt::EditRole)
             .toLongLong();
-    const FunctionInfo* function =
-        app->GetCaptureData().FindFunctionByAddress(absolute_address, false);
+    const FunctionInfo* function = capture_data.FindFunctionByAddress(absolute_address, false);
     if (function != nullptr) {
       functions_set.insert(function);
     }
@@ -305,7 +305,7 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   } else if (action->text() == kActionCollapseAll) {
     ui_->callTreeTreeView->collapseAll();
   } else if (action->text() == kActionLoadSymbols) {
-    app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
+    app_->LoadModules(modules_to_load);
   } else if (action->text() == kActionSelect) {
     for (const FunctionInfo* function : functions) {
       app_->SelectFunction(*function);

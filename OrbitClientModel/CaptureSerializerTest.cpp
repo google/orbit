@@ -8,6 +8,7 @@
 #include "CaptureData.h"
 #include "CaptureSerializationTestMatchers.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "TracepointCustom.h"
@@ -25,8 +26,8 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TracepointEventInfo;
-using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
+using OrbitClientData::ModuleManager;
 using ::testing::ElementsAreArray;
 
 TEST(CaptureSerializer, GetCaptureFileName) {
@@ -55,8 +56,6 @@ TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
   CaptureInfo capture_info =
       capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
   EXPECT_EQ(0, capture_info.selected_functions_size());
-  EXPECT_EQ(-1, capture_info.process_id());
-  EXPECT_EQ("", capture_info.process_name());
   EXPECT_EQ(0, capture_info.thread_names_size());
   EXPECT_EQ(0, capture_info.thread_state_slices_size());
   EXPECT_EQ(0, capture_info.address_infos_size());
@@ -64,35 +63,44 @@ TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
   EXPECT_EQ(0, capture_info.callstack_events_size());
   EXPECT_EQ(0, capture_info.key_to_string_size());
   EXPECT_EQ(0, capture_info.function_stats_size());
+  EXPECT_EQ(0, capture_info.modules_size());
+
+  const orbit_client_protos::ProcessInfo& process_info = capture_info.process();
+  EXPECT_EQ(process_info.pid(), -1);
+  EXPECT_EQ(process_info.name(), "");
+  EXPECT_EQ(process_info.cpu_usage(), 0);
+  EXPECT_EQ(process_info.full_path(), "");
+  EXPECT_EQ(process_info.command_line(), "");
+  EXPECT_EQ(process_info.is_64_bit(), false);
 }
 
 TEST(CaptureSerializer, GenerateCaptureInfo) {
   int32_t process_id = 42;
   std::string process_name = "p";
-  ProcessInfo process_info;
+  orbit_grpc_protos::ProcessInfo process_info;
   process_info.set_name(process_name);
   process_info.set_pid(process_id);
   ProcessData process(process_info);
 
-  absl::flat_hash_map<std::string, ModuleData*> module_map;
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_load_bias(0);
   module_info.set_file_path("path/to/module");
   module_info.set_address_start(15);
   module_info.set_address_end(1000);
-  std::vector<orbit_grpc_protos::ModuleInfo> module_infos;
-  module_infos.push_back(module_info);
   ModuleData module(module_info);
-  module_map["path/to/module"] = &module;
+
+  std::vector<orbit_grpc_protos::ModuleInfo> module_infos{module_info};
   process.UpdateModuleInfos(module_infos);
+  ModuleManager module_manager;
+  module_manager.AddNewModules(module_infos);
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   FunctionInfo selected_function;
   selected_function.set_name("foo");
   selected_function.set_address(123);
-  selected_function.set_module_base_address(15);
   selected_function.set_loaded_module_path("path/to/module");
-  selected_functions[FunctionUtils::GetAbsoluteAddress(selected_function)] = selected_function;
+  uint64_t selected_function_absolute_address = 123 + 15 - 0;
+  selected_functions[selected_function_absolute_address] = selected_function;
 
   TracepointInfoSet selected_tracepoints;
   TracepointInfo selected_tracepoint_info;
@@ -100,7 +108,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
 
-  CaptureData capture_data{std::move(process), std::move(module_map), selected_functions,
+  CaptureData capture_data{std::move(process), &module_manager, selected_functions,
                            selected_tracepoints};
 
   capture_data.AddOrAssignThreadName(42, "t42");
@@ -168,8 +176,16 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(selected_function.address(), actual_selected_function.address());
   EXPECT_EQ(selected_function.name(), actual_selected_function.name());
 
-  EXPECT_EQ(process_id, capture_info.process_id());
-  EXPECT_EQ(process_name, capture_info.process_name());
+  EXPECT_EQ(process_id, capture_info.process().pid());
+  EXPECT_EQ(process_name, capture_info.process().name());
+
+  ASSERT_EQ(1, capture_info.modules_size());
+  const orbit_client_protos::ModuleInfo& actual_module = capture_info.modules(0);
+  EXPECT_EQ(module_info.name(), actual_module.name());
+  EXPECT_EQ(module_info.file_path(), actual_module.file_path());
+  EXPECT_EQ(module_info.load_bias(), actual_module.load_bias());
+  EXPECT_EQ(module_info.address_start(), actual_module.address_start());
+  EXPECT_EQ(module_info.address_end(), actual_module.address_end());
 
   EXPECT_THAT(
       capture_info.thread_names(),
@@ -211,10 +227,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(tracepoint_event.tracepoint_info_key(), actual_tracepoint_event.tracepoint_info_key());
 
   ASSERT_EQ(1, capture_info.function_stats_size());
-  ASSERT_TRUE(
-      capture_info.function_stats().contains(FunctionUtils::GetAbsoluteAddress(selected_function)));
+  ASSERT_TRUE(capture_info.function_stats().contains(selected_function_absolute_address));
   const FunctionStats& actual_function_stats =
-      capture_info.function_stats().at(FunctionUtils::GetAbsoluteAddress(selected_function));
+      capture_info.function_stats().at(selected_function_absolute_address);
   const FunctionStats& expected_function_stats =
       capture_data.GetFunctionStatsOrDefault(selected_function);
   EXPECT_EQ(expected_function_stats.count(), actual_function_stats.count());

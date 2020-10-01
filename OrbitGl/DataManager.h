@@ -27,8 +27,6 @@ class DataManager final {
       : main_thread_id_(thread_id) {}
 
   void UpdateProcessInfos(const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos);
-  void UpdateModuleInfos(int32_t process_id,
-                         const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
 
   void SelectFunction(const orbit_client_protos::FunctionInfo& function);
   void DeselectFunction(const orbit_client_protos::FunctionInfo& function);
@@ -39,17 +37,9 @@ class DataManager final {
   void set_selected_process(int32_t pid);
 
   [[nodiscard]] const ProcessData* GetProcessByPid(int32_t process_id) const;
-  [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const;
-  [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const;
-  [[nodiscard]] const ModuleData* FindModuleByAddress(int32_t process_id,
-                                                      uint64_t absolute_address);
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
-      int32_t process_id, uint64_t absolute_address, bool is_exact) const;
-  [[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> GetModulesLoadedByProcess(
-      const ProcessData* process) const;
+  [[nodiscard]] ProcessData* GetMutableProcessByPid(int32_t process_id);
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
-  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedAndOrbitFunctions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] int32_t selected_thread_id() const;
   [[nodiscard]] const TextBox* selected_text_box() const;
@@ -66,7 +56,6 @@ class DataManager final {
   const std::thread::id main_thread_id_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
   absl::node_hash_map<int32_t, ProcessData> process_map_;
-  absl::flat_hash_map<std::string, std::unique_ptr<ModuleData>> module_map_;
   FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
 

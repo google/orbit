@@ -161,16 +161,15 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
 absl::flat_hash_set<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& indices) const {
   absl::flat_hash_set<ModuleData*> modules;
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : indices) {
     const SampledFunction& sampled_function = GetSampledFunction(index);
     CHECK(sampled_function.absolute_address != 0);
-    ModuleData* module =
-        GOrbitApp->GetCaptureData().FindModuleByAddress(sampled_function.absolute_address);
+    ModuleData* module = capture_data.FindModuleByAddress(sampled_function.absolute_address);
     if (module != nullptr) {
       modules.insert(module);
     }
   }
-
   return modules;
 }
 
@@ -227,7 +226,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules_to_load.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(GOrbitApp->GetCaptureData().process(), modules_to_load);
+    GOrbitApp->LoadModules(modules_to_load);
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = GOrbitApp->GetCaptureData().process_id();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {

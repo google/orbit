@@ -6,6 +6,7 @@
 
 #include "DataManager.h"
 #include "ModulesDataView.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "absl/flags/flag.h"
 #include "module.pb.h"
 #include "process.pb.h"
@@ -29,18 +30,26 @@ ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 using orbit_grpc_protos::GetModuleListResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using OrbitClientData::ModuleManager;
 
 DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   const auto range = module_list.modules();
   std::vector<ModuleInfo> modules{range.begin(), range.end()};
 
+  ModuleManager module_manager;
+  module_manager.AddNewModules(modules);
+
+  int32_t pid = 1;
   ProcessInfo process_info{};
-  process_info.set_pid(1);
+  process_info.set_pid(pid);
 
   DataManager data_manager{};
   data_manager.UpdateProcessInfos(std::vector{process_info});
-  data_manager.UpdateModuleInfos(1, modules);
+
+  ProcessData* process = data_manager.GetMutableProcessByPid(pid);
+  CHECK(process != nullptr);
+  process->UpdateModuleInfos(modules);
 
   ModulesDataView modules_data_view{};
-  modules_data_view.SetProcess(data_manager.GetProcessByPid(1));
+  modules_data_view.UpdateModules(process);
 }

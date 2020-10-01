@@ -19,7 +19,7 @@ class CaptureListener {
 
   // Called after capture started but before the first event arrived.
   virtual void OnCaptureStarted(
-      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) = 0;
   // Called when capture is complete.

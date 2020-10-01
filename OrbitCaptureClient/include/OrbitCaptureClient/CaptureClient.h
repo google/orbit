@@ -9,6 +9,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_set.h"
@@ -31,7 +32,7 @@ class CaptureClient {
 
   [[nodiscard]] ErrorMessageOr<void> StartCapture(
       ThreadPool* thread_pool, const ProcessData& process,
-      const absl::flat_hash_map<std::string, ModuleData*>& module_map,
+      const OrbitClientData::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints, bool enable_introspection);
 
@@ -54,7 +55,7 @@ class CaptureClient {
   }
 
  private:
-  void Capture(ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+  void Capture(ProcessData&& process, const OrbitClientData::ModuleManager& module_manager,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
                TracepointInfoSet selected_tracepoints, bool enable_introspection);
 

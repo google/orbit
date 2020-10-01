@@ -37,7 +37,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     google::protobuf::io::StringOutputStream stream{&buffer};
     google::protobuf::io::CodedOutputStream coded_stream{&stream};
     orbit_client_protos::CaptureHeader capture_header{};
-    capture_header.set_version("1.52");
+    capture_header.set_version("1.55");
 
     capture_serializer::WriteMessage(&capture_header, &coded_stream);
     capture_serializer::WriteMessage(&info.capture_info(), &coded_stream);
@@ -72,7 +72,10 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
   std::atomic<bool> cancellation_requested = false;
-  capture_deserializer::Load(input_stream, "", GOrbitApp.get(), &cancellation_requested);
+
+  OrbitClientData::ModuleManager module_manager;
+  capture_deserializer::Load(input_stream, "", GOrbitApp.get(), &module_manager,
+                             &cancellation_requested);
 
   app->GetThreadPool()->ShutdownAndWait();
 }

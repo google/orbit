@@ -38,7 +38,7 @@ static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTyp
 
 ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, const ProcessData& process,
-    const absl::flat_hash_map<std::string, ModuleData*>& module_map,
+    const OrbitClientData::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, bool enable_introspection) {
   absl::MutexLock lock(&state_mutex_);
@@ -50,19 +50,16 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   state_ = State::kStarting;
 
+  // TODO(168797897) Here a copy of the process is created. The loaded modules of this process were
+  // likely filled when the process was selected, which might be a while back. Between then and now
+  // the loaded modules might have changed. Up to date information about which modules are loaded
+  // should be used here. (Even better: while taking a capture this should always be up to date)
   ProcessData process_copy = process;
 
-  // TODO(168797897) Here a copy of the module_map is created. This module_map likely was downloaded
-  // when the process was selected, which might be a while back. Between then and now the loaded
-  // modules might have changed. Up to date information about which modules are loaded should be
-  // used here. (Even better: while taking a capture this should always be up to date)
-  absl::flat_hash_map<std::string, ModuleData*> module_map_copy = module_map;
-
-  thread_pool->Schedule([this, process = std::move(process_copy),
-                         module_map = std::move(module_map_copy),
+  thread_pool->Schedule([this, process = std::move(process_copy), &module_manager,
                          selected_functions = std::move(selected_functions), selected_tracepoints,
                          enable_introspection]() mutable {
-    Capture(std::move(process), std::move(module_map), std::move(selected_functions),
+    Capture(std::move(process), module_manager, std::move(selected_functions),
             std::move(selected_tracepoints), enable_introspection);
   });
 
@@ -70,7 +67,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 }
 
 void CaptureClient::Capture(ProcessData&& process,
-                            absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+                            const OrbitClientData::ModuleManager& module_manager,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints, bool enable_introspection) {
   CHECK(reader_writer_ == nullptr);
@@ -96,14 +93,14 @@ void CaptureClient::Capture(ProcessData&& process,
 
   capture_options->set_trace_thread_state(absl::GetFlag(FLAGS_thread_state));
   capture_options->set_trace_gpu_driver(true);
-  for (const auto& pair : selected_functions) {
-    const FunctionInfo& function = pair.second;
+  for (const auto& [absolute_address, function] : selected_functions) {
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
-    instrumented_function->set_file_offset(FunctionUtils::Offset(function));
-    instrumented_function->set_absolute_address(FunctionUtils::GetAbsoluteAddress(
-        function, process, *module_map.at(function.loaded_module_path())));
+    const ModuleData* module = module_manager.GetModuleByPath(function.loaded_module_path());
+    CHECK(module != nullptr);
+    instrumented_function->set_file_offset(FunctionUtils::Offset(function, *module));
+    instrumented_function->set_absolute_address(absolute_address);
     instrumented_function->set_function_type(
         IntrumentedFunctionTypeFromOrbitType(function.orbit_type()));
   }
@@ -132,8 +129,7 @@ void CaptureClient::Capture(ProcessData&& process,
 
   CaptureEventProcessor event_processor(capture_listener_);
 
-  capture_listener_->OnCaptureStarted(std::move(process), std::move(module_map),
-                                      std::move(selected_functions),
+  capture_listener_->OnCaptureStarted(std::move(process), std::move(selected_functions),
                                       std::move(selected_tracepoints));
 
   CaptureResponse response;

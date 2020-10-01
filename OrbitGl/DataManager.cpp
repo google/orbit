@@ -33,36 +33,6 @@ void DataManager::UpdateProcessInfos(const std::vector<ProcessInfo>& process_inf
   }
 }
 
-void DataManager::UpdateModuleInfos(int32_t process_id,
-                                    const std::vector<ModuleInfo>& module_infos) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  auto process_it = process_map_.find(process_id);
-  CHECK(process_it != process_map_.end());
-  ProcessData& process = process_it->second;
-  process.UpdateModuleInfos(module_infos);
-
-  for (const auto& module_info : module_infos) {
-    auto module_it = module_map_.find(module_info.file_path());
-    if (module_it == module_map_.end()) {
-      const auto [inserted_it, success] = module_map_.try_emplace(
-          module_info.file_path(), std::make_unique<ModuleData>(module_info));
-      CHECK(success);
-    } else {
-      ModuleData* module = (*module_it).second.get();
-      if (!module->is_loaded()) continue;
-      // When a module is already loaded (has loaded symbols), it could be the case that the
-      // modules base address changed. Since the module base address is *currently* saved in
-      // FunctionInfo, these need to be updated.
-      // TODO(169309553): As soon as module base address is not part of FunctionInfo anymore, remove
-      // the following.
-      if (module_info.address_start() != process.GetModuleBaseAddress(module->file_path())) {
-        module->UpdateFunctionsModuleBaseAddress(module_info.address_start());
-      }
-    }
-  }
-}
-
 void DataManager::SelectFunction(const FunctionInfo& function) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   if (!selected_functions_.contains(function)) {
@@ -110,30 +80,22 @@ void DataManager::ClearSelectedFunctions() {
   selected_functions_.clear();
 }
 
-const ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
+ProcessData* DataManager::GetMutableProcessByPid(int32_t process_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   auto it = process_map_.find(process_id);
-  if (it == process_map_.end()) {
-    return nullptr;
-  }
+  if (it == process_map_.end()) return nullptr;
 
   return &it->second;
 }
 
-const ModuleData* DataManager::GetModuleByPath(const std::string& path) const {
-  return GetMutableModuleByPath(path);
-}
-
-ModuleData* DataManager::GetMutableModuleByPath(const std::string& path) const {
+const ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
-  auto it = module_map_.find(path);
-  if (it == module_map_.end()) {
-    return nullptr;
-  }
+  auto it = process_map_.find(process_id);
+  if (it == process_map_.end()) return nullptr;
 
-  return it->second.get();
+  return &it->second;
 }
 
 bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
@@ -144,24 +106,6 @@ bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
 std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return std::vector<FunctionInfo>(selected_functions_.begin(), selected_functions_.end());
-}
-
-std::vector<FunctionInfo> DataManager::GetSelectedAndOrbitFunctions() const {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  CHECK(selected_process_ != nullptr);
-
-  std::vector<FunctionInfo> result = GetSelectedFunctions();
-
-  // Collect OrbitFunctions
-  for (const auto& [module_path, _] : selected_process_->GetMemoryMap()) {
-    const ModuleData* module = module_map_.at(module_path).get();
-    if (!module->is_loaded()) continue;
-
-    const std::vector<FunctionInfo>& orbit_functions = module->GetOrbitFunctions();
-    result.insert(result.end(), orbit_functions.begin(), orbit_functions.end());
-  }
-
-  return result;
 }
 
 void DataManager::set_selected_process(int32_t pid) {
@@ -190,49 +134,3 @@ bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
 }
 
 const TracepointInfoSet& DataManager::selected_tracepoints() const { return selected_tracepoints_; }
-
-const ModuleData* DataManager::FindModuleByAddress(int32_t process_id, uint64_t absolute_address) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  const ProcessData* process = GetProcessByPid(process_id);
-  if (process == nullptr) return nullptr;
-
-  const auto& result = process->FindModuleByAddress(absolute_address);
-  if (!result) return nullptr;
-
-  const std::string& module_path = result.value().first;
-
-  return module_map_.at(module_path).get();
-}
-
-const FunctionInfo* DataManager::FindFunctionByAddress(int32_t process_id,
-                                                       uint64_t absolute_address,
-                                                       bool is_exact) const {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  const ProcessData* process = GetProcessByPid(process_id);
-  if (process == nullptr) return nullptr;
-
-  const auto& result = process->FindModuleByAddress(absolute_address);
-  if (!result) return nullptr;
-
-  const std::string& module_path = result.value().first;
-  const uint64_t module_base_address = result.value().second;
-
-  const ModuleData* module = module_map_.at(module_path).get();
-
-  const uint64_t relative_address = absolute_address - module_base_address;
-  return module->FindFunctionByRelativeAddress(relative_address, is_exact);
-}
-
-[[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> DataManager::GetModulesLoadedByProcess(
-    const ProcessData* process) const {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  absl::flat_hash_map<std::string, ModuleData*> result;
-  for (const auto& [module_path, _] : process->GetMemoryMap()) {
-    result[module_path] = module_map_.at(module_path).get();
-  }
-
-  return result;
-}

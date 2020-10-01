@@ -34,6 +34,7 @@
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
@@ -96,7 +97,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted(
-      ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
+      ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints) override;
   void OnCaptureComplete() override;
@@ -243,13 +244,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  // TODO(169309553) get rid of ProcessData here, the process should not be needed to load a module.
-  // Also remove shared_ptr from PresetFile. Also consider references instead of pointers
-  void LoadModules(const ProcessData* process, const std::vector<ModuleData*>& modules,
+  void LoadModules(const std::vector<ModuleData*>& modules,
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
-  // TODO(169309553) get rid of Process
-  void LoadModulesFromPreset(const ProcessData* process,
-                             const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void LoadModulesFromPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
@@ -275,7 +272,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     return manual_instrumentation_manager_.get();
   }
   [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const {
-    return data_manager_->GetMutableModuleByPath(path);
+    return module_manager_->GetMutableModuleByPath(path);
+  }
+  [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const {
+    return module_manager_->GetModuleByPath(path);
   }
 
   // TODO(kuebler): Move them to a separate controler at some point
@@ -306,13 +306,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
-  // TODO(169309553): remove the process here, as soon as module_base_address is removed from
-  // FunctionInfo
-  void LoadSymbols(const std::filesystem::path& symbols_path, const ProcessData* process,
-                   ModuleData* module_data, const orbit_client_protos::PresetModule* preset_module);
-  // TODO(169309553): remove the process here, as soon as module_base_address is removed from
-  // FunctionInfo
-  void LoadModuleOnRemote(const ProcessData* process, ModuleData* module_data,
+  void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
+                   const orbit_client_protos::PresetModule* preset_module);
+
+  void LoadModuleOnRemote(ModuleData* module_data,
                           const orbit_client_protos::PresetModule* preset_module);
   ErrorMessageOr<void> SelectFunctionsFromPreset(const ModuleData* module,
                                                  const orbit_client_protos::PresetModule& preset);
@@ -377,6 +374,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
+  std::unique_ptr<OrbitClientData::ModuleManager> module_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
