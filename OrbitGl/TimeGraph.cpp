@@ -412,6 +412,14 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains
   return chains;
 }
 
+std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllSerializableTimerChains() const {
+  std::vector<std::shared_ptr<TimerChain>> chains;
+  for (const auto& track : tracks_) {
+    Append(chains, track->GetAllSerializableChains());
+  }
+  return chains;
+}
+
 void TimeGraph::UpdateMaxTimeStamp(uint64_t time) {
   if (time > capture_max_timestamp_) {
     capture_max_timestamp_ = time;

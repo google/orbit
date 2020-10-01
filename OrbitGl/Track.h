@@ -60,6 +60,9 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
 
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() { return {}; }
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() { return {}; }
+  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() {
+    return {};
+  }
 
   [[nodiscard]] bool IsMoving() const { return moving_; }
   [[nodiscard]] Vec2 GetMoveDelta() const {

@@ -51,6 +51,13 @@ void AsyncTrack::UpdateBoxHeight() {
   }
 }
 
+std::vector<std::shared_ptr<TimerChain>> AsyncTrack::GetAllSerializableChains() {
+  // For async time slices, the start and stop events are their own individual timers and are
+  // already serialized on their initial thread tracks. Return an empty vector so that we don't
+  // serialize the async timer twice.
+  return {};
+}
+
 void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   // Find the first row that that can receive the new timeslice with no overlap.
   // If none of the existing rows works, add a new row.
