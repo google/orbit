@@ -667,13 +667,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
-  const ProcessData* selected_process = GetSelectedProcess();
-  if (selected_process == nullptr) {
-    SendErrorToUi("Preset loading failed", "No process is selected. Please select a process first");
-    return;
-  }
-
-  LoadModulesFromPreset(selected_process, preset);
+  LoadModulesFromPreset(preset);
 }
 
 PresetLoadState OrbitApp::GetPresetLoadState(
@@ -712,6 +706,7 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
         processes.push_back(process);
         data_manager_->UpdateProcessInfos(processes);
         data_manager_->UpdateModuleInfos(process.pid(), modules);
+        data_manager_->set_selected_process(process.pid());
       });
     };
     capture_deserializer::Load(file_name, this, modules_callback,
@@ -753,7 +748,8 @@ bool OrbitApp::StartCapture() {
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool_.get(), *process, selected_functions, selected_tracepoints);
+      thread_pool_.get(), *process, data_manager_->GetModulesLoadedByProcess(process),
+      std::move(selected_functions), std::move(selected_tracepoints));
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -847,11 +843,10 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
-void OrbitApp::LoadModuleOnRemote(const ProcessData* process, ModuleData* module_data,
-                                  const PresetModule* preset_module) {
+void OrbitApp::LoadModuleOnRemote(ModuleData* module_data, const PresetModule* preset_module) {
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance (module \"%s\")...", module_data->file_path()));
-  thread_pool_->Schedule([this, process, module_data, preset_module,
+  thread_pool_->Schedule([this, module_data, preset_module,
                           scoped_status = std::move(scoped_status)]() mutable {
     const auto result = process_manager_->FindDebugInfoFile(module_data->file_path());
 
@@ -868,7 +863,7 @@ void OrbitApp::LoadModuleOnRemote(const ProcessData* process, ModuleData* module
 
     LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-    main_thread_executor_->Schedule([this, module_data, process, preset_module, debug_file_path,
+    main_thread_executor_->Schedule([this, module_data, preset_module, debug_file_path,
                                      scoped_status = std::move(scoped_status)]() mutable {
       const std::filesystem::path local_debug_file_path =
           symbol_helper_.GenerateCachedFileName(module_data->file_path());
@@ -887,14 +882,13 @@ void OrbitApp::LoadModuleOnRemote(const ProcessData* process, ModuleData* module
         }
       }
 
-      LoadSymbols(local_debug_file_path, process, module_data, preset_module);
+      LoadSymbols(local_debug_file_path, module_data, preset_module);
     });
   });
 }
 
-void OrbitApp::LoadModules(const ProcessData* process, const std::vector<ModuleData*>& modules,
+void OrbitApp::LoadModules(const std::vector<ModuleData*>& modules,
                            const std::shared_ptr<PresetFile>& preset) {
-  // TODO(159868905) use ModuleData instead of Module
   for (const auto& module : modules) {
     if (modules_currently_loading_.contains(module->file_path())) {
       continue;
@@ -911,12 +905,12 @@ void OrbitApp::LoadModules(const ProcessData* process, const std::vector<ModuleD
 
     const auto& symbols_path = FindSymbolsLocally(module->file_path(), module->build_id());
     if (symbols_path) {
-      LoadSymbols(symbols_path.value(), process, module, preset_module);
+      LoadSymbols(symbols_path.value(), module, preset_module);
       continue;
     }
 
     if (!absl::GetFlag(FLAGS_local)) {
-      LoadModuleOnRemote(process, module, preset_module);
+      LoadModuleOnRemote(module, preset_module);
       continue;
     }
 
@@ -974,19 +968,19 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindSymbolsLocally(
   return ErrorMessage(error_message);
 }
 
-void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, const ProcessData* process,
-                           ModuleData* module_data, const PresetModule* preset_module) {
+void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
+                           const PresetModule* preset_module) {
   auto scoped_status =
       CreateScopedStatus(absl::StrFormat(R"(Loading symbols for "%s" from file "%s"...)",
                                          module_data->file_path(), symbols_path.string()));
-  thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, process,
-                          module_data, preset_module]() mutable {
+  thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, module_data,
+                          preset_module]() mutable {
     auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
     CHECK(symbols_result);
     main_thread_executor_->Schedule([this, symbols = std::move(symbols_result.value()),
-                                     scoped_status = std::move(scoped_status), process, module_data,
+                                     scoped_status = std::move(scoped_status), module_data,
                                      preset_module] {
-      process->AddSymbols(module_data, symbols);
+      module_data->AddSymbols(symbols);
       functions_data_view_->AddFunctions(module_data->GetFunctions());
 
       LOG("Loaded %lu function symbols for module \"%s\"", symbols.symbol_infos().size(),
@@ -1026,8 +1020,7 @@ ErrorMessageOr<void> OrbitApp::SelectFunctionsFromPreset(const ModuleData* modul
   return outcome::success();
 }
 
-void OrbitApp::LoadModulesFromPreset(const ProcessData* process,
-                                     const std::shared_ptr<PresetFile>& preset_file) {
+void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<PresetFile>& preset_file) {
   std::vector<ModuleData*> modules_to_load;
   std::vector<std::string> module_paths_not_found;  // file path of module
   std::string error_message;
@@ -1053,19 +1046,16 @@ void OrbitApp::LoadModulesFromPreset(const ProcessData* process,
     if (static_cast<int>(module_paths_not_found.size()) ==
         preset_file->preset_info().path_to_module_size()) {
       // no modules were loaded
-      SendErrorToUi(
-          "Preset loading failed",
-          absl::StrFormat("None of the modules in the preset are loaded by the process \"%s\".",
-                          process->name()));
+      SendErrorToUi("Preset loading failed",
+                    absl::StrFormat("None of the modules in the preset are loaded."));
     } else {
-      SendWarningToUi(
-          "Preset only partially loaded",
-          absl::StrFormat("The following modules are not loaded by the process \"%s\":\n\"%s\"",
-                          process->name(), absl::StrJoin(module_paths_not_found, "\"\n\"")));
+      SendWarningToUi("Preset only partially loaded",
+                      absl::StrFormat("The following modules are not loaded:\n\"%s\"",
+                                      absl::StrJoin(module_paths_not_found, "\"\n\"")));
     }
   }
   if (!modules_to_load.empty()) {
-    LoadModules(process, modules_to_load, preset_file);
+    LoadModules(modules_to_load, preset_file);
   }
   FireRefreshCallbacks();
 }
@@ -1089,7 +1079,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         return;
       }
 
-      modules_data_view_->SetProcess(data_manager_->GetProcessByPid(pid));
+      modules_data_view_->UpdateModules(data_manager_->GetProcessByPid(pid));
 
       // To this point all data is ready. We can set the Process and then
       // propagate the changes to the UI.

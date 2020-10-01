@@ -23,10 +23,8 @@ namespace FunctionUtils {
 [[nodiscard]] uint64_t GetHash(const orbit_client_protos::FunctionInfo& func);
 
 // Calculates and returns the absolute address of the function.
-[[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func);
-[[nodiscard]] inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func) {
-  return func.address() + func.module_base_address() - func.load_bias();
-}
+[[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func,
+                              const ModuleData& module);
 [[nodiscard]] inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
                                                  const ProcessData& process,
                                                  const ModuleData& module) {
@@ -37,8 +35,7 @@ namespace FunctionUtils {
 [[nodiscard]] bool IsOrbitFunc(const orbit_client_protos::FunctionInfo& func);
 
 [[nodiscard]] std::unique_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
-    const orbit_grpc_protos::SymbolInfo& symbol_info, uint64_t load_bias,
-    const std::string& module_path, uint64_t module_base_address);
+    const orbit_grpc_protos::SymbolInfo& symbol_info, const std::string& module_path);
 
 bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 

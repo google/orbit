@@ -230,7 +230,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules_to_load.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(GOrbitApp->GetCaptureData().process(), modules_to_load);
+    GOrbitApp->LoadModules(modules_to_load);
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = GOrbitApp->GetCaptureData().process_id();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {

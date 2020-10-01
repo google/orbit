@@ -47,17 +47,6 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
       const auto [inserted_it, success] = module_map_.try_emplace(
           module_info.file_path(), std::make_unique<ModuleData>(module_info));
       CHECK(success);
-    } else {
-      ModuleData* module = (*module_it).second.get();
-      if (!module->is_loaded()) continue;
-      // When a module is already loaded (has loaded symbols), it could be the case that the
-      // modules base address changed. Since the module base address is *currently* saved in
-      // FunctionInfo, these need to be updated.
-      // TODO(169309553): As soon as module base address is not part of FunctionInfo anymore, remove
-      // the following.
-      if (module_info.address_start() != process.GetModuleBaseAddress(module->file_path())) {
-        module->UpdateFunctionsModuleBaseAddress(module_info.address_start());
-      }
     }
   }
 

@@ -96,7 +96,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   TracepointInfoSet selected_tracepoints;
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool, target_process_, selected_functions, selected_tracepoints);
+      thread_pool, target_process_, module_map_, selected_functions, selected_tracepoints);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -192,7 +192,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
   OUTCOME_TRY(symbols, SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
-  target_process_.AddSymbols(main_module_, symbols);
+  main_module_->AddSymbols(symbols);
   return outcome::success();
 }
 

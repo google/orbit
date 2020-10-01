@@ -88,9 +88,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   FunctionInfo selected_function;
   selected_function.set_name("foo");
   selected_function.set_address(123);
-  selected_function.set_module_base_address(15);
   selected_function.set_loaded_module_path("path/to/module");
-  selected_functions[FunctionUtils::GetAbsoluteAddress(selected_function)] = selected_function;
+  uint64_t selected_function_absolute_address = 123 + 15 - 0;
+  selected_functions[selected_function_absolute_address] = selected_function;
 
   TracepointInfoSet selected_tracepoints;
   TracepointInfo selected_tracepoint_info;
@@ -190,10 +190,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(tracepoint_event.tracepoint_info_key(), actual_tracepoint_event.tracepoint_info_key());
 
   ASSERT_EQ(1, capture_info.function_stats_size());
-  ASSERT_TRUE(
-      capture_info.function_stats().contains(FunctionUtils::GetAbsoluteAddress(selected_function)));
+  ASSERT_TRUE(capture_info.function_stats().contains(selected_function_absolute_address));
   const FunctionStats& actual_function_stats =
-      capture_info.function_stats().at(FunctionUtils::GetAbsoluteAddress(selected_function));
+      capture_info.function_stats().at(selected_function_absolute_address);
   const FunctionStats& expected_function_stats =
       capture_data.GetFunctionStatsOrDefault(selected_function);
   EXPECT_EQ(expected_function_stats.count(), actual_function_stats.count());

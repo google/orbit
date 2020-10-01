@@ -44,16 +44,14 @@ const FunctionInfo* ModuleData::FindFunctionByElfAddress(uint64_t elf_address,
   return function;
 }
 
-void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols,
-                            uint64_t module_base_address) {
+void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
   absl::MutexLock lock(&mutex_);
   CHECK(!is_loaded_);
 
   uint32_t address_reuse_counter = 0;
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     auto [inserted_it, success] = functions_.try_emplace(
-        symbol_info.address(), FunctionUtils::CreateFunctionInfo(symbol_info, load_bias(),
-                                                                 file_path(), module_base_address));
+        symbol_info.address(), FunctionUtils::CreateFunctionInfo(symbol_info, file_path()));
     FunctionInfo* function = inserted_it->second.get();
     // It happens that the same address has multiple symbol names associated
     // with it. For example: (all the same address)
@@ -73,13 +71,6 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   }
 
   is_loaded_ = true;
-}
-
-void ModuleData::UpdateFunctionsModuleBaseAddress(uint64_t module_base_address) {
-  absl::MutexLock lock(&mutex_);
-  for (auto& [_, function] : functions_) {
-    function->set_module_base_address(module_base_address);
-  }
 }
 
 const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromHash(uint64_t hash) const {

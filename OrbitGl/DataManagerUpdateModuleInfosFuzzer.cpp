@@ -41,5 +41,5 @@ DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   data_manager.UpdateModuleInfos(1, modules);
 
   ModulesDataView modules_data_view{};
-  modules_data_view.SetProcess(data_manager.GetProcessByPid(1));
+  modules_data_view.UpdateModules(data_manager.GetProcessByPid(1));
 }

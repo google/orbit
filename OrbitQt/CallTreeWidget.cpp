@@ -307,7 +307,7 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   } else if (action->text() == kActionCollapseAll) {
     ui_->callTreeTreeView->collapseAll();
   } else if (action->text() == kActionLoadSymbols) {
-    app_->LoadModules(app_->GetCaptureData().process(), modules_to_load);
+    app_->LoadModules(modules_to_load);
   } else if (action->text() == kActionSelect) {
     for (const FunctionInfo* function : functions) {
       app_->SelectFunction(*function);

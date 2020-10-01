@@ -38,6 +38,7 @@ static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTyp
 
 ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, const ProcessData& process,
+    absl::flat_hash_map<std::string, ModuleData*> module_map,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints) {
   absl::MutexLock lock(&state_mutex_);
@@ -51,16 +52,18 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   ProcessData process_copy = process;
 
-  thread_pool->Schedule([this, process = std::move(process_copy),
-                         selected_functions = std::move(selected_functions),
-                         selected_tracepoints]() mutable {
-    Capture(std::move(process), std::move(selected_functions), std::move(selected_tracepoints));
-  });
+  thread_pool->Schedule(
+      [this, process = std::move(process_copy), module_map = std::move(module_map),
+       selected_functions = std::move(selected_functions), selected_tracepoints]() mutable {
+        Capture(std::move(process), std::move(module_map), std::move(selected_functions),
+                std::move(selected_tracepoints));
+      });
 
   return outcome::success();
 }
 
 void CaptureClient::Capture(ProcessData&& process,
+                            absl::flat_hash_map<std::string, ModuleData*> module_map,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints) {
   CHECK(reader_writer_ == nullptr);
@@ -89,7 +92,8 @@ void CaptureClient::Capture(ProcessData&& process,
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
-    instrumented_function->set_file_offset(FunctionUtils::Offset(function));
+    instrumented_function->set_file_offset(
+        FunctionUtils::Offset(function, *module_map.at(function.loaded_module_path())));
     instrumented_function->set_absolute_address(absolute_address);
     instrumented_function->set_function_type(
         IntrumentedFunctionTypeFromOrbitType(function.orbit_type()));

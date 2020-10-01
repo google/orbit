@@ -12,5 +12,5 @@ using orbit_grpc_protos::ModuleSymbols;
 
 DEFINE_PROTO_FUZZER(const ModuleSymbols& symbols) {
   ModuleData module{orbit_grpc_protos::ModuleInfo{}};
-  module.AddSymbols(symbols, 0);
+  module.AddSymbols(symbols);
 }

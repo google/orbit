@@ -241,13 +241,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  // TODO(169309553) get rid of ProcessData here, the process should not be needed to load a module.
-  // Also remove shared_ptr from PresetFile. Also consider references instead of pointers
-  void LoadModules(const ProcessData* process, const std::vector<ModuleData*>& modules,
+  void LoadModules(const std::vector<ModuleData*>& modules,
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
-  // TODO(169309553) get rid of Process
-  void LoadModulesFromPreset(const ProcessData* process,
-                             const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void LoadModulesFromPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
   [[nodiscard]] absl::flat_hash_map<std::string, ModuleData*> GetModulesLoadedByProcess(
       const ProcessData* process) const {
@@ -308,13 +304,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
-  // TODO(169309553): remove the process here, as soon as module_base_address is removed from
-  // FunctionInfo
-  void LoadSymbols(const std::filesystem::path& symbols_path, const ProcessData* process,
-                   ModuleData* module_data, const orbit_client_protos::PresetModule* preset_module);
-  // TODO(169309553): remove the process here, as soon as module_base_address is removed from
-  // FunctionInfo
-  void LoadModuleOnRemote(const ProcessData* process, ModuleData* module_data,
+  void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
+                   const orbit_client_protos::PresetModule* preset_module);
+
+  void LoadModuleOnRemote(ModuleData* module_data,
                           const orbit_client_protos::PresetModule* preset_module);
   ErrorMessageOr<void> SelectFunctionsFromPreset(const ModuleData* module,
                                                  const orbit_client_protos::PresetModule& preset);

@@ -40,11 +40,7 @@ class ModuleData final {
   // TODO(169309553): The module_base_address parameter should not be needed here, but it is
   // because FunctionInfo still contains the field module_base_address. As soon as that field is
   // gone, remove the parameter here
-  void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols,
-                  uint64_t module_base_address);
-  // TODO(169309553): As soon as FunctionInfo does not contain module_base_address anymore,
-  // completely remove the following method
-  void UpdateFunctionsModuleBaseAddress(uint64_t module_base_address);
+  void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] const std::vector<const orbit_client_protos::FunctionInfo*> GetFunctions() const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctions() const;

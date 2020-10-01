@@ -125,8 +125,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module_data);
       }
     }
-    CHECK(process_ != nullptr);
-    GOrbitApp->LoadModules(process_, modules_to_load);
+    GOrbitApp->LoadModules(modules_to_load);
 
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<const ModuleData*> modules_to_validate;
@@ -171,8 +170,7 @@ void ModulesDataView::DoFilter() {
   indices_ = indices;
 }
 
-void ModulesDataView::SetProcess(const ProcessData* process) {
-  process_ = process;
+void ModulesDataView::UpdateModules(const ProcessData* process) {
   modules_.clear();
   module_memory_.clear();
   for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {

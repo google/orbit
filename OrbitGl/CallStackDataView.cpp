@@ -118,8 +118,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module);
       }
     }
-    const ProcessData* process = GOrbitApp->GetCaptureData().process();
-    GOrbitApp->LoadModules(process, modules_to_load);
+    GOrbitApp->LoadModules(modules_to_load);
 
   } else if (action == kMenuActionSelect) {
     for (int i : item_indices) {

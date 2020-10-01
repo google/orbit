@@ -113,9 +113,54 @@ void LoadCaptureInfo(
     std::atomic<bool>* cancellation_requested) {
   CHECK(capture_listener != nullptr);
 
+  ProcessInfo process_info;
+  process_info.set_pid(capture_info.process().pid());
+  process_info.set_name(capture_info.process().name());
+  process_info.set_cpu_usage(capture_info.process().cpu_usage());
+  process_info.set_full_path(capture_info.process().full_path());
+  process_info.set_command_line(capture_info.process().command_line());
+  process_info.set_is_64_bit(capture_info.process().is_64_bit());
+  ProcessData process(process_info);
+
+  if (*cancellation_requested) {
+    capture_listener->OnCaptureCancelled();
+    return;
+  }
+
+  std::vector<orbit_grpc_protos::ModuleInfo> modules;
+  absl::flat_hash_map<std::string, orbit_grpc_protos::ModuleInfo> module_map;
+  for (const auto& module : capture_info.modules()) {
+    orbit_grpc_protos::ModuleInfo module_info;
+    module_info.set_name(module.name());
+    module_info.set_file_path(module.file_path());
+    module_info.set_file_size(module.file_size());
+    module_info.set_address_start(module.address_start());
+    module_info.set_address_end(module.address_end());
+    module_info.set_build_id(module.build_id());
+    module_info.set_load_bias(module.load_bias());
+    modules.emplace_back(std::move(module_info));
+    module_map[module.file_path()] = modules.back();
+  }
+  process.UpdateModuleInfos(modules);
+
+  if (*cancellation_requested) {
+    capture_listener->OnCaptureCancelled();
+    return;
+  }
+
+  modules_callback(process_info, modules);
+
+  if (*cancellation_requested) {
+    capture_listener->OnCaptureCancelled();
+    return;
+  }
+
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
-    uint64_t address = FunctionUtils::GetAbsoluteAddress(function);
+    const auto& module_it = module_map.find(function.loaded_module_path());
+    CHECK(module_it != module_map.end());
+    ModuleData module(module_it->second);
+    uint64_t address = FunctionUtils::GetAbsoluteAddress(function, process, module);
     selected_functions[address] = function;
   }
   TracepointInfoSet selected_tracepoints;
@@ -131,30 +176,6 @@ void LoadCaptureInfo(
     capture_listener->OnCaptureCancelled();
     return;
   }
-
-  ProcessInfo process_info;
-  process_info.set_pid(capture_info.process().pid());
-  process_info.set_name(capture_info.process().name());
-  process_info.set_cpu_usage(capture_info.process().cpu_usage());
-  process_info.set_full_path(capture_info.process().full_path());
-  process_info.set_command_line(capture_info.process().command_line());
-  process_info.set_is_64_bit(capture_info.process().is_64_bit());
-  ProcessData process(process_info);
-
-  std::vector<orbit_grpc_protos::ModuleInfo> modules;
-  for (const auto& module : capture_info.modules()) {
-    orbit_grpc_protos::ModuleInfo module_info;
-    module_info.set_name(module.name());
-    module_info.set_file_path(module.file_path());
-    module_info.set_file_size(module.file_size());
-    module_info.set_address_start(module.address_start());
-    module_info.set_address_end(module.address_end());
-    module_info.set_build_id(module.build_id());
-    module_info.set_load_bias(module.load_bias());
-    modules.emplace_back(std::move(module_info));
-  }
-  process.UpdateModuleInfos(modules);
-  modules_callback(process_info, modules);
 
   capture_listener->OnCaptureStarted(std::move(process), std::move(selected_functions),
                                      std::move(selected_tracepoints));

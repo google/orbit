@@ -44,7 +44,6 @@ TEST(ModuleData, Constructor) {
 TEST(ModuleData, LoadSymbols) {
   // Setup ModuleData
   std::string module_file_path = "/test/file/path";
-  uint64_t module_base_start = 0x40;
   uint64_t module_load_bias = 0x400;
   ModuleInfo module_info{};
   module_info.set_file_path(module_file_path);
@@ -65,7 +64,7 @@ TEST(ModuleData, LoadSymbols) {
   symbol_info->set_size(symbol_size);
 
   // Test
-  module.AddSymbols(module_symbols, module_base_start);
+  module.AddSymbols(module_symbols);
   EXPECT_TRUE(module.is_loaded());
 
   ASSERT_EQ(module.GetFunctions().size(), 1);
@@ -74,41 +73,10 @@ TEST(ModuleData, LoadSymbols) {
   EXPECT_EQ(function->name(), symbol_name);
   EXPECT_EQ(function->pretty_name(), symbol_pretty_name);
   EXPECT_EQ(function->loaded_module_path(), module_file_path);
-  EXPECT_EQ(function->module_base_address(), module_base_start);
   EXPECT_EQ(function->address(), symbol_address);
-  EXPECT_EQ(function->load_bias(), module_load_bias);
   EXPECT_EQ(function->size(), symbol_size);
   EXPECT_EQ(function->file(), "");
   EXPECT_EQ(function->line(), 0);
-}
-
-TEST(ModuleData, UpdateFunctionsModuleBaseAddress) {
-  ModuleData module{ModuleInfo{}};
-
-  ModuleSymbols symbols{};
-  SymbolInfo* symbol = symbols.add_symbol_infos();
-  symbol->set_name("test name");
-
-  module.AddSymbols(symbols, 0);
-
-  ASSERT_TRUE(module.is_loaded());
-  ASSERT_EQ(module.GetFunctions().size(), 1);
-
-  {
-    const FunctionInfo* function = module.GetFunctions()[0];
-    EXPECT_EQ(function->name(), "test name");
-    EXPECT_EQ(function->module_base_address(), 0);
-  }
-  module.UpdateFunctionsModuleBaseAddress(100);
-
-  ASSERT_TRUE(module.is_loaded());
-  ASSERT_EQ(module.GetFunctions().size(), 1);
-
-  {
-    const FunctionInfo* function = module.GetFunctions()[0];
-    EXPECT_EQ(function->name(), "test name");
-    EXPECT_EQ(function->module_base_address(), 100);
-  }
 }
 
 TEST(ModuleData, FindFunctionByRelativeAddress) {
@@ -130,7 +98,7 @@ TEST(ModuleData, FindFunctionByRelativeAddress) {
 
   ModuleData module{ModuleInfo{}};
 
-  module.AddSymbols(symbols, 1000);
+  module.AddSymbols(symbols);
   EXPECT_TRUE(module.is_loaded());
 
   // Find exact
@@ -192,7 +160,7 @@ TEST(ModuleData, FindFunctionFromHash) {
   symbol->set_name("Symbol Name");
 
   ModuleData module{ModuleInfo{}};
-  module.AddSymbols(symbols, 0);
+  module.AddSymbols(symbols);
 
   ASSERT_TRUE(module.is_loaded());
   ASSERT_FALSE(module.GetFunctions().empty());

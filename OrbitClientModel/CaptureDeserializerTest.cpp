@@ -178,6 +178,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   FunctionInfo* selected_function = capture_info.add_selected_functions();
   selected_function->set_name("foo");
   selected_function->set_pretty_name("void foo()");
+  selected_function->set_loaded_module_path("path/to/module");
   selected_function->set_address(21);
   selected_function->set_size(12);
 
@@ -189,18 +190,20 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   EXPECT_CALL(listener, OnCaptureStarted(_, _, _)).Times(0);
   EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty()))
       .Times(1)
-      .WillOnce([selected_function](ProcessData&& process,
-                                    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-                                        actual_selected_functions,
-                                    Unused) {
+      .WillOnce([selected_function, module_info](
+                    ProcessData&& process,
+                    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
+                        actual_selected_functions,
+                    Unused) {
         EXPECT_EQ(process.name(), "process");
         EXPECT_EQ(process.pid(), 42);
         EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
 
         ASSERT_EQ(actual_selected_functions.size(), 1);
-        ASSERT_TRUE(actual_selected_functions.contains(selected_function->address()));
-        FunctionInfo actual_function_info =
-            actual_selected_functions.at(selected_function->address());
+        uint64_t absolute_address =
+            selected_function->address() + module_info->address_start() - module_info->load_bias();
+        ASSERT_TRUE(actual_selected_functions.contains(absolute_address));
+        FunctionInfo actual_function_info = actual_selected_functions.at(absolute_address);
 
         EXPECT_EQ(actual_function_info.name(), selected_function->name());
         EXPECT_EQ(actual_function_info.pretty_name(), selected_function->pretty_name());
