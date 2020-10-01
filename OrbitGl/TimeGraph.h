@@ -160,6 +160,9 @@ class TimeGraph {
     NeedsRedraw();
   }
 
+  void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
+                       const std::string& label, const std::string& time, float text_box_y);
+
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
   [[nodiscard]] uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }

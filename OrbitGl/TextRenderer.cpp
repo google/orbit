@@ -230,10 +230,10 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
   AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z);
 }
 
-void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y,
-                                                   float a_Z, const Color& a_Color,
-                                                   size_t a_TrailingCharsLength, uint32_t font_size,
-                                                   float a_MaxSize) {
+int TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y,
+                                                  float a_Z, const Color& a_Color,
+                                                  size_t a_TrailingCharsLength, uint32_t font_size,
+                                                  float a_MaxSize) {
   if (!m_Initialized) {
     Init();
   }
@@ -289,6 +289,7 @@ void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X
 
   if (!useEllipsisText) {
     AddText(a_Text, a_X, a_Y, a_Z, a_Color, font_size, a_MaxSize);
+    return GetStringWidth(a_Text);
   } else {
     auto leadingCharCount = fittingCharsCount - (a_TrailingCharsLength + ELLIPSIS_TEXT_LEN);
 
@@ -299,6 +300,7 @@ void TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X
     modifiedText.append(&a_Text[timePosition], a_TrailingCharsLength);
 
     AddText(modifiedText.c_str(), a_X, a_Y, a_Z, a_Color, font_size, a_MaxSize);
+    return GetStringWidth(modifiedText.c_str());
   }
 }
 

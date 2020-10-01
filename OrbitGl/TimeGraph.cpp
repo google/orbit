@@ -621,29 +621,36 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
   return colors[index % kNumColors];
 }
 
-void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
-                     const std::string& label, const std::string& time, float text_y) {
+}  // namespace
+
+void TimeGraph::DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
+                                const std::string& label, const std::string& time,
+                                float text_box_y) {
   Box box(pos, size, GlCanvas::kZValueOverlay);
   canvas->GetBatcher()->AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
 
-  constexpr const float kAdditionalSpaceForLine = 10.f;
-  constexpr const float kLeftOffset = 5.f;
-
   float max_size = size[0];
-  canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine, GlCanvas::kZValueText,
-      Color(255, 255, 255, 255), time.length(), GParams.font_size, max_size);
 
-  constexpr const float kOffsetBelowText = kAdditionalSpaceForLine / 2.f;
-  Vec2 line_from(pos[0], text_y + kOffsetBelowText);
-  Vec2 line_to(pos[0] + size[0], text_y + kOffsetBelowText);
+  const Color kBlack(0, 0, 0, 255);
+  int text_width = canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
+      text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueText, kBlack,
+      time.length(), GetFontSize(), max_size);
+
+  Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), GetTextBoxHeight());
+  Vec2 white_box_position(pos[0], text_box_y);
+
+  Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayTextBackground);
+
+  const Color kWhite(255, 255, 255, 255);
+  canvas->GetBatcher()->AddBox(white_box, kWhite);
+
+  Vec2 line_from(pos[0] + white_box_size[0], white_box_position[1] + GetTextBoxHeight() / 2.f);
+  Vec2 line_to(pos[0] + size[0], white_box_position[1] + GetTextBoxHeight() / 2.f);
   canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::kZValueOverlay,
                                 Color(255, 255, 255, 255));
 }
-
-}  // namespace
 
 void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   if (picking_mode != PickingMode::kNone || iterator_text_boxes_.empty()) {
