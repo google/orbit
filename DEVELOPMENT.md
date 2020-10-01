@@ -34,6 +34,8 @@ script will not be able to install conan for you.)
 
 All our third-party libraries and dependencies are managed by conan.
 
+Fix manual instrumentation serialization for async tracks 
+
 There are some exceptions. On Linux, we rely by default on the distribution's Qt5
 and Mesa installation. This can be changed by modifying the conan package options
 `system_qt` and `system_mesa`.
