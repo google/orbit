@@ -31,8 +31,6 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
   slider_->SetCanvas(this);
 
   vertical_slider_->SetDragCallback([&](float ratio) { this->OnVerticalDrag(ratio); });
-  vertical_slider_->SetResizeCallback(
-      [&](float start, float end) { this->OnVerticalZoom(start, end); });
   vertical_slider_->SetCanvas(this);
 
   vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
@@ -577,11 +575,6 @@ void CaptureWindow::OnVerticalDrag(float ratio) {
 void CaptureWindow::OnZoom(float start, float end) {
   double time_span = time_graph_.GetCaptureTimeSpanUs();
   time_graph_.SetMinMax(start * time_span, end * time_span);
-}
-
-void CaptureWindow::OnVerticalZoom(float start, float end) {
-  // double time_span = time_graph_.GetCaptureTimeSpanUs();
-  // time_graph_.Zoom(start * time_span, end * time_span);
 }
 
 void CaptureWindow::UpdateVerticalSlider() {

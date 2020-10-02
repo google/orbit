@@ -31,9 +31,11 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   void SetOrthogonalSliderSize(float size) { orthogonal_slider_size_ = size; }
   [[nodiscard]] float GetOrthogonalSliderSize() { return orthogonal_slider_size_; }
 
+  // Parameter: Position in [0, 1], relative to the size of the current data window
   typedef std::function<void(float)> DragCallback;
   void SetDragCallback(DragCallback callback) { drag_callback_ = callback; }
 
+  // Parameters: Start and End of the slider in [0, 1], relative to the full data window
   typedef std::function<void(float, float)> ResizeCallback;
   void SetResizeCallback(ResizeCallback callback) { resize_callback_ = callback; }
 
@@ -45,8 +47,10 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   [[nodiscard]] float GetMinSliderPixelLength() { return min_slider_pixel_length_; }
 
-  float GetPixelPos() { return PosToPixel(pos_ratio_); }
-  float GetPixelLength() { return LenToPixel(length_ratio_); }
+  [[nodiscard]] float GetPixelPos() { return PosToPixel(pos_ratio_); }
+  [[nodiscard]] float GetPixelLength() { return LenToPixel(length_ratio_); }
+
+  [[nodiscard]] bool CanResize() { return can_resize_; }
 
  protected:
   static Color GetLighterColor(const Color& color);
@@ -61,20 +65,22 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   [[nodiscard]] float PixelToLen(float value) { return value / GetCanvasEdgeLength(); }
   [[nodiscard]] float LenToPixel(float value) { return value * GetCanvasEdgeLength(); }
-  [[nodiscard]] float PixelToPos(float value) { return value / LenToPixel(1.0f - length_ratio_); }
+  [[nodiscard]] float PixelToPos(float value) {
+    return length_ratio_ < 1.0f ? value / LenToPixel(1.0f - length_ratio_) : 0.f;
+  }
   [[nodiscard]] float PosToPixel(float value) { return value * LenToPixel(1.0f - length_ratio_); }
 
-  [[nodiscard]] bool HandlePageScroll(int click_value);
+  [[nodiscard]] bool HandlePageScroll(float click_value);
 
  protected:
   static const float kGradientFactor;
 
   GlCanvas* canvas_;
 
-  float pos_ratio_;
-  float right_edge_ratio_;
-  float length_ratio_;
-  float picking_pixel_offset_;
+  float pos_ratio_;  // Position of the data window in [0, 1], relative to the visible data size
+  float right_edge_ratio_;  // Right edge of the data in [0, 1], relative to the visible data size
+  float length_ratio_;      // Length of the slider, relative to the max data size
+  float picking_pixel_offset_;  // Offset of the mouse cursor from the left of the slider in pixels
 
   DragCallback drag_callback_;
   ResizeCallback resize_callback_;
@@ -85,6 +91,8 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   int min_slider_pixel_length_;
   float pixel_height_;
   float orthogonal_slider_size_;
+
+  bool can_resize_ = false;
 
   int slider_resize_pixel_margin_;
 
@@ -101,17 +109,17 @@ class GlVerticalSlider : public GlSlider {
 
  protected:
   [[nodiscard]] float GetCanvasEdgeLength() override;
-  [[nodiscard]] int GetRelevantMouseDim(int x, int y) override { return y; }
+  [[nodiscard]] int GetRelevantMouseDim(int /*x*/, int y) override { return y; }
 };
 
 class GlHorizontalSlider : public GlSlider {
  public:
-  GlHorizontalSlider() : GlSlider(){};
+  GlHorizontalSlider() : GlSlider() { can_resize_ = true; };
   ~GlHorizontalSlider(){};
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
 
  protected:
   [[nodiscard]] float GetCanvasEdgeLength() override;
-  [[nodiscard]] int GetRelevantMouseDim(int x, int y) override { return x; }
+  [[nodiscard]] int GetRelevantMouseDim(int x, int /*y*/) override { return x; }
 };

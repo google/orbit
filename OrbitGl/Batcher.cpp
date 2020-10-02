@@ -28,6 +28,15 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
   AddLine(pos, pos + Vec2(0, size), z, color, std::move(user_data));
 }
 
+void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
+                              std::shared_ptr<Pickable> pickable) {
+  CHECK(picking_manager_ != nullptr);
+
+  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+
+  AddLine(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
+}
+
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;

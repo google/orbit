@@ -4,6 +4,8 @@
 
 #include "GlSlider.h"
 
+#include <math.h>
+
 #include <algorithm>
 
 #include "GlCanvas.h"
@@ -20,9 +22,9 @@ GlSlider::GlSlider()
       slider_color_(68, 68, 68, 255),
       bar_color_(61, 61, 61, 255),
       min_slider_pixel_length_(20),
-      slider_resize_pixel_margin_(5),
       pixel_height_(20),
-      orthogonal_slider_size_(20) {}
+      orthogonal_slider_size_(20),
+      slider_resize_pixel_margin_(6) {}
 
 void GlSlider::SetSliderPosRatio(float start_ratio)  // [0,1]
 {
@@ -97,10 +99,10 @@ void GlSlider::OnPick(int x, int y) {
     return;
   }
 
-  if (value <= slider_pos + slider_resize_pixel_margin_) {
+  if (value <= slider_pos + slider_resize_pixel_margin_ && can_resize_) {
     drag_type_ = DragType::kScaleMin;
     picking_pixel_offset_ = value - slider_pos;
-  } else if (value >= slider_pos + slider_length - slider_resize_pixel_margin_) {
+  } else if (value >= slider_pos + slider_length - slider_resize_pixel_margin_ && can_resize_) {
     drag_type_ = DragType::kScaleMax;
     picking_pixel_offset_ = slider_pos + slider_length - value;
   } else {
@@ -125,7 +127,9 @@ void GlSlider::DrawSlider(GlCanvas* canvas, float x, float y, float width, float
                           ShadingDirection shading_direction) {
   Batcher* batcher = canvas->GetBatcher();
   Color color =
-      canvas->GetPickingManager().IsThisElementPicked(this) ? selected_color_ : slider_color_;
+      canvas->GetPickingManager().IsThisElementPicked(this) && drag_type_ == DragType::kPan
+          ? selected_color_
+          : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
@@ -144,7 +148,7 @@ void GlSlider::DrawSlider(GlCanvas* canvas, float x, float y, float width, float
                         GlCanvas::kZValueSlider, color, shared_from_this(), shading_direction);
 }
 
-bool GlSlider::HandlePageScroll(int click_value) {
+bool GlSlider::HandlePageScroll(float click_value) {
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_length = LenToPixel(length_ratio_);
 
@@ -169,24 +173,21 @@ bool GlSlider::HandlePageScroll(int click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   CHECK(canvas == canvas_);
 
-  const bool picking = picking_mode != PickingMode::kNone;
   float x = canvas_->GetWidth() - GetPixelHeight();
 
   float canvas_height = canvas_->GetHeight() - GetOrthogonalSliderSize();
-  float slider_height = length_ratio_ * canvas_height;
+  float slider_height = ceilf(length_ratio_ * canvas_height);
   float non_slider_height = canvas_height - slider_height;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  if (!picking) {
-    DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), canvas_height);
-  }
+  DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), canvas_height);
 
-  float start = (1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize();
+  float start = ceilf((1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize());
 
   DrawSlider(canvas, x, start, GetPixelHeight(), slider_height, ShadingDirection::kRightToLeft);
 }
@@ -195,15 +196,13 @@ float GlVerticalSlider::GetCanvasEdgeLength() {
   return canvas_->GetHeight() - GetOrthogonalSliderSize();
 }
 
-void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  const bool picking = picking_mode != PickingMode::kNone;
-
+void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   canvas_ = canvas;
   static float y = 0;
 
   float canvas_width = canvas_->GetWidth() - GetOrthogonalSliderSize();
-  float slider_width = length_ratio_ * canvas_width;
-  float nonSliderWidth = canvas_width - slider_width;
+  float slider_width = ceilf(length_ratio_ * canvas_width);
+  float non_slider_width = canvas_width - slider_width;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
@@ -211,13 +210,54 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
       canvas->GetPickingManager().IsThisElementPicked(this) ? selected_color_ : slider_color_;
   const Color light_border_color = GetLighterColor(color);
 
-  if (!picking) {
-    DrawBackground(canvas, 0, y, canvas_width, GetPixelHeight());
-  }
+  DrawBackground(canvas, 0, y, canvas_width, GetPixelHeight());
 
-  float start = pos_ratio_ * nonSliderWidth;
+  float start = floorf(pos_ratio_ * non_slider_width);
 
   DrawSlider(canvas, start, y, slider_width, GetPixelHeight(), ShadingDirection::kTopToBottom);
+
+  Batcher* batcher = canvas->GetBatcher();
+  const float kEpsilon = 0.0001f;
+
+  // Left / right resize arrows and separator
+  const float height_factor = 2.f;
+  float tri_size = slider_resize_pixel_margin_ - 3.f;
+  tri_size = std::min(tri_size, pixel_height_ - tri_size * height_factor - 2.f);
+  const float tri_y_offset = (pixel_height_ - tri_size * height_factor) / 2.f;
+  const Color kWhite = GetLighterColor(GetLighterColor(bar_color_));
+  const float z = GlCanvas::kZValueSlider + 2 * kEpsilon;
+  const float x = start;
+  const float width = slider_width;
+
+  batcher->AddTriangle(
+      Triangle(Vec3(x + width - tri_size - 2.f, height_factor * tri_size + tri_y_offset, z),
+               Vec3(x + width - 2.f, tri_y_offset + height_factor / 2.f * tri_size, z),
+               Vec3(x + width - tri_size - 2.f, tri_y_offset, z)),
+      kWhite, shared_from_this());
+  batcher->AddVerticalLine(Vec2(x + width - slider_resize_pixel_margin_, 2.f), pixel_height_ - 4.f,
+                           z, kWhite, shared_from_this());
+
+  batcher->AddTriangle(
+      Triangle(Vec3(x + tri_size + 2.f, height_factor * tri_size + tri_y_offset, z),
+               Vec3(x + tri_size + 2.f, tri_y_offset, z),
+               Vec3(x + 2.f, tri_y_offset + height_factor / 2.f * tri_size, z)),
+      kWhite, shared_from_this());
+  batcher->AddVerticalLine(Vec2(x + slider_resize_pixel_margin_ + 1, 2.f), pixel_height_ - 4.f, z,
+                           kWhite, shared_from_this());
+
+  // Highlight the scale part of the slider
+  if (canvas->GetPickingManager().IsThisElementPicked(this)) {
+    if (drag_type_ == DragType::kScaleMax) {
+      batcher->AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
+                            Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
+                            GlCanvas::kZValueSlider + kEpsilon, selected_color_,
+                            ShadingDirection::kTopToBottom);
+    } else if (drag_type_ == DragType::kScaleMin) {
+      batcher->AddShadedBox(
+          Vec2(x + 2, 2), Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
+          GlCanvas::kZValueSlider + kEpsilon, selected_color_, ShadingDirection::kTopToBottom);
+    }
+  }
 }
 
 float GlHorizontalSlider::GetCanvasEdgeLength() {

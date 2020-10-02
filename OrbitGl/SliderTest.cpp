@@ -83,7 +83,7 @@ void test_drag_type() {
 
   const float kPos = 0.5f;
   const float kSize = 0.5f;
-  const float kOffset = 2;
+  const int kOffset = 2;
 
   int drag_count = 0;
   float pos = kPos;
@@ -100,7 +100,7 @@ void test_drag_type() {
   });
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  float scale = pow(10, dim);
+  int scale = static_cast<int>(pow(10, dim));
 
   pick_drag_release<dim>(*slider, 50 * scale);
   EXPECT_EQ(drag_count, 1);
@@ -109,26 +109,39 @@ void test_drag_type() {
   EXPECT_EQ(size, kSize);
 
   pick_drag_release<dim>(*slider, 25 * scale + kOffset);
-  EXPECT_EQ(drag_count, 2);
-  EXPECT_EQ(size_count, 1);
+  if (slider->CanResize()) {
+    EXPECT_EQ(drag_count, 2);
+    EXPECT_EQ(size_count, 1);
+  } else {
+    EXPECT_EQ(drag_count, 2);
+    EXPECT_EQ(size_count, 0);
+  }
   EXPECT_EQ(pos, kPos);
   EXPECT_EQ(size, kSize);
 
   pick_drag_release<dim>(*slider, 75 * scale - kOffset);
-  EXPECT_EQ(drag_count, 3);
-  EXPECT_EQ(size_count, 2);
+  if (slider->CanResize()) {
+    EXPECT_EQ(drag_count, 3);
+    EXPECT_EQ(size_count, 2);
+  } else {
+    EXPECT_EQ(drag_count, 3);
+    EXPECT_EQ(size_count, 0);
+  }
   EXPECT_EQ(pos, kPos);
   EXPECT_EQ(size, kSize);
 
+  drag_count = 0;
+  size_count = 0;
+
   pick_drag_release<dim>(*slider, kOffset);
-  EXPECT_EQ(drag_count, 4);
-  EXPECT_EQ(size_count, 2);
+  EXPECT_EQ(drag_count, 1);
+  EXPECT_EQ(size_count, 0);
   EXPECT_NE(pos, kPos);
   EXPECT_EQ(size, kSize);
 
   pick_drag_release<dim>(*slider, 100 * scale - kOffset);
-  EXPECT_EQ(drag_count, 5);
-  EXPECT_EQ(size_count, 2);
+  EXPECT_EQ(drag_count, 2);
+  EXPECT_EQ(size_count, 0);
   EXPECT_NE(pos, kPos);
   EXPECT_EQ(size, kSize);
 }
@@ -143,9 +156,9 @@ void test_scroll(float slider_length = 0.25) {
   auto [slider, canvas] = setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  float scale = pow(10, dim);
+  int scale = static_cast<int>(pow(10, dim));
   float pos;
-  const float kOffset = 2;
+  const int kOffset = 2;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
   slider->SetSliderLengthRatio(slider_length);
@@ -168,7 +181,7 @@ void test_drag(float slider_length = 0.25) {
   auto [slider, canvas] = setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  float scale = pow(10, dim);
+  int scale = static_cast<int>(pow(10, dim));
   float pos;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
@@ -181,7 +194,7 @@ void test_drag(float slider_length = 0.25) {
   drag<dim>(*slider, 100 * scale);
   EXPECT_NEAR(pos, 1.f, kEpsilon);
   EXPECT_EQ(slider->GetPosRatio(), pos);
-  drag<dim>(*slider, (100 - slider->GetLengthRatio() * 0.5f * 100) * scale);
+  drag<dim>(*slider, 100 * scale - static_cast<int>(slider->GetPixelLength() / 2));
   EXPECT_NEAR(pos, 1.f, kEpsilon);
 
   // Drag to middle
@@ -215,12 +228,16 @@ template <typename SliderClass, int dim>
 void test_scaling() {
   auto [slider, canvas] = setup<SliderClass>();
 
+  if (!slider->CanResize()) {
+    return;
+  }
+
   float size = 0.5f;
   float pos = 0.5f;
-  const float kOffset = 2;
+  const int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  float scale = pow(10, dim);
+  int scale = static_cast<int>(pow(10, dim));
 
   slider->SetResizeCallback([&](float start, float end) { size = end - start; });
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
@@ -273,12 +290,16 @@ template <typename SliderClass, int dim>
 void test_break_scaling() {
   auto [slider, canvas] = setup<SliderClass>();
 
+  if (!slider->CanResize()) {
+    return;
+  }
+
   float pos;
   float len;
-  const float kOffset = 2;
+  const int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  float scale = pow(10, dim);
+  int scale = static_cast<int>(pow(10, dim));
 
   // Pick on the right, then drag across the end of the slider
   pos = slider->GetPixelPos();
