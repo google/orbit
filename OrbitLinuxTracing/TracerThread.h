@@ -25,7 +25,6 @@
 #include "PerfEventProcessor.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
-#include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture.pb.h"
