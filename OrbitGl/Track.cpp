@@ -146,14 +146,19 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   if (!picking) {
     // Draw label.
+    auto first_parenthesis = label_.find('(');
+    auto first_brackets = label_.find('[');
+    auto id_label_start = std::min(first_parenthesis, first_brackets);
+    int trailing_characters =
+        (id_label_start == label_.npos) ? 0 : (label_.size() - id_label_start);
     float label_offset_x = layout.GetTrackLabelOffsetX();
     // Vertical offset for the text to be aligned to the center of the triangle.
     float label_offset_y = GCurrentTimeGraph->GetFontSize() / 3.f;
     const Color kColor =
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
-    canvas->GetTextRenderer().AddText(
+    canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
         label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
-        time_graph_->CalculateZoomedFontSize(), label_width - label_offset_x);
+        trailing_characters, time_graph_->CalculateZoomedFontSize(), label_width - label_offset_x);
   }
 
   canvas_ = canvas;
