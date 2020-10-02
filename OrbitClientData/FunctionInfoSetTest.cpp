@@ -56,8 +56,6 @@ TEST(FunctionInfoSet, DifferentName) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentPrettyName) {
@@ -78,8 +76,6 @@ TEST(FunctionInfoSet, DifferentPrettyName) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentLoadedModulePath) {
@@ -100,8 +96,6 @@ TEST(FunctionInfoSet, DifferentLoadedModulePath) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentModuleBaseAddress) {
@@ -122,8 +116,6 @@ TEST(FunctionInfoSet, DifferentModuleBaseAddress) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentAddress) {
@@ -144,8 +136,6 @@ TEST(FunctionInfoSet, DifferentAddress) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentLoadBias) {
@@ -166,8 +156,6 @@ TEST(FunctionInfoSet, DifferentLoadBias) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentSize) {
@@ -188,8 +176,6 @@ TEST(FunctionInfoSet, DifferentSize) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentFile) {
@@ -210,8 +196,6 @@ TEST(FunctionInfoSet, DifferentFile) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, DifferentLine) {
@@ -232,8 +216,6 @@ TEST(FunctionInfoSet, DifferentLine) {
 
   internal::EqualFunctionInfo eq;
   EXPECT_FALSE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_NE(hash(left), hash(right));
 }
 
 TEST(FunctionInfoSet, Insertion) {
