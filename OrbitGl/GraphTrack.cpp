@@ -58,7 +58,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
                                     GlCanvas::kZValueTextUi, kBlackColor,
                                     time_graph_->CalculateZoomedFontSize(), white_text_box_size[0]);
   Box white_text_box(white_text_box_position, white_text_box_size, GlCanvas::kZValueUi);
-  batcher->AddBox(white_text_box, kWhiteColor, shared_from_this());
+  batcher->AddBox(white_text_box, kWhiteColor);
 
   batcher->AddBox(box, color, shared_from_this());
 
