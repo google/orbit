@@ -36,11 +36,15 @@ else()
   find_program(NPM npm)
 endif()
 
-execute_process(COMMAND ${NPM} install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(NODE_AWARE_PATH "$ENV{PATH}" CACHE STRING "The state of PATH during config phase")
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E env "PATH=${NODE_AWARE_PATH}"
+                        ${NPM} install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/WebUI.qrc
                    COMMAND ${CMAKE_COMMAND}
                      -E env "ORBIT_BUILD_FOLDER=${CMAKE_BINARY_DIR}"
+                            "PATH=${NODE_AWARE_PATH}"
                      ${NPM} run build
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                    MAIN_DEPENDENCY webpack.config.js
