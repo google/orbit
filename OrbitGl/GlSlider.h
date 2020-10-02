@@ -34,7 +34,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   typedef std::function<void(float)> DragCallback;
   void SetDragCallback(DragCallback callback) { drag_callback_ = callback; }
 
-  typedef std::function<void(float)> ResizeCallback;
+  typedef std::function<void(float, float)> ResizeCallback;
   void SetResizeCallback(ResizeCallback callback) { resize_callback_ = callback; }
 
   [[nodiscard]] float GetPosRatio() { return pos_ratio_; }
@@ -42,6 +42,11 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   void OnPick(int x, int y) override;
   void OnDrag(int x, int y) override;
+
+  [[nodiscard]] float GetMinSliderPixelLength() { return min_slider_pixel_length_; }
+
+  float GetPixelPos() { return PosToPixel(pos_ratio_); }
+  float GetPixelLength() { return LenToPixel(length_ratio_); }
 
  protected:
   static Color GetLighterColor(const Color& color);

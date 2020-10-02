@@ -33,7 +33,7 @@ void GlSlider::SetSliderPosRatio(float start_ratio)  // [0,1]
 void GlSlider::SetSliderLengthRatio(float length_ratio)  // [0,1]
 {
   float min_length = static_cast<float>(min_slider_pixel_length_) / GetCanvasEdgeLength();
-  length_ratio_ = clamp(length_ratio, min_length, 1.f - pos_ratio_ * (1.f - length_ratio_));
+  length_ratio_ = clamp(length_ratio, min_length, 1.f);
   right_edge_ratio_ = pos_ratio_ * (1.0f - length_ratio_) + length_ratio_;
 }
 
@@ -54,6 +54,7 @@ Color GlSlider::GetDarkerColor(const Color& color) {
 void GlSlider::OnDrag(int x, int y) {
   float value = GetRelevantMouseDim(x, y);
   float slider_pos = PosToPixel(pos_ratio_);
+  float slider_right_pos = LenToPixel(right_edge_ratio_);
 
   switch (drag_type_) {
     case DragType::kNone:
@@ -62,8 +63,9 @@ void GlSlider::OnDrag(int x, int y) {
       SetSliderPosRatio(PixelToPos(value - picking_pixel_offset_));
       break;
     case DragType::kScaleMin: {
-      float new_pos = clamp(value - picking_pixel_offset_, 0.f, GetCanvasEdgeLength());
-      SetSliderLengthRatio(PixelToLen(LenToPixel(right_edge_ratio_) - new_pos));
+      float new_pos =
+          clamp(value - picking_pixel_offset_, 0.f, slider_right_pos - min_slider_pixel_length_);
+      SetSliderLengthRatio(PixelToLen(slider_right_pos - new_pos));
       SetSliderPosRatio(PixelToPos(new_pos));
       break;
     }
@@ -75,7 +77,8 @@ void GlSlider::OnDrag(int x, int y) {
   }
 
   if (drag_type_ != DragType::kPan && resize_callback_ != nullptr) {
-    resize_callback_(length_ratio_);
+    const float pos_as_len = PixelToLen(PosToPixel(pos_ratio_));
+    resize_callback_(pos_as_len, pos_as_len + length_ratio_);
   }
 
   if (drag_callback_) {
@@ -172,20 +175,20 @@ void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   const bool picking = picking_mode != PickingMode::kNone;
   float x = canvas_->GetWidth() - GetPixelHeight();
 
-  float canvasHeight = canvas_->GetHeight() - GetOrthogonalSliderSize();
-  float sliderHeight = length_ratio_ * canvasHeight;
-  float nonSliderHeight = canvasHeight - sliderHeight;
+  float canvas_height = canvas_->GetHeight() - GetOrthogonalSliderSize();
+  float slider_height = length_ratio_ * canvas_height;
+  float non_slider_height = canvas_height - slider_height;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
   if (!picking) {
-    DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), canvasHeight);
+    DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), canvas_height);
   }
 
-  float start = (1.0f - pos_ratio_) * nonSliderHeight + GetOrthogonalSliderSize();
+  float start = (1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize();
 
-  DrawSlider(canvas, x, start, GetPixelHeight(), sliderHeight, ShadingDirection::kRightToLeft);
+  DrawSlider(canvas, x, start, GetPixelHeight(), slider_height, ShadingDirection::kRightToLeft);
 }
 
 float GlVerticalSlider::GetCanvasEdgeLength() {
@@ -198,9 +201,9 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   canvas_ = canvas;
   static float y = 0;
 
-  float canvasWidth = canvas_->GetWidth() - GetOrthogonalSliderSize();
-  float sliderWidth = length_ratio_ * canvasWidth;
-  float nonSliderWidth = canvasWidth - sliderWidth;
+  float canvas_width = canvas_->GetWidth() - GetOrthogonalSliderSize();
+  float slider_width = length_ratio_ * canvas_width;
+  float nonSliderWidth = canvas_width - slider_width;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
@@ -209,12 +212,12 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   const Color light_border_color = GetLighterColor(color);
 
   if (!picking) {
-    DrawBackground(canvas, 0, y, canvasWidth, GetPixelHeight());
+    DrawBackground(canvas, 0, y, canvas_width, GetPixelHeight());
   }
 
   float start = pos_ratio_ * nonSliderWidth;
 
-  DrawSlider(canvas, start, y, sliderWidth, GetPixelHeight(), ShadingDirection::kTopToBottom);
+  DrawSlider(canvas, start, y, slider_width, GetPixelHeight(), ShadingDirection::kTopToBottom);
 }
 
 float GlHorizontalSlider::GetCanvasEdgeLength() {

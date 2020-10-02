@@ -27,9 +27,12 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
   vertical_slider_ = std::make_shared<GlVerticalSlider>();
 
   slider_->SetDragCallback([&](float ratio) { this->OnDrag(ratio); });
+  slider_->SetResizeCallback([&](float start, float end) { this->OnZoom(start, end); });
   slider_->SetCanvas(this);
 
   vertical_slider_->SetDragCallback([&](float ratio) { this->OnVerticalDrag(ratio); });
+  vertical_slider_->SetResizeCallback(
+      [&](float start, float end) { this->OnVerticalZoom(start, end); });
   vertical_slider_->SetCanvas(this);
 
   vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
@@ -569,6 +572,16 @@ void CaptureWindow::OnVerticalDrag(float ratio) {
   float range = max - min;
   world_top_left_y_ = min + ratio * range;
   NeedsUpdate();
+}
+
+void CaptureWindow::OnZoom(float start, float end) {
+  double time_span = time_graph_.GetCaptureTimeSpanUs();
+  time_graph_.SetMinMax(start * time_span, end * time_span);
+}
+
+void CaptureWindow::OnVerticalZoom(float start, float end) {
+  // double time_span = time_graph_.GetCaptureTimeSpanUs();
+  // time_graph_.Zoom(start * time_span, end * time_span);
 }
 
 void CaptureWindow::UpdateVerticalSlider() {

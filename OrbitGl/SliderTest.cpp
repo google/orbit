@@ -94,9 +94,9 @@ void test_drag_type() {
     ++drag_count;
     pos = ratio;
   });
-  slider->SetResizeCallback([&](float ratio) {
+  slider->SetResizeCallback([&](float start, float end) {
     ++size_count;
-    size = ratio;
+    size = end - start;
   });
 
   // Use different scales for x and y to make sure dims are chosen correctly
@@ -222,7 +222,7 @@ void test_scaling() {
   // Use different scales for x and y to make sure dims are chosen correctly
   float scale = pow(10, dim);
 
-  slider->SetResizeCallback([&](float ratio) { size = ratio; });
+  slider->SetResizeCallback([&](float start, float end) { size = end - start; });
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
 
   // Pick on the left
@@ -264,21 +264,39 @@ void test_scaling() {
   slider->OnRelease();
 }
 
+TEST(Slider, Scale) {
+  test_scaling<GlHorizontalSlider, 0>();
+  test_scaling<GlVerticalSlider, 1>();
+}
+
 template <typename SliderClass, int dim>
 void test_break_scaling() {
   auto [slider, canvas] = setup<SliderClass>();
 
-  float size;
   float pos;
+  float len;
+  const float kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
   float scale = pow(10, dim);
 
-  // Position in the middle
-  slider->SetSliderPosRatio(0.25f);
+  // Pick on the right, then drag across the end of the slider
+  pos = slider->GetPixelPos();
+  len = slider->GetPixelLength();
+  pick_drag_release<dim>(*slider, 75 * scale - kOffset, 0);
+  EXPECT_NEAR(slider->GetPixelPos(), pos, kEpsilon);
+  EXPECT_NEAR(slider->GetPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
+
+  slider->SetSliderPosRatio(0.5f);
+  slider->SetSliderLengthRatio(0.5f);
+
+  // Pick on the left, then drag across the end of the slider
+  pick_drag_release<dim>(*slider, 25 * scale + kOffset, 100 * scale);
+  EXPECT_NEAR(slider->GetPixelPos(), pos + len - slider->GetMinSliderPixelLength(), kEpsilon);
+  EXPECT_NEAR(slider->GetPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
 }
 
-TEST(Slider, Scale) {
-  test_scaling<GlHorizontalSlider, 0>();
-  test_scaling<GlVerticalSlider, 1>();
+TEST(Slider, BreakScale) {
+  test_break_scaling<GlHorizontalSlider, 0>();
+  test_break_scaling<GlVerticalSlider, 1>();
 }
