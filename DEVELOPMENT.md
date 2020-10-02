@@ -1,13 +1,29 @@
 # Getting started with development
 
+Orbit consists of two parts - the frontend and the collector, also called the service.
+The collector is responsible for instrumenting the target process and recording
+profiling events which are then streamed to the frontend, also called the UI.
+
+The communication between frontend and collector is handled by a [gRPC](https://grpc.io/)
+connection. gRPC uses HTTP 2.0 as its base communication layer. When talking to a Stadia
+instance we wrap that once more into an SSH tunnel.
+
 ## Platforms
 
-Windows 10 and Linux are supported.
+The frontend is supported on Windows 10 and Linux. The collector currently
+only works on Linux.
+
+Previous versions of Orbit supported profiling on Windows, but due to the
+priority shift towards Stadia this support is currently in a non-working state.
+There are plans to bring it back, but at this point we can't commit to any time
+schedule.
+
+If you want to try profiling on Windows, we recommend you to download the older 1.0.2
+release from GitHub's [releases page](https://github.com/google/orbit/releases).
 
 ## Compilers
 
 To build Orbit you need a compiler capable of C++17. The following ones should be fine.
-You should prefer clang over GCC, since most of the developers build with clang by default.
 
 * GCC 8 and above on Linux
 * Clang 7 and above on Linux
@@ -36,11 +52,42 @@ All our third-party libraries and dependencies are managed by conan.
 
 There are some exceptions. On Linux, we rely by default on the distribution's Qt5
 and Mesa installation. This can be changed by modifying the conan package options
-`system_qt` and `system_mesa`.
+`system_qt` and `system_mesa`, but we recommend to go with the distribution provided
+Qt package. You will need at least version 5.12.4 of Qt. The point release is important
+because it resolves a [known issue](https://bugreports.qt.io/browse/QTBUG-69683).
 
-The simplest way to do that is to change the default values of these two options.
+In case you still want to have Qt provided by conan, the simplest way to do that will be
+to change the default values of these two options.
 Check out `conanfile.py`. There is a python dictionary called `default_options`
 defined in the python class `OrbitConan`.
+
+
+## Running Orbit
+
+Like mentioned before, the collector currently only works for Linux. So the following
+only applies there:
+
+To obtain scheduling information, the collector needs to run as root:
+
+```bash
+sudo ./build_default_relwithdebinfo/bin/OrbitService # Start the collector
+```
+
+After the collector runs you can start the frontend from a different shell.
+
+```bash
+./build_default_relwithdebinfo/bin/Orbit --local
+```
+
+The frontend currently has no graphical user interface to connect to a generic
+remote instance. Only Stadia is supported as a special case. That's why you need
+to start the frontend in `--local` mode. This will instruct Orbit to connect to the
+service at `localhost` on port `44765`.
+
+If you needed remote profiling support you could tunnel the mentioned TCP port through
+a SSH connection to an arbitrary Linux server. There are plans on adding generic
+SSH tunneling support but we can't promise any timeframe for that.
+
 
 ## Consistent code styling
 
@@ -48,13 +95,14 @@ We use `clang-format` to achieve a consistent code styling across
 the whole code base. You need at least version 7.0.0 of `clang-format`.
 
 Please ensure that you applied `clang-format` to all your
-files in your pull request.
+files in your pull request. Otherwise a presubmit check will fail
+and unfortunately only Googlers have access to the detailed log.
 
 On Windows, we recommend getting `clang-format` directly from the
 LLVM.org website. They offer binary packages of `clang`, where
 `clang-format` is part of.
 
-Visual Studio 2017 ships `clang-format` as part of the IDE.
+Visual Studio 2017 ships `clang-format` as part of the IDE though.
 (https://devblogs.microsoft.com/cppblog/clangformat-support-in-visual-studio-2017-15-7-preview-1/)
 
 On most Linux distributions, there is a dedicated package called `clang-format`.
@@ -73,7 +121,8 @@ style.
 `bootstrap-orbit.{sh,ps1}` performs all the tasks which have to be done once per developer machine.
 This includes:
 * Installing system dependencies
-* Installing conan if necessary.
+* Installing the correct version of conan if necessary.
+* Installing the conan configuration (which changes rarely).
 
 Afterwards `bootstrap-orbit.{sh,ps1}` calls `build.{sh,ps1}`.
 
@@ -85,6 +134,11 @@ calls `cmake` for build configuration and starts the build.
 Whenever the dependencies change you have to call `build.{sh,ps1}` again.
 A dependency change might be introduced by a pull from upstream or by a switch
 to a different branch.
+
+It might occur to you that even though you called `build.{sh,ps1}` your build still
+fails with a weird error message. Most of the time this is due to outdated but cached
+information managed by CMake. The simplest way to resolve that problem is to make
+a clean build by deleting the build directory and calling `build.{sh,ps1}`.
 
 `build.{sh,ps1}` can initialize as many build configurations as you like from the
 same invocation. Just pass conan profile names as command line arguments. Example for Linux:
