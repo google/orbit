@@ -12,27 +12,19 @@
 namespace internal {
 struct HashFunctionInfo {
   size_t operator()(const orbit_client_protos::FunctionInfo& function) const {
-    return std::hash<std::string>{}(function.name()) * 37 +
-           std::hash<std::string>{}(function.pretty_name()) * 37 +
-           std::hash<std::string>{}(function.loaded_module_path()) * 37 +
-           std::hash<uint64_t>{}(function.module_base_address()) * 37 +
-           std::hash<uint64_t>{}(function.address()) * 37 +
-           std::hash<uint64_t>{}(function.load_bias()) * 37 +
-           std::hash<uint64_t>{}(function.size()) * 37 +
-           std::hash<std::string>{}(function.file()) * 37 + std::hash<uint32_t>{}(function.line());
+    return std::hash<uint64_t>{}(function.address()) * 37 + std::hash<uint64_t>{}(function.size());
   }
 };
 
 struct EqualFunctionInfo {
   bool operator()(const orbit_client_protos::FunctionInfo& left,
                   const orbit_client_protos::FunctionInfo& right) const {
-    return left.name().compare(right.name()) == 0 &&
-           left.pretty_name().compare(right.pretty_name()) == 0 &&
-           left.loaded_module_path().compare(right.loaded_module_path()) == 0 &&
+    return left.size() == right.size() && left.name() == right.name() &&
+           left.pretty_name() == right.pretty_name() &&
+           left.loaded_module_path() == right.loaded_module_path() &&
            left.module_base_address() == right.module_base_address() &&
            left.address() == right.address() && left.load_bias() == right.load_bias() &&
-           left.size() == right.size() && left.file().compare(right.file()) == 0 &&
-           left.line() == right.line();
+           left.file().compare(right.file()) == 0 && left.line() == right.line();
   }
 };
 
