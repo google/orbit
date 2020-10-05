@@ -763,10 +763,12 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
         std::string process_name = GOrbitApp->GetCaptureData().process_name();
         thread_track->SetName(process_name);
         thread_track->SetLabel(process_name + " (all threads)");
+        thread_track->SetNumberOfPrioritizedTrailingCharacters(strlen("(all threads)"));
       } else {
         const std::string& thread_name = GOrbitApp->GetCaptureData().GetThreadName(tid);
         track->SetName(thread_name);
         std::string track_label = absl::StrFormat("%s [%u]", thread_name, tid);
+        thread_track->SetNumberOfPrioritizedTrailingCharacters((std::to_string(tid)).size() + 2);
         track->SetLabel(track_label);
       }
     }
@@ -807,6 +809,8 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
     std::string label = OrbitGl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);
     track->SetLabel(label);
+    // This min combine two cases, label == timeline and when label includes timeline
+    track->SetNumberOfPrioritizedTrailingCharacters(std::min(label.size(), timeline.size() + 2));
     tracks_.emplace_back(track);
     gpu_tracks_[timeline_hash] = track;
   }
