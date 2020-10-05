@@ -27,8 +27,6 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in sam
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
-ABSL_FLAG(bool, enable_tracepoint_feature, false,
-          "Enable the setting of the panel of kernel tracepoints");
 
 DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& info) {
   std::string buffer{};
