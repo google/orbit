@@ -259,12 +259,14 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   std::vector<const FunctionInfo*> functions = GetFunctionsFromIndices(app_, selected_tree_indices);
   bool enable_select = false;
   bool enable_deselect = false;
-  for (const FunctionInfo* function : functions) {
-    enable_select |= !app_->IsFunctionSelected(*function);
-    enable_deselect |= app_->IsFunctionSelected(*function);
+  bool enable_disassembly = false;
+  if (GOrbitApp->IsCaptureConnected(GOrbitApp->GetCaptureData())) {
+    for (const FunctionInfo* function : functions) {
+      enable_select |= !app_->IsFunctionSelected(*function);
+      enable_deselect |= app_->IsFunctionSelected(*function);
+      enable_disassembly = true;
+    }
   }
-
-  bool enable_disassembly = !functions.empty();
 
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 

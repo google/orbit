@@ -55,8 +55,15 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       return FunctionUtils::GetLoadedModuleName(function);
     case kColumnAddress: {
       const ProcessData* process = GOrbitApp->GetSelectedProcess();
+      // If no process is selected, that means Orbit is in a disconnected state aka displaying a
+      // capture that has been loaded from file. CaptureData then holds the process
+      if (process == nullptr) {
+        const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+        process = capture_data.process();
+        CHECK(!GOrbitApp->IsCaptureConnected(capture_data));
+      }
       CHECK(process != nullptr);
-      const ModuleData* module = GOrbitApp->GetMutableModuleByPath(function.loaded_module_path());
+      const ModuleData* module = GOrbitApp->GetModuleByPath(function.loaded_module_path());
       CHECK(module != nullptr);
       return absl::StrFormat("0x%llx",
                              FunctionUtils::GetAbsoluteAddress(function, *process, *module));

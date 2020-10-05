@@ -649,10 +649,6 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   return outcome::success();
 }
 
-void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
-  LoadModulesFromPreset(preset);
-}
-
 PresetLoadState OrbitApp::GetPresetLoadState(
     const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const {
   return GetPresetLoadStateForProcess(preset, GetSelectedProcess());
@@ -784,6 +780,28 @@ bool OrbitApp::SelectProcess(const std::string& process) {
   }
 
   return false;
+}
+
+bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
+  // This function is used to determine if a capture is in a connected state. Lets imagine a user
+  // selects a process and takes a capture. Then the process of the capture is the same as the
+  // selected one and that means they are connected. If the user than selects a different process,
+  // the capture is not connected anymore. Orbit can be in a similar "capture connected" state, when
+  // the user connects to an instance, selects a process and then loads an instance from file that
+  // was taken shortly before of the same process.
+  // TODO(163303287): It might be the case in the future that captures loaded from file are always
+  // opened in a new window (compare b/163303287). Then this function is probably not necessary
+  // anymore. Otherwise, this function should probably be more sophisticated and also compare the
+  // build-id of the selected process (main module) and the process of the capture.
+
+  const ProcessData* selected_process = GetSelectedProcess();
+  if (selected_process == nullptr) return false;
+
+  const ProcessData* capture_process = capture.process();
+  CHECK(capture_process != nullptr);
+
+  return selected_process->pid() == capture_process->pid() &&
+         selected_process->full_path() == capture_process->full_path();
 }
 
 void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport report) {
@@ -957,33 +975,55 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
                           preset_module]() mutable {
     auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
     CHECK(symbols_result);
-    main_thread_executor_->Schedule([this, symbols = std::move(symbols_result.value()),
-                                     scoped_status = std::move(scoped_status), module_data,
-                                     preset_module] {
-      module_data->AddSymbols(symbols);
-      functions_data_view_->AddFunctions(module_data->GetFunctions());
+    module_data->AddSymbols(symbols_result.value());
 
-      LOG("Loaded %lu function symbols for module \"%s\"", symbols.symbol_infos().size(),
-          module_data->file_path());
+    std::string message =
+        absl::StrFormat(R"(Successfully loaded %d symbols for "%s")",
+                        symbols_result.value().symbol_infos_size(), module_data->file_path());
+    scoped_status.UpdateMessage(message);
+    LOG("%s", message);
 
-      // Applying preset
-      if (preset_module != nullptr) {
-        const auto selection_result = SelectFunctionsFromPreset(module_data, *preset_module);
-        if (!selection_result) {
-          LOG("Warning, loading preset incomplete: %s", selection_result.error().message());
-        }
-      }
+    main_thread_executor_->Schedule(
+        [this, scoped_status = std::move(scoped_status), module_data, preset_module] {
+          modules_currently_loading_.erase(module_data->file_path());
 
-      modules_currently_loading_.erase(module_data->file_path());
+          const ProcessData* selected_process = GetSelectedProcess();
+          if (selected_process != nullptr &&
+              selected_process->IsModuleLoaded(module_data->file_path())) {
+            functions_data_view_->AddFunctions(module_data->GetFunctions());
+            LOG("Added loaded function symbols for module \"%s\" to the functions tab",
+                module_data->file_path());
+          }
 
-      UpdateAfterSymbolLoading();
-      GOrbitApp->FireRefreshCallbacks();
-    });
+          // Applying preset
+          if (preset_module != nullptr) {
+            const auto selection_result = SelectFunctionsFromPreset(module_data, *preset_module);
+            if (!selection_result) {
+              LOG("Warning, loading preset incomplete: %s", selection_result.error().message());
+            }
+            LOG("Applied preset to module \"%s\"", module_data->file_path());
+          }
+
+          UpdateAfterSymbolLoading();
+          GOrbitApp->FireRefreshCallbacks();
+        });
   });
 }
 
 ErrorMessageOr<void> OrbitApp::SelectFunctionsFromPreset(const ModuleData* module,
                                                          const PresetModule& preset_module) {
+  const ProcessData* process = GetSelectedProcess();
+  if (process == nullptr) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to select preset functions for module \"%s\", because no process is selected",
+        module->file_path()));
+  }
+  if (!process->IsModuleLoaded(module->file_path())) {
+    return ErrorMessage(absl::StrFormat(
+        R"(Unable to select preset functions for module "%s", because the module is not loaded by process "%s")",
+        module->file_path(), process->name()));
+  }
+
   size_t count_missing = 0;
   for (const uint64_t function_hash : preset_module.function_hashes()) {
     const FunctionInfo* function = module->FindFunctionFromHash(function_hash);
@@ -1000,10 +1040,9 @@ ErrorMessageOr<void> OrbitApp::SelectFunctionsFromPreset(const ModuleData* modul
   return outcome::success();
 }
 
-void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<PresetFile>& preset_file) {
+void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
   std::vector<ModuleData*> modules_to_load;
   std::vector<std::string> module_paths_not_found;  // file path of module
-  std::string error_message;
   for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
     ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
 
@@ -1014,7 +1053,7 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<PresetFile>& preset_f
     if (module_data->is_loaded()) {
       const auto selecting_result = SelectFunctionsFromPreset(module_data, preset_module);
       if (!selecting_result) {
-        error_message += selecting_result.error().message();
+        LOG("Warning: %s", selecting_result.error().message());
       }
       continue;
     }

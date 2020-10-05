@@ -139,6 +139,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   bool SelectProcess(const std::string& process);
 
+  // This needs to be called from the main thread.
+  [[nodiscard]] bool IsCaptureConnected(const CaptureData& capture) const;
+
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
   void SetCaptureStartedCallback(CaptureStartedCallback callback) {
@@ -246,7 +249,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void LoadModules(const std::vector<ModuleData*>& modules,
                    const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
-  void LoadModulesFromPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
