@@ -122,13 +122,25 @@ std::optional<char> GetThreadState(pid_t tid) {
 
   std::string first_line{};
   std::getline(stream, first_line);
-  std::vector<std::string_view> fields = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
 
-  constexpr size_t kStateIndex = 2;
-  if (fields.size() <= kStateIndex) {
+  // Remove fields up to comm (process name) as this, enclosed in parentheses, could contain spaces.
+  size_t last_closed_paren_index = first_line.find_last_of(')');
+  if (last_closed_paren_index == std::string::npos) {
     return std::nullopt;
   }
-  return fields[kStateIndex][0];
+  std::string_view first_line_excl_pid_comm =
+      std::string_view{first_line}.substr(last_closed_paren_index + 1);
+
+  std::vector<std::string_view> fields_excl_pid_comm =
+      absl::StrSplit(first_line_excl_pid_comm, ' ', absl::SkipWhitespace{});
+
+  constexpr size_t kCommIndex = 1;
+  constexpr size_t kStateIndex = 2;
+  constexpr size_t kStateIndexExclPidComm = kStateIndex - kCommIndex - 1;
+  if (fields_excl_pid_comm.size() <= kStateIndexExclPidComm) {
+    return std::nullopt;
+  }
+  return fields_excl_pid_comm[kStateIndexExclPidComm][0];
 }
 
 std::optional<std::string> ExecuteCommand(const std::string& cmd) {

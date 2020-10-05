@@ -187,22 +187,34 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   std::string first_line{};
   std::getline(stream, first_line);
 
-  std::vector<std::string_view> fields = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
+  // Remove fields up to comm (process name) as this, enclosed in parentheses, could contain spaces.
+  size_t last_closed_paren_index = first_line.find_last_of(')');
+  if (last_closed_paren_index == std::string::npos) {
+    return std::nullopt;
+  }
+  std::string_view first_line_excl_pid_comm =
+      std::string_view{first_line}.substr(last_closed_paren_index + 1);
 
+  std::vector<std::string_view> fields_excl_pid_comm =
+      absl::StrSplit(first_line_excl_pid_comm, ' ', absl::SkipWhitespace{});
+
+  constexpr size_t kCommIndex = 1;
   constexpr size_t kUtimeIndex = 13;
+  constexpr size_t kUtimeIndexExclPidComm = kUtimeIndex - kCommIndex - 1;
   constexpr size_t kStimeIndex = 14;
+  constexpr size_t kStimeIndexExclPidComm = kStimeIndex - kCommIndex - 1;
 
-  if (fields.size() <= std::max(kUtimeIndex, kStimeIndex)) {
+  if (fields_excl_pid_comm.size() <= std::max(kUtimeIndex, kStimeIndex)) {
     return {};
   }
 
   size_t utime{};
-  if (!absl::SimpleAtoi(fields[kUtimeIndex], &utime)) {
+  if (!absl::SimpleAtoi(fields_excl_pid_comm[kUtimeIndexExclPidComm], &utime)) {
     return {};
   }
 
   size_t stime{};
-  if (!absl::SimpleAtoi(fields[kStimeIndex], &stime)) {
+  if (!absl::SimpleAtoi(fields_excl_pid_comm[kStimeIndexExclPidComm], &stime)) {
     return {};
   }
 
@@ -246,7 +258,6 @@ std::optional<Jiffies> GetCumulativeTotalCpuTime() {
   }
 
   // This is counting the number of CPUs
-  std::string current_line;
   size_t cpus = 0;
   while (true) {
     std::string current_line;
