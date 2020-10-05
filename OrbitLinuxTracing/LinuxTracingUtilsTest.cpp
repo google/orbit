@@ -4,6 +4,7 @@
 
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <pthread.h>
 #include <sys/syscall.h>
 
 #include <condition_variable>
@@ -113,6 +114,9 @@ TEST(GetThreadState, OrbitLinuxTracingTestsMainAndAnother) {
   std::optional<char> thread_state_holding_mutex;
   std::optional<char> main_state_waiting_mutex;
   std::thread thread{[&] {
+    // Make sure /proc/<pid>/stat is parsed correctly
+    // even when the thread name contains spaces and parentheses.
+    pthread_setname_np(pthread_self(), ") )  )()( )(  )");
     {
       absl::MutexLock lock{&mutex};
       thread_tid = syscall(SYS_gettid);
