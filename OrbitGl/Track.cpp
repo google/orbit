@@ -26,6 +26,7 @@ Track::Track(TimeGraph* time_graph)
   num_timers_ = 0;
   min_time_ = std::numeric_limits<uint64_t>::max();
   max_time_ = std::numeric_limits<uint64_t>::min();
+  num_prioritized_trailing_characters_ = 0;
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -146,11 +147,6 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   if (!picking) {
     // Draw label.
-    auto first_parenthesis = label_.find('(');
-    auto first_brackets = label_.find('[');
-    auto id_label_start = std::min(first_parenthesis, first_brackets);
-    int trailing_characters =
-        (id_label_start == label_.npos) ? 0 : (label_.size() - id_label_start);
     float label_offset_x = layout.GetTrackLabelOffsetX();
     // Vertical offset for the text to be aligned to the center of the triangle.
     float label_offset_y = GCurrentTimeGraph->GetFontSize() / 3.f;
@@ -158,7 +154,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
     canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
         label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
-        trailing_characters, time_graph_->CalculateZoomedFontSize(), label_width - label_offset_x);
+        GetNumberOfPrioritizedTrailingCharacters(), time_graph_->CalculateZoomedFontSize(),
+        label_width - label_offset_x);
   }
 
   canvas_ = canvas;

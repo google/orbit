@@ -57,6 +57,12 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
+  void SetNumberOfPrioritizedTrailingCharacters(int num_characters) {
+    num_prioritized_trailing_characters_ = num_characters;
+  }
+  [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const {
+    return num_prioritized_trailing_characters_;
+  }
 
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() { return {}; }
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() { return {}; }
@@ -100,6 +106,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   bool moving_;
   std::string name_;
   std::string label_;
+  int num_prioritized_trailing_characters_;
   TextBox thread_name_;
   int32_t thread_id_;
   Color color_;
