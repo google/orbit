@@ -150,8 +150,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
-  bool enable_iterator = false;
   bool enable_disassembly = false;
+  bool enable_iterator = false;
   bool enable_frame_track = false;
   bool enable_remove_frame_track = false;
 
@@ -160,21 +160,19 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
     const uint64_t absolute_address = capture_data.GetAbsoluteAddress(selected_function);
 
-    // Is that function actually inside a module of the process (i.e. can we disassemble)?
-    const FunctionInfo* actual_function =
-        capture_data.FindFunctionByAddress(absolute_address, false);
-    const bool function_exists = actual_function != nullptr;
+    if (GOrbitApp->IsCaptureConnected(capture_data)) {
+      enable_select |= !GOrbitApp->IsFunctionSelected(selected_function);
+      enable_unselect |= GOrbitApp->IsFunctionSelected(selected_function);
+      enable_disassembly = true;
+    }
 
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
-    enable_select |= function_exists && !GOrbitApp->IsFunctionSelected(selected_function);
-    enable_unselect |= function_exists && GOrbitApp->IsFunctionSelected(selected_function);
     // We need at least one function call to a function so that adding iterators makes sense.
     enable_iterator |= stats.count() > 0;
     // We need at least two function calls to a function so that it's possible to use it
     // as a frame marker.
     enable_frame_track |= stats.count() > 1 && added_frame_tracks_.count(absolute_address) == 0;
     enable_remove_frame_track |= added_frame_tracks_.count(absolute_address) > 0;
-    enable_disassembly |= function_exists;
   }
 
   std::vector<std::string> menu;
@@ -213,11 +211,6 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       action == kMenuActionDisassembly) {
     for (int i : item_indices) {
       FunctionInfo* selected_function = GetSelectedFunction(i);
-      const uint64_t absolute_address = capture_data.GetAbsoluteAddress(*selected_function);
-      // Is that function actually inside a module of the process?
-      if (capture_data.FindFunctionByAddress(absolute_address, false) == nullptr) {
-        continue;
-      }
       if (action == kMenuActionSelect) {
         GOrbitApp->SelectFunction(*selected_function);
       } else if (action == kMenuActionUnselect) {

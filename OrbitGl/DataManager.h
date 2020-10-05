@@ -15,6 +15,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/container/node_hash_map.h"
+#include "module.pb.h"
 
 // This class is responsible for storing and
 // navigating data on the client side. Note that

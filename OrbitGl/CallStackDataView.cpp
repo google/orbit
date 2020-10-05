@@ -88,7 +88,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
     const FunctionInfo* function = frame.function;
     const ModuleData* module = frame.module;
 
-    if (frame.function != nullptr) {
+    if (frame.function != nullptr && GOrbitApp->IsCaptureConnected(GOrbitApp->GetCaptureData())) {
       enable_select |= !GOrbitApp->IsFunctionSelected(*function);
       enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
       enable_disassembly = true;

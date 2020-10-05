@@ -10,7 +10,6 @@
 #include "Callstack.h"
 #include "DataView.h"
 #include "OrbitClientData/ModuleData.h"
-#include "capture_data.pb.h"
 
 class CallStackDataView : public DataView {
  public:
@@ -43,7 +42,6 @@ class CallStackDataView : public DataView {
   CallStack callstack_;
 
   struct CallStackDataViewFrame {
-    CallStackDataViewFrame() = default;
     CallStackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
                            ModuleData* module)
         : address(address), function(function), module(module) {}

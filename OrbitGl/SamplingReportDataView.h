@@ -39,7 +39,7 @@ class SamplingReportDataView : public DataView {
   SampledFunction& GetSampledFunction(unsigned int row);
   absl::flat_hash_set<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
       const std::vector<int>& indices);
-  [[nodiscard]] absl::flat_hash_set<ModuleData*> GetModulesFromIndices(
+  [[nodiscard]] absl::flat_hash_set<std::string> GetModulePathsFromIndices(
       const std::vector<int>& indices) const;
 
  private:

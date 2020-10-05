@@ -49,6 +49,8 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnInclusive:
       return absl::StrFormat("%.2f", func.inclusive);
     case kColumnModuleName:
+      // LOG("%s", func.module_path);
+      // LOG("%s", Path::GetFileName(func.module_path));
       return Path::GetFileName(func.module_path);
     case kColumnFile:
       return func.file;
@@ -158,19 +160,24 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
   return functions_set;
 }
 
-absl::flat_hash_set<ModuleData*> SamplingReportDataView::GetModulesFromIndices(
+absl::flat_hash_set<std::string> SamplingReportDataView::GetModulePathsFromIndices(
     const std::vector<int>& indices) const {
-  absl::flat_hash_set<ModuleData*> modules;
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  absl::flat_hash_set<std::string> module_paths;
+  const ProcessData* process = GOrbitApp->GetCaptureData().process();
+  CHECK(process != nullptr);
+
   for (int index : indices) {
     const SampledFunction& sampled_function = GetSampledFunction(index);
     CHECK(sampled_function.absolute_address != 0);
-    ModuleData* module = capture_data.FindModuleByAddress(sampled_function.absolute_address);
-    if (module != nullptr) {
-      modules.insert(module);
+    auto result = process->FindModuleByAddress(sampled_function.absolute_address);
+    if (!result) {
+      ERROR("result %s", result.error().message());
+    } else {
+      module_paths.insert(result.value().first);
     }
   }
-  return modules;
+
+  return module_paths;
 }
 
 const std::string SamplingReportDataView::kMenuActionSelect = "Hook";
@@ -182,19 +189,23 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_disassembly = false;
 
-  absl::flat_hash_set<const FunctionInfo*> selected_functions =
-      GetFunctionsFromIndices(selected_indices);
+  if (GOrbitApp->IsCaptureConnected(GOrbitApp->GetCaptureData())) {
+    absl::flat_hash_set<const FunctionInfo*> selected_functions =
+        GetFunctionsFromIndices(selected_indices);
 
-  bool enable_disassembly = !selected_functions.empty();
+    enable_disassembly = !selected_functions.empty();
 
-  for (const FunctionInfo* function : selected_functions) {
-    enable_select |= !GOrbitApp->IsFunctionSelected(*function);
-    enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
+    for (const FunctionInfo* function : selected_functions) {
+      enable_select |= !GOrbitApp->IsFunctionSelected(*function);
+      enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
+    }
   }
 
   bool enable_load = false;
-  for (const ModuleData* module : GetModulesFromIndices(selected_indices)) {
+  for (const std::string& module_path : GetModulePathsFromIndices(selected_indices)) {
+    const ModuleData* module = GOrbitApp->GetModuleByPath(module_path);
     if (!module->is_loaded()) {
       enable_load = true;
     }
@@ -221,7 +232,8 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
     }
   } else if (action == kMenuActionLoadSymbols) {
     std::vector<ModuleData*> modules_to_load;
-    for (ModuleData* module : GetModulesFromIndices(item_indices)) {
+    for (const std::string& module_path : GetModulePathsFromIndices(item_indices)) {
+      ModuleData* module = GOrbitApp->GetMutableModuleByPath(module_path);
       if (!module->is_loaded()) {
         modules_to_load.push_back(module);
       }
