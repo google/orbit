@@ -51,7 +51,6 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -316,10 +315,6 @@ void OrbitApp::PostInit() {
   string_manager_ = std::make_shared<StringManager>();
 
   GCurrentTimeGraph->SetStringManager(string_manager_);
-
-  if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
-    return;
-  }
 
   thread_pool_->Schedule([this] {
     std::unique_ptr<TracepointServiceClient> tracepoint_manager =
