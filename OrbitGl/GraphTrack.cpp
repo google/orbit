@@ -91,7 +91,9 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float x1 = time_graph_->GetWorldFromTick(time);
     float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
     float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
-    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), GlCanvas::kZValueText,
+    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y0), GlCanvas::kZValueText,
+                                      kLineColor);
+    time_graph_->GetBatcher().AddLine(Vec2(x1, y0), Vec2(x1, y1), GlCanvas::kZValueText,
                                       kLineColor);
 
     previous_time = time;
