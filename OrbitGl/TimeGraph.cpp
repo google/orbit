@@ -762,13 +762,15 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
         // This is the process_track_.
         std::string process_name = GOrbitApp->GetCaptureData().process_name();
         thread_track->SetName(process_name);
-        thread_track->SetLabel(process_name + " (all threads)");
-        thread_track->SetNumberOfPrioritizedTrailingCharacters(strlen("(all threads)"));
+        const std::string_view all_threads = " (all_threads)";
+        thread_track->SetLabel(process_name.append(all_threads));
+        thread_track->SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
       } else {
         const std::string& thread_name = GOrbitApp->GetCaptureData().GetThreadName(tid);
         track->SetName(thread_name);
-        std::string track_label = absl::StrFormat("%s [%u]", thread_name, tid);
-        thread_track->SetNumberOfPrioritizedTrailingCharacters((std::to_string(tid)).size() + 2);
+        std::string tid_str = std::to_string(tid);
+        std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
+        thread_track->SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
         track->SetLabel(track_label);
       }
     }
