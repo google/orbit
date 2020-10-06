@@ -118,7 +118,6 @@ target_link_libraries(
          OrbitClientServices
          OrbitProtos
          freetype-gl::freetype-gl
-         OpenGL::GLU
          freetype::freetype
          imgui::imgui
          capstone::capstone

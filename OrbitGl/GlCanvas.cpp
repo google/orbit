@@ -254,8 +254,8 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
   if (world_width_ <= 0) world_width_ = 1.f;
   if (world_height_ <= 0) world_height_ = 1.f;
 
-  gluOrtho2D(world_top_left_x_, world_top_left_x_ + world_width_, world_top_left_y_ - world_height_,
-             world_top_left_y_);
+  glOrtho(world_top_left_x_, world_top_left_x_ + world_width_, world_top_left_y_ - world_height_,
+          world_top_left_y_, -1.f, 1.f);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }

@@ -13,7 +13,6 @@
 // clang-format on
 
 #include <GL/glew.h>
-#include <GL/glu.h>
 #include <freetype-gl/freetype-gl.h>
 
 // clang-format off
