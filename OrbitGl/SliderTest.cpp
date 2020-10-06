@@ -15,33 +15,28 @@ class MockCanvas : public GlCanvas {
 };
 
 template <int dim>
-void pick(GlSlider& slider, int start, int other_dim = 0);
-
-template <>
-void pick<0>(GlSlider& slider, int start, int other_dim) {
-  slider.OnPick(start, other_dim);
-}
-
-template <>
-void pick<1>(GlSlider& slider, int start, int other_dim) {
-  slider.OnPick(other_dim, start);
+void pick(GlSlider& slider, int start, int other_dim = 0) {
+  static_assert(dim >= 0 && dim <= 1);
+  if constexpr (dim == 0) {
+    slider.OnPick(start, other_dim);
+  } else {
+    slider.OnPick(other_dim, start);
+  }
 }
 
 template <int dim>
-void drag(GlSlider& slider, int end, int other_dim = 0);
-
-template <>
-void drag<0>(GlSlider& slider, int end, int other_dim) {
-  slider.OnDrag(end, other_dim);
-}
-
-template <>
-void drag<1>(GlSlider& slider, int end, int other_dim) {
-  slider.OnDrag(other_dim, end);
+void drag(GlSlider& slider, int end, int other_dim = 0) {
+  static_assert(dim >= 0 && dim <= 1);
+  if constexpr (dim == 0) {
+    slider.OnDrag(end, other_dim);
+  } else {
+    slider.OnDrag(other_dim, end);
+  }
 }
 
 template <int dim>
 void pick_drag(GlSlider& slider, int start, int end = -1, int other_dim = 0) {
+  static_assert(dim >= 0 && dim <= 1);
   if (end < 0) {
     end = start;
   }
@@ -51,6 +46,7 @@ void pick_drag(GlSlider& slider, int start, int end = -1, int other_dim = 0) {
 
 template <int dim>
 void pick_drag_release(GlSlider& slider, int start, int end = -1, int other_dim = 0) {
+  static_assert(dim >= 0 && dim <= 1);
   pick_drag<dim>(slider, start, end, other_dim);
   slider.OnRelease();
 }
@@ -65,11 +61,11 @@ std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<MockCanvas>> setup() {
   std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>();
   slider->SetCanvas(canvas.get());
   slider->SetPixelHeight(10);
-  slider->SetOrthogonalSliderSize(50);
+  slider->SetOrthogonalSliderPixelHeight(50);
 
   // Set the slider to be 50% of the maximum size, position in the middle
-  slider->SetSliderPosRatio(0.5f);
-  slider->SetSliderLengthRatio(0.5f);
+  slider->SetNormalizedPosition(0.5f);
+  slider->SetNormalizedLength(0.5f);
 
   return std::make_pair<std::unique_ptr<SliderClass>, std::unique_ptr<MockCanvas>>(
       std::move(slider), std::move(canvas));
@@ -161,7 +157,7 @@ void test_scroll(float slider_length = 0.25) {
   const int kOffset = 2;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
-  slider->SetSliderLengthRatio(slider_length);
+  slider->SetNormalizedLength(slider_length);
 
   pick_drag_release<dim>(*slider, kOffset);
   EXPECT_LT(pos, 0.5f);
@@ -185,7 +181,7 @@ void test_drag(float slider_length = 0.25) {
   float pos;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
-  slider->SetSliderLengthRatio(slider_length);
+  slider->SetNormalizedLength(slider_length);
 
   pick<dim>(*slider, 50 * scale);
 
@@ -308,8 +304,8 @@ void test_break_scaling() {
   EXPECT_NEAR(slider->GetPixelPos(), pos, kEpsilon);
   EXPECT_NEAR(slider->GetPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
 
-  slider->SetSliderPosRatio(0.5f);
-  slider->SetSliderLengthRatio(0.5f);
+  slider->SetNormalizedPosition(0.5f);
+  slider->SetNormalizedLength(0.5f);
 
   // Pick on the left, then drag across the end of the slider
   pick_drag_release<dim>(*slider, 25 * scale + kOffset, 100 * scale);

@@ -27,14 +27,16 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
   vertical_slider_ = std::make_shared<GlVerticalSlider>();
 
   slider_->SetDragCallback([&](float ratio) { this->OnDrag(ratio); });
-  slider_->SetResizeCallback([&](float start, float end) { this->OnZoom(start, end); });
+  slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
+    this->OnZoom(normalized_start, normalized_end);
+  });
   slider_->SetCanvas(this);
 
   vertical_slider_->SetDragCallback([&](float ratio) { this->OnVerticalDrag(ratio); });
   vertical_slider_->SetCanvas(this);
 
-  vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
-  slider_->SetOrthogonalSliderSize(vertical_slider_->GetPixelHeight());
+  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
+  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 
   GOrbitApp->RegisterCaptureWindow(this);
 }
@@ -523,22 +525,22 @@ void CaptureWindow::DrawScreenSpace() {
     double width = stop - start;
     double max_start = time_span - width;
     double ratio = GOrbitApp->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
-    float slider_width = layout.GetSliderWidth();
+    int slider_width = static_cast<int>(layout.GetSliderWidth());
     slider_->SetPixelHeight(slider_width);
-    slider_->SetSliderPosRatio(static_cast<float>(ratio));
-    slider_->SetSliderLengthRatio(static_cast<float>(width / time_span));
+    slider_->SetNormalizedPosition(static_cast<float>(ratio));
+    slider_->SetNormalizedLength(static_cast<float>(width / time_span));
     slider_->Draw(this, picking_mode);
 
     float vertical_ratio = world_height_ / time_graph_.GetThreadTotalHeight();
     if (vertical_ratio < 1.f) {
       vertical_slider_->SetPixelHeight(slider_width);
-      vertical_slider_->SetSliderLengthRatio(vertical_ratio);
+      vertical_slider_->SetNormalizedLength(vertical_ratio);
       vertical_slider_->Draw(this, picking_mode);
       right_margin += slider_width;
     }
 
-    vertical_slider_->SetOrthogonalSliderSize(slider_->GetPixelHeight());
-    slider_->SetOrthogonalSliderSize(vertical_slider_->GetPixelHeight());
+    vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
+    slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
   }
 
   // Right vertical margin.
@@ -572,16 +574,16 @@ void CaptureWindow::OnVerticalDrag(float ratio) {
   NeedsUpdate();
 }
 
-void CaptureWindow::OnZoom(float start, float end) {
+void CaptureWindow::OnZoom(float normalized_start, float normalized_end) {
   double time_span = time_graph_.GetCaptureTimeSpanUs();
-  time_graph_.SetMinMax(start * time_span, end * time_span);
+  time_graph_.SetMinMax(normalized_start * time_span, normalized_end * time_span);
 }
 
 void CaptureWindow::UpdateVerticalSlider() {
   float min = world_max_y_;
   float max = world_height_ - time_graph_.GetThreadTotalHeight();
   float ratio = (world_top_left_y_ - min) / (max - min);
-  vertical_slider_->SetSliderPosRatio(ratio);
+  vertical_slider_->SetNormalizedPosition(ratio);
 }
 
 void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }

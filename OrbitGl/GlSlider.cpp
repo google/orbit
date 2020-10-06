@@ -13,9 +13,11 @@
 
 const float GlSlider::kGradientFactor = 0.25f;
 
-GlSlider::GlSlider()
-    : canvas_(nullptr),
+GlSlider::GlSlider(bool is_vertical)
+    : is_vertical_(is_vertical),
+      canvas_(nullptr),
       pos_ratio_(0),
+      right_edge_ratio_(0),
       length_ratio_(0),
       picking_pixel_offset_(0),
       selected_color_(75, 75, 75, 255),
@@ -26,16 +28,16 @@ GlSlider::GlSlider()
       orthogonal_slider_size_(20),
       slider_resize_pixel_margin_(6) {}
 
-void GlSlider::SetSliderPosRatio(float start_ratio)  // [0,1]
+void GlSlider::SetNormalizedPosition(float start_ratio)  // [0,1]
 {
-  pos_ratio_ = clamp(start_ratio, 0.f, 1.f);
+  pos_ratio_ = std::clamp(start_ratio, 0.f, 1.f);
   right_edge_ratio_ = pos_ratio_ * (1.0f - length_ratio_) + length_ratio_;
 }
 
-void GlSlider::SetSliderLengthRatio(float length_ratio)  // [0,1]
+void GlSlider::SetNormalizedLength(float length_ratio)  // [0,1]
 {
-  float min_length = static_cast<float>(min_slider_pixel_length_) / GetCanvasEdgeLength();
-  length_ratio_ = clamp(length_ratio, min_length, 1.f);
+  float min_length = static_cast<float>(min_slider_pixel_length_) / GetBarPixelLength();
+  length_ratio_ = std::clamp(length_ratio, min_length, 1.f);
   right_edge_ratio_ = pos_ratio_ * (1.0f - length_ratio_) + length_ratio_;
 }
 
@@ -54,7 +56,7 @@ Color GlSlider::GetDarkerColor(const Color& color) {
 }
 
 void GlSlider::OnDrag(int x, int y) {
-  float value = GetRelevantMouseDim(x, y);
+  float value = is_vertical_ ? y : x;
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_right_pos = LenToPixel(right_edge_ratio_);
 
@@ -62,20 +64,22 @@ void GlSlider::OnDrag(int x, int y) {
     case DragType::kNone:
       return;
     case DragType::kPan:
-      SetSliderPosRatio(PixelToPos(value - picking_pixel_offset_));
+      SetNormalizedPosition(PixelToPos(value - picking_pixel_offset_));
       break;
     case DragType::kScaleMin: {
-      float new_pos =
-          clamp(value - picking_pixel_offset_, 0.f, slider_right_pos - min_slider_pixel_length_);
-      SetSliderLengthRatio(PixelToLen(slider_right_pos - new_pos));
-      SetSliderPosRatio(PixelToPos(new_pos));
+      float new_pos = std::clamp(value - picking_pixel_offset_, 0.f,
+                                 slider_right_pos - min_slider_pixel_length_);
+      SetNormalizedLength(PixelToLen(slider_right_pos - new_pos));
+      SetNormalizedPosition(PixelToPos(new_pos));
       break;
     }
-    case DragType::kScaleMax:
-      SetSliderLengthRatio(PixelToLen(
-          clamp(value + picking_pixel_offset_, 0.f, GetCanvasEdgeLength()) - slider_pos));
-      SetSliderPosRatio(PixelToPos(slider_pos));
+    case DragType::kScaleMax: {
+      float len = GetBarPixelLength();
+      SetNormalizedLength(
+          PixelToLen(std::clamp(value + picking_pixel_offset_, 0.f, len) - slider_pos));
+      SetNormalizedPosition(PixelToPos(slider_pos));
       break;
+    }
   }
 
   if (drag_type_ != DragType::kPan && resize_callback_ != nullptr) {
@@ -89,7 +93,7 @@ void GlSlider::OnDrag(int x, int y) {
 }
 
 void GlSlider::OnPick(int x, int y) {
-  float value = GetRelevantMouseDim(x, y);
+  float value = is_vertical_ ? y : x;
 
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_length = LenToPixel(length_ratio_);
@@ -157,14 +161,14 @@ bool GlSlider::HandlePageScroll(float click_value) {
   }
 
   if (click_value < slider_pos) {
-    SetSliderPosRatio(PixelToPos(slider_pos - slider_length));
+    SetNormalizedPosition(PixelToPos(slider_pos - slider_length));
     if (drag_callback_ != nullptr) {
       drag_callback_(pos_ratio_);
     }
   }
 
   if (click_value > slider_pos + slider_length) {
-    SetSliderPosRatio(PixelToPos(slider_pos + slider_length));
+    SetNormalizedPosition(PixelToPos(slider_pos + slider_length));
     if (drag_callback_ != nullptr) {
       drag_callback_(pos_ratio_);
     }
@@ -178,21 +182,21 @@ void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
 
   float x = canvas_->GetWidth() - GetPixelHeight();
 
-  float canvas_height = canvas_->GetHeight() - GetOrthogonalSliderSize();
-  float slider_height = ceilf(length_ratio_ * canvas_height);
-  float non_slider_height = canvas_height - slider_height;
+  float bar_pixel_len = GetBarPixelLength();
+  float slider_height = ceilf(length_ratio_ * bar_pixel_len);
+  float non_slider_height = bar_pixel_len - slider_height;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), canvas_height);
+  DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), bar_pixel_len);
 
   float start = ceilf((1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize());
 
   DrawSlider(canvas, x, start, GetPixelHeight(), slider_height, ShadingDirection::kRightToLeft);
 }
 
-float GlVerticalSlider::GetCanvasEdgeLength() {
+int GlVerticalSlider::GetBarPixelLength() const {
   return canvas_->GetHeight() - GetOrthogonalSliderSize();
 }
 
@@ -200,9 +204,9 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   canvas_ = canvas;
   static float y = 0;
 
-  float canvas_width = canvas_->GetWidth() - GetOrthogonalSliderSize();
-  float slider_width = ceilf(length_ratio_ * canvas_width);
-  float non_slider_width = canvas_width - slider_width;
+  float bar_pixel_len = GetBarPixelLength();
+  float slider_width = ceilf(length_ratio_ * bar_pixel_len);
+  float non_slider_width = bar_pixel_len - slider_width;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
@@ -210,7 +214,7 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
       canvas->GetPickingManager().IsThisElementPicked(this) ? selected_color_ : slider_color_;
   const Color light_border_color = GetLighterColor(color);
 
-  DrawBackground(canvas, 0, y, canvas_width, GetPixelHeight());
+  DrawBackground(canvas, 0, y, bar_pixel_len, GetPixelHeight());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
@@ -220,27 +224,30 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   const float kEpsilon = 0.0001f;
 
   // Left / right resize arrows and separator
-  const float height_factor = 2.f;
+  const float kHeightFactor = 2.f;
+  // Triangle is 3 pixels smaller than the area - there is a 2 pixel border around the scrollbar,
+  // and there is no margin between the border and the triangle to make it as big as possible.
+  // On the other side, there is a 1 pixel margin between the triangle and the vertical line
   float tri_size = slider_resize_pixel_margin_ - 3.f;
-  tri_size = std::min(tri_size, pixel_height_ - tri_size * height_factor - 2.f);
-  const float tri_y_offset = (pixel_height_ - tri_size * height_factor) / 2.f;
+  tri_size = std::min(tri_size, pixel_height_ - tri_size * kHeightFactor - 2.f);
+  const float tri_y_offset = (pixel_height_ - tri_size * kHeightFactor) / 2.f;
   const Color kWhite = GetLighterColor(GetLighterColor(bar_color_));
   const float z = GlCanvas::kZValueSlider + 2 * kEpsilon;
   const float x = start;
   const float width = slider_width;
 
   batcher->AddTriangle(
-      Triangle(Vec3(x + width - tri_size - 2.f, height_factor * tri_size + tri_y_offset, z),
-               Vec3(x + width - 2.f, tri_y_offset + height_factor / 2.f * tri_size, z),
+      Triangle(Vec3(x + width - tri_size - 2.f, kHeightFactor * tri_size + tri_y_offset, z),
+               Vec3(x + width - 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z),
                Vec3(x + width - tri_size - 2.f, tri_y_offset, z)),
       kWhite, shared_from_this());
   batcher->AddVerticalLine(Vec2(x + width - slider_resize_pixel_margin_, 2.f), pixel_height_ - 4.f,
                            z, kWhite, shared_from_this());
 
   batcher->AddTriangle(
-      Triangle(Vec3(x + tri_size + 2.f, height_factor * tri_size + tri_y_offset, z),
+      Triangle(Vec3(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset, z),
                Vec3(x + tri_size + 2.f, tri_y_offset, z),
-               Vec3(x + 2.f, tri_y_offset + height_factor / 2.f * tri_size, z)),
+               Vec3(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z)),
       kWhite, shared_from_this());
   batcher->AddVerticalLine(Vec2(x + slider_resize_pixel_margin_ + 1, 2.f), pixel_height_ - 4.f, z,
                            kWhite, shared_from_this());
@@ -260,6 +267,6 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   }
 }
 
-float GlHorizontalSlider::GetCanvasEdgeLength() {
+int GlHorizontalSlider::GetBarPixelLength() const {
   return canvas_->GetWidth() - GetOrthogonalSliderSize();
 }
