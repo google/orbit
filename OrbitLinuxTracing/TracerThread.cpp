@@ -502,6 +502,22 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   bool perf_event_open_errors = false;
 
   if (trace_context_switches_) {
+    // TODO(dpallotti,b/170102150): When the sched:sched_switch tracepoint is already used to
+    //  collect thread states (or even for callstacks on context switches), also use it for
+    //  scheduling events in place of the built-in context switch collection of perf_event_open.
+    //  This is for a few reasons:
+    //  - avoid the overhead of using both;
+    //  - the timings of the two methods don't coincide perfectly (see b/170102150);
+    //  - the built-in context switch collection reports one event for the switch out plus one of
+    //    the switch in, with a gap of a few microseconds in between. While this behavior might seem
+    //    reasonable, it's different from the sched:sched_switch tracepoints, where only one event
+    //    per switch is generated and the time of the switch is unique.
+    //  Note that the built-in context switch collection cannot be used for thread states as it
+    //  doesn't provide the new state on the switch out.
+    //  The main problem to solve is that, for the thread switching in, sched:sched_switch reports
+    //  only the tid, not the pid. While this is seemingly solvable by using the pid from the
+    //  corresponding switch out when building the slice, this doesn't work in the special case of
+    //  the switch out on thread exit, where the pid reported by the tracepoint is -1.
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
