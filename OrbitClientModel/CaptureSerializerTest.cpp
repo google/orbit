@@ -6,6 +6,7 @@
 #include <string>
 
 #include "CaptureData.h"
+#include "CaptureSerializationTestMatchers.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
@@ -56,6 +57,8 @@ TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
   EXPECT_EQ(0, capture_info.selected_functions_size());
   EXPECT_EQ(-1, capture_info.process_id());
   EXPECT_EQ("", capture_info.process_name());
+  EXPECT_EQ(0, capture_info.thread_names_size());
+  EXPECT_EQ(0, capture_info.thread_state_slices_size());
   EXPECT_EQ(0, capture_info.address_infos_size());
   EXPECT_EQ(0, capture_info.callstacks_size());
   EXPECT_EQ(0, capture_info.callstack_events_size());
@@ -88,6 +91,24 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
 
   CaptureData capture_data{std::move(process), std::move(empty_module_map), selected_functions,
                            selected_tracepoints};
+
+  capture_data.AddOrAssignThreadName(42, "t42");
+  capture_data.AddOrAssignThreadName(43, "t43");
+
+  orbit_client_protos::ThreadStateSliceInfo thread_state_slice0;
+  thread_state_slice0.set_tid(42);
+  thread_state_slice0.set_thread_state(orbit_client_protos::ThreadStateSliceInfo::kRunnable);
+  thread_state_slice0.set_begin_timestamp_ns(1000);
+  thread_state_slice0.set_end_timestamp_ns(2000);
+  capture_data.AddThreadStateSlice(thread_state_slice0);
+  orbit_client_protos::ThreadStateSliceInfo thread_state_slice1;
+
+  thread_state_slice1.set_tid(42);
+  thread_state_slice1.set_thread_state(
+      orbit_client_protos::ThreadStateSliceInfo::kInterruptibleSleep);
+  thread_state_slice1.set_begin_timestamp_ns(3000);
+  thread_state_slice1.set_end_timestamp_ns(4000);
+  capture_data.AddThreadStateSlice(thread_state_slice1);
 
   LinuxAddressInfo address_info;
   address_info.set_absolute_address(987);
@@ -138,6 +159,14 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
 
   EXPECT_EQ(process_id, capture_info.process_id());
   EXPECT_EQ(process_name, capture_info.process_name());
+
+  EXPECT_THAT(
+      capture_info.thread_names(),
+      ::testing::UnorderedElementsAre(::testing::Pair(42, "t42"), ::testing::Pair(43, "t43")));
+
+  EXPECT_THAT(
+      capture_info.thread_state_slices(),
+      ::testing::Pointwise(ThreadStateSliceInfoEq(), {thread_state_slice0, thread_state_slice1}));
 
   ASSERT_EQ(1, capture_info.address_infos_size());
   const LinuxAddressInfo& actual_address_info = capture_info.address_infos(0);

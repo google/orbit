@@ -62,6 +62,17 @@ CaptureInfo GenerateCaptureInfo(
   capture_info.mutable_thread_names()->insert(capture_data.thread_names().begin(),
                                               capture_data.thread_names().end());
 
+  for (const auto& tid_and_thread_state_slices : capture_data.thread_state_slices()) {
+    // Note that thread state slices are saved in their original order only among the same thread,
+    // but all slices related to the same thread are saved sequentially. This might not be desired
+    // if the capture is opened in a streaming fashion.
+    for (const auto& thread_state_slice : tid_and_thread_state_slices.second) {
+      orbit_client_protos::ThreadStateSliceInfo* added_thread_state_slice =
+          capture_info.add_thread_state_slices();
+      added_thread_state_slice->CopyFrom(thread_state_slice);
+    }
+  }
+
   capture_info.mutable_address_infos()->Reserve(capture_data.address_infos().size());
   for (const auto& address_info : capture_data.address_infos()) {
     orbit_client_protos::LinuxAddressInfo* added_address_info = capture_info.add_address_infos();

@@ -33,6 +33,7 @@ target_compile_options(OrbitClientModelTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitClientModelTests PRIVATE
         CaptureDeserializerTest.cpp
+        CaptureSerializationTestMatchers.h
         CaptureSerializerTest.cpp)
 
 target_link_libraries(

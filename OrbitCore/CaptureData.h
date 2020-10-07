@@ -96,6 +96,16 @@ class CaptureData {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
+  [[nodiscard]] const absl::flat_hash_map<int32_t,
+                                          std::vector<orbit_client_protos::ThreadStateSliceInfo>>&
+  thread_state_slices() const {
+    return thread_state_slices_;
+  }
+
+  void AddThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo state_slice) {
+    thread_state_slices_[state_slice.tid()].emplace_back(std::move(state_slice));
+  }
+
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
   functions_stats() const {
     return functions_stats_;
@@ -197,6 +207,9 @@ class CaptureData {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
 
   absl::flat_hash_map<int32_t, std::string> thread_names_;
+
+  absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
+      thread_state_slices_;  // For each thread, assume sorted by timestamp and not overlapping.
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 };

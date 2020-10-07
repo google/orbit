@@ -9,6 +9,7 @@
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::AddressInfo;
@@ -182,9 +183,46 @@ void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
   capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
 }
 
-void CaptureEventProcessor::ProcessThreadStateSlice(
-    const ThreadStateSlice& /*thread_state_slice*/) {
-  // TODO(dpallotti,b/168790833): Send to OrbitApp and ClientGgp.
+void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thread_state_slice) {
+  ThreadStateSliceInfo slice_info;
+  slice_info.set_tid(thread_state_slice.tid());
+  switch (thread_state_slice.thread_state()) {
+    case ThreadStateSlice::kRunning:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kRunning);
+      break;
+    case ThreadStateSlice::kRunnable:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kRunnable);
+      break;
+    case ThreadStateSlice::kInterruptibleSleep:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kInterruptibleSleep);
+      break;
+    case ThreadStateSlice::kUninterruptibleSleep:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kUninterruptibleSleep);
+      break;
+    case ThreadStateSlice::kStopped:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kStopped);
+      break;
+    case ThreadStateSlice::kTraced:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kTraced);
+      break;
+    case ThreadStateSlice::kDead:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kDead);
+      break;
+    case ThreadStateSlice::kZombie:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kZombie);
+      break;
+    case ThreadStateSlice::kParked:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kParked);
+      break;
+    case ThreadStateSlice::kIdle:
+      slice_info.set_thread_state(ThreadStateSliceInfo::kIdle);
+      break;
+    default:
+      UNREACHABLE();
+  }
+  slice_info.set_begin_timestamp_ns(thread_state_slice.begin_timestamp_ns());
+  slice_info.set_end_timestamp_ns(thread_state_slice.end_timestamp_ns());
+  capture_listener_->OnThreadStateSlice(std::move(slice_info));
 }
 
 void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) {
