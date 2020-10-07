@@ -12,6 +12,7 @@ target_sources(
   OrbitQt
   PRIVATE CallTreeViewItemModel.h
           CallTreeWidget.h
+          CodeView.h
           CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
           deploymentconfigurations.h
@@ -42,6 +43,7 @@ target_sources(
   PRIVATE CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
+          CodeView.cpp
           Error.cpp
           ElidedLabel.cpp
           MainThreadExecutorImpl.cpp
@@ -80,6 +82,8 @@ target_link_libraries(
           OrbitGgp
           OrbitSshQt
           OrbitVersion
+          WebEngine
+          WebUI
           Qt5::Widgets
           Qt5::Core
           qtpropertybrowser::qtpropertybrowser)
