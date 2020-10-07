@@ -1,0 +1,72 @@
+/*
+  Copyright (c) 2020 The Orbit Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+*/
+
+:root {
+    --accent-color: 110, 146, 251;
+    --text-color: #ccc;
+}
+
+.line-heatmap-highlight-wrapper {
+    pointer-events: none;
+    line-height: inherit;
+    white-space: pre;
+}
+.line-heatmap-highlight {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: inherit 0;
+}
+
+.heatmap-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    pointer-events: none;
+    margin-top: -1.5em;
+    top: 0;
+    font-size: 100%;
+    right: 0em;
+    letter-spacing: -1px;
+    border-left: 1px solid var(--text-color);
+
+    user-select: none;
+    background-color: transparent;
+
+    margin-left: 0.5em;
+    padding-right: 2em;
+    position: relative;
+    overflow: hidden;
+}
+
+.heatmap-row {
+    width: 5em;
+}
+
+.heatmap-row > span {
+    display: block;
+    color: var(--text-color);
+    text-align: right;
+}
+
+.heatmap-row > span.title {
+    font-size: 0.8em;
+
+    /* The title row needs to have the same height as a regular row.
+       So the proper height is the inverse of the current relative
+       font size multiplied by the line-height (1.5).
+    */
+    height: calc(1em / 0.8 * 1.5);
+}
+
+pre[class*="language-"].hit-count {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding-top: 2em;
+    margin-top: 1.1em;
+    padding-right: 0;
+}

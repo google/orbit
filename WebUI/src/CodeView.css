@@ -1,0 +1,71 @@
+/*
+  Copyright (c) 2020 The Orbit Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+*/
+
+:root {
+    --feature-color: #353435;
+    --background-color: #444345;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: var(--background-color);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+main pre[class*="language-"] {
+    background: var(--background-color);
+}
+
+#page_wrap {
+    position: relative;
+    height: 100vh;
+}
+
+main {
+    position: absolute;
+    top: 3em;
+    bottom: 3em;
+    left: 0;
+    right: 0;
+    overflow: auto;
+}
+
+main pre code {
+    width: 660px;
+    overflow: hidden;
+}
+
+header,
+footer {
+    background-color: var(--feature-color);
+    position: absolute;
+    left: 0;
+    right: 0;
+    font-weight: 1.2rem;
+    color: white;
+    line-height: 3em;
+    height: 3em;
+    padding: 0 1em;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+header {
+    top: 0;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+footer {
+    bottom: 0;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-direction: row;
+}

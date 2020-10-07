@@ -1,0 +1,14 @@
+{
+  "presets": ["@babel/preset-env", "@babel/preset-typescript"],
+  "plugins": [
+    [
+      "babel-plugin-prismjs",
+      {
+        "languages": ["clike", "c", "cpp"],
+        "plugins": ["line-numbers"],
+        "theme": "tomorrow",
+        "css": true
+      }
+    ]
+  ]
+}

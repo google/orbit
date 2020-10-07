@@ -50,7 +50,12 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/WebUI.qrc
                            webpack.config.js
                            package.json
                            package-lock.json
-                           src/dummy.js
+                           src/Heatmap.ts
+                           src/Heatmap.css
+                           src/CodeView.ts
+                           src/CodeView.hbs
+                           src/CodeView.css
+                           src/x86asm.ts
                    )
 
 add_library(WebUI OBJECT)

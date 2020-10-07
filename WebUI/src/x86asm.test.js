@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import QWebChannel from 'qtwebchannel/qwebchannel';
+import x86asm from './x86asm';
 
-const el = document.createElement("div");
-el.innerHTML = "<h1>Hello, World!</h1>";
-document.body.appendChild(el);
+test("x86asm language", () => {
+
+    expect(typeof x86asm).toBe("object");
+
+});

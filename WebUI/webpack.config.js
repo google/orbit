@@ -40,7 +40,7 @@ const qwebchannel_search_path = (() => {
 const config = {
   mode: "development",
   entry: {
-    dummy: './src/dummy.js',
+    CodeView: "./src/CodeView",
   },
   output: {
     filename: "[name]/bundle.js",
@@ -48,12 +48,14 @@ const config = {
   },
   resolve: {
     modules: ["node_modules", qwebchannel_search_path],
+    extensions: [".ts", ".js", ".json", ".css"],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      chunks: ['dummy'],
-      filename: 'dummy/index.html',
-      title: "Dummy"
+      chunks: ["CodeView"],
+      filename: "CodeView/index.html",
+      template: "src/CodeView.hbs",
+      title: "CodeView",
     }),
     new QrcGeneratorPlugin(),
     new MinimizeWritesPlugin(),
@@ -62,6 +64,26 @@ const config = {
     contentBase: path.join(__dirname, "dist"),
     compress: true,
     port: 9000,
+    openPage: "/CodeView/",
+  },
+  module: {
+    rules: [
+      {
+        test: /\.[jt]s$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+        },
+      },
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.hbs$/,
+        loader: "handlebars-loader",
+      },
+    ],
   },
 };
 
@@ -77,7 +99,7 @@ module.exports = (env, args) => {
       "WebUI",
       "dist"
     );
-    config.output.publicPath = 'qrc:/webUI/';
+    config.output.publicPath = "qrc:///WebUI/";
   }
 
   return config;

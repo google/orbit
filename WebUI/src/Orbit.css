@@ -1,0 +1,71 @@
+:root {
+  --scrollbar-border-color: #292929;
+  --scrollbar-track-background-color: #3d3d3d;
+  --scrollbar-element-background-color: #424242;
+  --scrollbar-bright-border-color: #4e4e4e;
+  --scrollbar-bright-shadow-color: #585858;
+  --scrollbar-element-color: #bdbdbd;
+}
+
+::-webkit-scrollbar {
+  width: 18px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-background-color);
+  border: 1px solid var(--scrollbar-border-color);
+  box-shadow: inset 0 0 5px var(--scrollbar-border-color);
+  padding: 1px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-element-background-color);
+  border: 1px solid var(--scrollbar-bright-border-color);
+  border-left: 1px solid var(--scrollbar-border-color);
+  border-right: 1px solid var(--scrollbar-border-color);
+  width: 16px;
+  box-shadow: inset 0 0 5px var(--scrollbar-bright-shadow-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-bright-border-color);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-bright-shadow-color);
+}
+
+::-webkit-scrollbar-button:single-button {
+  height: 16px;
+  width: 16px;
+
+  color: var(--scrollbar-element-color);
+
+  border: 1px solid var(--scrollbar-border-color);
+  box-shadow: inset 0 0 5px var(--scrollbar-bright-shadow-color);
+
+  background: no-repeat var(--scrollbar-element-background-color);
+  background-size: 0.55em;
+  background-position: center bottom;
+}
+
+::-webkit-scrollbar-button:vertical:increment {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23bdbdbd'><polygon points='0,0 100,0 50,50'/></svg>");
+}
+
+::-webkit-scrollbar-button:vertical:decrement {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23bdbdbd'><polygon points='0,50 100,50 50,0'/></svg>");
+}
+
+input[type="button"].orbit,
+button.orbit {
+  color: white;
+  background: linear-gradient(to top, #3f3f3f 0%, #505050 100%);
+  font-size: 9pt;
+
+  padding: 6px 10px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 3px #888;
+  border: 1px solid #2e2e2e;
+  outline: none;
+}
