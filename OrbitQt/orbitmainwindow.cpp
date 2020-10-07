@@ -49,10 +49,17 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
+constexpr int kDefaultWebSocketListenPort = 44738;
+
 OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
                                  OrbitQt::ServiceDeployManager* service_deploy_manager,
-                                 uint32_t font_size)
-    : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
+                                 uint32_t font_size, QWebEngineProfile* web_engine_profile)
+    : QMainWindow(nullptr),
+      m_App(a_App),
+      ui(new Ui::OrbitMainWindow),
+      web_engine_profile_{web_engine_profile},
+      code_view_(absl::GetFlag(FLAGS_devmode) ? std::optional<int>{kDefaultWebSocketListenPort}
+                                              : std::optional<int>{}) {
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
   ui->setupUi(this);
@@ -192,9 +199,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  GOrbitApp->SetDisassemblyCallback([this](orbit_gl::DisassembledCode disassembly, DisassemblyReport report) {
-    OpenDisassembly(std::move(disassembly), std::move(report));
-  });
+  GOrbitApp->SetDisassemblyCallback(
+      [this](orbit_gl::DisassembledCode disassembly, DisassemblyReport report) {
+        OpenDisassembly(std::move(disassembly), std::move(report));
+      });
   GOrbitApp->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
   });
@@ -646,15 +654,23 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
 }
 
-void OrbitMainWindow::OpenDisassembly(orbit_gl::DisassembledCode disassembly, DisassemblyReport report) {
-  auto* dialog = new OrbitDisassemblyDialog(this);
-  dialog->SetText(std::move(disassembly.disassembled_code));
-  dialog->SetDisassemblyReport(std::move(report));
-  dialog->setWindowTitle("Orbit Disassembly");
-  dialog->setAttribute(Qt::WA_DeleteOnClose);
-  dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |
-                         Qt::WindowMaximizeButtonHint);
-  dialog->show();
+void OrbitMainWindow::OpenDisassembly(orbit_gl::DisassembledCode src, DisassemblyReport report) {
+  code_view_.SetHeatmapEnabled(!report.empty());
+  code_view_.SetCode(QString::fromStdString(src.code_segment_title),
+                     QString::fromStdString(src.disassembled_code), "x86asm", std::move(report));
+
+  web_engine::Dialog dialog{web_engine_profile_};
+  dialog.SetWindowTitle("Disassembly");
+  dialog.SetView(code_view_.GetWebEngineView());
+  dialog.GetWebEnginePage()->setBackgroundColor(QColor{90, 90, 90});
+
+  const QSize kDefaultWindowSize{840, 600};
+  dialog.resize(kDefaultWindowSize);
+
+  const auto kCodeViewUrl = QStringLiteral("qrc:///WebUI/CodeView/index.html");
+  dialog.Load(QUrl{kCodeViewUrl});
+
+  dialog.exec();
 }
 
 void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }

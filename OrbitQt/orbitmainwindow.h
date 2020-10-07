@@ -13,6 +13,7 @@
 #include <QMainWindow>
 #include <QString>
 #include <QTimer>
+#include <QWebEngineProfile>
 #include <memory>
 #include <outcome.hpp>
 #include <string>
@@ -20,6 +21,8 @@
 
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
+#include "CodeView.h"
+#include "Disassembler.h"
 #include "StatusListener.h"
 #include "servicedeploymanager.h"
 
@@ -32,7 +35,7 @@ class OrbitMainWindow : public QMainWindow {
 
  public:
   OrbitMainWindow(QApplication* a_App, OrbitQt::ServiceDeployManager* service_deploy_manager,
-                  uint32_t font_size);
+                  uint32_t font_size, QWebEngineProfile* web_engine_profile);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) { m_GlWidgets.push_back(a_GlWidget); }
@@ -106,6 +109,10 @@ class OrbitMainWindow : public QMainWindow {
 
   // Status listener
   std::unique_ptr<StatusListener> status_listener_;
+
+  // CodeView
+  QWebEngineProfile* web_engine_profile_ = nullptr;
+  orbit_qt::CodeView code_view_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

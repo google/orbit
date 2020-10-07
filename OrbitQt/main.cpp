@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// clang-format off
+#include <GL/glew.h>
+// clang-format on
+
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
@@ -14,6 +18,8 @@
 #include <QProcessEnvironment>
 #include <QProgressDialog>
 #include <QStyleFactory>
+#include <QtWebEngine>
+#include <QWebEngineProfile>
 #include <optional>
 
 #ifdef _WIN32
@@ -148,8 +154,9 @@ static outcome::result<void> RunUiInstance(
 
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
+    QWebEngineProfile web_engine_profile{};
 
-    OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize);
+    OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize, &web_engine_profile);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);
@@ -311,6 +318,12 @@ int main(int argc, char* argv[]) {
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
+
+    // This has to be called before constructing the QApplication object
+    // because it will constructs a shareable OpenGL context which can be
+    // used by both Qt and Chromium. Otherwise the QApplication object would
+    // construct its own non-shareable context.
+    QtWebEngine::initialize();
 
     QApplication app(argc, argv);
     QApplication::setApplicationName("orbitprofiler");
