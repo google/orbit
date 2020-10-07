@@ -269,15 +269,8 @@ bool OrbitApp::Init(ApplicationOptions&& options,
 
 void OrbitApp::PostInit() {
   if (!options_.grpc_server_address.empty()) {
-    grpc::ChannelArguments channel_arguments;
-    // TODO (159888769) move symbol loading to grpc stream.
-    // The default receive message size is 4mb. Symbol data can easily be more
-    // than this. This is set to an arbitrary size of 2gb (numeric max), which
-    // seems to be enough and leaves some headroom. As an example, a 1.1gb
-    // .debug symbols file results in a message size of 88mb.
-    channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
     grpc_channel_ = grpc::CreateCustomChannel(
-        options_.grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
+        options_.grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
     if (!grpc_channel_) {
       ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
     }
