@@ -15,8 +15,6 @@ add_custom_command(OUTPUT "${q_webchannel_js_output}"
                    DEPENDS QWebChannelExtractor
                    COMMENT "Extracting qwebchannel.js from Qt5::WebChannel library")
 
-add_custom_target(q_webchannel_js ALL DEPENDS ${q_webchannel_js_output})
-
 if(WIN32)
   get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
   get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
