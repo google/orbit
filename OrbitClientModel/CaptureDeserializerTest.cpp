@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include "CaptureSerializationTestMatchers.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
@@ -20,6 +21,7 @@ using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::TracepointInfo;
@@ -28,9 +30,9 @@ using ::testing::_;
 using ::testing::Assign;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
+using ::testing::InSequence;
 using ::testing::IsEmpty;
 using ::testing::Matcher;
-using ::testing::NotNull;
 using ::testing::SaveArg;
 using ::testing::Unused;
 
@@ -53,6 +55,7 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
   MOCK_METHOD(void, OnThreadName, (int32_t /*thread_id*/, std::string /*thread_name*/), (override));
+  MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
               (override));
@@ -249,6 +252,42 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadNames) {
   EXPECT_CALL(listener, OnThreadName(_, _)).Times(0);
   EXPECT_CALL(listener, OnThreadName(1, "thread_a")).Times(1);
   EXPECT_CALL(listener, OnThreadName(2, "thread_b")).Times(1);
+
+  EXPECT_CALL(listener, OnCaptureStarted).Times(1);
+  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
+
+  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &empty_stream,
+                                                  &cancellation_requested);
+}
+
+TEST(CaptureDeserializer, LoadCaptureInfoThreadStateSlices) {
+  MockCaptureListener listener;
+  CaptureInfo capture_info;
+
+  orbit_client_protos::ThreadStateSliceInfo thread_state_slice0;
+  thread_state_slice0.set_tid(42);
+  thread_state_slice0.set_thread_state(orbit_client_protos::ThreadStateSliceInfo::kRunnable);
+  thread_state_slice0.set_begin_timestamp_ns(1000);
+  thread_state_slice0.set_end_timestamp_ns(2000);
+  capture_info.add_thread_state_slices()->CopyFrom(thread_state_slice0);
+
+  orbit_client_protos::ThreadStateSliceInfo thread_state_slice1;
+  thread_state_slice1.set_tid(42);
+  thread_state_slice1.set_thread_state(
+      orbit_client_protos::ThreadStateSliceInfo::kInterruptibleSleep);
+  thread_state_slice1.set_begin_timestamp_ns(3000);
+  thread_state_slice1.set_end_timestamp_ns(4000);
+  capture_info.add_thread_state_slices()->CopyFrom(thread_state_slice1);
+
+  std::atomic<bool> cancellation_requested = false;
+  uint8_t empty_data = 0;
+  google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
+
+  {
+    InSequence sequence;
+    EXPECT_CALL(listener, OnThreadStateSlice(ThreadStateSliceInfoEq(thread_state_slice0))).Times(1);
+    EXPECT_CALL(listener, OnThreadStateSlice(ThreadStateSliceInfoEq(thread_state_slice1))).Times(1);
+  }
 
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);

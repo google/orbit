@@ -36,6 +36,7 @@ class MyCaptureListener : public CaptureListener {
   void OnUniqueCallStack(CallStack) override {}
   void OnCallstackEvent(CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
+  void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo) override {}
   void OnAddressInfo(LinuxAddressInfo) override {}
   void OnUniqueTracepointInfo(uint64_t, orbit_grpc_protos::TracepointInfo) override {}
   void OnTracepointEvent(orbit_client_protos::TracepointEventInfo) override {}

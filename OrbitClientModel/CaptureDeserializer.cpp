@@ -147,6 +147,15 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     capture_listener->OnThreadName(thread_id_and_name.first, thread_id_and_name.second);
   }
 
+  for (const orbit_client_protos::ThreadStateSliceInfo& thread_state_slice :
+       capture_info.thread_state_slices()) {
+    if (*cancellation_requested) {
+      capture_listener->OnCaptureCancelled();
+      return;
+    }
+    capture_listener->OnThreadStateSlice(thread_state_slice);
+  }
+
   for (const CallstackInfo& callstack : capture_info.callstacks()) {
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     if (*cancellation_requested) {

@@ -312,6 +312,10 @@ void ClientGgp::OnThreadName(int32_t thread_id, std::string thread_name) {
   capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
 }
 
+void ClientGgp::OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) {
+  capture_data_.AddThreadStateSlice(std::move(thread_state_slice));
+}
+
 void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
   capture_data_.InsertAddressInfo(std::move(address_info));
 }
