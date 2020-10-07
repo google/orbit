@@ -141,7 +141,9 @@ target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
-               TimerInfosIteratorTest.cpp)
+               SliderTest.cpp
+               TimerInfosIteratorTest.cpp
+               UnitTestMockEnvironment.cpp)
 
 target_link_libraries(
   OrbitGlTests

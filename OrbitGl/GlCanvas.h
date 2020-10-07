@@ -23,8 +23,8 @@ class GlCanvas : public GlPanel {
   void Render(int width, int height) override;
   virtual void PostRender() {}
 
-  int GetWidth() const;
-  int GetHeight() const;
+  virtual int GetWidth() const;
+  virtual int GetHeight() const;
 
   void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
   void PrepareScreenSpaceViewport();
