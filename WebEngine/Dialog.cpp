@@ -38,10 +38,6 @@ Dialog::Dialog(QWebEngineProfile* profile, QWidget* parent) : QDialog(parent), p
         web_channel_->connectTo(new JsonTransport{web_socket_server_->nextPendingConnection()});
       });
 
-  // By default we expose the dialog object to the JavaScript part
-  // such that JavaScript can close the window.
-  web_channel_->registerObject("dialog", this);
-
   resize(QSize{800, 600});
 
   layout_.setContentsMargins(QMargins{});
