@@ -28,6 +28,13 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
+  const QByteArray contents = webchannel_js.readAll();
+
+  if (QFile output_file{argv[1]};
+      output_file.open(QIODevice::ReadOnly) && contents == output_file.readAll()) {
+    return 0;
+  }
+
   // Create the output directory if it does not exist
   QFileInfo{argv[1]}.dir().mkpath(".");
 
@@ -37,6 +44,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  output_file.write(webchannel_js.readAll());
+  output_file.write(contents);
   return 0;
 }
