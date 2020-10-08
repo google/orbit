@@ -10,6 +10,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_NumCores = 0;
   m_TextBoxHeight = 20.f;
   m_CoresHeight = 10.f;
+  thread_state_track_height_ = 4.0f;
   m_EventTrackHeight = 10.f;
   m_GraphTrackHeight = 20.f;
   m_TrackBottomMargin = 5.f;
@@ -51,6 +52,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(m_TrackLabelOffsetX);
   FLOAT_SLIDER(m_TextBoxHeight);
   FLOAT_SLIDER(m_CoresHeight);
+  FLOAT_SLIDER(thread_state_track_height_);
   FLOAT_SLIDER(m_EventTrackHeight);
   FLOAT_SLIDER(m_GraphTrackHeight);
   FLOAT_SLIDER(m_SpaceBetweenCores);

@@ -17,8 +17,6 @@ class TracepointTrack : public EventTrack {
 
   void SetPos(float x, float y);
 
-  [[nodiscard]] float GetHeight() const override;
-
   void OnPick(int x, int y) override;
   void OnRelease() override;
 

@@ -103,12 +103,12 @@ class CaptureData {
   }
 
   [[nodiscard]] bool HasThreadStatesForThread(int32_t tid) const {
-    std::lock_guard lock{*thread_state_slices_mutex_};
+    absl::MutexLock lock{thread_state_slices_mutex_.get()};
     return thread_state_slices_.count(tid) > 0;
   }
 
   void AddThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo state_slice) {
-    std::lock_guard lock{*thread_state_slices_mutex_};
+    absl::MutexLock lock{thread_state_slices_mutex_.get()};
     thread_state_slices_[state_slice.tid()].emplace_back(std::move(state_slice));
   }
 
@@ -222,8 +222,7 @@ class CaptureData {
 
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
       thread_state_slices_;  // For each thread, assume sorted by timestamp and not overlapping.
-  mutable std::unique_ptr<std::recursive_mutex> thread_state_slices_mutex_ =
-      std::make_unique<std::recursive_mutex>();
+  mutable std::unique_ptr<absl::Mutex> thread_state_slices_mutex_ = std::make_unique<absl::Mutex>();
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 };
