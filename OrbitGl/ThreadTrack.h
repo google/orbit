@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 
+#include "ThreadStateTrack.h"
 #include "TimerTrack.h"
 #include "capture_data.pb.h"
 
@@ -44,9 +45,11 @@ class ThreadTrack : public TimerTrack {
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
   [[nodiscard]] float GetHeight() const override;
-
   [[nodiscard]] float GetHeaderHeight() const override;
 
+  void UpdatePositionOfSubtracks();
+
+  std::shared_ptr<ThreadStateTrack> thread_state_track_;
   std::shared_ptr<EventTrack> event_track_;
   std::shared_ptr<TracepointTrack> tracepoint_track_;
 };

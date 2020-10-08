@@ -51,6 +51,7 @@ target_sources(
          StatusListener.h
          TextBox.h
          TextRenderer.h
+         ThreadStateTrack.h
          ThreadTrack.h
          TimeGraph.h
          TimeGraphLayout.h
@@ -101,6 +102,7 @@ target_sources(
           TimerChain.cpp
           TimerInfosIterator.cpp
           TimerTrack.cpp
+          ThreadStateTrack.cpp
           ThreadTrack.cpp
           Track.cpp
           TriangleToggle.cpp

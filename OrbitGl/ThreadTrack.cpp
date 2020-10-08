@@ -18,6 +18,9 @@ using orbit_client_protos::TimerInfo;
 
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id) : TimerTrack(time_graph) {
   thread_id_ = thread_id;
+
+  thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id);
+
   event_track_ = std::make_shared<EventTrack>(time_graph);
   event_track_->SetThreadId(thread_id);
 
@@ -138,31 +141,71 @@ void ThreadTrack::UpdateBoxHeight() {
 }
 
 bool ThreadTrack::IsEmpty() const {
-  return (GetNumTimers() == 0) && event_track_->IsEmpty() && tracepoint_track_->IsEmpty();
+  return thread_state_track_->IsEmpty() && event_track_->IsEmpty() &&
+         tracepoint_track_->IsEmpty() && (GetNumTimers() == 0);
+}
+
+void ThreadTrack::UpdatePositionOfSubtracks() {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  const float thread_state_track_height = layout.GetThreadStateTrackHeight();
+  const float event_track_height = layout.GetEventTrackHeight();
+  const float space_between_subtracks = layout.GetSpaceBetweenTracksAndThread();
+
+  float current_y = pos_[1];
+
+  thread_state_track_->SetPos(pos_[0], current_y);
+  if (!thread_state_track_->IsEmpty()) {
+    current_y -= (space_between_subtracks + thread_state_track_height);
+  }
+
+  event_track_->SetPos(pos_[0], current_y);
+  if (!event_track_->IsEmpty()) {
+    current_y -= (space_between_subtracks + event_track_height);
+  }
+
+  tracepoint_track_->SetPos(pos_[0], current_y);
 }
 
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
 
-  float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
+  UpdatePositionOfSubtracks();
 
-  event_track_->SetPos(pos_[0], pos_[1]);
-  event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
-  event_track_->Draw(canvas, picking_mode);
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  const float thread_state_track_height = layout.GetThreadStateTrackHeight();
+  const float event_track_height = layout.GetEventTrackHeight();
+  const float tracepoint_track_height = layout.GetEventTrackHeight();
 
-  tracepoint_track_->SetPos(pos_[0], pos_[1]);
-  tracepoint_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
-  tracepoint_track_->Draw(canvas, picking_mode);
+  if (!thread_state_track_->IsEmpty()) {
+    thread_state_track_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
+    thread_state_track_->Draw(canvas, picking_mode);
+  }
+
+  if (!event_track_->IsEmpty()) {
+    event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
+    event_track_->Draw(canvas, picking_mode);
+  }
+
+  if (!tracepoint_track_->IsEmpty()) {
+    tracepoint_track_->SetSize(canvas->GetWorldWidth(), tracepoint_track_height);
+    tracepoint_track_->Draw(canvas, picking_mode);
+  }
 }
 
 void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_id(thread_id_); }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
-  event_track_->SetPos(pos_[0], pos_[1]);
-  event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+  UpdatePositionOfSubtracks();
 
-  tracepoint_track_->SetPos(pos_[0], pos_[1]);
-  tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+  if (!thread_state_track_->IsEmpty()) {
+    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+  }
+  if (!event_track_->IsEmpty()) {
+    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+  }
+  if (!tracepoint_track_->IsEmpty()) {
+    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+  }
 
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
 }
@@ -230,15 +273,40 @@ float ThreadTrack::GetHeight() const {
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
   const uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
-  return layout.GetTextBoxHeight() * depth +
-         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) +
-         (!event_track_->IsEmpty() ? layout.GetEventTrackHeight() + layout.GetTrackBottomMargin()
-                                   : 0) +
-         tracepoint_track_->GetHeight();
+
+  bool gap_between_tracks_and_timers =
+      (!thread_state_track_->IsEmpty() || !event_track_->IsEmpty() ||
+       !tracepoint_track_->IsEmpty()) &&
+      (depth > 0);
+  return GetHeaderHeight() +
+         (gap_between_tracks_and_timers ? layout.GetSpaceBetweenTracksAndThread() : 0) +
+         layout.GetTextBoxHeight() * depth + layout.GetTrackBottomMargin();
 }
 
 float ThreadTrack::GetHeaderHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  const float thread_state_track_height = layout.GetThreadStateTrackHeight();
+  const float event_track_height = layout.GetEventTrackHeight();
+  const float tracepoint_track_height = layout.GetEventTrackHeight();
+  const float space_between_subtracks = layout.GetSpaceBetweenTracksAndThread();
 
-  return layout.GetEventTrackHeight() + tracepoint_track_->GetHeight();
+  float header_height = 0.0f;
+  int track_count = 0;
+  if (!thread_state_track_->IsEmpty()) {
+    header_height += thread_state_track_height;
+    ++track_count;
+  }
+
+  if (!event_track_->IsEmpty()) {
+    header_height += event_track_height;
+    ++track_count;
+  }
+
+  if (!tracepoint_track_->IsEmpty()) {
+    header_height += tracepoint_track_height;
+    ++track_count;
+  }
+
+  header_height += std::max(0, track_count - 1) * space_between_subtracks;
+  return header_height;
 }

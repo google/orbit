@@ -110,19 +110,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 }
 
 void TracepointTrack::SetPos(float x, float y) {
-  if (thread_id_ != TracepointEventBuffer::kAllTracepointsFakeTid) {
-    y = y - GetHeight();
-  }
   pos_ = Vec2(x, y);
-
-  thread_name_.SetPos(pos_);
-  thread_name_.SetSize(Vec2(size_[0] * 0.3f, size_[1]));
-}
-
-float TracepointTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
-
-  return !IsEmpty() ? layout.GetEventTrackHeight() + layout.GetSpaceBetweenTracksAndThread() : 0;
 }
 
 void TracepointTrack::OnPick(int x, int y) {

@@ -33,6 +33,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
     kGpuTrack,
     kSchedulerTrack,
     kAsyncTrack,
+    kThreadStateTrack,
     kUnknown,
   };
 
@@ -107,7 +108,6 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   std::string name_;
   std::string label_;
   int num_prioritized_trailing_characters_;
-  TextBox thread_name_;
   int32_t thread_id_;
   Color color_;
   bool visible_ = true;
