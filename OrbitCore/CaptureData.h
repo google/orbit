@@ -102,9 +102,21 @@ class CaptureData {
     return thread_state_slices_;
   }
 
+  [[nodiscard]] bool HasThreadStatesForThread(int32_t tid) const {
+    std::lock_guard lock{*thread_state_slices_mutex_};
+    return thread_state_slices_.count(tid) > 0;
+  }
+
   void AddThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo state_slice) {
+    std::lock_guard lock{*thread_state_slices_mutex_};
     thread_state_slices_[state_slice.tid()].emplace_back(std::move(state_slice));
   }
+
+  // Allows the caller to iterate `action` over all the thread state slices of the specified thread
+  // in the time range while holding for the whole time the internal mutex, acquired only once.
+  void ForEachThreadStateSliceIntersectingTimeRange(
+      int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
+      const std::function<void(const orbit_client_protos::ThreadStateSliceInfo&)>& action) const;
 
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
   functions_stats() const {
@@ -210,6 +222,8 @@ class CaptureData {
 
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
       thread_state_slices_;  // For each thread, assume sorted by timestamp and not overlapping.
+  mutable std::unique_ptr<std::recursive_mutex> thread_state_slices_mutex_ =
+      std::make_unique<std::recursive_mutex>();
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 };

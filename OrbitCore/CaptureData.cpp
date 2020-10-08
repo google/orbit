@@ -14,6 +14,30 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::ThreadStateSliceInfo;
+
+void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
+    int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
+    const std::function<void(const ThreadStateSliceInfo&)>& action) const {
+  std::lock_guard lock{*thread_state_slices_mutex_};
+  auto tid_thread_state_slices_it = thread_state_slices_.find(thread_id);
+  if (tid_thread_state_slices_it == thread_state_slices_.end()) {
+    return;
+  }
+
+  const std::vector<ThreadStateSliceInfo>& tid_thread_state_slices =
+      tid_thread_state_slices_it->second;
+  auto slice_it = std::lower_bound(tid_thread_state_slices.begin(), tid_thread_state_slices.end(),
+                                   min_timestamp,
+                                   [](const ThreadStateSliceInfo& slice, uint64_t min_timestamp) {
+                                     return slice.end_timestamp_ns() < min_timestamp;
+                                   });
+  while (slice_it != tid_thread_state_slices.end() &&
+         slice_it->begin_timestamp_ns() < max_timestamp) {
+    action(*slice_it);
+    ++slice_it;
+  }
+}
 
 const FunctionStats& CaptureData::GetFunctionStatsOrDefault(const FunctionInfo& function) const {
   static const FunctionStats kDefaultFunctionStats;
