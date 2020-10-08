@@ -14,9 +14,16 @@ target_link_libraries(
   WebEngine PUBLIC OrbitBase Qt5::Widgets Qt5::WebEngine Qt5::WebEngineWidgets
                    Qt5::WebSockets Qt5::WebChannel)
 
-target_sources(WebEngine PUBLIC include/WebEngine/Dialog.h
+target_sources(WebEngine PUBLIC include/WebEngine/BlockAllUrlRequestInterceptor.h
+                                include/WebEngine/Dialog.h
                                 include/WebEngine/DeleteLaterDeleter.h
                                 include/WebEngine/View.h)
 
-target_sources(WebEngine PRIVATE Dialog.cpp JsonTransport.cpp JsonTransport.h View.cpp)
-set_target_properties(WebEngine PROPERTIES AUTOMOC ON)
+target_sources(WebEngine PRIVATE BlockAllUrlRequestInterceptor.cpp
+                                 Dialog.cpp
+                                 JsonTransport.cpp
+                                 JsonTransport.h
+                                 View.cpp)
+
+qt5_wrap_cpp(MOC_SOURCES JsonTransport.h TARGET WebEngine)
+target_sources(WebEngine PRIVATE ${MOC_SOURCES})

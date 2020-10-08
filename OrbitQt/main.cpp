@@ -40,6 +40,7 @@
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
+#include "WebEngine/BlockAllUrlRequestInterceptor.h"
 #include "deploymentconfigurations.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
@@ -155,6 +156,9 @@ static outcome::result<void> RunUiInstance(
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
     QWebEngineProfile web_engine_profile{};
+
+    web_engine::BlockAllUrlRequestInterceptor block_all_url_request_interceptor{};
+    web_engine_profile.setRequestInterceptor(&block_all_url_request_interceptor);
 
     OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize, &web_engine_profile);
 
