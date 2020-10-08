@@ -46,6 +46,8 @@ namespace web_engine {
    dialog.exec();
 */
 class Dialog : public QDialog {
+  Q_OBJECT
+
  public:
   explicit Dialog(QWebEngineProfile* profile, QWidget* parent = nullptr);
 
