@@ -84,10 +84,10 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
 
     time_graph_.GetWorldMinMax(world_min, world_max);
 
-    auto width = static_cast<float>(GetWidth());
-
-    world_top_left_x_ = world_click_x_ - static_cast<float>(x) / width * world_width_;
-    world_top_left_y_ = world_click_y_ + static_cast<float>(y) / width * world_height_;
+    world_top_left_x_ =
+        world_click_x_ - static_cast<float>(x) / static_cast<float>(GetWidth()) * world_width_;
+    world_top_left_y_ =
+        world_click_y_ + static_cast<float>(y) / static_cast<float>(GetHeight()) * world_height_;
 
     world_top_left_x_ = clamp(world_top_left_x_, world_min, world_max - world_width_);
     world_top_left_y_ =
