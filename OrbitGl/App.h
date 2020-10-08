@@ -354,7 +354,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<ProcessesDataView> processes_data_view_;
   std::unique_ptr<ModulesDataView> modules_data_view_;
   std::unique_ptr<FunctionsDataView> functions_data_view_;
-  std::unique_ptr<LiveFunctionsDataView> live_functions_data_view_;
   std::unique_ptr<CallStackDataView> callstack_data_view_;
   std::unique_ptr<CallStackDataView> selection_callstack_data_view_;
   std::unique_ptr<PresetsDataView> presets_data_view_;

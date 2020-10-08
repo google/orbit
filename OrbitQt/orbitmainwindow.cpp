@@ -140,9 +140,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetOpenCaptureFinishedCallback(
       [loading_capture_dialog] { loading_capture_dialog->close(); });
 
-  GOrbitApp->SetRefreshCallback([this](DataViewType a_Type) {
-    this->OnRefreshDataViewPanels(a_Type);
-    this->ui->liveFunctions->OnDataChanged();
+  GOrbitApp->SetRefreshCallback([this](DataViewType type) {
+    if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
+      this->ui->liveFunctions->OnDataChanged();
+    }
+    this->OnRefreshDataViewPanels(type);
   });
 
   GOrbitApp->SetSamplingReportCallback(
