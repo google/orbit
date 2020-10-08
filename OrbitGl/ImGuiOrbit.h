@@ -23,7 +23,7 @@ class GlCanvas;
 
 extern ImFont* GOrbitImguiFont;
 
-IMGUI_API bool Orbit_ImGui_Init();
+IMGUI_API bool Orbit_ImGui_Init(uint32_t font_size);
 IMGUI_API void Orbit_ImGui_Shutdown();
 IMGUI_API void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas);
 

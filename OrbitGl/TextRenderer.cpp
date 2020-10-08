@@ -10,7 +10,6 @@
 #include "App.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
-#include "Params.h"
 #include "Path.h"
 
 typedef struct {
@@ -19,10 +18,11 @@ typedef struct {
   float r, g, b, a;  // color
 } vertex_t;
 
-TextRenderer::TextRenderer()
+TextRenderer::TextRenderer(uint32_t font_size)
     : m_Atlas(nullptr),
       m_Buffer(nullptr),
       m_Font(nullptr),
+      current_font_size_(font_size),
       m_Canvas(nullptr),
       m_Initialized(false),
       m_DrawOutline(false) {}
@@ -55,7 +55,6 @@ void TextRenderer::Init() {
   for (int i = 1; i <= 100; i += 1) {
     m_FontsBySize[i] = texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }
-  current_font_size_ = GParams.font_size;
   SetFontSize(current_font_size_);
 
   m_Pen.x = 0;

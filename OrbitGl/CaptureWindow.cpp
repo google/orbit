@@ -6,12 +6,16 @@
 
 #include "App.h"
 #include "GlUtils.h"
+#include "TimeGraph.h"
 #include "absl/base/casts.h"
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode)
-    : GlCanvas(), stats_enabled_(stats_mode == StatsMode::kEnabled) {
+CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode, uint32_t font_size)
+    : GlCanvas(font_size),
+      font_size_(font_size),
+      time_graph_(font_size),
+      stats_enabled_(stats_mode == StatsMode::kEnabled) {
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&text_renderer_);
   time_graph_.SetCanvas(this);
@@ -775,7 +779,7 @@ void CaptureWindow::RenderTimeBar() {
       std::string text = GetPrettyTime(absl::Microseconds(current_micros));
       float world_x = time_graph_.GetWorldFromUs(current_micros);
       text_renderer_.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTextUi,
-                             Color(255, 255, 255, 255), GParams.font_size);
+                             Color(255, 255, 255, 255), font_size_);
 
       Vec2 pos(world_x, world_y);
       ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTextUi, Color(255, 255, 255, 255));
@@ -805,7 +809,7 @@ void CaptureWindow::RenderSelectionOverlay() {
     float pos_x = pos[0] + size[0];
 
     text_renderer_.AddText(text.c_str(), pos_x, select_stop_[1], GlCanvas::kZValueText, text_color,
-                           GParams.font_size, size[0], true);
+                           font_size_, size[0], true);
 
     const unsigned char g = 100;
     Color grey(g, g, g, 255);

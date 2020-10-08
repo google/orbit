@@ -34,7 +34,8 @@ const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabColor = Color(50, 50, 50, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
+GlCanvas::GlCanvas(uint32_t font_size)
+    : text_renderer_(font_size), ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
   width_ = 0;

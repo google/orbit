@@ -17,7 +17,6 @@ target_sources(
          CallstackTypes.h
          CaptureData.h
          CoreUtils.h
-         Params.h
          Path.h
          RingBuffer.h
          SamplingProfiler.h
@@ -34,7 +33,6 @@ target_sources(
   PRIVATE CallstackData.cpp
           CaptureData.cpp
           CoreUtils.cpp
-          Params.cpp
           Path.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp

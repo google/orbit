@@ -49,7 +49,8 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 extern QMenu* GContextMenu;
 
 OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
-                                 OrbitQt::ServiceDeployManager* service_deploy_manager)
+                                 OrbitQt::ServiceDeployManager* service_deploy_manager,
+                                 uint32_t font_size)
     : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
@@ -210,7 +211,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       return GlPanel::StatsMode::kDisabled;
     }
   }();
-  ui->CaptureGLWidget->Initialize(capture_window_stats_mode, this);
+  ui->CaptureGLWidget->Initialize(capture_window_stats_mode, this, font_size);
 
   ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
                               SelectionType::kExtended, FontType::kDefault);

@@ -19,7 +19,7 @@ struct texture_font_t;
 
 class TextRenderer {
  public:
-  TextRenderer();
+  TextRenderer(uint32_t font_size);
   ~TextRenderer();
 
   void Init();

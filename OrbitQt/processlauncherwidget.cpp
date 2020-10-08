@@ -7,7 +7,6 @@
 #include <QFileDialog>
 #include <QLineEdit>
 
-#include "../OrbitCore/Params.h"
 #include "App.h"
 #include "absl/flags/flag.h"
 #include "ui_processlauncherwidget.h"

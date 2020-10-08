@@ -11,7 +11,7 @@
 
 class CaptureWindow : public GlCanvas {
  public:
-  explicit CaptureWindow(StatsMode stats_mode);
+  explicit CaptureWindow(StatsMode stats_mode, uint32_t font_size);
   ~CaptureWindow() override;
 
   void Initialize() override;
@@ -61,6 +61,7 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(BatcherId batcher_id);
 
  private:
+  uint32_t font_size_;
   TimeGraph time_graph_;
   OutputWindow m_StatsWindow;
   bool draw_help_;

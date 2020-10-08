@@ -61,7 +61,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   GOrbitApp->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
   GOrbitApp->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
 
-  TimeGraph time_graph{};
+  TimeGraph time_graph{14};
   GCurrentTimeGraph = &time_graph;
   auto string_manager = std::make_shared<StringManager>();
   time_graph.SetStringManager(string_manager);

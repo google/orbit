@@ -6,8 +6,8 @@
 
 #include "CaptureWindow.h"
 
-std::unique_ptr<GlPanel> GlPanel::Create(StatsMode stats_mode) {
-  return std::make_unique<CaptureWindow>(stats_mode);
+std::unique_ptr<GlPanel> GlPanel::Create(StatsMode stats_mode, uint32_t font_size) {
+  return std::make_unique<CaptureWindow>(stats_mode, font_size);
 }
 
 GlPanel::GlPanel() {
