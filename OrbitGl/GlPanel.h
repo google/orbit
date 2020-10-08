@@ -15,7 +15,7 @@ class GlPanel {
   // Determines if the panel should show debug statistics when the user requests them.
   // This is usually only enabled when Orbit runs in developer mode.
   enum class StatsMode { kEnabled, kDisabled };
-  static std::unique_ptr<GlPanel> Create(StatsMode stats_mode);
+  static std::unique_ptr<GlPanel> Create(StatsMode stats_mode, uint32_t font_size);
 
   virtual void Initialize();
   virtual void Resize(int a_Width, int a_Height);

@@ -7,7 +7,6 @@
 #include <functional>
 
 #include "Batcher.h"
-#include "Params.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 

@@ -9,7 +9,6 @@
 #include "App.h"
 #include "Callstack.h"
 #include "ModulesDataView.h"
-#include "Params.h"
 #include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::ProcessInfo;

@@ -34,7 +34,8 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-TimeGraph::TimeGraph() : batcher_(BatcherId::kTimeGraph) {
+TimeGraph::TimeGraph(uint32_t font_size)
+    : font_size_(font_size), text_renderer_static_(font_size), batcher_(BatcherId::kTimeGraph) {
   last_thread_reorder_.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 

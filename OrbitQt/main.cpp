@@ -134,9 +134,11 @@ static outcome::result<void> RunUiInstance(
   OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
 
   {  // Scoping of QT UI Resources
-    OrbitMainWindow w(app, service_deploy_manager_ptr);
+    uint32_t kDefaultFontSize = 14;
 
-    Orbit_ImGui_Init();
+    OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize);
+
+    Orbit_ImGui_Init(kDefaultFontSize);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);

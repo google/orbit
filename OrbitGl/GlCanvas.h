@@ -15,7 +15,7 @@
 
 class GlCanvas : public GlPanel {
  public:
-  GlCanvas();
+  GlCanvas(uint32_t font_size);
   ~GlCanvas() override;
 
   void Initialize() override;

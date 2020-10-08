@@ -18,7 +18,6 @@
 #include "Images.h"
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
-#include "Params.h"
 #include "Path.h"
 #include "absl/base/casts.h"
 
@@ -627,7 +626,7 @@ uint32_t LoadTextureFromFile(const char* file_name) {
   return texture_id;
 }
 
-bool Orbit_ImGui_Init() {
+bool Orbit_ImGui_Init(uint32_t font_size) {
   ImGuiIO& io = ImGui::GetIO();
   io.IniFilename = nullptr;
 
@@ -662,7 +661,7 @@ bool Orbit_ImGui_Init() {
   SetupImGuiStyle(true, 1.f);
 
   const float kImguiFontOffset = 10.f;
-  GOrbitImguiFont = AddOrbitFont(GParams.font_size + kImguiFontOffset);
+  GOrbitImguiFont = AddOrbitFont(font_size + kImguiFontOffset);
   ImGui::GetIO().Fonts->Build();
 
   return true;

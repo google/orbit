@@ -18,7 +18,6 @@
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
-#include "Params.h"
 #include "SchedulerTrack.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
@@ -32,7 +31,7 @@
 
 class TimeGraph {
  public:
-  TimeGraph();
+  TimeGraph(uint32_t font_size);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -111,7 +110,7 @@ class TimeGraph {
   void SetFontSize(uint32_t font_size);
   [[nodiscard]] uint32_t GetFontSize() const { return text_renderer_static_.GetFontSize(); }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
-    return lround((GParams.font_size) * layout_.GetScale());
+    return lround((font_size_)*layout_.GetScale());
   }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
@@ -185,6 +184,7 @@ class TimeGraph {
                          const orbit_client_protos::TimerInfo& timer_info);
 
  private:
+  uint32_t font_size_;
   TextRenderer text_renderer_static_;
   TextRenderer* text_renderer_ = nullptr;
   GlCanvas* canvas_ = nullptr;

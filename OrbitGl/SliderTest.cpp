@@ -10,6 +10,7 @@
 
 class MockCanvas : public GlCanvas {
  public:
+  MockCanvas() : GlCanvas(14) {}
   MOCK_METHOD(int, GetWidth, (), (const, override));
   MOCK_METHOD(int, GetHeight, (), (const, override));
 };
