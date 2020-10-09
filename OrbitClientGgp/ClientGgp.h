@@ -28,6 +28,7 @@ class ClientGgp final : public CaptureListener {
   bool StopCapture();
   bool SaveCapture();
   void LoadSelectedFunctions();
+  void UpdateCaptureFunctions(std::vector<std::string> capture_functions);
 
   // CaptureListener implementation
   void OnCaptureStarted(
