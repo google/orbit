@@ -12,7 +12,7 @@
 
 #include "WebEngine/DeleteLaterDeleter.h"
 
-namespace WebEngine {
+namespace web_engine {
 
 /* Json-based transport for QtWebChannel
 
@@ -45,5 +45,5 @@ class JsonTransport : public QWebChannelAbstractTransport {
  private:
   std::unique_ptr<QWebSocket, DeleteLaterDeleter> socket_;
 };
-}  // namespace WebEngine
+}  // namespace web_engine
 #endif  // WEB_ENGINE_TRANSPORT_H_

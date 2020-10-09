@@ -5,7 +5,7 @@
 #ifndef WEB_ENGINE_DELETE_LATER_DELETER_H_
 #define WEB_ENGINE_DELETE_LATER_DELETER_H_
 
-namespace WebEngine {
+namespace web_engine {
 
 /* DeleteLaterDeleter is supposed to be used with std::unique_ptr
    and a QObject-derived type. It calls Qt's deleteLater member
@@ -31,5 +31,5 @@ struct DeleteLaterDeleter {
   }
 };
 
-}  // namespace WebEngine
+}  // namespace web_engine
 #endif  // WEB_ENGINE_DELETE_LATER_DELETER_H_

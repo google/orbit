@@ -16,9 +16,9 @@
 
 #include "WebEngine/DeleteLaterDeleter.h"
 
-namespace WebEngine {
+namespace web_engine {
 
-/* WebEngine::Dialog is a dialog window with a full screen web view.
+/* web_engine::Dialog is a dialog window with a full screen web view.
 
    The class bundles all the resources needed to show a web page
    and to communicate with the C++ part using Qt's webchannel.
@@ -40,7 +40,7 @@ namespace WebEngine {
 
    Example:
    QWebEngineProfile profile{};
-   WebEngine::Dialog dialog{&profile};
+   web_engine::Dialog dialog{&profile};
    dialog.GetWebEnginePage()->load(QUrl{"https://www.google.com/"});
    dialog.setWindowModality(Qt::ApplicationModal);
    dialog.exec();
@@ -70,6 +70,6 @@ class Dialog : public QDialog {
   std::unique_ptr<QWebSocketServer, DeleteLaterDeleter> web_socket_server_;
   std::unique_ptr<QWebChannel, DeleteLaterDeleter> web_channel_;
 };
-}  // namespace WebEngine
+}  // namespace web_engine
 
 #endif  // WEB_ENGINE_DIALOG_H_
