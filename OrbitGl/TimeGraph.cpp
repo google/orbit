@@ -46,6 +46,7 @@ TimeGraph::TimeGraph() : batcher_(BatcherId::kTimeGraph) {
           [this](const std::string& name, const TimerInfo& timer_info) {
             ProcessAsyncTimer(name, timer_info);
           });
+  num_cores_ = 0;
   manual_instrumentation_manager_ = GOrbitApp->GetManualInstrumentationManager();
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
 }
@@ -86,7 +87,6 @@ void TimeGraph::Clear() {
   async_tracks_.clear();
   frame_tracks_.clear();
 
-  cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ =
@@ -312,9 +312,9 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       ++thread_count_map_[timer_info.thread_id()];
     } else {
       scheduler_track_->OnTimer(timer_info);
-      if (!cores_seen_.count(timer_info.processor())) {
-        cores_seen_.insert(timer_info.processor());
-        uint32_t num_cores = GetNumCores();
+      if (GetNumCores() <= static_cast<uint32_t>(timer_info.processor())) {
+        auto num_cores = timer_info.processor() + 1;
+        SetNumCores(num_cores);
         layout_.SetNumCores(num_cores);
         scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
       }
@@ -388,11 +388,6 @@ uint32_t TimeGraph::GetNumTimers() const {
     num_timers += track->GetNumTimers();
   }
   return num_timers;
-}
-
-uint32_t TimeGraph::GetNumCores() const {
-  ScopeLock lock(mutex_);
-  return cores_seen_.size();
 }
 
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
