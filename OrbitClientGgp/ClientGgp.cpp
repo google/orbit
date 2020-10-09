@@ -257,6 +257,11 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   return selected_functions;
 }
 
+void ClientGgp::UpdateCaptureFunctions(std::vector<std::string> capture_functions) {
+  options_.capture_functions = capture_functions;
+  return;
+}
+
 void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_back(timer_info); }
 
 // CaptureListener implementation
