@@ -33,6 +33,7 @@ if(WIN32)
 else()
   find_program(NPM npm)
 endif()
+find_program(NODE node)
 
 set(NODE_AWARE_PATH "$ENV{PATH}" CACHE STRING "The state of PATH during config phase")
 
@@ -62,3 +63,18 @@ add_library(WebUI OBJECT)
 target_sources(WebUI PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/dist/WebUI.qrc)
 target_link_libraries(WebUI PUBLIC Qt5::Core)
 set_target_properties(WebUI PROPERTIES AUTORCC 1)
+
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/NOTICE.WebUI"
+                   BYPRODUCTS "${CMAKE_BINARY_DIR}/NOTICE.WebUI.csv"
+                   COMMAND ${CMAKE_COMMAND}
+                     -E env "PATH=${NODE_AWARE_PATH}"
+                     ${NODE} LicenseCollector.js "${CMAKE_BINARY_DIR}/NOTICE.WebUI"
+                     "${CMAKE_BINARY_DIR}/NOTICE.WebUI.csv"
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                   MAIN_DEPENDENCY package.json
+                   DEPENDS package-lock.json
+                           LicenseCollector.js
+                   COMMENT "Collecting licenses of third party web dependencies"
+                   )
+
+add_custom_target(WebUI_NOTICE_File DEPENDS "${CMAKE_BINARY_DIR}/NOTICE.WebUI")

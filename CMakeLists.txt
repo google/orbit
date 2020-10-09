@@ -207,8 +207,20 @@ file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 include("cmake/collect_licenses.cmake")
 
 # When not compiling with a system-provided version of Qt we can integrate all the licenses from Chromium.
-if(EXISTS "${CMAKE_BINARY_DIR}/NOTICE.Chromium")
-  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE" "${CMAKE_BINARY_DIR}/licenses/" APPEND_FILES "${CMAKE_BINARY_DIR}/NOTICE.Chromium")
+if(EXISTS "${CMAKE_BINARY_DIR}/NOTICE.Chromium" AND TARGET WebUI_NOTICE_File)
+  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE"
+                                "${CMAKE_BINARY_DIR}/licenses/"
+                                APPEND_FILES
+                                "${CMAKE_BINARY_DIR}/NOTICE.Chromium"
+                                "${CMAKE_BINARY_DIR}/NOTICE.WebUI"
+                                DEPENDS WebUI_NOTICE_File)
+elseif(TARGET WebUI_NOTICE_File)
+  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE"
+                                "${CMAKE_BINARY_DIR}/licenses/"
+                                APPEND_FILES
+                                "${CMAKE_BINARY_DIR}/NOTICE.WebUI"
+                                DEPENDS WebUI_NOTICE_File)
 else()
-  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE" "${CMAKE_BINARY_DIR}/licenses/")
+  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE"
+                                "${CMAKE_BINARY_DIR}/licenses/")
 endif()

@@ -28,13 +28,27 @@ endfunction()
 set(GEN_THIRD_PARTY_SCRIPT "${CMAKE_CURRENT_LIST_FILE}")
 
 function(GenerateThirdPartyLicenseFile OUTPUT_FILE INPUT_DIRECTORY)
-  cmake_parse_arguments(GEN "" "" "APPEND_FILES" ${ARGN})
+  cmake_parse_arguments(GEN "" "" "APPEND_FILES;DEPENDS" ${ARGN})
 
   get_filename_component(INPUT_DIRECTORY "${INPUT_DIRECTORY}" ABSOLUTE)
   get_filename_component(OUTPUT_FILE "${OUTPUT_FILE}" ABSOLUTE)
   string(MD5 OUTPUT_FILE_HASH "${OUTPUT_FILE}")
   string(SUBSTRING "${OUTPUT_FILE_HASH}" 0 12 OUTPUT_FILE_HASH)
-  add_custom_target("ThirdPartyLicenseFile_${OUTPUT_FILE_HASH}" ALL COMMAND ${CMAKE_COMMAND} -DIN_GENERATE_THIRD_PARTY_LICENSE_FILE=TRUE -DINPUT_DIRECTORY="${INPUT_DIRECTORY}" -DOUTPUT_FILE="${OUTPUT_FILE}" -DAPPEND_FILES="${GEN_APPEND_FILES}" -P "${GEN_THIRD_PARTY_SCRIPT}" BYPRODUCTS "${OUTPUT_FILE}" COMMENT "Collecting licenses for the ${OUTPUT_FILE} file...")
+
+  # Semicolons needs to be escaped since otherwise CMake will expand them to spaces
+  string(REPLACE ";" "$<SEMICOLON>" APPEND_FILES_ESCAPED "${GEN_APPEND_FILES}")
+
+  add_custom_target("ThirdPartyLicenseFile_${OUTPUT_FILE_HASH}" ALL COMMAND ${CMAKE_COMMAND}
+                    -DIN_GENERATE_THIRD_PARTY_LICENSE_FILE=TRUE
+                    -DINPUT_DIRECTORY="${INPUT_DIRECTORY}"
+                    -DOUTPUT_FILE="${OUTPUT_FILE}"
+                    -DAPPEND_FILES="${APPEND_FILES_ESCAPED}"
+                    -P "${GEN_THIRD_PARTY_SCRIPT}"
+                    BYPRODUCTS "${OUTPUT_FILE}"
+                    COMMENT "Collecting licenses for the ${OUTPUT_FILE} file...")
+  if(GEN_DEPENDS)
+    add_dependencies("ThirdPartyLicenseFile_${OUTPUT_FILE_HASH}" ${GEN_DEPENDS})
+  endif()
 endfunction()
 
 if(IN_GENERATE_THIRD_PARTY_LICENSE_FILE)
