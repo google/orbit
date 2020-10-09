@@ -27,6 +27,7 @@ class ClientGgp final : public CaptureListener {
   bool RequestStartCapture(ThreadPool* thread_pool);
   bool StopCapture();
   bool SaveCapture();
+  void LoadSelectedFunctions();
 
   // CaptureListener implementation
   void OnCaptureStarted(
@@ -52,6 +53,7 @@ class ClientGgp final : public CaptureListener {
   ProcessData target_process_;
   absl::flat_hash_set<std::unique_ptr<ModuleData>> modules_;
   absl::flat_hash_map<std::string, ModuleData*> module_map_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
   ModuleData* main_module_;
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<CaptureClient> capture_client_;

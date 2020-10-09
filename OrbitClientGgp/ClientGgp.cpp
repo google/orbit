@@ -76,27 +76,12 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
     return false;
   }
 
-  // Load selected functions if provided
-  absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
-  if (!options_.capture_functions.empty()) {
-    LOG("Loading selected functions");
-    selected_functions = GetSelectedFunctions();
-    if (!selected_functions.empty()) {
-      LOG("List of selected functions to hook in the capture:");
-      for (auto const& [address, selected_function] : selected_functions) {
-        LOG("%d %s", address, selected_function.pretty_name());
-      }
-    }
-  } else {
-    LOG("No functions provided; no functions hooked in the capture");
-  }
-
   // Start capture
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool, target_process_, module_map_, selected_functions, selected_tracepoints);
+      thread_pool, target_process_, module_map_, selected_functions_, selected_tracepoints);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -210,7 +195,26 @@ bool ClientGgp::InitCapture() {
     ERROR("Not possible to finish loading the module and symbols: %s", result.error().message());
     return false;
   }
+  // Load selected functions
+  LoadSelectedFunctions();
   return true;
+}
+
+void ClientGgp::LoadSelectedFunctions() {
+  // Load selected functions if provided
+  if (!options_.capture_functions.empty()) {
+    LOG("Loading selected functions");
+    selected_functions_ = GetSelectedFunctions();
+    if (!selected_functions_.empty()) {
+      LOG("List of selected functions to hook in the capture:");
+      for (auto const& [address, selected_function] : selected_functions_) {
+        LOG("%d %s", address, selected_function.pretty_name());
+      }
+    }
+  } else {
+    LOG("No functions provided; no functions hooked in the capture");
+  }
+  return;
 }
 
 void ClientGgp::InformUsedSelectedCaptureFunctions(
