@@ -42,14 +42,12 @@ TimeGraph::TimeGraph(uint32_t font_size)
   tracepoints_system_wide_track_ =
       GetOrCreateThreadTrack(TracepointEventBuffer::kAllTracepointsFakeTid);
 
-  // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
-  process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
-
   async_timer_info_listener_ =
       std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
           [this](const std::string& name, const TimerInfo& timer_info) {
             ProcessAsyncTimer(name, timer_info);
           });
+  num_cores_ = 0;
   manual_instrumentation_manager_ = GOrbitApp->GetManualInstrumentationManager();
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
 }
@@ -90,14 +88,10 @@ void TimeGraph::Clear() {
   async_tracks_.clear();
   frame_tracks_.clear();
 
-  cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ =
       GetOrCreateThreadTrack(TracepointEventBuffer::kAllTracepointsFakeTid);
-
-  // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
-  process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
 
   SetIteratorOverlayData({}, {});
 
@@ -319,7 +313,12 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       ++thread_count_map_[timer_info.thread_id()];
     } else {
       scheduler_track_->OnTimer(timer_info);
-      cores_seen_.insert(timer_info.processor());
+      if (GetNumCores() <= static_cast<uint32_t>(timer_info.processor())) {
+        auto num_cores = timer_info.processor() + 1;
+        SetNumCores(num_cores);
+        layout_.SetNumCores(num_cores);
+        scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
+      }
     }
   }
 
@@ -390,11 +389,6 @@ uint32_t TimeGraph::GetNumTimers() const {
     num_timers += track->GetNumTimers();
   }
   return num_timers;
-}
-
-uint32_t TimeGraph::GetNumCores() const {
-  ScopeLock lock(mutex_);
-  return cores_seen_.size();
 }
 
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
@@ -749,33 +743,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
-  uint32_t num_cores = GetNumCores();
-  layout_.SetNumCores(num_cores);
-  scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
   for (auto& track : sorted_tracks_) {
-    if (track->GetType() == Track::kThreadTrack) {
-      auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
-      int32_t tid = thread_track->GetThreadId();
-      if (tid == TracepointEventBuffer::kAllTracepointsFakeTid) {
-        thread_track->SetName("All tracepoint events");
-        thread_track->SetLabel("All tracepoint events");
-      } else if (tid == SamplingProfiler::kAllThreadsFakeTid) {
-        // This is the process_track_.
-        std::string process_name = GOrbitApp->GetCaptureData().process_name();
-        thread_track->SetName(process_name);
-        const std::string_view all_threads = " (all_threads)";
-        thread_track->SetLabel(process_name.append(all_threads));
-        thread_track->SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
-      } else {
-        const std::string& thread_name = GOrbitApp->GetCaptureData().GetThreadName(tid);
-        track->SetName(thread_name);
-        std::string tid_str = std::to_string(tid);
-        std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
-        thread_track->SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
-        track->SetLabel(track_label);
-      }
-    }
-
     track->Draw(canvas, picking_mode);
   }
 }
@@ -787,6 +755,9 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
     track = std::make_shared<SchedulerTrack>(this);
     tracks_.emplace_back(track);
     scheduler_track_ = track;
+    uint32_t num_cores = GetNumCores();
+    layout_.SetNumCores(num_cores);
+    scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
   }
   return track;
 }
@@ -799,6 +770,24 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
     tracks_.emplace_back(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(GetThreadColor(tid));
+    if (tid == TracepointEventBuffer::kAllTracepointsFakeTid) {
+      track->SetName("All tracepoint events");
+      track->SetLabel("All tracepoint events");
+    } else if (tid == SamplingProfiler::kAllThreadsFakeTid) {
+      // This is the process track.
+      std::string process_name = GOrbitApp->GetCaptureData().process_name();
+      track->SetName(process_name);
+      const std::string_view all_threads = " (all_threads)";
+      track->SetLabel(process_name.append(all_threads));
+      track->SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
+    } else {
+      const std::string& thread_name = GOrbitApp->GetCaptureData().GetThreadName(tid);
+      track->SetName(thread_name);
+      std::string tid_str = std::to_string(tid);
+      std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
+      track->SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
+      track->SetLabel(track_label);
+    }
   }
   return track;
 }
@@ -868,7 +857,9 @@ void TimeGraph::SortTracks() {
   event_count_.clear();
   event_count_[SamplingProfiler::kAllThreadsFakeTid] =
       GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount();
-  GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
+
+  // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
+  auto process_track_ = GetOrCreateThreadTrack(SamplingProfiler::kAllThreadsFakeTid);
   for (const auto& tid_and_count :
        GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCountsPerTid()) {
     const int32_t thread_id = tid_and_count.first;

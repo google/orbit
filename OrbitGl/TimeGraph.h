@@ -114,7 +114,7 @@ class TimeGraph {
   }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
-  [[nodiscard]] uint32_t GetNumCores() const;
+  [[nodiscard]] uint32_t GetNumCores() const { return num_cores_; }
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableTimerChains() const;
@@ -182,6 +182,7 @@ class TimeGraph {
   void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
+  void SetNumCores(uint32_t num_cores) { num_cores_ = num_cores; }
 
  private:
   uint32_t font_size_;
@@ -210,7 +211,7 @@ class TimeGraph {
   TimeGraphLayout layout_;
 
   std::map<int32_t, uint32_t> thread_count_map_;
-
+  uint32_t num_cores_;
   // Be careful when directly changing these members without using the
   // methods NeedsRedraw() or NeedsUpdate():
   // needs_update_primitives_ should always imply needs_redraw_, that is
@@ -239,9 +240,7 @@ class TimeGraph {
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
   std::string thread_filter_;
 
-  std::set<uint32_t> cores_seen_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
-  std::shared_ptr<ThreadTrack> process_track_;
   std::shared_ptr<ThreadTrack> tracepoints_system_wide_track_;
 
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::CallstackEvent>>
