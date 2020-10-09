@@ -9,7 +9,7 @@
 
 #include "OrbitBase/Logging.h"
 
-namespace WebEngine {
+namespace web_engine {
 
 JsonTransport::JsonTransport(QWebSocket* socket) : socket_(socket) {
   QObject::connect(socket_.get(), &QWebSocket::textMessageReceived, this,
@@ -32,4 +32,4 @@ void JsonTransport::sendMessage(const QJsonObject& msg) {
   socket_->sendTextMessage(QString::fromUtf8(document.toJson(QJsonDocument::Compact)));
 }
 
-}  // namespace WebEngine
+}  // namespace web_engine

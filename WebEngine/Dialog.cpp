@@ -15,7 +15,7 @@
 #include "JsonTransport.h"
 #include "OrbitBase/Logging.h"
 
-namespace WebEngine {
+namespace web_engine {
 
 Dialog::Dialog(QWebEngineProfile* profile, QWidget* parent) : QDialog(parent), page_(profile) {
   web_socket_server_.reset(
@@ -47,4 +47,4 @@ Dialog::Dialog(QWebEngineProfile* profile, QWidget* parent) : QDialog(parent), p
   view_.setPage(&page_);
 }
 
-}  // namespace WebEngine
+}  // namespace web_engine
