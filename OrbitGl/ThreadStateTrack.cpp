@@ -109,19 +109,55 @@ std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
 void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                         PickingMode /*picking_mode*/) {
   Batcher* batcher = &time_graph_->GetBatcher();
+  const GlCanvas* canvas = time_graph_->GetCanvas();
+
+  const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
+  const uint64_t pixel_delta_ns = time_window_ns / canvas->GetWidth();
+  const uint64_t min_time_graph_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+  const float pixel_width_in_world_coords =
+      canvas->GetWorldWidth() / static_cast<float>(canvas->GetWidth());
+
+  uint64_t ignore_until_ns = 0;
+
   GOrbitApp->GetCaptureData().ForEachThreadStateSliceIntersectingTimeRange(
       thread_id_, min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
-        float x0 = std::max(pos_[0], time_graph_->GetWorldFromTick(slice.begin_timestamp_ns()));
-        float x1 =
-            std::min(pos_[0] + size_[0], time_graph_->GetWorldFromTick(slice.end_timestamp_ns()));
-        Vec2 pos{x0, pos_[1]};
-        Vec2 size{x1 - x0, -size_[1]};
-        Box box(pos, size, GlCanvas::kZValueEvent);
+        if (slice.end_timestamp_ns() <= ignore_until_ns) {
+          // Reduce overdraw by not drawing slices whose entire width would only draw over a
+          // previous slice. Similar to TimerTrack::UpdatePrimitives.
+          return;
+        }
+
+        const float x0 = time_graph_->GetWorldFromTick(slice.begin_timestamp_ns());
+        const float x1 = time_graph_->GetWorldFromTick(slice.end_timestamp_ns());
+        const float width = x1 - x0;
+
+        const Vec2 pos{x0, pos_[1]};
+        const Vec2 size{width, -size_[1]};
+
+        const Color color = GetThreadStateColor(slice.thread_state());
 
         auto user_data = std::make_unique<PickingUserData>(
             nullptr, [&](PickingId id) { return GetThreadStateSliceTooltip(id); });
         user_data->custom_data_ = &slice;
-        batcher->AddBox(box, GetThreadStateColor(slice.thread_state()), std::move(user_data));
+
+        if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {
+          Box box(pos, size, GlCanvas::kZValueEvent);
+          batcher->AddBox(box, color, std::move(user_data));
+        } else {
+          // Make this slice cover an entire pixel and don't draw subsequent slices that would
+          // coincide with the same pixel.
+          // Use AddBox instead of AddVerticalLine as otherwise the tops of Boxes and lines wouldn't
+          // be properly aligned.
+          Box box(pos, {pixel_width_in_world_coords, size[1]}, GlCanvas::kZValueEvent);
+          batcher->AddBox(box, color, std::move(user_data));
+
+          if (pixel_delta_ns != 0) {
+            ignore_until_ns =
+                min_time_graph_ns +
+                (slice.begin_timestamp_ns() - min_time_graph_ns) / pixel_delta_ns * pixel_delta_ns +
+                pixel_delta_ns;
+          }
+        }
       });
 }
 
