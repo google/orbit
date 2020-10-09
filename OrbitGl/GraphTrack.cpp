@@ -13,7 +13,6 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
   float trackWidth = canvas->GetWorldWidth();
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   const bool picking = picking_mode != PickingMode::kNone;
 
   pos_[0] = canvas->GetWorldTopLeftX();
@@ -33,30 +32,18 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   Box box(pos_, Vec2(size_[0], -size_[1]), track_z);
 
-  // Draw label with graph value at current mouse position.
-  const Color kWhiteColor(255, 255, 255, 255);
-  const Color kBlackColor(0, 0, 0, 255);
-  double graph_value = GetValueAtTime(time_graph_->GetCurrentMouseTimeNs());
-
-  int white_text_box_width =
-      canvas->GetTextRenderer().GetStringWidth(std::to_string(graph_value).c_str());
-
-  Vec2 white_text_box_size(white_text_box_width, layout.GetTextBoxHeight());
-  auto rightmost_x_position = canvas->GetWorldTopLeftX() + canvas->GetWorldWidth() -
-                              layout.GetRightMargin() - layout.GetSliderWidth() -
-                              white_text_box_size[0];
-  Vec2 white_text_box_position(
-      std::min(canvas->GetMouseX(), rightmost_x_position),
-      y0 - static_cast<float>((max_ - graph_value) * size_[1] / value_range_) -
-          white_text_box_size[1] / 2.f);
-
   if (!picking) {
-    canvas->GetTextRenderer().AddText(
-        std::to_string(graph_value).c_str(), white_text_box_position[0],
-        white_text_box_position[1] + layout.GetTextOffset(), GlCanvas::kZValueTextUi, kBlackColor,
-        time_graph_->CalculateZoomedFontSize(), white_text_box_size[0]);
-    Box white_text_box(white_text_box_position, white_text_box_size, GlCanvas::kZValueUi);
-    batcher->AddBox(white_text_box, kWhiteColor);
+    auto last_measure = GetPreviousValueAndTime(time_graph_->GetCurrentMouseTimeNs());
+    if (last_measure.has_value()) {
+      auto& [time, value] = last_measure.value();
+      if (time_graph_->IsFullyVisible(time, time)) {
+        float point_x = time_graph_->GetWorldFromTick(time);
+        float point_y = y0 - static_cast<float>((max_ - value) * size_[1] / value_range_);
+        const Color kBlack(0, 0, 0, 255);
+        const Color kWhite(255, 255, 255, 255);
+        DrawLabel(canvas, Vec2(point_x, point_y), std::to_string(value), kBlack, kWhite);
+      }
+    }
   }
 
   batcher->AddBox(box, color, shared_from_this());
@@ -69,6 +56,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, shared_from_this());
 
   const Color kLineColor(0, 128, 255, 128);
+  const Color kDotColor(0, 128, 255, 255);
 
   if (!picking) {
     // Current time window
@@ -82,23 +70,68 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     if (it != values_.begin()) --it;
     uint64_t previous_time = it->first;
     double last_normalized_value = (it->second - min_) * inv_value_range_;
+    constexpr float kDotRadius = 2.f;
+    float base_y = pos_[1] - size_[1];
+    DrawSquareDot(canvas,
+                  Vec2(time_graph_->GetWorldFromTick(previous_time),
+                       base_y + static_cast<float>(last_normalized_value) * size_[1]),
+                  kDotRadius, GlCanvas::kZValueText, kDotColor);
     for (++it; it != values_.end(); ++it) {
       if (previous_time > max_ns) break;
       uint64_t time = it->first;
       double normalized_value = (it->second - min_) * inv_value_range_;
-      float base_y = pos_[1] - size_[1];
       float x0 = time_graph_->GetWorldFromTick(previous_time);
       float x1 = time_graph_->GetWorldFromTick(time);
       float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
       float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
-      time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y0), GlCanvas::kZValueText,
+      time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), GlCanvas::kZValueText,
                                         kLineColor);
-      time_graph_->GetBatcher().AddLine(Vec2(x1, y0), Vec2(x1, y1), GlCanvas::kZValueText,
-                                        kLineColor);
+      DrawSquareDot(canvas, Vec2(x1, y1), kDotRadius, GlCanvas::kZValueText, kDotColor);
 
       previous_time = time;
       last_normalized_value = normalized_value;
     }
+  }
+}
+
+void GraphTrack::DrawSquareDot(GlCanvas* canvas, Vec2 center, float radius, float z, Color color) {
+  Vec2 position(center[0] - radius, center[1] - radius);
+  Vec2 size(2 * radius, 2 * radius);
+  canvas->GetBatcher()->AddBox(Box(position, size, z), color);
+}
+
+void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string text,
+                           Color text_color, Color font_color) {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+
+  int text_width = canvas->GetTextRenderer().GetStringWidth(text.c_str());
+  Vec2 text_box_size(text_width, layout.GetTextBoxHeight());
+
+  float arrow_width = text_box_size[1] / 2.f;
+  bool arrow_is_left_directed =
+      target_pos[0] < canvas->GetWorldTopLeftX() + text_box_size[0] + arrow_width;
+  Vec2 text_box_position(
+      target_pos[0] + (arrow_is_left_directed ? arrow_width : -arrow_width - text_box_size[0]),
+      target_pos[1] - text_box_size[1] / 2.f);
+
+  canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
+                                    text_box_position[1] + layout.GetTextOffset(),
+                                    GlCanvas::kZValueTextUi, text_color,
+                                    time_graph_->CalculateZoomedFontSize(), text_box_size[0]);
+
+  Box arrow_text_box(text_box_position, text_box_size, GlCanvas::kZValueUi);
+  Vec3 arrow_extra_point(target_pos[0], target_pos[1], GlCanvas::kZValueUi);
+
+  Batcher* batcher = canvas->GetBatcher();
+  batcher->AddBox(arrow_text_box, font_color);
+  if (arrow_is_left_directed) {
+    batcher->AddTriangle(
+        Triangle(arrow_text_box.vertices[0], arrow_text_box.vertices[1], arrow_extra_point),
+        font_color);
+  } else {
+    batcher->AddTriangle(
+        Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
+        font_color);
   }
 }
 
@@ -111,13 +144,14 @@ void GraphTrack::AddValue(double value, uint64_t time) {
   if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
 }
 
-double GraphTrack::GetValueAtTime(uint64_t time, double default_value) const {
+std::optional<std::pair<uint64_t, double> > GraphTrack::GetPreviousValueAndTime(
+    uint64_t time) const {
   auto iterator_lower = values_.upper_bound(time);
-  if (iterator_lower == values_.end() || iterator_lower == values_.begin()) {
-    return default_value;
+  if (iterator_lower == values_.begin()) {
+    return {};
   }
   --iterator_lower;
-  return iterator_lower->second;
+  return *iterator_lower;
 }
 
 float GraphTrack::GetHeight() const {
