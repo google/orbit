@@ -4,9 +4,9 @@
 
 #include <vector>
 
-#include "ClientGgp.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitClientGgp/ClientGgp.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
