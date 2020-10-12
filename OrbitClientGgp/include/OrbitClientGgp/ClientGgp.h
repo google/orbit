@@ -10,11 +10,11 @@
 #include <string>
 
 #include "CaptureData.h"
-#include "ClientGgpOptions.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ProcessData.h"
+#include "OrbitClientGgp/ClientGgpOptions.h"
 #include "OrbitClientServices/ProcessClient.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"

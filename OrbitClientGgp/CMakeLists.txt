@@ -9,12 +9,18 @@ add_executable(OrbitClientGgp main.cpp)
 target_compile_options(OrbitClientGgp PRIVATE
     ${STRICT_COMPILE_FLAGS})
 
+target_include_directories(OrbitClientGgp PUBLIC 
+        ${CMAKE_CURRENT_LIST_DIR}/include)
+
 target_include_directories(OrbitClientGgp PRIVATE
     ${CMAKE_CURRENT_LIST_DIR})
 
+target_sources(OrbitClientGgp PUBLIC
+    include/OrbitClientGgp/ClientGgp.h
+    include/OrbitClientGgp/ClientGgpOptions.h)
+
 target_sources(OrbitClientGgp PRIVATE
     ClientGgp.cpp
-    ClientGgp.h
     main.cpp)
 
 target_link_libraries(OrbitClientGgp PUBLIC
