@@ -10,9 +10,9 @@
 # llvm-cov and requires a build with build arguments -fprofile-instr-generate 
 # and -fcoverage-mapping. 
 #
-# usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR OUTPUT_DIR
-#
-# settings:
+# usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR
+
+# Settings:
 # grep inverted matching list for files in BUILD_DIR/bin/ that are not used
 BIN_FILE_FILTER="\.debug\|crashpad_handler"
 # grep inverted matching list for source files that are not used
@@ -22,6 +22,8 @@ SOURCE_FILE_FILTER="Test.cpp\|Tests.cpp\|Fuzzer.cpp"
 # fail on any error
 set -e
 
+# Generate the css class string that determines the color of table cells
+# parameter 1: percent; float, between 0 and 100
 function get_css_class_string {
   local percent=$1
   local result="column-entry-red"
@@ -34,6 +36,9 @@ function get_css_class_string {
   echo "$result"
 }
 
+# Generate a td html tag that contains the percent covered and is color coded
+# parameter 1: count; int, total amount
+# parameter 2: covered; int, amount covered (covered <= count)
 function generate_html_td {
   local count=$1
   local covered=$2
@@ -44,9 +49,9 @@ function generate_html_td {
   echo "<td class='$css_class'><pre> $percent_formatted% ($covered/$count)</pre></td>"
 }
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 2 ]; then
   echo "error: wrong number of arguments."
-  echo "usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR OUTPUT_DIR"
+  echo "usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR"
   exit 1
 fi
 
@@ -62,11 +67,7 @@ if [ ! -d $BUILD_DIR ]; then
   exit 1
 fi
 
-OUTPUT_DIR=$(realpath $3)
-if [ ! -d $OUTPUT_DIR ]; then
-  echo "error: directory $3 does not exist."
-  exit 1
-fi
+OUTPUT_DIR=$BUILD_DIR/coverage
 
 LIBS=$BUILD_DIR/lib/*
 BINS=$(find $BUILD_DIR/bin/ -maxdepth 1 -type f | grep -v "$BIN_FILE_FILTER")
@@ -78,17 +79,20 @@ SUM_LINES_COVERED=0
 SUM_REGIONS_COUNT=0
 SUM_REGIONS_COVERED=0
 
+# ctest --show-only=json-v1 outputs structured (json) information about the tests in the current
+# directory. This json output is transformed by jq to be only the name of the test, which in Orbits
+# case corresponds to the components (targets) like OrbitBase, OrbitSsh, etc.
 for COMPONENT in $(cd "$BUILD_DIR"; ctest --show-only=json-v1 | jq -r '.tests | .[] | .name')
 do
   echo "$COMPONENT: preprocessing"
-  llvm-profdata merge -sparse \
+  llvm-profdata-9 merge -sparse \
     -o $BUILD_DIR/$COMPONENT.profdata \
     $BUILD_DIR/$COMPONENT/default.profraw 
 
   SOURCE_FILES=$(find $SOURCE_DIR/$COMPONENT -regex ".*\.\(h\|cpp\)" | grep -v "$SOURCE_FILE_FILTER")
 
   echo "$COMPONENT: generating html report"
-  llvm-cov show -format=html \
+  llvm-cov-9 show -format=html \
     -show-line-counts-or-regions -show-instantiations=false \
     -output-dir=$OUTPUT_DIR/coverage_$COMPONENT \
     -instr-profile=$BUILD_DIR/$COMPONENT.profdata \
@@ -96,7 +100,7 @@ do
     $SOURCE_FILES >/dev/null 2>&1
 
   echo "$COMPONENT: generating json summary"
-  JSON=$(llvm-cov export -summary-only \
+  JSON=$(llvm-cov-9 export -summary-only \
     -instr-profile=$BUILD_DIR/$COMPONENT.profdata \
     $FORMATTED_BINARY_FILES $SOURCE_FILES 2>/dev/null \
     | jq -c '.data[0].totals')
@@ -129,5 +133,7 @@ INDEX_HTML+=$HTML_TABLE
 INDEX_HTML+="<tr class='light-row-bold'><td><pre>Totals</pre></td>$(generate_html_td $SUM_FUNCTIONS_COUNT $SUM_FUNCTIONS_COVERED)$(generate_html_td $SUM_LINES_COUNT $SUM_LINES_COVERED)$(generate_html_td $SUM_REGIONS_COUNT $SUM_REGIONS_COVERED)</tr></table></body></html>"
 
 echo "$INDEX_HTML" > $OUTPUT_DIR/index.html
+
+echo "Success! Coverage report generated at $OUTPUT_DIR/index.html"
 
 exit 0
