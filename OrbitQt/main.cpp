@@ -134,7 +134,7 @@ static outcome::result<void> RunUiInstance(
   OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
 
   {  // Scoping of QT UI Resources
-    uint32_t kDefaultFontSize = 14;
+    constexpr uint32_t kDefaultFontSize = 14;
 
     OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize);
 

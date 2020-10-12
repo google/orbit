@@ -31,7 +31,7 @@
 
 class TimeGraph {
  public:
-  TimeGraph(uint32_t font_size);
+  explicit TimeGraph(uint32_t font_size);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
