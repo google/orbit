@@ -34,8 +34,6 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
-ClientGgp::ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
-
 bool ClientGgp::InitClient() {
   if (options_.grpc_server_address.empty()) {
     ERROR("gRPC server address not provided");
