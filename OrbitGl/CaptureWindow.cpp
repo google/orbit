@@ -526,17 +526,15 @@ void CaptureWindow::DrawScreenSpace() {
   const TimeGraphLayout& layout = time_graph_.GetLayout();
   float right_margin = layout.GetRightMargin();
 
-  const auto picking_mode = GetPickingMode();
-
   if (time_span > 0) {
     UpdateHorizontalSliderFromWorld();
     UpdateHorizontalScroll(slider_->GetPosRatio());
-    slider_->Draw(this, picking_mode);
+    slider_->Draw(this);
 
     UpdateVerticalSliderFromWorld();
     UpdateVerticalScroll(vertical_slider_->GetPosRatio());
     if (vertical_slider_->GetLengthRatio() < 1.f) {
-      vertical_slider_->Draw(this, picking_mode);
+      vertical_slider_->Draw(this);
       int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
       right_margin += slider_width;
     }

@@ -26,13 +26,13 @@ class TimerTrack : public Track {
   ~TimerTrack() override = default;
 
   // Pickable
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info);
   [[nodiscard]] std::string GetTooltip() const override;
 
   // Track
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                        PickingMode /*picking_mode*/) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode /*picking_mode*/,
+                        float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return kTimerTrack; }
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() override;

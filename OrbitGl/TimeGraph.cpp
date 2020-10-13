@@ -562,17 +562,13 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  SortTracks();
-
-  float current_y = -layout_.GetSchedulerTrackOffset();
-
-  for (auto& track : sorted_tracks_) {
-    track->SetY(current_y);
-    track->UpdatePrimitives(min_tick, max_tick, picking_mode);
-    current_y -= (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+  if (GOrbitApp->IsCapturing() || sorted_tracks_.empty()) {
+    SortTracks();
   }
 
-  min_y_ = current_y;
+  UpdateMovingTrackSorting();
+  UpdateTracks(min_tick, max_tick, picking_mode);
+
   needs_update_primitives_ = false;
 }
 
@@ -771,7 +767,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
 void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   for (auto& track : sorted_tracks_) {
-    track->Draw(canvas, picking_mode);
+    const float z_offset = track->IsMoving() || track->IsPinned() ? 1.f : 0.f;
+    track->Draw(canvas, picking_mode, z_offset);
   }
 }
 
@@ -1007,6 +1004,69 @@ void TimeGraph::SortTracks() {
 
     last_thread_reorder_.Reset();
   }
+}
+
+void TimeGraph::UpdateMovingTrackSorting() {
+  std::shared_ptr<Track> moving_track = nullptr;
+  for (auto track = sorted_tracks_.begin(); track != sorted_tracks_.end(); ++track) {
+    if ((*track)->IsMoving()) {
+      moving_track = *track;
+      sorted_tracks_.erase(track);
+      break;
+    }
+  }
+
+  if (moving_track != nullptr) {
+    bool inserted = false;
+
+    for (auto track = sorted_tracks_.begin(); track != sorted_tracks_.end(); ++track) {
+      if (moving_track->GetPos()[1] >= (*track)->GetPos()[1]) {
+        sorted_tracks_.insert(track, std::move(moving_track));
+        inserted = true;
+        break;
+      }
+    }
+
+    if (!inserted) {
+      sorted_tracks_.push_back(std::move(moving_track));
+    }
+  }
+}
+
+void TimeGraph::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
+  float current_y = -layout_.GetSchedulerTrackOffset();
+  float pinned_tracks_height = 0.f;
+
+  // Draw pinned tracks
+  for (auto& track : sorted_tracks_) {
+    if (!track->IsPinned()) {
+      continue;
+    }
+
+    const float z_offset = 1.f;
+    track->SetY(current_y + canvas_->GetWorldTopLeftY() - layout_.GetTopMargin() -
+                layout_.GetSchedulerTrackOffset());
+    track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    const float height = (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+    current_y -= height;
+    pinned_tracks_height += height;
+  }
+
+  current_y = -layout_.GetSchedulerTrackOffset() - pinned_tracks_height;
+
+  // Draw unpinned tracks
+  for (auto& track : sorted_tracks_) {
+    if (track->IsPinned()) {
+      continue;
+    }
+
+    const float z_offset = track->IsMoving() || track->IsPinned() ? 1.f : 0.f;
+    track->SetY(current_y);
+    track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    current_y -= (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+  }
+
+  min_y_ = current_y;
 }
 
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {

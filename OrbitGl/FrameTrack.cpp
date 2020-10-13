@@ -210,8 +210,8 @@ std::string FrameTrack::GetBoxTooltip(PickingId id) const {
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
 
-void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  TimerTrack::Draw(canvas, picking_mode);
+void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  TimerTrack::Draw(canvas, picking_mode, z_offset);
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);

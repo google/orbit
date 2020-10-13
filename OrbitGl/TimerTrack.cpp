@@ -24,14 +24,14 @@ TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
 }
 
-void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float track_height = GetHeight();
   float track_width = canvas->GetWorldWidth();
 
   SetPos(canvas->GetWorldTopLeftX(), pos_[1]);
   SetSize(track_width, track_height);
 
-  Track::Draw(canvas, picking_mode);
+  Track::Draw(canvas, picking_mode, z_offset);
 }
 
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
@@ -54,7 +54,7 @@ void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetT
 float TimerTrack::GetTextBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
 
 void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                  PickingMode /*picking_mode*/) {
+                                  PickingMode /*picking_mode*/, float z_offset) {
   UpdateBoxHeight();
 
   Batcher* batcher = &time_graph_->GetBatcher();
@@ -110,7 +110,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
-        float z = GlCanvas::kZValueBox;
+        float z = GlCanvas::kZValueBox + z_offset;
         Color color = GetTimerColor(timer_info, is_selected);
         text_box.SetPos(pos);
         text_box.SetSize(size);

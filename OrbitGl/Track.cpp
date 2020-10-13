@@ -79,7 +79,7 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
   }
 }
 
-void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -89,9 +89,15 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + size_[0];
   float y0 = pos_[1];
   float y1 = y0 - size_[1];
-  float track_z = GlCanvas::kZValueTrack;
-  float text_z = GlCanvas::kZValueText;
+  float track_z = GlCanvas::kZValueTrack + z_offset;
+  float text_z = GlCanvas::kZValueText + z_offset;
   float top_margin = layout.GetTrackTopMargin();
+
+  // Draw pinned background
+  if (!picking && IsPinned()) {
+    Box box(Vec2(x0, y0), Vec2(size_[0], size_[1]), track_z);
+    batcher->AddBox(box, GlCanvas::kTabColor, shared_from_this());
+  }
 
   // Draw track background.
   Color background_color = GetBackgroundColor();
@@ -125,7 +131,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 top_left(tab_x0, y0 + label_height);
     Vec2 end_bottom(x1 - right_margin, y1);
     Vec2 end_top(x1 - right_margin, y0 + top_margin);
-    float z = GlCanvas::kZValueRoundingCorner;
+    float z = GlCanvas::kZValueRoundingCorner + z_offset;
 
     DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, z);
     DrawTriangleFan(batcher, rounded_corner, bottom_right, background_color, 0, z);
@@ -147,7 +153,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float toggle_y_pos = pos_[1] + half_label_height;
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos);
-  collapse_toggle_->Draw(canvas, picking_mode);
+  collapse_toggle_->Draw(canvas, picking_mode, z_offset);
 
   if (!picking) {
     // Draw label.
@@ -165,8 +171,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   canvas_ = canvas;
 }
 
-void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/,
-                             PickingMode /*  picking_mode*/) {}
+void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/,
+                             float /*z_offset*/) {}
 
 void Track::SetPos(float a_X, float a_Y) {
   if (!moving_) {

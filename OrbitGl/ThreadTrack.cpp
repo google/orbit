@@ -175,8 +175,8 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_track_->SetPos(pos_[0], current_y);
 }
 
-void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  TimerTrack::Draw(canvas, picking_mode);
+void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  TimerTrack::Draw(canvas, picking_mode, z_offset);
 
   UpdatePositionOfSubtracks();
 
@@ -187,36 +187,36 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   if (!thread_state_track_->IsEmpty()) {
     thread_state_track_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
-    thread_state_track_->Draw(canvas, picking_mode);
+    thread_state_track_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!event_track_->IsEmpty()) {
     event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
-    event_track_->Draw(canvas, picking_mode);
+    event_track_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!tracepoint_track_->IsEmpty()) {
     tracepoint_track_->SetSize(canvas->GetWorldWidth(), tracepoint_track_height);
-    tracepoint_track_->Draw(canvas, picking_mode);
+    tracepoint_track_->Draw(canvas, picking_mode, z_offset);
   }
 }
 
 void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_id(thread_id_); }
 
-void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
-  UpdatePositionOfSubtracks();
+void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                                   float z_offset) {
 
   if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
   }
   if (!event_track_->IsEmpty()) {
-    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
   }
   if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
   }
 
-  TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
+  TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
 }
 
 void ThreadTrack::SetTrackColor(Color color) {

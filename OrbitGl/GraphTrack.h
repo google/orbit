@@ -17,7 +17,7 @@ class GraphTrack : public Track {
  public:
   explicit GraphTrack(TimeGraph* time_graph, std::string name);
   [[nodiscard]] Type GetType() const override { return kGraphTrack; }
-  void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
   [[nodiscard]] float GetHeight() const override;
   void AddValue(double value, uint64_t time);
   [[nodiscard]] std::optional<std::pair<uint64_t, double> > GetPreviousValueAndTime(

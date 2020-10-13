@@ -11,17 +11,18 @@ TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
   thread_id_ = thread_id;
 }
 
-void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   if (IsEmpty()) {
     return;
   }
 
   Batcher* batcher = canvas->GetBatcher();
 
-  const float eventBarZ = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
-                                                              : GlCanvas::kZValueEventBar;
+  float event_bar_z = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
+                                                          : GlCanvas::kZValueEventBar;
+  event_bar_z += z_offset;
   Color color = color_;
-  Box box(pos_, Vec2(size_[0], -size_[1]), eventBarZ);
+  Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
   batcher->AddBox(box, color, shared_from_this());
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
@@ -33,9 +34,8 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + size_[0];
   float y1 = y0 - size_[1];
 
-  batcher->AddLine(pos_, Vec2(x1, y0), GlCanvas::kZValueEventBar, color, shared_from_this());
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::kZValueEventBar, color,
-                   shared_from_this());
+  batcher->AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
   if (picked_) {
     Vec2& from = mouse_pos_[0];
@@ -47,7 +47,7 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     y1 = y0 - size_[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi);
+    Box box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
     batcher->AddBox(box, picked_color, shared_from_this());
   }
 
@@ -55,10 +55,10 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                       PickingMode picking_mode) {
+                                       PickingMode picking_mode, float z_offset) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float z = GlCanvas::kZValueEvent;
+  float z = GlCanvas::kZValueEvent + z_offset;
   float track_height = layout.GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 

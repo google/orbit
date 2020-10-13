@@ -11,9 +11,10 @@ class TracepointTrack : public EventTrack {
  public:
   explicit TracepointTrack(TimeGraph* time_graph, int32_t thread_id);
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                        float z_offset = 0) override;
 
   void SetPos(float x, float y);
 

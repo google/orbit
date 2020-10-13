@@ -39,17 +39,18 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
 
   explicit Track(TimeGraph* time_graph);
   ~Track() override = default;
+  virtual void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode, float z_offset = 0);
+  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                                float z_offset = 0);
 
   // Pickable
-  void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode) override;
-  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void OnPick(int a_X, int a_Y) override;
   void OnRelease() override;
   void OnDrag(int a_X, int a_Y) override;
   [[nodiscard]] bool Draggable() override { return true; }
-  [[nodiscard]] bool Movable() override { return true; }
 
   [[nodiscard]] virtual Type GetType() const = 0;
+  [[nodiscard]] virtual bool Movable() { return true; }
 
   [[nodiscard]] virtual float GetHeight() const { return 0.f; };
   [[nodiscard]] bool GetVisible() const { return visible_; }
@@ -70,6 +71,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() {
     return {};
   }
+
+  [[nodiscard]] bool IsPinned() const { return pinned_; }
 
   [[nodiscard]] bool IsMoving() const { return moving_; }
   [[nodiscard]] Vec2 GetMoveDelta() const {
@@ -115,10 +118,11 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   int32_t process_id_;
   Color color_;
   bool visible_ = true;
+  bool pinned_ = false;
   std::atomic<uint32_t> num_timers_;
   std::atomic<uint64_t> min_time_;
   std::atomic<uint64_t> max_time_;
-  bool picking_enabled_ = false;
+  bool picking_enabled_ = true;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
   std::shared_ptr<TriangleToggle> collapse_toggle_;

@@ -25,7 +25,7 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
   void UpdateBoxHeight() override;
 

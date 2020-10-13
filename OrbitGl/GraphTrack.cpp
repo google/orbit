@@ -9,7 +9,7 @@
 GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name)
     : Track(time_graph), name_(std::move(name)) {}
 
-void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   Batcher* batcher = canvas->GetBatcher();
 
   float trackWidth = canvas->GetWorldWidth();
@@ -28,7 +28,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   const Color kPickedColor(0, 128, 255, 128);
   Color color = GetBackgroundColor();
 
-  float track_z = GlCanvas::kZValueTrack;
+  float track_z = GlCanvas::kZValueTrack + z_offset;
 
   Box box(pos_, Vec2(size_[0], -size_[1]), track_z);
 

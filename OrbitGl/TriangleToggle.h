@@ -27,8 +27,9 @@ class TriangleToggle : public Pickable, public std::enable_shared_from_this<Tria
   TriangleToggle(TriangleToggle&&) = delete;
   TriangleToggle& operator=(TriangleToggle&&) = delete;
 
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0);
+
   // Pickable
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
   void OnPick(int x, int y) override;
   void OnRelease() override;
 

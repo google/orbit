@@ -17,6 +17,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   ~GlSlider(){};
 
   [[nodiscard]] bool Draggable() override { return true; }
+  virtual void Draw(GlCanvas* canvas) = 0;
 
   void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
 
@@ -109,7 +110,7 @@ class GlVerticalSlider : public GlSlider {
   GlVerticalSlider() : GlSlider(true){};
   ~GlVerticalSlider(){};
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas) override;
 
  protected:
   [[nodiscard]] int GetBarPixelLength() const override;
@@ -120,7 +121,7 @@ class GlHorizontalSlider : public GlSlider {
   GlHorizontalSlider() : GlSlider(false) { can_resize_ = true; };
   ~GlHorizontalSlider(){};
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas) override;
 
  protected:
   [[nodiscard]] int GetBarPixelLength() const override;

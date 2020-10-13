@@ -42,6 +42,8 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
+  void UpdateMovingTrackSorting();
+  void UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void SelectEvents(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
