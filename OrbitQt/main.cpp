@@ -65,6 +65,9 @@ ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of fra
 // TODO: Remove this flag once we have a way to toggle the display return values
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 
+ABSL_FLAG(bool, enable_tracepoint_feature, false,
+          "Enable the setting of the panel of kernel tracepoints");
+
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
 using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;
