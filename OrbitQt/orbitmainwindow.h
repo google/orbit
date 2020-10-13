@@ -52,7 +52,7 @@ class OrbitMainWindow : public QMainWindow {
 
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
-  void OpenDisassembly(std::string a_String, DisassemblyReport report);
+  void OpenDisassembly(orbit_gl::DisassembledCode a_String, DisassemblyReport report);
   void OpenCapture(const std::string& filepath);
   void OnCaptureCleared();
 

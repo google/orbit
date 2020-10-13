@@ -195,7 +195,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
   }
-  using DisassemblyCallback = std::function<void(std::string, DisassemblyReport)>;
+  using DisassemblyCallback = std::function<void(orbit_gl::DisassembledCode, DisassemblyReport)>;
   void SetDisassemblyCallback(DisassemblyCallback callback) {
     disassembly_callback_ = std::move(callback);
   }
@@ -254,7 +254,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
-  void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
+  void SendDisassemblyToUi(orbit_gl::DisassembledCode disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);

@@ -192,7 +192,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  GOrbitApp->SetDisassemblyCallback([this](std::string disassembly, DisassemblyReport report) {
+  GOrbitApp->SetDisassemblyCallback([this](orbit_gl::DisassembledCode disassembly, DisassemblyReport report) {
     OpenDisassembly(std::move(disassembly), std::move(report));
   });
   GOrbitApp->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
@@ -646,9 +646,9 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
 }
 
-void OrbitMainWindow::OpenDisassembly(std::string a_String, DisassemblyReport report) {
+void OrbitMainWindow::OpenDisassembly(orbit_gl::DisassembledCode disassembly, DisassemblyReport report) {
   auto* dialog = new OrbitDisassemblyDialog(this);
-  dialog->SetText(std::move(a_String));
+  dialog->SetText(std::move(disassembly.disassembled_code));
   dialog->SetDisassemblyReport(std::move(report));
   dialog->setWindowTitle("Orbit Disassembly");
   dialog->setAttribute(Qt::WA_DeleteOnClose);
