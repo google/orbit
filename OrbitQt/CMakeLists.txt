@@ -153,7 +153,7 @@ set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTORCC ON)
 
-register_test(OrbitQtTests)
+register_test(OrbitQtTests TEST_ISOLATION)
 
 # QT_QPA_PLATFORM=offscreen is currently not supported under Windows.
 # So if requested we disable the test all the way.
