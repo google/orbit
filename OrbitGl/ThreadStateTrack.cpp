@@ -34,32 +34,34 @@ void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
-  static const Color kGreen{0, 224, 0, 255};
-  static const Color kLightBlue{0, 255, 255, 255};
-  static const Color kYellow{255, 192, 0, 255};
-  static const Color kOrange{255, 128, 0, 255};
-  static const Color kRed{255, 0, 0, 255};
-  static const Color kGrey{128, 128, 128, 255};
+  static const Color kGreen500{76, 175, 80, 255};
+  static const Color kBlue500{33, 150, 243, 255};
+  static const Color kGray600{117, 117, 117, 255};
+  static const Color kOrange500{255, 152, 0, 255};
+  static const Color kRed500{244, 67, 54, 255};
+  static const Color kPurple500{156, 39, 176, 255};
   static const Color kBlack{0, 0, 0, 255};
+  static const Color kBrown500{121, 85, 72, 255};
 
   switch (state) {
     case ThreadStateSliceInfo::kRunning:
-      return kGreen;
+      return kGreen500;
     case ThreadStateSliceInfo::kRunnable:
-      return kLightBlue;
+      return kBlue500;
     case ThreadStateSliceInfo::kInterruptibleSleep:
-      return kYellow;
+      return kGray600;
     case ThreadStateSliceInfo::kUninterruptibleSleep:
-      return kOrange;
+      return kOrange500;
     case ThreadStateSliceInfo::kStopped:
+      return kRed500;
     case ThreadStateSliceInfo::kTraced:
-      return kRed;
+      return kPurple500;
     case ThreadStateSliceInfo::kDead:
     case ThreadStateSliceInfo::kZombie:
       return kBlack;
     case ThreadStateSliceInfo::kParked:
     case ThreadStateSliceInfo::kIdle:
-      return kGrey;
+      return kBrown500;
     default:
       UNREACHABLE();
   }
