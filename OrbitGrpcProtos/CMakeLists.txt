@@ -17,6 +17,7 @@ target_sources(OrbitProtos PRIVATE
         module.proto
         process.proto
         services.proto
+        services_ggp.proto
         symbol.proto
         tracepoint.proto)
 

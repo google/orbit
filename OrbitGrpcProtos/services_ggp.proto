@@ -1,0 +1,27 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package orbit_grpc_protos;
+
+// Hello world test code
+service CaptureClientGgpService {
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc StartCapture (StartCaptureRequest) returns (StartCaptureReply) {}
+}
+
+message StartCaptureRequest {}
+
+message StartCaptureReply {}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
