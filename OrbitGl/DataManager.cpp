@@ -40,6 +40,7 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
   auto process_it = process_map_.find(process_id);
   CHECK(process_it != process_map_.end());
   ProcessData& process = process_it->second;
+  process.UpdateModuleInfos(module_infos);
 
   for (const auto& module_info : module_infos) {
     auto module_it = module_map_.find(module_info.file_path());
@@ -60,8 +61,6 @@ void DataManager::UpdateModuleInfos(int32_t process_id,
       }
     }
   }
-
-  process.UpdateModuleInfos(module_infos);
 }
 
 void DataManager::SelectFunction(const FunctionInfo& function) {
