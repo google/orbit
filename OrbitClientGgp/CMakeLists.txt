@@ -2,33 +2,43 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-project(OrbitClientGgp)
+project(OrbitClientGgpLib)
 
-add_executable(OrbitClientGgp main.cpp)
+add_library(OrbitClientGgpLib STATIC)
 
-target_compile_options(OrbitClientGgp PRIVATE
+target_compile_options(OrbitClientGgpLib PRIVATE
     ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitClientGgp PUBLIC 
+target_include_directories(OrbitClientGgpLib PUBLIC 
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_include_directories(OrbitClientGgp PRIVATE
+target_include_directories(OrbitClientGgpLib PRIVATE
     ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitClientGgp PUBLIC
+target_sources(OrbitClientGgpLib PUBLIC
     include/OrbitClientGgp/ClientGgp.h
     include/OrbitClientGgp/ClientGgpOptions.h)
 
-target_sources(OrbitClientGgp PRIVATE
+target_sources(OrbitClientGgpLib PRIVATE
     ClientGgp.cpp
     main.cpp)
 
-target_link_libraries(OrbitClientGgp PUBLIC
+target_link_libraries(OrbitClientGgpLib PUBLIC
     OrbitBase
     OrbitCaptureClient
     OrbitClientModel
     OrbitClientServices
     OrbitProtos
     OrbitVersion)
+
+project(OrbitClientGgp)
+
+add_executable(OrbitClientGgp main.cpp)
+
+target_link_libraries(OrbitClientGgp PRIVATE 
+    OrbitClientGgpLib)
+
+target_compile_options(OrbitClientGgp PRIVATE 
+    ${STRICT_COMPILE_FLAGS})
 
 strip_symbols(OrbitClientGgp)
