@@ -28,7 +28,7 @@ if [ "$0" == "$SCRIPT" ]; then
   cd "$DIR"
   REFERENCE="origin/master"
   MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
-  FORMATTING_DIFF="$(git diff -U0 --no-color --relative $MERGE_BASE | clang-format-diff-9 -p1)"
+  FORMATTING_DIFF="$(git diff -U0 --no-color --relative $MERGE_BASE -- . ':!third_party/' ':!build/' | clang-format-diff-9 -p1)"
 
   if [ -n "$FORMATTING_DIFF" ]; then
     echo "clang-format determined the following necessary changes to your PR:"
