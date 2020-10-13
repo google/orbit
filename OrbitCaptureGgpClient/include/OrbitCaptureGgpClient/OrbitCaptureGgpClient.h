@@ -17,14 +17,15 @@
 
 class CaptureClientGgpClient {
  public:
-  CaptureClientGgpClient(std::shared_ptr<grpc::Channel> channel);
+  CaptureClientGgpClient(std::shared_ptr<grpc::Channel> channel)
+      : capture_client_ggp_service_(orbit_grpc_protos::CaptureClientGgpService::NewStub(channel)){};
 
   // Assembles the client's payload, sends it and presents the response back
   // from the server.
   std::string SayHello(const std::string& user);
 
  private:
-  std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> stub_;
+  std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> capture_client_ggp_service_;
 };
 
 #endif  // ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_

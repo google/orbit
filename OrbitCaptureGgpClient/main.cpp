@@ -11,10 +11,6 @@
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 #include "services_ggp.grpc.pb.h"
 
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::Status;
-
 int main(int argc, char** argv) {
   // Instantiate the client. It requires a channel, out of which the actual RPCs
   // are created. This channel models a connection to an endpoint specified by
@@ -43,9 +39,10 @@ int main(int argc, char** argv) {
   }
   CaptureClientGgpClient ggp_capture_client(
       grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
+
   std::string user("world");
   std::string reply = ggp_capture_client.SayHello(user);
   std::cout << "CaptureClientGgpService received: " << reply << std::endl;
 
-  return 0;
+  return 1;
 }

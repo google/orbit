@@ -21,5 +21,6 @@ target_sources(OrbitCaptureGgpService PRIVATE
 
 target_link_libraries(OrbitCaptureGgpService PUBLIC 
         OrbitBase
+        OrbitClientGgpLib
         OrbitProtos)
 

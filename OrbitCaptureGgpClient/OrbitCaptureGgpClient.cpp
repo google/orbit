@@ -13,12 +13,8 @@
 using orbit_grpc_protos::HelloReply;
 using orbit_grpc_protos::HelloRequest;
 
-using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-
-CaptureClientGgpClient::CaptureClientGgpClient(std::shared_ptr<Channel> channel)
-    : stub_(orbit_grpc_protos::CaptureClientGgpService::NewStub(channel)) {}
 
 // Assembles the client's payload, sends it and presents the response back
 // from the server.
@@ -35,7 +31,7 @@ std::string CaptureClientGgpClient::SayHello(const std::string& user) {
   ClientContext context;
 
   // The actual RPC.
-  Status status = stub_->SayHello(&context, request, &reply);
+  Status status = capture_client_ggp_service_->SayHello(&context, request, &reply);
 
   // Act upon its status.
   if (status.ok()) {

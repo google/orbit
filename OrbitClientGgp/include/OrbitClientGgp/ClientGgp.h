@@ -23,7 +23,10 @@
 
 class ClientGgp final : public CaptureListener {
  public:
-  ClientGgp(ClientGgpOptions&& options);
+  explicit ClientGgp(){};
+
+  explicit ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
+
   bool InitClient();
   bool RequestStartCapture(ThreadPool* thread_pool);
   bool StopCapture();

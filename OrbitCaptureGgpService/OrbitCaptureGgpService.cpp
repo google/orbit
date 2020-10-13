@@ -4,6 +4,8 @@
 
 #include "OrbitCaptureGgpService.h"
 
+#include <string>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitCaptureGgpServiceImpl.h"
 #include "absl/strings/str_cat.h"
