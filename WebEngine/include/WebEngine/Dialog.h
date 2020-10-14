@@ -13,6 +13,7 @@
 #include <QWebEngineView>
 #include <QWebSocketServer>
 #include <memory>
+#include <optional>
 
 #include "WebEngine/DeleteLaterDeleter.h"
 
@@ -38,9 +39,19 @@ namespace web_engine {
    the user. In that case it helps to construct the dialog upfront and
    hide it until it's needed.
 
+   The communication with the JavaScript engine usually works via Chromium's
+   internal IPC mechanism. This won't be available when the web view is loaded
+   in an external browser for debugging purposes. Therefore it is also possible
+   to start a websocket server which can also expose the communication channel.
+   To do so, specify a port number as the second argument. 0 is also valid and
+   will instruct the operating system to choose a port. It can be obtained via
+   `dialog.GetWebSocketServer().value()->serverPort()`. Both communication
+   channels work at the same time. The web socket server will only listen on
+   localhost.
+
    Example:
    QWebEngineProfile profile{};
-   web_engine::Dialog dialog{&profile};
+   web_engine::Dialog dialog{&profile, std::nullopt};
    dialog.GetWebEnginePage()->load(QUrl{"https://www.google.com/"});
    dialog.setWindowModality(Qt::ApplicationModal);
    dialog.exec();
@@ -49,7 +60,8 @@ class Dialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit Dialog(QWebEngineProfile* profile, QWidget* parent = nullptr);
+  explicit Dialog(QWebEngineProfile* profile, std::optional<int> web_socket_port_number,
+                  QWidget* parent = nullptr);
 
   QWebEngineView* GetWebEngineView() { return &view_; }
   const QWebEngineView* GetWebEngineView() const { return &view_; }
@@ -60,8 +72,20 @@ class Dialog : public QDialog {
   QWebChannel* GetWebChannel() { return web_channel_.get(); }
   const QWebChannel* GetWebChannel() const { return web_channel_.get(); }
 
-  QWebSocketServer* GetWebSocketServer() { return web_socket_server_.get(); }
-  const QWebSocketServer* GetWebSocketServer() const { return web_socket_server_.get(); }
+  std::optional<QWebSocketServer*> GetWebSocketServer() {
+    if (web_socket_server_) {
+      return web_socket_server_.get();
+    } else {
+      return std::nullopt;
+    }
+  }
+  std::optional<const QWebSocketServer*> GetWebSocketServer() const {
+    if (web_socket_server_) {
+      return web_socket_server_.get();
+    } else {
+      return std::nullopt;
+    }
+  }
 
   void RegisterObject(const QString& id, QObject* obj) { web_channel_->registerObject(id, obj); }
 
