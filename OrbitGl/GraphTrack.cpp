@@ -14,6 +14,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   float trackWidth = canvas->GetWorldWidth();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
+  const bool picking = picking_mode != PickingMode::kNone;
 
   pos_[0] = canvas->GetWorldTopLeftX();
   SetSize(trackWidth, GetHeight());
@@ -53,12 +54,14 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
       y0 - static_cast<float>((max_ - graph_value) * size_[1] / value_range_) -
           white_text_box_size[1] / 2.f);
 
-  canvas->GetTextRenderer().AddText(std::to_string(graph_value).c_str(), white_text_box_position[0],
-                                    white_text_box_position[1] + layout.GetTextOffset(),
-                                    GlCanvas::kZValueTextUi, kBlackColor,
-                                    time_graph_->CalculateZoomedFontSize(), white_text_box_size[0]);
-  Box white_text_box(white_text_box_position, white_text_box_size, GlCanvas::kZValueUi);
-  batcher->AddBox(white_text_box, kWhiteColor);
+  if (!picking) {
+    canvas->GetTextRenderer().AddText(
+        std::to_string(graph_value).c_str(), white_text_box_position[0],
+        white_text_box_position[1] + layout.GetTextOffset(), GlCanvas::kZValueTextUi, kBlackColor,
+        time_graph_->CalculateZoomedFontSize(), white_text_box_size[0]);
+    Box white_text_box(white_text_box_position, white_text_box_size, GlCanvas::kZValueUi);
+    batcher->AddBox(white_text_box, kWhiteColor);
+  }
 
   batcher->AddBox(box, color, shared_from_this());
 
@@ -71,33 +74,35 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   const Color kLineColor(0, 128, 255, 128);
 
-  // Current time window
-  uint64_t min_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
-  uint64_t max_ns = time_graph_->GetTickFromUs(time_graph_->GetMaxTimeUs());
-  double time_range = static_cast<float>(max_ns - min_ns);
-  if (values_.size() < 2 || time_range == 0) return;
+  if (!picking) {
+    // Current time window
+    uint64_t min_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+    uint64_t max_ns = time_graph_->GetTickFromUs(time_graph_->GetMaxTimeUs());
+    double time_range = static_cast<float>(max_ns - min_ns);
+    if (values_.size() < 2 || time_range == 0) return;
 
-  auto it = values_.upper_bound(min_ns);
-  if (it == values_.end()) return;
-  if (it != values_.begin()) --it;
-  uint64_t previous_time = it->first;
-  double last_normalized_value = (it->second - min_) * inv_value_range_;
-  for (++it; it != values_.end(); ++it) {
-    if (previous_time > max_ns) break;
-    uint64_t time = it->first;
-    double normalized_value = (it->second - min_) * inv_value_range_;
-    float base_y = pos_[1] - size_[1];
-    float x0 = time_graph_->GetWorldFromTick(previous_time);
-    float x1 = time_graph_->GetWorldFromTick(time);
-    float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
-    float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
-    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y0), GlCanvas::kZValueText,
-                                      kLineColor);
-    time_graph_->GetBatcher().AddLine(Vec2(x1, y0), Vec2(x1, y1), GlCanvas::kZValueText,
-                                      kLineColor);
+    auto it = values_.upper_bound(min_ns);
+    if (it == values_.end()) return;
+    if (it != values_.begin()) --it;
+    uint64_t previous_time = it->first;
+    double last_normalized_value = (it->second - min_) * inv_value_range_;
+    for (++it; it != values_.end(); ++it) {
+      if (previous_time > max_ns) break;
+      uint64_t time = it->first;
+      double normalized_value = (it->second - min_) * inv_value_range_;
+      float base_y = pos_[1] - size_[1];
+      float x0 = time_graph_->GetWorldFromTick(previous_time);
+      float x1 = time_graph_->GetWorldFromTick(time);
+      float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
+      float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
+      time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y0), GlCanvas::kZValueText,
+                                        kLineColor);
+      time_graph_->GetBatcher().AddLine(Vec2(x1, y0), Vec2(x1, y1), GlCanvas::kZValueText,
+                                        kLineColor);
 
-    previous_time = time;
-    last_normalized_value = normalized_value;
+      previous_time = time;
+      last_normalized_value = normalized_value;
+    }
   }
 }
 
