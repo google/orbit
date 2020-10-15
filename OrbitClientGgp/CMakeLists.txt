@@ -20,8 +20,7 @@ target_sources(OrbitClientGgpLib PUBLIC
     include/OrbitClientGgp/ClientGgpOptions.h)
 
 target_sources(OrbitClientGgpLib PRIVATE
-    ClientGgp.cpp
-    main.cpp)
+    ClientGgp.cpp)
 
 target_link_libraries(OrbitClientGgpLib PUBLIC
     OrbitBase
