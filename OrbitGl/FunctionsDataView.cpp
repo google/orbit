@@ -142,7 +142,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-  menu.emplace_back(kMenuActionDisassembly);
+  if (selected_indices.size() == 1) menu.emplace_back(kMenuActionDisassembly);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }

@@ -101,7 +101,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   if (enable_load) menu.emplace_back(kMenuActionLoadSymbols);
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
+  if (enable_disassembly && selected_indices.size() == 1) menu.emplace_back(kMenuActionDisassembly);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }

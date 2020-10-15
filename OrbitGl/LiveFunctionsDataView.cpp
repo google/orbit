@@ -184,7 +184,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
+  if (enable_disassembly && selected_indices.size() == 1) menu.emplace_back(kMenuActionDisassembly);
 
   if (enable_iterator) {
     menu.emplace_back(kMenuActionIterate);
