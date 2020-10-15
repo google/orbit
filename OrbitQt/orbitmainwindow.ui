@@ -435,6 +435,7 @@ QPushButton:disabled {
      <addaction name="actionServiceStackOverflow"/>
     </widget>
     <addaction name="menuCrash"/>
+    <addaction name="actionchrome_gpu"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
@@ -610,6 +611,11 @@ QPushButton:disabled {
   <action name="actionServiceStackOverflow">
    <property name="text">
     <string>[Service] Stack Overflow</string>
+   </property>
+  </action>
+  <action name="actionchrome_gpu">
+   <property name="text">
+    <string>chrome://gpu</string>
    </property>
   </action>
  </widget>

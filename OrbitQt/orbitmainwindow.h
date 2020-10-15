@@ -89,6 +89,7 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionServiceCheckFalse_triggered();
   void on_actionServiceNullPointerDereference_triggered();
   void on_actionServiceStackOverflow_triggered();
+  void on_actionchrome_gpu_triggered();
 
   void ShowCaptureOnSaveWarningIfNeeded();
 

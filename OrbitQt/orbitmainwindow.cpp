@@ -28,6 +28,7 @@
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
 #include "TutorialOverlay.h"
+#include "WebEngine/Dialog.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
@@ -705,6 +706,13 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
 void OrbitMainWindow::OnCaptureCleared() {
   ui->liveFunctions->Reset();
   ui->actionSave_Capture->setDisabled(true);
+}
+
+void OrbitMainWindow::on_actionchrome_gpu_triggered() {
+  QWebEngineProfile profile{};
+  web_engine::Dialog dialog{&profile};
+  dialog.GetWebEnginePage()->load(QUrl{"chrome://gpu"});
+  dialog.exec();
 }
 
 void OrbitMainWindow::closeEvent(QCloseEvent* event) {
