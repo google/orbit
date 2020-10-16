@@ -15,6 +15,9 @@ class FrameTrack : public TimerTrack {
 
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  // Some values needed for visualization have to be computed after all timers have been added to
+  // the track. This can be done using the Finalize() method.
+  void Finalize();
 
   [[nodiscard]] float GetTextBoxHeight(
       const orbit_client_protos::TimerInfo& timer_info) const override;
@@ -40,6 +43,8 @@ class FrameTrack : public TimerTrack {
 
   orbit_client_protos::FunctionInfo function_;
   orbit_client_protos::FunctionStats stats_;
+
+  std::vector<uint64_t> durations_;
 
   float maximum_box_ratio_ = 0.f;
 };

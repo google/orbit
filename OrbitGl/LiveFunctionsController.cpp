@@ -243,6 +243,7 @@ void LiveFunctionsController::AddFrameTrack(const FunctionInfo& function) {
 
     GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
   }
+  GCurrentTimeGraph->FinalizeFrameTrack(function);
 }
 
 void LiveFunctionsController::RemoveFrameTrack(const FunctionInfo& function) {

@@ -1090,3 +1090,10 @@ void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& functi
   frame_tracks_.erase(function.address());
   NeedsUpdate();
 }
+
+void TimeGraph::FinalizeFrameTrack(const orbit_client_protos::FunctionInfo& function) {
+  auto it = frame_tracks_.find(function.address());
+  if (it != frame_tracks_.end()) {
+    it->second->Finalize();
+  }
+}

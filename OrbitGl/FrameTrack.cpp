@@ -119,14 +119,7 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
     stats_.set_min_ns(duration_ns);
   }
 
-  double ratio = 0.0;
-  if (stats_.average_time_ns() != 0) {
-    ratio = static_cast<double>(duration_ns) / static_cast<double>(stats_.average_time_ns());
-  }
-
-  maximum_box_ratio_ = std::max(maximum_box_ratio_, static_cast<float>(ratio));
-  maximum_box_ratio_ =
-      std::min(maximum_box_ratio_, static_cast<float>(kHeightCapAverageMultipleDouble));
+  durations_.push_back(duration_ns);
 
   TimerTrack::OnTimer(timer_info);
 }
@@ -201,6 +194,21 @@ std::string FrameTrack::GetBoxTooltip(PickingId id) const {
       FunctionUtils::GetLoadedModuleName(function_), text_box->GetTimerInfo().user_data_key(),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
+}
+
+void FrameTrack::Finalize() {
+  for (uint64_t duration : durations_) {
+    double ratio = 0.0;
+    if (stats_.average_time_ns() != 0) {
+      ratio = static_cast<double>(duration) / static_cast<double>(stats_.average_time_ns());
+    }
+
+    maximum_box_ratio_ = std::max(maximum_box_ratio_, static_cast<float>(ratio));
+    maximum_box_ratio_ =
+        std::min(maximum_box_ratio_, static_cast<float>(kHeightCapAverageMultipleDouble));
+  }
+
+  durations_.clear();
 }
 
 void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
