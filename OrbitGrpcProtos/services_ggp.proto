@@ -8,20 +8,26 @@ package orbit_grpc_protos;
 
 // Hello world test code
 service CaptureClientGgpService {
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
   rpc StartCapture (StartCaptureRequest) returns (StartCaptureResponse) {}
+  rpc StopAndSaveCapture (StopAndSaveCaptureRequest) returns (StopAndSaveCaptureResponse) {}
+  rpc UpdateSelectedFunctions (UpdateSelectedFunctionsRequest) returns (UpdateSelectedFunctionsResponse) {}
+  rpc ShutdownService (ShutdownServiceRequest) returns (ShutdownServiceResponse) {}
 }
 
 message StartCaptureRequest {}
+
 message StartCaptureResponse {}
 
+message StopAndSaveCaptureRequest {}
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+message StopAndSaveCaptureResponse {}
+
+message UpdateSelectedFunctionsRequest {
+  repeated string functions = 1;
 }
 
-// The response message containing the greetings
-message HelloReply {
-  string message = 1;
-}
+message UpdateSelectedFunctionsResponse {}
+
+message ShutdownServiceRequest {}
+
+message ShutdownServiceResponse {}

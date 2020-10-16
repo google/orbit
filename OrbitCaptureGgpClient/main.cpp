@@ -4,45 +4,98 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/flags/usage_config.h"
 #include "services_ggp.grpc.pb.h"
 
-int main(int argc, char** argv) {
-  // Instantiate the client. It requires a channel, out of which the actual RPCs
-  // are created. This channel models a connection to an endpoint specified by
-  // the argument "--target=" which is the only expected argument.
-  // We indicate that the channel isn't authenticated (use of
-  // InsecureChannelCredentials()).
-  std::string target_str;
-  std::string arg_str("--target");
-  if (argc > 1) {
-    std::string arg_val = argv[1];
-    size_t start_pos = arg_val.find(arg_str);
-    if (start_pos != std::string::npos) {
-      start_pos += arg_str.size();
-      if (arg_val[start_pos] == '=') {
-        target_str = arg_val.substr(start_pos + 1);
-      } else {
-        std::cout << "The only correct argument syntax is --target=" << std::endl;
-        return 0;
-      }
-    } else {
-      std::cout << "The only acceptable argument is --target=" << std::endl;
-      return 0;
-    }
-  } else {
-    target_str = "127.0.0.1:44767";
-  }
-  CaptureClientGgpClient ggp_capture_client(
-      grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
+ABSL_FLAG(uint16_t, grpc_port, 44767, "gRPC server port for capture ggp service");
 
-  std::string user("world");
-  std::string reply = ggp_capture_client.SayHello(user);
-  std::cout << "CaptureClientGgpService received: " << reply << std::endl;
+int main(int argc, char** argv) {
+  absl::ParseCommandLine(argc, argv);
+
+  // Create channel
+  grpc::ChannelArguments channel_arguments;
+  channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
+  uint64_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
+  std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
+
+  std::shared_ptr<::grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
+      grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
+  if (!grpc_channel) {
+    ERROR("Unable to create GRPC channel to %s", grpc_server_address);
+    return 0;
+  }
+  LOG("Created GRPC channel to %s", grpc_server_address);
+
+  CaptureClientGgpClient ggp_capture_client = CaptureClientGgpClient(grpc_channel);
+
+  // Waits for input to run the grpc call requested by the user
+
+  ErrorMessageOr<void> result = ErrorMessage();
+  bool exit = false;
+  while (!exit) {
+    int i;
+    std::cout << "\n";
+    std::cout << "List of available commands:\n";
+    std::cout << "------------------------------\n";
+    std::cout << "1 Start capture\n";
+    std::cout << "2 Stop and save capture\n";
+    std::cout << "3 Hook functions\n";
+    std::cout << "4 Shutdown service and exit\n";
+    std::cout << "\n";
+    std::cout << "Introduce your choice (1-4): ";
+
+    std::cin >> i;
+    switch (i) {
+      case 1:
+        LOG("Chosen %d: Start capture", i);
+        result = ggp_capture_client.StartCapture();
+        if (result.has_error()) {
+          ERROR("Not possible to start capture: %s", result.error().message());
+        }
+        break;
+      case 2:
+        LOG("Chosen %d: Stop and save capture", i);
+        result = ggp_capture_client.StopAndSaveCapture();
+        if (result.has_error()) {
+          ERROR("Not possible to stop or save capture: %s", result.error().message());
+        }
+        break;
+      case 3: {
+        std::vector<std::string> selected_functions;
+        std::string function;
+        std::cout << "Introduce function to hook (Enter ! when you are done): ";
+        std::cin >> function;
+        while (function != "!") {
+          selected_functions.push_back(function);
+          std::cout << "Introduce function to hook (Enter ! when you are done): ";
+          std::cin >> function;
+        }
+        result = ggp_capture_client.UpdateSelectedFunctions(selected_functions);
+        if (result.has_error()) {
+          ERROR("Not possible to update functions %s", result.error().message());
+        }
+        break;
+      }
+      case 4:
+        LOG("Chosen %d: Shutdown service and exit", i);
+        exit = true;
+        break;
+      default:
+        ERROR("Option selected not valid. Try again");
+    }
+  }
+
+  ggp_capture_client.ShutdownService();
 
   return 1;
 }

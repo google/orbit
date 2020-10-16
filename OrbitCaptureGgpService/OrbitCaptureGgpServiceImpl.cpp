@@ -20,17 +20,19 @@ using grpc::ServerContext;
 using grpc::Status;
 using grpc::StatusCode;
 
+using orbit_grpc_protos::ShutdownServiceRequest;
+using orbit_grpc_protos::ShutdownServiceResponse;
+using orbit_grpc_protos::StartCaptureRequest;
+using orbit_grpc_protos::StartCaptureResponse;
+using orbit_grpc_protos::StopAndSaveCaptureRequest;
+using orbit_grpc_protos::StopAndSaveCaptureResponse;
+using orbit_grpc_protos::UpdateSelectedFunctionsRequest;
+using orbit_grpc_protos::UpdateSelectedFunctionsResponse;
+
 CaptureClientGgpServiceImpl::CaptureClientGgpServiceImpl()
     : orbit_grpc_protos::CaptureClientGgpService::Service{} {
+  thread_pool_ = ThreadPool::Create(1, 1, absl::Seconds(1));
   InitClientGgp();
-}
-
-Status CaptureClientGgpServiceImpl::SayHello(grpc::ServerContext*,
-                                             const orbit_grpc_protos::HelloRequest* request,
-                                             orbit_grpc_protos::HelloReply* reply) {
-  std::string prefix("Hello ");
-  reply->set_message(prefix + request->name());
-  return Status::OK;
 }
 
 void CaptureClientGgpServiceImpl::InitClientGgp() {
@@ -50,4 +52,74 @@ void CaptureClientGgpServiceImpl::InitClientGgp() {
   }
   LOG("ClientGgp Initialised");
   return;
+}
+
+Status CaptureClientGgpServiceImpl::StartCapture(ServerContext*, const StartCaptureRequest*,
+                                                 StartCaptureResponse*) {
+  LOG("Start capture grpc call received");
+  if (CaptureIsRunning()) {
+    return Status(StatusCode::INTERNAL, "A capture is already running");
+  }
+  if (!client_ggp_.RequestStartCapture(thread_pool_.get())) {
+    return Status(StatusCode::INTERNAL, "Not possible to start the capture");
+  }
+  return Status::OK;
+}
+
+Status CaptureClientGgpServiceImpl::StopAndSaveCapture(grpc::ServerContext*,
+                                                       const StopAndSaveCaptureRequest*,
+                                                       StopAndSaveCaptureResponse*) {
+  LOG("Stop capture grpc call received");
+  if (!client_ggp_.StopCapture()) {
+    return Status(StatusCode::INTERNAL, "Not possible to stop the capture");
+  }
+  // idle until all the capture data is received
+  while (CaptureIsRunning()) {
+  }
+  SaveCapture();
+  return Status::OK;
+}
+
+void CaptureClientGgpServiceImpl::SaveCapture() {
+  LOG("Save capture");
+  if (!client_ggp_.SaveCapture()) {
+    ERROR("Not able to save capture");
+  }
+}
+
+Status CaptureClientGgpServiceImpl::UpdateSelectedFunctions(
+    grpc::ServerContext*, const UpdateSelectedFunctionsRequest* request,
+    UpdateSelectedFunctionsResponse*) {
+  LOG("UpdateSelectedFunctions grpc call received");
+  std::vector<std::string> capture_functions;
+  for (const auto& function : request->functions()) {
+    capture_functions.push_back(function);
+  }
+
+  client_ggp_.UpdateCaptureFunctions(capture_functions);
+  return Status::OK;
+}
+
+Status CaptureClientGgpServiceImpl::ShutdownService(grpc::ServerContext*,
+                                                    const ShutdownServiceRequest*,
+                                                    ShutdownServiceResponse*) {
+  LOG("Shutdown grpc call received");
+  Shutdown();
+  return Status::OK;
+}
+
+void CaptureClientGgpServiceImpl::Shutdown() {
+  if (CaptureIsRunning()) {
+    if (!client_ggp_.StopCapture()) {
+      LOG("Not possible to stop the capture");
+    }
+  }
+  LOG("Shut down the thread and wait for it to finish");
+  thread_pool_->ShutdownAndWait();
+
+  LOG("All done");
+}
+
+bool CaptureClientGgpServiceImpl::CaptureIsRunning() {
+  return (thread_pool_->GetNumberOfBusyThreads() > 0);
 }

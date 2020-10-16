@@ -13,6 +13,8 @@
 #include <memory>
 #include <string>
 
+#include "OrbitBase/Result.h"
+#include "grpcpp/grpcpp.h"
 #include "services_ggp.grpc.pb.h"
 
 class CaptureClientGgpClient {
@@ -20,9 +22,11 @@ class CaptureClientGgpClient {
   CaptureClientGgpClient(std::shared_ptr<grpc::Channel> channel)
       : capture_client_ggp_service_(orbit_grpc_protos::CaptureClientGgpService::NewStub(channel)){};
 
-  // Assembles the client's payload, sends it and presents the response back
-  // from the server.
-  std::string SayHello(const std::string& user);
+  [[nodiscard]] ErrorMessageOr<void> StartCapture();
+  [[nodiscard]] ErrorMessageOr<void> StopAndSaveCapture();
+  [[nodiscard]] ErrorMessageOr<void> UpdateSelectedFunctions(
+      std::vector<std::string> capture_functions);
+  void ShutdownService();
 
  private:
   std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> capture_client_ggp_service_;
