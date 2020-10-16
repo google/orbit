@@ -1,0 +1,15 @@
+{ 
+    "file_format_version" : "1.1.0", 
+    "layer" : { 
+        "name": "ORBIT_VK_LAYER", 
+        "type": "GLOBAL", 
+        "library_path": "/usr/local/cloudcast/lib/libOrbitVulkanLayer.so",
+        "api_version": "1.1.77", 
+        "implementation_version": "1", 
+        "description": "Provides GPU insights for the Orbit System Profiler", 
+        "functions": {
+            "vkGetInstanceProcAddr": "OrbitGetInstanceProcAddr",
+            "vkGetDeviceProcAddr": "OrbitGetDeviceProcAddr"
+        }  
+    } 
+} 
