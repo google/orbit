@@ -15,7 +15,8 @@ target_link_libraries(
                    Qt5::WebSockets Qt5::WebChannel)
 
 target_sources(WebEngine PUBLIC include/WebEngine/Dialog.h
-                                include/WebEngine/DeleteLaterDeleter.h)
+                                include/WebEngine/DeleteLaterDeleter.h
+                                include/WebEngine/View.h)
 
-target_sources(WebEngine PRIVATE Dialog.cpp JsonTransport.cpp JsonTransport.h)
+target_sources(WebEngine PRIVATE Dialog.cpp JsonTransport.cpp JsonTransport.h View.cpp)
 set_target_properties(WebEngine PROPERTIES AUTOMOC ON)
