@@ -19,6 +19,7 @@ class ThreadPoolImpl : public ThreadPool {
                           absl::Duration thread_ttl);
 
   size_t GetPoolSize() override;
+  size_t GetNBusyThreads() override;
   void Schedule(std::unique_ptr<Action> action) override;
   void Shutdown() override;
   void Wait() override;
@@ -92,6 +93,11 @@ void ThreadPoolImpl::CleanupFinishedThreads() {
 size_t ThreadPoolImpl::GetPoolSize() {
   absl::MutexLock lock(&mutex_);
   return worker_threads_.size();
+}
+
+size_t ThreadPoolImpl::GetNBusyThreads() {
+  absl::MutexLock lock(&mutex_);
+  return worker_threads_.size() - idle_threads_;
 }
 
 void ThreadPoolImpl::Shutdown() {
