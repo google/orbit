@@ -29,6 +29,8 @@ class FrameTrack : public TimerTrack {
 
   void UpdateBoxHeight() override;
 
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() override;
+
  protected:
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected) const override;
