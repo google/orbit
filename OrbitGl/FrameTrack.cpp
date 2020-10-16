@@ -18,20 +18,36 @@ constexpr const uint64_t kHeightCapAverageMultipleUint64 = 6;
 constexpr const float kBoxHeightMultiplier = 3.f;
 }  // namespace
 
+float FrameTrack::GetMaximumScaleFactor() const {
+  if (stats_.average_time_ns() == 0) {
+    return 0.f;
+  }
+  // Compute the scale factor in double first as we convert time values in nanoseconds to
+  // floating point. Single-precision floating point (float type) can only exactly
+  // represent all integer values up to 2^24 - 1, which given the ns time unit is fairly
+  // small (only ~16ms).
+  double scale_factor =
+      static_cast<double>(stats_.max_ns()) / static_cast<double>(stats_.average_time_ns());
+  scale_factor = std::min(scale_factor, kHeightCapAverageMultipleDouble);
+  return static_cast<float>(scale_factor);
+}
+
 float FrameTrack::GetMaximumBoxHeight() const {
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
-  const float box_height_normalizer = is_collapsed ? maximum_box_ratio_ : 1.f;
-  if (maximum_box_ratio_ == 0.f) {
+  float scale_factor = GetMaximumScaleFactor();
+  const float box_height_normalizer = is_collapsed ? scale_factor : 1.f;
+  if (scale_factor == 0.f) {
     return 0.f;
   } else {
-    return maximum_box_ratio_ * box_height_ / box_height_normalizer;
+    return scale_factor * box_height_ / box_height_normalizer;
   }
 }
 
 float FrameTrack::GetAverageBoxHeight() const {
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
-  const float box_height_normalizer = is_collapsed ? maximum_box_ratio_ : 1.f;
-  if (maximum_box_ratio_ == 0.f) {
+  float scale_factor = GetMaximumScaleFactor();
+  const float box_height_normalizer = is_collapsed ? scale_factor : 1.f;
+  if (scale_factor == 0.f) {
     return 0.f;
   } else {
     return box_height_ / box_height_normalizer;
@@ -118,15 +134,6 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
   if (stats_.min_ns() == 0 || duration_ns < stats_.min_ns()) {
     stats_.set_min_ns(duration_ns);
   }
-
-  double ratio = 0.0;
-  if (stats_.average_time_ns() != 0) {
-    ratio = static_cast<double>(duration_ns) / static_cast<double>(stats_.average_time_ns());
-  }
-
-  maximum_box_ratio_ = std::max(maximum_box_ratio_, static_cast<float>(ratio));
-  maximum_box_ratio_ =
-      std::min(maximum_box_ratio_, static_cast<float>(kHeightCapAverageMultipleDouble));
 
   TimerTrack::OnTimer(timer_info);
 }
