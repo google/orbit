@@ -53,6 +53,7 @@ class ThreadPool {
   }
 
   virtual size_t GetPoolSize() = 0;
+  virtual size_t GetNBusyThreads() = 0;
 
   // Create ThreadPool with specified minimum and maximum number of worker
   // threads.
