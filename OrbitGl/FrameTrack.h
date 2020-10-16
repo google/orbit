@@ -11,7 +11,7 @@ class FrameTrack : public TimerTrack {
  public:
   explicit FrameTrack(TimeGraph* time_graph, const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }
-  [[nodiscard]] bool IsCollapsable() const override { return maximum_box_ratio_ > 0.f; }
+  [[nodiscard]] bool IsCollapsable() const override { return GetMaximumScaleFactor() > 0.f; }
 
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
@@ -37,13 +37,12 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetHeight() const override;
 
  private:
+  [[nodiscard]] float GetMaximumScaleFactor() const;
   [[nodiscard]] float GetMaximumBoxHeight() const;
   [[nodiscard]] float GetAverageBoxHeight() const;
 
   orbit_client_protos::FunctionInfo function_;
   orbit_client_protos::FunctionStats stats_;
-
-  float maximum_box_ratio_ = 0.f;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_
