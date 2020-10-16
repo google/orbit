@@ -14,12 +14,31 @@ class CaptureClientGgpServiceImpl final
  public:
   CaptureClientGgpServiceImpl();
 
-  grpc::Status SayHello(grpc::ServerContext*, const orbit_grpc_protos::HelloRequest* request,
-                        orbit_grpc_protos::HelloReply* reply) override;
+  [[nodiscard]] grpc::Status StartCapture(
+      grpc::ServerContext* context, const orbit_grpc_protos::StartCaptureRequest* request,
+      orbit_grpc_protos::StartCaptureResponse* response) override;
+
+  [[nodiscard]] grpc::Status StopAndSaveCapture(
+      grpc::ServerContext* context, const orbit_grpc_protos::StopAndSaveCaptureRequest* request,
+      orbit_grpc_protos::StopAndSaveCaptureResponse* response) override;
+
+  [[nodiscard]] grpc::Status UpdateSelectedFunctions(
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::UpdateSelectedFunctionsRequest* request,
+      orbit_grpc_protos::UpdateSelectedFunctionsResponse* response) override;
+
+  [[nodiscard]] grpc::Status ShutdownService(
+      grpc::ServerContext* context, const orbit_grpc_protos::ShutdownServiceRequest* request,
+      orbit_grpc_protos::ShutdownServiceResponse* response) override;
 
  private:
   ClientGgp client_ggp_;
+  std::unique_ptr<ThreadPool> thread_pool_;
+
   void InitClientGgp();
+  void SaveCapture();
+  void Shutdown();
+  bool CaptureIsRunning();
 };
 
 #endif  // ORBIT_CAPTURE_GGP_SERVICE_ORBIT_CAPTURE_GGP_SERVICE_IMPL_H_
