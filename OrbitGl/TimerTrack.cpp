@@ -45,13 +45,8 @@ std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float box_height = box_height_;
-  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
-    box_height /= static_cast<float>(depth_);
-  }
-
   return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
-         box_height * (depth + 1);
+         box_height_ * (depth + 1);
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
