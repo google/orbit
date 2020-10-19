@@ -81,8 +81,7 @@ add_custom_command(TARGET OrbitServiceTests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
         $<TARGET_FILE_DIR:OrbitServiceTests>/testdata)
 
-register_test(OrbitServiceTests)
-set_tests_properties(OrbitService PROPERTIES TIMEOUT 10)
+register_test(OrbitServiceTests PROPERTIES TIMEOUT 10)
 
 add_fuzzer(OrbitServiceUtilsFindSymbolsFilePathFuzzer
            OrbitServiceUtilsFindSymbolsFilePathFuzzer.cpp)

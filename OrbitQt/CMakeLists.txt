@@ -153,18 +153,34 @@ set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTORCC ON)
 
-register_test(OrbitQtTests)
+if(WIN32)
+  get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+  get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+  find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+
+  add_custom_command(
+    TARGET OrbitQtTests
+    POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
+            "${WINDEPLOYQT_EXECUTABLE}" --pdb "$<TARGET_FILE:OrbitQtTests>"
+    COMMENT "Running windeployqt...")
+endif()
+
+
+set(test_properties "")
 
 # QT_QPA_PLATFORM=offscreen is currently not supported under Windows.
 # So if requested we disable the test all the way.
 # This is mainly a work-around for the CI, especially the presubmit checks.
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
   message(STATUS "Disabling OrbitQt-tests since they don't work in a headless setup")
-  set_tests_properties(OrbitQt PROPERTIES DISABLED TRUE)
+  list(APPEND test_properties DISABLED TRUE)
 endif()
 
 if (NOT WIN32)
   # On Linux we can always run the tests with offscreen rendering. That won't do any harm
   # and it avoid test failures in headless environments like SSH-sessions.
-  set_tests_properties(OrbitQt PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+  list(APPEND test_properties ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
+
+register_test(OrbitQtTests PROPERTIES ${test_properties})
