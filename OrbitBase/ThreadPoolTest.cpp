@@ -250,6 +250,68 @@ TEST(ThreadPool, ExtendThreadPool) {
   EXPECT_EQ(actions_executed, 24);
 }
 
+TEST(ThreadPool, CheckGetNumberOfBusyThreads) {
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  constexpr size_t kThreadTtlMillis = 5;
+
+  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
+      kThreadPoolMinSize, kThreadPoolMaxSize, absl::Milliseconds(kThreadTtlMillis));
+
+  EXPECT_EQ(thread_pool->GetNumberOfBusyThreads(), 0);
+
+  absl::Mutex actions_started_mutex;
+  size_t actions_started = 0;
+  absl::Mutex actions_executed_mutex;
+  size_t actions_executed = 0;
+
+  auto action = [&] {
+    actions_started_mutex.Lock();
+    actions_started++;
+    actions_started_mutex.Unlock();
+
+    absl::MutexLock lock(&actions_executed_mutex);
+    actions_executed++;
+  };
+
+  {
+    // Schedule an action and check we have a busy thread
+    absl::MutexLock lock(&actions_executed_mutex);
+    thread_pool->Schedule(action);
+
+    actions_started_mutex.Lock();
+    EXPECT_TRUE(actions_started_mutex.AwaitWithTimeout(
+        absl::Condition(
+            +[](size_t* started) { return *started == 1; }, &actions_started),
+        absl::Milliseconds(100)))
+        << "actions_started=" << actions_started << ", expected 1";
+    actions_started_mutex.Unlock();
+    EXPECT_EQ(thread_pool->GetNumberOfBusyThreads(), 1);
+
+    // Schedule another action and check that there are 2 workers threads now.
+    thread_pool->Schedule(action);
+
+    actions_started_mutex.Lock();
+    EXPECT_TRUE(actions_started_mutex.AwaitWithTimeout(
+        absl::Condition(
+            +[](size_t* started) { return *started == 2; }, &actions_started),
+        absl::Milliseconds(100)));
+    actions_started_mutex.Unlock();
+    EXPECT_EQ(thread_pool->GetNumberOfBusyThreads(), 2);
+
+    EXPECT_TRUE(actions_executed_mutex.AwaitWithTimeout(
+        absl::Condition(
+            +[](size_t* executed) { return *executed == 2; }, &actions_executed),
+        absl::Milliseconds(100)))
+        << "actions_executed=" << actions_executed << ", expected 2";
+  }
+
+  // Check there are no busy threads anymore
+  EXPECT_EQ(thread_pool->GetNumberOfBusyThreads(), 0);
+
+  thread_pool->ShutdownAndWait();
+};
+
 TEST(ThreadPool, InvalidArguments) {
   EXPECT_DEATH(
       {
