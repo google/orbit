@@ -63,5 +63,4 @@ target_sources(OrbitSshTests PRIVATE SocketTests.cpp ContextTests.cpp)
 target_link_libraries(OrbitSshTests PRIVATE OrbitSsh libssh2::libssh2
                                             GTest::Main)
 
-register_test(OrbitSshTests)
-set_tests_properties(OrbitSsh PROPERTIES TIMEOUT 10)
+register_test(OrbitSshTests PROPERTIES TIMEOUT 10)

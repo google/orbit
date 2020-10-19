@@ -2,16 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-function(register_test)
-  set(TEST_TARGET "${ARGV0}")
-  string(REGEX REPLACE "Tests$" "" TEST_NAME "${TEST_TARGET}")
+include(${CMAKE_SOURCE_DIR}/third_party/cmake/Modules/GoogleTest.cmake)
 
+function(register_test TEST_TARGET)
+  cmake_parse_arguments(ARGS "" "" "PROPERTIES" ${ARGN})
   set(TESTRESULTS_DIRECTORY "${CMAKE_BINARY_DIR}/testresults")
-  add_test(
-    NAME "${TEST_NAME}"
-    COMMAND
-      "$<TARGET_FILE:${TEST_TARGET}>"
-      "--gtest_output=xml:${TESTRESULTS_DIRECTORY}/${TEST_NAME}_sponge_log.xml")
+
+  if (NOT "TIMEOUT" IN_LIST ARGS_PROPERTIES)
+    list(APPEND ARGS_PROPERTIES TIMEOUT 60)
+  endif()
+
+  gtest_discover_tests(${TEST_TARGET}
+    XML_OUTPUT_DIR "${TESTRESULTS_DIRECTORY}"
+    PROPERTIES ${ARGS_PROPERTIES})
 endfunction()
 
 if(NOT TARGET GTest::GTest)
