@@ -2,15 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitVulkanLayer/DispatchTable.h"
-#include "OrbitVulkanLayer/LayerLogic.h"
+#include "LayerLogic.h"
 #include "absl/base/casts.h"
 #include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
 #include "vulkan/vulkan.h"
 
 /*
- * These free functions act as entries to the layer.
+ * The big picture:
+ * This is the main entry point for Orbit's vulkan layer. The layer is structured as follows:
+ * * All instrumented vulkan functions will hook into implementations found here
+ *   (e.g. OrbitQueueSubmit)
+ * * The actual logic of the layer is implemented in LayerLogic.h/.cpp. This has the following
+ *    scheme: For each vk function, there is a PreCall*, Call*, and PostCall* function, where
+ *    Call* will just forward the call to the "actual" vulkan function following the dispatch
+ *    table (see DispatchTable).
+ *  * There are the following helper classes to structure the actual layer logic:
+ *     * CommandBufferManager.h: Which keeps track of command buffer allocations.
+ *     * DispatchTable.h: Which provides virtual dispatch for the vulkan functions to be called.
+ *     * QueryManager.h: Which keeps track of query pool slots e.g. used for timestamp queries
+ *        and allows to assign those.
+ *     * QueueManager keeps track of association of VkQueue(s) to devices.
+ *
+ *
+ * For this free functions in this namespace:
+ * As said, they act as entries to the layer.
  * OrbitGetDeviceProcAddr and OrbitGetInstanceProcAddr are the actual entry points, called by
  * the loader and potential other layers, and forward to all the functions that this layer
  * intercepts.
@@ -18,9 +33,10 @@
  * The actual logic of the layer (and thus of each intercepted vulkan function) is implemented
  * in `LayerLogic`.
  *
- * Only the basic enumaration as well as the ProcAddr functions are implemented here.
+ * Only the basic enumeration as well as the ProcAddr functions are implemented here.
+ *
  */
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 #if defined(WIN32)
 #define ORBIT_EXPORT extern "C" __declspec(dllexport) VK_LAYER_EXPORT
@@ -217,7 +233,7 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitEnumerateInstanceExtensionProperties(
 VKAPI_ATTR VkResult VKAPI_CALL OrbitEnumerateDeviceExtensionProperties(
     VkPhysicalDevice physical_device, const char* layer_name, uint32_t* property_count,
     VkExtensionProperties* properties) {
-  // pass through any queries that aren't to us
+  // Pass through any queries that aren't to us
   if (layer_name == nullptr || strcmp(layer_name, kLayerName) != 0) {
     if (physical_device == VK_NULL_HANDLE) {
       return VK_SUCCESS;
@@ -227,7 +243,7 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitEnumerateDeviceExtensionProperties(
                                                          property_count, properties);
   }
 
-  // don't expose any extensions
+  // Don't expose any extensions
   if (property_count != nullptr) {
     *property_count = 0;
   }
@@ -312,4 +328,4 @@ ORBIT_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL OrbitGetInstanceProcAddr(V
 
 #undef ORBIT_EXPORT
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer

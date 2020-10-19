@@ -2,22 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LAYER_LAYER_LOGIC_H_
-#define ORBIT_LAYER_LAYER_LOGIC_H_
+#ifndef ORBIT_VULKAN_LAYER_LAYER_LOGIC_H_
+#define ORBIT_VULKAN_LAYER_LAYER_LOGIC_H_
 
 #include <OrbitBase/Logging.h>
 
-#include "OrbitVulkanLayer/CommandBufferManager.h"
-#include "OrbitVulkanLayer/DispatchTable.h"
-#include "OrbitVulkanLayer/QueryManager.h"
+#include "CommandBufferManager.h"
+#include "DispatchTable.h"
+#include "QueryManager.h"
 #include "QueueManager.h"
 #include "vulkan/vulkan.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 /**
  * This class controls the logic of this layer. For the instrumented vulkan functions,
- * it provides PreCall*, PostCall* and Call* functions, where the Call* function, just forward
+ * it provides PreCall*, PostCall* and Call* functions, where the Call* functions just forward
  * to the next layer (using the dispatch table).
  * PreCall* functions are executed before the `actual` vulkan call and PostCall* afterwards.
  * PreCall/PostCall are omitted when not needed.
@@ -33,7 +33,6 @@ namespace orbit::layer {
 class LayerLogic {
  public:
   LayerLogic() = default;
-  ~LayerLogic() = default;
 
   [[nodiscard]] VkResult PreCallAndCallCreateInstance(const VkInstanceCreateInfo* create_info,
                                                       const VkAllocationCallbacks* allocator,
@@ -177,11 +176,12 @@ class LayerLogic {
   DispatchTable dispatch_table_;
   QueueManager queue_manager_;
 
-  // TODO: Ideally move this to somewhere
+  // TODO: Ideally we have a manager class to take over tracking the mapping from physical device
+  //  to instance.
   absl::Mutex mutex_;
   absl::flat_hash_map<VkPhysicalDevice, VkInstance> physical_device_to_instance_;
 };
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer
 
-#endif  // ORBIT_LAYER_LAYER_LOGIC_H_
+#endif  // ORBIT_VULKAN_LAYER_LAYER_LOGIC_H_

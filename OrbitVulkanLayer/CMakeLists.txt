@@ -13,18 +13,16 @@ target_include_directories(OrbitVulkanLayer PUBLIC
 target_include_directories(OrbitVulkanLayer PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitVulkanLayer PUBLIC
-        include/OrbitVulkanLayer/CommandBufferManager.h
-        include/OrbitVulkanLayer/DispatchTable.h
-        include/OrbitVulkanLayer/LayerLogic.h
-        include/OrbitVulkanLayer/QueryManager.h)
-
 target_sources(OrbitVulkanLayer PRIVATE
         CommandBufferManager.cpp
+        CommandBufferManager.h
         DispatchTable.cpp
+        DispatchTable.h
         Main.cpp
         LayerLogic.cpp
-        QueueManager.cpp)
+        LayerLogic.h
+        QueueManager.cpp
+        QueryManager.h)
 
 
 target_link_libraries(OrbitVulkanLayer PUBLIC

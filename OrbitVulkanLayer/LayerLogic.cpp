@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitVulkanLayer/LayerLogic.h"
+#include "LayerLogic.h"
 
-#include <OrbitBase/Logging.h>
+#include "OrbitBase/Logging.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 VkResult LayerLogic::PreCallAndCallCreateInstance(const VkInstanceCreateInfo* create_info,
                                                   const VkAllocationCallbacks* allocator,
@@ -164,4 +164,4 @@ void LayerLogic::PostCallEnumeratePhysicalDevices(VkInstance instance,
   }
 }
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer

@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LAYER_COMMAND_BUFFER_MANAGER_H_
-#define ORBIT_LAYER_COMMAND_BUFFER_MANAGER_H_
+#ifndef ORBIT_VULKAN_LAYER_COMMAND_BUFFER_MANAGER_H_
+#define ORBIT_VULKAN_LAYER_COMMAND_BUFFER_MANAGER_H_
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "vulkan/vulkan.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 /*
  * This class is responsible to track command buffers and command pools.
@@ -22,8 +22,6 @@ namespace orbit::layer {
  *
  * Thread-Safety: This class is internally synchronized (using read/write locks), and can be
  * safely accessed from different threads.
- *
- *
  */
 class CommandBufferManager {
  public:
@@ -46,6 +44,6 @@ class CommandBufferManager {
   absl::flat_hash_map<VkCommandBuffer, VkDevice> command_buffer_to_device_;
 };
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer
 
-#endif  // ORBIT_LAYER_COMMAND_BUFFER_MANAGER_H_
+#endif  // ORBIT_VULKAN_LAYER_COMMAND_BUFFER_MANAGER_H_

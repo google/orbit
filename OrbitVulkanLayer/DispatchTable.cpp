@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitVulkanLayer/DispatchTable.h"
+#include "DispatchTable.h"
 
 #include "OrbitBase/Logging.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 void DispatchTable::CreateInstanceDispatchTable(const VkInstance& instance,
                                                 const PFN_vkGetInstanceProcAddr& next_gipa) {
   // Create dispatch table
-  VkLayerInstanceDispatchTable dispatch_table = {};
+  VkLayerInstanceDispatchTable dispatch_table;
   dispatch_table.DestroyInstance =
       absl::bit_cast<PFN_vkDestroyInstance>(next_gipa(instance, "vkDestroyInstance"));
   dispatch_table.GetInstanceProcAddr =
@@ -37,7 +37,7 @@ void DispatchTable::RemoveInstanceDispatchTable(const VkInstance& instance) {
 void DispatchTable::CreateDeviceDispatchTable(const VkDevice& device,
                                               const PFN_vkGetDeviceProcAddr& next_gdpa) {
   // Create dispatch table
-  VkLayerDispatchTable dispatch_table = {};
+  VkLayerDispatchTable dispatch_table;
 
   dispatch_table.CreateCommandPool =
       absl::bit_cast<PFN_vkCreateCommandPool>(next_gdpa(device, "vkCreateCommandPool"));
@@ -202,4 +202,4 @@ PFN_vkQueuePresentKHR DispatchTable::QueuePresentKHR(const VkDevice& device) {
   return device_dispatch_table_.at(device).QueuePresentKHR;
 }
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer

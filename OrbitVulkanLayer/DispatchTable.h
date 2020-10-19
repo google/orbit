@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LAYER_DISPATCH_TABLE_H_
-#define ORBIT_LAYER_DISPATCH_TABLE_H_
+#ifndef ORBIT_VULKAN_LAYER_DISPATCH_TABLE_H_
+#define ORBIT_VULKAN_LAYER_DISPATCH_TABLE_H_
 
 #include "absl/base/casts.h"
 #include "absl/container/flat_hash_map.h"
@@ -13,7 +13,7 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 #include "vulkan/vulkan.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 /*
  * A thread-safe dispatch table for vulkan function look-up.
  *
@@ -26,7 +26,6 @@ namespace orbit::layer {
 class DispatchTable {
  public:
   DispatchTable() = default;
-  ~DispatchTable() = default;
   void CreateInstanceDispatchTable(const VkInstance& instance,
                                    const PFN_vkGetInstanceProcAddr& next_gipa);
   void RemoveInstanceDispatchTable(const VkInstance& instance);
@@ -71,6 +70,6 @@ class DispatchTable {
   absl::Mutex mutex_;
 };
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer
 
-#endif  // ORBIT_LAYER_DISPATCH_TABLE_H_
+#endif  // ORBIT_VULKAN_LAYER_DISPATCH_TABLE_H_

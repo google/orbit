@@ -3,12 +3,12 @@
     "layer" : { 
         "name": "ORBIT_VK_LAYER", 
         "type": "GLOBAL", 
-        "library_path": "/usr/local/cloudcast/lib/libOrbitVulkanLayer.so",
+        "library_path": "./libOrbitVulkanLayer.so",
         "api_version": "1.1.77", 
         "implementation_version": "1", 
         "description": "Provides GPU insights for the Orbit System Profiler", 
         "disable_environment": {
-            "DISABLE_ORBIT": "1"
+            "DISABLE_ORBIT_VULKAN_LAYER": "1"
         },
         "functions": {
             "vkGetInstanceProcAddr": "OrbitGetInstanceProcAddr",

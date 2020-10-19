@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitVulkanLayer/CommandBufferManager.h"
+#include "CommandBufferManager.h"
 
 #include "OrbitBase/Logging.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 void CommandBufferManager::TrackCommandPool(VkCommandPool pool) {
   absl::WriterMutexLock lock(&mutex_);
@@ -65,10 +65,12 @@ bool CommandBufferManager::IsCommandPoolTracked(const VkCommandPool& pool) {
   absl::ReaderMutexLock lock(&mutex_);
   return tracked_pools_.find(pool) != tracked_pools_.end();
 }
+
 bool CommandBufferManager::IsCommandBufferTracked(const VkCommandBuffer& command_buffer) {
   absl::ReaderMutexLock lock(&mutex_);
   return tracked_command_buffers_.find(command_buffer) != tracked_command_buffers_.end();
 }
+
 const VkDevice& CommandBufferManager::GetDeviceOfCommandBuffer(
     const VkCommandBuffer& command_buffer) {
   absl::ReaderMutexLock lock(&mutex_);
@@ -76,4 +78,4 @@ const VkDevice& CommandBufferManager::GetDeviceOfCommandBuffer(
   return command_buffer_to_device_.at(command_buffer);
 }
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer

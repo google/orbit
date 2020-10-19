@@ -2,17 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LAYER_QUERY_MANAGER_H_
-#define ORBIT_LAYER_QUERY_MANAGER_H_
+#ifndef ORBIT_VULKAN_LAYER_LAYER_LOGIC_H_
+#define ORBIT_VULKAN_LAYER_LAYER_LOGIC_H_
 
 #include <array>
 #include <cstdint>
 #include <vector>
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 /*
  * TODO: This class will manage query slots (indexes).
+ *  A vulkan query pool has a user defined number of "slots" (per-index identifiable unique
+ *  storage-points for query results).
+ *  This class will manage the state of those slots.
+ *  It will provide a method to get the next free slot index.
  */
 class QuerySlotManager {
  public:
@@ -38,7 +42,6 @@ class QuerySlotManager {
   };
 
   QuerySlotManager() = default;
-  ~QuerySlotManager() = default;
 
   bool NextReadyQuerySlot(uint32_t& allocatedIndex);
   void MarkSlots(std::vector<uint32_t>& slotsToMark, SlotState newState);
@@ -52,6 +55,6 @@ class QuerySlotManager {
   volatile uint32_t next_free_index_ = 0;
 };
 
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer
 
-#endif  // ORBIT_LAYER_QUERY_MANAGER_H_
+#endif  // ORBIT_VULKAN_LAYER_QUERY_MANAGER_H_

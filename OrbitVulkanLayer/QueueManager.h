@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LAYER_QUEUE_MANAGER_H_
-#define ORBIT_LAYER_QUEUE_MANAGER_H_
+#ifndef ORBIT_VULKAN_LAYER_QUEUE_MANAGER_H_
+#define ORBIT_VULKAN_LAYER_QUEUE_MANAGER_H_
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "vulkan/vulkan.h"
 
-namespace orbit::layer {
+namespace orbit_vulkan_layer {
 
 /*
  * This class tracks the mapping from queues to the device (via vkGetDeviceQueue).
@@ -25,7 +25,6 @@ namespace orbit::layer {
 class QueueManager {
  public:
   QueueManager() = default;
-  ~QueueManager() = default;
   void TrackQueue(const VkQueue& queue, const VkDevice& device);
   [[nodiscard]] const VkDevice& GetDeviceOfQueue(const VkQueue& queue);
 
@@ -33,6 +32,6 @@ class QueueManager {
   absl::Mutex mutex_;
   absl::flat_hash_map<VkQueue, VkDevice> queue_to_device_;
 };
-}  // namespace orbit::layer
+}  // namespace orbit_vulkan_layer
 
-#endif  // ORBIT_LAYER_QUEUE_MANAGER_H_
+#endif  // ORBIT_VULKAN_LAYER_QUEUE_MANAGER_H_
