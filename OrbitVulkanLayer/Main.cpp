@@ -47,7 +47,7 @@ namespace orbit_vulkan_layer {
 // layer metadata
 static constexpr const char* const kLayerName = "ORBIT_VK_LAYER";
 static constexpr const char* const kLayerDescription =
-    "Provides GPU insights for the Orbit System Profiler";
+    "Provides GPU insights for the Orbit Profiler";
 
 static constexpr const uint32_t kLayerImplVersion = 1;
 static constexpr const uint32_t kLayerSpecVersion = VK_API_VERSION_1_1;
@@ -233,7 +233,6 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitEnumerateInstanceExtensionProperties(
 VKAPI_ATTR VkResult VKAPI_CALL OrbitEnumerateDeviceExtensionProperties(
     VkPhysicalDevice physical_device, const char* layer_name, uint32_t* property_count,
     VkExtensionProperties* properties) {
-  // Pass through any queries that aren't to us
   if (layer_name == nullptr || strcmp(layer_name, kLayerName) != 0) {
     if (physical_device == VK_NULL_HANDLE) {
       return VK_SUCCESS;
@@ -243,7 +242,7 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitEnumerateDeviceExtensionProperties(
                                                          property_count, properties);
   }
 
-  // Don't expose any extensions
+  // This layer does not expose any extensions, therefore we need to set property_count to zero
   if (property_count != nullptr) {
     *property_count = 0;
   }

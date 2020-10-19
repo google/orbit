@@ -11,32 +11,31 @@ namespace orbit_vulkan_layer {
 VkResult LayerLogic::PreCallAndCallCreateInstance(const VkInstanceCreateInfo* create_info,
                                                   const VkAllocationCallbacks* allocator,
                                                   VkInstance* instance) {
-  auto* layer_ci = absl::bit_cast<VkLayerInstanceCreateInfo*>(create_info->pNext);
+  auto* layer_create_info = absl::bit_cast<VkLayerInstanceCreateInfo*>(create_info->pNext);
 
-  // Search through linked structs in pNext for link info.
-  while (layer_ci != nullptr && (layer_ci->sType != VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO ||
-                                 layer_ci->function != VK_LAYER_LINK_INFO)) {
-    layer_ci = absl::bit_cast<VkLayerInstanceCreateInfo*>(layer_ci->pNext);
+  while (layer_create_info != nullptr &&
+         (layer_create_info->sType != VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO ||
+          layer_create_info->function != VK_LAYER_LINK_INFO)) {
+    layer_create_info = absl::bit_cast<VkLayerInstanceCreateInfo*>(layer_create_info->pNext);
   }
 
-  if (layer_ci == nullptr) {
-    // No link info was found; we can't finish initializing
+  if (layer_create_info == nullptr) {
     return VK_ERROR_INITIALIZATION_FAILED;
   }
 
-  PFN_vkGetInstanceProcAddr next_gipa = layer_ci->u.pLayerInfo->pfnNextGetInstanceProcAddr;
+  PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
+      layer_create_info->u.pLayerInfo->pfnNextGetInstanceProcAddr;
 
   // Advance linkage for next layer
-  layer_ci->u.pLayerInfo = layer_ci->u.pLayerInfo->pNext;
+  layer_create_info->u.pLayerInfo = layer_create_info->u.pLayerInfo->pNext;
 
   // Need to call vkCreateInstance down the chain to actually create the
-  // instance.
-  auto create_instance =
-      absl::bit_cast<PFN_vkCreateInstance>(next_gipa(VK_NULL_HANDLE, "vkCreateInstance"));
+  // instance, as we need it to be alive in the create instance dispatch table.
+  auto create_instance = absl::bit_cast<PFN_vkCreateInstance>(
+      next_get_instance_proc_addr_function(VK_NULL_HANDLE, "vkCreateInstance"));
   VkResult result = create_instance(create_info, allocator, instance);
 
-  // Create dispatch table
-  dispatch_table_.CreateInstanceDispatchTable(*instance, next_gipa);
+  dispatch_table_.CreateInstanceDispatchTable(*instance, next_get_instance_proc_addr_function);
 
   return result;
 }
@@ -58,32 +57,33 @@ void LayerLogic::PostCallDestroyDevice(VkDevice device,
 VkResult LayerLogic::PreCallAndCallCreateDevice(
     VkPhysicalDevice /*physical_device*/ physical_device, const VkDeviceCreateInfo* create_info,
     const VkAllocationCallbacks* allocator /*allocator*/, VkDevice* device) {
-  auto* layer_ci = absl::bit_cast<VkLayerDeviceCreateInfo*>(create_info->pNext);
+  auto* layer_create_info = absl::bit_cast<VkLayerDeviceCreateInfo*>(create_info->pNext);
 
-  // Search through linked structs in pNext for link info.
-  while (layer_ci != nullptr && (layer_ci->sType != VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO ||
-                                 layer_ci->function != VK_LAYER_LINK_INFO)) {
-    layer_ci = absl::bit_cast<VkLayerDeviceCreateInfo*>(layer_ci->pNext);
+  while (layer_create_info != nullptr &&
+         (layer_create_info->sType != VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO ||
+          layer_create_info->function != VK_LAYER_LINK_INFO)) {
+    layer_create_info = absl::bit_cast<VkLayerDeviceCreateInfo*>(layer_create_info->pNext);
   }
 
-  if (layer_ci == nullptr) {
-    // No link info was found; we can't finish initializing
+  if (layer_create_info == nullptr) {
     return VK_ERROR_INITIALIZATION_FAILED;
   }
 
-  PFN_vkGetInstanceProcAddr next_gipa = layer_ci->u.pLayerInfo->pfnNextGetInstanceProcAddr;
-  PFN_vkGetDeviceProcAddr next_gdpa = layer_ci->u.pLayerInfo->pfnNextGetDeviceProcAddr;
+  PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
+      layer_create_info->u.pLayerInfo->pfnNextGetInstanceProcAddr;
+  PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
+      layer_create_info->u.pLayerInfo->pfnNextGetDeviceProcAddr;
 
   // Advance linkage for next layer
-  layer_ci->u.pLayerInfo = layer_ci->u.pLayerInfo->pNext;
+  layer_create_info->u.pLayerInfo = layer_create_info->u.pLayerInfo->pNext;
 
-  // Need to call vkCreateDevice down the chain to actually create the device
-  auto create_device_function =
-      absl::bit_cast<PFN_vkCreateDevice>(next_gipa(VK_NULL_HANDLE, "vkCreateDevice"));
+  // Need to call vkCreateInstance down the chain to actually create the
+  // instance, as we need it to be alive in the create instance dispatch table.
+  auto create_device_function = absl::bit_cast<PFN_vkCreateDevice>(
+      next_get_instance_proc_addr_function(VK_NULL_HANDLE, "vkCreateDevice"));
   VkResult result = create_device_function(physical_device, create_info, allocator, device);
 
-  // Create dispatch table
-  dispatch_table_.CreateDeviceDispatchTable(*device, next_gdpa);
+  dispatch_table_.CreateDeviceDispatchTable(*device, next_get_device_proc_addr_function);
 
   return result;
 }
@@ -102,7 +102,7 @@ void LayerLogic::PostCallCreateCommandPool(VkDevice /*device*/,
 
 void LayerLogic::PostCallDestroyCommandPool(VkDevice /*device*/, VkCommandPool command_pool,
                                             const VkAllocationCallbacks* /*allocator*/) {
-  command_buffer_manager_.UnTrackCommandPool(command_pool);
+  command_buffer_manager_.UntrackCommandPool(command_pool);
 }
 
 void LayerLogic::PostCallResetCommandPool(VkDevice /*device*/, VkCommandPool /*command_pool*/,
@@ -112,14 +112,14 @@ void LayerLogic::PostCallAllocateCommandBuffers(VkDevice device,
                                                 const VkCommandBufferAllocateInfo* allocate_info,
                                                 VkCommandBuffer* command_buffers) {
   const VkCommandPool& pool = allocate_info->commandPool;
-  const uint32_t cb_count = allocate_info->commandBufferCount;
-  command_buffer_manager_.TrackCommandBuffers(device, pool, command_buffers, cb_count);
+  const uint32_t command_buffer_count = allocate_info->commandBufferCount;
+  command_buffer_manager_.TrackCommandBuffers(device, pool, command_buffers, command_buffer_count);
 }
 
 void LayerLogic::PostCallFreeCommandBuffers(VkDevice device, VkCommandPool command_pool,
                                             uint32_t command_buffer_count,
                                             const VkCommandBuffer* command_buffers) {
-  command_buffer_manager_.UnTrackCommandBuffers(device, command_pool, command_buffers,
+  command_buffer_manager_.UntrackCommandBuffers(device, command_pool, command_buffers,
                                                 command_buffer_count);
 }
 
@@ -150,10 +150,12 @@ void LayerLogic::PostCallEnumeratePhysicalDevices(VkInstance instance,
                                                   VkPhysicalDevice* physical_devices) {
   if (physical_device_count != nullptr && physical_devices != nullptr) {
     // Map these devices to this instance so that we can map each physical
-    // device back to a dispatch table when handling
-    // EnumerateDeviceExtensionProperties. Note that this is hardly error-proof,
-    // but it's impossible to handle this perfectly since physical devices may
-    // be in use by multiple instances.
+    // device back to a dispatch table which is bound to the instance.
+    // Note that this is hardly error-proof. Physical devices could be used by multiple instances
+    // (in fact this is an n-to-n mapping).
+    // In theory the dispatch table can also be different per instance, thus we could end-up in
+    // calling the wrong function, but there is no perfect solution for this, as we do not have
+    // any other chance to know which instance is the right one at the call.
     {
       absl::WriterMutexLock lock(&mutex_);
       for (uint32_t i = 0; i < *physical_device_count; ++i) {

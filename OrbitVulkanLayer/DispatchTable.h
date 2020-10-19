@@ -26,10 +26,12 @@ namespace orbit_vulkan_layer {
 class DispatchTable {
  public:
   DispatchTable() = default;
-  void CreateInstanceDispatchTable(const VkInstance& instance,
-                                   const PFN_vkGetInstanceProcAddr& next_gipa);
+  void CreateInstanceDispatchTable(
+      const VkInstance& instance,
+      const PFN_vkGetInstanceProcAddr& next_get_instance_proc_addr_function);
   void RemoveInstanceDispatchTable(const VkInstance& instance);
-  void CreateDeviceDispatchTable(const VkDevice& device, const PFN_vkGetDeviceProcAddr& next_gdpa);
+  void CreateDeviceDispatchTable(const VkDevice& device,
+                                 const PFN_vkGetDeviceProcAddr& next_get_device_proc_add_function);
   void RemoveDeviceDispatchTable(const VkDevice& device);
 
   [[nodiscard]] PFN_vkDestroyInstance DestroyInstance(const VkInstance& instance);

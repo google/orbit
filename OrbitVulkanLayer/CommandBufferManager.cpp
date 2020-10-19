@@ -13,10 +13,9 @@ void CommandBufferManager::TrackCommandPool(VkCommandPool pool) {
   tracked_pools_.insert(pool);
 }
 
-void CommandBufferManager::UnTrackCommandPool(VkCommandPool pool) {
+void CommandBufferManager::UntrackCommandPool(VkCommandPool pool) {
   absl::WriterMutexLock lock(&mutex_);
   CHECK(IsCommandPoolTracked(pool));
-  tracked_pools_.erase(pool);
 
   // Remove the command buffers associated with this pool:
   for (const VkCommandBuffer& cb : pool_to_command_buffers_[pool]) {
@@ -25,6 +24,7 @@ void CommandBufferManager::UnTrackCommandPool(VkCommandPool pool) {
     tracked_command_buffers_.erase(cb);
   }
   pool_to_command_buffers_.erase(pool);
+  tracked_pools_.erase(pool);
 }
 
 void CommandBufferManager::TrackCommandBuffers(VkDevice device, VkCommandPool pool,
@@ -43,7 +43,7 @@ void CommandBufferManager::TrackCommandBuffers(VkDevice device, VkCommandPool po
   }
 }
 
-void CommandBufferManager::UnTrackCommandBuffers(VkDevice device, VkCommandPool pool,
+void CommandBufferManager::UntrackCommandBuffers(VkDevice device, VkCommandPool pool,
                                                  const VkCommandBuffer* command_buffers,
                                                  uint32_t count) {
   absl::WriterMutexLock lock(&mutex_);
@@ -63,7 +63,7 @@ void CommandBufferManager::UnTrackCommandBuffers(VkDevice device, VkCommandPool 
 
 bool CommandBufferManager::IsCommandPoolTracked(const VkCommandPool& pool) {
   absl::ReaderMutexLock lock(&mutex_);
-  return tracked_pools_.find(pool) != tracked_pools_.end();
+  return tracked_pools_.contains(pool);
 }
 
 bool CommandBufferManager::IsCommandBufferTracked(const VkCommandBuffer& command_buffer) {

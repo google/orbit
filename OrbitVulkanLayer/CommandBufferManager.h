@@ -26,10 +26,10 @@ namespace orbit_vulkan_layer {
 class CommandBufferManager {
  public:
   void TrackCommandPool(VkCommandPool pool);
-  void UnTrackCommandPool(VkCommandPool pool);
+  void UntrackCommandPool(VkCommandPool pool);
   void TrackCommandBuffers(VkDevice device, VkCommandPool pool,
                            const VkCommandBuffer* command_buffers, uint32_t count);
-  void UnTrackCommandBuffers(VkDevice device, VkCommandPool pool,
+  void UntrackCommandBuffers(VkDevice device, VkCommandPool pool,
                              const VkCommandBuffer* command_buffers, uint32_t count);
 
   [[nodiscard]] bool IsCommandPoolTracked(const VkCommandPool& pool);

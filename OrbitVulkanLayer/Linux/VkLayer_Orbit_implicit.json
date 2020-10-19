@@ -6,7 +6,7 @@
         "library_path": "./libOrbitVulkanLayer.so",
         "api_version": "1.1.77", 
         "implementation_version": "1", 
-        "description": "Provides GPU insights for the Orbit System Profiler", 
+        "description": "Provides GPU insights for the Orbit Profiler",
         "disable_environment": {
             "DISABLE_ORBIT_VULKAN_LAYER": "1"
         },

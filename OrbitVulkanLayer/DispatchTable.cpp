@@ -8,21 +8,20 @@
 
 namespace orbit_vulkan_layer {
 
-void DispatchTable::CreateInstanceDispatchTable(const VkInstance& instance,
-                                                const PFN_vkGetInstanceProcAddr& next_gipa) {
-  // Create dispatch table
+void DispatchTable::CreateInstanceDispatchTable(
+    const VkInstance& instance,
+    const PFN_vkGetInstanceProcAddr& next_get_instance_proc_addr_function) {
   VkLayerInstanceDispatchTable dispatch_table;
-  dispatch_table.DestroyInstance =
-      absl::bit_cast<PFN_vkDestroyInstance>(next_gipa(instance, "vkDestroyInstance"));
-  dispatch_table.GetInstanceProcAddr =
-      absl::bit_cast<PFN_vkGetInstanceProcAddr>(next_gipa(instance, "vkGetInstanceProcAddr"));
+  dispatch_table.DestroyInstance = absl::bit_cast<PFN_vkDestroyInstance>(
+      next_get_instance_proc_addr_function(instance, "vkDestroyInstance"));
+  dispatch_table.GetInstanceProcAddr = absl::bit_cast<PFN_vkGetInstanceProcAddr>(
+      next_get_instance_proc_addr_function(instance, "vkGetInstanceProcAddr"));
   dispatch_table.EnumerateDeviceExtensionProperties =
       absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-          next_gipa(instance, "vkEnumerateDeviceExtensionProperties"));
+          next_get_instance_proc_addr_function(instance, "vkEnumerateDeviceExtensionProperties"));
   dispatch_table.EnumeratePhysicalDevices = absl::bit_cast<PFN_vkEnumeratePhysicalDevices>(
-      next_gipa(instance, "vkEnumeratePhysicalDevices"));
+      next_get_instance_proc_addr_function(instance, "vkEnumeratePhysicalDevices"));
 
-  // Store the dispatch table for this instance
   {
     absl::WriterMutexLock lock(&mutex_);
     instance_dispatch_table_[instance] = dispatch_table;
@@ -34,54 +33,52 @@ void DispatchTable::RemoveInstanceDispatchTable(const VkInstance& instance) {
   instance_dispatch_table_.erase(instance);
 }
 
-void DispatchTable::CreateDeviceDispatchTable(const VkDevice& device,
-                                              const PFN_vkGetDeviceProcAddr& next_gdpa) {
-  // Create dispatch table
+void DispatchTable::CreateDeviceDispatchTable(
+    const VkDevice& device, const PFN_vkGetDeviceProcAddr& next_get_device_proc_add_function) {
   VkLayerDispatchTable dispatch_table;
 
-  dispatch_table.CreateCommandPool =
-      absl::bit_cast<PFN_vkCreateCommandPool>(next_gdpa(device, "vkCreateCommandPool"));
-  dispatch_table.DestroyCommandPool =
-      absl::bit_cast<PFN_vkDestroyCommandPool>(next_gdpa(device, "vkDestroyCommandPool"));
-  dispatch_table.ResetCommandPool =
-      absl::bit_cast<PFN_vkResetCommandPool>(next_gdpa(device, "vkResetCommandPool"));
+  dispatch_table.CreateCommandPool = absl::bit_cast<PFN_vkCreateCommandPool>(
+      next_get_device_proc_add_function(device, "vkCreateCommandPool"));
+  dispatch_table.DestroyCommandPool = absl::bit_cast<PFN_vkDestroyCommandPool>(
+      next_get_device_proc_add_function(device, "vkDestroyCommandPool"));
+  dispatch_table.ResetCommandPool = absl::bit_cast<PFN_vkResetCommandPool>(
+      next_get_device_proc_add_function(device, "vkResetCommandPool"));
 
-  dispatch_table.AllocateCommandBuffers =
-      absl::bit_cast<PFN_vkAllocateCommandBuffers>(next_gdpa(device, "vkAllocateCommandBuffers"));
-  dispatch_table.FreeCommandBuffers =
-      absl::bit_cast<PFN_vkFreeCommandBuffers>(next_gdpa(device, "vkFreeCommandBuffers"));
-  dispatch_table.BeginCommandBuffer =
-      absl::bit_cast<PFN_vkBeginCommandBuffer>(next_gdpa(device, "vkBeginCommandBuffer"));
-  dispatch_table.EndCommandBuffer =
-      absl::bit_cast<PFN_vkEndCommandBuffer>(next_gdpa(device, "vkEndCommandBuffer"));
-  dispatch_table.ResetCommandBuffer =
-      absl::bit_cast<PFN_vkResetCommandBuffer>(next_gdpa(device, "vkResetCommandBuffer"));
+  dispatch_table.AllocateCommandBuffers = absl::bit_cast<PFN_vkAllocateCommandBuffers>(
+      next_get_device_proc_add_function(device, "vkAllocateCommandBuffers"));
+  dispatch_table.FreeCommandBuffers = absl::bit_cast<PFN_vkFreeCommandBuffers>(
+      next_get_device_proc_add_function(device, "vkFreeCommandBuffers"));
+  dispatch_table.BeginCommandBuffer = absl::bit_cast<PFN_vkBeginCommandBuffer>(
+      next_get_device_proc_add_function(device, "vkBeginCommandBuffer"));
+  dispatch_table.EndCommandBuffer = absl::bit_cast<PFN_vkEndCommandBuffer>(
+      next_get_device_proc_add_function(device, "vkEndCommandBuffer"));
+  dispatch_table.ResetCommandBuffer = absl::bit_cast<PFN_vkResetCommandBuffer>(
+      next_get_device_proc_add_function(device, "vkResetCommandBuffer"));
 
   dispatch_table.QueueSubmit =
-      absl::bit_cast<PFN_vkQueueSubmit>(next_gdpa(device, "vkQueueSubmit"));
-  dispatch_table.QueuePresentKHR =
-      absl::bit_cast<PFN_vkQueuePresentKHR>(next_gdpa(device, "vkQueuePresentKHR"));
+      absl::bit_cast<PFN_vkQueueSubmit>(next_get_device_proc_add_function(device, "vkQueueSubmit"));
+  dispatch_table.QueuePresentKHR = absl::bit_cast<PFN_vkQueuePresentKHR>(
+      next_get_device_proc_add_function(device, "vkQueuePresentKHR"));
 
-  dispatch_table.GetDeviceQueue =
-      absl::bit_cast<PFN_vkGetDeviceQueue>(next_gdpa(device, "vkGetDeviceQueue"));
-  dispatch_table.GetDeviceQueue2 =
-      absl::bit_cast<PFN_vkGetDeviceQueue2>(next_gdpa(device, "vkGetDeviceQueue2"));
+  dispatch_table.GetDeviceQueue = absl::bit_cast<PFN_vkGetDeviceQueue>(
+      next_get_device_proc_add_function(device, "vkGetDeviceQueue"));
+  dispatch_table.GetDeviceQueue2 = absl::bit_cast<PFN_vkGetDeviceQueue2>(
+      next_get_device_proc_add_function(device, "vkGetDeviceQueue2"));
 
-  dispatch_table.CreateQueryPool =
-      absl::bit_cast<PFN_vkCreateQueryPool>(next_gdpa(device, "vkCreateQueryPool"));
-  dispatch_table.CmdResetQueryPool =
-      absl::bit_cast<PFN_vkCmdResetQueryPool>(next_gdpa(device, "vkCmdResetQueryPool"));
+  dispatch_table.CreateQueryPool = absl::bit_cast<PFN_vkCreateQueryPool>(
+      next_get_device_proc_add_function(device, "vkCreateQueryPool"));
+  dispatch_table.CmdResetQueryPool = absl::bit_cast<PFN_vkCmdResetQueryPool>(
+      next_get_device_proc_add_function(device, "vkCmdResetQueryPool"));
 
-  dispatch_table.CmdWriteTimestamp =
-      absl::bit_cast<PFN_vkCmdWriteTimestamp>(next_gdpa(device, "vkCmdWriteTimestamp"));
-  dispatch_table.CmdBeginQuery =
-      absl::bit_cast<PFN_vkCmdBeginQuery>(next_gdpa(device, "vkCmdBeginQuery"));
+  dispatch_table.CmdWriteTimestamp = absl::bit_cast<PFN_vkCmdWriteTimestamp>(
+      next_get_device_proc_add_function(device, "vkCmdWriteTimestamp"));
+  dispatch_table.CmdBeginQuery = absl::bit_cast<PFN_vkCmdBeginQuery>(
+      next_get_device_proc_add_function(device, "vkCmdBeginQuery"));
   dispatch_table.CmdEndQuery =
-      absl::bit_cast<PFN_vkCmdEndQuery>(next_gdpa(device, "vkCmdEndQuery"));
-  dispatch_table.GetQueryPoolResults =
-      absl::bit_cast<PFN_vkGetQueryPoolResults>(next_gdpa(device, "vkGetQueryPoolResults"));
+      absl::bit_cast<PFN_vkCmdEndQuery>(next_get_device_proc_add_function(device, "vkCmdEndQuery"));
+  dispatch_table.GetQueryPoolResults = absl::bit_cast<PFN_vkGetQueryPoolResults>(
+      next_get_device_proc_add_function(device, "vkGetQueryPoolResults"));
 
-  // Store the dispatch table for this device
   {
     absl::WriterMutexLock lock(&mutex_);
     device_dispatch_table_[device] = dispatch_table;
