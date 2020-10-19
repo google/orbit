@@ -51,6 +51,8 @@ RUN dpkg --add-architecture i386 \
        libqt5webchannel5-dev \
        libqt5websockets5-dev \
        qtwebengine5-dev \
+       libvulkan-dev \
+       vulkan-validationlayers-dev \
        jq \
        python2.7 \
        zip \

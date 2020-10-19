@@ -4,6 +4,8 @@ RUN sudo apt-get -qq update \
     && sudo apt-get install -y --no-install-recommends \
     jq \
     libtinfo5 \
+    libvulkan-dev \
+    vulkan-validationlayers-dev \
     python2.7 \
     zip \
     && sudo rm -rf /var/lib/apt/lists/*
