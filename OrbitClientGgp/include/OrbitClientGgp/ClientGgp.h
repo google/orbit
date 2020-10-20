@@ -27,7 +27,6 @@ class ClientGgp final : public CaptureListener {
   bool RequestStartCapture(ThreadPool* thread_pool);
   bool StopCapture();
   bool SaveCapture();
-  void LoadSelectedFunctions();
   void UpdateCaptureFunctions(std::vector<std::string> capture_functions);
 
   // CaptureListener implementation
@@ -66,6 +65,7 @@ class ClientGgp final : public CaptureListener {
   ErrorMessageOr<ProcessData> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
+  void LoadSelectedFunctions();
   std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> GetSelectedFunctions();
   void InformUsedSelectedCaptureFunctions(
