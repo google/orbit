@@ -84,7 +84,8 @@ class TimerTrack : public Track {
   [[nodiscard]] std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
   virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/,
-                                double /*elapsed_us*/, float /*min_x*/, TextBox* /*text_box*/) {}
+                                double /*elapsed_us*/, float /*min_x*/, float /*z_offset*/,
+                                TextBox* /*text_box*/) {}
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
   mutable Mutex mutex_;

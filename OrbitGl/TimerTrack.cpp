@@ -120,7 +120,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         if (is_visible_width) {
           if (!is_collapsed) {
-            SetTimesliceText(timer_info, elapsed_us, world_start_x, &text_box);
+            SetTimesliceText(timer_info, elapsed_us, world_start_x, z_offset, &text_box);
           }
           batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
         } else {

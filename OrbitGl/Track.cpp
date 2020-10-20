@@ -90,7 +90,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float y0 = pos_[1];
   float y1 = y0 - size_[1];
   float track_z = GlCanvas::kZValueTrack + z_offset;
-  float text_z = GlCanvas::kZValueText + z_offset;
+  float text_z = GlCanvas::kZValueTrack + z_offset;
   float top_margin = layout.GetTrackTopMargin();
 
   // Draw pinned background

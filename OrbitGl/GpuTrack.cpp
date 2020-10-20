@@ -118,7 +118,7 @@ bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
 }
 
 void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
-                                TextBox* text_box) {
+                                float z_offset, TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
@@ -140,7 +140,7 @@ void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, 
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
-      GlCanvas::kZValueText, kTextWhite, text_box->GetElapsedTimeTextLength(),
+      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       time_graph_->CalculateZoomedFontSize(), max_size);
 }
 
