@@ -164,7 +164,7 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   }
 
   std::optional<FunctionCall> function_call = function_call_manager_.ProcessUretprobes(
-      event->GetTid(), event->GetTimestamp(), event->GetAx());
+      event->GetPid(), event->GetTid(), event->GetTimestamp(), event->GetAx());
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
