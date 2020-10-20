@@ -4,12 +4,17 @@
 
 #include <OrbitBase/Logging.h>
 
-static absl::Mutex log_file_mutex;
+static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;
 
 void InitLogFile(const std::string& path) {
   absl::MutexLock lock(&log_file_mutex);
-  CHECK(!log_file.is_open());
+  // Do not call CHECK here - it will end up calling LogToFile,
+  // which tries to lock on the same mutex a second time. This will
+  // lead to an error since the mutex is not recursive.
+  if (log_file.is_open()) {
+    PLATFORM_ABORT();
+  }
   log_file.open(path, std::ofstream::out);
 }
 

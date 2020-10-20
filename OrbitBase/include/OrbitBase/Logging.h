@@ -15,21 +15,28 @@
 
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
-#define LOG(format, ...)                                                                \
-  do {                                                                                  \
-    std::string file__ = std::filesystem::path(__FILE__).filename().string();           \
-    std::string file_and_line__ = absl::StrFormat("%s:%d", file__.c_str(), __LINE__);   \
-    if (file_and_line__.size() > 28)                                                    \
-      file_and_line__ = "..." + file_and_line__.substr(file_and_line__.size() - 25);    \
-    std::string formatted_log__ =                                                       \
-        absl::StrFormat("[%28s] " format "\n", file_and_line__.c_str(), ##__VA_ARGS__); \
-    PLATFORM_LOG(formatted_log__.c_str());                                              \
+constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
+
+#define LOG(format, ...)                                                                     \
+  do {                                                                                       \
+    std::filesystem::path path__ = std::filesystem::path(__FILE__);                          \
+    std::string file__;                                                                      \
+    std::string dir__;                                                                       \
+    auto path_it__ = path__.end();                                                           \
+    if (path_it__ != path__.begin()) file__ = (--path_it__)->string();                       \
+    if (path_it__ != path__.begin()) dir__ = (--path_it__)->string();                        \
+    std::string file_and_line__ = absl::StrFormat("%s/%s:%d", dir__, file__, __LINE__);      \
+    std::string time__ = absl::FormatTime(kLogTimeFormat, absl::Now(), absl::UTCTimeZone()); \
+    std::string formatted_log__ =                                                            \
+        absl::StrFormat("[%s] [%28s] " format "\n", time__, file_and_line__, ##__VA_ARGS__); \
+    PLATFORM_LOG(formatted_log__.c_str());                                                   \
   } while (0)
 
 #if defined(_WIN32) && defined(ERROR)
