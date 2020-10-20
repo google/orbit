@@ -5,6 +5,10 @@
 include(${CMAKE_SOURCE_DIR}/third_party/cmake/Modules/GoogleTest.cmake)
 
 function(register_test TEST_TARGET)
+  if(CMAKE_CROSSCOMPILING)
+    return()
+  endif()
+
   cmake_parse_arguments(ARGS "" "" "PROPERTIES" ${ARGN})
   set(TESTRESULTS_DIRECTORY "${CMAKE_BINARY_DIR}/testresults")
 
