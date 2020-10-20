@@ -31,9 +31,12 @@ class CaptureClientGgpServiceImpl final
       grpc::ServerContext* context, const orbit_grpc_protos::ShutdownServiceRequest* request,
       orbit_grpc_protos::ShutdownServiceResponse* response) override;
 
+  bool ShutdownRequested();
+
  private:
   ClientGgp client_ggp_;
   std::unique_ptr<ThreadPool> thread_pool_;
+  bool shutdown_ = false;
 
   void InitClientGgp();
   void SaveCapture();

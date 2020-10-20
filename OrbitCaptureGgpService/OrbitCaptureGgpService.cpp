@@ -32,6 +32,15 @@ void OrbitCaptureGgpService::RunServer() {
     return;
   }
 
+  std::thread ServerShutdownWatcher([&ggp_capture_service, &server]() {
+    static constexpr auto WatcherFrequency = std::chrono::seconds(5);
+    while (!ggp_capture_service.ShutdownRequested()) {
+      std::this_thread::sleep_for(WatcherFrequency);
+    }
+    server->Shutdown();
+  });
+
   LOG("Capture ggp server listening on %s", server_address);
   server->Wait();
+  ServerShutdownWatcher.join();
 }
