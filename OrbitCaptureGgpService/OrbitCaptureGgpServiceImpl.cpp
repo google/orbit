@@ -116,6 +116,7 @@ void CaptureClientGgpServiceImpl::Shutdown() {
   }
   LOG("Shut down the thread and wait for it to finish");
   thread_pool_->ShutdownAndWait();
+  shutdown_ = true;
 
   LOG("All done");
 }
@@ -123,3 +124,5 @@ void CaptureClientGgpServiceImpl::Shutdown() {
 bool CaptureClientGgpServiceImpl::CaptureIsRunning() {
   return (thread_pool_->GetNumberOfBusyThreads() > 0);
 }
+
+bool CaptureClientGgpServiceImpl::ShutdownRequested() { return shutdown_; }
