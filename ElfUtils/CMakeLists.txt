@@ -23,10 +23,10 @@ target_link_libraries(
   ElfUtils
   PUBLIC OrbitBase
          OrbitProtos
-         abseil::abseil
-         llvm_object::llvm_object
-         llvm_symbolize::llvm_symbolize
-         Outcome::Outcome)
+         CONAN_PKG::abseil
+         CONAN_PKG::llvm_object
+         CONAN_PKG::llvm_symbolize
+         CONAN_PKG::Outcome)
 
 add_executable(ElfUtilsTests)
 
@@ -39,8 +39,8 @@ target_link_libraries(
   PRIVATE ElfUtils
           OrbitCore # TODO: This is needed for GetExecutablePath - consider moving it to OrbitBase
           GTest::Main
-          llvm_object::llvm_object
-          abseil::abseil)
+          CONAN_PKG::llvm_object
+          CONAN_PKG::abseil)
 
 add_custom_command(TARGET ElfUtilsTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata

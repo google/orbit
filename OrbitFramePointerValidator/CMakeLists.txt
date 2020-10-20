@@ -26,8 +26,8 @@ target_sources(OrbitFramePointerValidator PRIVATE
 target_link_libraries(OrbitFramePointerValidator PUBLIC
         OrbitBase
         OrbitProtos
-        abseil::abseil
-        capstone::capstone)
+        CONAN_PKG::abseil
+        CONAN_PKG::capstone)
 
 add_executable(OrbitFramePointerValidatorTests)
 
@@ -41,6 +41,6 @@ target_link_libraries(OrbitFramePointerValidatorTests PRIVATE
         OrbitCore
         OrbitFramePointerValidator
         GTest::Main
-        abseil::abseil)
+        CONAN_PKG::abseil)
 
 register_test(OrbitFramePointerValidatorTests)

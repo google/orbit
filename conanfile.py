@@ -21,7 +21,7 @@ class OrbitConan(ConanFile):
     url = "https://github.com/pierricgimmig/orbitprofiler.git"
     description = "C/C++ Performance Profiler"
     settings = "os", "compiler", "build_type", "arch"
-    generators = ["cmake_find_package_multi", "cmake"]
+    generators = ["cmake_multi"]
     options = {"system_mesa": [True, False],
                "system_qt": [True, False], "with_gui": [True, False],
                "debian_packaging": [True, False],
