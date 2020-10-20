@@ -53,7 +53,7 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, thread_ordering_feature);
+ABSL_DECLARE_FLAG(bool, track_ordering_feature);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;

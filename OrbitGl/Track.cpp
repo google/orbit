@@ -12,7 +12,7 @@
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
 
-ABSL_DECLARE_FLAG(bool, thread_ordering_feature);
+ABSL_DECLARE_FLAG(bool, track_ordering_feature);
 
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
@@ -180,11 +180,11 @@ void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode
                              float /*z_offset*/) {}
 
 void Track::SetPinned(bool value) {
-  pinned_ = value && absl::GetFlag(FLAGS_thread_ordering_feature);
+  pinned_ = value && absl::GetFlag(FLAGS_track_ordering_feature);
   if (pinned_) {
     picking_enabled_ = false;
   } else {
-    picking_enabled_ = absl::GetFlag(FLAGS_thread_ordering_feature);
+    picking_enabled_ = absl::GetFlag(FLAGS_track_ordering_feature);
   }
 }
 
