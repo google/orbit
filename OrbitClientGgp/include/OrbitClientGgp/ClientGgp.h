@@ -64,6 +64,7 @@ class ClientGgp final : public CaptureListener {
 
   ErrorMessageOr<ProcessData> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
+  void ClearCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
   void LoadSelectedFunctions();
   std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);

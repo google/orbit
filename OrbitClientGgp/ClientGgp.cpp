@@ -76,10 +76,12 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
     return false;
   }
 
+  // Clean capture data and variables to start from a clean state
+  ClearCapture();
+
   // Start capture
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
-
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool, target_process_, module_map_, selected_functions_, selected_tracepoints);
 
@@ -261,6 +263,12 @@ void ClientGgp::UpdateCaptureFunctions(std::vector<std::string> capture_function
   options_.capture_functions = capture_functions;
   LoadSelectedFunctions();
   return;
+}
+
+void ClientGgp::ClearCapture() {
+  capture_data_ = CaptureData();
+  string_manager_->Clear();
+  timer_infos_.clear();
 }
 
 void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_back(timer_info); }
