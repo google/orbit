@@ -54,9 +54,9 @@ target_link_libraries(
          concurrentqueue::concurrentqueue
          multicore::multicore
          oqpi::oqpi
-         abseil::abseil
-         llvm_object::llvm_object
-         Outcome::Outcome)
+         CONAN_PKG::abseil
+         CONAN_PKG::llvm_object
+         CONAN_PKG::Outcome)
 
 if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
@@ -92,8 +92,8 @@ target_link_libraries(
   OrbitCoreTests
   PRIVATE OrbitCore
           GTest::Main
-          llvm_object::llvm_object
-          abseil::abseil)
+          CONAN_PKG::llvm_object
+          CONAN_PKG::abseil)
 
 add_custom_command(TARGET OrbitCoreTests POST_BUILD COMMAND ${CMAKE_COMMAND}
                    -E remove_directory $<TARGET_FILE_DIR:OrbitCoreTests>/testdata/OrbitCore)
@@ -107,4 +107,4 @@ register_test(OrbitCoreTests)
 add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
 target_link_libraries(
   ModuleLoadSymbolsFuzzer PRIVATE OrbitCore
-                                  libprotobuf-mutator::libprotobuf-mutator)
+                                  CONAN_PKG::libprotobuf-mutator)

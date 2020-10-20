@@ -10,3 +10,4 @@ add_library(OrbitClientProtos STATIC)
 protobuf_generate(TARGET OrbitClientProtos PROTOS capture_data.proto
                                                   preset.proto)
 target_include_directories(OrbitClientProtos PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(OrbitClientProtos PUBLIC CONAN_PKG::protobuf)

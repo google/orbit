@@ -29,7 +29,7 @@ target_link_libraries(OrbitCaptureClient PUBLIC
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
 target_link_libraries(
   CaptureEventProcessorProcessEventsFuzzer
-  PRIVATE OrbitCaptureClient libprotobuf-mutator::libprotobuf-mutator)
+  PRIVATE OrbitCaptureClient CONAN_PKG::libprotobuf-mutator)
 
 add_executable(OrbitCaptureClientTests)
 

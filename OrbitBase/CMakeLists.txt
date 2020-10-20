@@ -36,7 +36,8 @@ target_sources(OrbitBase PRIVATE
         SafeStrerror.cpp)
 
 target_link_libraries(OrbitBase PUBLIC
-        abseil::abseil
+        CONAN_PKG::Outcome
+        CONAN_PKG::abseil
         std::filesystem)
 
 add_executable(OrbitBaseTests)

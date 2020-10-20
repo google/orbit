@@ -34,7 +34,7 @@ target_sources(
           SftpCopyToLocalOperation.cpp
           SftpCopyToRemoteOperation.cpp)
 
-target_link_libraries(OrbitSshQt PUBLIC OrbitBase OrbitSsh Qt5::Core Qt5::Network abseil::abseil)
+target_link_libraries(OrbitSshQt PUBLIC OrbitBase OrbitSsh Qt5::Core Qt5::Network CONAN_PKG::abseil)
 set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)
 
 add_executable(OrbitSshQtIntegrationTests)

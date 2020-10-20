@@ -96,7 +96,7 @@ if(WITH_CRASH_HANDLING)
     OrbitQt
     PRIVATE CrashHandler.cpp
     PUBLIC CrashHandler.h CrashOptions.h)
-  target_link_libraries(OrbitQt PRIVATE crashpad::crashpad)
+  target_link_libraries(OrbitQt PRIVATE CONAN_PKG::crashpad)
   target_compile_definitions(OrbitQt PRIVATE ORBIT_CRASH_HANDLING)
 
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CrashOptions.cpp.in

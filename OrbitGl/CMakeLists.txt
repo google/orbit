@@ -122,13 +122,13 @@ target_link_libraries(
          OrbitClientModel
          OrbitClientServices
          OrbitProtos
-         freetype-gl::freetype-gl
-         freetype::freetype
-         imgui::imgui
-         capstone::capstone
+         CONAN_PKG::Outcome
+         CONAN_PKG::capstone
+         CONAN_PKG::freetype-gl
+         CONAN_PKG::freetype
+         CONAN_PKG::glew
+         CONAN_PKG::imgui
          gte::gte
-         glew::glew
-         Outcome::Outcome
          stb::stb)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
@@ -160,10 +160,10 @@ register_test(OrbitGlTests)
 
 add_fuzzer(CaptureDeserializerLoadFuzzer CaptureDeserializerLoadFuzzer.cpp)
 target_link_libraries(CaptureDeserializerLoadFuzzer
-                      PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
+                      PRIVATE OrbitGl CONAN_PKG::libprotobuf-mutator)
 
 add_fuzzer(DataManagerUpdateModuleInfosFuzzer
            DataManagerUpdateModuleInfosFuzzer.cpp)
 target_link_libraries(DataManagerUpdateModuleInfosFuzzer
-                      PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
+                      PRIVATE OrbitGl CONAN_PKG::libprotobuf-mutator)
 

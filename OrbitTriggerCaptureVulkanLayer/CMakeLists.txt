@@ -32,3 +32,5 @@ protobuf_generate(TARGET OrbitTriggerCaptureVulkanLayerProtos PROTOS
 
 target_include_directories(OrbitTriggerCaptureVulkanLayerProtos PUBLIC 
         ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(OrbitTriggerCaptureVulkanLayerProtos PUBLIC
+        CONAN_PKG::protobuf)
