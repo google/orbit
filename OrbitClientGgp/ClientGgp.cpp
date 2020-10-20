@@ -76,10 +76,8 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
     return false;
   }
 
-  // Clean capture data and variables to start from a clean state
   ClearCapture();
 
-  // Start capture
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
   ErrorMessageOr<void> result = capture_client_->StartCapture(
