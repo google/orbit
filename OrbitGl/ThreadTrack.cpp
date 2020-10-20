@@ -205,6 +205,7 @@ void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                    float z_offset) {
+  UpdatePositionOfSubtracks();
 
   if (!thread_state_track_->IsEmpty()) {
     thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);

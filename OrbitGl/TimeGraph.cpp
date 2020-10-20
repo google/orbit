@@ -767,7 +767,12 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
 void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   for (auto& track : sorted_tracks_) {
-    const float z_offset = track->IsMoving() || track->IsPinned() ? 1.f : 0.f;
+    float z_offset = 0;
+    if (track->IsPinned()) {
+      z_offset = GlCanvas::kZOffsetPinnedTrack;
+    } else if (track->IsMoving()) {
+      z_offset = GlCanvas::kZOffsetMovingTack;
+    }
     track->Draw(canvas, picking_mode, z_offset);
   }
 }
@@ -1043,7 +1048,7 @@ void TimeGraph::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode p
       continue;
     }
 
-    const float z_offset = 1.f;
+    const float z_offset = GlCanvas::kZOffsetPinnedTrack;
     track->SetY(current_y + canvas_->GetWorldTopLeftY() - layout_.GetTopMargin() -
                 layout_.GetSchedulerTrackOffset());
     track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
@@ -1060,7 +1065,7 @@ void TimeGraph::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode p
       continue;
     }
 
-    const float z_offset = track->IsMoving() || track->IsPinned() ? 1.f : 0.f;
+    const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
     track->SetY(current_y);
     track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
     current_y -= (track->GetHeight() + layout_.GetSpaceBetweenTracks());

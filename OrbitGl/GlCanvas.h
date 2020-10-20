@@ -96,6 +96,9 @@ class GlCanvas : public GlPanel {
   static float kZValueEventBar;
   static float kZValueTrack;
 
+  static float kZOffsetMovingTack;
+  static float kZOffsetPinnedTrack;
+
   static const Color kBackgroundColor;
   static const Color kTabTextColorSelected;
 

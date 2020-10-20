@@ -34,6 +34,9 @@ float GlCanvas::kZValueMargin = 0.61f;
 float GlCanvas::kZValueSliderBg = 0.63f;
 float GlCanvas::kZValueSlider = 0.65f;
 
+float GlCanvas::kZOffsetMovingTack = 0.1f;
+float GlCanvas::kZOffsetPinnedTrack = 0.2f;
+
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
@@ -259,7 +262,7 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
   if (world_height_ <= 0) world_height_ = 1.f;
 
   glOrtho(world_top_left_x_, world_top_left_x_ + world_width_, world_top_left_y_ - world_height_,
-          world_top_left_y_, -1.f, 1.f);
+          world_top_left_y_, -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
