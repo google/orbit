@@ -37,6 +37,11 @@ const CreateWebChannel = (transport) => {
       source_el.className = `language-${language}`;
       Prism.highlightElement(source_el, false);
       document.querySelector("main").scrollTop = 0;
+
+      if (view.test_mode) {
+        // The print request signals that everything was loaded properly in the web context.
+        window.print();
+      }
     };
 
     update_view();

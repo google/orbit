@@ -133,10 +133,13 @@ target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitQtTests
         PRIVATE
+                CodeView.h
                 CutoutWidget.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE StatusListenerImplTest.cpp
+        PRIVATE CodeView.cpp
+                CodeViewTest.cpp
+                StatusListenerImplTest.cpp
                 StatusListenerImpl.cpp
                 TutorialOverlayTest.cpp
                 TutorialOverlay.cpp
@@ -149,6 +152,8 @@ target_link_libraries(
   OrbitQtTests
   PRIVATE OrbitCore
           OrbitGl
+          WebEngine
+          WebUI
           Qt5::Widgets
           Qt5::Core
           GTest::Main)

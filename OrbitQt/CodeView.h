@@ -43,6 +43,7 @@ class CodeView : public QObject {
   Q_PROPERTY(QString language MEMBER language_ NOTIFY sourceCodeChanged)
   Q_PROPERTY(bool line_numbers_enabled MEMBER line_numbers_enabled_ NOTIFY sourceCodeChanged)
   Q_PROPERTY(bool heatmap_enabled MEMBER heatmap_enabled_ NOTIFY sourceCodeChanged)
+  Q_PROPERTY(bool test_mode MEMBER test_mode_ NOTIFY sourceCodeChanged)
 
   // These vector properties expose sampling data to the javascript context. The vector index
   // refers to the line number in the property source_code.
@@ -68,6 +69,11 @@ class CodeView : public QObject {
     emit sourceCodeChanged();
   }
 
+  void SetTestModeEnabled(bool enabled) {
+    test_mode_ = enabled;
+    emit sourceCodeChanged();
+  }
+
   web_engine::View* GetWebEngineView() { return &web_engine_view_; }
   const web_engine::View* GetWebEngineView() const { return &web_engine_view_; }
 
@@ -83,6 +89,7 @@ class CodeView : public QObject {
   QString language_;
   bool line_numbers_enabled_ = false;
   bool heatmap_enabled_ = false;
+  bool test_mode_ = false;
   std::optional<DisassemblyReport> disassembly_report_;
 };
 }  // namespace orbit_qt
