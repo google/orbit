@@ -14,31 +14,32 @@
 #include "../../../Orbit.h"
 #include "OrbitBase/ThreadPool.h"
 
+#define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
+
 namespace orbit::tracing {
 
 struct Scope {
+  Scope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
+        orbit::Color color = orbit::Color::kAuto);
   uint64_t begin = 0;
   uint64_t end = 0;
-  uint64_t tracked_value = 0;
   uint32_t depth = 0;
   uint32_t tid = 0;
-  orbit::Color color = orbit::Color::kAuto;
-  const char* name = nullptr;
-  orbit_api::EventType type = orbit_api::kNone;
+  orbit_api::EncodedEvent encoded_event;
 };
 
 using TimerCallback = std::function<void(const Scope& scope)>;
 
 class Listener {
  public:
-  explicit Listener(std::unique_ptr<TimerCallback> callback);
+  explicit Listener(TimerCallback callback);
   ~Listener();
 
   static void DeferScopeProcessing(const Scope& scope);
   [[nodiscard]] inline static bool IsActive() { return active_; }
 
  private:
-  std::unique_ptr<TimerCallback> user_callback_ = {};
+  TimerCallback user_callback_ = nullptr;
   std::unique_ptr<ThreadPool> thread_pool_ = {};
   inline static bool active_ = false;
 };
