@@ -103,6 +103,7 @@ bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
 }
 
 void TracerThread::InitUprobesEventVisitor() {
+  ORBIT_SCOPE_FUNCTION;
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
   uprobes_unwinding_visitor_->SetListener(listener_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
@@ -113,6 +114,7 @@ void TracerThread::InitUprobesEventVisitor() {
 bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
                                const std::vector<int32_t>& cpus,
                                absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+  ORBIT_SCOPE_FUNCTION;
   const char* module = function.BinaryPath().c_str();
   const uint64_t offset = function.FileOffset();
   for (int32_t cpu : cpus) {
@@ -129,6 +131,7 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
 bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
                                   const std::vector<int32_t>& cpus,
                                   absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+  ORBIT_SCOPE_FUNCTION;
   const char* module = function.BinaryPath().c_str();
   const uint64_t offset = function.FileOffset();
   for (int32_t cpu : cpus) {
@@ -145,6 +148,7 @@ bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
 void TracerThread::AddUprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
     const LinuxTracing::Function& function) {
+  ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
     uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
@@ -157,6 +161,7 @@ void TracerThread::AddUprobesFileDescriptors(
 void TracerThread::AddUretprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
     const LinuxTracing::Function& function) {
+  ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uretprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
     uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
@@ -167,6 +172,7 @@ void TracerThread::AddUretprobesFileDescriptors(
 }
 
 bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   bool uprobes_event_open_errors = false;
 
   for (const auto& function : instrumented_functions_) {
@@ -213,6 +219,7 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
 }
 
 void TracerThread::OpenUserSpaceProbesRingBuffers() {
+  ORBIT_SCOPE_FUNCTION;
   for (const auto& [/*int32_t*/ cpu, /*std::vector<int>*/ fds] : fds_per_cpu_) {
     if (fds.empty()) continue;
 
@@ -230,6 +237,7 @@ void TracerThread::OpenUserSpaceProbesRingBuffers() {
 }
 
 bool TracerThread::OpenMmapTask(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   std::vector<int> mmap_task_tracing_fds;
   std::vector<PerfEventRingBuffer> mmap_task_ring_buffers;
   for (int32_t cpu : cpus) {
@@ -257,6 +265,7 @@ bool TracerThread::OpenMmapTask(const std::vector<int32_t>& cpus) {
 }
 
 bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
@@ -308,6 +317,7 @@ static void OpenRingBuffersOrRedirectOnExisting(
     absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
     std::vector<PerfEventRingBuffer>* ring_buffers, uint64_t ring_buffer_size_kb,
     std::string_view buffer_name_prefix) {
+  ORBIT_SCOPE_FUNCTION;
   // Redirect all events on the same cpu to a single ring buffer.
   for (const auto& cpu_and_fd : fds_per_cpu) {
     int32_t cpu = cpu_and_fd.first;
@@ -347,6 +357,7 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     std::vector<int>* tracing_fds, uint64_t ring_buffer_size_kb,
     absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu_for_redirection,
     std::vector<PerfEventRingBuffer>* ring_buffers) {
+  ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<size_t, absl::flat_hash_map<int32_t, int>> index_to_tracepoint_fds_per_cpu;
   bool tracepoint_event_open_errors = false;
   for (size_t tracepoint_index = 0;
@@ -403,6 +414,7 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
 }
 
 bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> thread_name_tracepoint_ring_buffer_fds_per_cpu;
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
       {{"task", "task_newtask", &task_newtask_ids_}, {"task", "task_rename", &task_rename_ids_}},
@@ -411,12 +423,14 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
 }
 
 void TracerThread::InitThreadStateVisitor() {
+  ORBIT_SCOPE_FUNCTION;
   thread_state_visitor_ = std::make_unique<ThreadStateVisitor>();
   thread_state_visitor_->SetListener(listener_);
   event_processor_.AddVisitor(thread_state_visitor_.get());
 }
 
 bool TracerThread::OpenThreadStateTracepoints(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
   // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
@@ -427,6 +441,7 @@ bool TracerThread::OpenThreadStateTracepoints(const std::vector<int32_t>& cpus) 
 }
 
 bool TracerThread::InitGpuTracepointEventProcessor() {
+  ORBIT_SCOPE_FUNCTION;
   gpu_event_processor_ = std::make_unique<GpuTracepointEventProcessor>();
   gpu_event_processor_->SetListener(listener_);
   return true;
@@ -445,6 +460,7 @@ bool TracerThread::InitGpuTracepointEventProcessor() {
 // We have to record events system-wide (per CPU) to ensure we record all relevant events.
 // This method returns true on success, otherwise false.
 bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> gpu_tracepoint_ring_buffer_fds_per_cpu;
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
       {{"amdgpu", "amdgpu_cs_ioctl", &amdgpu_cs_ioctl_ids_},
@@ -455,6 +471,7 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
 }
 
 bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
   bool tracepoint_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
 
@@ -594,7 +611,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   std::thread deferred_events_thread(&TracerThread::ProcessDeferredEvents, this);
 
   while (!(*exit_requested)) {
-    ORBIT_SCOPE("Tracer Iteration");
+    ORBIT_SCOPE("Tracer iteration");
 
     if (!last_iteration_saw_events) {
       // Periodically print event statistics.
@@ -701,12 +718,17 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 
   // Close the ring buffers.
+  ORBIT_START("ring_buffers_.clear()");
   ring_buffers_.clear();
+  ORBIT_STOP();
 
   // Close the file descriptors.
+  ORBIT_START_WITH_COLOR("Closing file descriptors", orbit::Color::kRed);
   for (int fd : tracing_fds_) {
+    ORBIT_SCOPE("Closing fd");
     close(fd);
   }
+  ORBIT_STOP();
 }
 
 void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
@@ -1011,6 +1033,7 @@ void TracerThread::RetrieveThreadStatesSystemWide() {
 }
 
 void TracerThread::Reset() {
+  ORBIT_SCOPE_FUNCTION;
   tracing_fds_.clear();
   fds_per_cpu_.clear();
   ring_buffers_.clear();
@@ -1038,6 +1061,7 @@ void TracerThread::Reset() {
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {
+  ORBIT_SCOPE_FUNCTION;
   uint64_t timestamp_ns = MonotonicTimestampNs();
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
     double actual_window_s =
