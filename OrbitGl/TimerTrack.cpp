@@ -147,6 +147,10 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     UpdateDepth(timer_info.depth() + 1);
   }
 
+  if(process_id_ == -1) {
+    process_id_ = timer_info.process_id();
+  }
+
   TextBox text_box(Vec2(0, 0), Vec2(0, 0), "");
   text_box.SetTimerInfo(timer_info);
 

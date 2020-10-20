@@ -4,6 +4,7 @@
 
 #include "Track.h"
 
+#include "App.h"
 #include "CoreMath.h"
 #include "GlCanvas.h"
 #include "TimeGraphLayout.h"
@@ -27,6 +28,8 @@ Track::Track(TimeGraph* time_graph)
   min_time_ = std::numeric_limits<uint64_t>::max();
   max_time_ = std::numeric_limits<uint64_t>::min();
   num_prioritized_trailing_characters_ = 0;
+  thread_id_ = -1;
+  process_id_ = -1;
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -91,10 +94,11 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float top_margin = layout.GetTrackTopMargin();
 
   // Draw track background.
+  Color background_color = GetBackGroundColor();
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
-      batcher->AddBox(box, GlCanvas::kTabColor, shared_from_this());
+      batcher->AddBox(box, background_color, shared_from_this());
     }
   }
 
@@ -106,7 +110,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, GlCanvas::kTabColor, shared_from_this());
+  batcher->AddBox(box, background_color, shared_from_this());
 
   // Draw rounded corners.
   if (!picking) {
@@ -124,7 +128,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float z = GlCanvas::kZValueRoundingCorner;
 
     DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, bottom_right, GlCanvas::kTabColor, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_right, background_color, 0, z);
     DrawTriangleFan(batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f, z);
     DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, z);
     DrawTriangleFan(batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f, z);
@@ -174,6 +178,18 @@ void Track::SetY(float y) {
   if (!moving_) {
     pos_[1] = y;
   }
+}
+
+Color Track::GetBackGroundColor() const {
+  int32_t capture_process_id = GOrbitApp->GetCaptureData().process_id();
+  if (GetType() == kSchedulerTrack) {
+    return color_;
+  } else if (process_id_ != -1 && process_id_ != capture_process_id) {
+    const Color kExternalProcessColor(30, 30, 40, 255);
+    return kExternalProcessColor;
+  }
+
+  return color_;
 }
 
 void Track::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }

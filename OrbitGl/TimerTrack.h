@@ -38,9 +38,6 @@ class TimerTrack : public Track {
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
-
-  [[nodiscard]] Color GetColor() const;
-  [[nodiscard]] static Color GetColor(ThreadID a_TID);
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }

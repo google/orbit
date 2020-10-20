@@ -27,11 +27,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float y1 = y0 - size_[1];
 
   const Color kPickedColor(0, 128, 255, 128);
-  Color color = color_;
-  if (picked_) {
-    // TODO: Is this really used? Is picked_ even a thing?
-    color = kPickedColor;
-  }
+  Color color = GetBackGroundColor();
 
   float track_z = GlCanvas::kZValueTrack;
 

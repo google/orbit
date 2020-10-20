@@ -86,10 +86,13 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] Vec2 GetPos() const { return pos_; }
   void SetSize(float a_SizeX, float a_SizeY);
   void SetColor(Color a_Color) { color_ = a_Color; }
+  [[nodiscard]] Color GetBackGroundColor() const;
 
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
   virtual void OnCollapseToggle(TriangleToggle::State state);
   [[nodiscard]] virtual bool IsCollapsable() const { return false; }
+  [[nodiscard]] int32_t GetProcessId() const { return process_id_; }
+  void SetProcessId(uint32_t pid) { process_id_ = pid; }
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
@@ -109,6 +112,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   std::string label_;
   int num_prioritized_trailing_characters_;
   int32_t thread_id_;
+  int32_t process_id_;
   Color color_;
   bool visible_ = true;
   std::atomic<uint32_t> num_timers_;
