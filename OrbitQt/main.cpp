@@ -69,6 +69,7 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
+ABSL_FLAG(bool, thread_ordering_feature, false, "Allow reordering and pinning of threads");
 
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;

@@ -73,6 +73,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   }
 
   [[nodiscard]] bool IsPinned() const { return pinned_; }
+  void SetPinned(bool value);
 
   [[nodiscard]] bool IsMoving() const { return moving_; }
   [[nodiscard]] Vec2 GetMoveDelta() const {
@@ -122,7 +123,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   std::atomic<uint32_t> num_timers_;
   std::atomic<uint64_t> min_time_;
   std::atomic<uint64_t> max_time_;
-  bool picking_enabled_ = true;
+  bool picking_enabled_ = false;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
   std::shared_ptr<TriangleToggle> collapse_toggle_;

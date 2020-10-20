@@ -4,11 +4,15 @@
 
 #include "Track.h"
 
+#include <absl/flags/flag.h>
 #include "App.h"
+
 #include "CoreMath.h"
 #include "GlCanvas.h"
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
+
+ABSL_DECLARE_FLAG(bool, thread_ordering_feature);
 
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
@@ -30,6 +34,7 @@ Track::Track(TimeGraph* time_graph)
   num_prioritized_trailing_characters_ = 0;
   thread_id_ = -1;
   process_id_ = -1;
+  SetPinned(false);
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -174,6 +179,15 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
 void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/,
                              float /*z_offset*/) {}
 
+void Track::SetPinned(bool value) {
+  pinned_ = value && absl::GetFlag(FLAGS_thread_ordering_feature);
+  if (pinned_) {
+    picking_enabled_ = false;
+  } else {
+    picking_enabled_ = absl::GetFlag(FLAGS_thread_ordering_feature);
+  }
+}
+
 void Track::SetPos(float a_X, float a_Y) {
   if (!moving_) {
     pos_ = Vec2(a_X, a_Y);
@@ -200,10 +214,7 @@ Color Track::GetBackgroundColor() const {
 
 void Track::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 
-void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
-  time_graph_->NeedsUpdate();
-  time_graph_->NeedsRedraw();
-}
+void Track::OnCollapseToggle(TriangleToggle::State /*state*/) { time_graph_->NeedsUpdate(); }
 
 void Track::OnPick(int a_X, int a_Y) {
   if (!picking_enabled_) return;
