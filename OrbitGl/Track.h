@@ -86,7 +86,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] Vec2 GetPos() const { return pos_; }
   void SetSize(float a_SizeX, float a_SizeY);
   void SetColor(Color a_Color) { color_ = a_Color; }
-  [[nodiscard]] Color GetBackGroundColor() const;
+  [[nodiscard]] Color GetBackgroundColor() const;
 
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
   virtual void OnCollapseToggle(TriangleToggle::State state);

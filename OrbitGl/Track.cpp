@@ -94,7 +94,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float top_margin = layout.GetTrackTopMargin();
 
   // Draw track background.
-  Color background_color = GetBackGroundColor();
+  Color background_color = GetBackgroundColor();
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
@@ -180,7 +180,7 @@ void Track::SetY(float y) {
   }
 }
 
-Color Track::GetBackGroundColor() const {
+Color Track::GetBackgroundColor() const {
   int32_t capture_process_id = GOrbitApp->GetCaptureData().process_id();
   if (GetType() == kSchedulerTrack) {
     return color_;

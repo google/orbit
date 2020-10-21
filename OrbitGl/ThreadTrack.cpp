@@ -119,6 +119,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
 
   uint64_t address = timer_info.function_address();
   const FunctionInfo* function_info = GOrbitApp->GetCaptureData().GetSelectedFunction(address);
+  CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection);
   std::optional<Color> user_color =
       function_info ? GetUserColor(timer_info, *function_info) : std::nullopt;
 

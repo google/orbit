@@ -22,7 +22,7 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
-using orbit_grpc_protos::IntrospectionCall;
+using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -41,8 +41,8 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
     case CaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
       break;
-    case CaptureEvent::kIntrospectionCall:
-      ProcessIntrospectionCall(event.introspection_call());
+    case CaptureEvent::kIntrospectionScope:
+      ProcessIntrospectionScope(event.introspection_scope());
       break;
     case CaptureEvent::kInternedString:
       ProcessInternedString(event.interned_string());
@@ -127,19 +127,18 @@ void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_cal
   capture_listener_->OnTimer(timer_info);
 }
 
-void CaptureEventProcessor::ProcessIntrospectionCall(const IntrospectionCall& introspection_call) {
-  const FunctionCall& function_call = introspection_call.function_call();
+void CaptureEventProcessor::ProcessIntrospectionScope(
+    const IntrospectionScope& introspection_scope) {
   TimerInfo timer_info;
-  timer_info.set_process_id(function_call.pid());
-  timer_info.set_thread_id(function_call.tid());
-  timer_info.set_start(function_call.begin_timestamp_ns());
-  timer_info.set_end(function_call.end_timestamp_ns());
-  timer_info.set_depth(static_cast<uint8_t>(function_call.depth()));
-  timer_info.set_function_address(0);
-  timer_info.set_processor(-1);
+  timer_info.set_process_id(introspection_scope.pid());
+  timer_info.set_thread_id(introspection_scope.tid());
+  timer_info.set_start(introspection_scope.begin_timestamp_ns());
+  timer_info.set_end(introspection_scope.end_timestamp_ns());
+  timer_info.set_depth(static_cast<uint8_t>(introspection_scope.depth()));
+  timer_info.set_function_address(0);  // function address n/a, set to invalid value
+  timer_info.set_processor(-1);        // cpu info not available, set to invalid value
   timer_info.set_type(TimerInfo::kIntrospection);
-  timer_info.mutable_registers()->CopyFrom(function_call.registers());
-
+  timer_info.mutable_registers()->CopyFrom(introspection_scope.registers());
   capture_listener_->OnTimer(timer_info);
 }
 
