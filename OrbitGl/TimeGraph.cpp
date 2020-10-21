@@ -301,13 +301,10 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   } else if (timer_info.type() == TimerInfo::kFrame) {
     std::shared_ptr<FrameTrack> track = GetOrCreateFrameTrack(*function);
     track->OnTimer(timer_info);
+  } else if (timer_info.type() == TimerInfo::kIntrospection) {
+    ProcessIntrospectionTimer(timer_info);
   } else {
     std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(timer_info.thread_id());
-    if (timer_info.type() == TimerInfo::kIntrospection) {
-      const Color kGreenIntrospection(87, 166, 74, 255);
-      track->SetColor(kGreenIntrospection);
-    }
-
     if (timer_info.type() != TimerInfo::kCoreActivity) {
       track->OnTimer(timer_info);
       ++thread_count_map_[timer_info.thread_id()];
@@ -332,12 +329,38 @@ void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
       ProcessValueTrackingTimer(timer_info);
       break;
     case FunctionInfo::kOrbitTimerStartAsync:
-      [[fallthrough]];
     case FunctionInfo::kOrbitTimerStopAsync:
       manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
       break;
     default:
       break;
+  }
+}
+
+void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {
+  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+
+  switch (event.type) {
+    case orbit_api::kScopeStart: {
+      std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(timer_info.thread_id());
+      track->OnTimer(timer_info);
+      ++thread_count_map_[timer_info.thread_id()];
+    } break;
+    case orbit_api::kScopeStartAsync:
+    case orbit_api::kScopeStopAsync:
+      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      break;
+    case orbit_api::kTrackInt:
+    case orbit_api::kTrackInt64:
+    case orbit_api::kTrackUint:
+    case orbit_api::kTrackUint64:
+    case orbit_api::kTrackFloat:
+    case orbit_api::kTrackDouble:
+    case orbit_api::kString:
+      ProcessValueTrackingTimer(timer_info);
+      break;
+    default:
+      ERROR("Unhandled introspection type [%u]", event.type);
   }
 }
 
@@ -374,6 +397,10 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
     default:
       ERROR("Unsupported value tracking type [%u]", event.type);
       break;
+  }
+
+  if (track->GetProcessId() == -1) {
+    track->SetProcessId(timer_info.process_id());
   }
 }
 
@@ -898,26 +925,22 @@ void TimeGraph::SortTracks() {
     ScopeLock lock(mutex_);
     sorted_tracks_.clear();
 
-    // Scheduler Track.
-    if (!scheduler_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(scheduler_track_);
-    }
-
-    // Gpu Tracks.
+    // Gpu tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
       sorted_tracks_.emplace_back(timeline_and_track.second);
     }
 
+    // Frame tracks.
     for (const auto& name_and_track : frame_tracks_) {
       sorted_tracks_.emplace_back(name_and_track.second);
     }
 
-    // Graph Tracks.
+    // Graph tracks.
     for (const auto& graph_track : graph_tracks_) {
       sorted_tracks_.emplace_back(graph_track.second);
     }
 
-    // Async Tracks.
+    // Async tracks.
     for (const auto& async_track : async_tracks_) {
       sorted_tracks_.emplace_back(async_track.second);
     }
@@ -926,12 +949,12 @@ void TimeGraph::SortTracks() {
       sorted_tracks_.emplace_back(tracepoints_system_wide_track_);
     }
 
-    // Process Track.
+    // Process track.
     if (!process_track_->IsEmpty()) {
       sorted_tracks_.emplace_back(process_track_);
     }
 
-    // Thread Tracks.
+    // Thread tracks.
     for (auto thread_id : sorted_thread_ids) {
       std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(thread_id);
       if (!track->IsEmpty()) {
@@ -955,6 +978,32 @@ void TimeGraph::SortTracks() {
       }
       sorted_tracks_ = std::move(filtered_tracks);
     }
+
+    // Separate "capture_pid" tracks from tracks that originate from other processes.
+    int32_t capture_pid = GOrbitApp->GetCaptureData().process_id();
+    std::vector<std::shared_ptr<Track>> capture_pid_tracks;
+    std::vector<std::shared_ptr<Track>> external_pid_tracks;
+    for (auto& track : sorted_tracks_) {
+      int32_t pid = track->GetProcessId();
+      if (pid != -1 && pid != capture_pid) {
+        external_pid_tracks.emplace_back(track);
+      } else {
+        capture_pid_tracks.emplace_back(track);
+      }
+    }
+
+    // Clear before repopulating.
+    sorted_tracks_.clear();
+
+    // Scheduler track.
+    if (!scheduler_track_->IsEmpty()) {
+      sorted_tracks_.emplace_back(scheduler_track_);
+    }
+
+    // For now, "external_pid_tracks" should only contain
+    // introspection tracks. Display them on top.
+    Append(sorted_tracks_, external_pid_tracks);
+    Append(sorted_tracks_, capture_pid_tracks);
 
     last_thread_reorder_.Reset();
   }

@@ -4,7 +4,10 @@
 
 #include "LinuxTracingGrpcHandler.h"
 
+#include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
+
+ABSL_DECLARE_FLAG(bool, devmode);
 
 namespace orbit_service {
 
@@ -16,6 +19,7 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
+using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -34,6 +38,30 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   tracer_->Start();
 
   sender_thread_ = std::thread{[this] { SenderThread(); }};
+
+  if (absl::GetFlag(FLAGS_devmode)) {
+    SetupIntrospection();
+  }
+}
+
+void LinuxTracingGrpcHandler::SetupIntrospection() {
+  orbit_tracing_listener_ =
+      std::make_unique<orbit::tracing::Listener>([this](const orbit::tracing::Scope& scope) {
+        IntrospectionScope introspection_scope;
+        introspection_scope.set_pid(getpid());
+        introspection_scope.set_tid(scope.tid);
+        introspection_scope.set_begin_timestamp_ns(scope.begin);
+        introspection_scope.set_end_timestamp_ns(scope.end);
+        introspection_scope.set_depth(scope.depth);
+        introspection_scope.mutable_registers()->Reserve(6);
+        introspection_scope.add_registers(scope.encoded_event.args[0]);
+        introspection_scope.add_registers(scope.encoded_event.args[1]);
+        introspection_scope.add_registers(scope.encoded_event.args[2]);
+        introspection_scope.add_registers(scope.encoded_event.args[3]);
+        introspection_scope.add_registers(scope.encoded_event.args[4]);
+        introspection_scope.add_registers(scope.encoded_event.args[5]);
+        OnIntrospectionScope(introspection_scope);
+      });
 }
 
 void LinuxTracingGrpcHandler::Stop() {
@@ -74,6 +102,16 @@ void LinuxTracingGrpcHandler::OnCallstackSample(CallstackSample callstack_sample
 void LinuxTracingGrpcHandler::OnFunctionCall(FunctionCall function_call) {
   CaptureEvent event;
   *event.mutable_function_call() = std::move(function_call);
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    event_buffer_.emplace_back(std::move(event));
+  }
+}
+
+void LinuxTracingGrpcHandler::OnIntrospectionScope(
+    orbit_grpc_protos::IntrospectionScope introspection_scope) {
+  CaptureEvent event;
+  *event.mutable_introspection_scope() = std::move(introspection_scope);
   {
     absl::MutexLock lock{&event_buffer_mutex_};
     event_buffer_.emplace_back(std::move(event));
@@ -235,6 +273,7 @@ void LinuxTracingGrpcHandler::SenderThread() {
 
   bool stopped = false;
   while (!stopped) {
+    ORBIT_SCOPE("SenderThread iteration");
     event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
                                                 +[](LinuxTracingGrpcHandler* self) {
                                                   return self->event_buffer_.size() >=
@@ -257,6 +296,9 @@ void LinuxTracingGrpcHandler::SendBufferedEvents(std::vector<CaptureEvent>&& buf
   if (buffered_events.empty()) {
     return;
   }
+
+  ORBIT_SCOPE("GrpcHandler::SendBufferedEvents");
+  ORBIT_UINT64("Number of sent buffered events", buffered_events.size());
   constexpr uint64_t kMaxEventsPerResponse = 10'000;
   CaptureResponse response;
   for (CaptureEvent& event : buffered_events) {

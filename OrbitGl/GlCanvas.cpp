@@ -35,7 +35,6 @@ float GlCanvas::kZValueSliderBg = 0.63f;
 float GlCanvas::kZValueSlider = 0.65f;
 
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
-const Color GlCanvas::kTabColor = Color(50, 50, 50, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
 GlCanvas::GlCanvas(uint32_t font_size)

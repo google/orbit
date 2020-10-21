@@ -6,6 +6,7 @@
 #define ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/Tracing.h>
 #include <OrbitLinuxTracing/Tracer.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 
@@ -34,6 +35,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override;
   void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) override;
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override;
+  void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_call) override;
   void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override;
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override;
   void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override;
@@ -44,6 +46,9 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
       reader_writer_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
+
+  // Manual instrumentation tracing listener.
+  std::unique_ptr<orbit::tracing::Listener> orbit_tracing_listener_;
 
   [[nodiscard]] static uint64_t ComputeCallstackKey(const orbit_grpc_protos::Callstack& callstack);
   [[nodiscard]] uint64_t InternCallstackIfNecessaryAndGetKey(
@@ -62,6 +67,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   absl::flat_hash_set<uint64_t> tracepoint_keys_sent_;
   absl::Mutex tracepoint_keys_sent_mutex_;
 
+  void SetupIntrospection();
   void SenderThread();
   void SendBufferedEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& buffered_events);
 

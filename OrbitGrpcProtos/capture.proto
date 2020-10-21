@@ -61,6 +61,15 @@ message FunctionCall {
   repeated uint64 registers = 8;
 }
 
+message IntrospectionScope {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 begin_timestamp_ns = 3;
+  uint64 end_timestamp_ns = 4;
+  int32 depth = 5;
+  repeated uint64 registers = 6;
+}
+
 message Callstack {
   repeated uint64 pcs = 1;
 }
@@ -179,5 +188,6 @@ message CaptureEvent {
     AddressInfo address_info = 8;
     InternedTracepointInfo interned_tracepoint_info = 9;
     TracepointEvent tracepoint_event = 10;
+    IntrospectionScope introspection_scope = 12;
   }
 }

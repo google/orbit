@@ -20,7 +20,10 @@ ABSL_CONST_INIT static Listener* global_tracing_listener = nullptr;
 
 namespace orbit::tracing {
 
-Listener::Listener(std::unique_ptr<TimerCallback> callback) {
+Scope::Scope(orbit_api::EventType type, const char* name, uint64_t data, orbit::Color color)
+    : encoded_event(type, name, data, color) {}
+
+Listener::Listener(TimerCallback callback) {
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
   thread_pool_ = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
@@ -55,7 +58,7 @@ void Listener::DeferScopeProcessing(const Scope& scope) {
   global_tracing_listener->thread_pool_->Schedule([scope]() {
     absl::MutexLock lock(&global_tracing_mutex);
     if (!IsActive()) return;
-    (*global_tracing_listener->user_callback_)(scope);
+    global_tracing_listener->user_callback_(scope);
   });
 }
 
@@ -69,11 +72,10 @@ static std::vector<Scope>& GetThreadLocalScopes() {
 namespace orbit_api {
 
 void Start(const char* name, orbit::Color color) {
-  GetThreadLocalScopes().emplace_back(orbit::tracing::Scope());
+  GetThreadLocalScopes().emplace_back(
+      orbit::tracing::Scope(orbit_api::kScopeStart, name, /*data*/ 0, color));
   auto& scope = GetThreadLocalScopes().back();
-  scope.name = name;
   scope.begin = MonotonicTimestampNs();
-  scope.color = color;
 }
 
 void Stop() {
@@ -81,28 +83,31 @@ void Stop() {
   scope.end = MonotonicTimestampNs();
   scope.depth = GetThreadLocalScopes().size() - 1;
   scope.tid = GetCurrentThreadId();
-  scope.type = orbit_api::EventType::kScopeStop;
   Listener::DeferScopeProcessing(scope);
   GetThreadLocalScopes().pop_back();
 }
 
-// Will be implemented shortly.
-void StartAsync(const char*, uint64_t, orbit::Color) { CHECK(0); }
-void StopAsync(uint64_t) { CHECK(0); }
-
-void TrackScope(const char* name, uint64_t value, orbit::Color color, orbit_api::EventType type) {
-  orbit::tracing::Scope scope;
+void StartAsync(const char* name, uint64_t id, orbit::Color color) {
+  orbit::tracing::Scope scope(orbit_api::kScopeStartAsync, name, id, color);
   scope.begin = MonotonicTimestampNs();
-  scope.name = name;
-  scope.color = color;
-  scope.tracked_value = value;
+  scope.end = scope.begin;
   scope.tid = GetCurrentThreadId();
-  scope.type = type;
+  Listener::DeferScopeProcessing(scope);
+}
+
+void StopAsync(uint64_t id) {
+  orbit::tracing::Scope scope(orbit_api::kScopeStopAsync, /*name*/ nullptr, id);
+  scope.begin = MonotonicTimestampNs();
+  scope.end = scope.begin;
+  scope.tid = GetCurrentThreadId();
   Listener::DeferScopeProcessing(scope);
 }
 
 void TrackValue(orbit_api::EventType type, const char* name, uint64_t value, orbit::Color color) {
-  TrackScope(name, value, color, type);
+  orbit::tracing::Scope scope(type, name, value, color);
+  scope.begin = MonotonicTimestampNs();
+  scope.tid = GetCurrentThreadId();
+  Listener::DeferScopeProcessing(scope);
 }
 
 }  // namespace orbit_api

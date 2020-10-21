@@ -33,7 +33,7 @@ class UprobesFunctionCallManager {
     tid_uprobes_stack.emplace(function_address, begin_timestamp, regs);
   }
 
-  std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(pid_t tid,
+  std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(pid_t pid, pid_t tid,
                                                                    uint64_t end_timestamp,
                                                                    uint64_t return_value) {
     if (!tid_uprobes_stacks_.contains(tid)) {
@@ -47,6 +47,7 @@ class UprobesFunctionCallManager {
     auto& tid_uprobe = tid_uprobes_stack.top();
 
     orbit_grpc_protos::FunctionCall function_call;
+    function_call.set_pid(pid);
     function_call.set_tid(tid);
     function_call.set_absolute_address(tid_uprobe.function_address);
     function_call.set_begin_timestamp_ns(tid_uprobe.begin_timestamp);

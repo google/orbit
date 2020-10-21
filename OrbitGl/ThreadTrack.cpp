@@ -53,7 +53,6 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 
   const FunctionInfo* func =
       GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
-  CHECK(func != nullptr);
 
   if (!func) {
     return text_box->GetText();
@@ -81,7 +80,8 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  return GOrbitApp->IsFunctionVisible(timer_info.function_address());
+  return timer_info.type() == TimerInfo::kIntrospection ||
+         GOrbitApp->IsFunctionVisible(timer_info.function_address());
 }
 
 bool ThreadTrack::IsTrackSelected() const {
@@ -119,11 +119,20 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
 
   uint64_t address = timer_info.function_address();
   const FunctionInfo* function_info = GOrbitApp->GetCaptureData().GetSelectedFunction(address);
-  CHECK(function_info);
-  std::optional<Color> user_color = GetUserColor(timer_info, *function_info);
+  CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection);
+  std::optional<Color> user_color =
+      function_info ? GetUserColor(timer_info, *function_info) : std::nullopt;
 
-  Color color = user_color.has_value() ? user_color.value()
-                                       : time_graph_->GetThreadColor(timer_info.thread_id());
+  Color color = kInactiveColor;
+  if (user_color.has_value()) {
+    color = user_color.value();
+  } else if (timer_info.type() == TimerInfo::kIntrospection) {
+    orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    color = event.color == orbit::Color::kAuto ? time_graph_->GetColor(event.name)
+                                               : ToColor(static_cast<uint64_t>(event.color));
+  } else {
+    color = time_graph_->GetThreadColor(timer_info.thread_id());
+  }
 
   constexpr uint8_t kOddAlpha = 210;
   if (!(timer_info.depth() & 0x1)) {
@@ -240,9 +249,8 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
 
       text_box->SetText(text);
     } else if (timer_info.type() == TimerInfo::kIntrospection) {
-      std::string text = absl::StrFormat(
-          "%s %s", time_graph_->GetStringManager()->Get(timer_info.user_data_key()).value_or(""),
-          time.c_str());
+      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+      std::string text = absl::StrFormat("%s %s", api_event.name, time.c_str());
       text_box->SetText(text);
     } else {
       ERROR(

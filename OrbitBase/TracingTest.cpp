@@ -30,13 +30,12 @@ TEST(Tracing, Scopes) {
 
   absl::flat_hash_map<pid_t, std::vector<Scope>> scopes_by_thread_id;
   {
-    Listener tracing_listener(
-        std::make_unique<TimerCallback>([&scopes_by_thread_id](const Scope& scope) {
-          // Check that callback is called from a single thread.
-          static pid_t callback_thread_id = GetCurrentThreadId();
-          EXPECT_EQ(GetCurrentThreadId(), callback_thread_id);
-          scopes_by_thread_id[scope.tid].emplace_back(scope);
-        }));
+    Listener tracing_listener([&scopes_by_thread_id](const Scope& scope) {
+      // Check that callback is called from a single thread.
+      static pid_t callback_thread_id = GetCurrentThreadId();
+      EXPECT_EQ(GetCurrentThreadId(), callback_thread_id);
+      scopes_by_thread_id[scope.tid].emplace_back(scope);
+    });
 
     std::vector<std::unique_ptr<std::thread>> threads;
     for (size_t i = 0; i < kNumThreads; ++i) {
