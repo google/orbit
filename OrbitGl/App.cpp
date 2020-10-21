@@ -863,6 +863,7 @@ void OrbitApp::LoadModuleOnRemote(const ProcessData* process, ModuleData* module
           SendErrorToUi("Error loading symbols",
                         absl::StrFormat("Could not copy debug info file from the remote: %s",
                                         scp_result.error().message()));
+          modules_currently_loading_.erase(module_data->file_path());
           return;
         }
       }

@@ -226,8 +226,12 @@ ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocal(std::string_view sour
   auto sftp_channel_stop_result = StopSftpChannel(&loop, sftp_channel.value().get());
 
   if (!sftp_channel_stop_result) {
-    ERROR(R"(Error closing sftp channel (after copied remote "%s" to "%s": %s))", source,
-          destination, sftp_channel_stop_result.error().message());
+    std::string sftp_error_message =
+        absl::StrFormat(R"(Error closing sftp channel (after copied remote "%s" to "%s": %s))",
+                        source, destination, sftp_channel_stop_result.error().message());
+    ERROR("%s", sftp_error_message);
+    return ErrorMessage(
+        absl::StrFormat("Download of file %s failed: %s", source, sftp_error_message));
   }
 
   return outcome::success();
