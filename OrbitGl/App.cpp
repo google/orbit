@@ -259,17 +259,17 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
   });
 }
 
-bool OrbitApp::Init(ApplicationOptions&& options,
-                    std::unique_ptr<MainThreadExecutor> main_thread_executor) {
-  GOrbitApp = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
+std::unique_ptr<OrbitApp> OrbitApp::Create(
+    ApplicationOptions&& options, std::unique_ptr<MainThreadExecutor> main_thread_executor) {
+  auto app = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
 
 #ifdef _WIN32
   oqpi_tk::start_default_scheduler();
 #endif
 
-  GOrbitApp->LoadFileMapping();
+  app->LoadFileMapping();
 
-  return true;
+  return app;
 }
 
 void OrbitApp::PostInit() {

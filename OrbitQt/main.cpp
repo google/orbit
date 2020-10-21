@@ -136,7 +136,7 @@ static outcome::result<void> RunUiInstance(
 
   std::optional<std::error_code> error;
 
-  OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
+  GOrbitApp = OrbitApp::Create(std::move(options), CreateMainThreadExecutor());
 
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;

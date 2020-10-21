@@ -67,11 +67,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   OrbitApp(ApplicationOptions&& options, std::unique_ptr<MainThreadExecutor> main_thread_executor);
   ~OrbitApp() override;
 
-  static bool Init(ApplicationOptions&& options,
-                   std::unique_ptr<MainThreadExecutor> main_thread_executor);
+  static std::unique_ptr<OrbitApp> Create(ApplicationOptions&& options,
+                                          std::unique_ptr<MainThreadExecutor> main_thread_executor);
+
   void PostInit();
   void OnExit();
-  static void MainTick();
+  void MainTick();
 
   std::string GetCaptureTime();
   std::string GetSaveFile(const std::string& extension);

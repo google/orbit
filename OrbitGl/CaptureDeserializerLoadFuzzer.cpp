@@ -46,35 +46,33 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     }
   }
 
-  OrbitApp::Init({}, nullptr);
+  std::unique_ptr<OrbitApp> app = OrbitApp::Create({}, nullptr);
 
-  GOrbitApp->SetCaptureStartedCallback([]() {});
-  GOrbitApp->SetCaptureStoppedCallback([]() {});
-  GOrbitApp->SetCaptureFailedCallback([]() {});
-  GOrbitApp->SetCaptureClearedCallback([]() {});
-  GOrbitApp->SetOpenCaptureCallback([]() {});
-  GOrbitApp->SetOpenCaptureFailedCallback([]() {});
-  GOrbitApp->SetOpenCaptureFinishedCallback([]() {});
-  GOrbitApp->SetSelectLiveTabCallback([]() {});
-  GOrbitApp->SetErrorMessageCallback(
-      [](const std::string& /*title*/, const std::string& /*text*/) {});
-  GOrbitApp->SetRefreshCallback([](DataViewType /*type*/) {});
-  GOrbitApp->SetSamplingReportCallback(
+  app->SetCaptureStartedCallback([]() {});
+  app->SetCaptureStoppedCallback([]() {});
+  app->SetCaptureFailedCallback([]() {});
+  app->SetCaptureClearedCallback([]() {});
+  app->SetOpenCaptureCallback([]() {});
+  app->SetOpenCaptureFailedCallback([]() {});
+  app->SetOpenCaptureFinishedCallback([]() {});
+  app->SetSelectLiveTabCallback([]() {});
+  app->SetErrorMessageCallback([](const std::string& /*title*/, const std::string& /*text*/) {});
+  app->SetRefreshCallback([](DataViewType /*type*/) {});
+  app->SetSamplingReportCallback(
       [](DataView* /*view*/, std::shared_ptr<SamplingReport> /*report*/) {});
-  GOrbitApp->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
-  GOrbitApp->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
+  app->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
+  app->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
 
   TimeGraph time_graph{14};
   GCurrentTimeGraph = &time_graph;
   auto string_manager = std::make_shared<StringManager>();
   time_graph.SetStringManager(string_manager);
-  GOrbitApp->ClearCapture();
+  app->ClearCapture();
 
   // NOLINTNEXTLINE
   std::istringstream input_stream{std::move(buffer)};
   std::atomic<bool> cancellation_requested = false;
   capture_deserializer::Load(input_stream, "", GOrbitApp.get(), &cancellation_requested);
 
-  GOrbitApp->GetThreadPool()->ShutdownAndWait();
-  GOrbitApp.reset();
+  app->GetThreadPool()->ShutdownAndWait();
 }
