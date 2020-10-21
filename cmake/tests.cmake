@@ -18,7 +18,8 @@ function(register_test TEST_TARGET)
 
   gtest_discover_tests(${TEST_TARGET}
     XML_OUTPUT_DIR "${TESTRESULTS_DIRECTORY}"
-    PROPERTIES ${ARGS_PROPERTIES})
+    PROPERTIES ${ARGS_PROPERTIES}
+    DISCOVERY_MODE PRE_TEST)
 endfunction()
 
 if(NOT TARGET GTest::GTest)
