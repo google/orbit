@@ -40,6 +40,8 @@ message CaptureOptions {
   bool trace_gpu_driver = 6;
 
   repeated TracepointInfo instrumented_tracepoint = 7;
+
+  bool enable_introspection = 9;
 }
 
 message SchedulingSlice {

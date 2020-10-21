@@ -33,7 +33,7 @@ class CaptureClient {
       ThreadPool* thread_pool, const ProcessData& process,
       const absl::flat_hash_map<std::string, ModuleData*>& module_map,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints);
+      TracepointInfoSet selected_tracepoints, bool enable_introspection);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -56,7 +56,7 @@ class CaptureClient {
  private:
   void Capture(ProcessData&& process, absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-               TracepointInfoSet selected_tracepoints);
+               TracepointInfoSet selected_tracepoints, bool enable_introspection);
 
   void FinishCapture();
 

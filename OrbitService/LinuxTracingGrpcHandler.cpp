@@ -7,8 +7,6 @@
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
 
-ABSL_DECLARE_FLAG(bool, devmode);
-
 namespace orbit_service {
 
 using orbit_grpc_protos::AddressInfo;
@@ -27,6 +25,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());
+  bool enable_introspection = capture_options.enable_introspection();
 
   {
     // Protect tracer_ with event_buffer_mutex_ so that we can use tracer_ in
@@ -39,7 +38,7 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
 
   sender_thread_ = std::thread{[this] { SenderThread(); }};
 
-  if (absl::GetFlag(FLAGS_devmode)) {
+  if (enable_introspection) {
     SetupIntrospection();
   }
 }
