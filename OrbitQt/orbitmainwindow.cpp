@@ -499,7 +499,7 @@ void OrbitMainWindow::StartMainTimer() {
 }
 
 void OrbitMainWindow::OnTimer() {
-  OrbitApp::MainTick();
+  GOrbitApp->MainTick();
 
   for (OrbitGLWidget* glWidget : m_GlWidgets) {
     glWidget->update();
