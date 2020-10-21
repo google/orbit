@@ -80,8 +80,10 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
 
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
-  ErrorMessageOr<void> result = capture_client_->StartCapture(
-      thread_pool, target_process_, module_map_, selected_functions_, selected_tracepoints);
+  bool enable_introspection = false;
+  ErrorMessageOr<void> result =
+      capture_client_->StartCapture(thread_pool, target_process_, module_map_, selected_functions_,
+                                    selected_tracepoints, enable_introspection);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());

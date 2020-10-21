@@ -40,7 +40,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, const ProcessData& process,
     const absl::flat_hash_map<std::string, ModuleData*>& module_map,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints) {
+    TracepointInfoSet selected_tracepoints, bool enable_introspection) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return ErrorMessage(
@@ -58,12 +58,13 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   // used here. (Even better: while taking a capture this should always be up to date)
   absl::flat_hash_map<std::string, ModuleData*> module_map_copy = module_map;
 
-  thread_pool->Schedule(
-      [this, process = std::move(process_copy), module_map = std::move(module_map_copy),
-       selected_functions = std::move(selected_functions), selected_tracepoints]() mutable {
-        Capture(std::move(process), std::move(module_map), std::move(selected_functions),
-                std::move(selected_tracepoints));
-      });
+  thread_pool->Schedule([this, process = std::move(process_copy),
+                         module_map = std::move(module_map_copy),
+                         selected_functions = std::move(selected_functions), selected_tracepoints,
+                         enable_introspection]() mutable {
+    Capture(std::move(process), std::move(module_map), std::move(selected_functions),
+            std::move(selected_tracepoints), enable_introspection);
+  });
 
   return outcome::success();
 }
@@ -71,7 +72,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 void CaptureClient::Capture(ProcessData&& process,
                             absl::flat_hash_map<std::string, ModuleData*>&& module_map,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-                            TracepointInfoSet selected_tracepoints) {
+                            TracepointInfoSet selected_tracepoints, bool enable_introspection) {
   CHECK(reader_writer_ == nullptr);
 
   grpc::ClientContext context;
@@ -111,6 +112,8 @@ void CaptureClient::Capture(ProcessData&& process,
     instrumented_tracepoint->set_category(tracepoint.category());
     instrumented_tracepoint->set_name(tracepoint.name());
   }
+
+  capture_options->set_enable_introspection(enable_introspection);
 
   if (!reader_writer_->Write(request)) {
     ERROR("Sending CaptureRequest on Capture's gRPC stream");

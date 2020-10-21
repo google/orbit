@@ -730,10 +730,11 @@ bool OrbitApp::StartCapture() {
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
+  bool enable_introspection = absl::GetFlag(FLAGS_devmode);
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, data_manager_->GetModulesLoadedByProcess(process),
-      selected_functions, selected_tracepoints);
+      selected_functions, selected_tracepoints, enable_introspection);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
