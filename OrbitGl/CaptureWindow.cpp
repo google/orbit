@@ -30,13 +30,20 @@ CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode, uint32_t font_
   slider_ = std::make_shared<GlHorizontalSlider>();
   vertical_slider_ = std::make_shared<GlVerticalSlider>();
 
-  slider_->SetDragCallback([&](float ratio) { this->OnDrag(ratio); });
+  slider_->SetDragCallback([&](float ratio) {
+    this->UpdateHorizontalScroll(ratio);
+    NeedsUpdate();
+  });
   slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
-    this->OnZoom(normalized_start, normalized_end);
+    this->UpdateHorizontalZoom(normalized_start, normalized_end);
+    NeedsUpdate();
   });
   slider_->SetCanvas(this);
 
-  vertical_slider_->SetDragCallback([&](float ratio) { this->OnVerticalDrag(ratio); });
+  vertical_slider_->SetDragCallback([&](float ratio) {
+    this->UpdateVerticalScroll(ratio);
+    NeedsUpdate();
+  });
   vertical_slider_->SetCanvas(this);
 
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
@@ -534,14 +541,16 @@ void CaptureWindow::DrawScreenSpace() {
     slider_->SetNormalizedPosition(static_cast<float>(ratio));
     slider_->SetNormalizedLength(static_cast<float>(width / time_span));
     slider_->Draw(this, picking_mode);
+    UpdateHorizontalScroll(slider_->GetPosRatio());
 
     float vertical_ratio = world_height_ / time_graph_.GetThreadTotalHeight();
+    vertical_slider_->SetPixelHeight(slider_width);
+    vertical_slider_->SetNormalizedLength(vertical_ratio);
     if (vertical_ratio < 1.f) {
-      vertical_slider_->SetPixelHeight(slider_width);
-      vertical_slider_->SetNormalizedLength(vertical_ratio);
       vertical_slider_->Draw(this, picking_mode);
       right_margin += slider_width;
     }
+    UpdateVerticalScroll(vertical_slider_->GetPosRatio());
 
     vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
     slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
@@ -565,20 +574,18 @@ void CaptureWindow::DrawScreenSpace() {
   }
 }
 
-void CaptureWindow::OnDrag(float ratio) {
-  time_graph_.OnDrag(ratio);
-  NeedsUpdate();
+void CaptureWindow::UpdateHorizontalScroll(float ratio) {
+  time_graph_.UpdateHorizontalScroll(ratio);
 }
 
-void CaptureWindow::OnVerticalDrag(float ratio) {
+void CaptureWindow::UpdateVerticalScroll(float ratio) {
   float min = world_max_y_;
   float max = world_height_ - time_graph_.GetThreadTotalHeight();
-  float range = max - min;
+  float range = std::min(max - min, 0.f);
   world_top_left_y_ = min + ratio * range;
-  NeedsUpdate();
 }
 
-void CaptureWindow::OnZoom(float normalized_start, float normalized_end) {
+void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
   double time_span = time_graph_.GetCaptureTimeSpanUs();
   time_graph_.SetMinMax(normalized_start * time_span, normalized_end * time_span);
 }
