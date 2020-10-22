@@ -47,9 +47,9 @@ class CaptureWindow : public GlCanvas {
   void RenderTimeBar();
   void RenderSelectionOverlay();
   void SelectTextBox(const TextBox* text_box);
-  void OnDrag(float ratio);
-  void OnVerticalDrag(float ratio);
-  void OnZoom(float normalized_start, float normalized_end);
+  void UpdateHorizontalScroll(float ratio);
+  void UpdateVerticalScroll(float ratio);
+  void UpdateHorizontalZoom(float normalized_start, float normalized_end);
   void NeedsUpdate();
   void OnCaptureStarted();
   std::vector<std::string> GetContextMenu() override;

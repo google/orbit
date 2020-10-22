@@ -119,7 +119,7 @@ class TimeGraph {
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableTimerChains() const;
 
-  void OnDrag(float ratio);
+  void UpdateHorizontalScroll(float ratio);
   [[nodiscard]] double GetMinTimeUs() const { return min_time_us_; }
   [[nodiscard]] double GetMaxTimeUs() const { return max_time_us_; }
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }

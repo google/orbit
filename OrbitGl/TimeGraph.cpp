@@ -272,7 +272,7 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
   NeedsUpdate();
 }
 
-void TimeGraph::OnDrag(float ratio) {
+void TimeGraph::UpdateHorizontalScroll(float ratio) {
   double time_span = GetCaptureTimeSpanUs();
   double time_window = max_time_us_ - min_time_us_;
   min_time_us_ = ratio * (time_span - time_window);
