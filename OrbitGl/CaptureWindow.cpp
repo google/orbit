@@ -60,7 +60,6 @@ void CaptureWindow::OnTimer() { GlCanvas::OnTimer(); }
 
 void CaptureWindow::ZoomAll() {
   time_graph_.ZoomAll();
-  world_top_left_y_ = world_max_y_;
   ResetHoverTimer();
   NeedsUpdate();
 }
@@ -726,6 +725,7 @@ void CaptureWindow::RenderHelpUi() {
   ImGui::Text("Start/Stop Capture: 'X'");
   ImGui::Text("Pan: 'A','D' or \"Left Click + Drag\"");
   ImGui::Text("Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"");
+  ImGui::Text("Vertical Zoom: \"Ctrl + Scroll\"");
   ImGui::Text("Select: Left Click");
   ImGui::Text("Measure: \"Right Click + Drag\"");
   ImGui::Text("Toggle Help: 'H'");
