@@ -101,7 +101,6 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
         clamp(world_top_left_y_, world_height_ - time_graph_.GetThreadTotalHeight(), world_max_y_);
 
     time_graph_.PanTime(screen_click_x_, x, GetWidth(), static_cast<double>(ref_time_click_));
-    UpdateVerticalSlider();
     NeedsUpdate();
 
     click_was_drag_ = true;
@@ -531,29 +530,17 @@ void CaptureWindow::DrawScreenSpace() {
   const auto picking_mode = GetPickingMode();
 
   if (time_span > 0) {
-    double start = time_graph_.GetMinTimeUs();
-    double stop = time_graph_.GetMaxTimeUs();
-    double width = stop - start;
-    double max_start = time_span - width;
-    double ratio = GOrbitApp->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
-    int slider_width = static_cast<int>(layout.GetSliderWidth());
-    slider_->SetPixelHeight(slider_width);
-    slider_->SetNormalizedPosition(static_cast<float>(ratio));
-    slider_->SetNormalizedLength(static_cast<float>(width / time_span));
-    slider_->Draw(this, picking_mode);
+    UpdateHorizontalSliderFromWorld();
     UpdateHorizontalScroll(slider_->GetPosRatio());
+    slider_->Draw(this, picking_mode);
 
-    float vertical_ratio = world_height_ / time_graph_.GetThreadTotalHeight();
-    vertical_slider_->SetPixelHeight(slider_width);
-    vertical_slider_->SetNormalizedLength(vertical_ratio);
-    if (vertical_ratio < 1.f) {
+    UpdateVerticalSliderFromWorld();
+    UpdateVerticalScroll(vertical_slider_->GetPosRatio());
+    if (vertical_slider_->GetLengthRatio() < 1.f) {
       vertical_slider_->Draw(this, picking_mode);
+      int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
       right_margin += slider_width;
     }
-    UpdateVerticalScroll(vertical_slider_->GetPosRatio());
-
-    vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
-    slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
   }
 
   // Right vertical margin.
@@ -581,8 +568,12 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   float min = world_max_y_;
   float max = world_height_ - time_graph_.GetThreadTotalHeight();
-  float range = std::min(max - min, 0.f);
-  world_top_left_y_ = min + ratio * range;
+  float range = max - min;
+  float new_top_left_y = min + ratio * range;
+  if (new_top_left_y != world_top_left_y_) {
+    world_top_left_y_ = min + ratio * range;
+    NeedsUpdate();
+  }
 }
 
 void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
@@ -590,11 +581,30 @@ void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalize
   time_graph_.SetMinMax(normalized_start * time_span, normalized_end * time_span);
 }
 
-void CaptureWindow::UpdateVerticalSlider() {
+void CaptureWindow::UpdateHorizontalSliderFromWorld() {
+  double time_span = time_graph_.GetCaptureTimeSpanUs();
+  double start = time_graph_.GetMinTimeUs();
+  double stop = time_graph_.GetMaxTimeUs();
+  double width = stop - start;
+  double max_start = time_span - width;
+  double ratio = GOrbitApp->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
+  int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
+  slider_->SetPixelHeight(slider_width);
+  slider_->SetNormalizedPosition(static_cast<float>(ratio));
+  slider_->SetNormalizedLength(static_cast<float>(width / time_span));
+  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
+}
+
+void CaptureWindow::UpdateVerticalSliderFromWorld() {
   float min = world_max_y_;
   float max = world_height_ - time_graph_.GetThreadTotalHeight();
   float ratio = (world_top_left_y_ - min) / (max - min);
+  float vertical_ratio = world_height_ / time_graph_.GetThreadTotalHeight();
+  int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
+  vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(ratio);
+  vertical_slider_->SetNormalizedLength(vertical_ratio);
+  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
 }
 
 void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
