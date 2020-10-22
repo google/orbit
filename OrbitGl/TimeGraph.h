@@ -42,6 +42,7 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
+  void UpdateFilteredTrackList();
   void UpdateMovingTrackSorting();
   void UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void SelectEvents(float world_start, float world_end, int32_t thread_id);
@@ -241,6 +242,7 @@ class TimeGraph {
   std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
 
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
+  std::vector<std::shared_ptr<Track>> sorted_filtered_tracks_;
   std::string thread_filter_;
 
   std::shared_ptr<SchedulerTrack> scheduler_track_;
