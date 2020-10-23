@@ -26,7 +26,7 @@ class GraphTrack : public Track {
  protected:
   void DrawSquareDot(GlCanvas* canvas, Vec2 center, float radius, float z, Color color);
   void DrawLabel(GlCanvas* canvas, Vec2 target_pos, std::string text, Color text_color,
-                 Color font_color);
+                 Color font_color, float z);
   std::map<uint64_t, double> values_;
   double min_ = std::numeric_limits<double>::max();
   double max_ = std::numeric_limits<double>::lowest();
