@@ -565,8 +565,9 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  if (GOrbitApp->IsCapturing() || sorted_tracks_.empty()) {
+  if (GOrbitApp->IsCapturing() || sorted_tracks_.empty() || sorting_invalidated_) {
     SortTracks();
+    sorting_invalidated_ = false;
   }
 
   UpdateMovingTrackSorting();
@@ -785,7 +786,7 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
     track = std::make_shared<SchedulerTrack>(this);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     scheduler_track_ = track;
     uint32_t num_cores = GetNumCores();
     layout_.SetNumCores(num_cores);
@@ -799,7 +800,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
     track = std::make_shared<ThreadTrack>(this, tid);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(GetThreadColor(tid));
     if (tid == TracepointEventBuffer::kAllTracepointsFakeTid) {
@@ -835,7 +836,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
     track->SetLabel(label);
     // This min combine two cases, label == timeline and when label includes timeline
     track->SetNumberOfPrioritizedTrailingCharacters(std::min(label.size(), timeline.size() + 2));
-    tracks_.emplace_back(track);
+    AddTrack(track);
     gpu_tracks_[timeline_hash] = track;
   }
 
@@ -849,7 +850,7 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(const std::string& name) {
     track = std::make_shared<GraphTrack>(this, name);
     track->SetName(name);
     track->SetLabel(name);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     graph_tracks_[name] = track;
   }
 
@@ -861,7 +862,7 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<AsyncTrack>(this, name);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     async_tracks_[name] = track;
   }
 
@@ -873,10 +874,15 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
     track = std::make_shared<FrameTrack>(this, function);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     frame_tracks_[function.address()] = track;
   }
   return track;
+}
+
+void TimeGraph::AddTrack(std::shared_ptr<Track> track) {
+  tracks_.emplace_back(track);
+  sorting_invalidated_ = true;
 }
 
 std::vector<int32_t>

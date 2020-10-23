@@ -180,6 +180,8 @@ class TimeGraph {
   std::shared_ptr<FrameTrack> GetOrCreateFrameTrack(
       const orbit_client_protos::FunctionInfo& function);
 
+  void AddTrack(std::shared_ptr<Track> track);
+
   [[nodiscard]] std::vector<int32_t> GetSortedThreadIds();
 
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
@@ -196,6 +198,7 @@ class TimeGraph {
   TextRenderer* text_renderer_ = nullptr;
   GlCanvas* canvas_ = nullptr;
   int num_drawn_text_boxes_ = 0;
+  bool sorting_invalidated_ = true;
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
