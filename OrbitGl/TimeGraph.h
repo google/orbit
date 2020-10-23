@@ -180,6 +180,8 @@ class TimeGraph {
   std::shared_ptr<FrameTrack> GetOrCreateFrameTrack(
       const orbit_client_protos::FunctionInfo& function);
 
+  [[nodiscard]] std::vector<int32_t> GetSortedThreadIds();
+
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
                                  const orbit_client_protos::TimerInfo& timer_info);
   void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);

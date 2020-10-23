@@ -876,6 +876,35 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
   return track;
 }
 
+std::vector<int32_t>
+TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions first
+  std::vector<int32_t> sorted_thread_ids;
+  std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
+      OrbitUtils::ReverseValueSort(thread_count_map_);
+
+  for (auto& pair : sorted_threads) {
+    // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
+    // separately.
+    if (pair.first != SamplingProfiler::kAllThreadsFakeTid) {
+      sorted_thread_ids.push_back(pair.first);
+    }
+  }
+
+  // Then show threads sorted by number of events
+  std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
+      OrbitUtils::ReverseValueSort(event_count_);
+  for (auto& pair : sorted_by_events) {
+    // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
+    // separately.
+    if (pair.first == SamplingProfiler::kAllThreadsFakeTid) continue;
+    if (thread_count_map_.find(pair.first) == thread_count_map_.end()) {
+      sorted_thread_ids.push_back(pair.first);
+    }
+  }
+
+  return sorted_thread_ids;
+}
+
 void TimeGraph::SetThreadFilter(const std::string& filter) {
   thread_filter_ = absl::AsciiStrToLower(filter);
   UpdateFilteredTrackList();
@@ -900,78 +929,54 @@ void TimeGraph::SortTracks() {
 
   // Reorder threads once every second when capturing
   if (!GOrbitApp->IsCapturing() || last_thread_reorder_.QueryMillis() > 1000.0) {
-    std::vector<int32_t> sorted_thread_ids;
-
-    // Show threads with instrumented functions first
-    std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
-        OrbitUtils::ReverseValueSort(thread_count_map_);
-    for (auto& pair : sorted_threads) {
-      // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
-      // separately.
-      if (pair.first != SamplingProfiler::kAllThreadsFakeTid) {
-        sorted_thread_ids.push_back(pair.first);
-      }
-    }
-
-    // Then show threads sorted by number of events
-    std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
-        OrbitUtils::ReverseValueSort(event_count_);
-    for (auto& pair : sorted_by_events) {
-      // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
-      // separately.
-      if (pair.first == SamplingProfiler::kAllThreadsFakeTid) continue;
-      if (thread_count_map_.find(pair.first) == thread_count_map_.end()) {
-        sorted_thread_ids.push_back(pair.first);
-      }
-    }
+    std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
 
     ScopeLock lock(mutex_);
-    sorted_tracks_.clear();
+    // Gather all tracks regardless of the process in sorted order
+    std::vector<std::shared_ptr<Track>> all_processes_sorted_tracks;
 
     // Gpu tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
-      sorted_tracks_.emplace_back(timeline_and_track.second);
+      all_processes_sorted_tracks.emplace_back(timeline_and_track.second);
     }
 
     // Frame tracks.
     for (const auto& name_and_track : frame_tracks_) {
-      sorted_tracks_.emplace_back(name_and_track.second);
+      all_processes_sorted_tracks.emplace_back(name_and_track.second);
     }
 
     // Graph tracks.
     for (const auto& graph_track : graph_tracks_) {
-      sorted_tracks_.emplace_back(graph_track.second);
+      all_processes_sorted_tracks.emplace_back(graph_track.second);
     }
 
     // Async tracks.
     for (const auto& async_track : async_tracks_) {
-      sorted_tracks_.emplace_back(async_track.second);
+      all_processes_sorted_tracks.emplace_back(async_track.second);
     }
 
     if (!tracepoints_system_wide_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(tracepoints_system_wide_track_);
+      all_processes_sorted_tracks.emplace_back(tracepoints_system_wide_track_);
     }
 
     // Process track.
     if (!process_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(process_track_);
+      all_processes_sorted_tracks.emplace_back(process_track_);
     }
 
     // Thread tracks.
     for (auto thread_id : sorted_thread_ids) {
       std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(thread_id);
       if (!track->IsEmpty()) {
-        sorted_tracks_.emplace_back(track);
+        all_processes_sorted_tracks.emplace_back(track);
       }
     }
-
-    UpdateFilteredTrackList();
 
     // Separate "capture_pid" tracks from tracks that originate from other processes.
     int32_t capture_pid = GOrbitApp->GetCaptureData().process_id();
     std::vector<std::shared_ptr<Track>> capture_pid_tracks;
     std::vector<std::shared_ptr<Track>> external_pid_tracks;
-    for (auto& track : sorted_tracks_) {
+    for (auto& track : all_processes_sorted_tracks) {
       int32_t pid = track->GetProcessId();
       if (pid != -1 && pid != capture_pid) {
         external_pid_tracks.emplace_back(track);
@@ -994,6 +999,8 @@ void TimeGraph::SortTracks() {
     Append(sorted_tracks_, capture_pid_tracks);
 
     last_thread_reorder_.Reset();
+
+    UpdateFilteredTrackList();
   }
 }
 
