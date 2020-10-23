@@ -1179,6 +1179,15 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
   }
 }
 
+void TimeGraph::SetRightMargin(float margin) {
+  {
+    if (right_margin_ != margin) {
+      NeedsUpdate();
+    }
+    right_margin_ = margin;
+  }
+}
+
 const TextBox* TimeGraph::FindPrevious(const TextBox* from) {
   CHECK(from);
   const TimerInfo& timer_info = from->GetTimerInfo();
