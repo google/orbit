@@ -88,6 +88,9 @@ void TimeGraph::Clear() {
   async_tracks_.clear();
   frame_tracks_.clear();
 
+  sorted_tracks_.clear();
+  sorted_filtered_tracks_.clear();
+
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ =
