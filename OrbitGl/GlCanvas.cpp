@@ -15,24 +15,26 @@
 #include "absl/strings/str_format.h"
 
 // Tracks: 0.0 - 0.1
-// World Overlay: 0.2 - 0.3
-// UI: 0.4 - 0.5
-// UI Overlay: 0.6 - 0.7
+// World Overlay: 0.4 - 0.5
+// UI: 0.6 - 0.7
+// UI Overlay: 0.8 - 0.9
 float GlCanvas::kZValueTrack = 0.01f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.07f;
-float GlCanvas::kZValueRoundingCorner = 0.09f;
-float GlCanvas::kZValueOverlay = 0.23f;
-float GlCanvas::kZValueOverlayTextBackground = 0.25f;
-float GlCanvas::kZValueText = 0.27f;
-float GlCanvas::kZValueEventBarPicking = 0.29f;
-float GlCanvas::kZValueUi = 0.41f;
-float GlCanvas::kZValueTimeBarBg = 0.43f;
-float GlCanvas::kZValueTextUi = 0.45f;
-float GlCanvas::kZValueMargin = 0.61f;
-float GlCanvas::kZValueSliderBg = 0.63f;
-float GlCanvas::kZValueSlider = 0.65f;
+float GlCanvas::kZValueOverlay = 0.43f;
+float GlCanvas::kZValueOverlayTextBackground = 0.45f;
+float GlCanvas::kZValueText = 0.47f;
+float GlCanvas::kZValueEventBarPicking = 0.49f;
+float GlCanvas::kZValueUi = 0.61f;
+float GlCanvas::kZValueTimeBarBg = 0.63f;
+float GlCanvas::kZValueTextUi = 0.65f;
+float GlCanvas::kZValueMargin = 0.81f;
+float GlCanvas::kZValueSliderBg = 0.83f;
+float GlCanvas::kZValueSlider = 0.85f;
+
+float GlCanvas::kZOffsetMovingTack = 0.1f;
+float GlCanvas::kZOffsetPinnedTrack = 0.2f;
 
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
@@ -259,7 +261,7 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
   if (world_height_ <= 0) world_height_ = 1.f;
 
   glOrtho(world_top_left_x_, world_top_left_x_ + world_width_, world_top_left_y_ - world_height_,
-          world_top_left_y_, -1.f, 1.f);
+          world_top_left_y_, -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }

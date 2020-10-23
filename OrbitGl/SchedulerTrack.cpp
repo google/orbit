@@ -4,6 +4,8 @@
 
 #include "SchedulerTrack.h"
 
+#include <absl/flags/flag.h>
+
 #include "App.h"
 #include "EventTrack.h"
 #include "GlCanvas.h"
@@ -16,7 +18,7 @@ using orbit_client_protos::TimerInfo;
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(TimeGraph* time_graph) : TimerTrack(time_graph) {}
+SchedulerTrack::SchedulerTrack(TimeGraph* time_graph) : TimerTrack(time_graph) { SetPinned(true); }
 
 float SchedulerTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();

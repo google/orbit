@@ -17,8 +17,9 @@ class ThreadStateTrack final : public Track {
   ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id);
   Type GetType() const override { return kThreadStateTrack; }
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                        float z_offset) override;
 
   void OnPick(int x, int y) override;
   void OnRelease() override { picked_ = false; };

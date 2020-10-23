@@ -18,13 +18,13 @@ bool ThreadStateTrack::IsEmpty() const {
   return !GOrbitApp->GetCaptureData().HasThreadStatesForThread(thread_id_);
 }
 
-void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   // Similarly to EventTrack::Draw, the thread state slices don't respond to clicks, but have a
   // tooltip. For picking, we want to draw the event bar over them if handling a click, and
   // underneath otherwise. This simulates "click-through" behavior.
-  const float thread_state_bar_z = picking_mode == PickingMode::kClick
-                                       ? GlCanvas::kZValueEventBarPicking
-                                       : GlCanvas::kZValueEventBar;
+  float thread_state_bar_z = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
+                                                                 : GlCanvas::kZValueEventBar;
+  thread_state_bar_z += z_offset;
 
   // Draw a transparent track just for clicking.
   Batcher* batcher = canvas->GetBatcher();
@@ -109,7 +109,7 @@ std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
 }
 
 void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                        PickingMode /*picking_mode*/) {
+                                        PickingMode /*picking_mode*/, float z_offset) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const GlCanvas* canvas = time_graph_->GetCanvas();
 
@@ -143,14 +143,14 @@ void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         user_data->custom_data_ = &slice;
 
         if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {
-          Box box(pos, size, GlCanvas::kZValueEvent);
+          Box box(pos, size, GlCanvas::kZValueEvent + z_offset);
           batcher->AddBox(box, color, std::move(user_data));
         } else {
           // Make this slice cover an entire pixel and don't draw subsequent slices that would
           // coincide with the same pixel.
           // Use AddBox instead of AddVerticalLine as otherwise the tops of Boxes and lines wouldn't
           // be properly aligned.
-          Box box(pos, {pixel_width_in_world_coords, size[1]}, GlCanvas::kZValueEvent);
+          Box box(pos, {pixel_width_in_world_coords, size[1]}, GlCanvas::kZValueEvent + z_offset);
           batcher->AddBox(box, color, std::move(user_data));
 
           if (pixel_delta_ns != 0) {

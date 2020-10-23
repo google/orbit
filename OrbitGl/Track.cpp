@@ -4,11 +4,15 @@
 
 #include "Track.h"
 
+#include <absl/flags/flag.h>
+
 #include "App.h"
 #include "CoreMath.h"
 #include "GlCanvas.h"
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
+
+ABSL_DECLARE_FLAG(bool, track_ordering_feature);
 
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
@@ -30,6 +34,7 @@ Track::Track(TimeGraph* time_graph)
   num_prioritized_trailing_characters_ = 0;
   thread_id_ = -1;
   process_id_ = -1;
+  SetPinned(false);
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -79,7 +84,7 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
   }
 }
 
-void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -89,16 +94,21 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + size_[0];
   float y0 = pos_[1];
   float y1 = y0 - size_[1];
-  float track_z = GlCanvas::kZValueTrack;
-  float text_z = GlCanvas::kZValueText;
+  float track_z = GlCanvas::kZValueTrack + z_offset;
+  float text_z = GlCanvas::kZValueTrack + z_offset;
   float top_margin = layout.GetTrackTopMargin();
 
+  const Color kBackgroundColor = GetBackgroundColor();
+
   // Draw track background.
-  Color background_color = GetBackgroundColor();
   if (!picking) {
+    if (IsPinned()) {
+      Box box(Vec2(x0, y0), Vec2(size_[0], size_[1]), track_z);
+      batcher->AddBox(box, kBackgroundColor, shared_from_this());
+    }
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
-      batcher->AddBox(box, background_color, shared_from_this());
+      batcher->AddBox(box, kBackgroundColor, shared_from_this());
     }
   }
 
@@ -110,7 +120,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, background_color, shared_from_this());
+  batcher->AddBox(box, kBackgroundColor, shared_from_this());
 
   // Draw rounded corners.
   if (!picking) {
@@ -125,14 +135,13 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 top_left(tab_x0, y0 + label_height);
     Vec2 end_bottom(x1 - right_margin, y1);
     Vec2 end_top(x1 - right_margin, y0 + top_margin);
-    float z = GlCanvas::kZValueRoundingCorner;
 
-    DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, bottom_right, background_color, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f, z);
-    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, z);
-    DrawTriangleFan(batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f, z);
-    DrawTriangleFan(batcher, rounded_corner, end_top, GlCanvas::kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_right, kBackgroundColor, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, end_top, GlCanvas::kBackgroundColor, 180.f, track_z);
   }
 
   // Collapse toggle state management.
@@ -147,7 +156,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float toggle_y_pos = pos_[1] + half_label_height;
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos);
-  collapse_toggle_->Draw(canvas, picking_mode);
+  collapse_toggle_->Draw(canvas, picking_mode, z_offset);
 
   if (!picking) {
     // Draw label.
@@ -165,8 +174,18 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   canvas_ = canvas;
 }
 
-void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/,
-                             PickingMode /*  picking_mode*/) {}
+void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/,
+                             float /*z_offset*/) {}
+
+void Track::SetPinned(bool value) {
+  const bool track_ordering_feature = absl::GetFlag(FLAGS_track_ordering_feature);
+  pinned_ = value && track_ordering_feature;
+  if (pinned_) {
+    picking_enabled_ = false;
+  } else {
+    picking_enabled_ = track_ordering_feature;
+  }
+}
 
 void Track::SetPos(float a_X, float a_Y) {
   if (!moving_) {
@@ -194,10 +213,7 @@ Color Track::GetBackgroundColor() const {
 
 void Track::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 
-void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
-  time_graph_->NeedsUpdate();
-  time_graph_->NeedsRedraw();
-}
+void Track::OnCollapseToggle(TriangleToggle::State /*state*/) { time_graph_->NeedsUpdate(); }
 
 void Track::OnPick(int a_X, int a_Y) {
   if (!picking_enabled_) return;

@@ -27,9 +27,7 @@ class Pickable {
   virtual void OnPick(int a_X, int a_Y) = 0;
   virtual void OnDrag(int /*a_X*/, int /*a_Y*/) {}
   virtual void OnRelease(){};
-  virtual void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode) = 0;
   [[nodiscard]] virtual bool Draggable() { return false; }
-  [[nodiscard]] virtual bool Movable() { return false; }
   [[nodiscard]] virtual std::string GetTooltip() const { return ""; }
 };
 

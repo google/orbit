@@ -175,8 +175,8 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_track_->SetPos(pos_[0], current_y);
 }
 
-void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
-  TimerTrack::Draw(canvas, picking_mode);
+void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  TimerTrack::Draw(canvas, picking_mode, z_offset);
 
   UpdatePositionOfSubtracks();
 
@@ -187,36 +187,37 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   if (!thread_state_track_->IsEmpty()) {
     thread_state_track_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
-    thread_state_track_->Draw(canvas, picking_mode);
+    thread_state_track_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!event_track_->IsEmpty()) {
     event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
-    event_track_->Draw(canvas, picking_mode);
+    event_track_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!tracepoint_track_->IsEmpty()) {
     tracepoint_track_->SetSize(canvas->GetWorldWidth(), tracepoint_track_height);
-    tracepoint_track_->Draw(canvas, picking_mode);
+    tracepoint_track_->Draw(canvas, picking_mode, z_offset);
   }
 }
 
 void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_id(thread_id_); }
 
-void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
+void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                                   float z_offset) {
   UpdatePositionOfSubtracks();
 
   if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
   }
   if (!event_track_->IsEmpty()) {
-    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
   }
   if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
+    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
   }
 
-  TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
+  TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
 }
 
 void ThreadTrack::SetTrackColor(Color color) {
@@ -226,7 +227,7 @@ void ThreadTrack::SetTrackColor(Color color) {
 }
 
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
-                                   TextBox* text_box) {
+                                   float z_offset, TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
@@ -267,7 +268,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
-      GlCanvas::kZValueText, kTextWhite, text_box->GetElapsedTimeTextLength(),
+      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       time_graph_->CalculateZoomedFontSize(), max_size);
 }
 

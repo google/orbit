@@ -5,18 +5,6 @@
 #include <absl/flags/flag.h>
 
 // Flag declarations
-ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, local);
-
-ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
-ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
-
-ABSL_DECLARE_FLAG(bool, show_return_values);
-ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, thread_state);
-
-// Flag usages
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
@@ -28,3 +16,4 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
+ABSL_FLAG(bool, track_ordering_feature, false, "Allow reordering and pinning of threads");

@@ -42,6 +42,9 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
+  void UpdateFilteredTrackList();
+  void UpdateMovingTrackSorting();
+  void UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void SelectEvents(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
@@ -177,6 +180,10 @@ class TimeGraph {
   std::shared_ptr<FrameTrack> GetOrCreateFrameTrack(
       const orbit_client_protos::FunctionInfo& function);
 
+  void AddTrack(std::shared_ptr<Track> track);
+
+  [[nodiscard]] std::vector<int32_t> GetSortedThreadIds();
+
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
                                  const orbit_client_protos::TimerInfo& timer_info);
   void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);
@@ -191,6 +198,7 @@ class TimeGraph {
   TextRenderer* text_renderer_ = nullptr;
   GlCanvas* canvas_ = nullptr;
   int num_drawn_text_boxes_ = 0;
+  bool sorting_invalidated_ = true;
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
@@ -239,6 +247,7 @@ class TimeGraph {
   std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
 
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
+  std::vector<std::shared_ptr<Track>> sorted_filtered_tracks_;
   std::string thread_filter_;
 
   std::shared_ptr<SchedulerTrack> scheduler_track_;

@@ -14,8 +14,9 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
       handler_(handler),
       time_graph_(time_graph) {}
 
-void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   Batcher* batcher = canvas->GetBatcher();
+  const float z = GlCanvas::kZValueTrack + z_offset;
 
   const bool picking = picking_mode != PickingMode::kNone;
   const Color kWhite(255, 255, 255, 255);
@@ -32,13 +33,11 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
     Triangle triangle;
     if (state_ == State::kCollapsed) {
-      triangle = Triangle(position + Vec3(-half_h, half_w, GlCanvas::kZValueUi),
-                          position + Vec3(-half_h, -half_w, GlCanvas::kZValueUi),
-                          position + Vec3(half_w, 0.f, GlCanvas::kZValueUi));
+      triangle = Triangle(position + Vec3(-half_h, half_w, z), position + Vec3(-half_h, -half_w, z),
+                          position + Vec3(half_w, 0.f, z));
     } else {
-      triangle = Triangle(position + Vec3(half_w, half_h, GlCanvas::kZValueUi),
-                          position + Vec3(-half_w, half_h, GlCanvas::kZValueUi),
-                          position + Vec3(0.f, -half_w, GlCanvas::kZValueUi));
+      triangle = Triangle(position + Vec3(half_w, half_h, z), position + Vec3(-half_w, half_h, z),
+                          position + Vec3(0.f, -half_w, z));
     }
     batcher->AddTriangle(triangle, color, shared_from_this());
   } else {
@@ -46,7 +45,7 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float original_width = 2 * half_w;
     float large_width = 2 * original_width;
     Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
-            Vec2(large_width, large_width), GlCanvas::kZValueUi);
+            Vec2(large_width, large_width), z);
     batcher->AddBox(box, color, shared_from_this());
   }
 }

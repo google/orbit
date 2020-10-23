@@ -121,8 +121,6 @@ void TextRenderer::Display(Batcher* batcher) {
   mat4* proj = reinterpret_cast<mat4*>(&matrix[0]);
   m_Proj = *proj;
 
-  mat4_set_orthographic(&m_Proj, 0, m_Canvas->GetWidth(), 0, m_Canvas->GetHeight(), -1, 1);
-
   glUseProgram(m_Shader);
   {
     glUniform1i(glGetUniformLocation(m_Shader, "texture"), 0);
@@ -130,10 +128,6 @@ void TextRenderer::Display(Batcher* batcher) {
     glUniformMatrix4fv(glGetUniformLocation(m_Shader, "view"), 1, 0, m_View.data);
     glUniformMatrix4fv(glGetUniformLocation(m_Shader, "projection"), 1, 0, m_Proj.data);
     vertex_buffer_render(m_Buffer, GL_TRIANGLES);
-
-    /*PRINT_VAR(m_Model);
-    PRINT_VAR(m_View);
-    PRINT_VAR(m_Proj);*/
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);

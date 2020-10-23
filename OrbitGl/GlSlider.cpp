@@ -177,7 +177,7 @@ bool GlSlider::HandlePageScroll(float click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
+void GlVerticalSlider::Draw(GlCanvas* canvas) {
   CHECK(canvas == canvas_);
 
   float x = canvas_->GetWidth() - GetPixelHeight();
@@ -200,7 +200,7 @@ int GlVerticalSlider::GetBarPixelLength() const {
   return canvas_->GetHeight() - GetOrthogonalSliderSize();
 }
 
-void GlHorizontalSlider::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
+void GlHorizontalSlider::Draw(GlCanvas* canvas) {
   canvas_ = canvas;
   static float y = 0;
 

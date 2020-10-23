@@ -88,6 +88,9 @@ void TimeGraph::Clear() {
   async_tracks_.clear();
   frame_tracks_.clear();
 
+  sorted_tracks_.clear();
+  sorted_filtered_tracks_.clear();
+
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ =
@@ -562,17 +565,14 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  SortTracks();
-
-  float current_y = -layout_.GetSchedulerTrackOffset();
-
-  for (auto& track : sorted_tracks_) {
-    track->SetY(current_y);
-    track->UpdatePrimitives(min_tick, max_tick, picking_mode);
-    current_y -= (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+  if (GOrbitApp->IsCapturing() || sorted_tracks_.empty() || sorting_invalidated_) {
+    SortTracks();
+    sorting_invalidated_ = false;
   }
 
-  min_y_ = current_y;
+  UpdateMovingTrackSorting();
+  UpdateTracks(min_tick, max_tick, picking_mode);
+
   needs_update_primitives_ = false;
 }
 
@@ -770,8 +770,14 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
-  for (auto& track : sorted_tracks_) {
-    track->Draw(canvas, picking_mode);
+  for (auto& track : sorted_filtered_tracks_) {
+    float z_offset = 0;
+    if (track->IsPinned()) {
+      z_offset = GlCanvas::kZOffsetPinnedTrack;
+    } else if (track->IsMoving()) {
+      z_offset = GlCanvas::kZOffsetMovingTack;
+    }
+    track->Draw(canvas, picking_mode, z_offset);
   }
 }
 
@@ -780,7 +786,7 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
     track = std::make_shared<SchedulerTrack>(this);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     scheduler_track_ = track;
     uint32_t num_cores = GetNumCores();
     layout_.SetNumCores(num_cores);
@@ -794,7 +800,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
     track = std::make_shared<ThreadTrack>(this, tid);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(GetThreadColor(tid));
     if (tid == TracepointEventBuffer::kAllTracepointsFakeTid) {
@@ -830,7 +836,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
     track->SetLabel(label);
     // This min combine two cases, label == timeline and when label includes timeline
     track->SetNumberOfPrioritizedTrailingCharacters(std::min(label.size(), timeline.size() + 2));
-    tracks_.emplace_back(track);
+    AddTrack(track);
     gpu_tracks_[timeline_hash] = track;
   }
 
@@ -844,7 +850,7 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(const std::string& name) {
     track = std::make_shared<GraphTrack>(this, name);
     track->SetName(name);
     track->SetLabel(name);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     graph_tracks_[name] = track;
   }
 
@@ -856,7 +862,7 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<AsyncTrack>(this, name);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     async_tracks_[name] = track;
   }
 
@@ -868,14 +874,49 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
     track = std::make_shared<FrameTrack>(this, function);
-    tracks_.emplace_back(track);
+    AddTrack(track);
     frame_tracks_[function.address()] = track;
   }
   return track;
 }
 
+void TimeGraph::AddTrack(std::shared_ptr<Track> track) {
+  tracks_.emplace_back(track);
+  sorting_invalidated_ = true;
+}
+
+std::vector<int32_t>
+TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions first
+  std::vector<int32_t> sorted_thread_ids;
+  std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
+      OrbitUtils::ReverseValueSort(thread_count_map_);
+
+  for (auto& pair : sorted_threads) {
+    // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
+    // separately.
+    if (pair.first != SamplingProfiler::kAllThreadsFakeTid) {
+      sorted_thread_ids.push_back(pair.first);
+    }
+  }
+
+  // Then show threads sorted by number of events
+  std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
+      OrbitUtils::ReverseValueSort(event_count_);
+  for (auto& pair : sorted_by_events) {
+    // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
+    // separately.
+    if (pair.first == SamplingProfiler::kAllThreadsFakeTid) continue;
+    if (thread_count_map_.find(pair.first) == thread_count_map_.end()) {
+      sorted_thread_ids.push_back(pair.first);
+    }
+  }
+
+  return sorted_thread_ids;
+}
+
 void TimeGraph::SetThreadFilter(const std::string& filter) {
   thread_filter_ = absl::AsciiStrToLower(filter);
+  UpdateFilteredTrackList();
   NeedsUpdate();
 }
 
@@ -897,93 +938,54 @@ void TimeGraph::SortTracks() {
 
   // Reorder threads once every second when capturing
   if (!GOrbitApp->IsCapturing() || last_thread_reorder_.QueryMillis() > 1000.0) {
-    std::vector<int32_t> sorted_thread_ids;
-
-    // Show threads with instrumented functions first
-    std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
-        OrbitUtils::ReverseValueSort(thread_count_map_);
-    for (auto& pair : sorted_threads) {
-      // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
-      // separately.
-      if (pair.first != SamplingProfiler::kAllThreadsFakeTid) {
-        sorted_thread_ids.push_back(pair.first);
-      }
-    }
-
-    // Then show threads sorted by number of events
-    std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
-        OrbitUtils::ReverseValueSort(event_count_);
-    for (auto& pair : sorted_by_events) {
-      // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
-      // separately.
-      if (pair.first == SamplingProfiler::kAllThreadsFakeTid) continue;
-      if (thread_count_map_.find(pair.first) == thread_count_map_.end()) {
-        sorted_thread_ids.push_back(pair.first);
-      }
-    }
+    std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
 
     ScopeLock lock(mutex_);
-    sorted_tracks_.clear();
+    // Gather all tracks regardless of the process in sorted order
+    std::vector<std::shared_ptr<Track>> all_processes_sorted_tracks;
 
     // Gpu tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
-      sorted_tracks_.emplace_back(timeline_and_track.second);
+      all_processes_sorted_tracks.emplace_back(timeline_and_track.second);
     }
 
     // Frame tracks.
     for (const auto& name_and_track : frame_tracks_) {
-      sorted_tracks_.emplace_back(name_and_track.second);
+      all_processes_sorted_tracks.emplace_back(name_and_track.second);
     }
 
     // Graph tracks.
     for (const auto& graph_track : graph_tracks_) {
-      sorted_tracks_.emplace_back(graph_track.second);
+      all_processes_sorted_tracks.emplace_back(graph_track.second);
     }
 
     // Async tracks.
     for (const auto& async_track : async_tracks_) {
-      sorted_tracks_.emplace_back(async_track.second);
+      all_processes_sorted_tracks.emplace_back(async_track.second);
     }
 
     if (!tracepoints_system_wide_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(tracepoints_system_wide_track_);
+      all_processes_sorted_tracks.emplace_back(tracepoints_system_wide_track_);
     }
 
     // Process track.
     if (!process_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(process_track_);
+      all_processes_sorted_tracks.emplace_back(process_track_);
     }
 
     // Thread tracks.
     for (auto thread_id : sorted_thread_ids) {
       std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(thread_id);
       if (!track->IsEmpty()) {
-        sorted_tracks_.emplace_back(track);
+        all_processes_sorted_tracks.emplace_back(track);
       }
-    }
-
-    // Filter tracks if needed.
-    if (!thread_filter_.empty()) {
-      std::vector<std::string> filters =
-          absl::StrSplit(thread_filter_, ' ', absl::SkipWhitespace());
-      std::vector<std::shared_ptr<Track>> filtered_tracks;
-      for (const auto& track : sorted_tracks_) {
-        std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
-        for (auto& filter : filters) {
-          if (absl::StrContains(lower_case_label, filter)) {
-            filtered_tracks.emplace_back(track);
-            break;
-          }
-        }
-      }
-      sorted_tracks_ = std::move(filtered_tracks);
     }
 
     // Separate "capture_pid" tracks from tracks that originate from other processes.
     int32_t capture_pid = GOrbitApp->GetCaptureData().process_id();
     std::vector<std::shared_ptr<Track>> capture_pid_tracks;
     std::vector<std::shared_ptr<Track>> external_pid_tracks;
-    for (auto& track : sorted_tracks_) {
+    for (auto& track : all_processes_sorted_tracks) {
       int32_t pid = track->GetProcessId();
       if (pid != -1 && pid != capture_pid) {
         external_pid_tracks.emplace_back(track);
@@ -1006,7 +1008,106 @@ void TimeGraph::SortTracks() {
     Append(sorted_tracks_, capture_pid_tracks);
 
     last_thread_reorder_.Reset();
+
+    UpdateFilteredTrackList();
   }
+}
+
+void TimeGraph::UpdateFilteredTrackList() {
+  if (thread_filter_.empty()) {
+    sorted_filtered_tracks_ = sorted_tracks_;
+    return;
+  }
+
+  sorted_filtered_tracks_.clear();
+  std::vector<std::string> filters = absl::StrSplit(thread_filter_, ' ', absl::SkipWhitespace());
+  for (const auto& track : sorted_tracks_) {
+    std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
+    for (auto& filter : filters) {
+      if (absl::StrContains(lower_case_label, filter)) {
+        sorted_filtered_tracks_.emplace_back(track);
+        break;
+      }
+    }
+  }
+}
+
+void TimeGraph::UpdateMovingTrackSorting() {
+  // This updates the position of the currently moving track in both the sorted_tracks_
+  // and the sorted_filtered_tracks_ array. The moving track is inserted after the first track
+  // with a value of top + height smaller than the current mouse position.
+  // Only drawn (i.e. not filtered out) tracks are taken into account to determine the
+  // insertion position, but both arrays are updated accordingly.
+  //
+  // Note: We do an O(n) search for the correct position in the sorted_tracks_ array which
+  // could be optimized, but this is not worth the effort for the limited number of tracks.
+
+  std::shared_ptr<Track> moving_track = nullptr;
+  for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
+       ++track_it) {
+    if ((*track_it)->IsMoving()) {
+      moving_track = *track_it;
+      sorted_filtered_tracks_.erase(track_it);
+      sorted_tracks_.erase(std::find(sorted_tracks_.begin(), sorted_tracks_.end(), moving_track));
+      break;
+    }
+  }
+
+  if (moving_track != nullptr) {
+    bool inserted = false;
+
+    for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
+         ++track_it) {
+      if (moving_track->GetPos()[1] >= (*track_it)->GetPos()[1]) {
+        auto sorted_track_it = std::find(sorted_tracks_.begin(), sorted_tracks_.end(), *track_it);
+        sorted_tracks_.insert(sorted_track_it, moving_track);
+        sorted_filtered_tracks_.insert(track_it, moving_track);
+        inserted = true;
+        break;
+      }
+    }
+
+    if (!inserted) {
+      sorted_tracks_.push_back(moving_track);
+      sorted_filtered_tracks_.push_back(moving_track);
+    }
+  }
+}
+
+void TimeGraph::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
+  float current_y = -layout_.GetSchedulerTrackOffset();
+  float pinned_tracks_height = 0.f;
+
+  // Draw pinned tracks
+  for (auto& track : sorted_filtered_tracks_) {
+    if (!track->IsPinned()) {
+      continue;
+    }
+
+    const float z_offset = GlCanvas::kZOffsetPinnedTrack;
+    track->SetY(current_y + canvas_->GetWorldTopLeftY() - layout_.GetTopMargin() -
+                layout_.GetSchedulerTrackOffset());
+    track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    const float height = (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+    current_y -= height;
+    pinned_tracks_height += height;
+  }
+
+  current_y = -layout_.GetSchedulerTrackOffset() - pinned_tracks_height;
+
+  // Draw unpinned tracks
+  for (auto& track : sorted_filtered_tracks_) {
+    if (track->IsPinned()) {
+      continue;
+    }
+
+    const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
+    track->SetY(current_y);
+    track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    current_y -= (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+  }
+
+  min_y_ = current_y;
 }
 
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {
