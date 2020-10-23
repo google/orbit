@@ -22,7 +22,6 @@ float GlCanvas::kZValueTrack = 0.01f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.07f;
-float GlCanvas::kZValueRoundingCorner = 0.09f;
 float GlCanvas::kZValueOverlay = 0.43f;
 float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueText = 0.47f;
