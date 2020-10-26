@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -25,7 +26,75 @@ using orbit_grpc_protos::UpdateSelectedFunctionsResponse;
 using grpc::ClientContext;
 using grpc::Status;
 
-ErrorMessageOr<void> CaptureClientGgpClient::StartCapture() {
+class CaptureClientGgpClient::CaptureClientGgpClientImpl {
+ public:
+  void SetupGrpcClient(std::string grpc_server_address);
+
+  [[nodiscard]] ErrorMessageOr<void> StartCapture();
+  [[nodiscard]] ErrorMessageOr<void> StopAndSaveCapture();
+  [[nodiscard]] ErrorMessageOr<void> UpdateSelectedFunctions(
+      std::vector<std::string> capture_functions);
+  void ShutdownService();
+
+ private:
+  std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> capture_client_ggp_service_;
+};
+
+CaptureClientGgpClient::CaptureClientGgpClient(std::string grpc_server_address)
+    : pimpl{std::make_unique<CaptureClientGgpClientImpl>()} {
+  pimpl->SetupGrpcClient(grpc_server_address);
+}
+
+int CaptureClientGgpClient::StartCapture() {
+  ErrorMessageOr<void> result = pimpl->StartCapture();
+  if (result.has_error()) {
+    ERROR("Not possible to start capture: %s", result.error().message());
+    return 0;
+  }
+  return 1;
+}
+
+int CaptureClientGgpClient::StopAndSaveCapture() {
+  ErrorMessageOr<void> result = pimpl->StopAndSaveCapture();
+  if (result.has_error()) {
+    ERROR("Not possible to stop or save capture: %s", result.error().message());
+    return 0;
+  }
+  return 1;
+}
+
+int CaptureClientGgpClient::UpdateSelectedFunctions(std::vector<std::string> selected_functions) {
+  ErrorMessageOr<void> result = pimpl->UpdateSelectedFunctions(selected_functions);
+  if (result.has_error()) {
+    ERROR("Not possible to update functions %s", result.error().message());
+    return 0;
+  }
+  return 1;
+}
+
+void CaptureClientGgpClient::ShutdownService() { pimpl->ShutdownService(); }
+
+CaptureClientGgpClient::~CaptureClientGgpClient() = default;
+CaptureClientGgpClient::CaptureClientGgpClient(CaptureClientGgpClient&&) = default;
+CaptureClientGgpClient& CaptureClientGgpClient::operator=(CaptureClientGgpClient&&) = default;
+
+void CaptureClientGgpClient::CaptureClientGgpClientImpl::SetupGrpcClient(
+    std::string grpc_server_address) {
+  grpc::ChannelArguments channel_arguments;
+  channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
+
+  std::shared_ptr<::grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
+      grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
+  if (!grpc_channel) {
+    ERROR("Unable to create GRPC channel to %s", grpc_server_address);
+    return;
+  }
+  LOG("Created GRPC channel to %s", grpc_server_address);
+
+  capture_client_ggp_service_ = orbit_grpc_protos::CaptureClientGgpService::NewStub(grpc_channel);
+}
+
+ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StartCapture() {
   StartCaptureRequest request;
   StartCaptureResponse response;
   auto context = std::make_unique<ClientContext>();
@@ -41,7 +110,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::StartCapture() {
   return outcome::success();
 }
 
-ErrorMessageOr<void> CaptureClientGgpClient::StopAndSaveCapture() {
+ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopAndSaveCapture() {
   StopAndSaveCaptureRequest request;
   StopAndSaveCaptureResponse response;
   auto context = std::make_unique<ClientContext>();
@@ -57,7 +126,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::StopAndSaveCapture() {
   return outcome::success();
 }
 
-ErrorMessageOr<void> CaptureClientGgpClient::UpdateSelectedFunctions(
+ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::UpdateSelectedFunctions(
     std::vector<std::string> selected_functions) {
   UpdateSelectedFunctionsRequest request;
   UpdateSelectedFunctionsResponse response;
@@ -77,7 +146,8 @@ ErrorMessageOr<void> CaptureClientGgpClient::UpdateSelectedFunctions(
   return outcome::success();
 }
 
-void CaptureClientGgpClient::ShutdownService() {
+void CaptureClientGgpClient::CaptureClientGgpClientImpl::CaptureClientGgpClientImpl::
+    ShutdownService() {
   ShutdownServiceRequest request;
   ShutdownServiceResponse response;
   auto context = std::make_unique<ClientContext>();
