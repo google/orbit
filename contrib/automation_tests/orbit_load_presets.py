@@ -1,69 +1,36 @@
+"""
+Copyright (c) 2020 The Orbit Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+"""
+
 """Apply two presets in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started. Two presets named
 draw_frame_in_hello_ggp_1_52.opr and ggp_issue_frame_token_in_hello_ggp_1_52
-(hooking the functions DrawFrame and GgpIssueFrameToken) need to exits in the
+(hooking the functions DrawFrame and GgpIssueFrameToken) need to exist in the
 preset folder.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
 to by run from  64 bit python.
 """
+import orbit_testing
 import logging
 import time
 from absl import app
 import pywinauto
 from pywinauto.application import Application
 
-
-def WaitForOrbit():
-  while True:
-    try:
-      Application(backend='uia').connect(title_re='orbitprofiler')
-      break
-    except pywinauto.findwindows.ElementNotFoundError:
-      pass
-
-
-def ConnectToGamelet(application):
-  """Connect to the first gamelet in the start dialog.
-
-  Args:
-    application: pywinauto application object for Orbit.
-  """
-  # Connect to the first (and only) gamelet.
-  dialog = application.window(title_re='orbitprofiler')
-  dialog.set_focus()
-  # DataItem0 contains the name of the first gamelet.
-  dialog.DataItem0.wait('exists', timeout=100)
-  dialog.DataItem0.click_input()
-  dialog.OK.click_input()
-  logging.info('Connected to Gamelet.')
-  # Wait until the service is deployed and the main window is opened.
-  # Waiting for the window does not really work since there is a progress dialog
-  # with an identical title popping up in between. So we just sleep.
-  time.sleep(15)
-
-
 def main(argv):
-  WaitForOrbit()
-
+  orbit_testing.WaitForOrbit()
   application = Application(backend='uia').connect(title_re='orbitprofiler')
-
-  ConnectToGamelet(application)
-
-  # Choose hello_ggp_stanalone as the process to profile.
-  main_wnd = application.window(title_re='orbitprofiler', found_index=0)
-  main_wnd.ProcessesEdit.type_keys('hello_')
-  # Wait for the game to appear in the ProcessesTreeView.
-  main_wnd.ProcessesTreeView.hello_ggp_stand.wait('exists', timeout=100)
-  main_wnd.ProcessesTreeView.hello_ggp_stand.click_input()
-  logging.info('Selected process "hello_ggp_stand".')
-
-  time.sleep(5)
+  orbit_testing.ConnectToGamelet(application)
+  orbit_testing.SelectProcess(application, 'hello_')
 
   # Load the presets.
+  main_wnd = application.window(title_re='orbitprofiler', found_index=0)
   main_wnd.PresetsTreeView2.draw_frame_in_hello_ggp_1_52.click_input(
       button='right')
   main_wnd.LoadPreset.click_input()
