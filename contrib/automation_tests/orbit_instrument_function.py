@@ -1,3 +1,9 @@
+"""
+Copyright (c) 2020 The Orbit Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+"""
+
 """Run a basic workflow in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -14,52 +20,20 @@ This automation script covers a basic workflow:
  - instrument a function
  - take a capture and verify the hooked function is recorded
 """
+import orbit_testing
 import logging
 import time
 from absl import app
 import pywinauto
 from pywinauto.application import Application
 
-
-def WaitForOrbit():
-  while True:
-    try:
-      Application(backend='uia').connect(title_re='orbitprofiler')
-      break
-    except pywinauto.findwindows.ElementNotFoundError:
-      pass
-
-
 def main(argv):
-  WaitForOrbit()
+  orbit_testing.WaitForOrbit()
   application = Application(backend='uia').connect(title_re='orbitprofiler')
+  orbit_testing.ConnectToGamelet(application)
+  orbit_testing.SelectProcess(application, 'hello_')
 
-  if application.is_process_running():
-    logging.info('Orbit is running.')
-  else:
-    logging.info('Orbit is not running.')
-
-  # Connect to the first (and only) gamelet.
-  dialog = application.window(title_re='orbitprofiler')
-  dialog.set_focus()
-  # DataItem0 contains the name of the first gamelet.
-  dialog.DataItem0.click_input()
-  dialog.OK.click_input()
-  logging.info('Connected to Gamelet.')
-
-  # Wait until the service is deployed and the main window is opened.
-  # Waiting for the window does not really work since there is a progress dialog
-  # with an identical title popping up in between. So we just sleep.
-  time.sleep(15)
-
-  # Choose hello_ggp_stanalone as the process to profile.
   main_wnd = application.window(title_re='orbitprofiler', found_index=0)
-  main_wnd.ProcessesEdit.type_keys('hello_')
-  # Wait for the game to appear in the ProcessesTreeView.
-  main_wnd.ProcessesTreeView.hello_ggp_stand.wait('exists', timeout=100)
-  main_wnd.ProcessesTreeView.hello_ggp_stand.click_input()
-  logging.info('Selected process "hello_ggp_stand".')
-
   # Load debug symbols for hello_ggp_standalone module.
   time.sleep(2)
   main_wnd.ModulesTreeView.hello_ggp_standalone.click_input(button='right')
