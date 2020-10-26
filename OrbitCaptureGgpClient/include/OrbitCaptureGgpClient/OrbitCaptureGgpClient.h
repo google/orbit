@@ -5,31 +5,24 @@
 #ifndef ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_
 #define ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_
 
-#include <grpcpp/ext/proto_server_reflection_plugin.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/health_check_service_interface.h>
-
-#include <iostream>
-#include <memory>
 #include <string>
-
-#include "OrbitBase/Result.h"
-#include "grpcpp/grpcpp.h"
-#include "services_ggp.grpc.pb.h"
+#include <vector>
 
 class CaptureClientGgpClient {
  public:
-  CaptureClientGgpClient(std::shared_ptr<grpc::Channel> channel)
-      : capture_client_ggp_service_(orbit_grpc_protos::CaptureClientGgpService::NewStub(channel)){};
+  CaptureClientGgpClient(std::string grpc_server_address);
+  ~CaptureClientGgpClient();
+  CaptureClientGgpClient(CaptureClientGgpClient&&);
+  CaptureClientGgpClient& operator=(CaptureClientGgpClient&&);
 
-  [[nodiscard]] ErrorMessageOr<void> StartCapture();
-  [[nodiscard]] ErrorMessageOr<void> StopAndSaveCapture();
-  [[nodiscard]] ErrorMessageOr<void> UpdateSelectedFunctions(
-      std::vector<std::string> capture_functions);
+  int StartCapture();
+  int StopAndSaveCapture();
+  int UpdateSelectedFunctions(std::vector<std::string> capture_functions);
   void ShutdownService();
 
  private:
-  std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> capture_client_ggp_service_;
+  class CaptureClientGgpClientImpl;
+  std::unique_ptr<CaptureClientGgpClientImpl> pimpl;
 };
 
 #endif  // ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_

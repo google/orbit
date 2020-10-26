@@ -25,25 +25,12 @@ ABSL_FLAG(uint16_t, grpc_port, 44767, "gRPC server port for capture ggp service"
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
 
-  // Create channel
-  grpc::ChannelArguments channel_arguments;
-  channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
   uint64_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
   std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
-
-  std::shared_ptr<::grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
-      grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
-  if (!grpc_channel) {
-    ERROR("Unable to create GRPC channel to %s", grpc_server_address);
-    return 0;
-  }
-  LOG("Created GRPC channel to %s", grpc_server_address);
-
-  CaptureClientGgpClient ggp_capture_client = CaptureClientGgpClient(grpc_channel);
+  CaptureClientGgpClient ggp_capture_client = CaptureClientGgpClient(grpc_server_address);
 
   // Waits for input to run the grpc call requested by the user
 
-  ErrorMessageOr<void> result = ErrorMessage();
   constexpr const int kStartCaptureCommand = 1;
   constexpr const int kStopAndSaveCaptureCommand = 2;
   constexpr const int kUpdateSelectedFunctionsCommand = 3;
@@ -66,17 +53,11 @@ int main(int argc, char** argv) {
     switch (i) {
       case kStartCaptureCommand:
         LOG("Chosen %d: Start capture", i);
-        result = ggp_capture_client.StartCapture();
-        if (result.has_error()) {
-          ERROR("Not possible to start capture: %s", result.error().message());
-        }
+        ggp_capture_client.StartCapture();
         break;
       case kStopAndSaveCaptureCommand:
         LOG("Chosen %d: Stop and save capture", i);
-        result = ggp_capture_client.StopAndSaveCapture();
-        if (result.has_error()) {
-          ERROR("Not possible to stop or save capture: %s", result.error().message());
-        }
+        ggp_capture_client.StopAndSaveCapture();
         break;
       case kUpdateSelectedFunctionsCommand: {
         std::vector<std::string> selected_functions;
@@ -88,10 +69,7 @@ int main(int argc, char** argv) {
           std::cout << "Introduce function to hook (Enter ! when you are done): ";
           std::cin >> function;
         }
-        result = ggp_capture_client.UpdateSelectedFunctions(selected_functions);
-        if (result.has_error()) {
-          ERROR("Not possible to update functions %s", result.error().message());
-        }
+        ggp_capture_client.UpdateSelectedFunctions(selected_functions);
         break;
       }
       case kShutdownServiceCommand:
