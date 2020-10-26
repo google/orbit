@@ -6,12 +6,17 @@ syntax = "proto3";
 
 package orbit_grpc_protos;
 
-// Hello world test code
 service CaptureClientGgpService {
-  rpc StartCapture (StartCaptureRequest) returns (StartCaptureResponse) {}
-  rpc StopAndSaveCapture (StopAndSaveCaptureRequest) returns (StopAndSaveCaptureResponse) {}
-  rpc UpdateSelectedFunctions (UpdateSelectedFunctionsRequest) returns (UpdateSelectedFunctionsResponse) {}
-  rpc ShutdownService (ShutdownServiceRequest) returns (ShutdownServiceResponse) {}
+  rpc StartCapture(StartCaptureRequest) returns (StartCaptureResponse) {}
+
+  rpc StopAndSaveCapture(StopAndSaveCaptureRequest)
+      returns (StopAndSaveCaptureResponse) {}
+
+  rpc UpdateSelectedFunctions(UpdateSelectedFunctionsRequest)
+      returns (UpdateSelectedFunctionsResponse) {}
+
+  rpc ShutdownService(ShutdownServiceRequest)
+      returns (ShutdownServiceResponse) {}
 }
 
 message StartCaptureRequest {}
