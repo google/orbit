@@ -23,7 +23,7 @@
 
 class ClientGgp final : public CaptureListener {
  public:
-  explicit ClientGgp(){};
+  ClientGgp(){};
 
   explicit ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
 

@@ -19,6 +19,9 @@
 
 ABSL_FLAG(uint16_t, grpc_port, 44767, "gRPC server port for capture ggp service");
 
+// Created for testing purposes and to document the use of CaptureClientGgpClient, which is
+// expected to be used in a game. Tests the available methods and it should be kept up to date when
+// these are included, removed or updated in CaptureClientGgpClient
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
 
