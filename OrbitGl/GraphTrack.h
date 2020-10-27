@@ -18,13 +18,15 @@ class GraphTrack : public Track {
   explicit GraphTrack(TimeGraph* time_graph, std::string name);
   [[nodiscard]] Type GetType() const override { return kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                        float z_offset = 0) override;
   [[nodiscard]] float GetHeight() const override;
   void AddValue(double value, uint64_t time);
   [[nodiscard]] std::optional<std::pair<uint64_t, double> > GetPreviousValueAndTime(
       uint64_t time) const;
 
  protected:
-  void DrawSquareDot(GlCanvas* canvas, Vec2 center, float radius, float z, Color color);
+  void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, Color color);
   void DrawLabel(GlCanvas* canvas, Vec2 target_pos, std::string text, Color text_color,
                  Color font_color, float z);
   std::map<uint64_t, double> values_;
