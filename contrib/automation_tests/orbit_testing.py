@@ -6,16 +6,19 @@ found in the LICENSE file.
 
 import logging
 import time
+import pywinauto
 from pywinauto.application import Application
 
 def WaitForOrbit():
   """Waits for Orbit to start up."""
+  logging.info('Start waiting for Orbit.')
   while True:
     try:
       Application(backend='uia').connect(title_re='orbitprofiler')
       break
     except pywinauto.findwindows.ElementNotFoundError:
       pass
+  logging.info('Connected to Orbit.')
 
 def ConnectToGamelet(application):
   """Connect to the first gamelet in the start dialog.
@@ -23,6 +26,7 @@ def ConnectToGamelet(application):
   Args:
      application: pywinauto application object for Orbit.
   """
+  logging.info('Start connecting to gamelet.')
   # Connect to the first (and only) gamelet.
   dialog = application.window(title_re='orbitprofiler')
   dialog.set_focus()
@@ -44,6 +48,7 @@ def SelectProcess(application, process_search_term):
      application: pywinauto application object for Orbit.
      process_search_term: The term to search for among processes.
   """
+  logging.info('Start selecting process based on search: %s', process_search_term)
   main_wnd = application.window(title_re='orbitprofiler', found_index=0)
   time.sleep(2)
   main_wnd.ProcessesEdit.type_keys(process_search_term)
@@ -60,6 +65,7 @@ def LoadSymbols(application, module_search_term):
      application: pywinauto application object for Orbit.
      module_search_term: The term to search for among modules.
   """
+  logging.info('Start loading symbols for module based on search: %s', module_search_term)
   main_wnd = application.window(title_re='orbitprofiler', found_index=0)
   time.sleep(2)
   main_wnd.ModulesEdit.type_keys(module_search_term)
@@ -77,6 +83,7 @@ def HookFunction(application, function_search_term):
      application: pywinauto application object for Orbit.
      function_search_term: The term to search for among function.
   """
+  logging.info('Start hooking function based on search: %s', function_search_term)
   main_wnd = application.window(title_re='orbitprofiler', found_index=0)
   time.sleep(2)
   # There is no properly named control identifier for the function controls, this is
