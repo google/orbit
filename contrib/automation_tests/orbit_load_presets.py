@@ -68,25 +68,9 @@ def main(argv):
     raise RuntimeError(
         'Function GgpIssueFrameToken was not found in the binary.')
 
-  # The capture tab can not be found in the usual way so the focus is set by
-  # clicking on the widget. The x-coordinate for the click is obtained from the
-  # mid_point of the capture tab header, the y-coordinate is taken from the
-  # mid_point of the functions tab on the right.
-  # Obtaining the coordinates is done before clicking on the tab since
-  # pywinauto becomes painfully slow once the tab is visible.
-  click_x = main_wnd.captureTabItem.rectangle().mid_point().x
-  click_y = main_wnd.SessionsTreeView.rectangle().mid_point().y
 
-  # Change into capture tab.
-  main_wnd.captureTabItem.click_input()
-  logging.info('Changed into capture view')
-
-  # Focus the capture tab and take a five second capture.
-  main_wnd.click_input(coords=(click_x, click_y))
-  main_wnd.type_keys('X')
-  time.sleep(5)
-  main_wnd.type_keys('X')
-  logging.info('Took a five second capture.')
+  orbit_testing.FocusOnCaptureWindow(application)
+  orbit_testing.Capture(application, 5)
 
   # Check the output in the live tab. DrawFrames should have been called ~300
   # times (60 Hz * 5 seconds).
