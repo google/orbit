@@ -7,7 +7,7 @@
 
 #include "capture.pb.h"
 
-// This interface is used by LinuxTracingGrpcHandler
+// This interface is used by LinuxTracingHandler
 // to process a buffered vector of generated events.
 class CaptureResponseListener {
  public:
