@@ -505,6 +505,7 @@ void CaptureWindow::Draw() {
   picking_manager_.Reset();
 
   time_graph_.Draw(this, GetPickingMode());
+  time_graph_.GetBatcher().Draw(GetPickingMode() != PickingMode::kNone);
 
   RenderSelectionOverlay();
 
@@ -515,6 +516,21 @@ void CaptureWindow::Draw() {
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
   }
+
+  // We have to draw everything collected in the batcher at this point,
+  // as PrepareScreenSpaceViewport() changes the coordinate system.
+  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
+  ui_batcher_.ResetElements();
+
+  PrepareScreenSpaceViewport();
+
+  DrawScreenSpace();
+
+  // Draw remaining elements collected with the batcher.
+  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
+
+  text_renderer_.Display(&ui_batcher_);
+  RenderText();
 }
 
 void CaptureWindow::DrawScreenSpace() {
@@ -634,7 +650,7 @@ static std::string VariableToString(std::string_view name, const T& value) {
   return string_stream.str();
 }
 
-void CaptureWindow::RenderUI() {
+void CaptureWindow::RenderImGui() {
   // Don't draw ImGui when picking.
   if (GetPickingMode() != PickingMode::kNone) {
     return;

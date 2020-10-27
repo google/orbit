@@ -38,7 +38,7 @@ class CaptureWindow : public GlCanvas {
   void OnTimer() override;
   void Draw() override;
   void DrawScreenSpace() override;
-  void RenderUI() override;
+  void RenderImGui() override;
   void RenderText() override;
   void PreRender() override;
   void PostRender() override;
