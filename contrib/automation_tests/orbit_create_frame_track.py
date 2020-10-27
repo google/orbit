@@ -4,7 +4,7 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
-"""Instrument a single function in Orbit using pywinauto.
+"""Create a frame track in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started.
@@ -18,7 +18,8 @@ This automation script covers a basic workflow:
  - connect to a gamelet
  - select a process and load debug symbols
  - instrument a function
- - take a capture and verify the hooked function is recorded
+ - take a capture
+ - in the "Live" tab, create a frame track for the instrumented function
 """
 import orbit_testing
 import logging
@@ -35,20 +36,19 @@ def main(argv):
   orbit_testing.LoadSymbols(application, 'hello_')
   orbit_testing.HookFunction(application, 'DrawFrame')
   orbit_testing.FocusOnCaptureWindow(application)
-  orbit_testing.Capture(application, 5);
+  orbit_testing.Capture(application, 5)
 
   main_wnd = application.window(title_re='orbitprofiler', found_index=0)
-
-  # Check the output in the live tab. DrawFrames should have been called ~300
-  # times (60 Hz * 5 seconds).
+  # Find 'DrawFrame' in the live tab and create a frame track.
   children = main_wnd.TreeView.children()
   for i in range(len(children)):
     if 'DrawFrame' in children[i].window_text():
-      num = int(children[i + 1].window_text())
-      if num < 30 or num > 3000:
-        raise RuntimeError('Wrong number of calls to "DrawFrame": ' + str(num))
-      else:
-        logging.info('Verified number of calls to "DrawFrame".')
+      children[i].click_input(button='right')
+      main_wnd.child_window(title='Add frame track(s)', control_type="MenuItem").click_input()
+
+  # Since the frame track is only a visualization and only affects the 
+  # OpenGL rendered capture window, there is currently no way to verify
+  # automatically that the frame track was created correctly.
 
   main_wnd.CloseButton.click_input()
   logging.info('Closed Orbit.')
