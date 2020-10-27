@@ -624,7 +624,6 @@ void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   DrawTracks(canvas, picking_mode);
   DrawOverlay(canvas, picking_mode);
-  batcher_.Draw(picking);
 
   needs_redraw_ = false;
 }

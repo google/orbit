@@ -70,7 +70,7 @@ class GlCanvas : public GlPanel {
 
   virtual void Draw() {}
   virtual void DrawScreenSpace() {}
-  virtual void RenderUI() {}
+  virtual void RenderImGui() {}
   virtual void RenderText() {}
 
   virtual void Hover(int /*X*/, int /*Y*/) {}

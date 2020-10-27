@@ -338,22 +338,7 @@ void GlCanvas::Render(int width, int height) {
 
   Draw();
 
-  // We have to draw everything collected in the batcher at this point,
-  // as PrepareScreenSpaceViewport() changes the coordinate system.
-  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
-  ui_batcher_.ResetElements();
-
-  PrepareScreenSpaceViewport();
-
-  DrawScreenSpace();
-
-  // Draw remaining elements collected with the batcher.
-  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
-
-  text_renderer_.Display(&ui_batcher_);
-  RenderText();
-  RenderUI();
-
+  RenderImGui();
   glFlush();
   CleanupGlState();
 
