@@ -150,7 +150,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
         info.build_id());
   }
 
-  module_manager_.AddNewModules(module_infos);
+  module_manager_.AddOrUpdateModules(module_infos);
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_

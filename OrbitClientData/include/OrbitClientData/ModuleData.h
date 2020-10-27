@@ -30,6 +30,7 @@ class ModuleData final {
   [[nodiscard]] const std::string& build_id() const { return module_info_.build_id(); }
   [[nodiscard]] uint64_t load_bias() const { return module_info_.load_bias(); }
   [[nodiscard]] bool is_loaded() const;
+  void UpdateIfChanged(orbit_grpc_protos::ModuleInfo info);
   // relative_address here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByRelativeAddress(
@@ -43,7 +44,7 @@ class ModuleData final {
 
  private:
   mutable absl::Mutex mutex_;
-  const orbit_grpc_protos::ModuleInfo module_info_;
+  orbit_grpc_protos::ModuleInfo module_info_;
   bool is_loaded_;
   std::map<uint64_t, std::unique_ptr<orbit_client_protos::FunctionInfo>> functions_;
   // TODO(168799822) This is a map of hash to function used for preset loading. Currently presets

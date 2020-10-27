@@ -22,7 +22,7 @@ class ModuleManager final {
 
   [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const;
   [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path);
-  void AddNewModules(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
+  void AddOrUpdateModules(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctionsOfProcess(
       const ProcessData& process) const;
 

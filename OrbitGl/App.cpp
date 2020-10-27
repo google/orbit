@@ -1096,7 +1096,16 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         return;
       }
 
-      module_manager_->AddNewModules(module_infos);
+      module_manager_->AddOrUpdateModules(module_infos);
+
+      // Updating a module can result in not having symbols(functions) anymore. In that
+      // case these functions should also be removed from the selected (hooked) functions
+      for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
+        const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+        if (!module->is_loaded()) {
+          data_manager_->DeselectFunction(func);
+        }
+      }
 
       ProcessData* process = data_manager_->GetMutableProcessByPid(pid);
       CHECK(process != nullptr);

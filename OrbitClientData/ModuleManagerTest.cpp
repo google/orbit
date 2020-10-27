@@ -33,7 +33,7 @@ TEST(ModuleManager, GetModuleByPath) {
   module_info.set_load_bias(load_bias);
 
   ModuleManager module_manager;
-  module_manager.AddNewModules({module_info});
+  module_manager.AddOrUpdateModules({module_info});
 
   const ModuleData* module = module_manager.GetModuleByPath(file_path);
   ASSERT_NE(module, nullptr);
@@ -62,7 +62,7 @@ TEST(ModuleManager, GetMutableModuleByPath) {
   module_info.set_load_bias(load_bias);
 
   ModuleManager module_manager;
-  module_manager.AddNewModules({module_info});
+  module_manager.AddOrUpdateModules({module_info});
 
   ModuleData* module = module_manager.GetMutableModuleByPath(file_path);
   ASSERT_NE(module, nullptr);
@@ -80,7 +80,7 @@ TEST(ModuleManager, GetMutableModuleByPath) {
   EXPECT_EQ(non_existing_module, nullptr);
 }
 
-TEST(ModuleManager, AddNewModules) {
+TEST(ModuleManager, AddOrUpdateModules) {
   std::string name = "name of module";
   std::string file_path = "path/of/module";
   uint64_t file_size = 300;
@@ -95,45 +95,50 @@ TEST(ModuleManager, AddNewModules) {
   module_info.set_load_bias(load_bias);
 
   ModuleManager module_manager;
-  module_manager.AddNewModules({module_info});
-  {
-    const ModuleData* module = module_manager.GetModuleByPath(file_path);
-    ASSERT_NE(module, nullptr);
-    EXPECT_EQ(module->name(), name);
-  }
+  module_manager.AddOrUpdateModules({module_info});
+  ModuleData* module = module_manager.GetMutableModuleByPath(file_path);
 
-  // change name and add again (should not be added again, since module is identified by file path)
-  std::string different_name = "different name";
-  module_info.set_name(different_name);
-  module_manager.AddNewModules({module_info});
-  {
-    const ModuleData* module = module_manager.GetModuleByPath(file_path);
-    ASSERT_NE(module, nullptr);
-    EXPECT_EQ(module->name(), name);
-    EXPECT_NE(module->name(), different_name);
-  }
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module->name(), name);
 
-  // change file path and add again (should be added again, because it is now considered a different
-  // module)
+  // change name, this updates the module
+  std::string changed_name = "changed name";
+  module_info.set_name(changed_name);
+
+  module_manager.AddOrUpdateModules({module_info});
+
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module->file_path(), file_path);
+  EXPECT_EQ(module->name(), changed_name);
+
+  // add symbols
+  ModuleSymbols module_symbols;
+  module->AddSymbols(module_symbols);
+  ASSERT_TRUE(module->is_loaded());
+
+  // change build id, this updates the module and removes the symbols
+  module_info.set_build_id("different build id");
+  module_manager.AddOrUpdateModules({module_info});
+
+  EXPECT_EQ(module->build_id(), module_info.build_id());
+  EXPECT_FALSE(module->is_loaded());
+
+  // change file path & file size and add again (should be added again, because it is now considered
+  // a different module)
   std::string different_path = "different/path/of/module";
   module_info.set_file_path(different_path);
-  module_manager.AddNewModules({module_info});
-  {
-    // original module
-    const ModuleData* module = module_manager.GetModuleByPath(file_path);
-    ASSERT_NE(module, nullptr);
-    EXPECT_EQ(module->name(), name);
-    EXPECT_NE(module->name(), different_name);
-  }
-  {
-    // second module
-    const ModuleData* module = module_manager.GetModuleByPath(different_path);
-    ASSERT_NE(module, nullptr);
-    EXPECT_EQ(module->name(), different_name);
-    EXPECT_NE(module->name(), name);
-    EXPECT_EQ(module->file_path(), different_path);
-    EXPECT_NE(module->file_path(), file_path);
-  }
+  uint64_t different_file_size = 301;
+  module_info.set_file_size(different_file_size);
+  module_manager.AddOrUpdateModules({module_info});
+
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module->file_path(), file_path);
+  EXPECT_EQ(module->file_size(), file_size);
+
+  const ModuleData* different_module = module_manager.GetModuleByPath(different_path);
+  ASSERT_NE(different_module, nullptr);
+  EXPECT_EQ(different_module->file_path(), different_path);
+  EXPECT_EQ(different_module->file_size(), different_file_size);
 }
 
 TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
@@ -155,7 +160,7 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
   module_info.set_address_end(address_end);
 
   ModuleManager module_manager;
-  module_manager.AddNewModules({module_info});
+  module_manager.AddOrUpdateModules({module_info});
 
   ProcessInfo process_info;
   ProcessData process{process_info};
@@ -176,11 +181,13 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
   ModuleSymbols module_symbols;
   {
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name("not an orbit function");
+    symbol_info->set_name("mangled_not_an_orbit_function");
+    symbol_info->set_demangled_name("not an orbit function");
   }
   {
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name("orbit_api::Start()");
+    symbol_info->set_name("mangled_orbit_api::Start()");
+    symbol_info->set_demangled_name("orbit_api::Start()");
     symbol_info->set_address(500);
   }
 
@@ -194,7 +201,8 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     ASSERT_EQ(functions.size(), 1);
 
     FunctionInfo& function{functions[0]};
-    EXPECT_EQ(function.name(), "orbit_api::Start()");
+    EXPECT_EQ(function.name(), "mangled_orbit_api::Start()");
+    EXPECT_EQ(function.pretty_name(), "orbit_api::Start()");
     EXPECT_EQ(function.address(), 500);
   }
 }
