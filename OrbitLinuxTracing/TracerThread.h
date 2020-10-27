@@ -71,8 +71,8 @@ class TracerThread {
 
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
                                     const LinuxTracing::Function& function);
-
-  void OpenUserSpaceProbesRingBuffers();
+  void OpenUserSpaceProbesRingBuffers(
+      const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu);
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
   void InitThreadStateVisitor();
@@ -133,7 +133,6 @@ class TracerThread {
   TracerListener* listener_ = nullptr;
 
   std::vector<int> tracing_fds_;
-  absl::flat_hash_map<int32_t, std::vector<int>> fds_per_cpu_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
 
   absl::flat_hash_map<uint64_t, const Function*> uprobes_uretprobes_ids_to_function_;

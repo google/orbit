@@ -154,7 +154,6 @@ void TracerThread::AddUprobesFileDescriptors(
     uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
     uprobes_ids_.insert(stream_id);
     tracing_fds_.push_back(fd);
-    fds_per_cpu_[cpu].push_back(fd);
   }
 }
 
@@ -167,7 +166,6 @@ void TracerThread::AddUretprobesFileDescriptors(
     uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
     uretprobes_ids_.insert(stream_id);
     tracing_fds_.push_back(fd);
-    fds_per_cpu_[cpu].push_back(fd);
   }
 }
 
@@ -175,6 +173,7 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool uprobes_event_open_errors = false;
 
+  absl::flat_hash_map<int32_t, std::vector<int>> uprobes_uretpobres_fds_per_cpu;
   for (const auto& function : instrumented_functions_) {
     absl::flat_hash_map<int32_t, int> uprobes_fds_per_cpu;
     absl::flat_hash_map<int32_t, int> uretprobes_fds_per_cpu;
@@ -211,23 +210,30 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
     // not having a uprobe associated with a uretprobe but not the opposite.
     AddUretprobesFileDescriptors(uretprobes_fds_per_cpu, function);
     AddUprobesFileDescriptors(uprobes_fds_per_cpu, function);
+
+    for (const auto& [cpu, fd] : uretprobes_fds_per_cpu) {
+      uprobes_uretpobres_fds_per_cpu[cpu].push_back(fd);
+    }
+    for (const auto& [cpu, fd] : uprobes_fds_per_cpu) {
+      uprobes_uretpobres_fds_per_cpu[cpu].push_back(fd);
+    }
   }
 
-  OpenUserSpaceProbesRingBuffers();
+  OpenUserSpaceProbesRingBuffers(uprobes_uretpobres_fds_per_cpu);
 
   return !uprobes_event_open_errors;
 }
 
-void TracerThread::OpenUserSpaceProbesRingBuffers() {
+void TracerThread::OpenUserSpaceProbesRingBuffers(
+    const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
-  for (const auto& [/*int32_t*/ cpu, /*std::vector<int>*/ fds] : fds_per_cpu_) {
+  for (const auto& [/*int32_t*/ cpu, /*std::vector<int>*/ fds] : uprobes_uretpobres_fds_per_cpu) {
     if (fds.empty()) continue;
 
     // Create a single ring buffer per cpu.
     int ring_buffer_fd = fds[0];
-    constexpr uint64_t buffer_size = UPROBES_RING_BUFFER_SIZE_KB;
     std::string buffer_name = absl::StrFormat("uprobes_uretprobes_%u", cpu);
-    ring_buffers_.emplace_back(ring_buffer_fd, buffer_size, buffer_name);
+    ring_buffers_.emplace_back(ring_buffer_fd, UPROBES_RING_BUFFER_SIZE_KB, buffer_name);
 
     // Redirect subsequent fds to the cpu specific ring buffer created above.
     for (size_t i = 1; i < fds.size(); ++i) {
@@ -1035,7 +1041,6 @@ void TracerThread::RetrieveThreadStatesSystemWide() {
 void TracerThread::Reset() {
   ORBIT_SCOPE_FUNCTION;
   tracing_fds_.clear();
-  fds_per_cpu_.clear();
   ring_buffers_.clear();
 
   uprobes_unwinding_visitor_.reset();
