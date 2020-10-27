@@ -92,7 +92,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   std::vector<orbit_grpc_protos::ModuleInfo> module_infos{module_info};
   process.UpdateModuleInfos(module_infos);
   ModuleManager module_manager;
-  module_manager.AddNewModules(module_infos);
+  module_manager.AddOrUpdateModules(module_infos);
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   FunctionInfo selected_function;

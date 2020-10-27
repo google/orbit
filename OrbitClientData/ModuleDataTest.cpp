@@ -80,17 +80,21 @@ TEST(ModuleData, LoadSymbols) {
 TEST(ModuleData, FindFunctionByRelativeAddress) {
   uint64_t address1 = 100;
   std::string name1 = "Name 1";
+  std::string demangled_name_1 = "Pretty Name 1";
   uint64_t address2 = 200;
   std::string name2 = "Name 2";
+  std::string demangled_name_2 = "Pretty Name 2";
   uint64_t size = 10;
 
   ModuleSymbols symbols;
   SymbolInfo* symbol1 = symbols.add_symbol_infos();
   symbol1->set_name(name1);
+  symbol1->set_demangled_name(demangled_name_1);
   symbol1->set_address(address1);
   symbol1->set_size(size);
   SymbolInfo* symbol2 = symbols.add_symbol_infos();
   symbol2->set_name(name2);
+  symbol1->set_demangled_name(demangled_name_2);
   symbol2->set_address(address2);
   symbol2->set_size(size);
 
@@ -175,4 +179,58 @@ TEST(ModuleData, FindFunctionFromHash) {
     const FunctionInfo* result = module.FindFunctionFromHash(hash + 1);
     EXPECT_EQ(result, nullptr);
   }
+}
+
+TEST(ModuleData, UpdateIfChanged) {
+  std::string name = "Example Name";
+  std::string file_path = "/test/file/path";
+  uint64_t file_size = 1000;
+  std::string build_id = "test build id";
+  uint64_t load_bias = 4000;
+
+  ModuleInfo module_info{};
+  module_info.set_name(name);
+  module_info.set_file_path(file_path);
+  module_info.set_file_size(file_size);
+  module_info.set_build_id(build_id);
+  module_info.set_load_bias(load_bias);
+
+  ModuleData module{module_info};
+
+  EXPECT_EQ(module.name(), name);
+  EXPECT_EQ(module.file_path(), file_path);
+  EXPECT_EQ(module.file_size(), file_size);
+  EXPECT_EQ(module.build_id(), build_id);
+  EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_FALSE(module.is_loaded());
+  EXPECT_TRUE(module.GetFunctions().empty());
+
+  module_info.set_name("different name");
+  module.UpdateIfChanged(module_info);
+  EXPECT_EQ(module.name(), module_info.name());
+
+  module_info.set_file_size(1002);
+  module.UpdateIfChanged(module_info);
+  EXPECT_EQ(module.file_size(), module_info.file_size());
+
+  module_info.set_build_id("different build_id");
+  module.UpdateIfChanged(module_info);
+  EXPECT_EQ(module.build_id(), module_info.build_id());
+
+  module_info.set_load_bias(4010);
+  module.UpdateIfChanged(module_info);
+  EXPECT_EQ(module.load_bias(), module_info.load_bias());
+
+  // add symbols, then change module; symbols are deleted
+  ModuleSymbols symbols;
+  module.AddSymbols(symbols);
+  EXPECT_TRUE(module.is_loaded());
+
+  module_info.set_build_id("yet another build id");
+  module.UpdateIfChanged(module_info);
+  EXPECT_FALSE(module.is_loaded());
+
+  // file_path is not allowed to be changed
+  module_info.set_file_path("changed/path");
+  EXPECT_DEATH(module.UpdateIfChanged(module_info), "Check failed");
 }

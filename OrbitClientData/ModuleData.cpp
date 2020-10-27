@@ -8,12 +8,42 @@
 #include "OrbitClientData/FunctionUtils.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
+#include "module.pb.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_grpc_protos::ModuleInfo;
 
 bool ModuleData::is_loaded() const {
   absl::MutexLock lock(&mutex_);
   return is_loaded_;
+}
+
+void ModuleData::UpdateIfChanged(ModuleInfo info) {
+  absl::MutexLock lock(&mutex_);
+
+  CHECK(file_path() == info.file_path());
+
+  // TODO(171878807): Remove this as soon as a better way of distinguishing modules is implemented.
+  const bool build_id_matching = !build_id().empty() && build_id() == info.build_id();
+  const bool all_module_properties_matching =
+      build_id() == info.build_id() && name() == info.name() && file_size() == info.file_size() &&
+      load_bias() == info.load_bias();
+
+  module_info_ = std::move(info);
+
+  if (build_id_matching) return;
+
+  if (all_module_properties_matching) return;
+
+  LOG("Module %s changed.", file_path());
+
+  if (!is_loaded_) return;
+
+  LOG("Module %s contained symbols. Because the module changed, those are now removed.",
+      file_path());
+  functions_.clear();
+  hash_to_function_map_.clear();
+  is_loaded_ = false;
 }
 
 const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionByRelativeAddress(
@@ -61,7 +91,13 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     // __cxxabiv1::__class_type_info::~__class_type_info()
     // __cxxabiv1::__pbase_type_info::~__pbase_type_info()
     if (success) {
-      hash_to_function_map_.emplace(FunctionUtils::GetHash(*function), function);
+      const bool success =
+          hash_to_function_map_.try_emplace(FunctionUtils::GetHash(*function), function).second;
+      if (!success) {
+        LOG("Warning: Multiple functions with the same demangled name: %s (this is currently not "
+            "supported by presets)",
+            function->pretty_name());
+      }
     } else {
       address_reuse_counter++;
     }

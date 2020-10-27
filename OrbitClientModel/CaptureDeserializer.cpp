@@ -137,7 +137,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   }
   process.UpdateModuleInfos(modules);
 
-  module_manager->AddNewModules(modules);
+  module_manager->AddOrUpdateModules(modules);
 
   if (*cancellation_requested) {
     capture_listener->OnCaptureCancelled();

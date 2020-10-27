@@ -38,7 +38,7 @@ DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   std::vector<ModuleInfo> modules{range.begin(), range.end()};
 
   ModuleManager module_manager;
-  module_manager.AddNewModules(modules);
+  module_manager.AddOrUpdateModules(modules);
 
   int32_t pid = 1;
   ProcessInfo process_info{};

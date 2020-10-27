@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitClientData/ModuleData.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
@@ -14,15 +15,17 @@ using orbit_client_protos::FunctionInfo;
 
 namespace OrbitClientData {
 
-void ModuleManager::AddNewModules(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
+void ModuleManager::AddOrUpdateModules(
+    const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
   absl::MutexLock lock(&mutex_);
 
   for (const auto& module_info : module_infos) {
     auto module_it = module_map_.find(module_info.file_path());
     if (module_it == module_map_.end()) {
-      const auto [inserted_it, success] =
-          module_map_.try_emplace(module_info.file_path(), module_info);
+      const bool success = module_map_.try_emplace(module_info.file_path(), module_info).second;
       CHECK(success);
+    } else {
+      module_it->second.UpdateIfChanged(module_info);
     }
   }
 }
