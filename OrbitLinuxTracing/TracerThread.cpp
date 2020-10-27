@@ -120,7 +120,7 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
   for (int32_t cpu : cpus) {
     int fd = uprobes_retaddr_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Opening uprobe 0x%lx on cpu %d", function.VirtualAddress(), cpu);
+      ERROR("Opening uprobe %#lx on cpu %d", function.VirtualAddress(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -137,7 +137,7 @@ bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
   for (int32_t cpu : cpus) {
     int fd = uretprobes_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Opening uretprobe 0x%lx on cpu %d", function.VirtualAddress(), cpu);
+      ERROR("Opening uretprobe %#lx on cpu %d", function.VirtualAddress(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
