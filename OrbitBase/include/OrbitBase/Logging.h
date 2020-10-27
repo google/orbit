@@ -35,7 +35,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     std::string file_and_line__ = absl::StrFormat("%s/%s:%d", dir__, file__, __LINE__);      \
     std::string time__ = absl::FormatTime(kLogTimeFormat, absl::Now(), absl::UTCTimeZone()); \
     std::string formatted_log__ =                                                            \
-        absl::StrFormat("[%s] [%28s] " format "\n", time__, file_and_line__, ##__VA_ARGS__); \
+        absl::StrFormat("[%s] [%40s] " format "\n", time__, file_and_line__, ##__VA_ARGS__); \
     PLATFORM_LOG(formatted_log__.c_str());                                                   \
   } while (0)
 
