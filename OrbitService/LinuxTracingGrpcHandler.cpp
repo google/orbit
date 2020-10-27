@@ -14,7 +14,6 @@ using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureEvent;
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::IntrospectionScope;
@@ -287,30 +286,8 @@ void LinuxTracingGrpcHandler::SenderThread() {
     std::vector<CaptureEvent> buffered_events = std::move(event_buffer_);
     event_buffer_.clear();
     event_buffer_mutex_.Unlock();
-    SendBufferedEvents(std::move(buffered_events));
+    capture_response_listener_->ProcessEvents(std::move(buffered_events));
   }
-}
-
-void LinuxTracingGrpcHandler::SendBufferedEvents(std::vector<CaptureEvent>&& buffered_events) {
-  if (buffered_events.empty()) {
-    return;
-  }
-
-  ORBIT_SCOPE("GrpcHandler::SendBufferedEvents");
-  ORBIT_UINT64("Number of sent buffered events", buffered_events.size());
-  constexpr uint64_t kMaxEventsPerResponse = 10'000;
-  CaptureResponse response;
-  for (CaptureEvent& event : buffered_events) {
-    // We buffer to avoid sending countless tiny messages, but we also want to
-    // avoid huge messages, which would cause the capture on the client to jump
-    // forward in time in few big steps and not look live anymore.
-    if (response.capture_events_size() == kMaxEventsPerResponse) {
-      reader_writer_->Write(response);
-      response.clear_capture_events();
-    }
-    response.mutable_capture_events()->Add(std::move(event));
-  }
-  reader_writer_->Write(response);
 }
 
 }  // namespace orbit_service

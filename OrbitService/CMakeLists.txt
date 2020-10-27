@@ -11,12 +11,15 @@ add_library(OrbitServiceLib STATIC)
 target_compile_options(OrbitServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitServiceLib PRIVATE
+        CaptureResponseListener.h
         CaptureServiceImpl.cpp
         CaptureServiceImpl.h
         CrashServiceImpl.cpp
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         FramePointerValidatorServiceImpl.h
+        LinuxTracingGrpcHandler.cpp
+        LinuxTracingGrpcHandler.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
@@ -31,12 +34,6 @@ target_sources(OrbitServiceLib PRIVATE
         TracepointServiceImpl.cpp
         ServiceUtils.cpp
         ServiceUtils.h)
-
-if (NOT WIN32)
-  target_sources(OrbitServiceLib PRIVATE
-          LinuxTracingGrpcHandler.cpp
-          LinuxTracingGrpcHandler.h)
-endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set_target_properties(OrbitServiceLib PROPERTIES COMPILE_FLAGS /wd4127)
@@ -55,14 +52,6 @@ project(OrbitService)
 add_executable(OrbitService main.cpp)
 target_link_libraries(OrbitService PRIVATE OrbitServiceLib)
 target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  # Administrator privileges
-  set_target_properties(
-    OrbitService
-    PROPERTIES LINK_FLAGS
-               "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
-endif()
 
 strip_symbols(OrbitService)
 

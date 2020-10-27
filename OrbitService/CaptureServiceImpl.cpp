@@ -4,6 +4,7 @@
 
 #include "CaptureServiceImpl.h"
 
+#include "CaptureResponseListener.h"
 #include "LinuxTracingGrpcHandler.h"
 #include "OrbitBase/Logging.h"
 
@@ -12,11 +13,50 @@ namespace orbit_service {
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 
+namespace {
+
+using orbit_grpc_protos::CaptureEvent;
+
+class GrpcCaptureResponseSender final : public CaptureResponseListener {
+ public:
+  explicit GrpcCaptureResponseSender(
+      grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
+      : reader_writer_{reader_writer} {}
+
+  void ProcessEvents(std::vector<CaptureEvent>&& events) override {
+    if (events.empty()) {
+      return;
+    }
+
+    ORBIT_SCOPE("GrpcCaptureResponseSender::ProcessEvents");
+    ORBIT_UINT64("Number of sent buffered events", events.size());
+    constexpr uint64_t kMaxEventsPerResponse = 10'000;
+    CaptureResponse response;
+    for (CaptureEvent& event : events) {
+      // We buffer to avoid sending countless tiny messages, but we also want to
+      // avoid huge messages, which would cause the capture on the client to jump
+      // forward in time in few big steps and not look live anymore.
+      if (response.capture_events_size() == kMaxEventsPerResponse) {
+        reader_writer_->Write(response);
+        response.clear_capture_events();
+      }
+      response.mutable_capture_events()->Add(std::move(event));
+    }
+    reader_writer_->Write(response);
+  }
+
+ private:
+  grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer_;
+};
+
+}  // namespace
+
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   pthread_setname_np(pthread_self(), "CSImpl::Capture");
-  LinuxTracingGrpcHandler tracing_handler{reader_writer};
+  GrpcCaptureResponseSender capture_response_listener{reader_writer};
+  LinuxTracingGrpcHandler tracing_handler{&capture_response_listener};
 
   CaptureRequest request;
   reader_writer->Read(&request);

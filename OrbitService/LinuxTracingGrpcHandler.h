@@ -5,23 +5,21 @@
 #ifndef ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
 #define ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/Tracing.h>
-#include <OrbitLinuxTracing/Tracer.h>
-#include <OrbitLinuxTracing/TracerListener.h>
-
+#include "CaptureResponseListener.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
+#include "OrbitLinuxTracing/Tracer.h"
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
-#include "services.grpc.pb.h"
+#include "capture.pb.h"
 
 namespace orbit_service {
 
 class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
  public:
-  explicit LinuxTracingGrpcHandler(
-      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer)
-      : reader_writer_{reader_writer} {}
+  explicit LinuxTracingGrpcHandler(CaptureResponseListener* capture_response_listener)
+      : capture_response_listener_{capture_response_listener} {}
 
   ~LinuxTracingGrpcHandler() override = default;
   LinuxTracingGrpcHandler(const LinuxTracingGrpcHandler&) = delete;
@@ -43,8 +41,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override;
 
  private:
-  grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-      reader_writer_;
+  CaptureResponseListener* capture_response_listener_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
@@ -69,7 +66,6 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
 
   void SetupIntrospection();
   void SenderThread();
-  void SendBufferedEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& buffered_events);
 
   std::vector<orbit_grpc_protos::CaptureEvent> event_buffer_;
   absl::Mutex event_buffer_mutex_;
