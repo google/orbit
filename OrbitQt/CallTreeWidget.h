@@ -30,6 +30,9 @@ class CallTreeWidget : public QWidget {
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
 
+ protected:
+  void resizeEvent(QResizeEvent* event) override;
+
  private slots:
   void onCopyKeySequencePressed();
   void onCustomContextMenuRequested(const QPoint& point);
@@ -92,13 +95,21 @@ class CallTreeWidget : public QWidget {
   void SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
                        std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model);
 
+  void ResizeColumnsIfNecessary();
+
   std::unique_ptr<Ui::CallTreeWidget> ui_;
   OrbitApp* app_ = nullptr;
   std::unique_ptr<CallTreeViewItemModel> model_;
   std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
   std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;
-  bool columns_already_resized_ = false;
+
+  enum class ColumnResizingState {
+    kInitial = 0,        // CallTreeWidget hasn't got its first size set yet
+    kWidgetSizeSet = 1,  // CallTreeWidget has got its first size, resize the columns when possible
+    kDone = 2            // The columns have been resized (once)
+  };
+  ColumnResizingState column_resizing_state_ = ColumnResizingState::kInitial;
 };
 
 #endif  // ORBIT_QT_CALL_TREE_WIDGET_H_

@@ -49,13 +49,9 @@ void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_vie
   ui_->callTreeTreeView->setModel(hooked_proxy_model_.get());
   ui_->callTreeTreeView->sortByColumn(CallTreeViewItemModel::kInclusive, Qt::DescendingOrder);
 
-  // Resize columns only the first time a non-empty CallTreeView is set.
-  if (!columns_already_resized_ && hooked_proxy_model_->rowCount(QModelIndex{}) > 0) {
-    ui_->callTreeTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
-    columns_already_resized_ = true;
-  }
-
   onSearchLineEditTextEdited(ui_->searchLineEdit->text());
+
+  ResizeColumnsIfNecessary();
 }
 
 namespace {
@@ -101,6 +97,43 @@ void CallTreeWidget::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_vie
                   std::make_unique<HideValuesForBottomUpProxyModel>(nullptr));
   // Don't show the "Exclusive" column for the bottom-up tree, it provides no useful information.
   ui_->callTreeTreeView->hideColumn(CallTreeViewItemModel::kExclusive);
+}
+
+void CallTreeWidget::resizeEvent(QResizeEvent* /*event*/) {
+  if (column_resizing_state_ == ColumnResizingState::kInitial) {
+    column_resizing_state_ = ColumnResizingState::kWidgetSizeSet;
+    ResizeColumnsIfNecessary();
+  }
+}
+
+void CallTreeWidget::ResizeColumnsIfNecessary() {
+  // Resize columns only once, when the following holds:
+  // - a non-empty CallTreeView is set;
+  // - the size of the QTreeView has been set, which means that the size of CallTreeWidget has been
+  //   set, which in turns means that the tab has been shown at least once.
+  if (column_resizing_state_ != ColumnResizingState::kWidgetSizeSet ||
+      hooked_proxy_model_ == nullptr || hooked_proxy_model_->rowCount(QModelIndex{}) == 0) {
+    return;
+  }
+
+  ui_->callTreeTreeView->header()->setStretchLastSection(false);
+  ui_->callTreeTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
+  // Shrink the first column (to a minimum width) so that all columns are visible,
+  // but still make it as wide as possible.
+  static constexpr int kMinThreadOrFunctionColumnSize = 200;
+  int thread_or_function_column_size = ui_->callTreeTreeView->header()->width();
+  for (int column = 0; column < ui_->callTreeTreeView->header()->count(); ++column) {
+    if (column != CallTreeViewItemModel::kThreadOrFunction) {
+      thread_or_function_column_size -= ui_->callTreeTreeView->header()->sectionSize(column);
+    }
+  }
+  thread_or_function_column_size =
+      std::max(kMinThreadOrFunctionColumnSize, thread_or_function_column_size);
+  ui_->callTreeTreeView->header()->resizeSection(CallTreeViewItemModel::kThreadOrFunction,
+                                                 thread_or_function_column_size);
+  ui_->callTreeTreeView->header()->setStretchLastSection(true);
+
+  column_resizing_state_ = ColumnResizingState::kDone;
 }
 
 static std::string BuildStringFromIndices(const QModelIndexList& indices) {
