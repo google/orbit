@@ -30,7 +30,7 @@ perf_event_attr generic_event_attr() {
 }
 
 int generic_event_open(perf_event_attr* attr, pid_t pid, int32_t cpu) {
-  int fd = perf_event_open(attr, pid, cpu, -1, 0);
+  int fd = perf_event_open(attr, pid, cpu, -1, PERF_FLAG_FD_CLOEXEC);
   if (fd == -1) {
     ERROR("perf_event_open: %s", SafeStrerror(errno));
   }
