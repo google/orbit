@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "LinuxTracingGrpcHandler.h"
+#include "LinuxTracingHandler.h"
 
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
@@ -21,7 +21,7 @@ using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
-void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
+void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());
   bool enable_introspection = capture_options.enable_introspection();
@@ -42,7 +42,7 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   }
 }
 
-void LinuxTracingGrpcHandler::SetupIntrospection() {
+void LinuxTracingHandler::SetupIntrospection() {
   orbit_tracing_listener_ =
       std::make_unique<orbit::tracing::Listener>([this](const orbit::tracing::Scope& scope) {
         IntrospectionScope introspection_scope;
@@ -62,7 +62,7 @@ void LinuxTracingGrpcHandler::SetupIntrospection() {
       });
 }
 
-void LinuxTracingGrpcHandler::Stop() {
+void LinuxTracingHandler::Stop() {
   CHECK(tracer_ != nullptr);
   CHECK(sender_thread_.joinable());
 
@@ -75,7 +75,7 @@ void LinuxTracingGrpcHandler::Stop() {
   sender_thread_.join();
 }
 
-void LinuxTracingGrpcHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
+void LinuxTracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
   CaptureEvent event;
   *event.mutable_scheduling_slice() = std::move(scheduling_slice);
   {
@@ -84,7 +84,7 @@ void LinuxTracingGrpcHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice
   }
 }
 
-void LinuxTracingGrpcHandler::OnCallstackSample(CallstackSample callstack_sample) {
+void LinuxTracingHandler::OnCallstackSample(CallstackSample callstack_sample) {
   CHECK(callstack_sample.callstack_or_key_case() == CallstackSample::kCallstack);
   callstack_sample.set_callstack_key(
       InternCallstackIfNecessaryAndGetKey(callstack_sample.callstack()));
@@ -97,7 +97,7 @@ void LinuxTracingGrpcHandler::OnCallstackSample(CallstackSample callstack_sample
   }
 }
 
-void LinuxTracingGrpcHandler::OnFunctionCall(FunctionCall function_call) {
+void LinuxTracingHandler::OnFunctionCall(FunctionCall function_call) {
   CaptureEvent event;
   *event.mutable_function_call() = std::move(function_call);
   {
@@ -106,7 +106,7 @@ void LinuxTracingGrpcHandler::OnFunctionCall(FunctionCall function_call) {
   }
 }
 
-void LinuxTracingGrpcHandler::OnIntrospectionScope(
+void LinuxTracingHandler::OnIntrospectionScope(
     orbit_grpc_protos::IntrospectionScope introspection_scope) {
   CaptureEvent event;
   *event.mutable_introspection_scope() = std::move(introspection_scope);
@@ -116,7 +116,7 @@ void LinuxTracingGrpcHandler::OnIntrospectionScope(
   }
 }
 
-void LinuxTracingGrpcHandler::OnGpuJob(GpuJob gpu_job) {
+void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
   CHECK(gpu_job.timeline_or_key_case() == GpuJob::kTimeline);
   gpu_job.set_timeline_key(
       InternStringIfNecessaryAndGetKey(std::move(*gpu_job.mutable_timeline())));
@@ -129,7 +129,7 @@ void LinuxTracingGrpcHandler::OnGpuJob(GpuJob gpu_job) {
   }
 }
 
-void LinuxTracingGrpcHandler::OnThreadName(ThreadName thread_name) {
+void LinuxTracingHandler::OnThreadName(ThreadName thread_name) {
   CaptureEvent event;
   *event.mutable_thread_name() = std::move(thread_name);
   {
@@ -138,7 +138,7 @@ void LinuxTracingGrpcHandler::OnThreadName(ThreadName thread_name) {
   }
 }
 
-void LinuxTracingGrpcHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice) {
+void LinuxTracingHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice) {
   CaptureEvent event;
   *event.mutable_thread_state_slice() = std::move(thread_state_slice);
   {
@@ -147,7 +147,7 @@ void LinuxTracingGrpcHandler::OnThreadStateSlice(ThreadStateSlice thread_state_s
   }
 }
 
-void LinuxTracingGrpcHandler::OnAddressInfo(AddressInfo address_info) {
+void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
   {
     absl::MutexLock lock{&addresses_seen_mutex_};
     if (addresses_seen_.contains(address_info.absolute_address())) {
@@ -171,8 +171,7 @@ void LinuxTracingGrpcHandler::OnAddressInfo(AddressInfo address_info) {
   }
 }
 
-void LinuxTracingGrpcHandler::OnTracepointEvent(
-    orbit_grpc_protos::TracepointEvent tracepoint_event) {
+void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) {
   CHECK(tracepoint_event.tracepoint_info_or_key_case() ==
         orbit_grpc_protos::TracepointEvent::kTracepointInfo);
   tracepoint_event.set_tracepoint_info_key(
@@ -186,7 +185,7 @@ void LinuxTracingGrpcHandler::OnTracepointEvent(
   }
 }
 
-uint64_t LinuxTracingGrpcHandler::ComputeCallstackKey(const Callstack& callstack) {
+uint64_t LinuxTracingHandler::ComputeCallstackKey(const Callstack& callstack) {
   uint64_t key = 17;
   for (uint64_t pc : callstack.pcs()) {
     key = 31 * key + pc;
@@ -194,7 +193,7 @@ uint64_t LinuxTracingGrpcHandler::ComputeCallstackKey(const Callstack& callstack
   return key;
 }
 
-uint64_t LinuxTracingGrpcHandler::InternCallstackIfNecessaryAndGetKey(Callstack callstack) {
+uint64_t LinuxTracingHandler::InternCallstackIfNecessaryAndGetKey(Callstack callstack) {
   uint64_t key = ComputeCallstackKey(callstack);
   {
     absl::MutexLock lock{&callstack_keys_sent_mutex_};
@@ -214,11 +213,11 @@ uint64_t LinuxTracingGrpcHandler::InternCallstackIfNecessaryAndGetKey(Callstack 
   return key;
 }
 
-uint64_t LinuxTracingGrpcHandler::ComputeStringKey(const std::string& str) {
+uint64_t LinuxTracingHandler::ComputeStringKey(const std::string& str) {
   return std::hash<std::string>{}(str);
 }
 
-uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(std::string str) {
+uint64_t LinuxTracingHandler::InternStringIfNecessaryAndGetKey(std::string str) {
   uint64_t key = ComputeStringKey(str);
   {
     absl::MutexLock lock{&string_keys_sent_mutex_};
@@ -238,7 +237,7 @@ uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(std::string s
   return key;
 }
 
-uint64_t LinuxTracingGrpcHandler::InternTracepointInfoIfNecessaryAndGetKey(
+uint64_t LinuxTracingHandler::InternTracepointInfoIfNecessaryAndGetKey(
     orbit_grpc_protos::TracepointInfo tracepoint_info) {
   uint64_t key =
       ComputeStringKey(absl::StrCat(tracepoint_info.category(), ":", tracepoint_info.name()));
@@ -262,7 +261,7 @@ uint64_t LinuxTracingGrpcHandler::InternTracepointInfoIfNecessaryAndGetKey(
   return key;
 }
 
-void LinuxTracingGrpcHandler::SenderThread() {
+void LinuxTracingHandler::SenderThread() {
   pthread_setname_np(pthread_self(), "SenderThread");
   constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
   // This should be lower than kMaxEventsPerResponse in SendBufferedEvents as
@@ -273,7 +272,7 @@ void LinuxTracingGrpcHandler::SenderThread() {
   while (!stopped) {
     ORBIT_SCOPE("SenderThread iteration");
     event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
-                                                +[](LinuxTracingGrpcHandler* self) {
+                                                +[](LinuxTracingHandler* self) {
                                                   return self->event_buffer_.size() >=
                                                              kSendEventCountInterval ||
                                                          self->tracer_ == nullptr;

@@ -18,8 +18,8 @@ target_sources(OrbitServiceLib PRIVATE
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         FramePointerValidatorServiceImpl.h
-        LinuxTracingGrpcHandler.cpp
-        LinuxTracingGrpcHandler.h
+        LinuxTracingHandler.cpp
+        LinuxTracingHandler.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp

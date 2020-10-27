@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
-#define ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
+#ifndef ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
+#define ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
 
 #include "CaptureResponseListener.h"
 #include "OrbitBase/Logging.h"
@@ -16,16 +16,16 @@
 
 namespace orbit_service {
 
-class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
+class LinuxTracingHandler : public LinuxTracing::TracerListener {
  public:
-  explicit LinuxTracingGrpcHandler(CaptureResponseListener* capture_response_listener)
+  explicit LinuxTracingHandler(CaptureResponseListener* capture_response_listener)
       : capture_response_listener_{capture_response_listener} {}
 
-  ~LinuxTracingGrpcHandler() override = default;
-  LinuxTracingGrpcHandler(const LinuxTracingGrpcHandler&) = delete;
-  LinuxTracingGrpcHandler& operator=(const LinuxTracingGrpcHandler&) = delete;
-  LinuxTracingGrpcHandler(LinuxTracingGrpcHandler&&) = delete;
-  LinuxTracingGrpcHandler& operator=(LinuxTracingGrpcHandler&&) = delete;
+  ~LinuxTracingHandler() override = default;
+  LinuxTracingHandler(const LinuxTracingHandler&) = delete;
+  LinuxTracingHandler& operator=(const LinuxTracingHandler&) = delete;
+  LinuxTracingHandler(LinuxTracingHandler&&) = delete;
+  LinuxTracingHandler& operator=(LinuxTracingHandler&&) = delete;
 
   void Start(orbit_grpc_protos::CaptureOptions capture_options);
   void Stop();
@@ -74,4 +74,4 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
 
 }  // namespace orbit_service
 
-#endif  // ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
+#endif  // ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_

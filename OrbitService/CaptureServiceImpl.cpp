@@ -5,7 +5,7 @@
 #include "CaptureServiceImpl.h"
 
 #include "CaptureResponseListener.h"
-#include "LinuxTracingGrpcHandler.h"
+#include "LinuxTracingHandler.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_service {
@@ -56,7 +56,7 @@ grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   pthread_setname_np(pthread_self(), "CSImpl::Capture");
   GrpcCaptureResponseSender capture_response_listener{reader_writer};
-  LinuxTracingGrpcHandler tracing_handler{&capture_response_listener};
+  LinuxTracingHandler tracing_handler{&capture_response_listener};
 
   CaptureRequest request;
   reader_writer->Read(&request);
