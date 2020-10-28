@@ -164,6 +164,7 @@ class TracerThread {
       sched_switch_count = 0;
       sample_count = 0;
       uprobes_count = 0;
+      gpu_events_count = 0;
       lost_count = 0;
       lost_count_per_buffer.clear();
       *unwind_error_count = 0;
