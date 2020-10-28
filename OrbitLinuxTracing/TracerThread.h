@@ -150,6 +150,8 @@ class TracerThread {
   absl::flat_hash_set<uint64_t> dma_fence_signaled_ids_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> ids_to_tracepoint_info_;
 
+  uint64_t effective_capture_start_timestamp_ns_ = 0;
+
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
