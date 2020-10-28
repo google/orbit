@@ -731,13 +731,20 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 
   // Close the file descriptors.
-  {
+  // Do it in a separate dedicated thread as this can take a long time
+  // with a lot of uprobes and uretprobes.
+  std::thread([tracing_fds = tracing_fds_] {
+    pthread_setname_np(pthread_self(), "close(fd)s");
     ORBIT_SCOPE_WITH_COLOR("Closing file descriptors", orbit::Color::kRed);
-    for (int fd : tracing_fds_) {
+    uint64_t fd_close_begin_ns = MonotonicTimestampNs();
+    for (int fd : tracing_fds) {
       ORBIT_SCOPE("Closing fd");
       close(fd);
     }
-  }
+    uint64_t fd_close_end_ns = MonotonicTimestampNs();
+    LOG("Finished closing %lu perf_event_open file descriptors after %.3f ms", tracing_fds.size(),
+        (fd_close_end_ns - fd_close_begin_ns) / 1e6);
+  }).detach();
 }
 
 void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
