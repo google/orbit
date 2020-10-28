@@ -809,11 +809,11 @@ void CaptureWindow::RenderTimeBar() {
 
       std::string text = GetPrettyTime(absl::Microseconds(current_micros));
       float world_x = time_graph_.GetWorldFromUs(current_micros);
-      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTextUi,
+      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTimeBar,
                              Color(255, 255, 255, 255), font_size_);
 
       Vec2 pos(world_x, world_y);
-      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTextUi, Color(255, 255, 255, 255));
+      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTimeBar, Color(255, 255, 255, 255));
     }
   }
 }

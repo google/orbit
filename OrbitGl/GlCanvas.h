@@ -83,10 +83,11 @@ class GlCanvas : public GlPanel {
   static float kZValueSlider;
   static float kZValueSliderBg;
   static float kZValueMargin;
+  static float kZValueTimeBar;
+  static float kZValueTimeBarBg;
   static float kZValueTextUi;
   static float kZValueUi;
   static float kZValueEventBarPicking;
-  static float kZValueTimeBarBg;
   static float kZValueText;
   static float kZValueOverlayTextBackground;
   static float kZValueOverlay;
