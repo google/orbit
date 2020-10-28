@@ -17,7 +17,7 @@
 // Tracks: 0.0 - 0.1
 // World Overlay: 0.4 - 0.5
 // UI: 0.6 - 0.7
-// UI Overlay: 0.8 - 0.9
+// ScreenSpace: 0.8 - 0.9
 float GlCanvas::kZValueTrack = 0.01f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
@@ -27,11 +27,12 @@ float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueText = 0.47f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
-float GlCanvas::kZValueTimeBarBg = 0.63f;
-float GlCanvas::kZValueTextUi = 0.65f;
-float GlCanvas::kZValueMargin = 0.81f;
-float GlCanvas::kZValueSliderBg = 0.83f;
-float GlCanvas::kZValueSlider = 0.85f;
+float GlCanvas::kZValueTextUi = 0.61f;
+float GlCanvas::kZValueTimeBarBg = 0.81f;
+float GlCanvas::kZValueTimeBar = 0.83f;
+float GlCanvas::kZValueMargin = 0.85f;
+float GlCanvas::kZValueSliderBg = 0.87f;
+float GlCanvas::kZValueSlider = 0.89f;
 
 float GlCanvas::kZOffsetMovingTack = 0.1f;
 float GlCanvas::kZOffsetPinnedTrack = 0.2f;
