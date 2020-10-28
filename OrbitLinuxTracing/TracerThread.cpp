@@ -545,8 +545,6 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
-  context_switch_manager_.Clear();
-
   perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
@@ -1065,10 +1063,6 @@ void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
 
-  uprobes_unwinding_visitor_.reset();
-  thread_state_visitor_.reset();
-  event_processor_.ClearVisitors();
-
   uprobes_uretprobes_ids_to_function_.clear();
   uprobes_ids_.clear();
   uretprobes_ids_.clear();
@@ -1083,8 +1077,15 @@ void TracerThread::Reset() {
   dma_fence_signaled_ids_.clear();
   ids_to_tracepoint_info_.clear();
 
-  deferred_events_.clear();
+  effective_capture_start_timestamp_ns_ = 0;
+
   stop_deferred_thread_ = false;
+  deferred_events_.clear();
+  context_switch_manager_.Clear();
+  uprobes_unwinding_visitor_.reset();
+  thread_state_visitor_.reset();
+  event_processor_.ClearVisitors();
+  gpu_event_processor_.reset();
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {
