@@ -517,23 +517,28 @@ void CaptureWindow::Draw() {
   }
   DrawScreenSpace();
 
-  // We start by computing all layers
-  auto layers = time_graph_.GetBatcher().GetLayers();
-  for (auto layer : ui_batcher_.GetLayers()) {
-    layers.insert(layer);
-  }
+  // We start by getting all layers
+  std::vector<float> all_layers = time_graph_.GetBatcher().GetLayers();
+  Append(all_layers, ui_batcher_.GetLayers());
+  Append(all_layers, text_renderer_.GetLayers());
+  Append(all_layers, time_graph_.GetTextRenderer()->GetLayers());
+  std::sort(all_layers.begin(), all_layers.end());
+  std::unique(all_layers.begin(), all_layers.end());
 
-  for (float layer : layers) {
-    if (layer > GlCanvas::kScreenSpaceCutPoint) {
-      // As items in ScreenSpace uses a different coordinate system, we have to change it.
-      PrepareScreenSpaceViewport();
+  for (float layer : all_layers) {
+    // We use different coordinate systems for ScreenSpace items (margin, scrollbar, ...)
+    // and for the text than the rest of items inside CaptureWindow. So, we have to switch
+    // between these 2 systems while the layer is changing (with these "Prepare.." functions).
+    if (layer < GlCanvas::kScreenSpaceCutPoint) {
+      Prepare2DViewport(0, 0, GetWidth(), GetHeight());
     }
     time_graph_.GetBatcher().Draw(layer, GetPickingMode() != PickingMode::kNone);
     ui_batcher_.Draw(layer, GetPickingMode() != PickingMode::kNone);
-  }
 
-  text_renderer_.Display(&ui_batcher_);
-  RenderText();
+    PrepareScreenSpaceViewport();
+    text_renderer_.Display(&ui_batcher_, layer);
+    RenderText(layer);
+  }
 }
 
 void CaptureWindow::DrawScreenSpace() {
@@ -711,9 +716,9 @@ void CaptureWindow::RenderImGui() {
   ImGui::Render();
 }
 
-void CaptureWindow::RenderText() {
+void CaptureWindow::RenderText(float layer) {
   if (!picking_) {
-    time_graph_.DrawText(this);
+    time_graph_.DrawText(this, layer);
   }
 }
 

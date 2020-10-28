@@ -124,7 +124,7 @@ class Batcher {
                    std::shared_ptr<Pickable> pickable);
 
   void AddCircle(Vec2 position, float radius, float z, Color color);
-  std::set<float> GetLayers() const;
+  [[nodiscard]] std::vector<float> GetLayers() const;
   virtual void Draw(float layer, bool picking = false) const;
 
   void ResetElements();

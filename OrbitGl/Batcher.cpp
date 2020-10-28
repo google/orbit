@@ -235,10 +235,10 @@ void Batcher::StartNewFrame() {
   user_data_.clear();
 }
 
-std::set<float> Batcher::GetLayers() const {
-  std::set<float> layers;
+std::vector<float> Batcher::GetLayers() const {
+  std::vector<float> layers;
   for (auto& [layer, _] : primitive_buffers_by_layer_) {
-    layers.insert(layer);
+    layers.push_back(layer);
   }
   return layers;
 };

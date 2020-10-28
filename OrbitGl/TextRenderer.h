@@ -23,7 +23,7 @@ class TextRenderer {
   ~TextRenderer();
 
   void Init();
-  void Display(Batcher* batcher);
+  void Display(Batcher* batcher, float layer);
   void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
                uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false);
   // Returns the width of the rendered string.
@@ -34,11 +34,11 @@ class TextRenderer {
                 float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
 
   int GetStringWidth(const char* a_Text) const;
+  [[nodiscard]] std::vector<float> GetLayers() const;
   void Clear();
   void SetCanvas(class GlCanvas* a_Canvas) { m_Canvas = a_Canvas; }
   const GlCanvas* GetCanvas() const { return m_Canvas; }
   GlCanvas* GetCanvas() { return m_Canvas; }
-  int GetNumCharacters() const;
   void ToggleDrawOutline() { m_DrawOutline = !m_DrawOutline; }
   void SetFontSize(uint32_t a_Size);
   uint32_t GetFontSize() const;
@@ -52,7 +52,7 @@ class TextRenderer {
 
  private:
   texture_atlas_t* m_Atlas;
-  vertex_buffer_t* m_Buffer;
+  std::unordered_map<float, vertex_buffer_t*> buffers_by_layer_;
   texture_font_t* m_Font;
   std::map<int, texture_font_t*> m_FontsBySize;
   uint32_t current_font_size_;
