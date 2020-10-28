@@ -604,6 +604,8 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_enable(fd);
   }
 
+  effective_capture_start_timestamp_ns_ = MonotonicTimestampNs();
+
   // Get the initial thread names and notify the listener_.
   RetrieveThreadNamesSystemWide();
 
@@ -744,6 +746,10 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& hea
                                                     PerfEventRingBuffer* ring_buffer) {
   SystemWideContextSwitchPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
+  if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
+    return;
+  }
+
   pid_t pid = event.GetPid();
   pid_t tid = event.GetTid();
   uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
@@ -772,6 +778,9 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   ForkPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
+  if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
+    return;
+  }
 
   if (event.GetPid() != pid_) {
     return;
@@ -785,6 +794,9 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   ExitPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
+  if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
+    return;
+  }
 
   if (event.GetPid() != pid_) {
     return;
@@ -811,6 +823,13 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
+  uint64_t time = ReadSampleRecordTime(ring_buffer);
+  if (time < effective_capture_start_timestamp_ns_) {
+    // Don't consider events that came before all file descriptors had been enabled.
+    ring_buffer->SkipRecord(header);
+    return;
+  }
+
   uint64_t stream_id = ReadSampleRecordStreamId(ring_buffer);
   bool is_uprobe = uprobes_ids_.contains(stream_id);
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
