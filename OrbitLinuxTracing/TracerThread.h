@@ -126,6 +126,7 @@ class TracerThread {
   uint64_t sampling_period_ns_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
+  ManualInstrumentationConfig manual_instrumentation_config_;
   bool trace_thread_state_;
   bool trace_gpu_driver_;
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
@@ -167,8 +168,9 @@ class TracerThread {
       gpu_events_count = 0;
       lost_count = 0;
       lost_count_per_buffer.clear();
-      *unwind_error_count = 0;
-      *discarded_samples_in_uretprobes_count = 0;
+      discarded_out_of_order_count = 0;
+      unwind_error_count = 0;
+      discarded_samples_in_uretprobes_count = 0;
     }
 
     uint64_t event_count_begin_ns = 0;
@@ -178,15 +180,13 @@ class TracerThread {
     uint64_t gpu_events_count = 0;
     uint64_t lost_count = 0;
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
-    std::shared_ptr<std::atomic<uint64_t>> unwind_error_count =
-        std::make_unique<std::atomic<uint64_t>>(0);
-    std::shared_ptr<std::atomic<uint64_t>> discarded_samples_in_uretprobes_count =
-        std::make_unique<std::atomic<uint64_t>>(0);
+    std::atomic<uint64_t> discarded_out_of_order_count = 0;
+    std::atomic<uint64_t> unwind_error_count = 0;
+    std::atomic<uint64_t> discarded_samples_in_uretprobes_count = 0;
   };
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
   EventStats stats_{};
-  ManualInstrumentationConfig manual_instrumentation_config_;
 
   static constexpr uint64_t NS_PER_MILLISECOND = 1'000'000;
   static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;

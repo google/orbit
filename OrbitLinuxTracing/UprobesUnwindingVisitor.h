@@ -49,10 +49,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
   void SetUnwindErrorsAndDiscardedSamplesCounters(
-      std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter,
-      std::shared_ptr<std::atomic<uint64_t>> discarded_samples_in_uretprobes_counter) {
-    unwind_error_counter_ = std::move(unwind_error_counter);
-    discarded_samples_in_uretprobes_counter_ = std::move(discarded_samples_in_uretprobes_counter);
+      std::atomic<uint64_t>* unwind_error_counter,
+      std::atomic<uint64_t>* discarded_samples_in_uretprobes_counter) {
+    unwind_error_counter_ = unwind_error_counter;
+    discarded_samples_in_uretprobes_counter_ = discarded_samples_in_uretprobes_counter;
   }
 
   void visit(StackSamplePerfEvent* event) override;
@@ -68,8 +68,9 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   LibunwindstackUnwinder unwinder_{};
 
   TracerListener* listener_ = nullptr;
-  std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter_ = nullptr;
-  std::shared_ptr<std::atomic<uint64_t>> discarded_samples_in_uretprobes_counter_ = nullptr;
+
+  std::atomic<uint64_t>* unwind_error_counter_ = nullptr;
+  std::atomic<uint64_t>* discarded_samples_in_uretprobes_counter_ = nullptr;
 
   absl::flat_hash_map<pid_t, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>>
       uprobe_sps_ips_cpus_per_thread_{};

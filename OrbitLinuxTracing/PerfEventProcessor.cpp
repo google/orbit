@@ -56,12 +56,12 @@ std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
 }
 
 void PerfEventProcessor::AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event) {
-#ifndef NDEBUG
-  if (last_processed_timestamp_ > 0 &&
-      event->GetTimestamp() < last_processed_timestamp_ - kProcessingDelayMs * 1'000'000) {
-    ERROR("Processed an event out of order");
+  if (last_processed_timestamp_ns_ > 0 && event->GetTimestamp() < last_processed_timestamp_ns_) {
+    if (discarded_out_of_order_counter_ != nullptr) {
+      ++(*discarded_out_of_order_counter_);
+    }
+    return;
   }
-#endif
   event_queue_.PushEvent(origin_fd, std::move(event));
 }
 
@@ -69,9 +69,10 @@ void PerfEventProcessor::ProcessAllEvents() {
   CHECK(!visitors_.empty());
   while (event_queue_.HasEvent()) {
     std::unique_ptr<PerfEvent> event = event_queue_.PopEvent();
-#ifndef NDEBUG
-    last_processed_timestamp_ = event->GetTimestamp();
-#endif
+    // Events are guaranteed to be processed in order of timestamp
+    // as out-of-order events are discarded in AddEvent.
+    CHECK(event->GetTimestamp() >= last_processed_timestamp_ns_);
+    last_processed_timestamp_ns_ = event->GetTimestamp();
     for (PerfEventVisitor* visitor : visitors_) {
       event->Accept(visitor);
     }
@@ -80,19 +81,20 @@ void PerfEventProcessor::ProcessAllEvents() {
 
 void PerfEventProcessor::ProcessOldEvents() {
   CHECK(!visitors_.empty());
-  uint64_t max_timestamp = MonotonicTimestampNs();
+  uint64_t current_timestamp_ns = MonotonicTimestampNs();
 
   while (event_queue_.HasEvent()) {
     PerfEvent* event = event_queue_.TopEvent();
 
-    // Do not read the most recent events as out-of-order events could arrive.
-    if (event->GetTimestamp() + kProcessingDelayMs * 1'000'000 >= max_timestamp) {
+    // Do not read the most recent events as out-of-order events could (and will) arrive.
+    if (event->GetTimestamp() + kProcessingDelayMs * 1'000'000 >= current_timestamp_ns) {
       break;
     }
+    // Events are guaranteed to be processed in order of timestamp
+    // as out-of-order events are discarded in AddEvent.
+    CHECK(event->GetTimestamp() >= last_processed_timestamp_ns_);
+    last_processed_timestamp_ns_ = event->GetTimestamp();
 
-#ifndef NDEBUG
-    last_processed_timestamp_ = event->GetTimestamp();
-#endif
     for (PerfEventVisitor* visitor : visitors_) {
       event->Accept(visitor);
     }

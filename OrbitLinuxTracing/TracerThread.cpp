@@ -34,7 +34,6 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
     sampling_period_ns_ = 0;
   }
 
-  instrumented_functions_.clear();
   instrumented_functions_.reserve(capture_options.instrumented_functions_size());
 
   for (const CaptureOptions::InstrumentedFunction& instrumented_function :
@@ -107,7 +106,7 @@ void TracerThread::InitUprobesEventVisitor() {
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
   uprobes_unwinding_visitor_->SetListener(listener_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
-      stats_.unwind_error_count, stats_.discarded_samples_in_uretprobes_count);
+      &stats_.unwind_error_count, &stats_.discarded_samples_in_uretprobes_count);
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
@@ -522,6 +521,8 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   // cpu per instrumented function, increase the maximum number of open files.
   SetMaxOpenFilesSoftLimit(GetMaxOpenFilesHardLimit());
 
+  event_processor_.SetDiscardedOutOfOrderCounter(&stats_.discarded_out_of_order_count);
+
   bool perf_event_open_errors = false;
 
   if (trace_context_switches_) {
@@ -724,17 +725,19 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 
   // Close the ring buffers.
-  ORBIT_START("ring_buffers_.clear()");
-  ring_buffers_.clear();
-  ORBIT_STOP();
+  {
+    ORBIT_SCOPE("ring_buffers_.clear()");
+    ring_buffers_.clear();
+  }
 
   // Close the file descriptors.
-  ORBIT_START_WITH_COLOR("Closing file descriptors", orbit::Color::kRed);
-  for (int fd : tracing_fds_) {
-    ORBIT_SCOPE("Closing fd");
-    close(fd);
+  {
+    ORBIT_SCOPE_WITH_COLOR("Closing file descriptors", orbit::Color::kRed);
+    for (int fd : tracing_fds_) {
+      ORBIT_SCOPE("Closing fd");
+      close(fd);
+    }
   }
-  ORBIT_STOP();
 }
 
 void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
@@ -1071,28 +1074,39 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
     double actual_window_s =
         static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
-    LOG("Events per second (last %.1f s):", actual_window_s);
-    LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
-    LOG("  samples: %.0f", stats_.sample_count / actual_window_s);
-    LOG("  u(ret)probes: %.0f", stats_.uprobes_count / actual_window_s);
-    LOG("  gpu events: %.0f", stats_.gpu_events_count / actual_window_s);
+    LOG("Events per second (and total) last %.3f s:", actual_window_s);
+    LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
+        stats_.sched_switch_count);
+    LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
+    LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s,
+        stats_.uprobes_count);
+    LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
+        stats_.gpu_events_count);
 
     if (stats_.lost_count_per_buffer.empty()) {
-      LOG("  lost: %.0f", stats_.lost_count / actual_window_s);
+      LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
     } else {
-      LOG("  lost: %.0f, of which:", stats_.lost_count / actual_window_s);
-      for (const auto& lost_from_buffer : stats_.lost_count_per_buffer) {
-        LOG("    from %s: %.0f", lost_from_buffer.first->GetName().c_str(),
-            lost_from_buffer.second / actual_window_s);
+      LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s,
+          stats_.lost_count);
+      for (const auto& buffer_and_lost_count : stats_.lost_count_per_buffer) {
+        LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
+            buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
       }
     }
 
-    uint64_t unwind_error_count = *stats_.unwind_error_count;
-    LOG("  unwind errors: %.0f (%.1f%%)", unwind_error_count / actual_window_s,
-        100.0 * unwind_error_count / stats_.sample_count);
-    uint64_t discarded_samples_in_uretprobes_count = *stats_.discarded_samples_in_uretprobes_count;
-    LOG("  discarded samples in u(ret)probes: %.0f (%.1f%%)",
+    uint64_t discarded_out_of_order_count = stats_.discarded_out_of_order_count;
+    LOG("  %s: %.0f/s (%lu)",
+        discarded_out_of_order_count == 0 ? "discarded as out of order"
+                                          : "DISCARDED AS OUT OF ORDER",
+        discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
+
+    uint64_t unwind_error_count = stats_.unwind_error_count;
+    LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
+        unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
+    uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
+    LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
         discarded_samples_in_uretprobes_count / actual_window_s,
+        discarded_samples_in_uretprobes_count,
         100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
     stats_.Reset();
   }

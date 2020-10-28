@@ -78,19 +78,21 @@ class PerfEventProcessor {
 
   void ClearVisitors() { visitors_.clear(); }
 
+  void SetDiscardedOutOfOrderCounter(std::atomic<uint64_t>* discarded_out_of_order_counter) {
+    discarded_out_of_order_counter_ = discarded_out_of_order_counter;
+  }
+
  private:
   // Do not process events that are more recent than 0.1 seconds. There could be
   // events coming out of order as they are read from different perf_event_open
   // ring buffers and this ensure that all events are processed in the correct
   // order.
   static constexpr uint64_t kProcessingDelayMs = 100;
+  uint64_t last_processed_timestamp_ns_ = 0;
+  std::atomic<uint64_t>* discarded_out_of_order_counter_ = nullptr;
 
   PerfEventQueue event_queue_;
   std::vector<PerfEventVisitor*> visitors_;
-
-#ifndef NDEBUG
-  uint64_t last_processed_timestamp_ = 0;
-#endif
 };
 
 }  // namespace LinuxTracing
