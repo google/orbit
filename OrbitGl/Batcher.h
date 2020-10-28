@@ -63,6 +63,18 @@ struct TriangleBuffer {
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
 };
 
+struct PrimitiveBuffers {
+  void Reset() {
+    line_buffer.Reset();
+    box_buffer.Reset();
+    triangle_buffer.Reset();
+  }
+
+  LineBuffer line_buffer;
+  BoxBuffer box_buffer;
+  TriangleBuffer triangle_buffer;
+};
+
 enum class ShadingDirection { kLeftToRight, kRightToLeft, kTopToBottom, kBottomToTop };
 
 class Batcher {
@@ -112,7 +124,8 @@ class Batcher {
                    std::shared_ptr<Pickable> pickable);
 
   void AddCircle(Vec2 position, float radius, float z, Color color);
-  virtual void Draw(bool picking = false) const;
+  std::set<float> GetLayers() const;
+  virtual void Draw(float layer, bool picking = false) const;
 
   void ResetElements();
   void StartNewFrame();
@@ -126,9 +139,9 @@ class Batcher {
   [[nodiscard]] const TextBox* GetTextBox(PickingId id);
 
  protected:
-  void DrawLineBuffer(bool picking) const;
-  void DrawBoxBuffer(bool picking) const;
-  void DrawTriangleBuffer(bool picking) const;
+  void DrawLineBuffer(float layer, bool picking) const;
+  void DrawBoxBuffer(float layer, bool picking) const;
+  void DrawTriangleBuffer(float layer, bool picking) const;
 
   void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                             ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
@@ -142,9 +155,7 @@ class Batcher {
 
   BatcherId batcher_id_;
   PickingManager* picking_manager_;
-  LineBuffer line_buffer_;
-  BoxBuffer box_buffer_;
-  TriangleBuffer triangle_buffer_;
+  std::unordered_map<float, PrimitiveBuffers> primitive_buffers_by_layer_;
 
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
