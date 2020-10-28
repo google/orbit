@@ -28,6 +28,7 @@ float GlCanvas::kZValueText = 0.47f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
 float GlCanvas::kZValueTextUi = 0.61f;
+float GlCanvas::kScreenSpaceCutPoint = 0.8f;
 float GlCanvas::kZValueTimeBarBg = 0.81f;
 float GlCanvas::kZValueTimeBar = 0.83f;
 float GlCanvas::kZValueMargin = 0.85f;

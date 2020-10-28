@@ -27,23 +27,25 @@ class MockBatcher : public Batcher {
   // Simulate drawing by simple appending all colors to internal
   // buffers. Only a single color per element will be appended
   // (start point for line, first vertex for triangle and box)
-  void Draw(bool picking = false) const override {
+  void Draw(float layer = 0.f, bool picking = false) const override {
+    if (!primitive_buffers_by_layer_.count(layer)) return;
+    const PrimitiveBuffers& buffer = primitive_buffers_by_layer_.at(layer);
     if (picking) {
-      for (auto it = line_buffer_.picking_colors_.begin();
-           it != line_buffer_.picking_colors_.end();) {
+      for (auto it = buffer.line_buffer.picking_colors_.begin();
+           it != buffer.line_buffer.picking_colors_.end();) {
         drawn_line_colors_.push_back(*it);
         ++it;
         ++it;
       }
-      for (auto it = triangle_buffer_.picking_colors_.begin();
-           it != triangle_buffer_.picking_colors_.end();) {
+      for (auto it = buffer.triangle_buffer.picking_colors_.begin();
+           it != buffer.triangle_buffer.picking_colors_.end();) {
         drawn_triangle_colors_.push_back(*it);
         ++it;
         ++it;
         ++it;
       }
-      for (auto it = box_buffer_.picking_colors_.begin();
-           it != box_buffer_.picking_colors_.end();) {
+      for (auto it = buffer.box_buffer.picking_colors_.begin();
+           it != buffer.box_buffer.picking_colors_.end();) {
         drawn_box_colors_.push_back(*it);
         ++it;
         ++it;
@@ -51,18 +53,19 @@ class MockBatcher : public Batcher {
         ++it;
       }
     } else {
-      for (auto it = line_buffer_.colors_.begin(); it != line_buffer_.colors_.end();) {
+      for (auto it = buffer.line_buffer.colors_.begin(); it != buffer.line_buffer.colors_.end();) {
         drawn_line_colors_.push_back(*it);
         ++it;
         ++it;
       }
-      for (auto it = triangle_buffer_.colors_.begin(); it != triangle_buffer_.colors_.end();) {
+      for (auto it = buffer.triangle_buffer.colors_.begin();
+           it != buffer.triangle_buffer.colors_.end();) {
         drawn_triangle_colors_.push_back(*it);
         ++it;
         ++it;
         ++it;
       }
-      for (auto it = box_buffer_.colors_.begin(); it != box_buffer_.colors_.end();) {
+      for (auto it = buffer.box_buffer.colors_.begin(); it != buffer.box_buffer.colors_.end();) {
         drawn_box_colors_.push_back(*it);
         ++it;
         ++it;
@@ -142,13 +145,12 @@ TEST(Batcher, PickingSimpleElements) {
   std::string box_custom_data = "box custom data";
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
-
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
   batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
                       std::move(triangle_user_data));
   batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
 
-  batcher.Draw(true);
+  batcher.Draw(0.f, true);
   ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0], line_custom_data);
   ExpectCustomDataEq(batcher, batcher.GetDrawnTriangleColors()[0], triangle_custom_data);
   ExpectCustomDataEq(batcher, batcher.GetDrawnBoxColors()[0], box_custom_data);
@@ -175,7 +177,7 @@ TEST(Batcher, PickingPickables) {
                       triangle_pickable);
   batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), box_pickable);
 
-  batcher.Draw(true);
+  batcher.Draw(0.f, true);
   ExpectPickableEq(batcher, batcher.GetDrawnLineColors()[0], pm, line_pickable);
   ExpectPickableEq(batcher, batcher.GetDrawnTriangleColors()[0], pm, triangle_pickable);
   ExpectPickableEq(batcher, batcher.GetDrawnBoxColors()[0], pm, box_pickable);
@@ -201,7 +203,7 @@ TEST(Batcher, MultipleDrawCalls) {
                       std::move(triangle_user_data));
   batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
 
-  batcher.Draw(true);
+  batcher.Draw(0.f, true);
 
   auto line_color = batcher.GetDrawnLineColors()[0];
   auto triangle_color = batcher.GetDrawnTriangleColors()[0];

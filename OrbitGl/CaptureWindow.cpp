@@ -505,7 +505,6 @@ void CaptureWindow::Draw() {
   picking_manager_.Reset();
 
   time_graph_.Draw(this, GetPickingMode());
-  time_graph_.GetBatcher().Draw(GetPickingMode() != PickingMode::kNone);
 
   RenderSelectionOverlay();
 
@@ -516,18 +515,22 @@ void CaptureWindow::Draw() {
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
   }
-
-  // We have to draw everything collected in the batcher at this point,
-  // as PrepareScreenSpaceViewport() changes the coordinate system.
-  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
-  ui_batcher_.ResetElements();
-
-  PrepareScreenSpaceViewport();
-
   DrawScreenSpace();
 
-  // Draw remaining elements collected with the batcher.
-  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
+  // We start by computing all layers
+  auto layers = time_graph_.GetBatcher().GetLayers();
+  for (auto layer : ui_batcher_.GetLayers()) {
+    layers.insert(layer);
+  }
+
+  for (float layer : layers) {
+    if (layer > GlCanvas::kScreenSpaceCutPoint) {
+      // As items in ScreenSpace uses a different coordinate system, we have to change it.
+      PrepareScreenSpaceViewport();
+    }
+    time_graph_.GetBatcher().Draw(layer, GetPickingMode() != PickingMode::kNone);
+    ui_batcher_.Draw(layer, GetPickingMode() != PickingMode::kNone);
+  }
 
   text_renderer_.Display(&ui_batcher_);
   RenderText();

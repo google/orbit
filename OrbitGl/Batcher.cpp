@@ -42,10 +42,11 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Col
   Line line;
   line.start_point = Vec3(from[0], from[1], z);
   line.end_point = Vec3(to[0], to[1], z);
+  auto& buffer = primitive_buffers_by_layer_[z];
 
-  line_buffer_.lines_.push_back(line);
-  line_buffer_.colors_.push_back_n(color, 2);
-  line_buffer_.picking_colors_.push_back_n(picking_color, 2);
+  buffer.line_buffer.lines_.push_back(line);
+  buffer.line_buffer.colors_.push_back_n(color, 2);
+  buffer.line_buffer.picking_colors_.push_back_n(picking_color, 2);
   user_data_.push_back(std::move(user_data));
 }
 
@@ -102,9 +103,11 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
 
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
                      std::unique_ptr<PickingUserData> user_data) {
-  box_buffer_.boxes_.push_back(box);
-  box_buffer_.colors_.push_back(colors);
-  box_buffer_.picking_colors_.push_back_n(picking_color, 4);
+  float layer_z_value = box.vertices[0][2];
+  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
+  buffer.box_buffer.boxes_.push_back(box);
+  buffer.box_buffer.colors_.push_back(colors);
+  buffer.box_buffer.picking_colors_.push_back_n(picking_color, 4);
   user_data_.push_back(std::move(user_data));
 }
 
@@ -126,9 +129,11 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                           std::unique_ptr<PickingUserData> user_data) {
-  triangle_buffer_.triangles_.push_back(triangle);
-  triangle_buffer_.colors_.push_back_n(color, 3);
-  triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);
+  float layer_z_value = triangle.vertices[0][2];
+  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
+  buffer.triangle_buffer.triangles_.push_back(triangle);
+  buffer.triangle_buffer.colors_.push_back_n(color, 3);
+  buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
   user_data_.push_back(std::move(user_data));
 }
 
@@ -220,9 +225,9 @@ void Batcher::GetBoxGradientColors(const Color& color, std::array<Color, 4>* col
 }
 
 void Batcher::ResetElements() {
-  line_buffer_.Reset();
-  box_buffer_.Reset();
-  triangle_buffer_.Reset();
+  for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
+    buffer.Reset();
+  }
 }
 
 void Batcher::StartNewFrame() {
@@ -230,7 +235,16 @@ void Batcher::StartNewFrame() {
   user_data_.clear();
 }
 
-void Batcher::Draw(bool picking) const {
+std::set<float> Batcher::GetLayers() const {
+  std::set<float> layers;
+  for (auto& [layer, _] : primitive_buffers_by_layer_) {
+    layers.insert(layer);
+  }
+  return layers;
+};
+
+void Batcher::Draw(float layer, bool picking) const {
+  if (!primitive_buffers_by_layer_.count(layer)) return;
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
   if (picking) {
     glDisable(GL_BLEND);
@@ -243,20 +257,21 @@ void Batcher::Draw(bool picking) const {
   glEnableClientState(GL_COLOR_ARRAY);
   glEnable(GL_TEXTURE_2D);
 
-  DrawBoxBuffer(picking);
-  DrawLineBuffer(picking);
-  DrawTriangleBuffer(picking);
+  DrawBoxBuffer(layer, picking);
+  DrawLineBuffer(layer, picking);
+  DrawTriangleBuffer(layer, picking);
 
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
   glPopAttrib();
 }
 
-void Batcher::DrawBoxBuffer(bool picking) const {
-  const Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block = box_buffer_.boxes_.root();
+void Batcher::DrawBoxBuffer(float layer, bool picking) const {
+  auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
+  const Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block = box_buffer.boxes_.root();
   const Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
 
-  color_block = !picking ? box_buffer_.colors_.root() : box_buffer_.picking_colors_.root();
+  color_block = !picking ? box_buffer.colors_.root() : box_buffer.picking_colors_.root();
 
   while (box_block != nullptr) {
     if (auto num_elems = box_block->size()) {
@@ -270,11 +285,12 @@ void Batcher::DrawBoxBuffer(bool picking) const {
   }
 }
 
-void Batcher::DrawLineBuffer(bool picking) const {
-  const Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block = line_buffer_.lines_.root();
+void Batcher::DrawLineBuffer(float layer, bool picking) const {
+  auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
+  const Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block = line_buffer.lines_.root();
   const Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
 
-  color_block = !picking ? line_buffer_.colors_.root() : line_buffer_.picking_colors_.root();
+  color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
 
   while (line_block != nullptr) {
     if (auto num_elems = line_block->size()) {
@@ -288,13 +304,13 @@ void Batcher::DrawLineBuffer(bool picking) const {
   }
 }
 
-void Batcher::DrawTriangleBuffer(bool picking) const {
+void Batcher::DrawTriangleBuffer(float layer, bool picking) const {
+  auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
   const Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
-      triangle_buffer_.triangles_.root();
+      triangle_buffer.triangles_.root();
   const Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
 
-  color_block =
-      !picking ? triangle_buffer_.colors_.root() : triangle_buffer_.picking_colors_.root();
+  color_block = !picking ? triangle_buffer.colors_.root() : triangle_buffer.picking_colors_.root();
 
   while (triangle_block != nullptr) {
     if (int num_elems = triangle_block->size()) {
