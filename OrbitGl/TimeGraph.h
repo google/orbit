@@ -37,7 +37,7 @@ class TimeGraph {
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
   void DrawTracks(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
   void DrawOverlay(GlCanvas* canvas, PickingMode picking_mode);
-  void DrawText(GlCanvas* canvas);
+  void DrawText(GlCanvas* canvas, float layer);
 
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);

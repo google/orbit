@@ -1215,9 +1215,9 @@ const TextBox* TimeGraph::FindDown(const TextBox* from) {
   return GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
 }
 
-void TimeGraph::DrawText(GlCanvas* canvas) {
+void TimeGraph::DrawText(GlCanvas* canvas, float layer) {
   if (draw_text_) {
-    text_renderer_static_.Display(canvas->GetBatcher());
+    text_renderer_static_.Display(canvas->GetBatcher(), layer);
   }
 }
 

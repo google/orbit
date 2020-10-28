@@ -20,7 +20,6 @@ typedef struct {
 
 TextRenderer::TextRenderer(uint32_t font_size)
     : m_Atlas(nullptr),
-      m_Buffer(nullptr),
       m_Font(nullptr),
       current_font_size_(font_size),
       m_Canvas(nullptr),
@@ -33,9 +32,10 @@ TextRenderer::~TextRenderer() {
   }
   m_FontsBySize.clear();
 
-  if (m_Buffer) {
-    vertex_buffer_delete(m_Buffer);
+  for (auto& [unused_layer, buffer] : buffers_by_layer_) {
+    vertex_buffer_delete(buffer);
   }
+  buffers_by_layer_.clear();
 
   if (m_Atlas) {
     texture_atlas_delete(m_Atlas);
@@ -51,7 +51,6 @@ void TextRenderer::Init() {
   const auto exe_dir = Path::GetExecutableDir();
   const auto fontFileName = exe_dir + "fonts/Vera.ttf";
 
-  m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
   for (int i = 1; i <= 100; i += 1) {
     m_FontsBySize[i] = texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }
@@ -91,9 +90,11 @@ void TextRenderer::SetFontSize(uint32_t size) {
 
 uint32_t TextRenderer::GetFontSize() const { return current_font_size_; }
 
-void TextRenderer::Display(Batcher* batcher) {
+void TextRenderer::Display(Batcher* batcher, float layer) {
+  if (!buffers_by_layer_.count(layer)) return;
+  auto& buffer = buffers_by_layer_.at(layer);
   if (m_DrawOutline) {
-    DrawOutline(batcher, m_Buffer);
+    DrawOutline(batcher, buffer);
   }
 
   // Lazy init
@@ -127,7 +128,7 @@ void TextRenderer::Display(Batcher* batcher) {
     glUniformMatrix4fv(glGetUniformLocation(m_Shader, "model"), 1, 0, m_Model.data);
     glUniformMatrix4fv(glGetUniformLocation(m_Shader, "view"), 1, 0, m_View.data);
     glUniformMatrix4fv(glGetUniformLocation(m_Shader, "projection"), 1, 0, m_Proj.data);
-    vertex_buffer_render(m_Buffer, GL_TRIANGLES);
+    vertex_buffer_render(buffer, GL_TRIANGLES);
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -200,8 +201,10 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       if (strWidth > maxWidth) {
         break;
       }
-
-      vertex_buffer_push_back(m_Buffer, vertices, 4, indices, 6);
+      if (!buffers_by_layer_.count(textZ)) {
+        buffers_by_layer_[textZ] = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
+      }
+      vertex_buffer_push_back(buffers_by_layer_.at(textZ), vertices, 4, indices, 6);
       pen->x += glyph->advance_x;
     }
   }
@@ -332,6 +335,14 @@ int TextRenderer::GetStringWidth(const char* a_Text) const {
   return static_cast<int>(ceil(stringWidth));
 }
 
+std::vector<float> TextRenderer::GetLayers() const {
+  std::vector<float> layers;
+  for (auto& [layer, unused_buffer] : buffers_by_layer_) {
+    layers.push_back(layer);
+  }
+  return layers;
+};
+
 void TextRenderer::ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y) {
   float WorldWidth = m_Canvas->GetWorldWidth();
   float WorldHeight = m_Canvas->GetWorldHeight();
@@ -349,9 +360,7 @@ float TextRenderer::ToScreenSpace(float a_Size) {
 void TextRenderer::Clear() {
   m_Pen.x = 0.f;
   m_Pen.y = 0.f;
-  if (m_Buffer) {
-    vertex_buffer_clear(m_Buffer);
+  for (auto& [unused_layer, buffer] : buffers_by_layer_) {
+    vertex_buffer_clear(buffer);
   }
 }
-
-int TextRenderer::GetNumCharacters() const { return int(m_Buffer->vertices->size) / 4; }
