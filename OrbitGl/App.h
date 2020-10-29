@@ -247,8 +247,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
-  void LoadModules(const std::vector<ModuleData*>& modules,
-                   const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
+  void LoadModules(
+      const std::vector<ModuleData*>& modules,
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {});
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
@@ -309,12 +310,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
   void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                   const orbit_client_protos::PresetModule* preset_module);
+                   std::vector<uint64_t> function_hashes_to_hook);
 
-  void LoadModuleOnRemote(ModuleData* module_data,
-                          const orbit_client_protos::PresetModule* preset_module);
-  ErrorMessageOr<void> SelectFunctionsFromPreset(const ModuleData* module,
-                                                 const orbit_client_protos::PresetModule& preset);
+  void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook);
+  ErrorMessageOr<void> SelectFunctionsFromHashes(const ModuleData* module,
+                                                 const std::vector<uint64_t>& function_hashes);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(const std::string& filename);
 
