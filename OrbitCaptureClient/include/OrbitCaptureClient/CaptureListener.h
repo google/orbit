@@ -8,7 +8,6 @@
 #include "Callstack.h"
 #include "OrbitBase/Result.h"
 #include "OrbitClientData/ProcessData.h"
-#include "Timer.h"
 #include "TracepointCustom.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"

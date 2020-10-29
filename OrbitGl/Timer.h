@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_TIMER_H_
-#define ORBIT_CORE_TIMER_H_
+#ifndef ORBIT_GL_TIMER_H_
+#define ORBIT_GL_TIMER_H_
 
 #include <string>
 
@@ -21,18 +21,12 @@ class Timer {
   }
 
   [[nodiscard]] double ElapsedMicros() const { return TicksToMicroseconds(start_, end_); }
-
   [[nodiscard]] double ElapsedMillis() const { return ElapsedMicros() * 0.001; }
   [[nodiscard]] double ElapsedSeconds() const { return ElapsedMicros() * 0.000001; }
 
-  double QueryMillis() {
+  [[nodiscard]] double QueryMillis() {
     Stop();
     return ElapsedMillis();
-  }
-
-  double QuerySeconds() {
-    Stop();
-    return ElapsedSeconds();
   }
 
  private:
@@ -40,4 +34,4 @@ class Timer {
   uint64_t end_ = 0;
 };
 
-#endif  // ORBIT_CORE_TIMER_H_
+#endif  // ORBIT_GL_TIMER_H_

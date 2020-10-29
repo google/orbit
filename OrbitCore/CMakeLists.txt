@@ -20,7 +20,6 @@ target_sources(
          Path.h
          RingBuffer.h
          SamplingProfiler.h
-        Timer.h
          StringManager.h
          SymbolHelper.h
          Threading.h

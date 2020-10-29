@@ -55,6 +55,7 @@ target_sources(
          ThreadTrack.h
          TimeGraph.h
          TimeGraphLayout.h
+         Timer.h
          TimerChain.h
          TimerInfosIterator.h
          TimerTrack.h
