@@ -21,8 +21,13 @@ target_sources(OrbitCaptureGgpClientLib PRIVATE
         OrbitCaptureGgpClient.cpp)
 
 target_link_libraries(OrbitCaptureGgpClientLib PUBLIC 
-        OrbitCore
+        OrbitBase
         OrbitProtos)
+
+if(WIN32)
+  target_compile_definitions(OrbitCaptureGgpClientLib PUBLIC -D_WIN32_WINNT=0x0700)
+  target_compile_definitions(OrbitCaptureGgpClientLib PUBLIC -DNTDDI_VERSION=0x06030000)
+endif()
 
 project(OrbitCaptureGgpClient)
 add_executable(OrbitCaptureGgpClient main.cpp)
