@@ -841,10 +841,12 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
-void OrbitApp::LoadModuleOnRemote(ModuleData* module_data, const PresetModule* preset_module) {
+void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
+                                  std::vector<uint64_t> function_hashes_to_hook) {
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance (module \"%s\")...", module_data->file_path()));
-  thread_pool_->Schedule([this, module_data, preset_module,
+  thread_pool_->Schedule([this, module_data,
+                          function_hashes_to_hook = std::move(function_hashes_to_hook),
                           scoped_status = std::move(scoped_status)]() mutable {
     const auto result = process_manager_->FindDebugInfoFile(module_data->file_path());
 
@@ -861,55 +863,55 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data, const PresetModule* p
 
     LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-    main_thread_executor_->Schedule([this, module_data, preset_module, debug_file_path,
-                                     scoped_status = std::move(scoped_status)]() mutable {
-      const std::filesystem::path local_debug_file_path =
-          symbol_helper_.GenerateCachedFileName(module_data->file_path());
+    main_thread_executor_->Schedule(
+        [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
+         debug_file_path, scoped_status = std::move(scoped_status)]() mutable {
+          const std::filesystem::path local_debug_file_path =
+              symbol_helper_.GenerateCachedFileName(module_data->file_path());
 
-      {
-        scoped_status.UpdateMessage(
-            absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
-                            module_data->file_path(), debug_file_path));
-        SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
-        auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path.string());
-        if (!scp_result) {
-          SendErrorToUi("Error loading symbols",
-                        absl::StrFormat("Could not copy debug info file from the remote: %s",
-                                        scp_result.error().message()));
-          modules_currently_loading_.erase(module_data->file_path());
-          return;
-        }
-      }
+          {
+            scoped_status.UpdateMessage(
+                absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
+                                module_data->file_path(), debug_file_path));
+            SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
+            auto scp_result =
+                secure_copy_callback_(debug_file_path, local_debug_file_path.string());
+            if (!scp_result) {
+              SendErrorToUi("Error loading symbols",
+                            absl::StrFormat("Could not copy debug info file from the remote: %s",
+                                            scp_result.error().message()));
+              modules_currently_loading_.erase(module_data->file_path());
+              return;
+            }
+          }
 
-      LoadSymbols(local_debug_file_path, module_data, preset_module);
-    });
+          LoadSymbols(local_debug_file_path, module_data, std::move(function_hashes_to_hook));
+        });
   });
 }
 
-void OrbitApp::LoadModules(const std::vector<ModuleData*>& modules,
-                           const std::shared_ptr<PresetFile>& preset) {
+void OrbitApp::LoadModules(
+    const std::vector<ModuleData*>& modules,
+    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map) {
   for (const auto& module : modules) {
     if (modules_currently_loading_.contains(module->file_path())) {
       continue;
     }
     modules_currently_loading_.insert(module->file_path());
 
-    const PresetModule* preset_module = nullptr;
-    if (preset != nullptr) {
-      const auto it = preset->preset_info().path_to_module().find(module->file_path());
-      if (it != preset->preset_info().path_to_module().end()) {
-        preset_module = &(it->second);
-      }
+    std::vector<uint64_t> function_hashes_to_hook;
+    if (function_hashes_to_hook_map.contains(module->file_path())) {
+      function_hashes_to_hook = function_hashes_to_hook_map.at(module->file_path());
     }
 
     const auto& symbols_path = FindSymbolsLocally(module->file_path(), module->build_id());
     if (symbols_path) {
-      LoadSymbols(symbols_path.value(), module, preset_module);
+      LoadSymbols(symbols_path.value(), module, std::move(function_hashes_to_hook));
       continue;
     }
 
     if (!absl::GetFlag(FLAGS_local)) {
-      LoadModuleOnRemote(module, preset_module);
+      LoadModuleOnRemote(module, std::move(function_hashes_to_hook));
       continue;
     }
 
@@ -968,12 +970,12 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindSymbolsLocally(
 }
 
 void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                           const PresetModule* preset_module) {
+                           std::vector<uint64_t> function_hashes_to_hook) {
   auto scoped_status =
       CreateScopedStatus(absl::StrFormat(R"(Loading symbols for "%s" from file "%s"...)",
                                          module_data->file_path(), symbols_path.string()));
   thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, module_data,
-                          preset_module]() mutable {
+                          function_hashes_to_hook = std::move(function_hashes_to_hook)]() mutable {
     auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
     CHECK(symbols_result);
     module_data->AddSymbols(symbols_result.value());
@@ -984,35 +986,35 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
     scoped_status.UpdateMessage(message);
     LOG("%s", message);
 
-    main_thread_executor_->Schedule(
-        [this, scoped_status = std::move(scoped_status), module_data, preset_module] {
-          modules_currently_loading_.erase(module_data->file_path());
+    main_thread_executor_->Schedule([this, scoped_status = std::move(scoped_status), module_data,
+                                     function_hashes_to_hook = std::move(function_hashes_to_hook)] {
+      modules_currently_loading_.erase(module_data->file_path());
 
-          const ProcessData* selected_process = GetSelectedProcess();
-          if (selected_process != nullptr &&
-              selected_process->IsModuleLoaded(module_data->file_path())) {
-            functions_data_view_->AddFunctions(module_data->GetFunctions());
-            LOG("Added loaded function symbols for module \"%s\" to the functions tab",
-                module_data->file_path());
-          }
+      const ProcessData* selected_process = GetSelectedProcess();
+      if (selected_process != nullptr &&
+          selected_process->IsModuleLoaded(module_data->file_path())) {
+        functions_data_view_->AddFunctions(module_data->GetFunctions());
+        LOG("Added loaded function symbols for module \"%s\" to the functions tab",
+            module_data->file_path());
+      }
 
-          // Applying preset
-          if (preset_module != nullptr) {
-            const auto selection_result = SelectFunctionsFromPreset(module_data, *preset_module);
-            if (!selection_result) {
-              LOG("Warning, loading preset incomplete: %s", selection_result.error().message());
-            }
-            LOG("Applied preset to module \"%s\"", module_data->file_path());
-          }
+      if (!function_hashes_to_hook.empty()) {
+        const auto selection_result =
+            SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
+        if (!selection_result) {
+          LOG("Warning, automated hooked incomplete: %s", selection_result.error().message());
+        }
+        LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
+      }
 
-          UpdateAfterSymbolLoading();
-          GOrbitApp->FireRefreshCallbacks();
-        });
+      UpdateAfterSymbolLoading();
+      GOrbitApp->FireRefreshCallbacks();
+    });
   });
 }
 
-ErrorMessageOr<void> OrbitApp::SelectFunctionsFromPreset(const ModuleData* module,
-                                                         const PresetModule& preset_module) {
+ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
+    const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
   const ProcessData* process = GetSelectedProcess();
   if (process == nullptr) {
     return ErrorMessage(absl::StrFormat(
@@ -1026,7 +1028,7 @@ ErrorMessageOr<void> OrbitApp::SelectFunctionsFromPreset(const ModuleData* modul
   }
 
   size_t count_missing = 0;
-  for (const uint64_t function_hash : preset_module.function_hashes()) {
+  for (const uint64_t function_hash : function_hashes) {
     const FunctionInfo* function = module->FindFunctionFromHash(function_hash);
     if (function == nullptr) {
       count_missing++;
@@ -1052,7 +1054,9 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
       continue;
     }
     if (module_data->is_loaded()) {
-      const auto selecting_result = SelectFunctionsFromPreset(module_data, preset_module);
+      std::vector<uint64_t> function_hashes{preset_module.function_hashes().begin(),
+                                            preset_module.function_hashes().end()};
+      const auto selecting_result = SelectFunctionsFromHashes(module_data, function_hashes);
       if (!selecting_result) {
         LOG("Warning: %s", selecting_result.error().message());
       }
@@ -1073,7 +1077,14 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
     }
   }
   if (!modules_to_load.empty()) {
-    LoadModules(modules_to_load, preset_file);
+    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
+    for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
+      function_hashes_to_hook_map[module_path] = std::vector<uint64_t>{};
+      for (const uint64_t function_hash : preset_module.function_hashes()) {
+        function_hashes_to_hook_map.at(module_path).push_back(function_hash);
+      }
+    }
+    LoadModules(modules_to_load, std::move(function_hashes_to_hook_map));
   }
   FireRefreshCallbacks();
 }
@@ -1096,31 +1107,50 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         return;
       }
 
-      module_manager_->AddOrUpdateModules(module_infos);
-
-      // Updating a module can result in not having symbols(functions) anymore. In that
-      // case these functions should also be removed from the selected (hooked) functions
-      for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-        const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
-        if (!module->is_loaded()) {
-          data_manager_->DeselectFunction(func);
-        }
-      }
-
       ProcessData* process = data_manager_->GetMutableProcessByPid(pid);
       CHECK(process != nullptr);
       process->UpdateModuleInfos(module_infos);
-
-      modules_data_view_->UpdateModules(process);
-
-      // To this point all data is ready. We can set the Process and then
-      // propagate the changes to the UI.
 
       // If no process was selected before, or the process changed
       if (GetSelectedProcess() == nullptr || pid != GetSelectedProcess()->pid()) {
         data_manager_->ClearSelectedFunctions();
         data_manager_->set_selected_process(pid);
       }
+
+      // Updating the list of loaded modules (in memory) of a process, can mean that a process has
+      // now less loaded modules than before. If the user hooked (selected) functions of a module
+      // that is now not used anymore by the process, these functions need to be deselected (A)
+
+      // Updating a module can result in not having symbols(functions) anymore. In that case all
+      // functions from this module need to be deselected (B), because they are not valid
+      // anymore. These functions are saved (C), so the module can be loaded again and the functions
+      // are then selected (hooked) again (D).
+
+      // Update modules and get the ones to reload.
+      std::vector<ModuleData*> modules_to_reload =
+          module_manager_->AddOrUpdateModules(module_infos);
+
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
+      for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
+        const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+        // (A) deselect functions when the module is not loaded by the process anymore
+        if (!process->IsModuleLoaded(module->file_path())) {
+          data_manager_->DeselectFunction(func);
+        } else {
+          if (!module->is_loaded()) {
+            // (B) deselect when module does not have functions anymore (!is_loaded())
+            data_manager_->DeselectFunction(func);
+            // (C) Save function hashes, so they can be hooked again after reload
+            function_hashes_to_hook_map[module->file_path()].push_back(
+                FunctionUtils::GetHash(func));
+          }
+        }
+      }
+      // (D) Load Modules again (and pass on functions to hook after loading)
+      LoadModules(modules_to_reload, std::move(function_hashes_to_hook_map));
+
+      // Refresh UI
+      modules_data_view_->UpdateModules(process);
 
       functions_data_view_->ClearFunctions();
       for (const auto& [module_path, _] : GetSelectedProcess()->GetMemoryMap()) {

@@ -95,7 +95,9 @@ TEST(ModuleManager, AddOrUpdateModules) {
   module_info.set_load_bias(load_bias);
 
   ModuleManager module_manager;
-  module_manager.AddOrUpdateModules({module_info});
+  std::vector<ModuleData*> unloaded_modules = module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(unloaded_modules.empty());
+
   ModuleData* module = module_manager.GetMutableModuleByPath(file_path);
 
   ASSERT_NE(module, nullptr);
@@ -105,7 +107,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   std::string changed_name = "changed name";
   module_info.set_name(changed_name);
 
-  module_manager.AddOrUpdateModules({module_info});
+  unloaded_modules = module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(unloaded_modules.empty());
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->file_path(), file_path);
@@ -118,7 +121,9 @@ TEST(ModuleManager, AddOrUpdateModules) {
 
   // change build id, this updates the module and removes the symbols
   module_info.set_build_id("different build id");
-  module_manager.AddOrUpdateModules({module_info});
+  unloaded_modules = module_manager.AddOrUpdateModules({module_info});
+  EXPECT_FALSE(unloaded_modules.empty());
+  EXPECT_EQ(unloaded_modules.size(), 1);
 
   EXPECT_EQ(module->build_id(), module_info.build_id());
   EXPECT_FALSE(module->is_loaded());
@@ -129,7 +134,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   module_info.set_file_path(different_path);
   uint64_t different_file_size = 301;
   module_info.set_file_size(different_file_size);
-  module_manager.AddOrUpdateModules({module_info});
+  unloaded_modules = module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(unloaded_modules.empty());
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->file_path(), file_path);

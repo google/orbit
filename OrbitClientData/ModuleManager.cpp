@@ -15,9 +15,11 @@ using orbit_client_protos::FunctionInfo;
 
 namespace OrbitClientData {
 
-void ModuleManager::AddOrUpdateModules(
+std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
     const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
   absl::MutexLock lock(&mutex_);
+
+  std::vector<ModuleData*> unloaded_modules;
 
   for (const auto& module_info : module_infos) {
     auto module_it = module_map_.find(module_info.file_path());
@@ -25,9 +27,16 @@ void ModuleManager::AddOrUpdateModules(
       const bool success = module_map_.try_emplace(module_info.file_path(), module_info).second;
       CHECK(success);
     } else {
-      module_it->second.UpdateIfChanged(module_info);
+      ModuleData& module = module_it->second;
+      bool was_loaded = module.is_loaded();
+      module.UpdateIfChanged(module_info);
+      if (was_loaded && !module.is_loaded()) {
+        unloaded_modules.push_back(&module);
+      }
     }
   }
+
+  return unloaded_modules;
 }
 
 const ModuleData* ModuleManager::GetModuleByPath(const std::string& path) const {
