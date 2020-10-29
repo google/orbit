@@ -31,7 +31,7 @@ namespace capture_deserializer {
 
 void Load(const std::string& file_name, CaptureListener* capture_listener,
           ModuleManager* module_manager, std::atomic<bool>* cancellation_requested) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", file_name));
+  SCOPED_TIMED_LOG("Loading capture from \"%s\"", file_name);
 
   // Binary
   std::ifstream file(file_name, std::ios::binary);

@@ -7,7 +7,7 @@
 #include "CoreUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "ScopeTimer.h"
+#include "Timer.h"
 #include "client/settings.h"
 
 namespace {

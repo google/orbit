@@ -9,9 +9,9 @@
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "PickingManager.h"
-#include "ScopeTimer.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
+#include "Timer.h"
 
 class GlCanvas : public GlPanel {
  public:
