@@ -142,6 +142,7 @@ target_sources(OrbitGlTests PRIVATE
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
+               GlUtilsTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
                SliderTest.cpp

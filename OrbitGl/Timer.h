@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "GlUtils.h"
 #include "OrbitBase/Profiling.h"
 
 class Timer {

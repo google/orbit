@@ -5,8 +5,6 @@
 #ifndef ORBIT_BASE_PROFILING_H_
 #define ORBIT_BASE_PROFILING_H_
 
-#include "absl/time/time.h"
-
 #ifdef _WIN32
 #include <Windows.h>
 using pid_t = uint32_t;
@@ -23,16 +21,8 @@ using pid_t = uint32_t;
 #else
   timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-  return 1000000000ll * ts.tv_sec + ts.tv_nsec;
+  return 1000000000LL * ts.tv_sec + ts.tv_nsec;
 #endif
-}
-
-[[nodiscard]] inline absl::Duration TicksToDuration(uint64_t start, uint64_t end) {
-  return absl::Nanoseconds(end - start);
-}
-
-[[nodiscard]] inline double TicksToMicroseconds(uint64_t start, uint64_t end) {
-  return static_cast<double>((end - start)) * 0.001;
 }
 
 #ifdef __linux__
