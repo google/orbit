@@ -84,6 +84,29 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   } while (0 && (assertion))
 #endif
 
+// Declare the class inside the macro so that file:line are the ones where SCOPED_TIMED_LOG is used.
+#define SCOPED_TIMED_LOG(format, ...)                                                          \
+  class ScopedTimedLog##__LINE__ {                                                             \
+   public:                                                                                     \
+    explicit ScopedTimedLog##__LINE__(std::string&& message)                                   \
+        : message_{std::move(message)}, begin_{std::chrono::steady_clock::now()} {             \
+      LOG("%s started", message_);                                                             \
+    }                                                                                          \
+                                                                                               \
+    ~ScopedTimedLog##__LINE__() {                                                              \
+      auto end = std::chrono::steady_clock::now();                                             \
+      auto duration =                                                                          \
+          std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - begin_); \
+      LOG("%s took %.3f ms", message_, duration.count());                                      \
+    }                                                                                          \
+                                                                                               \
+   private:                                                                                    \
+    std::string message_;                                                                      \
+    std::chrono::time_point<std::chrono::steady_clock> begin_;                                 \
+  } scoped_timed_log_##__LINE__ {                                                              \
+    absl::StrFormat(format, ##__VA_ARGS__)                                                     \
+  }
+
 extern std::ofstream log_file;
 void InitLogFile(const std::string& path);
 void LogToFile(const std::string& message);
