@@ -34,7 +34,6 @@ class LiveFunctionsDataView : public DataView {
       const orbit_client_protos::FunctionInfo& function) const;
 
   std::vector<orbit_client_protos::FunctionInfo> functions_;
-  std::set<uint64_t> added_frame_tracks_;
 
   LiveFunctionsController* live_functions_;
 

@@ -214,45 +214,11 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
 }
 
 void LiveFunctionsController::AddFrameTrack(const FunctionInfo& function) {
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(function);
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
-
-  std::vector<uint64_t> all_start_times;
-
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      for (uint64_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
-        if (box.GetTimerInfo().function_address() == function_address) {
-          all_start_times.push_back(box.GetTimerInfo().start());
-        }
-      }
-    }
-  }
-  std::sort(all_start_times.begin(), all_start_times.end());
-
-  for (size_t k = 0; k < all_start_times.size() - 1; ++k) {
-    TimerInfo frame_timer;
-
-    // TID is meaningless for this timer (start and end can be on two different threads).
-    constexpr const int32_t kUnusedThreadId = -1;
-    frame_timer.set_thread_id(kUnusedThreadId);
-    frame_timer.set_start(all_start_times[k]);
-    frame_timer.set_end(all_start_times[k + 1]);
-    // We use user_data_key to keep track of the frame number.
-    frame_timer.set_user_data_key(k);
-    frame_timer.set_type(TimerInfo::kFrame);
-
-    GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
-  }
+  GOrbitApp->AddFrameTrack(function);
 }
 
 void LiveFunctionsController::RemoveFrameTrack(const FunctionInfo& function) {
-  GCurrentTimeGraph->RemoveFrameTrack(function);
+  GOrbitApp->RemoveFrameTrack(function);
 }
 
 uint64_t LiveFunctionsController::GetStartTime(uint64_t index) {

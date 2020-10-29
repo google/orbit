@@ -158,7 +158,6 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : selected_indices) {
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
-    const uint64_t absolute_address = capture_data.GetAbsoluteAddress(selected_function);
 
     if (GOrbitApp->IsCaptureConnected(capture_data)) {
       enable_select |= !GOrbitApp->IsFunctionSelected(selected_function);
@@ -171,8 +170,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     enable_iterator |= stats.count() > 0;
     // We need at least two function calls to a function so that it's possible to use it
     // as a frame marker.
-    enable_frame_track |= stats.count() > 1 && added_frame_tracks_.count(absolute_address) == 0;
-    enable_remove_frame_track |= added_frame_tracks_.count(absolute_address) > 0;
+    enable_frame_track |= stats.count() > 1 && !GOrbitApp->HasFrameTrack(selected_function);
+    enable_remove_frame_track |= GOrbitApp->HasFrameTrack(selected_function);
   }
 
   std::vector<std::string> menu;
@@ -263,18 +262,14 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
       const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(*function);
-      uint64_t function_address = capture_data.GetAbsoluteAddress(*function);
-      if (stats.count() > 1 && added_frame_tracks_.count(function_address) == 0) {
+      if (stats.count() > 1 && !GOrbitApp->HasFrameTrack(*function)) {
         live_functions_->AddFrameTrack(*function);
-        added_frame_tracks_.insert(function_address);
       }
     }
   } else if (action == kMenuActionRemoveFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      uint64_t function_address = capture_data.GetAbsoluteAddress(*function);
-      if (added_frame_tracks_.count(function_address) > 0) {
-        added_frame_tracks_.erase(function_address);
+      if (GOrbitApp->HasFrameTrack(*function)) {
         live_functions_->RemoveFrameTrack(*function);
       }
     }
@@ -320,7 +315,6 @@ void LiveFunctionsDataView::DoFilter() {
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
-  added_frame_tracks_.clear();
   const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
       GOrbitApp->GetCaptureData().selected_functions();
   size_t functions_count = selected_functions.size();

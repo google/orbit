@@ -1387,3 +1387,70 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 [[nodiscard]] bool OrbitApp::IsTracepointSelected(const TracepointInfo& info) const {
   return data_manager_->IsTracepointSelected(info);
 }
+
+void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
+  const CaptureData& capture_data = GetCaptureData();
+  const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
+
+  if (frame_track_functions_.contains(function_address)) {
+    ERROR("Trying to add duplicate frame track for function: %s",
+          FunctionUtils::GetDisplayName(function));
+    DCHECK(false);
+    return;
+  }
+
+  std::vector<std::shared_ptr<TimerChain>> chains =
+      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+
+  std::vector<uint64_t> all_start_times;
+
+  for (const auto& chain : chains) {
+    if (!chain) continue;
+    for (const TimerBlock& block : *chain) {
+      for (uint64_t i = 0; i < block.size(); ++i) {
+        const TextBox& box = block[i];
+        if (box.GetTimerInfo().function_address() == function_address) {
+          all_start_times.push_back(box.GetTimerInfo().start());
+        }
+      }
+    }
+  }
+  std::sort(all_start_times.begin(), all_start_times.end());
+
+  for (size_t k = 0; k < all_start_times.size() - 1; ++k) {
+    TimerInfo frame_timer;
+
+    // TID is meaningless for this timer (start and end can be on two different threads).
+    constexpr const int32_t kUnusedThreadId = -1;
+    frame_timer.set_thread_id(kUnusedThreadId);
+    frame_timer.set_start(all_start_times[k]);
+    frame_timer.set_end(all_start_times[k + 1]);
+    // We use user_data_key to keep track of the frame number.
+    frame_timer.set_user_data_key(k);
+    frame_timer.set_type(TimerInfo::kFrame);
+
+    GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
+  }
+  frame_track_functions_.insert(std::make_pair(function_address, function));
+}
+
+void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
+  const CaptureData& capture_data = GetCaptureData();
+  auto function_address = capture_data.GetAbsoluteAddress(function);
+
+  if (!frame_track_functions_.contains(function_address)) {
+    ERROR("Trying to remove non-existent frame track for function: %s",
+          FunctionUtils::GetDisplayName(function));
+    DCHECK(false);
+    return;
+  }
+
+  frame_track_functions_.erase(function_address);
+  GCurrentTimeGraph->RemoveFrameTrack(function);
+}
+
+bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
+  const CaptureData& capture_data = GetCaptureData();
+  auto function_address = capture_data.GetAbsoluteAddress(function);
+  return frame_track_functions_.contains(function_address);
+}
