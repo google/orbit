@@ -305,6 +305,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
 
+  void AddFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
+
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
@@ -391,6 +395,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
   CaptureData capture_data_;
+  // Keep track of the functions that we show frame tracks for. This is needed for
+  // serialization.
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> frame_track_functions_;
 };
 
 extern std::unique_ptr<OrbitApp> GOrbitApp;

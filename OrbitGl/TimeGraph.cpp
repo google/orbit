@@ -418,12 +418,22 @@ uint32_t TimeGraph::GetNumTimers() const {
   for (const auto& track : tracks_) {
     num_timers += track->GetNumTimers();
   }
+  // Frame tracks are removable by users and cannot simply be thrown into the
+  // tracks_ vector.
+  for (const auto& [unused_key, track] : frame_tracks_) {
+    num_timers += track->GetNumTimers();
+  }
   return num_timers;
 }
 
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : tracks_) {
+    Append(chains, track->GetAllChains());
+  }
+  // Frame tracks are removable by users and cannot simply be thrown into the
+  // tracks_ vector.
+  for (const auto& [unused_key, track] : frame_tracks_) {
     Append(chains, track->GetAllChains());
   }
   return chains;
@@ -874,7 +884,9 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
     track = std::make_shared<FrameTrack>(this, function);
-    AddTrack(track);
+    // Normally we would call AddTrack(track) here, but frame tracks are removable by users
+    // and therefore cannot be simply thrown into the flat vector of tracks.
+    sorting_invalidated_ = true;
     frame_tracks_[function.address()] = track;
   }
   return track;
@@ -1238,5 +1250,6 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 
 void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) {
   frame_tracks_.erase(function.address());
+  sorting_invalidated_ = true;
   NeedsUpdate();
 }
