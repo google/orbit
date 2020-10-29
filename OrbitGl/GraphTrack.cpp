@@ -40,6 +40,7 @@ void GraphTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     double last_normalized_value = (it->second - min_) * inv_value_range_;
     constexpr float kDotRadius = 2.f;
     float base_y = pos_[1] - size_[1];
+    float y1 = 0;
     DrawSquareDot(batcher,
                   Vec2(time_graph_->GetWorldFromTick(previous_time),
                        base_y + static_cast<float>(last_normalized_value) * size_[1]),
@@ -52,13 +53,19 @@ void GraphTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       float x0 = time_graph_->GetWorldFromTick(previous_time);
       float x1 = time_graph_->GetWorldFromTick(time);
       float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
-      float y1 = base_y + static_cast<float>(normalized_value) * size_[1];
+      y1 = base_y + static_cast<float>(normalized_value) * size_[1];
       batcher->AddLine(Vec2(x0, y0), Vec2(x1, y0), graph_z, kLineColor);
       batcher->AddLine(Vec2(x1, y0), Vec2(x1, y1), graph_z, kLineColor);
-      DrawSquareDot(batcher, Vec2(x1, y0), kDotRadius, dot_z, kDotColor);
+      DrawSquareDot(batcher, Vec2(x1, y1), kDotRadius, dot_z, kDotColor);
 
       previous_time = time;
       last_normalized_value = normalized_value;
+    }
+
+    if (!values_.empty()) {
+      float x0 = time_graph_->GetWorldFromTick(previous_time);
+      float x1 = time_graph_->GetWorldFromTick(max_tick);
+      batcher->AddLine(Vec2(x0, y1), Vec2(x1, y1), graph_z, kLineColor);
     }
   }
 }
@@ -72,19 +79,18 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   // Draw label
   uint64_t current_mouse_time_ns = time_graph_->GetCurrentMouseTimeNs();
   auto previous_point = GetPreviousValueAndTime(current_mouse_time_ns);
-  if (previous_point.has_value()) {
-    double value = previous_point.value().second;
-    uint64_t last_time = values_.rbegin()->first;
-    uint64_t first_time = values_.begin()->first;
-    uint64_t label_time = std::clamp(current_mouse_time_ns, first_time, last_time);
-    float point_x = time_graph_->GetWorldFromTick(label_time);
-    double normalized_value = (value - min_) * inv_value_range_;
-    float point_y = pos_[1] - size_[1] * (1.f - static_cast<float>(normalized_value));
-    const Color kBlack(0, 0, 0, 255);
-    const Color kWhite(255, 255, 255, 255);
-    float text_z = GlCanvas::kZValueEvent + z_offset;
-    DrawLabel(canvas, Vec2(point_x, point_y), std::to_string(value), kBlack, kWhite, text_z);
-  }
+
+  double value =
+      previous_point.has_value() ? previous_point.value().second : values_.begin()->second;
+  uint64_t first_time = values_.begin()->first;
+  uint64_t label_time = std::max(current_mouse_time_ns, first_time);
+  float point_x = time_graph_->GetWorldFromTick(label_time);
+  double normalized_value = (value - min_) * inv_value_range_;
+  float point_y = pos_[1] - size_[1] * (1.f - static_cast<float>(normalized_value));
+  const Color kBlack(0, 0, 0, 255);
+  const Color kWhite(255, 255, 255, 255);
+  float text_z = GlCanvas::kZValueEvent + z_offset;
+  DrawLabel(canvas, Vec2(point_x, point_y), std::to_string(value), kBlack, kWhite, text_z);
 }
 
 void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, Color color) {
