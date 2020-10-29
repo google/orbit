@@ -11,7 +11,7 @@
 
 #include "CaptureData.h"
 #include "OrbitBase/Result.h"
-#include "ScopeTimer.h"
+#include "Timer.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
@@ -74,7 +74,7 @@ ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& captur
   }
 
   {
-    SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
+    SCOPED_TIMED_LOG("Saving capture in \"%s\"", filename);
     internal::Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
                    std::move(timers_iterator_end));
   }

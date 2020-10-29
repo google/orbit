@@ -42,9 +42,9 @@
 #include "ProcessesDataView.h"
 #include "SamplingProfiler.h"
 #include "SamplingReport.h"
-#include "ScopeTimer.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "Timer.h"
 #include "TimerInfosIterator.h"
 #include "capture_data.pb.h"
 #include "preset.pb.h"
@@ -870,7 +870,7 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data, const PresetModule* p
         scoped_status.UpdateMessage(
             absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
                             module_data->file_path(), debug_file_path));
-        SCOPE_TIMER_LOG(absl::StrFormat("Copying %s", debug_file_path));
+        SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
         auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path.string());
         if (!scp_result) {
           SendErrorToUi("Error loading symbols",

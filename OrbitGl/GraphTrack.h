@@ -8,7 +8,7 @@
 #include <limits>
 #include <optional>
 
-#include "ScopeTimer.h"
+#include "Timer.h"
 #include "Track.h"
 
 class TimeGraph;

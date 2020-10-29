@@ -20,7 +20,7 @@ target_sources(
          Path.h
          RingBuffer.h
          SamplingProfiler.h
-         ScopeTimer.h
+        Timer.h
          StringManager.h
          SymbolHelper.h
          Threading.h
@@ -35,7 +35,6 @@ target_sources(
           CoreUtils.cpp
           Path.cpp
           SamplingProfiler.cpp
-          ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
           TracepointEventBuffer.cpp
