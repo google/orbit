@@ -15,7 +15,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "Path.h"
-#include "Timer.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 
