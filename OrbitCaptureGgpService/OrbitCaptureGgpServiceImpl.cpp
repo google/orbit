@@ -45,8 +45,8 @@ void CaptureClientGgpServiceImpl::InitClientGgp() {
   client_ggp_options.capture_file_name = absl::GetFlag(FLAGS_file_name);
   client_ggp_options.capture_file_directory = absl::GetFlag(FLAGS_file_directory);
 
-  client_ggp_ = ClientGgp(std::move(client_ggp_options));
-  if (!client_ggp_.InitClient()) {
+  client_ggp_ = std::unique_ptr<ClientGgp>(new ClientGgp(std::move(client_ggp_options)));
+  if (!client_ggp_->InitClient()) {
     ERROR("Not possible to initialise client");
     return;
   }
@@ -60,7 +60,7 @@ Status CaptureClientGgpServiceImpl::StartCapture(ServerContext*, const StartCapt
   if (CaptureIsRunning()) {
     return Status(StatusCode::INTERNAL, "A capture is already running");
   }
-  if (!client_ggp_.RequestStartCapture(thread_pool_.get())) {
+  if (!client_ggp_->RequestStartCapture(thread_pool_.get())) {
     return Status(StatusCode::INTERNAL, "Not possible to start the capture");
   }
   return Status::OK;
@@ -70,7 +70,7 @@ Status CaptureClientGgpServiceImpl::StopAndSaveCapture(grpc::ServerContext*,
                                                        const StopAndSaveCaptureRequest*,
                                                        StopAndSaveCaptureResponse*) {
   LOG("Stop capture grpc call received");
-  if (!client_ggp_.StopCapture()) {
+  if (!client_ggp_->StopCapture()) {
     return Status(StatusCode::INTERNAL, "Not possible to stop the capture");
   }
   // idle until all the capture data is received
@@ -82,7 +82,7 @@ Status CaptureClientGgpServiceImpl::StopAndSaveCapture(grpc::ServerContext*,
 
 void CaptureClientGgpServiceImpl::SaveCapture() {
   LOG("Save capture");
-  if (!client_ggp_.SaveCapture()) {
+  if (!client_ggp_->SaveCapture()) {
     ERROR("Not able to save capture");
   }
 }
@@ -96,7 +96,7 @@ Status CaptureClientGgpServiceImpl::UpdateSelectedFunctions(
     capture_functions.push_back(function);
   }
 
-  client_ggp_.UpdateCaptureFunctions(capture_functions);
+  client_ggp_->UpdateCaptureFunctions(capture_functions);
   return Status::OK;
 }
 
@@ -110,7 +110,7 @@ Status CaptureClientGgpServiceImpl::ShutdownService(grpc::ServerContext*,
 
 void CaptureClientGgpServiceImpl::Shutdown() {
   if (CaptureIsRunning()) {
-    if (!client_ggp_.StopCapture()) {
+    if (!client_ggp_->StopCapture()) {
       LOG("Not possible to stop the capture");
     }
   }

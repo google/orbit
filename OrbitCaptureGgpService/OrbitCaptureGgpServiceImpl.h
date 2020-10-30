@@ -34,7 +34,7 @@ class CaptureClientGgpServiceImpl final
   bool ShutdownRequested();
 
  private:
-  ClientGgp client_ggp_;
+  std::unique_ptr<ClientGgp> client_ggp_;
   std::unique_ptr<ThreadPool> thread_pool_;
   bool shutdown_ = false;
 
