@@ -81,8 +81,17 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     setWindowTitle({});
   });
 
+  constexpr const char* kFinalizingCaptureMessage =
+      "<div align=\"left\">"
+      "Please wait while the capture is being finalized..."
+      "<ul>"
+      "<li>Waiting for the remaining capture data</li>"
+      "<li>Processing callstacks</li>"
+      "<li>Cleaning up dynamic instrumentation</li>"
+      "</ul>"
+      "</div>";
   auto finalizing_capture_dialog =
-      new QProgressDialog("Waiting for the remaining capture data...", "OK", 0, 0, this, Qt::Tool);
+      new QProgressDialog(kFinalizingCaptureMessage, "OK", 0, 0, this, Qt::Tool);
   finalizing_capture_dialog->setWindowTitle("Finalizing capture");
   finalizing_capture_dialog->setModal(true);
   finalizing_capture_dialog->setWindowFlags(
