@@ -5,32 +5,28 @@
 #ifndef ORBIT_GL_TIMER_H_
 #define ORBIT_GL_TIMER_H_
 
-#include <string>
-
-#include "GlUtils.h"
 #include "OrbitBase/Profiling.h"
 
 class Timer {
  public:
-  void Start() { start_ = MonotonicTimestampNs(); }
+  explicit Timer() { Start(); }
 
-  void Stop() { end_ = MonotonicTimestampNs(); }
-
+  void Start() { start_ = Now(); }
+  void Stop() { end_ = Now(); }
   void Reset() {
-    Stop();
-    Start();
+    start_ = Now();
+    end_ = 0;
   }
 
-  [[nodiscard]] double ElapsedMicros() const { return TicksToMicroseconds(start_, end_); }
-  [[nodiscard]] double ElapsedMillis() const { return ElapsedMicros() * 0.001; }
-  [[nodiscard]] double ElapsedSeconds() const { return ElapsedMicros() * 0.000001; }
-
-  [[nodiscard]] double QueryMillis() {
-    Stop();
-    return ElapsedMillis();
-  }
+  [[nodiscard]] double ElapsedNanos() const { return static_cast<double>(End() - start_); }
+  [[nodiscard]] double ElapsedMicros() const { return ElapsedNanos() * 0.001; }
+  [[nodiscard]] double ElapsedMillis() const { return ElapsedNanos() * 0.000001; }
+  [[nodiscard]] double ElapsedSeconds() const { return ElapsedNanos() * 0.000000001; }
 
  private:
+  [[nodiscard]] uint64_t End() const { return end_ == 0 ? Now() : end_; }
+  [[nodiscard]] uint64_t Now() const { return MonotonicTimestampNs(); }
+
   uint64_t start_ = 0;
   uint64_t end_ = 0;
 };

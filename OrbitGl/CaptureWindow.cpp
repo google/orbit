@@ -228,7 +228,7 @@ void CaptureWindow::Hover(int x, int y) {
 
 void CaptureWindow::PreRender() {
   // TODO: Move to GlCanvas?
-  if (is_mouse_over_ && can_hover_ && hover_timer_.QueryMillis() > hover_delay_ms_) {
+  if (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_) {
     is_hovering_ = true;
     picking_ = true;
     NeedsRedraw();

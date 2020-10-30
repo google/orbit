@@ -949,7 +949,7 @@ void TimeGraph::SortTracks() {
   }
 
   // Reorder threads once every second when capturing
-  if (!GOrbitApp->IsCapturing() || last_thread_reorder_.QueryMillis() > 1000.0) {
+  if (!GOrbitApp->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
     std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
 
     ScopeLock lock(mutex_);

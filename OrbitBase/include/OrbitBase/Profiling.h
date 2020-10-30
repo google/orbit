@@ -9,7 +9,9 @@
 #include <Windows.h>
 using pid_t = uint32_t;
 #else
+#include <stdint.h>
 #include <sys/syscall.h>
+#include <time.h>
 #include <unistd.h>
 #endif
 

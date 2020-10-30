@@ -241,9 +241,8 @@ void GlCanvas::UpdateWheelMomentum(float delta_time) {
 }
 
 void GlCanvas::OnTimer() {
-  update_timer_.Stop();
   delta_time_ = static_cast<float>(update_timer_.ElapsedSeconds());
-  update_timer_.Start();
+  update_timer_.Reset();
   UpdateWheelMomentum(delta_time_);
 }
 
@@ -327,9 +326,6 @@ void GlCanvas::Render(int width, int height) {
 
   ScopeImguiContext state(im_gui_context_);
 
-  Timer timer;
-  timer.Start();
-
   PrepareGlState();
   Prepare2DViewport(0, 0, GetWidth(), GetHeight());
 
@@ -362,8 +358,6 @@ void GlCanvas::Render(int width, int height) {
 
   glFlush();
   CleanupGlState();
-
-  timer.Stop();
 
   im_gui_active_ = ImGui::IsAnyItemActive();
 
