@@ -44,36 +44,41 @@ int main(int argc, char** argv) {
   // Waits for input to run the grpc call requested by the user
 
   ErrorMessageOr<void> result = ErrorMessage();
+  constexpr const int kStartCaptureCommand = 1;
+  constexpr const int kStopAndSaveCaptureCommand = 2;
+  constexpr const int kUpdateSelectedFunctionsCommand = 3;
+  constexpr const int kShutdownServiceCommand = 4;
   bool exit = false;
   while (!exit) {
     int i;
     std::cout << "\n";
     std::cout << "List of available commands:\n";
     std::cout << "------------------------------\n";
-    std::cout << "1 Start capture\n";
-    std::cout << "2 Stop and save capture\n";
-    std::cout << "3 Hook functions\n";
-    std::cout << "4 Shutdown service and exit\n";
+    std::cout << kStartCaptureCommand << " Start capture\n";
+    std::cout << kStopAndSaveCaptureCommand << " Stop and save capture\n";
+    std::cout << kUpdateSelectedFunctionsCommand << " Hook functions\n";
+    std::cout << kShutdownServiceCommand << " Shutdown service and exit\n";
     std::cout << "\n";
-    std::cout << "Introduce your choice (1-4): ";
+    std::cout << "Introduce your choice (" << kStartCaptureCommand << "-" << kShutdownServiceCommand
+              << "): ";
 
     std::cin >> i;
     switch (i) {
-      case 1:
+      case kStartCaptureCommand:
         LOG("Chosen %d: Start capture", i);
         result = ggp_capture_client.StartCapture();
         if (result.has_error()) {
           ERROR("Not possible to start capture: %s", result.error().message());
         }
         break;
-      case 2:
+      case kStopAndSaveCaptureCommand:
         LOG("Chosen %d: Stop and save capture", i);
         result = ggp_capture_client.StopAndSaveCapture();
         if (result.has_error()) {
           ERROR("Not possible to stop or save capture: %s", result.error().message());
         }
         break;
-      case 3: {
+      case kUpdateSelectedFunctionsCommand: {
         std::vector<std::string> selected_functions;
         std::string function;
         std::cout << "Introduce function to hook (Enter ! when you are done): ";
@@ -89,7 +94,7 @@ int main(int argc, char** argv) {
         }
         break;
       }
-      case 4:
+      case kShutdownServiceCommand:
         LOG("Chosen %d: Shutdown service and exit", i);
         exit = true;
         break;
