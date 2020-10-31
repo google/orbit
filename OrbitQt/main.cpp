@@ -49,6 +49,8 @@ ABSL_FLAG(bool, enable_stale_features, false,
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
+ABSL_FLAG(bool, nodeploy, false, "Disable automatic deployment of OrbitService");
+
 ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
@@ -225,6 +227,8 @@ static void StyleOrbit(QApplication& app) {
 static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
   if (absl::GetFlag(FLAGS_local)) {
     return std::nullopt;
+  } else if (absl::GetFlag(FLAGS_nodeploy)) {
+    return OrbitQt::NoDeployment{};
   }
 
   auto env = QProcessEnvironment::systemEnvironment();
