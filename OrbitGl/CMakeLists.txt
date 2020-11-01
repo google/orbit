@@ -29,7 +29,6 @@ target_sources(
          FunctionsDataView.h
          Geometry.h
          GlCanvas.h
-         GlPanel.h
          GlSlider.h
          GlUtils.h
          GpuTrack.h
@@ -82,7 +81,6 @@ target_sources(
           LiveFunctionsController.cpp
           FunctionsDataView.cpp
           GlCanvas.cpp
-          GlPanel.cpp
           GlSlider.cpp
           GlUtils.cpp
           GpuTrack.cpp

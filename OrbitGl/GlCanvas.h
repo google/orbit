@@ -5,7 +5,6 @@
 #ifndef ORBIT_GL_GL_CANVAS_H_
 #define ORBIT_GL_GL_CANVAS_H_
 
-#include "GlPanel.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "PickingManager.h"
@@ -13,21 +12,27 @@
 #include "TimeGraph.h"
 #include "Timer.h"
 
-class GlCanvas : public GlPanel {
+class GlCanvas {
  public:
   explicit GlCanvas(uint32_t font_size);
-  ~GlCanvas() override;
+  virtual ~GlCanvas();
 
   enum class CanvasType { kCaptureWindow, kDebug };
   static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size);
 
-  void Initialize() override;
-  void Resize(int width, int height) override;
-  void Render(int width, int height) override;
+  virtual void Initialize();
+  virtual void Resize(int width, int height);
+  virtual void Render(int width, int height);
+  virtual void PreRender(){};
   virtual void PostRender() {}
 
   virtual int GetWidth() const;
   virtual int GetHeight() const;
+
+  virtual void SetMainWindowSize(int width, int height) {
+    m_MainWindowWidth = width;
+    m_MainWindowHeight = height;
+  }
 
   void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
   void PrepareScreenSpaceViewport();
@@ -38,18 +43,26 @@ class GlCanvas : public GlPanel {
   float ScreenToWorldWidth(int width) const;
 
   // events
-  void MouseMoved(int x, int y, bool left, bool right, bool middle) override;
-  void LeftDown(int x, int y) override;
-  void MouseWheelMoved(int x, int y, int delta, bool ctrl) override;
-  void LeftUp() override;
-  void LeftDoubleClick() override;
-  void RightDown(int x, int y) override;
-  bool RightUp() override;
-  void CharEvent(unsigned int character) override;
-  void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
-  void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
+  virtual void MouseMoved(int x, int y, bool left, bool right, bool middle);
+  virtual void LeftDown(int x, int y);
+  virtual void LeftUp();
+  virtual void LeftDoubleClick();
+  virtual void MouseWheelMoved(int x, int y, int delta, bool ctrl);
+  virtual void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) {
+    MouseWheelMoved(x, y, delta, ctrl);
+  }
+  virtual void RightDown(int x, int y);
+  virtual bool RightUp();
+  virtual void MiddleDown(int /*x*/, int /*y*/) {}
+  virtual void MiddleUp(int /*x*/, int /*y*/) {}
+  virtual void CharEvent(unsigned int character);
+  virtual void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt);
+  virtual void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt);
   virtual void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   virtual bool ControlPressed();
+
+  virtual std::vector<std::string> GetContextMenu() { return std::vector<std::string>(); }
+  virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
 
   float GetWorldWidth() const { return world_width_; }
   float GetWorldHeight() const { return world_height_; }
@@ -85,6 +98,12 @@ class GlCanvas : public GlPanel {
 
   ImGuiContext* GetImGuiContext() { return imgui_context_; }
   Batcher* GetBatcher() { return &ui_batcher_; }
+
+  virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
+  void NeedsRedraw() { m_NeedsRedraw = true; }
+
+  bool GetIsMouseOver() const { return is_mouse_over_; }
+  void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
   PickingManager& GetPickingManager() { return picking_manager_; }
 
@@ -156,6 +175,10 @@ class GlCanvas : public GlPanel {
   bool picking_;
   bool double_clicking_;
   bool control_key_;
+  bool is_mouse_over_ = false;
+  bool m_NeedsRedraw;
+  int m_MainWindowWidth = 0;
+  int m_MainWindowHeight = 0;
 
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
