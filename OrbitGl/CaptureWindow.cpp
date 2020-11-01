@@ -655,17 +655,6 @@ void CaptureWindow::RenderImGui() {
   if (GetPickingMode() != PickingMode::kNone) {
     return;
   }
-
-  if (draw_help_) {
-    RenderHelpUi();
-
-    if (first_help_draw_) {
-      // Redraw so that Imgui resizes the
-      // window properly on first draw
-      NeedsRedraw();
-      first_help_draw_ = false;
-    }
-  }
 }
 
 void CaptureWindow::RenderImGui() {
@@ -713,31 +702,21 @@ void ColorToFloat(Color color, float* output) {
 
 void CaptureWindow::RenderHelpUi() {
   constexpr float kYOffset = 8.f;
-  ImGui::SetNextWindowPos(ImVec2(0, kYOffset));
+  float world_x = 0;
+  float world_y = 0;
+  ScreenToWorld(0, kYOffset, world_x, world_y);
 
-  ImVec4 color(1.f, 0, 0, 1.f);
-  ColorToFloat(slider_->GetBarColor(), &color.x);
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
+  const char* help_message =
+      "Start/Stop Capture: 'X'\n"
+      "Pan: 'A','D' or \"Left Click + Drag\"\n"
+      "Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"\n"
+      "Vertical Zoom: \"Ctrl + Scroll\"\n"
+      "Select: Left Click\n"
+      "Measure: \"Right Click + Drag\"\n"
+      "Toggle Help: 'H'\n";
 
-  if (!ImGui::Begin("Help Overlay", &draw_help_, ImVec2(0, 0), 1.f,
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
-    ImGui::PopStyleColor();
-    ImGui::End();
-    return;
-  }
-
-  ImGui::Text("Start/Stop Capture: 'X'");
-  ImGui::Text("Pan: 'A','D' or \"Left Click + Drag\"");
-  ImGui::Text("Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"");
-  ImGui::Text("Vertical Zoom: \"Ctrl + Scroll\"");
-  ImGui::Text("Select: Left Click");
-  ImGui::Text("Measure: \"Right Click + Drag\"");
-  ImGui::Text("Toggle Help: 'H'");
-
-  ImGui::End();
-
-  ImGui::PopStyleColor();
+  text_renderer_.AddText(help_message, world_x, world_y, GlCanvas::kZValueTextUi,
+                         Color(255, 255, 255, 255), font_size_);
 }
 
 inline double GetIncrementMs(double milli_seconds) {

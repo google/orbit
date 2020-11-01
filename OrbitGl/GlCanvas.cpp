@@ -353,10 +353,6 @@ void GlCanvas::Render(int width, int height) {
 
 void GlCanvas::RenderUI() {
   RenderImGui();
-
-  // Rendering
-  glViewport(0, 0, GetWidth(), GetHeight());
-  ImGui::Render();
   NeedsRedraw();
 }
 
@@ -364,6 +360,7 @@ void GlCanvas::RenderImGui() {
   ScopeImguiContext state(imgui_context_);
   Orbit_ImGui_NewFrame(this);
 
+  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(ImColor(25, 25, 25)));
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoTitleBar |
                                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                   ImGuiWindowFlags_NoCollapse;
@@ -376,6 +373,11 @@ void GlCanvas::RenderImGui() {
     ImGui::EndTabBar();
   }
   ImGui::End();
+  ImGui::PopStyleColor();
+
+  // Rendering
+  glViewport(0, 0, GetWidth(), GetHeight());
+  ImGui::Render();
 }
 
 void GlCanvas::Resize(int width, int height) {
