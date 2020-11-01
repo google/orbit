@@ -26,6 +26,7 @@
 #include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
+#include "ImGuiOrbit.h"
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
@@ -247,6 +248,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
+  void RenderImGui();
 
   void LoadModules(
       const std::vector<ModuleData*>& modules,
@@ -265,6 +267,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
+  [[nodiscard]] ImGuiContext* GetOrCreateDebugImGuiContext();
 
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
@@ -367,6 +370,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
+  ImGuiContext* debug_imgui_context_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;

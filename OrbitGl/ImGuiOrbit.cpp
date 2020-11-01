@@ -20,6 +20,8 @@
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 #include "absl/base/casts.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/strip.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -728,14 +730,51 @@ void OutputWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
 
   ImGui::TextUnformatted(Buf.begin());
 
-  static bool checked = true;
-  ImGui::Checkbox("blah", &checked);
-
-  static int i1 = 0;
-  if (ImGui::SliderInt("slider int", &i1, 10, 100)) {
-    GCurrentTimeGraph->SetFontSize(i1);
-  }
-
   ImGui::End();
   ImGui::PopStyleVar();
 }
+
+namespace ImGuiOrbit {
+std::string PrettyVariableName(const char* name) {
+  size_t length = strlen(name);
+
+  // remove "m_"
+  if (length > 2) {
+    if (name[0] == 'm' && name[1] == '_') {
+      name += 2;
+    }
+  }
+
+  std::string result;
+  bool previous_char_is_blank = false;
+  bool previous_char_is_lower = false;
+  while (*name != '\0') {
+    char c = *name;
+
+    // Replace underscore by space.
+    if (c == '_') {
+      c = ' ';
+    }
+
+    // Insert space between lower and upper case letters.
+    bool is_upper = absl::ascii_isupper(c);
+    bool needs_upper = previous_char_is_blank;
+    if (is_upper && previous_char_is_lower) {
+      result += ' ';
+      needs_upper = true;
+    }
+
+    // Append character to result, uppercased if needed.
+    result += needs_upper ? absl::ascii_toupper(c) : c;
+    previous_char_is_lower = !is_upper;
+    previous_char_is_blank = (c == ' ');
+    ++name;
+  }
+
+  if (!result.empty()) {
+    result[0] = absl::ascii_toupper(result[0]);
+  }
+
+  return result;
+}
+}  // namespace ImGuiOrbit

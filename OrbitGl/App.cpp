@@ -114,6 +114,10 @@ OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi_tk::stop_scheduler();
 #endif
+
+  if (debug_imgui_context_ != nullptr) {
+    ImGui::DestroyContext(debug_imgui_context_);
+  }
 }
 
 void OrbitApp::OnCaptureStarted(ProcessData&& process,
@@ -410,6 +414,11 @@ void OrbitApp::RefreshCaptureView() {
   NeedsRedraw();
   GOrbitApp->FireRefreshCallbacks();
   DoZoom = true;  // TODO: remove global, review logic
+}
+
+void OrbitApp::RenderImGui() {
+  CHECK(capture_window_);
+  capture_window_->RenderImGui();
 }
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
@@ -1369,6 +1378,13 @@ DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
+}
+
+[[nodiscard]] ImGuiContext* OrbitApp::GetOrCreateDebugImGuiContext() {
+  if (debug_imgui_context_ == nullptr) {
+    debug_imgui_context_ = ImGui::CreateContext();
+  }
+  return debug_imgui_context_;
 }
 
 void OrbitApp::FilterTracks(const std::string& filter) {

@@ -75,7 +75,7 @@ class GlCanvas : public GlPanel {
 
   virtual void Hover(int /*X*/, int /*Y*/) {}
 
-  ImGuiContext* GetImGuiContext() { return im_gui_context_; }
+  ImGuiContext* GetImGuiContext() { return imgui_context_; }
   Batcher* GetBatcher() { return &ui_batcher_; }
 
   PickingManager& GetPickingManager() { return picking_manager_; }
@@ -140,7 +140,7 @@ class GlCanvas : public GlPanel {
   bool is_hovering_;
   bool can_hover_;
 
-  ImGuiContext* im_gui_context_;
+  ImGuiContext* imgui_context_;
   uint64_t ref_time_click_;
   TextRenderer text_renderer_;
   Timer update_timer_;

@@ -215,15 +215,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
         return service_deploy_manager->CopyFileToLocal(source, destination);
       });
 
-  auto const capture_window_stats_mode = [&]() {
-    // The capture window will show statistics on request only when then developer mode.
-    if (absl::GetFlag(FLAGS_devmode)) {
-      return GlPanel::StatsMode::kEnabled;
-    } else {
-      return GlPanel::StatsMode::kDisabled;
-    }
-  }();
-  ui->CaptureGLWidget->Initialize(capture_window_stats_mode, this, font_size);
+  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
+  ui->openGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
 
   ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
                               SelectionType::kExtended, FontType::kDefault);
@@ -702,3 +695,4 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
     QMainWindow::closeEvent(event);
   }
 }
+

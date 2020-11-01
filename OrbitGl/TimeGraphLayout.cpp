@@ -36,47 +36,35 @@ TimeGraphLayout::TimeGraphLayout() {
   time_bar_height_ = 15.f;
 };
 
-#define FLOAT_SLIDER_MIN_MAX(x, min, max)     \
-  if (ImGui::SliderFloat(#x, &x, min, max)) { \
-    needs_redraw = true;                      \
-  }
-
-#define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
-
 bool TimeGraphLayout::DrawProperties() {
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-  ImVec2 size(400, 400);
-
-  ImGui::Begin("Layout Properties", &m_DrawProperties, size, 1.f, 0);
   bool needs_redraw = false;
-  FLOAT_SLIDER(m_TrackLabelOffsetX);
-  FLOAT_SLIDER(m_TextBoxHeight);
-  FLOAT_SLIDER(m_CoresHeight);
-  FLOAT_SLIDER(thread_state_track_height_);
-  FLOAT_SLIDER(m_EventTrackHeight);
-  FLOAT_SLIDER(m_GraphTrackHeight);
-  FLOAT_SLIDER(m_SpaceBetweenCores);
-  FLOAT_SLIDER(space_between_gpu_depths_);
-  FLOAT_SLIDER(m_SpaceBetweenTracks);
-  FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
-  FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
-  FLOAT_SLIDER(m_SliderWidth);
-  FLOAT_SLIDER(time_bar_height_);
-  FLOAT_SLIDER(m_TrackTabHeight);
-  FLOAT_SLIDER(m_TrackTabOffset);
-  FLOAT_SLIDER(m_CollapseButtonOffset);
-  FLOAT_SLIDER(m_RoundingRadius);
-  FLOAT_SLIDER(m_RoundingNumSides);
-  FLOAT_SLIDER(m_TextOffset);
-  FLOAT_SLIDER(right_margin_);
-  FLOAT_SLIDER(m_SchedulerTrackOffset);
-  FLOAT_SLIDER_MIN_MAX(m_TrackTabWidth, 0, 1000.f);
-  FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20.f);
-  FLOAT_SLIDER_MIN_MAX(m_TrackTopMargin, 0, 20.f);
-  FLOAT_SLIDER(m_ToolbarIconHeight);
-  FLOAT_SLIDER_MIN_MAX(scale_, 0.05f, 20.f);
-  ImGui::Checkbox("DrawTrackBackground", &m_DrawTrackBackground);
-  ImGui::End();
+  IMGUI_FLOAT_SLIDER(m_TrackLabelOffsetX);
+  IMGUI_FLOAT_SLIDER(m_TextBoxHeight);
+  IMGUI_FLOAT_SLIDER(m_CoresHeight);
+  IMGUI_FLOAT_SLIDER(thread_state_track_height_);
+  IMGUI_FLOAT_SLIDER(m_EventTrackHeight);
+  IMGUI_FLOAT_SLIDER(m_GraphTrackHeight);
+  IMGUI_FLOAT_SLIDER(m_SpaceBetweenCores);
+  IMGUI_FLOAT_SLIDER(space_between_gpu_depths_);
+  IMGUI_FLOAT_SLIDER(m_SpaceBetweenTracks);
+  IMGUI_FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
+  IMGUI_FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
+  IMGUI_FLOAT_SLIDER(m_SliderWidth);
+  IMGUI_FLOAT_SLIDER(time_bar_height_);
+  IMGUI_FLOAT_SLIDER(m_TrackTabHeight);
+  IMGUI_FLOAT_SLIDER(m_TrackTabOffset);
+  IMGUI_FLOAT_SLIDER(m_CollapseButtonOffset);
+  IMGUI_FLOAT_SLIDER(m_RoundingRadius);
+  IMGUI_FLOAT_SLIDER(m_RoundingNumSides);
+  IMGUI_FLOAT_SLIDER(m_TextOffset);
+  IMGUI_FLOAT_SLIDER(right_margin_);
+  IMGUI_FLOAT_SLIDER(m_SchedulerTrackOffset);
+  IMGUI_FLOAT_SLIDER_MIN_MAX(m_TrackTabWidth, 0, 1000.f);
+  IMGUI_FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20.f);
+  IMGUI_FLOAT_SLIDER_MIN_MAX(m_TrackTopMargin, 0, 20.f);
+  IMGUI_FLOAT_SLIDER(m_ToolbarIconHeight);
+  IMGUI_FLOAT_SLIDER_MIN_MAX(scale_, 0.05f, 20.f);
+  ImGui::Checkbox("Draw Track Background", &m_DrawTrackBackground);
 
   return needs_redraw;
 }

@@ -14,10 +14,33 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include "imgui.h"
 #include "imgui_internal.h"
+
+#define IMGUI_VAR_TO_TEXT(var) ImGuiOrbit::VariableToText(#var, var)
+#define IMGUI_VARN_TO_TEXT(var, name) ImGuiOrbit::VariableToText(name, var)
+
+#define IMGUI_FLOAT_SLIDER(x) IMGUI_FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
+#define IMGUI_FLOAT_SLIDER_MIN_MAX(x, min, max)     \
+  if (ImGui::SliderFloat(ImGuiOrbit::PrettyVariableName(#x).c_str(), &x, min, max)) { \
+    needs_redraw = true;                      \
+  }
+
+namespace ImGuiOrbit {
+
+std::string PrettyVariableName(const char* name);
+
+template <class T>
+inline void VariableToText(std::string_view name, const T& value) {
+  std::stringstream string_stream{};
+  string_stream << name << " = " << value;
+  ImGui::Text("%s", string_stream.str().c_str());
+}
+
+}  // namespace ImGuiOrbit
 
 class GlCanvas;
 

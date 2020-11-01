@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "GlUtils.h"
+#include "ImGuiOrbit.h"
 
 TEST(GlUtils, TicksToDuration) {
   uint64_t t0 = 0;
@@ -25,4 +26,8 @@ TEST(GlUtils, TicksToMicroseconds) {
   constexpr double kEpsilon = 0.001;
   EXPECT_TRUE(abs(dt0 - 1.0) < kEpsilon);
   EXPECT_TRUE(abs(dt1 - 2.0) < kEpsilon);
+}
+
+TEST(GlUtils, PrettyVariableName) {
+
 }

@@ -6,8 +6,16 @@
 
 #include "CaptureWindow.h"
 
-std::unique_ptr<GlPanel> GlPanel::Create(StatsMode stats_mode, uint32_t font_size) {
-  return std::make_unique<CaptureWindow>(stats_mode, font_size);
+std::unique_ptr<GlPanel> GlPanel::Create(CanvasType canvas_type, uint32_t font_size) {
+  switch (canvas_type) {
+    case CanvasType::kCaptureWindow:
+      return std::make_unique<CaptureWindow>(font_size);
+    case CanvasType::kDebug:
+      return std::make_unique<GlCanvas>(font_size);
+    default:
+      ERROR("Unhandled canvas type (%d)", canvas_type);
+      return nullptr;
+  }
 }
 
 GlPanel::GlPanel() {

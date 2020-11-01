@@ -27,10 +27,10 @@ QToolTip {
 	color: #ffffff;
 	background-color: #2a82da;
 	border: 1px
-	solid white; 
+	solid white;
 }
 
-QPushButton:disabled { 
+QPushButton:disabled {
 	color: gray;
 }</string>
   </property>
@@ -367,6 +367,16 @@ QPushButton:disabled {
         <layout class="QGridLayout" name="gridLayout_3">
          <item row="0" column="0">
           <widget class="OrbitDataViewPanel" name="TracepointsList" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="debugTab">
+        <attribute name="title">
+         <string>Debug</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="OrbitGLWidget" name="openGLWidget"/>
          </item>
         </layout>
        </widget>

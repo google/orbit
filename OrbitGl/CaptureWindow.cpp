@@ -11,18 +11,14 @@
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode, uint32_t font_size)
-    : GlCanvas(font_size),
-      font_size_(font_size),
-      time_graph_(font_size),
-      stats_enabled_(stats_mode == StatsMode::kEnabled) {
+CaptureWindow::CaptureWindow(uint32_t font_size)
+    : GlCanvas(font_size), font_size_(font_size), time_graph_(font_size) {
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&text_renderer_);
   time_graph_.SetCanvas(this);
   draw_help_ = true;
   draw_filter_ = false;
   first_help_draw_ = true;
-  draw_stats_ = false;
   world_top_left_x_ = 0;
   world_top_left_y_ = 0;
   world_max_y_ = 0;
@@ -128,8 +124,6 @@ void CaptureWindow::LeftDown(int x, int y) {
   ref_time_click_ = static_cast<uint64_t>(time_graph_.GetTime(static_cast<double>(x) / GetWidth()));
 
   is_selecting_ = false;
-
-  Orbit_ImGui_MouseButtonCallback(this, 0, true);
 
   picking_ = true;
   click_was_drag_ = false;
@@ -363,9 +357,6 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
     time_graph_.VerticalZoom(delta_float, mouse_relative_y_position);
   }
 
-  // Use the original sign of a_Delta here.
-  Orbit_ImGui_ScrollCallback(this, -delta);
-
   can_hover_ = true;
 
   NeedsUpdate();
@@ -390,7 +381,7 @@ void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta,
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
 
-  ScopeImguiContext state(im_gui_context_);
+  ScopeImguiContext state(imgui_context_);
 
   if (!im_gui_active_) {
     switch (key_code) {
@@ -413,9 +404,6 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
         break;
       case 'F':
         draw_filter_ = !draw_filter_;
-        break;
-      case 'I':
-        draw_stats_ = !draw_stats_ && stats_enabled_;
         break;
       case 'H':
         draw_help_ = !draw_help_;
@@ -668,42 +656,6 @@ void CaptureWindow::RenderImGui() {
     return;
   }
 
-  ScopeImguiContext state(im_gui_context_);
-  Orbit_ImGui_NewFrame(this);
-
-#define VAR_TO_STR(var) VariableToString(#var, var)
-
-  if (draw_stats_) {
-    ImGui::ShowDemoWindow();
-    if (time_graph_.GetLayout().DrawProperties()) {
-      NeedsUpdate();
-    }
-
-    m_StatsWindow.Clear();
-
-    m_StatsWindow.AddLine(VAR_TO_STR(width_));
-    m_StatsWindow.AddLine(VAR_TO_STR(height_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_height_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_width_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_top_left_x_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_top_left_y_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_min_width_));
-    m_StatsWindow.AddLine(VAR_TO_STR(mouse_x_));
-    m_StatsWindow.AddLine(VAR_TO_STR(mouse_y_));
-    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumDrawnTextBoxes()));
-    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumTimers()));
-    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetThreadTotalHeight()));
-
-    m_StatsWindow.AddLine(VAR_TO_STR(
-        GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size()));
-    m_StatsWindow.AddLine(
-        VAR_TO_STR(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount()));
-
-    m_StatsWindow.Draw("Capture Stats", &draw_stats_);
-  }
-
-#undef VAR_TO_STR
-
   if (draw_help_) {
     RenderHelpUi();
 
@@ -714,10 +666,37 @@ void CaptureWindow::RenderImGui() {
       first_help_draw_ = false;
     }
   }
+}
 
-  // Rendering
-  glViewport(0, 0, GetWidth(), GetHeight());
-  ImGui::Render();
+void CaptureWindow::RenderImGui() {
+  // ImGui::ShowDemoWindow();
+  if (ImGui::BeginTabItem("Layout Properties")) {
+    if (time_graph_.GetLayout().DrawProperties()) {
+      NeedsUpdate();
+    }
+    ImGui::EndTabItem();
+  }
+
+  if (ImGui::BeginTabItem("Capture Stats")) {
+    IMGUI_VAR_TO_TEXT(width_);
+    IMGUI_VAR_TO_TEXT(height_);
+    IMGUI_VAR_TO_TEXT(world_height_);
+    IMGUI_VAR_TO_TEXT(world_width_);
+    IMGUI_VAR_TO_TEXT(world_top_left_x_);
+    IMGUI_VAR_TO_TEXT(world_top_left_y_);
+    IMGUI_VAR_TO_TEXT(world_min_width_);
+    IMGUI_VAR_TO_TEXT(mouse_x_);
+    IMGUI_VAR_TO_TEXT(mouse_y_);
+    IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetThreadTotalHeight());
+
+    IMGUI_VAR_TO_TEXT(
+        GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size());
+    IMGUI_VAR_TO_TEXT(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
+
+    ImGui::EndTabItem();
+  }
 }
 
 void CaptureWindow::RenderText(float layer) {

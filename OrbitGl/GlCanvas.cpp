@@ -88,14 +88,10 @@ GlCanvas::GlCanvas(uint32_t font_size)
   is_hovering_ = false;
   ResetHoverTimer();
 
-  im_gui_context_ = ImGui::CreateContext();
-  ScopeImguiContext state(im_gui_context_);
+  imgui_context_ = GOrbitApp->GetOrCreateDebugImGuiContext();
 }
 
-GlCanvas::~GlCanvas() {
-  ImGui::DestroyContext(im_gui_context_);
-  ScopeImguiContext state(im_gui_context_);
-}
+GlCanvas::~GlCanvas() {}
 
 void GlCanvas::Initialize() {
   static bool first_init = true;
@@ -189,7 +185,7 @@ void GlCanvas::LeftUp() {
 }
 
 void GlCanvas::LeftDoubleClick() {
-  ScopeImguiContext state(im_gui_context_);
+  ScopeImguiContext state(imgui_context_);
   double_clicking_ = true;
   NeedsRedraw();
 }
@@ -216,7 +212,7 @@ void GlCanvas::CharEvent(unsigned int character) { Orbit_ImGui_CharCallback(this
 
 void GlCanvas::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-  ScopeImguiContext state(im_gui_context_);
+  ScopeImguiContext state(imgui_context_);
   ImGuiIO& io = ImGui::GetIO();
   io.KeyCtrl = ctrl;
   io.KeyShift = shift;
@@ -327,7 +323,7 @@ void GlCanvas::Render(int width, int height) {
   m_NeedsRedraw = false;
   ui_batcher_.StartNewFrame();
 
-  ScopeImguiContext state(im_gui_context_);
+  ScopeImguiContext state(imgui_context_);
 
   PrepareGlState();
   Prepare2DViewport(0, 0, GetWidth(), GetHeight());
@@ -353,6 +349,33 @@ void GlCanvas::Render(int width, int height) {
 
   picking_ = false;
   double_clicking_ = false;
+}
+
+void GlCanvas::RenderUI() {
+  RenderImGui();
+
+  // Rendering
+  glViewport(0, 0, GetWidth(), GetHeight());
+  ImGui::Render();
+  NeedsRedraw();
+}
+
+void GlCanvas::RenderImGui() {
+  ScopeImguiContext state(imgui_context_);
+  Orbit_ImGui_NewFrame(this);
+
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoTitleBar |
+                                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                  ImGuiWindowFlags_NoCollapse;
+  ImVec2 size = ImVec2(GetWidth(), GetHeight());
+  ImGui::SetNextWindowSize(size);
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::Begin("OrbitDebug", nullptr, size, 1.f, window_flags);
+  if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
+    GOrbitApp->RenderImGui();
+    ImGui::EndTabBar();
+  }
+  ImGui::End();
 }
 
 void GlCanvas::Resize(int width, int height) {
