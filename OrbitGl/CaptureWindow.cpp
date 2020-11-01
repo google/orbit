@@ -726,7 +726,7 @@ void CaptureWindow::RenderHelpUi() {
       "Toggle Help: 'H'\n";
 
   text_renderer_.AddText(help_message, world_x, world_y, GlCanvas::kZValueTextUi,
-                         Color(255, 255, 255, 255), font_size_);
+                         Color(255, 255, 255, 255), font_size_ * 2);
 }
 
 inline double GetIncrementMs(double milli_seconds) {
