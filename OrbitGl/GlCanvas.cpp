@@ -93,6 +93,18 @@ GlCanvas::GlCanvas(uint32_t font_size)
 
 GlCanvas::~GlCanvas() {}
 
+std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size) {
+  switch (canvas_type) {
+    case CanvasType::kCaptureWindow:
+      return std::make_unique<CaptureWindow>(font_size);
+    case CanvasType::kDebug:
+      return std::make_unique<GlCanvas>(font_size);
+    default:
+      ERROR("Unhandled canvas type (%d)", canvas_type);
+      return nullptr;
+  }
+}
+
 void GlCanvas::Initialize() {
   static bool first_init = true;
   if (first_init) {
@@ -339,6 +351,9 @@ void GlCanvas::Render(int width, int height) {
 
   Draw();
 
+  for( auto render_callback : render_callbacks_ ){
+    render_callback();
+  }
   RenderImGui();
   glFlush();
   CleanupGlState();
@@ -349,35 +364,6 @@ void GlCanvas::Render(int width, int height) {
 
   picking_ = false;
   double_clicking_ = false;
-}
-
-void GlCanvas::RenderUI() {
-  RenderImGui();
-  NeedsRedraw();
-}
-
-void GlCanvas::RenderImGui() {
-  ScopeImguiContext state(imgui_context_);
-  Orbit_ImGui_NewFrame(this);
-
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(ImColor(25, 25, 25)));
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoTitleBar |
-                                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                  ImGuiWindowFlags_NoCollapse;
-  ImVec2 size = ImVec2(GetWidth(), GetHeight());
-  ImGui::SetNextWindowSize(size);
-  ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::Begin("OrbitDebug", nullptr, size, 1.f, window_flags);
-  if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
-    GOrbitApp->RenderImGui();
-    ImGui::EndTabBar();
-  }
-  ImGui::End();
-  ImGui::PopStyleColor();
-
-  // Rendering
-  glViewport(0, 0, GetWidth(), GetHeight());
-  ImGui::Render();
 }
 
 void GlCanvas::Resize(int width, int height) {

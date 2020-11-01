@@ -18,6 +18,9 @@ class GlCanvas : public GlPanel {
   explicit GlCanvas(uint32_t font_size);
   ~GlCanvas() override;
 
+  enum class CanvasType { kCaptureWindow, kDebug };
+  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size);
+
   void Initialize() override;
   void Resize(int width, int height) override;
   void Render(int width, int height) override;
@@ -74,6 +77,11 @@ class GlCanvas : public GlPanel {
   virtual void RenderText(float) {}
 
   virtual void Hover(int /*X*/, int /*Y*/) {}
+
+  using RenderCallback = std::function<void()>;
+  void AddRenderCallback(RenderCallback callback) {
+    render_callbacks_.emplace_back(std::move(callback));
+  }
 
   ImGuiContext* GetImGuiContext() { return imgui_context_; }
   Batcher* GetBatcher() { return &ui_batcher_; }
@@ -151,6 +159,7 @@ class GlCanvas : public GlPanel {
 
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
+  std::vector<RenderCallback> render_callbacks_;
 };
 
 #endif  // ORBIT_GL_GL_CANVAS_H_

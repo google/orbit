@@ -153,7 +153,7 @@ void OrbitTreeView::Link(OrbitTreeView* link) {
 }
 
 void OrbitTreeView::SetGlWidget(OrbitGLWidget* gl_widget) {
-  model_->GetDataView()->SetGlPanel(gl_widget->GetPanel());
+  model_->GetDataView()->SetGlCanvas(gl_widget->GetCanvas());
 }
 
 void OrbitTreeView::drawRow(QPainter* painter, const QStyleOptionViewItem& options,

@@ -119,6 +119,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
 
   void RegisterCaptureWindow(CaptureWindow* capture);
+  void RegisterDebugCanvas(GlCanvas* debug_canvas);
 
   void SetSamplingReport(
       SamplingProfiler sampling_profiler,
@@ -370,6 +371,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
+  GlCanvas* debug_canvas_ = nullptr;
   ImGuiContext* debug_imgui_context_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;

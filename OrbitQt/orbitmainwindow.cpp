@@ -217,6 +217,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
   ui->openGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
+  GOrbitApp->RegisterDebugCanvas(ui->openGLWidget->GetCanvas());
 
   ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
                               SelectionType::kExtended, FontType::kDefault);

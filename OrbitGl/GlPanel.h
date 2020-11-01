@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #pragma once
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -11,10 +12,6 @@ class GlPanel {
  public:
   GlPanel();
   virtual ~GlPanel() = default;
-
-  enum class CanvasType { kCaptureWindow, kDebug };
-
-  static std::unique_ptr<GlPanel> Create(CanvasType canvas_type, uint32_t font_size);
 
   virtual void Initialize();
   virtual void Resize(int a_Width, int a_Height);
@@ -61,6 +58,5 @@ class GlPanel {
   int m_MainWindowWidth;
   int m_MainWindowHeight;
   bool m_NeedsRedraw;
-
   bool is_mouse_over_;
 };

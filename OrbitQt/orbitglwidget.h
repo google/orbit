@@ -5,10 +5,11 @@
 #ifndef ORBIT_QT_ORBIT_GL_WIDGET_H_
 #define ORBIT_QT_ORBIT_GL_WIDGET_H_
 
+#include "OpenGl.h"
+#include "GlCanvas.h"
+
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
-
-#include "GlPanel.h"
 
 class QOpenGLDebugMessage;
 class QOpenGLDebugLogger;
@@ -18,14 +19,14 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  void Initialize(GlPanel::CanvasType canvas_type, class OrbitMainWindow* a_MainWindow,
+  void Initialize(GlCanvas::CanvasType canvas_type, class OrbitMainWindow* a_MainWindow,
                   uint32_t font_size);
   void initializeGL() override;
   void resizeGL(int w, int h) override;
   void paintGL() override;
   bool eventFilter(QObject* object, QEvent* event) override;
   void TakeScreenShot();
-  GlPanel* GetPanel() { return m_OrbitPanel.get(); }
+  GlCanvas* GetCanvas() { return gl_canvas_.get(); }
   void PrintContextInformation();
 
   void mousePressEvent(QMouseEvent* event) override;
@@ -44,8 +45,8 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void OnMenuClicked(int a_Index);
 
  private:
-  std::unique_ptr<GlPanel> m_OrbitPanel;
-  QOpenGLDebugLogger* m_DebugLogger;
+  std::unique_ptr<GlCanvas> gl_canvas_;
+  QOpenGLDebugLogger* debug_logger_;
 };
 
 #endif  // ORBIT_QT_ORBIT_GL_WIDGET_H_

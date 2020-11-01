@@ -417,8 +417,28 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 void OrbitApp::RenderImGui() {
+  CHECK(debug_canvas_);
   CHECK(capture_window_);
+  ScopeImguiContext context(GetOrCreateDebugImGuiContext());
+  Orbit_ImGui_NewFrame(debug_canvas_);
+
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoTitleBar |
+                                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                  ImGuiWindowFlags_NoCollapse;
+
+  int width = debug_canvas_->GetWidth();
+  int height = debug_canvas_->GetHeight();
+  ImVec2 size = ImVec2(width, height);
+
+  ImGui::SetNextWindowSize(size);
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::Begin("OrbitDebug", nullptr, size, 1.f, window_flags);
   capture_window_->RenderImGui();
+  ImGui::End();
+
+  glViewport(0, 0, width, height);
+  ImGui::Render();
+  debug_canvas_->NeedsRedraw();
 }
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
@@ -480,6 +500,12 @@ void OrbitApp::MainTick() {
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* capture) {
   CHECK(capture_window_ == nullptr);
   capture_window_ = capture;
+}
+
+void OrbitApp::RegisterDebugCanvas(GlCanvas* debug_canvas) {
+  CHECK(debug_canvas_ == nullptr);
+  debug_canvas_ = debug_canvas;
+  debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
 }
 
 void OrbitApp::NeedsRedraw() {

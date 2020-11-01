@@ -12,12 +12,13 @@
 
 #include "OrbitBase/Logging.h"
 #include "orbitmainwindow.h"
+#include "GlCanvas.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0
 
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
-  m_OrbitPanel = nullptr;
-  m_DebugLogger = nullptr;
+  gl_canvas_ = nullptr;
+  debug_logger_ = nullptr;
   setFocusPolicy(Qt::WheelFocus);
   setMouseTracking(true);
   setUpdateBehavior(QOpenGLWidget::PartialUpdate);
@@ -26,9 +27,9 @@ OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
 
 bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   if (event->type() == QEvent::Paint) {
-    if (m_OrbitPanel) {
-      m_OrbitPanel->PreRender();
-      if (!m_OrbitPanel->GetNeedsRedraw()) {
+    if (gl_canvas_) {
+      gl_canvas_->PreRender();
+      if (!gl_canvas_->GetNeedsRedraw()) {
         return true;
       }
     }
@@ -36,9 +37,9 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   return false;
 }
 
-void OrbitGLWidget::Initialize(GlPanel::CanvasType canvas_type, OrbitMainWindow* a_MainWindow,
+void OrbitGLWidget::Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* a_MainWindow,
                                uint32_t font_size) {
-  m_OrbitPanel = GlPanel::Create(canvas_type, font_size);
+  gl_canvas_ = GlCanvas::Create(canvas_type, font_size);
 
   if (a_MainWindow) {
     a_MainWindow->RegisterGlWidget(this);
@@ -47,20 +48,20 @@ void OrbitGLWidget::Initialize(GlPanel::CanvasType canvas_type, OrbitMainWindow*
 
 void OrbitGLWidget::initializeGL() {
 #if ORBIT_DEBUG_OPEN_GL
-  m_DebugLogger = new QOpenGLDebugLogger(this);
-  if (m_DebugLogger->initialize()) {
-    LOG("GL_DEBUG Debug Logger %s", m_DebugLogger->metaObject()->className());
-    connect(m_DebugLogger, SIGNAL(messageLogged(QOpenGLDebugMessage)), this,
+  debug_logger_ = new QOpenGLDebugLogger(this);
+  if (debug_logger_->initialize()) {
+    LOG("GL_DEBUG Debug Logger %s", debug_logger_->metaObject()->className());
+    connect(debug_logger_, SIGNAL(messageLogged(QOpenGLDebugMessage)), this,
             SLOT(messageLogged(QOpenGLDebugMessage)));
-    m_DebugLogger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
+    debug_logger_->startLogging(QOpenGLDebugLogger::SynchronousLogging);
   }
   format().setOption(QSurfaceFormat::DebugContext);
 #endif
 
   initializeOpenGLFunctions();
 
-  if (m_OrbitPanel) {
-    m_OrbitPanel->Initialize();
+  if (gl_canvas_) {
+    gl_canvas_->Initialize();
   }
 
   PrintContextInformation();
@@ -159,19 +160,19 @@ void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
 }
 
 void OrbitGLWidget::resizeGL(int w, int h) {
-  if (m_OrbitPanel) {
-    m_OrbitPanel->Resize(w, h);
+  if (gl_canvas_) {
+    gl_canvas_->Resize(w, h);
 
     QPoint localPoint(0, 0);
     QPoint windowPoint = this->mapTo(this->window(), localPoint);
-    m_OrbitPanel->SetWindowOffset(windowPoint.x(), windowPoint.y());
-    m_OrbitPanel->SetMainWindowSize(this->geometry().width(), this->geometry().height());
+    gl_canvas_->SetWindowOffset(windowPoint.x(), windowPoint.y());
+    gl_canvas_->SetMainWindowSize(this->geometry().width(), this->geometry().height());
   }
 }
 
 void OrbitGLWidget::paintGL() {
-  if (m_OrbitPanel) {
-    m_OrbitPanel->Render(width(), height());
+  if (gl_canvas_) {
+    gl_canvas_->Render(width(), height());
   }
 
   static volatile bool doScreenShot = false;
@@ -187,17 +188,17 @@ void OrbitGLWidget::TakeScreenShot() {
 }
 
 void OrbitGLWidget::mousePressEvent(QMouseEvent* event) {
-  if (m_OrbitPanel) {
+  if (gl_canvas_) {
     if (event->buttons() == Qt::LeftButton) {
-      m_OrbitPanel->LeftDown(event->x(), event->y());
+      gl_canvas_->LeftDown(event->x(), event->y());
     }
 
     if (event->buttons() == Qt::RightButton) {
-      m_OrbitPanel->RightDown(event->x(), event->y());
+      gl_canvas_->RightDown(event->x(), event->y());
     }
 
     if (event->buttons() == Qt::MiddleButton) {
-      m_OrbitPanel->MiddleDown(event->x(), event->y());
+      gl_canvas_->MiddleDown(event->x(), event->y());
     }
   }
 
@@ -205,19 +206,19 @@ void OrbitGLWidget::mousePressEvent(QMouseEvent* event) {
 }
 
 void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
-  if (m_OrbitPanel) {
+  if (gl_canvas_) {
     if (event->button() == Qt::LeftButton) {
-      m_OrbitPanel->LeftUp();
+      gl_canvas_->LeftUp();
     }
 
     if (event->button() == Qt::RightButton) {
-      if (m_OrbitPanel->RightUp()) {
+      if (gl_canvas_->RightUp()) {
         showContextMenu();
       }
     }
 
     if (event->button() == Qt::MiddleButton) {
-      m_OrbitPanel->MiddleUp(event->x(), event->y());
+      gl_canvas_->MiddleUp(event->x(), event->y());
     }
   }
 
@@ -225,7 +226,7 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void OrbitGLWidget::showContextMenu() {
-  std::vector<std::string> menu = m_OrbitPanel->GetContextMenu();
+  std::vector<std::string> menu = gl_canvas_->GetContextMenu();
 
   if (!menu.empty()) {
     QMenu contextMenu(tr("GlContextMenu"), this);
@@ -247,21 +248,21 @@ void OrbitGLWidget::showContextMenu() {
 }
 
 void OrbitGLWidget::OnMenuClicked(int a_Index) {
-  const std::vector<std::string>& menu = m_OrbitPanel->GetContextMenu();
-  m_OrbitPanel->OnContextMenu(menu[a_Index], a_Index);
+  const std::vector<std::string>& menu = gl_canvas_->GetContextMenu();
+  gl_canvas_->OnContextMenu(menu[a_Index], a_Index);
 }
 
 void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
   if (event->button() == Qt::LeftButton) {
-    m_OrbitPanel->LeftDoubleClick();
+    gl_canvas_->LeftDoubleClick();
   }
 
   update();
 }
 
 void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
-  if (m_OrbitPanel) {
-    m_OrbitPanel->MouseMoved(event->x(), event->y(), event->buttons() & Qt::LeftButton,
+  if (gl_canvas_) {
+    gl_canvas_->MouseMoved(event->x(), event->y(), event->buttons() & Qt::LeftButton,
                              event->buttons() & Qt::RightButton,
                              event->buttons() & Qt::MiddleButton);
   }
@@ -269,20 +270,20 @@ void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   update();
 }
 
-void OrbitGLWidget::enterEvent(QEvent*) { m_OrbitPanel->SetIsMouseOver(true); }
+void OrbitGLWidget::enterEvent(QEvent*) { gl_canvas_->SetIsMouseOver(true); }
 
-void OrbitGLWidget::leaveEvent(QEvent*) { m_OrbitPanel->SetIsMouseOver(false); }
+void OrbitGLWidget::leaveEvent(QEvent*) { gl_canvas_->SetIsMouseOver(false); }
 
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
-  if (m_OrbitPanel) {
+  if (gl_canvas_) {
     bool ctrl = event->modifiers() & Qt::ControlModifier;
     bool shift = event->modifiers() & Qt::ShiftModifier;
     bool alt = event->modifiers() & Qt::AltModifier;
-    m_OrbitPanel->KeyPressed(event->key() & 0x00FFFFFF, ctrl, shift, alt);
+    gl_canvas_->KeyPressed(event->key() & 0x00FFFFFF, ctrl, shift, alt);
 
     QString text = event->text();
     if (text.size() > 0) {
-      m_OrbitPanel->CharEvent(text[0].unicode());
+      gl_canvas_->CharEvent(text[0].unicode());
     }
   }
 
@@ -290,23 +291,23 @@ void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
 }
 
 void OrbitGLWidget::keyReleaseEvent(QKeyEvent* event) {
-  if (m_OrbitPanel) {
+  if (gl_canvas_) {
     bool ctrl = event->modifiers() & Qt::ControlModifier;
     bool shift = event->modifiers() & Qt::ShiftModifier;
     bool alt = event->modifiers() & Qt::AltModifier;
-    m_OrbitPanel->KeyReleased(event->key() & 0x00FFFFFF, ctrl, shift, alt);
+    gl_canvas_->KeyReleased(event->key() & 0x00FFFFFF, ctrl, shift, alt);
   }
 
   update();
 }
 
 void OrbitGLWidget::wheelEvent(QWheelEvent* event) {
-  if (m_OrbitPanel) {
+  if (gl_canvas_) {
     if (event->orientation() == Qt::Vertical) {
-      m_OrbitPanel->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
+      gl_canvas_->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
                                     event->modifiers() & Qt::ControlModifier);
     } else {
-      m_OrbitPanel->MouseWheelMovedHorizontally(event->x(), event->y(), event->delta() / 8,
+      gl_canvas_->MouseWheelMovedHorizontally(event->x(), event->y(), event->delta() / 8,
                                                 event->modifiers() & Qt::ControlModifier);
     }
   }

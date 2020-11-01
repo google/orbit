@@ -658,33 +658,43 @@ void CaptureWindow::RenderImGui() {
 }
 
 void CaptureWindow::RenderImGui() {
-  // ImGui::ShowDemoWindow();
-  if (ImGui::BeginTabItem("Layout Properties")) {
-    if (time_graph_.GetLayout().DrawProperties()) {
-      NeedsUpdate();
+  if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
+    if (ImGui::BeginTabItem("Layout Properties")) {
+      if (time_graph_.GetLayout().DrawProperties()) {
+        NeedsUpdate();
+      }
+      ImGui::EndTabItem();
     }
-    ImGui::EndTabItem();
-  }
 
-  if (ImGui::BeginTabItem("Capture Stats")) {
-    IMGUI_VAR_TO_TEXT(width_);
-    IMGUI_VAR_TO_TEXT(height_);
-    IMGUI_VAR_TO_TEXT(world_height_);
-    IMGUI_VAR_TO_TEXT(world_width_);
-    IMGUI_VAR_TO_TEXT(world_top_left_x_);
-    IMGUI_VAR_TO_TEXT(world_top_left_y_);
-    IMGUI_VAR_TO_TEXT(world_min_width_);
-    IMGUI_VAR_TO_TEXT(mouse_x_);
-    IMGUI_VAR_TO_TEXT(mouse_y_);
-    IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
-    IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
-    IMGUI_VAR_TO_TEXT(time_graph_.GetThreadTotalHeight());
+    if (ImGui::BeginTabItem("Capture Stats")) {
+      IMGUI_VAR_TO_TEXT(width_);
+      IMGUI_VAR_TO_TEXT(height_);
+      IMGUI_VAR_TO_TEXT(world_height_);
+      IMGUI_VAR_TO_TEXT(world_width_);
+      IMGUI_VAR_TO_TEXT(world_top_left_x_);
+      IMGUI_VAR_TO_TEXT(world_top_left_y_);
+      IMGUI_VAR_TO_TEXT(world_min_width_);
+      IMGUI_VAR_TO_TEXT(mouse_x_);
+      IMGUI_VAR_TO_TEXT(mouse_y_);
+      IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
+      IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
+      IMGUI_VAR_TO_TEXT(time_graph_.GetThreadTotalHeight());
 
-    IMGUI_VAR_TO_TEXT(
-        GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size());
-    IMGUI_VAR_TO_TEXT(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
+      IMGUI_VAR_TO_TEXT(
+          GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size());
+      IMGUI_VAR_TO_TEXT(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
 
-    ImGui::EndTabItem();
+      ImGui::EndTabItem();
+    }
+
+    if (ImGui::BeginTabItem("Misc")) {
+      static bool show_imgui_demo = false;
+      ImGui::Checkbox("Show ImGui Demo", &show_imgui_demo);
+      if (show_imgui_demo) {
+        ImGui::ShowDemoWindow();
+      }
+    }
+    ImGui::EndTabBar();
   }
 }
 
@@ -701,7 +711,7 @@ void ColorToFloat(Color color, float* output) {
 }
 
 void CaptureWindow::RenderHelpUi() {
-  constexpr float kYOffset = 8.f;
+  constexpr int kYOffset = 20;
   float world_x = 0;
   float world_y = 0;
   ScreenToWorld(0, kYOffset, world_x, world_y);
