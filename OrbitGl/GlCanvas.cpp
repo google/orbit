@@ -78,8 +78,6 @@ GlCanvas::GlCanvas(uint32_t font_size)
   mouse_ratio_ = 0.0;
   im_gui_active_ = false;
 
-  update_timer_.Start();
-
   hover_delay_ms_ = 300;
   can_hover_ = false;
   is_hovering_ = false;
@@ -242,7 +240,7 @@ void GlCanvas::UpdateWheelMomentum(float delta_time) {
 
 void GlCanvas::OnTimer() {
   delta_time_ = static_cast<float>(update_timer_.ElapsedSeconds());
-  update_timer_.Reset();
+  update_timer_.Restart();
   UpdateWheelMomentum(delta_time_);
 }
 
@@ -374,7 +372,7 @@ void GlCanvas::Resize(int width, int height) {
 }
 
 void GlCanvas::ResetHoverTimer() {
-  hover_timer_.Reset();
+  hover_timer_.Restart();
   can_hover_ = true;
 }
 

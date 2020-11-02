@@ -242,12 +242,12 @@ void CaptureWindow::PostRender() {
     is_hovering_ = false;
     can_hover_ = false;
     picking_ = false;
-    hover_timer_.Reset();
+    hover_timer_.Restart();
 
     Hover(mouse_pos_x_, mouse_pos_y_);
     NeedsUpdate();
     GlCanvas::Render(width_, height_);
-    hover_timer_.Reset();
+    hover_timer_.Restart();
   }
 
   if (picking_) {

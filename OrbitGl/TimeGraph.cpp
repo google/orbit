@@ -36,7 +36,6 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 
 TimeGraph::TimeGraph(uint32_t font_size)
     : font_size_(font_size), text_renderer_static_(font_size), batcher_(BatcherId::kTimeGraph) {
-  last_thread_reorder_.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ =
@@ -1019,7 +1018,7 @@ void TimeGraph::SortTracks() {
     Append(sorted_tracks_, external_pid_tracks);
     Append(sorted_tracks_, capture_pid_tracks);
 
-    last_thread_reorder_.Reset();
+    last_thread_reorder_.Restart();
 
     UpdateFilteredTrackList();
   }

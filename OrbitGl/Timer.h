@@ -9,11 +9,10 @@
 
 class Timer {
  public:
-  explicit Timer() { Start(); }
+  explicit Timer() { Restart(); }
 
-  void Start() { Reset(); }
   void Stop() { end_ = Now(); }
-  void Reset() {
+  void Restart() {
     start_ = Now();
     end_ = 0;
   }
