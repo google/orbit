@@ -173,8 +173,16 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
   float strWidth = 0.f;
   int minX = INT_MAX;
   int maxX = -INT_MAX;
+  constexpr GLuint indices[6] = {0, 1, 2, 0, 2, 3};
+  vec2 initial_pen = *pen;
 
   for (i = 0; i < strlen(text); ++i) {
+    if (text[i] == '\n') {
+      pen->x = initial_pen.x;
+      pen->y -= font->height;
+      continue;
+    }
+
     if (!texture_font_find_glyph(font, text + i)) {
       texture_font_load_glyph(font, text + i);
     }
@@ -194,7 +202,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       float t0 = glyph->t0;
       float s1 = glyph->s1;
       float t1 = glyph->t1;
-      GLuint indices[6] = {0, 1, 2, 0, 2, 3};
+
       vertex_t vertices[4] = {{x0, y0, textZ, s0, t0, r, g, b, a},
                               {x0, y1, textZ, s0, t1, r, g, b, a},
                               {x1, y1, textZ, s1, t1, r, g, b, a},

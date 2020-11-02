@@ -699,10 +699,11 @@ void ColorToFloat(Color color, float* output) {
 }
 
 void CaptureWindow::RenderHelpUi() {
-  constexpr int kYOffset = 20;
+  constexpr int kYOffset = 30;
+  constexpr int kMargin = 50;
   float world_x = 0;
   float world_y = 0;
-  ScreenToWorld(0, kYOffset, world_x, world_y);
+  ScreenToWorld(kMargin, kMargin + kYOffset, world_x, world_y);
 
   const char* help_message =
       "Start/Stop Capture: 'X'\n"
