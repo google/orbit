@@ -36,6 +36,12 @@ TimeGraphLayout::TimeGraphLayout() {
   time_bar_height_ = 15.f;
 };
 
+#define IMGUI_FLOAT_SLIDER(x) IMGUI_FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
+#define IMGUI_FLOAT_SLIDER_MIN_MAX(x, min, max)                                       \
+  if (ImGui::SliderFloat(ImGuiOrbit::PrettyVariableName(#x).c_str(), &x, min, max)) { \
+    needs_redraw = true;                                                              \
+  }
+
 bool TimeGraphLayout::DrawProperties() {
   bool needs_redraw = false;
   IMGUI_FLOAT_SLIDER(m_TrackLabelOffsetX);

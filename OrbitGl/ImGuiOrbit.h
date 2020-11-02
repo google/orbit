@@ -23,12 +23,6 @@
 #define IMGUI_VAR_TO_TEXT(var) ImGuiOrbit::VariableToText(#var, var)
 #define IMGUI_VARN_TO_TEXT(var, name) ImGuiOrbit::VariableToText(name, var)
 
-#define IMGUI_FLOAT_SLIDER(x) IMGUI_FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
-#define IMGUI_FLOAT_SLIDER_MIN_MAX(x, min, max)                                       \
-  if (ImGui::SliderFloat(ImGuiOrbit::PrettyVariableName(#x).c_str(), &x, min, max)) { \
-    needs_redraw = true;                                                              \
-  }
-
 namespace ImGuiOrbit {
 
 std::string PrettyVariableName(const char* name);
