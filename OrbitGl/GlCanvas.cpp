@@ -86,6 +86,7 @@ GlCanvas::GlCanvas(uint32_t font_size)
   hover_delay_ms_ = 300;
   can_hover_ = false;
   is_hovering_ = false;
+  initial_font_size_ = font_size;
   ResetHoverTimer();
 }
 
@@ -102,8 +103,7 @@ std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font
     case CanvasType::kDebug:
       return std::make_unique<GlCanvas>(font_size);
     default:
-      ERROR("Unhandled canvas type (%d)", canvas_type);
-      return nullptr;
+      UNREACHABLE();
   }
 }
 

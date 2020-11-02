@@ -413,8 +413,8 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 void OrbitApp::RenderImGui() {
-  CHECK(debug_canvas_);
-  CHECK(capture_window_);
+  CHECK(debug_canvas_ != nullptr);
+  CHECK(capture_window_ != nullptr);
   ScopeImguiContext context(debug_canvas_->GetImGuiContext());
   Orbit_ImGui_NewFrame(debug_canvas_);
 
@@ -494,10 +494,9 @@ void OrbitApp::RegisterCaptureWindow(CaptureWindow* capture) {
 
 void OrbitApp::RegisterDebugCanvas(GlCanvas* debug_canvas) {
   CHECK(debug_canvas_ == nullptr);
-  constexpr uint32_t kDefaultFontSize = 14;
   debug_canvas_ = debug_canvas;
   debug_canvas_->EnableImGui();
-  Orbit_ImGui_Init(kDefaultFontSize);
+  Orbit_ImGui_Init(debug_canvas_->GetInitialFontSize());
   debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
 }
 

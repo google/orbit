@@ -25,8 +25,6 @@
 
 namespace ImGuiOrbit {
 
-std::string PrettyVariableName(const char* name);
-
 template <class T>
 inline void VariableToText(std::string_view name, const T& value) {
   std::stringstream string_stream{};

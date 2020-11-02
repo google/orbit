@@ -646,7 +646,7 @@ void CaptureWindow::RenderImGui() {
 }
 
 void CaptureWindow::RenderImGui() {
-  if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
+  if (ImGui::BeginTabBar("CaptureWindowTabBar", ImGuiTabBarFlags_None)) {
     if (ImGui::BeginTabItem("Layout Properties")) {
       if (time_graph_.GetLayout().DrawProperties()) {
         NeedsUpdate();
@@ -714,8 +714,9 @@ void CaptureWindow::RenderHelpUi() {
       "Measure: \"Right Click + Drag\"\n"
       "Toggle Help: 'H'\n";
 
+  const uint32_t kHelpMessageFontSize = 2 * font_size_;
   text_renderer_.AddText(help_message, world_x, world_y, GlCanvas::kZValueTextUi,
-                         Color(255, 255, 255, 255), font_size_ * 2);
+                         Color(255, 255, 255, 255), kHelpMessageFontSize);
 }
 
 inline double GetIncrementMs(double milli_seconds) {

@@ -9,73 +9,73 @@ class TimeGraphLayout {
  public:
   TimeGraphLayout();
 
-  float GetTextBoxHeight() const { return m_TextBoxHeight * scale_; }
-  float GetTextCoresHeight() const { return m_CoresHeight * scale_; }
+  float GetTextBoxHeight() const { return text_box_height_ * scale_; }
+  float GetTextCoresHeight() const { return core_height_ * scale_; }
   float GetThreadStateTrackHeight() const { return thread_state_track_height_ * scale_; }
-  float GetEventTrackHeight() const { return m_EventTrackHeight * scale_; }
-  float GetGraphTrackHeight() const { return m_GraphTrackHeight * scale_; }
-  float GetTrackBottomMargin() const { return m_TrackBottomMargin * scale_; }
-  float GetTrackTopMargin() const { return m_TrackTopMargin * scale_; }
-  float GetTrackLabelOffsetX() const { return m_TrackLabelOffsetX; }
-  float GetSliderWidth() const { return m_SliderWidth; }
+  float GetEventTrackHeight() const { return event_track_height_ * scale_; }
+  float GetGraphTrackHeight() const { return graph_track_height_ * scale_; }
+  float GetTrackBottomMargin() const { return track_bottom_margin_ * scale_; }
+  float GetTrackTopMargin() const { return track_top_margin_ * scale_; }
+  float GetTrackLabelOffsetX() const { return track_label_offset_x_; }
+  float GetSliderWidth() const { return slider_width_; }
   float GetTimeBarHeight() const { return time_bar_height_; }
-  float GetTrackTabWidth() const { return m_TrackTabWidth; }
-  float GetTrackTabHeight() const { return m_TrackTabHeight * scale_; }
-  float GetTrackTabOffset() const { return m_TrackTabOffset; }
-  float GetCollapseButtonOffset() const { return m_CollapseButtonOffset; }
-  float GetRoundingRadius() const { return m_RoundingRadius * scale_; }
-  float GetRoundingNumSides() const { return m_RoundingNumSides; }
-  float GetTextOffset() const { return m_TextOffset * scale_; }
+  float GetTrackTabWidth() const { return track_tab_width_; }
+  float GetTrackTabHeight() const { return track_tab_height_ * scale_; }
+  float GetTrackTabOffset() const { return track_tab_offset_; }
+  float GetCollapseButtonOffset() const { return collapse_button_offset_; }
+  float GetRoundingRadius() const { return rounding_radius_ * scale_; }
+  float GetRoundingNumSides() const { return rounding_num_sides_; }
+  float GetTextOffset() const { return text_offset_ * scale_; }
   float GetBottomMargin() const;
   float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetRightMargin() const { return right_margin_; }
-  float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset * scale_; }
-  float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks * scale_; }
-  float GetSpaceBetweenCores() const { return m_SpaceBetweenCores * scale_; }
+  float GetSchedulerTrackOffset() const { return scheduler_track_offset_ * scale_; }
+  float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
+  float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
-  float GetSpaceBetweenTracksAndThread() const { return m_SpaceBetweenTracksAndThread * scale_; }
-  float GetToolbarIconHeight() const { return m_ToolbarIconHeight; }
+  float GetSpaceBetweenTracksAndThread() const { return space_between_tracks_and_thread_ * scale_; }
+  float GetToolbarIconHeight() const { return toolbar_icon_height_; }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = value; }
-  void SetDrawProperties(bool value) { m_DrawProperties = value; }
-  void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
+  void SetDrawProperties(bool value) { draw_properties_ = value; }
+  void SetNumCores(int a_NumCores) { num_cores_ = a_NumCores; }
   bool DrawProperties();
-  bool GetDrawTrackBackground() const { return m_DrawTrackBackground; }
+  bool GetDrawTrackBackground() const { return draw_track_background_; }
 
  protected:
-  int m_NumCores;
+  int num_cores_;
 
-  float m_TextBoxHeight;
-  float m_CoresHeight;
+  float text_box_height_;
+  float core_height_;
   float thread_state_track_height_;
-  float m_EventTrackHeight;
-  float m_GraphTrackHeight;
-  float m_TrackBottomMargin;
-  float m_TrackTopMargin;
-  float m_TrackLabelOffsetX;
-  float m_SliderWidth;
+  float event_track_height_;
+  float graph_track_height_;
+  float track_bottom_margin_;
+  float track_top_margin_;
+  float track_label_offset_x_;
+  float slider_width_;
   float time_bar_height_;
-  float m_TrackTabWidth;
-  float m_TrackTabHeight;
-  float m_TrackTabOffset;
-  float m_CollapseButtonOffset;
-  float m_RoundingRadius;
-  float m_RoundingNumSides;
-  float m_TextOffset;
+  float track_tab_width_;
+  float track_tab_height_;
+  float track_tab_offset_;
+  float collapse_button_offset_;
+  float rounding_radius_;
+  float rounding_num_sides_;
+  float text_offset_;
   float right_margin_;
-  float m_SchedulerTrackOffset;
+  float scheduler_track_offset_;
 
-  float m_SpaceBetweenCores;
+  float space_between_cores_;
   float space_between_gpu_depths_;
-  float m_SpaceBetweenTracks;
-  float m_SpaceBetweenTracksAndThread;
-  float m_SpaceBetweenThreadBlocks;
+  float space_between_tracks_;
+  float space_between_tracks_and_thread_;
+  float space_between_thread_blocks_;
 
-  float m_ToolbarIconHeight;
+  float toolbar_icon_height_;
   float scale_;
 
-  bool m_DrawProperties = false;
-  bool m_DrawTrackBackground = true;
+  bool draw_properties_ = false;
+  bool draw_track_background_ = true;
 };
 
 #endif  // ORBIT_GL_TIME_GRAPH_LAYOUT_H_

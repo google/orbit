@@ -71,6 +71,7 @@ class GlCanvas {
   void SetWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
   TextRenderer& GetTextRenderer() { return text_renderer_; }
+  uint32_t GetInitialFontSize() const { return initial_font_size_; }
 
   virtual void UpdateWheelMomentum(float delta_time);
   virtual void OnTimer();
@@ -167,6 +168,7 @@ class GlCanvas {
   int hover_delay_ms_;
   bool is_hovering_;
   bool can_hover_;
+  uint32_t initial_font_size_;
 
   ImGuiContext* imgui_context_ = nullptr;
   uint64_t ref_time_click_;

@@ -173,7 +173,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
   float strWidth = 0.f;
   int minX = INT_MAX;
   int maxX = -INT_MAX;
-  constexpr GLuint indices[6] = {0, 1, 2, 0, 2, 3};
+  constexpr std::array<GLuint, 6> indices = {0, 1, 2, 0, 2, 3};
   vec2 initial_pen = *pen;
 
   for (i = 0; i < strlen(text); ++i) {
@@ -218,7 +218,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       if (!buffers_by_layer_.count(textZ)) {
         buffers_by_layer_[textZ] = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
       }
-      vertex_buffer_push_back(buffers_by_layer_.at(textZ), vertices, 4, indices, 6);
+      vertex_buffer_push_back(buffers_by_layer_.at(textZ), vertices, 4, indices.data(), 6);
       pen->x += glyph->advance_x;
     }
   }
