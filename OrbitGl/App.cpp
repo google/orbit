@@ -458,7 +458,7 @@ Timer GMainTimer;
 
 // TODO: make it non-static
 void OrbitApp::MainTick() {
-  GMainTimer.Reset();
+  GMainTimer.Restart();
 
   if (DoZoom) {
     GCurrentTimeGraph->SortTracks();

@@ -78,8 +78,6 @@ GlCanvas::GlCanvas(uint32_t font_size)
   mouse_ratio_ = 0.0;
   im_gui_active_ = false;
 
-  update_timer_.Start();
-
   hover_delay_ms_ = 300;
   can_hover_ = false;
   is_hovering_ = false;
@@ -241,9 +239,8 @@ void GlCanvas::UpdateWheelMomentum(float delta_time) {
 }
 
 void GlCanvas::OnTimer() {
-  update_timer_.Stop();
   delta_time_ = static_cast<float>(update_timer_.ElapsedSeconds());
-  update_timer_.Start();
+  update_timer_.Restart();
   UpdateWheelMomentum(delta_time_);
 }
 
@@ -327,9 +324,6 @@ void GlCanvas::Render(int width, int height) {
 
   ScopeImguiContext state(im_gui_context_);
 
-  Timer timer;
-  timer.Start();
-
   PrepareGlState();
   Prepare2DViewport(0, 0, GetWidth(), GetHeight());
 
@@ -363,8 +357,6 @@ void GlCanvas::Render(int width, int height) {
   glFlush();
   CleanupGlState();
 
-  timer.Stop();
-
   im_gui_active_ = ImGui::IsAnyItemActive();
 
   PostRender();
@@ -380,7 +372,7 @@ void GlCanvas::Resize(int width, int height) {
 }
 
 void GlCanvas::ResetHoverTimer() {
-  hover_timer_.Reset();
+  hover_timer_.Restart();
   can_hover_ = true;
 }
 
