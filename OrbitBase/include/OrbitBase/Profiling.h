@@ -13,19 +13,19 @@ using pid_t = uint32_t;
 #include <unistd.h>
 #endif
 
-[[nodiscard]] inline uint64_t MonotonicTimestampNs() {
 #ifdef _WIN32
+[[nodiscard]] inline uint64_t MonotonicTimestampNs() {
   __int64 time;
   GetSystemTimeAsFileTime((FILETIME*)&time);
   return static_cast<uint64_t>(time) * 100;
+}
 #else
+[[nodiscard]] inline uint64_t MonotonicTimestampNs() {
   timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   return 1000000000LL * ts.tv_sec + ts.tv_nsec;
-#endif
 }
 
-#ifdef __linux__
 [[nodiscard]] inline pid_t GetCurrentThreadId() {
   thread_local pid_t current_tid = syscall(__NR_gettid);
   return current_tid;
