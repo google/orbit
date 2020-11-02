@@ -145,6 +145,7 @@ else()
   add_subdirectory(OrbitClientGgp)
   add_subdirectory(OrbitCaptureGgpClient)
   add_subdirectory(OrbitCaptureGgpService)
+  add_subdirectory(OrbitVulkanLayerClientGgp)
 endif()
 
 add_subdirectory(ElfUtils)
