@@ -373,9 +373,6 @@ void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta,
   } else {
     Pan(-0.1f);
   }
-
-  // Use the original sign of delta here.
-  Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 }
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {

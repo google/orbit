@@ -5,11 +5,14 @@
 #ifndef ORBIT_QT_ORBIT_GL_WIDGET_H_
 #define ORBIT_QT_ORBIT_GL_WIDGET_H_
 
+// clang-format off
+#include "OpenGl.h"
+// clang-format on
+
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
 #include "GlCanvas.h"
-#include "OpenGl.h"
 
 class QOpenGLDebugMessage;
 class QOpenGLDebugLogger;

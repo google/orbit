@@ -376,7 +376,7 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="0" column="0">
-          <widget class="OrbitGLWidget" name="openGLWidget"/>
+          <widget class="OrbitGLWidget" name="debugOpenGLWidget"/>
          </item>
         </layout>
        </widget>
