@@ -423,7 +423,7 @@ void OrbitApp::RenderImGui() {
 
   ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
   ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::Begin("OrbitDebug", nullptr, ImVec2(0,0), 1.f, window_flags);
+  ImGui::Begin("OrbitDebug", nullptr, ImVec2(0, 0), 1.f, window_flags);
   capture_window_->RenderImGui();
   ImGui::End();
 

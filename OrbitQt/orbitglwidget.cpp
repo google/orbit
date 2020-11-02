@@ -10,9 +10,9 @@
 #include <QOpenGLDebugLogger>
 #include <QSignalMapper>
 
+#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "orbitmainwindow.h"
-#include "GlCanvas.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0
 
@@ -259,8 +259,7 @@ void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
 void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   if (gl_canvas_) {
     gl_canvas_->MouseMoved(event->x(), event->y(), event->buttons() & Qt::LeftButton,
-                             event->buttons() & Qt::RightButton,
-                             event->buttons() & Qt::MiddleButton);
+                           event->buttons() & Qt::RightButton, event->buttons() & Qt::MiddleButton);
   }
 
   update();
@@ -301,10 +300,10 @@ void OrbitGLWidget::wheelEvent(QWheelEvent* event) {
   if (gl_canvas_) {
     if (event->orientation() == Qt::Vertical) {
       gl_canvas_->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
-                                    event->modifiers() & Qt::ControlModifier);
+                                  event->modifiers() & Qt::ControlModifier);
     } else {
       gl_canvas_->MouseWheelMovedHorizontally(event->x(), event->y(), event->delta() / 8,
-                                                event->modifiers() & Qt::ControlModifier);
+                                              event->modifiers() & Qt::ControlModifier);
     }
   }
 
