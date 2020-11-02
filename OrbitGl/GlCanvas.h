@@ -96,16 +96,17 @@ class GlCanvas {
     render_callbacks_.emplace_back(std::move(callback));
   }
 
-  ImGuiContext* GetImGuiContext() { return imgui_context_; }
-  Batcher* GetBatcher() { return &ui_batcher_; }
+  void EnableImGui();
+  [[nodiscard]] ImGuiContext* GetImGuiContext() const { return imgui_context_; }
+  [[nodiscard]] Batcher* GetBatcher() { return &ui_batcher_; }
 
-  virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
+  [[nodiscard]] virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
   void NeedsRedraw() { m_NeedsRedraw = true; }
 
-  bool GetIsMouseOver() const { return is_mouse_over_; }
+  [[nodiscard]] bool GetIsMouseOver() const { return is_mouse_over_; }
   void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
-  PickingManager& GetPickingManager() { return picking_manager_; }
+  [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
 
   static float kZValueSlider;
   static float kZValueSliderBg;
@@ -167,7 +168,7 @@ class GlCanvas {
   bool is_hovering_;
   bool can_hover_;
 
-  ImGuiContext* imgui_context_;
+  ImGuiContext* imgui_context_ = nullptr;
   uint64_t ref_time_click_;
   TextRenderer text_renderer_;
   Timer update_timer_;

@@ -87,11 +87,13 @@ GlCanvas::GlCanvas(uint32_t font_size)
   can_hover_ = false;
   is_hovering_ = false;
   ResetHoverTimer();
-
-  imgui_context_ = GOrbitApp->GetOrCreateDebugImGuiContext();
 }
 
-GlCanvas::~GlCanvas() {}
+GlCanvas::~GlCanvas() {
+  if (imgui_context_ != nullptr) {
+    ImGui::DestroyContext(imgui_context_);
+  }
+}
 
 std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size) {
   switch (canvas_type) {
@@ -117,6 +119,12 @@ void GlCanvas::Initialize() {
     }
     LOG("Using GLEW %s", absl::bit_cast<const char*>(glewGetString(GLEW_VERSION)));
     first_init = false;
+  }
+}
+
+void GlCanvas::EnableImGui() {
+  if (imgui_context_ == nullptr) {
+    imgui_context_ = ImGui::CreateContext();
   }
 }
 
@@ -155,7 +163,7 @@ void GlCanvas::LeftDown(int x, int y) {
   screen_click_y_ = y;
   is_selecting_ = false;
 
-  Orbit_ImGui_MouseButtonCallback(this, 0, true);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, true);
 
   NeedsRedraw();
 }
@@ -185,19 +193,18 @@ void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   }
 
   // Use the original sign of a_Delta here.
-  Orbit_ImGui_ScrollCallback(this, -delta_normalized);
+  Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 
   NeedsRedraw();
 }
 
 void GlCanvas::LeftUp() {
   picking_manager_.Release();
-  Orbit_ImGui_MouseButtonCallback(this, 0, false);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, false);
   NeedsRedraw();
 }
 
 void GlCanvas::LeftDoubleClick() {
-  ScopeImguiContext state(imgui_context_);
   double_clicking_ = true;
   NeedsRedraw();
 }
@@ -209,34 +216,30 @@ void GlCanvas::RightDown(int x, int y) {
   select_start_ = select_stop_ = Vec2(world_x, world_y);
   is_selecting_ = true;
 
-  Orbit_ImGui_MouseButtonCallback(this, 1, true);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, true);
   NeedsRedraw();
 }
 
 bool GlCanvas::RightUp() {
-  Orbit_ImGui_MouseButtonCallback(this, 1, false);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, false);
   is_selecting_ = true;
   NeedsRedraw();
   return false;
 }
 
-void GlCanvas::CharEvent(unsigned int character) { Orbit_ImGui_CharCallback(this, character); }
+void GlCanvas::CharEvent(unsigned int character) {
+  Orbit_ImGui_CharCallback(imgui_context_, character);
+}
 
 void GlCanvas::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-  ScopeImguiContext state(imgui_context_);
-  ImGuiIO& io = ImGui::GetIO();
-  io.KeyCtrl = ctrl;
-  io.KeyShift = shift;
-  io.KeyAlt = alt;
-
-  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), true);
+  Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), true, ctrl, shift, alt);
   NeedsRedraw();
 }
 
 void GlCanvas::KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), false);
+  Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), false, ctrl, shift, alt);
   NeedsRedraw();
 }
 
@@ -335,8 +338,6 @@ void GlCanvas::Render(int width, int height) {
   m_NeedsRedraw = false;
   ui_batcher_.StartNewFrame();
 
-  ScopeImguiContext state(imgui_context_);
-
   PrepareGlState();
   Prepare2DViewport(0, 0, GetWidth(), GetHeight());
 
@@ -358,7 +359,9 @@ void GlCanvas::Render(int width, int height) {
   glFlush();
   CleanupGlState();
 
-  im_gui_active_ = ImGui::IsAnyItemActive();
+  if (imgui_context_) {
+    im_gui_active_ = ImGui::IsAnyItemActive();
+  }
 
   PostRender();
 

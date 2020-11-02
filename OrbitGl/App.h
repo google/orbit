@@ -268,7 +268,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
-  [[nodiscard]] ImGuiContext* GetOrCreateDebugImGuiContext();
 
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
@@ -372,7 +371,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   CaptureWindow* capture_window_ = nullptr;
   GlCanvas* debug_canvas_ = nullptr;
-  ImGuiContext* debug_imgui_context_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;

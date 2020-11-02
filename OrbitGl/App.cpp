@@ -114,10 +114,6 @@ OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi_tk::stop_scheduler();
 #endif
-
-  if (debug_imgui_context_ != nullptr) {
-    ImGui::DestroyContext(debug_imgui_context_);
-  }
 }
 
 void OrbitApp::OnCaptureStarted(ProcessData&& process,
@@ -419,24 +415,18 @@ void OrbitApp::RefreshCaptureView() {
 void OrbitApp::RenderImGui() {
   CHECK(debug_canvas_);
   CHECK(capture_window_);
-  ScopeImguiContext context(GetOrCreateDebugImGuiContext());
+  ScopeImguiContext context(debug_canvas_->GetImGuiContext());
   Orbit_ImGui_NewFrame(debug_canvas_);
 
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoTitleBar |
-                                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                  ImGuiWindowFlags_NoCollapse;
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
 
-  int width = debug_canvas_->GetWidth();
-  int height = debug_canvas_->GetHeight();
-  ImVec2 size = ImVec2(width, height);
-
-  ImGui::SetNextWindowSize(size);
+  ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
   ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::Begin("OrbitDebug", nullptr, size, 1.f, window_flags);
+  ImGui::Begin("OrbitDebug", nullptr, ImVec2(0,0), 1.f, window_flags);
   capture_window_->RenderImGui();
   ImGui::End();
 
-  glViewport(0, 0, width, height);
   ImGui::Render();
   debug_canvas_->NeedsRedraw();
 }
@@ -504,7 +494,10 @@ void OrbitApp::RegisterCaptureWindow(CaptureWindow* capture) {
 
 void OrbitApp::RegisterDebugCanvas(GlCanvas* debug_canvas) {
   CHECK(debug_canvas_ == nullptr);
+  constexpr uint32_t kDefaultFontSize = 14;
   debug_canvas_ = debug_canvas;
+  debug_canvas_->EnableImGui();
+  Orbit_ImGui_Init(kDefaultFontSize);
   debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
 }
 
@@ -1404,13 +1397,6 @@ DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
-}
-
-[[nodiscard]] ImGuiContext* OrbitApp::GetOrCreateDebugImGuiContext() {
-  if (debug_imgui_context_ == nullptr) {
-    debug_imgui_context_ = ImGui::CreateContext();
-  }
-  return debug_imgui_context_;
 }
 
 void OrbitApp::FilterTracks(const std::string& filter) {

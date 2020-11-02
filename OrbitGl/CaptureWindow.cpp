@@ -375,13 +375,11 @@ void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta,
   }
 
   // Use the original sign of delta here.
-  Orbit_ImGui_ScrollCallback(this, -delta_normalized);
+  Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 }
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-
-  ScopeImguiContext state(imgui_context_);
 
   if (!im_gui_active_) {
     switch (key_code) {
@@ -462,13 +460,6 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
         break;
     }
   }
-
-  ImGuiIO& io = ImGui::GetIO();
-  io.KeyCtrl = ctrl;
-  io.KeyShift = shift;
-  io.KeyAlt = alt;
-
-  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), true);
 
   NeedsRedraw();
 }
