@@ -5,6 +5,7 @@
 #ifndef ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_
 #define ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
