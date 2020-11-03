@@ -68,7 +68,6 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   return Status::OK;
 }
 
-
 Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemoryRequest* request,
                                             GetProcessMemoryResponse* response) {
   uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);

@@ -37,9 +37,9 @@ TimeGraphLayout::TimeGraphLayout() {
 };
 
 #define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
-#define FLOAT_SLIDER_MIN_MAX(x, min, max) \
-  if (ImGui::SliderFloat(#x, &x, min, max)) {   \
-    needs_redraw = true;                        \
+#define FLOAT_SLIDER_MIN_MAX(x, min, max)     \
+  if (ImGui::SliderFloat(#x, &x, min, max)) { \
+    needs_redraw = true;                      \
   }
 
 bool TimeGraphLayout::DrawProperties() {

@@ -155,7 +155,7 @@ void Batcher::AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Co
   Box middle_box(Vec2(pos[0] + radius, pos[1]), Vec2(size[0] - 2 * radius, size[1]), z);
   Box right_box(Vec2(pos[0] + size[0] - radius, pos[1] + radius),
                 Vec2(radius, size[1] - 2 * radius), z);
-  
+
   AddBox(left_box, color);
   AddBox(middle_box, color);
   AddBox(right_box, color);
@@ -164,7 +164,7 @@ void Batcher::AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Co
   Vec2 top_left_pos(pos[0] + radius, pos[1] + size[1] - radius);
   Vec2 top_right_pos(pos[0] + size[0] - radius, pos[1] + size[1] - radius);
   Vec2 bottom_right_pos(pos[0] + size[0] - radius, pos[1] + radius);
-  
+
   AddBottomLeftRoundedCorner(bottom_left_pos, radius, z, color);
   AddTopLeftRoundedCorner(top_left_pos, radius, z, color);
   AddTopRightRoundedCorner(top_right_pos, radius, z, color);

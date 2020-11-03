@@ -1219,10 +1219,12 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   data_manager_->DeselectFunction(func);
 }
 
-[[nodiscard]] bool OrbitApp::IsFunctionSelected(const orbit_client_protos::FunctionInfo& func)
-    const { return data_manager_->IsFunctionSelected(func); }
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(
+    const orbit_client_protos::FunctionInfo& func) const {
+  return data_manager_->IsFunctionSelected(func);
+}
 
-        [[nodiscard]] bool OrbitApp::IsFunctionSelected(const SampledFunction& func) const {
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(const SampledFunction& func) const {
   return IsFunctionSelected(func.absolute_address);
 }
 
@@ -1255,9 +1257,7 @@ void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functio
   return data_manager_->IsFunctionVisible(function_address);
 }
 
-ThreadID OrbitApp::selected_thread_id() const {
-  return data_manager_->selected_thread_id();
-}
+ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_thread_id(); }
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   return data_manager_->set_selected_thread_id(thread_id);

@@ -138,11 +138,8 @@ class Batcher {
   void ResetElements();
   void StartNewFrame();
 
-  [[nodiscard]] PickingManager* GetPickingManager() {
-    return picking_manager_;
-  } void SetPickingManager(PickingManager* picking_manager) {
-    picking_manager_ = picking_manager;
-  }
+  [[nodiscard]] PickingManager* GetPickingManager() { return picking_manager_; }
+  void SetPickingManager(PickingManager* picking_manager) { picking_manager_ = picking_manager; }
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);

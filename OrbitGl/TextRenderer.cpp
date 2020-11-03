@@ -144,7 +144,7 @@ void TextRenderer::Display(Batcher* batcher) {
 }
 
 void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
-  if(m_Buffer == nullptr) return;
+  if (m_Buffer == nullptr) return;
   // TODO: No color was set here before.
   Color color(255, 255, 255, 255);
 
@@ -232,7 +232,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
     out_text_pos->x = min_x;
     out_text_pos->y = min_y;
   }
-  
+
   if (out_text_size) {
     out_text_size->x = max_x - min_x;
     out_text_size->y = max_y - min_y;
