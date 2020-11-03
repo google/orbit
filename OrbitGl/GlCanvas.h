@@ -39,6 +39,7 @@ class GlCanvas {
   void PrepareGlState();
   static void CleanupGlState();
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
+  Vec2 ScreenToWorld(Vec2 screen_pos);
   float ScreenToWorldHeight(int height) const;
   float ScreenToWorldWidth(int width) const;
 
@@ -76,10 +77,10 @@ class GlCanvas {
   virtual void UpdateWheelMomentum(float delta_time);
   virtual void OnTimer();
 
-  float GetMouseX() const { return mouse_x_; }
+  float GetMouseX() const { return mouse_world_x_; }
 
-  float GetMousePosX() const { return static_cast<float>(mouse_pos_x_); }
-  float GetMousePosY() const { return static_cast<float>(mouse_pos_y_); }
+  float GetMousePosX() const { return static_cast<float>(mouse_screen_x_); }
+  float GetMousePosY() const { return static_cast<float>(mouse_screen_y_); }
 
   void ResetHoverTimer();
 
@@ -137,8 +138,8 @@ class GlCanvas {
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
 
-  int width_;
-  int height_;
+  int screen_width_;
+  int screen_height_;
   float world_width_;
   float world_height_;
   float world_top_left_x_;
@@ -147,10 +148,10 @@ class GlCanvas {
   float world_min_width_;
   float world_click_x_;
   float world_click_y_;
-  float mouse_x_;
-  float mouse_y_;
-  int mouse_pos_x_;
-  int mouse_pos_y_;
+  float mouse_world_x_;
+  float mouse_world_y_;
+  int mouse_screen_x_;
+  int mouse_screen_y_;
   Vec2 select_start_;
   Vec2 select_stop_;
   uint64_t time_start_;

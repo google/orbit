@@ -117,6 +117,13 @@ class Batcher {
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                     std::shared_ptr<Pickable> pickable,
                     ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
+  void AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Color& color,
+                     float margin = 0);
+
+  void AddBottomLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddTopLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddTopRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddBottomRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -131,13 +138,18 @@ class Batcher {
   void ResetElements();
   void StartNewFrame();
 
-  [[nodiscard]] PickingManager* GetPickingManager() { return picking_manager_; }
-  void SetPickingManager(PickingManager* picking_manager) { picking_manager_ = picking_manager; }
+  [[nodiscard]] PickingManager* GetPickingManager() {
+    return picking_manager_;
+  } void SetPickingManager(PickingManager* picking_manager) {
+    picking_manager_ = picking_manager;
+  }
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);
 
   [[nodiscard]] const TextBox* GetTextBox(PickingId id);
+
+  static constexpr uint32_t kNumArcSides = 16;
 
  protected:
   void DrawLineBuffer(float layer, bool picking) const;

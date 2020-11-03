@@ -74,10 +74,10 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
   float world_x, world_y;
   ScreenToWorld(x, y, world_x, world_y);
 
-  mouse_x_ = world_x;
-  mouse_y_ = world_y;
-  mouse_pos_x_ = x;
-  mouse_pos_y_ = y;
+  mouse_world_x_ = world_x;
+  mouse_world_y_ = world_y;
+  mouse_screen_x_ = x;
+  mouse_screen_y_ = y;
 
   // Pan
   if (left && !im_gui_active_ && !picking_manager_.IsDragging() && !GOrbitApp->IsCapturing()) {
@@ -238,9 +238,9 @@ void CaptureWindow::PostRender() {
     picking_ = false;
     hover_timer_.Restart();
 
-    Hover(mouse_pos_x_, mouse_pos_y_);
+    Hover(mouse_screen_x_, mouse_screen_y_);
     NeedsUpdate();
-    GlCanvas::Render(width_, height_);
+    GlCanvas::Render(screen_width_, screen_height_);
     hover_timer_.Restart();
   }
 
@@ -248,7 +248,7 @@ void CaptureWindow::PostRender() {
     picking_ = false;
     Pick(screen_click_x_, screen_click_y_);
     NeedsRedraw();
-    GlCanvas::Render(width_, height_);
+    GlCanvas::Render(screen_width_, screen_height_);
   }
 }
 
@@ -315,8 +315,8 @@ void CaptureWindow::Zoom(int delta) {
   float world_x;
   float world_y;
 
-  ScreenToWorld(mouse_pos_x_, mouse_pos_y_, world_x, world_y);
-  mouse_ratio_ = static_cast<double>(mouse_pos_x_) / GetWidth();
+  ScreenToWorld(mouse_screen_x_, mouse_screen_y_, world_x, world_y);
+  mouse_ratio_ = static_cast<double>(mouse_screen_x_) / GetWidth();
 
   time_graph_.ZoomTime(delta_float, mouse_ratio_);
   wheel_momentum_ = delta_float * wheel_momentum_ < 0 ? 0 : wheel_momentum_ + delta_float;
@@ -325,9 +325,9 @@ void CaptureWindow::Zoom(int delta) {
 }
 
 void CaptureWindow::Pan(float ratio) {
-  double ref_time = time_graph_.GetTime(static_cast<double>(mouse_pos_x_) / GetWidth());
-  time_graph_.PanTime(mouse_pos_x_,
-                      mouse_pos_x_ + static_cast<int>(ratio * static_cast<float>(GetWidth())),
+  double ref_time = time_graph_.GetTime(static_cast<double>(mouse_screen_x_) / GetWidth());
+  time_graph_.PanTime(mouse_screen_x_,
+                      mouse_screen_x_ + static_cast<int>(ratio * static_cast<float>(GetWidth())),
                       GetWidth(), ref_time);
   NeedsUpdate();
 }
@@ -487,7 +487,7 @@ void CaptureWindow::Draw() {
   if (GetPickingMode() == PickingMode::kNone) {
     RenderTimeBar();
 
-    Vec2 pos(mouse_x_, world_top_left_y_);
+    Vec2 pos(mouse_world_x_, world_top_left_y_);
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
   }
@@ -654,16 +654,18 @@ void CaptureWindow::RenderImGui() {
       ImGui::EndTabItem();
     }
 
-    if (ImGui::BeginTabItem("Capture Stats")) {
-      IMGUI_VAR_TO_TEXT(width_);
-      IMGUI_VAR_TO_TEXT(height_);
+    if (ImGui::BeginTabItem("Capture Info")) {
+      IMGUI_VAR_TO_TEXT(screen_width_);
+      IMGUI_VAR_TO_TEXT(screen_height_);
       IMGUI_VAR_TO_TEXT(world_height_);
       IMGUI_VAR_TO_TEXT(world_width_);
       IMGUI_VAR_TO_TEXT(world_top_left_x_);
       IMGUI_VAR_TO_TEXT(world_top_left_y_);
       IMGUI_VAR_TO_TEXT(world_min_width_);
-      IMGUI_VAR_TO_TEXT(mouse_x_);
-      IMGUI_VAR_TO_TEXT(mouse_y_);
+      IMGUI_VAR_TO_TEXT(mouse_screen_x_);
+      IMGUI_VAR_TO_TEXT(mouse_screen_y_);
+      IMGUI_VAR_TO_TEXT(mouse_world_x_);
+      IMGUI_VAR_TO_TEXT(mouse_world_y_);
       IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
       IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
       IMGUI_VAR_TO_TEXT(time_graph_.GetThreadTotalHeight());
@@ -698,12 +700,19 @@ void ColorToFloat(Color color, float* output) {
   }
 }
 
+Vec2 ScreenToWorld(GlCanvas* canvas, Vec2 screen_pos) {
+  Vec2 world_pos;
+  canvas->ScreenToWorld(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1]),
+                        world_pos[0], world_pos[1]);
+  return world_pos;
+}
+
 void CaptureWindow::RenderHelpUi() {
-  constexpr int kYOffset = 30;
-  constexpr int kMargin = 50;
+  constexpr int kXOffset = 50;
+  constexpr int kYOffset = 80;
   float world_x = 0;
   float world_y = 0;
-  ScreenToWorld(kMargin, kMargin + kYOffset, world_x, world_y);
+  ScreenToWorld(kXOffset, kYOffset, world_x, world_y);
 
   const char* help_message =
       "Start/Stop Capture: 'X'\n"
@@ -712,11 +721,20 @@ void CaptureWindow::RenderHelpUi() {
       "Vertical Zoom: \"Ctrl + Scroll\"\n"
       "Select: Left Click\n"
       "Measure: \"Right Click + Drag\"\n"
-      "Toggle Help: 'H'\n";
+      "Toggle Help: 'H'";
 
   const uint32_t kHelpMessageFontSize = 2 * font_size_;
+  Vec2 out_world_box_pos;
+  Vec2 out_world_box_size;
   text_renderer_.AddText(help_message, world_x, world_y, GlCanvas::kZValueTextUi,
-                         Color(255, 255, 255, 255), kHelpMessageFontSize);
+                         Color(255, 255, 255, 255), kHelpMessageFontSize, -1.f /*max_size*/,
+                         false /*right_justified*/, &out_world_box_pos, &out_world_box_size);
+
+  const Color kBoxColor(50, 50, 50, 230);
+  const float kMargin = 15.f;
+  const float kRoundingRadius = 20.f;
+  ui_batcher_.AddRoundedBox(out_world_box_pos, out_world_box_size, GlCanvas::kZValueUi,
+                            kRoundingRadius, kBoxColor, kMargin);
 }
 
 inline double GetIncrementMs(double milli_seconds) {

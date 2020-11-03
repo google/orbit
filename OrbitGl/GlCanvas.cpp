@@ -48,8 +48,8 @@ GlCanvas::GlCanvas(uint32_t font_size)
     : text_renderer_(font_size), ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
-  width_ = 0;
-  height_ = 0;
+  screen_width_ = 0;
+  screen_height_ = 0;
   world_width_ = 0;
   world_height_ = 0;
   world_top_left_x_ = -5.f;
@@ -65,10 +65,10 @@ GlCanvas::GlCanvas(uint32_t font_size)
   control_key_ = false;
   m_NeedsRedraw = true;
 
-  mouse_pos_x_ = 0.0;
-  mouse_pos_y_ = 0.0;
-  mouse_x_ = 0.0;
-  mouse_y_ = 0.0;
+  mouse_screen_x_ = 0.0;
+  mouse_screen_y_ = 0.0;
+  mouse_world_x_ = 0.0;
+  mouse_world_y_ = 0.0;
   world_click_x_ = 0.0;
   world_click_y_ = 0.0;
   world_max_y_ = 0.0;
@@ -135,10 +135,10 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
   float world_x, world_y;
   ScreenToWorld(mouse_x, mouse_y, world_x, world_y);
 
-  mouse_x_ = world_x;
-  mouse_y_ = world_y;
-  mouse_pos_x_ = mouse_x;
-  mouse_pos_y_ = mouse_y;
+  mouse_world_x_ = world_x;
+  mouse_world_y_ = world_y;
+  mouse_screen_x_ = mouse_x;
+  mouse_screen_y_ = mouse_y;
 
   // Pan
   if (left && !im_gui_active_) {
@@ -267,8 +267,8 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  world_width_ = static_cast<float>(width_);
-  world_height_ = static_cast<float>(height_);
+  world_width_ = static_cast<float>(screen_width_);
+  world_height_ = static_cast<float>(screen_height_);
 
   if (world_width_ <= 0) world_width_ = 1.f;
   if (world_height_ <= 0) world_height_ = 1.f;
@@ -315,6 +315,15 @@ void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
       world_top_left_y_ - (static_cast<float>(y) / static_cast<float>(GetHeight())) * world_height_;
 }
 
+Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) {
+  Vec2 world_pos;
+  world_pos[0] =
+      world_top_left_x_ + (screen_pos[0] / static_cast<float>(GetWidth())) * world_width_;
+  world_pos[1] =
+      world_top_left_y_ - (screen_pos[1] / static_cast<float>(GetHeight())) * world_height_;
+  return world_pos;
+}
+
 float GlCanvas::ScreenToWorldHeight(int height) const {
   return (static_cast<float>(height) / static_cast<float>(GetHeight())) * world_height_;
 }
@@ -323,13 +332,13 @@ float GlCanvas::ScreenToWorldWidth(int width) const {
   return (static_cast<float>(width) / static_cast<float>(GetWidth())) * world_width_;
 }
 
-int GlCanvas::GetWidth() const { return width_; }
+int GlCanvas::GetWidth() const { return screen_width_; }
 
-int GlCanvas::GetHeight() const { return height_; }
+int GlCanvas::GetHeight() const { return screen_height_; }
 
 void GlCanvas::Render(int width, int height) {
-  width_ = width;
-  height_ = height;
+  screen_width_ = width;
+  screen_height_ = height;
 
   if (!m_NeedsRedraw) {
     return;
@@ -370,8 +379,8 @@ void GlCanvas::Render(int width, int height) {
 }
 
 void GlCanvas::Resize(int width, int height) {
-  width_ = width;
-  height_ = height;
+  screen_width_ = width;
+  screen_height_ = height;
   NeedsRedraw();
 }
 
