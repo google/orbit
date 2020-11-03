@@ -125,7 +125,8 @@ class Batcher {
 
   void AddCircle(Vec2 position, float radius, float z, Color color);
   [[nodiscard]] std::vector<float> GetLayers() const;
-  virtual void Draw(float layer, bool picking = false) const;
+  void DrawLayer(float layer, bool picking = false) const;
+  virtual void Draw(bool picking = false) const;
 
   void ResetElements();
   void StartNewFrame();

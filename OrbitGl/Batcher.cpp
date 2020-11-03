@@ -243,7 +243,7 @@ std::vector<float> Batcher::GetLayers() const {
   return layers;
 };
 
-void Batcher::Draw(float layer, bool picking) const {
+void Batcher::DrawLayer(float layer, bool picking) const {
   if (!primitive_buffers_by_layer_.count(layer)) return;
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
   if (picking) {
@@ -264,6 +264,12 @@ void Batcher::Draw(float layer, bool picking) const {
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
   glPopAttrib();
+}
+
+void Batcher::Draw(bool picking) const {
+  for (auto& [layer, unused_buffer] : primitive_buffers_by_layer_) {
+    DrawLayer(layer, picking);
+  }
 }
 
 void Batcher::DrawBoxBuffer(float layer, bool picking) const {
