@@ -18,9 +18,11 @@ class Timer {
   }
 
   [[nodiscard]] uint64_t ElapsedNanos() const { return EndOrNow() - start_; }
-  [[nodiscard]] double ElapsedMicros() const { return static_cast<double>(ElapsedNanos()) * 0.001; }
-  [[nodiscard]] double ElapsedMillis() const { return ElapsedMicros() * 0.0001; }
-  [[nodiscard]] double ElapsedSeconds() const { return ElapsedMillis() * 0.0001; }
+  [[nodiscard]] double ElapsedMicros() const {
+    return static_cast<double>(ElapsedNanos()) / 1000.0;
+  }
+  [[nodiscard]] double ElapsedMillis() const { return ElapsedMicros() / 1000.0; }
+  [[nodiscard]] double ElapsedSeconds() const { return ElapsedMillis() / 1000.0; }
 
  private:
   [[nodiscard]] uint64_t EndOrNow() const { return end_ == 0 ? Now() : end_; }
