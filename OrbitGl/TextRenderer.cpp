@@ -144,6 +144,7 @@ void TextRenderer::Display(Batcher* batcher) {
 }
 
 void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
+  if(m_Buffer == nullptr) return;
   // TODO: No color was set here before.
   Color color(255, 255, 255, 255);
 
@@ -164,19 +165,21 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
 }
 
 void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const vec4& color,
-                                   vec2* pen, float a_MaxSize, float a_Z, bool) {
-  size_t i;
+                                   vec2* pen, float max_size, float a_Z, vec2* out_text_pos,
+                                   vec2* out_text_size) {
   float r = color.red, g = color.green, b = color.blue, a = color.alpha;
   float textZ = a_Z;
 
-  float maxWidth = a_MaxSize == -1.f ? FLT_MAX : ToScreenSpace(a_MaxSize);
-  float strWidth = 0.f;
-  int minX = INT_MAX;
-  int maxX = -INT_MAX;
+  float max_width = max_size == -1.f ? FLT_MAX : ToScreenSpace(max_size);
+  float str_width = 0.f;
+  float min_x = FLT_MAX;
+  float max_x = -FLT_MAX;
+  float min_y = FLT_MAX;
+  float max_y = -FLT_MAX;
   constexpr std::array<GLuint, 6> indices = {0, 1, 2, 0, 2, 3};
   vec2 initial_pen = *pen;
 
-  for (i = 0; i < strlen(text); ++i) {
+  for (size_t i = 0; i < strlen(text); ++i) {
     if (text[i] == '\n') {
       pen->x = initial_pen.x;
       pen->y -= font->height;
@@ -188,16 +191,15 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
     }
 
     texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
-    if (glyph != NULL) {
-      float kerning = 0.0f;
-      if (i > 0) {
-        kerning = texture_glyph_get_kerning(glyph, text + i - 1);
-      }
+    if (glyph != nullptr) {
+      float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
-      float x0 = static_cast<int>(pen->x + glyph->offset_x);
-      float y0 = static_cast<int>(pen->y + glyph->offset_y);
-      float x1 = static_cast<int>(x0 + glyph->width);
-      float y1 = static_cast<int>(y0 - glyph->height);
+
+      float x0 = pen->x + glyph->offset_x;
+      float y0 = pen->y + glyph->offset_y;
+      float x1 = x0 + glyph->width;
+      float y1 = y0 - glyph->height;
+
       float s0 = glyph->s0;
       float t0 = glyph->t0;
       float s1 = glyph->s1;
@@ -208,11 +210,14 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
                               {x1, y1, textZ, s1, t1, r, g, b, a},
                               {x1, y0, textZ, s1, t0, r, g, b, a}};
 
-      minX = std::min(minX, static_cast<int>(x0));
-      maxX = std::max(maxX, static_cast<int>(x1));
-      strWidth = maxX - minX;
+      min_x = std::min(min_x, x0);
+      max_x = std::max(max_x, x1);
+      min_y = std::min(min_y, y1);
+      max_y = std::max(max_y, y0);
 
-      if (strWidth > maxWidth) {
+      str_width = max_x - min_x;
+
+      if (str_width > max_width) {
         break;
       }
       if (!buffers_by_layer_.count(textZ)) {
@@ -222,11 +227,21 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       pen->x += glyph->advance_x;
     }
   }
+
+  if (out_text_pos) {
+    out_text_pos->x = min_x;
+    out_text_pos->y = min_y;
+  }
+  
+  if (out_text_size) {
+    out_text_size->x = max_x - min_x;
+    out_text_size->y = max_y - min_y;
+  }
 }
 
 void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
                            const Color& a_Color, uint32_t font_size, float a_MaxSize,
-                           bool a_RightJustified) {
+                           bool a_RightJustified, Vec2* out_text_pos, Vec2* out_text_size) {
   if (!font_size) return;
   ToScreenSpace(a_X, a_Y, m_Pen.x, m_Pen.y);
 
@@ -237,7 +252,19 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
   }
   SetFontSize(font_size);
 
-  AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z);
+  vec2 out_screen_pos;
+  vec2 out_screen_size;
+  AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z, &out_screen_pos,
+                  &out_screen_size);
+  if (out_text_pos) {
+    float inv_y = m_Canvas->GetHeight() - out_screen_pos.y;
+    (*out_text_pos) = m_Canvas->ScreenToWorld(Vec2(out_screen_pos.x, inv_y));
+  }
+
+  if (out_text_size) {
+    (*out_text_size)[0] = m_Canvas->ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
+    (*out_text_size)[1] = m_Canvas->ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
+  }
 }
 
 int TextRenderer::AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y,
