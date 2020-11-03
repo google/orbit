@@ -58,13 +58,13 @@ static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
   }
 }
 
-ServiceDeployManager::ServiceDeployManager(DeploymentConfiguration deployment_configuration,
-                                           OrbitSsh::Context* context,
+ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration& deployment_configuration,
+                                           const OrbitSsh::Context* context,
                                            OrbitSsh::Credentials credentials,
                                            const ServiceDeployManager::GrpcPort& grpc_port,
                                            QObject* parent)
     : QObject(parent),
-      deployment_configuration_(std::move(deployment_configuration)),
+      deployment_configuration_(deployment_configuration),
       context_(context),
       credentials_(std::move(credentials)),
       grpc_port_(grpc_port) {}

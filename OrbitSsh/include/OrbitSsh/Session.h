@@ -20,7 +20,7 @@ namespace OrbitSsh {
 
 class Session {
  public:
-  static outcome::result<Session> Create(Context* context);
+  static outcome::result<Session> Create(const Context* context);
 
   outcome::result<void> Handshake(Socket* socket_ptr);
   outcome::result<void> MatchKnownHosts(const AddrAndPort& addr_and_port,
