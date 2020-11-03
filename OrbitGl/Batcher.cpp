@@ -96,7 +96,7 @@ std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, uint32_t
   std::vector<Triangle> triangles;
   const Vec3 origin(0, 0, 0);
 
-  float increment_radians = fabs(angle_1 - angle_0) / static_cast<float>(num_sides);
+  float increment_radians = std::fabs(angle_1 - angle_0) / static_cast<float>(num_sides);
   Vec3 last_point(cosf(angle_0), sinf(angle_0), 0);
   for (uint32_t i = 1; i <= num_sides; ++i) {
     float angle = angle_0 + static_cast<float>(i) * increment_radians;
