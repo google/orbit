@@ -38,6 +38,9 @@ float GlCanvas::kZValueSlider = 0.89f;
 float GlCanvas::kZOffsetMovingTack = 0.1f;
 float GlCanvas::kZOffsetPinnedTrack = 0.2f;
 
+// Max Number of layers: 16 original, 4 for moving track, 4 for pinned Track
+unsigned GlCanvas::kMaxNumberRealZLayers = 16 + 4 + 4;
+
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 

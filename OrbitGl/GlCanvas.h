@@ -100,6 +100,7 @@ class GlCanvas : public GlPanel {
 
   static float kZOffsetMovingTack;
   static float kZOffsetPinnedTrack;
+  static unsigned kMaxNumberRealZLayers;
 
   static const Color kBackgroundColor;
   static const Color kTabTextColorSelected;
