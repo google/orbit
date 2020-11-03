@@ -23,7 +23,8 @@ class TextRenderer {
   ~TextRenderer();
 
   void Init();
-  void Display(Batcher* batcher, float layer);
+  void Display(Batcher* batcher);
+  void DisplayLayer(Batcher* batcher, float layer);
   void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
                uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false);
   // Returns the width of the rendered string.

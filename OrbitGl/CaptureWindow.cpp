@@ -532,11 +532,11 @@ void CaptureWindow::Draw() {
     if (layer < GlCanvas::kScreenSpaceCutPoint) {
       Prepare2DViewport(0, 0, GetWidth(), GetHeight());
     }
-    time_graph_.GetBatcher().Draw(layer, GetPickingMode() != PickingMode::kNone);
-    ui_batcher_.Draw(layer, GetPickingMode() != PickingMode::kNone);
+    time_graph_.GetBatcher().DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
+    ui_batcher_.DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
 
     PrepareScreenSpaceViewport();
-    text_renderer_.Display(&ui_batcher_, layer);
+    text_renderer_.DisplayLayer(&ui_batcher_, layer);
     RenderText(layer);
   }
 }

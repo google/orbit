@@ -90,7 +90,7 @@ void TextRenderer::SetFontSize(uint32_t size) {
 
 uint32_t TextRenderer::GetFontSize() const { return current_font_size_; }
 
-void TextRenderer::Display(Batcher* batcher, float layer) {
+void TextRenderer::DisplayLayer(Batcher* batcher, float layer) {
   if (!buffers_by_layer_.count(layer)) return;
   auto& buffer = buffers_by_layer_.at(layer);
   if (m_DrawOutline) {
@@ -135,6 +135,12 @@ void TextRenderer::Display(Batcher* batcher, float layer) {
   glUseProgram(0);
 
   glPopAttrib();
+}
+
+void TextRenderer::Display(Batcher* batcher) {
+  for (auto& [layer, unused_buffer] : buffers_by_layer_) {
+    DisplayLayer(batcher, layer);
+  }
 }
 
 void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
