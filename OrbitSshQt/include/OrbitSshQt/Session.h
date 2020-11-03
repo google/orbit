@@ -50,7 +50,7 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   using State = details::SessionState;
 
  public:
-  explicit Session(OrbitSsh::Context* context, QObject* parent = nullptr)
+  explicit Session(const OrbitSsh::Context* context, QObject* parent = nullptr)
       : StateMachineHelper(parent), context_(context) {}
 
   void ConnectToServer(OrbitSsh::Credentials creds);
@@ -69,7 +69,7 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   void dataEvent();
 
  private:
-  OrbitSsh::Context* context_ = nullptr;
+  const OrbitSsh::Context* context_;
   OrbitSsh::Credentials credentials_;
 
   std::optional<OrbitSsh::Socket> socket_;
