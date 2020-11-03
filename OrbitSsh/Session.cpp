@@ -43,7 +43,9 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   LIBSSH2_KNOWNHOSTS* known_hosts = libssh2_knownhost_init(raw_session_ptr_.get());
 
   if (known_hosts == nullptr) {
-    return static_cast<Error>(libssh2_session_last_errno(raw_session_ptr_.get()));
+    int last_ssh_errno = libssh2_session_last_errno(raw_session_ptr_.get());
+    ERROR("libssh2_knownhost_init call failed. libssh2_session_last_errno: %d", last_ssh_errno);
+    return static_cast<Error>(last_ssh_errno);
   }
 
   // libssh2 does not support anything else than:
@@ -51,6 +53,11 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   const int amount_hosts = libssh2_knownhost_readfile(
       known_hosts, known_hosts_path.string().c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH);
   if (amount_hosts < 0) {
+    ERROR(
+        "libssh2_knownhost_readfile() call failed. Tried to to read \"%s\". returned error code "
+        "was: %d, libssh2_session_last_errno: %d",
+        known_hosts_path.string(), amount_hosts,
+        libssh2_session_last_errno(raw_session_ptr_.get()));
     libssh2_knownhost_free(known_hosts);
     return static_cast<Error>(amount_hosts);
   }
@@ -61,8 +68,10 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
       libssh2_session_hostkey(raw_session_ptr_.get(), &fingerprint_length, &fingerprint_type);
 
   if (fingerprint == nullptr) {
+    int last_ssh_errno = libssh2_session_last_errno(raw_session_ptr_.get());
+    ERROR("libssh2_session_hostkey() failed, libssh2_session_last_errno: %d", last_ssh_errno);
     libssh2_knownhost_free(known_hosts);
-    return static_cast<Error>(libssh2_session_last_errno(raw_session_ptr_.get()));
+    return static_cast<Error>(last_ssh_errno);
   }
 
   const int check_result = libssh2_knownhost_checkp(
@@ -74,6 +83,10 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   libssh2_knownhost_free(known_hosts);
 
   if (check_result != LIBSSH2_KNOWNHOST_CHECK_MATCH) {
+    ERROR(
+        "libssh2_knownhost_checkp() call did not produce a match in list of known hosts. Match "
+        "result value: %d. libssh2_session_last_errno: %d",
+        check_result, libssh2_session_last_errno(raw_session_ptr_.get()));
     return static_cast<KnownHostsError>(check_result);
   }
 
