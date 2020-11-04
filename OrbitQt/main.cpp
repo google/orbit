@@ -84,7 +84,7 @@ using Context = OrbitSsh::Context;
 
 static outcome::result<GrpcPort> DeployOrbitService(
     std::optional<ServiceDeployManager>& service_deploy_manager,
-    const DeploymentConfiguration& deployment_configuration, Context* context,
+    const DeploymentConfiguration* deployment_configuration, Context* context,
     const SshCredentials& ssh_credentials, const GrpcPort& remote_ports) {
   QProgressDialog progress_dialog{};
 
@@ -122,7 +122,7 @@ static outcome::result<void> RunUiInstance(
 
     // The user chose a remote profiling target.
     OUTCOME_TRY(tunnel_ports,
-                DeployOrbitService(service_deploy_manager, deployment_configuration.value(),
+                DeployOrbitService(service_deploy_manager, &(deployment_configuration.value()),
                                    context, std::get<SshCredentials>(result), remote_ports));
     return std::make_tuple(tunnel_ports, QString{});
   }());

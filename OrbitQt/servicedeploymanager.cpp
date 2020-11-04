@@ -58,7 +58,7 @@ static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
   }
 }
 
-ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration& deployment_configuration,
+ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deployment_configuration,
                                            const OrbitSsh::Context* context,
                                            OrbitSsh::Credentials credentials,
                                            const ServiceDeployManager::GrpcPort& grpc_port,
@@ -67,7 +67,10 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration& deploy
       deployment_configuration_(deployment_configuration),
       context_(context),
       credentials_(std::move(credentials)),
-      grpc_port_(grpc_port) {}
+      grpc_port_(grpc_port) {
+  CHECK(deployment_configuration != nullptr);
+  CHECK(context != nullptr);
+}
 
 void ServiceDeployManager::Cancel() {
   loop_.error(make_error_code(Error::kUserCanceledServiceDeployment));
@@ -178,7 +181,7 @@ void ServiceDeployManager::StopSftpChannel() { (void)StopSftpChannel(&loop_, sft
 outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
   emit statusMessage("Copying OrbitService package to the remote instance...");
 
-  auto& config = std::get<SignedDebianPackageDeployment>(deployment_configuration_);
+  auto& config = std::get<SignedDebianPackageDeployment>(*deployment_configuration_);
 
   using FileMode = OrbitSshQt::SftpCopyToRemoteOperation::FileMode;
 
@@ -241,7 +244,7 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
   emit statusMessage("Copying OrbitService executable to the remote instance...");
 
   const std::string exe_destination_path = "/tmp/OrbitService";
-  auto& config = std::get<BareExecutableAndRootPasswordDeployment>(deployment_configuration_);
+  auto& config = std::get<BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
 
   OUTCOME_TRY(CopyFileToRemote(
       config.path_to_executable.string(), exe_destination_path,
@@ -295,7 +298,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   orbit_service_task_.emplace(&session_.value(), task_string);
 
   const auto& config =
-      std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(deployment_configuration_);
+      std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
 
   orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
 
@@ -385,7 +388,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec() {
   OUTCOME_TRY(sftp_channel, StartSftpChannel(&loop_));
   sftp_channel_ = std::move(sftp_channel);
   // Release mode: Deploying a signed debian package. No password required.
-  if (std::holds_alternative<SignedDebianPackageDeployment>(deployment_configuration_)) {
+  if (std::holds_alternative<SignedDebianPackageDeployment>(*deployment_configuration_)) {
     OUTCOME_TRY(service_already_installed, CheckIfInstalled());
 
     if (!service_already_installed) {
@@ -401,7 +404,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec() {
 
     // Developer mode: Deploying a bare executable and start it via sudo.
   } else if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(
-                 deployment_configuration_)) {
+                 *deployment_configuration_)) {
     OUTCOME_TRY(CopyOrbitServiceExecutable());
     OUTCOME_TRY(StartOrbitServicePrivileged());
     // TODO(hebecker): Replace this timeout by waiting for a
@@ -411,7 +414,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec() {
     StartWatchdog();
 
     // Manual Developer mode: No deployment, no starting. Just the tunnels.
-  } else if (std::holds_alternative<NoDeployment>(deployment_configuration_)) {
+  } else if (std::holds_alternative<NoDeployment>(*deployment_configuration_)) {
     // Nothing to deploy
     emit statusMessage(
         "Skipping deployment step. Expecting that OrbitService is already "

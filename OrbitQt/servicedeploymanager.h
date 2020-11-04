@@ -30,7 +30,7 @@ class ServiceDeployManager : public QObject {
     uint16_t grpc_port;
   };
 
-  explicit ServiceDeployManager(const DeploymentConfiguration& deployment_configuration,
+  explicit ServiceDeployManager(const DeploymentConfiguration* deployment_configuration,
                                 const OrbitSsh::Context* context, OrbitSsh::Credentials creds,
                                 const GrpcPort& grpc_port, QObject* parent = nullptr);
 
@@ -49,7 +49,7 @@ class ServiceDeployManager : public QObject {
  private:
   EventLoop loop_;
 
-  const DeploymentConfiguration& deployment_configuration_;
+  const DeploymentConfiguration* deployment_configuration_;
   const OrbitSsh::Context* context_;
   OrbitSsh::Credentials credentials_;
   GrpcPort grpc_port_;
