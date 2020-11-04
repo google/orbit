@@ -15,11 +15,10 @@ outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp, std::stri
                            static_cast<uint64_t>(flags), mode, LIBSSH2_SFTP_OPENFILE);
 
   if (result == nullptr) {
-    int last_errno = libssh2_session_last_errno(session->GetRawSessionPtr());
+    const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
 
     if (last_errno != LIBSSH2_ERROR_EAGAIN) {
-      ERROR("Unable to open sftp file \"%s\": %s (errno: %d)", filepath,
-            LibSsh2SessionLastError(session->GetRawSessionPtr()), last_errno);
+      ERROR("Unable to open sftp file \"%s\": %s", filepath, error_message);
     }
 
     return static_cast<Error>(last_errno);
@@ -34,8 +33,8 @@ outcome::result<std::string> SftpFile::Read(size_t max_length_in_bytes) {
 
   if (result < 0) {
     if (result != LIBSSH2_ERROR_EAGAIN) {
-      ERROR("Unable to read from sftp file \"%s\": %s (errno: %d)", filepath_,
-            LibSsh2SessionLastError(session_->GetRawSessionPtr()), result);
+      ERROR("Unable to read from sftp file \"%s\": %s", filepath_,
+            LibSsh2SessionLastError(session_->GetRawSessionPtr()).second);
     }
     return static_cast<Error>(result);
   }
@@ -50,7 +49,7 @@ outcome::result<void> SftpFile::Close() {
   if (result < 0) {
     if (result != LIBSSH2_ERROR_EAGAIN) {
       ERROR("Unable to close sftp file \"%s\": %s", filepath_,
-            LibSsh2SessionLastError(session_->GetRawSessionPtr()));
+            LibSsh2SessionLastError(session_->GetRawSessionPtr()).second);
     }
     return static_cast<Error>(result);
   }
@@ -66,8 +65,8 @@ outcome::result<size_t> SftpFile::Write(std::string_view data) {
 
   if (result < 0) {
     if (result != LIBSSH2_ERROR_EAGAIN) {
-      ERROR("Unable to write to sftp file \"%s\": %s (errno: %d)", filepath_,
-            LibSsh2SessionLastError(session_->GetRawSessionPtr()), result);
+      ERROR("Unable to write to sftp file \"%s\": %s", filepath_,
+            LibSsh2SessionLastError(session_->GetRawSessionPtr()).second);
     }
     return static_cast<Error>(result);
   }

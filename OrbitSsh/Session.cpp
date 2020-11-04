@@ -6,14 +6,36 @@
 
 #include <libssh2.h>
 
+#include <filesystem>
 #include <optional>
 
+#include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/KnownHostsError.h"
 #include "OrbitSsh/Socket.h"
+
+namespace {
+
+void LogFileContents(const std::filesystem::path& file_path) {
+  if (!std::filesystem::exists(file_path)) {
+    ERROR("Unable to print contents of file \"%s\": File does not exist.", file_path.string());
+    return;
+  }
+
+  std::ifstream stream{file_path.string()};
+  if (!stream.good()) {
+    ERROR("Unable to print contents of file \"%s\": Could not open.", file_path.string());
+    return;
+  }
+
+  LOG("Contents of file \"%s\":\n%s", file_path.string(),
+      std::string{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}});
+}
+
+}  // namespace
 
 namespace OrbitSsh {
 
@@ -43,9 +65,10 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   LIBSSH2_KNOWNHOSTS* known_hosts = libssh2_knownhost_init(raw_session_ptr_.get());
 
   if (known_hosts == nullptr) {
-    int last_ssh_errno = libssh2_session_last_errno(raw_session_ptr_.get());
-    ERROR("libssh2_knownhost_init call failed. libssh2_session_last_errno: %d", last_ssh_errno);
-    return static_cast<Error>(last_ssh_errno);
+    LogFileContents(known_hosts_path);
+    const auto [last_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
+    ERROR("libssh2_knownhost_init call failed, last session error message: %s", error_message);
+    return static_cast<Error>(last_errno);
   }
 
   // libssh2 does not support anything else than:
@@ -53,11 +76,12 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   const int amount_hosts = libssh2_knownhost_readfile(
       known_hosts, known_hosts_path.string().c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH);
   if (amount_hosts < 0) {
+    LogFileContents(known_hosts_path);
+    const auto [unused_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
     ERROR(
         "libssh2_knownhost_readfile() call failed. Tried to to read \"%s\". returned error code "
-        "was: %d, libssh2_session_last_errno: %d",
-        known_hosts_path.string(), amount_hosts,
-        libssh2_session_last_errno(raw_session_ptr_.get()));
+        "was: %d, last session error message: %s",
+        known_hosts_path.string(), amount_hosts, error_message);
     libssh2_knownhost_free(known_hosts);
     return static_cast<Error>(amount_hosts);
   }
@@ -68,10 +92,11 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
       libssh2_session_hostkey(raw_session_ptr_.get(), &fingerprint_length, &fingerprint_type);
 
   if (fingerprint == nullptr) {
-    int last_ssh_errno = libssh2_session_last_errno(raw_session_ptr_.get());
-    ERROR("libssh2_session_hostkey() failed, libssh2_session_last_errno: %d", last_ssh_errno);
+    LogFileContents(known_hosts_path);
+    const auto [last_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
+    ERROR("libssh2_session_hostkey() failed, last session error message: %s", error_message);
     libssh2_knownhost_free(known_hosts);
-    return static_cast<Error>(last_ssh_errno);
+    return static_cast<Error>(last_errno);
   }
 
   const int check_result = libssh2_knownhost_checkp(
@@ -83,10 +108,12 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   libssh2_knownhost_free(known_hosts);
 
   if (check_result != LIBSSH2_KNOWNHOST_CHECK_MATCH) {
+    LogFileContents(known_hosts_path);
+    const auto [unused_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
     ERROR(
         "libssh2_knownhost_checkp() call did not produce a match in list of known hosts. Match "
-        "result value: %d. libssh2_session_last_errno: %d",
-        check_result, libssh2_session_last_errno(raw_session_ptr_.get()));
+        "result value: %d. Last session error message: %s",
+        check_result, error_message);
     return static_cast<KnownHostsError>(check_result);
   }
 

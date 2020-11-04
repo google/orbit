@@ -4,6 +4,9 @@
 
 #include "OrbitSsh/Sftp.h"
 
+#include <libssh2.h>
+
+#include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
 
 namespace OrbitSsh {
@@ -13,7 +16,11 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
   auto* const result = libssh2_sftp_init(session->GetRawSessionPtr());
 
   if (result == nullptr) {
-    return static_cast<Error>(libssh2_session_last_errno(session->GetRawSessionPtr()));
+    const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
+    if (last_errno != LIBSSH2_ERROR_EAGAIN) {
+      ERROR("Call to ligssh2_sftp_init() failed. Last session error message: %s", error_message);
+    }
+    return static_cast<Error>(last_errno);
   }
 
   return Sftp{result, session};
