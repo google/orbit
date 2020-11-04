@@ -17,7 +17,7 @@ target_include_directories(OrbitVulkanLayerClientGgp PRIVATE
 #        include/OrbitVulkanLayerClientGgp/SampleLayer.h)
 
 target_sources(OrbitVulkanLayerClientGgp PRIVATE
-        SampleLayer.cpp)
+        OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC
         OrbitBase)
