@@ -29,7 +29,7 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
   const auto timeout_timer = QPointer{new QTimer{parent}};
 
   QObject::connect(timeout_timer, &QTimer::timeout, parent, [process, timeout_timer, callback]() {
-    if (process && !process->waitForFinished(10)) {
+    if (process && !process->waitForFinished(20)) {
       ERROR("Process request timed out after %dms", kDefaultTimeoutInMs);
       callback(Error::kRequestTimedOut);
       if (process) {
