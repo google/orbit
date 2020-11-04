@@ -11,7 +11,7 @@
 
 namespace OrbitSsh {
 
-std::string LibSsh2SessionLastError(LIBSSH2_SESSION* session);
+std::pair<int, std::string> LibSsh2SessionLastError(LIBSSH2_SESSION* session);
 
 }  // namespace OrbitSsh
 

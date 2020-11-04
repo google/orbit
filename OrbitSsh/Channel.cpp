@@ -10,7 +10,9 @@
 #include <optional>
 #include <outcome.hpp>
 
+#include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Error.h"
 
 namespace OrbitSsh {
 
@@ -23,7 +25,11 @@ outcome::result<Channel> Channel::OpenChannel(Session* session) {
     return outcome::success(Channel{raw_channel_ptr});
   }
 
-  return static_cast<Error>(libssh2_session_last_errno(session->GetRawSessionPtr()));
+  const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
+  if (last_errno != LIBSSH2_ERROR_EAGAIN) {
+    ERROR("Unable to open Channel, last session error message: %s", error_message);
+  }
+  return static_cast<Error>(last_errno);
 }
 
 outcome::result<Channel> Channel::OpenTcpIpTunnel(Session* session,
@@ -35,7 +41,11 @@ outcome::result<Channel> Channel::OpenTcpIpTunnel(Session* session,
     return outcome::success(Channel{raw_channel_ptr});
   }
 
-  return static_cast<Error>(libssh2_session_last_errno(session->GetRawSessionPtr()));
+  const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
+  if (last_errno != LIBSSH2_ERROR_EAGAIN) {
+    ERROR("Unable to open TcpIpTunnel, last session error message: %s", error_message);
+  }
+  return static_cast<Error>(last_errno);
 }
 
 outcome::result<void> Channel::Exec(const std::string& command) {
