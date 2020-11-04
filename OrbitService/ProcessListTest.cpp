@@ -24,7 +24,7 @@ TEST(ProcessList, ProcessList) {
   // We wait until the stats have been updated
   while (utils::GetCumulativeTotalCpuTime().value().value == total_cpu_cycles.value) {
     // If this loop never ends it will be caught by the automatic timeout feature
-    usleep(20'000);
+    usleep(10'000);
   }
 
   const auto result2 = process_list.Refresh();
