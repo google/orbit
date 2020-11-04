@@ -683,6 +683,7 @@ void CaptureWindow::RenderImGui() {
       if (show_imgui_demo) {
         ImGui::ShowDemoWindow();
       }
+      ImGui::EndTabItem();
     }
     ImGui::EndTabBar();
   }
