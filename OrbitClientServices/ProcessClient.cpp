@@ -48,8 +48,10 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::ProcessInfo>> ProcessClient::GetPr
 
   grpc::Status status = process_service_->GetProcessList(context.get(), request, &response);
   if (!status.ok()) {
-    ERROR("gRPC call to GetProcessList failed: %s (error_code=%d)", status.error_message(),
-          status.error_code());
+    if (status.error_code() != grpc::StatusCode::DEADLINE_EXCEEDED) {
+      ERROR("gRPC call to GetProcessList failed: %s (error_code=%d)", status.error_message(),
+            status.error_code());
+    }
     return ErrorMessage(status.error_message());
   }
 

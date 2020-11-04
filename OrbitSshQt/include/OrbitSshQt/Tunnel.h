@@ -56,7 +56,9 @@ class Tunnel : public StateMachineHelper<Tunnel, details::TunnelState> {
   void Start();
   void Stop();
 
-  uint16_t GetListenPort() const { return local_server_ ? local_server_->serverPort() : 0; }
+  [[nodiscard]] uint16_t GetListenPort() const {
+    return local_server_ ? local_server_->serverPort() : 0;
+  }
 
  signals:
   void tunnelOpened(uint16_t listen_port);
