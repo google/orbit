@@ -68,7 +68,6 @@ class CaptureWindow : public GlCanvas {
   TimeGraph time_graph_;
   bool draw_help_;
   bool draw_filter_;
-  bool first_help_draw_;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
 

@@ -92,7 +92,7 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
   AddBox(box, colors, std::move(user_data));
 }
 
-std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, uint32_t num_sides) {
+static std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, uint32_t num_sides) {
   std::vector<Triangle> triangles;
   const Vec3 origin(0, 0, 0);
 

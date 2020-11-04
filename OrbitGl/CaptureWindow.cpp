@@ -18,7 +18,6 @@ CaptureWindow::CaptureWindow(uint32_t font_size)
   time_graph_.SetCanvas(this);
   draw_help_ = true;
   draw_filter_ = false;
-  first_help_draw_ = true;
   world_top_left_x_ = 0;
   world_top_left_y_ = 0;
   world_max_y_ = 0;
@@ -491,6 +490,11 @@ void CaptureWindow::Draw() {
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
   }
+
+  if (draw_help_) {
+      RenderHelpUi();
+  }
+
   DrawScreenSpace();
 
   // We start by getting all layers
@@ -725,16 +729,17 @@ void CaptureWindow::RenderHelpUi() {
       "Toggle Help: 'H'";
 
   const uint32_t kHelpMessageFontSize = 2 * font_size_;
-  Vec2 out_world_box_pos;
-  Vec2 out_world_box_size;
+  Vec2 text_bounding_box_pos;
+  Vec2 text_bounding_box_size;
   text_renderer_.AddText(help_message, world_x, world_y, GlCanvas::kZValueTextUi,
                          Color(255, 255, 255, 255), kHelpMessageFontSize, -1.f /*max_size*/,
-                         false /*right_justified*/, &out_world_box_pos, &out_world_box_size);
+                         false /*right_justified*/, &text_bounding_box_pos,
+                         &text_bounding_box_size);
 
   const Color kBoxColor(50, 50, 50, 230);
   const float kMargin = 15.f;
   const float kRoundingRadius = 20.f;
-  ui_batcher_.AddRoundedBox(out_world_box_pos, out_world_box_size, GlCanvas::kZValueUi,
+  ui_batcher_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size, GlCanvas::kZValueUi,
                             kRoundingRadius, kBoxColor, kMargin);
 }
 
