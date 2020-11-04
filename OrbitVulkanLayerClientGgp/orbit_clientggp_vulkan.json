@@ -1,7 +1,7 @@
 {
   "file_format_version": "1.1.0",
   "layer": {
-    "name": "VK_LAYER_ORBIT_CLIENT_GGP",
+    "name": "VK_LAYER_ORBIT_CAPTURE_CLIENT",
     "type": "GLOBAL",
     "library_path": "./libOrbitVulkanLayerClientGgp.so",
     "api_version": "1.1.77",
@@ -11,8 +11,8 @@
       "DISABLE_ORBIT_VULKAN_LAYER": "1"
     },
     "functions": {
-      "vkGetInstanceProcAddr": "SampleLayer_GetInstanceProcAddr",
-      "vkGetDeviceProcAddr": "SampleLayer_GetDeviceProcAddr"
+      "vkGetInstanceProcAddr": "OrbitCaptureClientGetInstanceProcAddr",
+      "vkGetDeviceProcAddr": "OrbitCaptureClientGetDeviceProcAddr"
     }
   }
 }
