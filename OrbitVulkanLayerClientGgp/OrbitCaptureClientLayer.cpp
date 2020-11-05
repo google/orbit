@@ -33,12 +33,6 @@ static constexpr uint32_t const kLayerSpecVersion = VK_API_VERSION_1_1;
 absl::Mutex layer_mutex;
 DispatchTable dispatch_table;
 
-// Layer data
-struct CommandStats {
-  uint32_t draw_count = 0, instance_count = 0, vert_count = 0;
-};
-std::map<VkCommandBuffer, CommandStats> command_buffer_stats;
-
 // --------------------------------------------------------------------------------
 // Layer init and shutdown
 // --------------------------------------------------------------------------------
@@ -130,54 +124,6 @@ OrbitCaptureClientDestroyDevice(VkDevice device, const VkAllocationCallbacks* /*
 }
 
 // --------------------------------------------------------------------------------
-// Actual layer implementation
-// --------------------------------------------------------------------------------
-
-VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientBeginCommandBuffer(
-    VkCommandBuffer command_buffer, const VkCommandBufferBeginInfo* begin_info) {
-  absl::ReaderMutexLock lock(&layer_mutex);
-  command_buffer_stats[command_buffer] = CommandStats();
-
-  return dispatch_table.CallBeginCommandBuffer(command_buffer, begin_info);
-}
-
-VK_LAYER_EXPORT void VKAPI_CALL OrbitCaptureClientCmdDraw(VkCommandBuffer command_buffer,
-                                                          uint32_t vertex_count,
-                                                          uint32_t instance_count,
-                                                          uint32_t first_vertex,
-                                                          uint32_t first_instance) {
-  absl::ReaderMutexLock lock(&layer_mutex);
-  command_buffer_stats[command_buffer].draw_count++;
-  command_buffer_stats[command_buffer].instance_count += instance_count;
-  command_buffer_stats[command_buffer].vert_count += instance_count * vertex_count;
-
-  dispatch_table.CallCmdDraw(command_buffer, vertex_count, instance_count, first_vertex,
-                             first_instance);
-}
-
-VK_LAYER_EXPORT void VKAPI_CALL OrbitCaptureClientCmdDrawIndexed(
-    VkCommandBuffer command_buffer, uint32_t index_count, uint32_t instance_count,
-    uint32_t first_index, int32_t vertex_offset, uint32_t first_instance) {
-  absl::ReaderMutexLock lock(&layer_mutex);
-  command_buffer_stats[command_buffer].draw_count++;
-  command_buffer_stats[command_buffer].instance_count += instance_count;
-  command_buffer_stats[command_buffer].vert_count += instance_count * index_count;
-
-  dispatch_table.CallCmdDrawIndexed(command_buffer, index_count, instance_count, first_index,
-                                    vertex_offset, first_instance);
-}
-
-VK_LAYER_EXPORT VkResult VKAPI_CALL
-OrbitCaptureClientEndCommandBuffer(VkCommandBuffer command_buffer) {
-  absl::ReaderMutexLock lock(&layer_mutex);
-  CommandStats& s = command_buffer_stats[command_buffer];
-  printf("Command buffer %p ended with %u draws, %u instances and %u vertices", command_buffer,
-         s.draw_count, s.instance_count, s.vert_count);
-
-  return dispatch_table.CallEndCommandBuffer(command_buffer);
-}
-
-// --------------------------------------------------------------------------------
 // Enumeration function
 // --------------------------------------------------------------------------------
 
@@ -251,10 +197,6 @@ OrbitCaptureClientGetDeviceProcAddr(VkDevice device, const char* name) {
   GETPROCADDR(EnumerateDeviceExtensionProperties);
   GETPROCADDR(CreateDevice);
   GETPROCADDR(DestroyDevice);
-  GETPROCADDR(BeginCommandBuffer);
-  GETPROCADDR(CmdDraw);
-  GETPROCADDR(CmdDrawIndexed);
-  GETPROCADDR(EndCommandBuffer);
 
   absl::ReaderMutexLock lock(&layer_mutex);
   return dispatch_table.CallGetDeviceProcAddr(device, name);
@@ -275,10 +217,6 @@ OrbitCaptureClientGetInstanceProcAddr(VkInstance instance, const char* name) {
   GETPROCADDR(EnumerateDeviceExtensionProperties);
   GETPROCADDR(CreateDevice);
   GETPROCADDR(DestroyDevice);
-  GETPROCADDR(BeginCommandBuffer);
-  GETPROCADDR(CmdDraw);
-  GETPROCADDR(CmdDrawIndexed);
-  GETPROCADDR(EndCommandBuffer);
 
   absl::ReaderMutexLock lock(&layer_mutex);
   return dispatch_table.CallGetInstanceProcAddr(instance, name);

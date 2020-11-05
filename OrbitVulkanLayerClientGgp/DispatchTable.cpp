@@ -81,26 +81,3 @@ VkResult DispatchTable::CallEnumerateDeviceExtensionProperties(
   return instance_dispatch_[GetKey(physical_device)].EnumerateDeviceExtensionProperties(
       physical_device, layer_name, property_count, properties);
 }
-
-VkResult DispatchTable::CallBeginCommandBuffer(VkCommandBuffer command_buffer,
-                                               const VkCommandBufferBeginInfo* begin_info) {
-  return device_dispatch_[GetKey(command_buffer)].BeginCommandBuffer(command_buffer, begin_info);
-}
-
-void DispatchTable::CallCmdDraw(VkCommandBuffer command_buffer, uint32_t vertex_count,
-                                uint32_t instance_count, uint32_t first_vertex,
-                                uint32_t first_instance) {
-  device_dispatch_[GetKey(command_buffer)].CmdDraw(command_buffer, vertex_count, instance_count,
-                                                   first_vertex, first_instance);
-}
-
-void DispatchTable::CallCmdDrawIndexed(VkCommandBuffer command_buffer, uint32_t index_count,
-                                       uint32_t instance_count, uint32_t first_index,
-                                       int32_t vertex_offset, uint32_t first_instance) {
-  device_dispatch_[GetKey(command_buffer)].CmdDrawIndexed(
-      command_buffer, index_count, instance_count, first_index, vertex_offset, first_instance);
-}
-
-VkResult DispatchTable::CallEndCommandBuffer(VkCommandBuffer command_buffer) {
-  return device_dispatch_[GetKey(command_buffer)].EndCommandBuffer(command_buffer);
-}
