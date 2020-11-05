@@ -51,6 +51,10 @@ ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
 ABSL_FLAG(bool, nodeploy, false, "Disable automatic deployment of OrbitService");
 
+ABSL_FLAG(std::string, collector, "", "Full path of collector to be deployed");
+
+ABSL_FLAG(std::string, collector_root_password, "", "Collector's machine root password");
+
 ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
@@ -239,9 +243,19 @@ static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfig
   const char* const kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
   const char* const kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
 
-  if (env.contains(kEnvExecutablePath) && env.contains(kEnvRootPassword)) {
+  // Program argument have higher precedence than environment variables.
+  std::string collector_override = absl::GetFlag(FLAGS_collector);
+  std::string collector_password = absl::GetFlag(FLAGS_collector_root_password);
+  std::string password = !collector_password.empty() ? collector_password
+                         : env.contains(kEnvRootPassword)
+                             ? env.value(kEnvRootPassword).toStdString()
+                             : "";
+
+  if (!collector_override.empty() && !password.empty()) {
+    return OrbitQt::BareExecutableAndRootPasswordDeployment{collector_override, password};
+  } else if (env.contains(kEnvExecutablePath) && !password.empty()) {
     return OrbitQt::BareExecutableAndRootPasswordDeployment{
-        env.value(kEnvExecutablePath).toStdString(), env.value(kEnvRootPassword).toStdString()};
+        env.value(kEnvExecutablePath).toStdString(), password};
   } else if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
     return OrbitQt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
                                                   env.value(kEnvSignaturePath).toStdString()};
