@@ -695,8 +695,8 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
                               "A capture is currently in progress. Do you want to abort the "
                               "capture and exit Orbit?") == QMessageBox::Yes) {
       // We need for the capture to clean up - close as soon as this is done
-      GOrbitApp->SetCaptureStoppedCallback([&] { close(); });
-      GOrbitApp->StopCapture();
+      GOrbitApp->SetCaptureFailedCallback([&] { close(); });
+      GOrbitApp->AbortCapture();
     }
   } else {
     QMainWindow::closeEvent(event);

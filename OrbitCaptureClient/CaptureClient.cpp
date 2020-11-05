@@ -69,11 +69,13 @@ void CaptureClient::Capture(ProcessData&& process,
                             const OrbitClientData::ModuleManager& module_manager,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints, bool enable_introspection) {
+  CHECK(client_context_ == nullptr);
   CHECK(reader_writer_ == nullptr);
 
   writes_done_failed_ = false;
-  grpc::ClientContext client_context;
-  reader_writer_ = capture_service_->Capture(&client_context);
+  try_abort_ = false;
+  client_context_ = std::make_unique<grpc::ClientContext>();
+  reader_writer_ = capture_service_->Capture(client_context_.get());
 
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
@@ -132,10 +134,14 @@ void CaptureClient::Capture(ProcessData&& process,
                                       std::move(selected_tracepoints));
 
   CaptureResponse response;
-  while (!writes_done_failed_ && reader_writer_->Read(&response)) {
+  while (!writes_done_failed_ && !try_abort_ && reader_writer_->Read(&response)) {
     event_processor.ProcessEvents(response.capture_events());
   }
-  if (writes_done_failed_) {
+
+  if (try_abort_) {
+    LOG("TryCancel on Capture's gRPC context was called: Read on Capture's gRPC stream failed");
+    capture_listener_->OnCaptureCancelled();
+  } else if (writes_done_failed_) {
     LOG("WritesDone on Capture's gRPC stream failed: stop reading and try to finish the gRPC call");
     capture_listener_->OnCaptureFailed(
         ErrorMessage("WritesDone on Capture's gRPC stream failed: unable to finish the "
@@ -179,6 +185,21 @@ bool CaptureClient::StopCapture() {
   return true;
 }
 
+bool CaptureClient::TryAbortCapture() {
+  absl::MutexLock lock(&state_mutex_);
+  if (state_ != State::kStarted && state_ != State::kStopping) {
+    LOG("TryAbortCapture ignored, because the capture is not started nor stopping");
+    return false;
+  }
+
+  CHECK(client_context_ != nullptr);
+
+  LOG("Calling TryCancel on Capture's gRPC context: trying to abort the capture");
+  try_abort_ = true;
+  client_context_->TryCancel();  // reader_writer_->Read in Capture should then fail
+  return true;
+}
+
 void CaptureClient::FinishCapture() {
   if (reader_writer_ == nullptr) {
     return;
@@ -189,6 +210,7 @@ void CaptureClient::FinishCapture() {
     ERROR("Finishing gRPC call to Capture: %s", status.error_message());
   }
   reader_writer_.reset();
+  client_context_.reset();
 
   absl::MutexLock lock(&state_mutex_);
   state_ = State::kStopped;
