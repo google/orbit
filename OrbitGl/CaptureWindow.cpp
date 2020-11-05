@@ -523,8 +523,11 @@ void CaptureWindow::Draw() {
   Append(all_layers, text_renderer_.GetLayers());
   Append(all_layers, time_graph_.GetTextRenderer()->GetLayers());
   std::sort(all_layers.begin(), all_layers.end());
-  std::unique(all_layers.begin(), all_layers.end());
-  CHECK(all_layers.size() <= GlCanvas::kMaxNumberRealZLayers);
+  auto it = std::unique(all_layers.begin(), all_layers.end());
+  all_layers.resize(std::distance(all_layers.begin(), it));
+  if (all_layers.size() > GlCanvas::kMaxNumberRealZLayers) {
+    ERROR("Too many z-layers. The current number is %d", all_layers.size());
+  }
 
   for (float layer : all_layers) {
     // We use different coordinate systems for ScreenSpace items (margin, scrollbar, ...)
