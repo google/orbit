@@ -48,10 +48,11 @@ if [ -n "$1" ]; then
   function cleanup {
     # Delete all unnecessary files from the src/-directory.
     # Kokoro would copy them otherwise before applying the artifacts regex
-	echo "Delete all unnecessary files from the src/-directory."
-	
+    echo "Delete all unnecessary files from the src/-directory."
+    
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
+      echo "Cleanup for presubmit."
       # In the presubmit case we only spare the test-results and this script.
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
@@ -65,8 +66,10 @@ if [ -n "$1" ]; then
             rm "$file"
           fi
         done
+      echo "Cleanup for presubmit done."
     else
       # In the non-presubmit case we spare the whole build dir and this script.
+      echo "Cleanup for non-presubmit."
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'orbitprofiler/build' | \
@@ -79,7 +82,8 @@ if [ -n "$1" ]; then
             rm "$file"
           fi
         done
-    fi
+      echo "Cleanup for non-presubmit done."
+   fi
   }
   trap cleanup EXIT
 
@@ -150,7 +154,7 @@ if [ -n "$1" ]; then
      || [ "${BUILD_TYPE}" == "nightly" ] \
      || [ "${BUILD_TYPE}" == "continuous_on_release_branch" ]; then
     set +e
-	echo "Uploading symbols to the symbol server."
+    echo "Uploading symbols to the symbol server."
     api_key=$(get_api_key "${OAUTH_TOKEN_HEADER}")
     upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin"
     set -e
