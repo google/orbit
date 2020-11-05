@@ -28,18 +28,6 @@ class DispatchTable {
       const VkPhysicalDevice& physical_device, const char* layer_name, uint32_t* property_count,
       VkExtensionProperties* properties);
 
-  [[nodiscard]] VkResult CallBeginCommandBuffer(VkCommandBuffer command_buffer,
-                                                const VkCommandBufferBeginInfo* begin_info);
-
-  void CallCmdDraw(VkCommandBuffer command_buffer, uint32_t vertex_count, uint32_t instance_count,
-                   uint32_t first_vertex, uint32_t first_instance);
-
-  void CallCmdDrawIndexed(VkCommandBuffer command_buffer, uint32_t index_count,
-                          uint32_t instance_count, uint32_t first_index, int32_t vertex_offset,
-                          uint32_t first_instance);
-
-  [[nodiscard]] VkResult CallEndCommandBuffer(VkCommandBuffer command_buffer);
-
  private:
   absl::flat_hash_map<void*, VkLayerInstanceDispatchTable> instance_dispatch_;
   absl::flat_hash_map<void*, VkLayerDispatchTable> device_dispatch_;
