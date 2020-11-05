@@ -13,10 +13,11 @@ target_include_directories(OrbitVulkanLayerClientGgp PUBLIC
 target_include_directories(OrbitVulkanLayerClientGgp PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-#target_sources(OrbitVulkanLayerClientGgp PUBLIC
-#        include/OrbitVulkanLayerClientGgp/SampleLayer.h)
+target_sources(OrbitVulkanLayerClientGgp PUBLIC
+        include/OrbitVulkanLayerClientGgp/DispatchTable.h)
 
 target_sources(OrbitVulkanLayerClientGgp PRIVATE
+        DispatchTable.cpp
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC

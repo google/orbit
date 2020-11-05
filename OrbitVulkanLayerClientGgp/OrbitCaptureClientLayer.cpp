@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitVulkanLayerClientGgp/DispatchTable.h"
 #include "absl/base/casts.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -28,23 +29,14 @@ static constexpr char const* kLayerDescription =
 static constexpr uint32_t const kLayerImplementationVersion = 1;
 static constexpr uint32_t const kLayerSpecVersion = VK_API_VERSION_1_1;
 
-absl::Mutex mutex;
+// Vulkan layer
+absl::Mutex layer_mutex;
+DispatchTable dispatch_table;
 
-// use the loader's dispatch table pointer as a key for dispatch map lookups
-template <typename DispatchableType>
-void* GetKey(DispatchableType inst) {
-  return *absl::bit_cast<void**>(inst);
-}
-
-// layer book-keeping information, to store dispatch tables by key
-absl::flat_hash_map<void*, VkLayerInstanceDispatchTable> instance_dispatch;
-absl::flat_hash_map<void*, VkLayerDispatchTable> device_dispatch;
-
-// actual data we're recording in this layer
+// Layer data
 struct CommandStats {
   uint32_t draw_count = 0, instance_count = 0, vert_count = 0;
 };
-
 std::map<VkCommandBuffer, CommandStats> command_buffer_stats;
 
 // --------------------------------------------------------------------------------
@@ -80,20 +72,9 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
 
   VkResult result = create_instance(instance_create_info, allocator, instance);
 
-  // fetch our own dispatch table for the functions we need, into the next layer
-  VkLayerInstanceDispatchTable dispatch_table;
-  dispatch_table.GetInstanceProcAddr =
-      absl::bit_cast<PFN_vkGetInstanceProcAddr>(gpa(*instance, "vkGetInstanceProcAddr"));
-  dispatch_table.DestroyInstance =
-      absl::bit_cast<PFN_vkDestroyInstance>(gpa(*instance, "vkDestroyInstance"));
-  dispatch_table.EnumerateDeviceExtensionProperties =
-      absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-          gpa(*instance, "vkEnumerateDeviceExtensionProperties"));
-
-  // store the table by key
   {
-    absl::WriterMutexLock lock(&mutex);
-    instance_dispatch[GetKey(*instance)] = dispatch_table;
+    absl::WriterMutexLock lock(&layer_mutex);
+    dispatch_table.CreateInstanceDispatchTable(*instance, gpa);
   }
 
   return result;
@@ -101,8 +82,8 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
 
 VK_LAYER_EXPORT void VKAPI_CALL
 OrbitCaptureClientDestroyInstance(VkInstance instance, const VkAllocationCallbacks* /*allocator*/) {
-  absl::WriterMutexLock lock(&mutex);
-  instance_dispatch.erase(GetKey(instance));
+  absl::WriterMutexLock lock(&layer_mutex);
+  dispatch_table.DestroyInstance(instance);
 }
 
 VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(
@@ -134,24 +115,9 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(
 
   VkResult result = create_device(physical_device, device_create_info, allocator, device);
 
-  // fetch our own dispatch table for the functions we need, into the next layer
-  VkLayerDispatchTable dispatch_table;
-  dispatch_table.GetDeviceProcAddr =
-      absl::bit_cast<PFN_vkGetDeviceProcAddr>(gdpa(*device, "vkGetDeviceProcAddr"));
-  dispatch_table.DestroyDevice =
-      absl::bit_cast<PFN_vkDestroyDevice>(gdpa(*device, "vkDestroyDevice"));
-  dispatch_table.BeginCommandBuffer =
-      absl::bit_cast<PFN_vkBeginCommandBuffer>(gdpa(*device, "vkBeginCommandBuffer"));
-  dispatch_table.CmdDraw = absl::bit_cast<PFN_vkCmdDraw>(gdpa(*device, "vkCmdDraw"));
-  dispatch_table.CmdDrawIndexed =
-      absl::bit_cast<PFN_vkCmdDrawIndexed>(gdpa(*device, "vkCmdDrawIndexed"));
-  dispatch_table.EndCommandBuffer =
-      absl::bit_cast<PFN_vkEndCommandBuffer>(gdpa(*device, "vkEndCommandBuffer"));
-
-  // store the table by key
   {
-    absl::WriterMutexLock lock(&mutex);
-    device_dispatch[GetKey(*device)] = dispatch_table;
+    absl::WriterMutexLock lock(&layer_mutex);
+    dispatch_table.CreateDeviceDispatchTable(*device, gdpa);
   }
 
   return result;
@@ -159,8 +125,8 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(
 
 VK_LAYER_EXPORT void VKAPI_CALL
 OrbitCaptureClientDestroyDevice(VkDevice device, const VkAllocationCallbacks* /*allocator*/) {
-  absl::WriterMutexLock lock(&mutex);
-  device_dispatch.erase(GetKey(device));
+  absl::WriterMutexLock lock(&layer_mutex);
+  dispatch_table.DestroyDevice(device);
 }
 
 // --------------------------------------------------------------------------------
@@ -169,9 +135,10 @@ OrbitCaptureClientDestroyDevice(VkDevice device, const VkAllocationCallbacks* /*
 
 VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientBeginCommandBuffer(
     VkCommandBuffer command_buffer, const VkCommandBufferBeginInfo* begin_info) {
-  absl::ReaderMutexLock lock(&mutex);
+  absl::ReaderMutexLock lock(&layer_mutex);
   command_buffer_stats[command_buffer] = CommandStats();
-  return device_dispatch[GetKey(command_buffer)].BeginCommandBuffer(command_buffer, begin_info);
+
+  return dispatch_table.CallBeginCommandBuffer(command_buffer, begin_info);
 }
 
 VK_LAYER_EXPORT void VKAPI_CALL OrbitCaptureClientCmdDraw(VkCommandBuffer command_buffer,
@@ -179,38 +146,35 @@ VK_LAYER_EXPORT void VKAPI_CALL OrbitCaptureClientCmdDraw(VkCommandBuffer comman
                                                           uint32_t instance_count,
                                                           uint32_t first_vertex,
                                                           uint32_t first_instance) {
-  absl::ReaderMutexLock lock(&mutex);
-
+  absl::ReaderMutexLock lock(&layer_mutex);
   command_buffer_stats[command_buffer].draw_count++;
   command_buffer_stats[command_buffer].instance_count += instance_count;
   command_buffer_stats[command_buffer].vert_count += instance_count * vertex_count;
 
-  device_dispatch[GetKey(command_buffer)].CmdDraw(command_buffer, vertex_count, instance_count,
-                                                  first_vertex, first_instance);
+  dispatch_table.CallCmdDraw(command_buffer, vertex_count, instance_count, first_vertex,
+                             first_instance);
 }
 
 VK_LAYER_EXPORT void VKAPI_CALL OrbitCaptureClientCmdDrawIndexed(
     VkCommandBuffer command_buffer, uint32_t index_count, uint32_t instance_count,
     uint32_t first_index, int32_t vertex_offset, uint32_t first_instance) {
-  absl::ReaderMutexLock lock(&mutex);
-
+  absl::ReaderMutexLock lock(&layer_mutex);
   command_buffer_stats[command_buffer].draw_count++;
   command_buffer_stats[command_buffer].instance_count += instance_count;
   command_buffer_stats[command_buffer].vert_count += instance_count * index_count;
 
-  device_dispatch[GetKey(command_buffer)].CmdDrawIndexed(
-      command_buffer, index_count, instance_count, first_index, vertex_offset, first_instance);
+  dispatch_table.CallCmdDrawIndexed(command_buffer, index_count, instance_count, first_index,
+                                    vertex_offset, first_instance);
 }
 
 VK_LAYER_EXPORT VkResult VKAPI_CALL
 OrbitCaptureClientEndCommandBuffer(VkCommandBuffer command_buffer) {
-  absl::ReaderMutexLock lock(&mutex);
-
+  absl::ReaderMutexLock lock(&layer_mutex);
   CommandStats& s = command_buffer_stats[command_buffer];
   printf("Command buffer %p ended with %u draws, %u instances and %u vertices", command_buffer,
          s.draw_count, s.instance_count, s.vert_count);
 
-  return device_dispatch[GetKey(command_buffer)].EndCommandBuffer(command_buffer);
+  return dispatch_table.CallEndCommandBuffer(command_buffer);
 }
 
 // --------------------------------------------------------------------------------
@@ -259,10 +223,9 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceExtensionPr
     if (physical_device == VK_NULL_HANDLE) {
       return VK_SUCCESS;
     }
-
-    absl::ReaderMutexLock lock(&mutex);
-    return instance_dispatch[GetKey(physical_device)].EnumerateDeviceExtensionProperties(
-        physical_device, layer_name, property_count, properties);
+    absl::ReaderMutexLock lock(&layer_mutex);
+    return dispatch_table.CallEnumerateDeviceExtensionProperties(physical_device, layer_name,
+                                                                 property_count, properties);
   }
 
   // don't expose any extensions
@@ -293,10 +256,8 @@ OrbitCaptureClientGetDeviceProcAddr(VkDevice device, const char* name) {
   GETPROCADDR(CmdDrawIndexed);
   GETPROCADDR(EndCommandBuffer);
 
-  {
-    absl::ReaderMutexLock lock(&mutex);
-    return device_dispatch[GetKey(device)].GetDeviceProcAddr(device, name);
-  }
+  absl::ReaderMutexLock lock(&layer_mutex);
+  return dispatch_table.CallGetDeviceProcAddr(device, name);
 }
 
 VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL
@@ -319,8 +280,6 @@ OrbitCaptureClientGetInstanceProcAddr(VkInstance instance, const char* name) {
   GETPROCADDR(CmdDrawIndexed);
   GETPROCADDR(EndCommandBuffer);
 
-  {
-    absl::ReaderMutexLock lock(&mutex);
-    return instance_dispatch[GetKey(instance)].GetInstanceProcAddr(instance, name);
-  }
+  absl::ReaderMutexLock lock(&layer_mutex);
+  return dispatch_table.CallGetInstanceProcAddr(instance, name);
 }
