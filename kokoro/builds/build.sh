@@ -57,17 +57,27 @@ if [ -n "$1" ]; then
 	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | wc -l )"; echo "Number of files $NR_FILES"
 	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | grep -v 'orbitprofiler/kokoro' | grep -v 'testresults/' | wc -l )"; echo "Number of files to delete $NR_FILES"
 	  
-	  
+	  # we want to keep 
+	  # /c/mnt/github/orbitprofiler/build/testresults
+	  # and
+	  # /c/mnt/github/orbitprofiler/kokoro
 	  find "$MOUNT_POINT" -depth -mindepth 1 -maxdepth 1 -type d | \
-        grep -v 'orbitprofiler' | \
-        grep -v 'testresults' | \
+        grep -v 'orbitprofiler/kokoro' | \
+        grep -v 'build' | \
         while read file; do
-		  echo "Delete directory: $file."
-          rmdir -rf --ignore-fail-on-non-empty "$file"
+		  echo "Delete directory: $file"
+          rm -rf  "$file"
 		done
       
 	  echo "First step done."
-	  
+	  # build dir can be cleaned up further
+	  find "$MOUNT_POINT/build" -depth -mindepth 1 -maxdepth 1 -type d  | \
+        grep -v 'build/testresults' | \
+        while read file; do
+		  echo "Delete directory: $file"
+          rm -rf "$file"
+		done
+		
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'testresults/' | \
