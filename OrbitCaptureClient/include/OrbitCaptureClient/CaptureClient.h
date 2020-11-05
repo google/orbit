@@ -24,9 +24,7 @@ class CaptureClient {
   explicit CaptureClient(const std::shared_ptr<grpc::Channel>& channel,
                          CaptureListener* capture_listener)
       : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)},
-        capture_listener_{capture_listener},
-        state_{State::kStopped},
-        force_stop_{false} {
+        capture_listener_{capture_listener} {
     CHECK(capture_listener_ != nullptr);
   }
 
@@ -69,8 +67,8 @@ class CaptureClient {
   CaptureListener* capture_listener_ = nullptr;
 
   mutable absl::Mutex state_mutex_;
-  State state_;
-  std::atomic<bool> force_stop_;
+  State state_ = State::kStopped;
+  std::atomic<bool> writes_done_failed_ = false;
 };
 
 #endif  // ORBIT_GL_CAPTURE_CLIENT_H_

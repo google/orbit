@@ -11,7 +11,6 @@
 #include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
-#include "process.pb.h"
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
@@ -72,8 +71,9 @@ void CaptureClient::Capture(ProcessData&& process,
                             TracepointInfoSet selected_tracepoints, bool enable_introspection) {
   CHECK(reader_writer_ == nullptr);
 
-  grpc::ClientContext context;
-  reader_writer_ = capture_service_->Capture(&context);
+  writes_done_failed_ = false;
+  grpc::ClientContext client_context;
+  reader_writer_ = capture_service_->Capture(&client_context);
 
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
@@ -120,8 +120,7 @@ void CaptureClient::Capture(ProcessData&& process,
     capture_listener_->OnCaptureFailed(ErrorMessage("Error sending capture request."));
     return;
   }
-  LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start "
-      "capturing");
+  LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
 
   state_mutex_.Lock();
   state_ = State::kStarted;
@@ -133,10 +132,11 @@ void CaptureClient::Capture(ProcessData&& process,
                                       std::move(selected_tracepoints));
 
   CaptureResponse response;
-  while (!force_stop_ && reader_writer_->Read(&response)) {
+  while (!writes_done_failed_ && reader_writer_->Read(&response)) {
     event_processor.ProcessEvents(response.capture_events());
   }
-  if (force_stop_) {
+  if (writes_done_failed_) {
+    LOG("WritesDone on Capture's gRPC stream failed: stop reading and try to finish the gRPC call");
     capture_listener_->OnCaptureFailed(
         ErrorMessage("WritesDone on Capture's gRPC stream failed: unable to finish the "
                      "capture in orderly manner, performing emergency stop."));
@@ -151,8 +151,8 @@ bool CaptureClient::StopCapture() {
   absl::MutexLock lock(&state_mutex_);
   if (state_ == State::kStarting) {
     // Block and wait until the state is not kStarting
-    bool (*IsNotStarting)(State * state) = [](State* state) { return *state != State::kStarting; };
-    state_mutex_.Await(absl::Condition(IsNotStarting, &state_));
+    bool (*is_not_starting)(State*) = [](State* state) { return *state != State::kStarting; };
+    state_mutex_.Await(absl::Condition(is_not_starting, &state_));
   }
 
   if (state_ != State::kStarted) {
@@ -170,7 +170,7 @@ bool CaptureClient::StopCapture() {
     ERROR(
         "WritesDone on Capture's gRPC stream failed: unable to finish the "
         "capture in orderly manner, initiating emergency stop");
-    force_stop_ = true;
+    writes_done_failed_ = true;
   } else {
     LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
   }
