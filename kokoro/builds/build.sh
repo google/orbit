@@ -54,6 +54,8 @@ if [ -n "$1" ]; then
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       echo "Cleanup for presubmit."
       # In the presubmit case we only spare the test-results and this script.
+	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | wc -l )"; echo "Number of files $NR_FILES"
+	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | grep -v 'orbitprofiler/kokoro' | grep -v 'testresults/' | wc -l )"; echo "Number of files to delete $NR_FILES"
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'testresults/' | \
@@ -61,8 +63,10 @@ if [ -n "$1" ]; then
           if [[ -d $file ]]; then
             # That might give an error message when the directory is not empty.
             # That's okay.
+			echo "Delete directory: $file."
             rmdir --ignore-fail-on-non-empty "$file"
           elif [[ -e $file ]]; then
+			echo "Delete file: $file."
             rm "$file"
           fi
         done
