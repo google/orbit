@@ -52,6 +52,8 @@ class CaptureClient {
     return state_ != State::kStopped;
   }
 
+  bool TryAbortCapture();
+
  private:
   void Capture(ProcessData&& process, const OrbitClientData::ModuleManager& module_manager,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
@@ -60,6 +62,7 @@ class CaptureClient {
   void FinishCapture();
 
   std::unique_ptr<orbit_grpc_protos::CaptureService::Stub> capture_service_;
+  std::unique_ptr<grpc::ClientContext> client_context_;
   std::unique_ptr<grpc::ClientReaderWriter<orbit_grpc_protos::CaptureRequest,
                                            orbit_grpc_protos::CaptureResponse>>
       reader_writer_;
@@ -69,6 +72,7 @@ class CaptureClient {
   mutable absl::Mutex state_mutex_;
   State state_ = State::kStopped;
   std::atomic<bool> writes_done_failed_ = false;
+  std::atomic<bool> try_abort_ = false;
 };
 
 #endif  // ORBIT_GL_CAPTURE_CLIENT_H_

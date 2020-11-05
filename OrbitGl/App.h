@@ -86,6 +86,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool IsCapturing() const;
   bool StartCapture();
   void StopCapture();
+  void AbortCapture();
   void ClearCapture();
   void SetCaptureData(CaptureData capture_data) { capture_data_ = std::move(capture_data); }
   [[nodiscard]] const CaptureData& GetCaptureData() const { return capture_data_; }

@@ -446,7 +446,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::OnExit() {
-  StopCapture();
+  AbortCapture();
 
   process_manager_->Shutdown();
   thread_pool_->ShutdownAndWait();
@@ -737,6 +737,15 @@ bool OrbitApp::StartCapture() {
 
 void OrbitApp::StopCapture() {
   if (!capture_client_->StopCapture()) {
+    return;
+  }
+
+  CHECK(capture_stop_requested_callback_);
+  capture_stop_requested_callback_();
+}
+
+void OrbitApp::AbortCapture() {
+  if (!capture_client_->TryAbortCapture()) {
     return;
   }
 
