@@ -33,7 +33,8 @@ source $(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)/upload_sy
 
 if [ -n "$1" ]; then
   # We are inside the docker container
-
+  echo "build.sh is invoked from inside the docker container."
+  
   readonly REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../" >/dev/null 2>&1 && pwd )"
   readonly MOUNT_POINT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" >/dev/null 2>&1 && pwd )"
   readonly KEYSTORE_PATH="${MOUNT_POINT}/keystore"
@@ -47,7 +48,8 @@ if [ -n "$1" ]; then
   function cleanup {
     # Delete all unnecessary files from the src/-directory.
     # Kokoro would copy them otherwise before applying the artifacts regex
-
+	echo "Delete all unnecessary files from the src/-directory."
+	
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       # In the presubmit case we only spare the test-results and this script.
@@ -125,24 +127,30 @@ if [ -n "$1" ]; then
     readonly PACKAGING_OPTION=""
   fi
 
+  echo "Invoking conan lock."
   conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
     --build=outdated \
     --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -u -pr ${CONAN_PROFILE} \
     -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
     --lockfile-out="${REPO_ROOT}/build/conan.lock"
 
+  echo "Installs the requirements (conan install)."
   conan install -if "${REPO_ROOT}/build/" \
           --build outdated \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
           "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/'
+  echo "Starting the build (conan build)."
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
+  echo "Start the packaging (conan package)."
   conan package -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
+  echo "Packaging is done."
 
   # Uploading symbols to the symbol server
   if [ "${BUILD_TYPE}" == "release" ] \
      || [ "${BUILD_TYPE}" == "nightly" ] \
      || [ "${BUILD_TYPE}" == "continuous_on_release_branch" ]; then
     set +e
+	echo "Uploading symbols to the symbol server."
     api_key=$(get_api_key "${OAUTH_TOKEN_HEADER}")
     upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin"
     set -e
@@ -150,6 +158,7 @@ if [ -n "$1" ]; then
 
   # Signing the debian package
   if [ -f "${KEYSTORE_PATH}/74938_SigningPrivateGpg" ] && [[ $CONAN_PROFILE == ggp_* ]]; then
+    echo "Signing the debian package"
     rm -rf ~/.gnupg/
     rm -rf /dev/shm/signing.gpg
     mkdir -p ~/.gnupg
@@ -168,6 +177,7 @@ if [ -n "$1" ]; then
   # Package the Debian package, the signature and the ggp client into a zip for integration in the 
   # installer.
   if [ -f ${KEYSTORE_PATH}/74938_SigningPrivateGpg ] && [[ $CONAN_PROFILE == ggp_* ]]; then
+    echo "Create a zip containing OrbitService for integration in the installer."
     pushd "${REPO_ROOT}/build/package" > /dev/null
     mkdir -p Orbit/collector
     cp -v OrbitProfiler*.deb Orbit/collector/
@@ -180,6 +190,7 @@ if [ -n "$1" ]; then
 
   # Package build artifacts into a zip for integration in the installer.
   if [[ $CONAN_PROFILE != ggp_* ]]; then
+    echo "Create a zip containing Orbit UI for integration in the installer."
     pushd "${REPO_ROOT}/build/package" > /dev/null
     cp -av bin/ Orbit
     find Orbit/ -name \*.pdb -delete
@@ -201,6 +212,7 @@ fi
 
 # We can't access the Keys-API inside of a docker container. So we retrieve
 # the key before entering the containers and transport it via environment variable.
+echo "build.sh is invoked on the VM - bring up docker."
 TEMP_DIR="$(mktemp -d)"
 pushd "${TEMP_DIR}" > /dev/null
 install_oauth2l
@@ -212,6 +224,7 @@ rm -rf "${TEMP_DIR}"
 readonly CONTAINER="gcr.io/orbitprofiler/${CONAN_PROFILE}:latest"
 
 if [ "$(uname -s)" == "Linux" ]; then
+  echo "Bring up docker for Linux build."
   gcloud auth configure-docker --quiet
   docker pull "${CONTAINER}"
   docker run --rm -v ${KOKORO_ARTIFACTS_DIR}:/mnt \
@@ -220,6 +233,7 @@ if [ "$(uname -s)" == "Linux" ]; then
     ${CONTAINER} \
     /mnt/github/orbitprofiler/kokoro/builds/build.sh in_docker
 else
+  echo "Bring up docker for Windows build."
   gcloud.cmd auth configure-docker --quiet
   docker pull "${CONTAINER}"
   docker run --rm -v ${KOKORO_ARTIFACTS_DIR}:C:/mnt \
