@@ -20,7 +20,7 @@ This automation script covers a basic workflow:
  - take a capture
  - verify that the top-down view contains at least 3 rows
  - verify that the first item is "hello_* (all threads)"
- - verify that the second item is "GgpSwapchain [*]"
+ - verify that the second item is "hello_*]" or "Ggp*]"
  - verify that the children of the first item are "*clone" and "_start"
 """
 
@@ -62,10 +62,11 @@ def main(argv):
     raise RuntimeError('First item of the top-down view is not "hello_* (all threads)"')
   logging.info('Verified that first item is "hello_* (all threads)"')
 
-  if (not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().startswith('GgpSwapchain [') or
+  if ((not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().startswith('hello_') and
+       not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().startswith('Ggp')) or
       not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().endswith(']')):
-    raise RuntimeError('Second item of the top-down view is not "GgpSwapchain [*]"')
-  logging.info('Verified that second item is "GgpSwapchain [*]"')
+    raise RuntimeError('Second item of the top-down view is not "hello_*]" nor "Ggp*]"')
+  logging.info('Verified that second item is "hello_*]" or "Ggp*]"')
   
   tree_items[0].double_click_input()
   logging.info('Expanded the first item')
