@@ -56,6 +56,18 @@ if [ -n "$1" ]; then
       # In the presubmit case we only spare the test-results and this script.
 	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | wc -l )"; echo "Number of files $NR_FILES"
 	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | grep -v 'orbitprofiler/kokoro' | grep -v 'testresults/' | wc -l )"; echo "Number of files to delete $NR_FILES"
+	  
+	  
+	  find "$MOUNT_POINT" -depth -mindepth 1 -maxdepth 1 -type d | \
+        grep -v 'orbitprofiler' | \
+        grep -v 'testresults' | \
+        while read file; do
+		  echo "Delete directory: $file."
+          rmdir -rf --ignore-fail-on-non-empty "$file"
+		done
+      
+	  echo "First step done."
+	  
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'testresults/' | \
