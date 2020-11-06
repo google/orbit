@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "DispatchTable.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitVulkanLayerClientGgp/DispatchTable.h"
 #include "absl/base/casts.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
