@@ -49,7 +49,7 @@ if [ -n "$1" ]; then
     # Delete all unnecessary files from the src/-directory.
     # Kokoro would copy them otherwise before applying the artifacts regex
     echo "Delete all unnecessary files from the src/-directory."
-    sleep 10000;
+    
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       echo "Cleanup for presubmit."
