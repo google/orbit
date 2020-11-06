@@ -16,68 +16,59 @@
 #include "vulkan/vulkan.h"
 
 namespace {
-// use the loader's dispatch table pointer as a key for dispatch map lookups
+// All dispatchable objects have a pointer to the dispatch table. The loader's dispatch
+// table pointer is used as a key for the dispatch map instead of the handle itself;
+// GetDispatchTableKey returns that pointer as void*.
 template <typename DispatchableType>
-void* GetKey(DispatchableType inst) {
-  return *absl::bit_cast<void**>(inst);
+void* GetDispatchTableKey(DispatchableType dispatchable_object) {
+  return *absl::bit_cast<void**>(dispatchable_object);
 }
 }  // namespace
 
-void DispatchTable::CreateInstanceDispatchTable(const VkInstance& instance,
-                                                const PFN_vkGetInstanceProcAddr& gpa) {
-  // fetch our own dispatch table for the functions we need, into the next layer
+void DispatchTable::CreateInstanceDispatchTable(
+    const VkInstance& instance, const PFN_vkGetInstanceProcAddr& get_instance_proc_addr) {
   VkLayerInstanceDispatchTable dispatch_table;
-  dispatch_table.GetInstanceProcAddr =
-      absl::bit_cast<PFN_vkGetInstanceProcAddr>(gpa(instance, "vkGetInstanceProcAddr"));
+  dispatch_table.GetInstanceProcAddr = absl::bit_cast<PFN_vkGetInstanceProcAddr>(
+      get_instance_proc_addr(instance, "vkGetInstanceProcAddr"));
   dispatch_table.DestroyInstance =
-      absl::bit_cast<PFN_vkDestroyInstance>(gpa(instance, "vkDestroyInstance"));
+      absl::bit_cast<PFN_vkDestroyInstance>(get_instance_proc_addr(instance, "vkDestroyInstance"));
   dispatch_table.EnumerateDeviceExtensionProperties =
       absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-          gpa(instance, "vkEnumerateDeviceExtensionProperties"));
+          get_instance_proc_addr(instance, "vkEnumerateDeviceExtensionProperties"));
 
-  // store the table by key
-  instance_dispatch_[GetKey(instance)] = dispatch_table;
+  instance_dispatch_[GetDispatchTableKey(instance)] = dispatch_table;
 }
 
 void DispatchTable::CreateDeviceDispatchTable(const VkDevice& device,
-                                              const PFN_vkGetDeviceProcAddr& gdpa) {
-  // fetch our own dispatch table for the functions we need, into the next layer
+                                              const PFN_vkGetDeviceProcAddr& get_device_proc_addr) {
   VkLayerDispatchTable dispatch_table;
   dispatch_table.GetDeviceProcAddr =
-      absl::bit_cast<PFN_vkGetDeviceProcAddr>(gdpa(device, "vkGetDeviceProcAddr"));
+      absl::bit_cast<PFN_vkGetDeviceProcAddr>(get_device_proc_addr(device, "vkGetDeviceProcAddr"));
   dispatch_table.DestroyDevice =
-      absl::bit_cast<PFN_vkDestroyDevice>(gdpa(device, "vkDestroyDevice"));
-  dispatch_table.BeginCommandBuffer =
-      absl::bit_cast<PFN_vkBeginCommandBuffer>(gdpa(device, "vkBeginCommandBuffer"));
-  dispatch_table.CmdDraw = absl::bit_cast<PFN_vkCmdDraw>(gdpa(device, "vkCmdDraw"));
-  dispatch_table.CmdDrawIndexed =
-      absl::bit_cast<PFN_vkCmdDrawIndexed>(gdpa(device, "vkCmdDrawIndexed"));
-  dispatch_table.EndCommandBuffer =
-      absl::bit_cast<PFN_vkEndCommandBuffer>(gdpa(device, "vkEndCommandBuffer"));
+      absl::bit_cast<PFN_vkDestroyDevice>(get_device_proc_addr(device, "vkDestroyDevice"));
 
-  // store the table by key
-  device_dispatch_[GetKey(device)] = dispatch_table;
+  device_dispatch_[GetDispatchTableKey(device)] = dispatch_table;
 }
 
 void DispatchTable::DestroyInstance(const VkInstance& instance) {
-  instance_dispatch_.erase(GetKey(instance));
+  instance_dispatch_.erase(GetDispatchTableKey(instance));
 }
 
 void DispatchTable::DestroyDevice(const VkDevice& device) {
-  device_dispatch_.erase(GetKey(device));
+  device_dispatch_.erase(GetDispatchTableKey(device));
 }
 
 PFN_vkVoidFunction DispatchTable::CallGetDeviceProcAddr(VkDevice device, const char* name) {
-  return device_dispatch_[GetKey(device)].GetDeviceProcAddr(device, name);
+  return device_dispatch_[GetDispatchTableKey(device)].GetDeviceProcAddr(device, name);
 }
 
 PFN_vkVoidFunction DispatchTable::CallGetInstanceProcAddr(VkInstance instance, const char* name) {
-  return instance_dispatch_[GetKey(instance)].GetInstanceProcAddr(instance, name);
+  return instance_dispatch_[GetDispatchTableKey(instance)].GetInstanceProcAddr(instance, name);
 }
 
 VkResult DispatchTable::CallEnumerateDeviceExtensionProperties(
     const VkPhysicalDevice& physical_device, const char* layer_name, uint32_t* property_count,
     VkExtensionProperties* properties) {
-  return instance_dispatch_[GetKey(physical_device)].EnumerateDeviceExtensionProperties(
-      physical_device, layer_name, property_count, properties);
+  return instance_dispatch_[GetDispatchTableKey(physical_device)]
+      .EnumerateDeviceExtensionProperties(physical_device, layer_name, property_count, properties);
 }
