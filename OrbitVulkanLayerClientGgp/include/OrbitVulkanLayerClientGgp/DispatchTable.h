@@ -13,11 +13,14 @@
 #include "vulkan/vk_layer_dispatch_table.h"
 #include "vulkan/vulkan.h"
 
+// Contains the logic related to the dispatch table so the creation of the table as well as the
+// management of its keys are transparent to the main file.
 class DispatchTable {
  public:
   void CreateInstanceDispatchTable(const VkInstance& instance,
-                                   const PFN_vkGetInstanceProcAddr& gpa);
-  void CreateDeviceDispatchTable(const VkDevice& device, const PFN_vkGetDeviceProcAddr& gdpa);
+                                   const PFN_vkGetInstanceProcAddr& get_instance_proc_addr);
+  void CreateDeviceDispatchTable(const VkDevice& device,
+                                 const PFN_vkGetDeviceProcAddr& get_device_proc_addr);
   void DestroyInstance(const VkInstance& instance);
   void DestroyDevice(const VkDevice& device);
 

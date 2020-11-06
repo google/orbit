@@ -22,14 +22,14 @@
 #define VK_LAYER_EXPORT extern "C"
 #endif
 
-// Layer information
+// Layer information.
 static constexpr char const* kLayerName = "VK_LAYER_ORBIT_CAPTURE_CLIENT";
 static constexpr char const* kLayerDescription =
     "Layer that contains Orbit Client implementation to run captures";
 static constexpr uint32_t const kLayerImplementationVersion = 1;
 static constexpr uint32_t const kLayerSpecVersion = VK_API_VERSION_1_1;
 
-// Vulkan layer
+// Vulkan layer.
 absl::Mutex layer_mutex;
 DispatchTable dispatch_table;
 
@@ -43,32 +43,28 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
   auto* layer_instance_create_info =
       absl::bit_cast<VkLayerInstanceCreateInfo*>(instance_create_info->pNext);
 
-  // step through the chain of pNext until we get to the link info
+  // Step through the chain of pNext until we get to the link info.
   while (layer_instance_create_info != nullptr &&
          (layer_instance_create_info->sType != VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO ||
           layer_instance_create_info->function != VK_LAYER_LINK_INFO)) {
     layer_instance_create_info =
         absl::bit_cast<VkLayerInstanceCreateInfo*>(layer_instance_create_info->pNext);
   }
-
   if (layer_instance_create_info == nullptr) {
-    // No loader instance create info
     return VK_ERROR_INITIALIZATION_FAILED;
   }
 
-  PFN_vkGetInstanceProcAddr gpa =
+  PFN_vkGetInstanceProcAddr get_instance_proc_addr =
       layer_instance_create_info->u.pLayerInfo->pfnNextGetInstanceProcAddr;
-  // move chain on for next layer
   layer_instance_create_info->u.pLayerInfo = layer_instance_create_info->u.pLayerInfo->pNext;
 
-  auto create_instance =
-      absl::bit_cast<PFN_vkCreateInstance>(gpa(VK_NULL_HANDLE, "vkCreateInstance"));
-
+  auto create_instance = absl::bit_cast<PFN_vkCreateInstance>(
+      get_instance_proc_addr(VK_NULL_HANDLE, "vkCreateInstance"));
   VkResult result = create_instance(instance_create_info, allocator, instance);
 
   {
     absl::WriterMutexLock lock(&layer_mutex);
-    dispatch_table.CreateInstanceDispatchTable(*instance, gpa);
+    dispatch_table.CreateInstanceDispatchTable(*instance, get_instance_proc_addr);
   }
 
   return result;
@@ -86,32 +82,30 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(
   auto* layer_device_create_info =
       absl::bit_cast<VkLayerDeviceCreateInfo*>(device_create_info->pNext);
 
-  // step through the chain of pNext until we get to the link info
+  // Step through the chain of pNext until we get to the link info.
   while (layer_device_create_info != nullptr &&
          (layer_device_create_info->sType != VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO ||
           layer_device_create_info->function != VK_LAYER_LINK_INFO)) {
     layer_device_create_info =
         absl::bit_cast<VkLayerDeviceCreateInfo*>(layer_device_create_info->pNext);
   }
-
   if (layer_device_create_info == nullptr) {
-    // No loader instance create info
     return VK_ERROR_INITIALIZATION_FAILED;
   }
 
-  PFN_vkGetInstanceProcAddr gipa =
+  PFN_vkGetInstanceProcAddr get_instance_proc_addr =
       layer_device_create_info->u.pLayerInfo->pfnNextGetInstanceProcAddr;
-  PFN_vkGetDeviceProcAddr gdpa = layer_device_create_info->u.pLayerInfo->pfnNextGetDeviceProcAddr;
-  // move chain on for next layer
+  PFN_vkGetDeviceProcAddr get_device_proc_addr =
+      layer_device_create_info->u.pLayerInfo->pfnNextGetDeviceProcAddr;
   layer_device_create_info->u.pLayerInfo = layer_device_create_info->u.pLayerInfo->pNext;
 
-  auto create_device = absl::bit_cast<PFN_vkCreateDevice>(gipa(VK_NULL_HANDLE, "vkCreateDevice"));
-
+  auto create_device =
+      absl::bit_cast<PFN_vkCreateDevice>(get_instance_proc_addr(VK_NULL_HANDLE, "vkCreateDevice"));
   VkResult result = create_device(physical_device, device_create_info, allocator, device);
 
   {
     absl::WriterMutexLock lock(&layer_mutex);
-    dispatch_table.CreateDeviceDispatchTable(*device, gdpa);
+    dispatch_table.CreateDeviceDispatchTable(*device, get_device_proc_addr);
   }
 
   return result;
@@ -154,7 +148,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceExtension
     return VK_ERROR_LAYER_NOT_PRESENT;
   }
 
-  // don't expose any extensions
   if (property_count != nullptr) {
     *property_count = 0;
   }
@@ -164,7 +157,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceExtension
 VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceExtensionProperties(
     VkPhysicalDevice physical_device, const char* layer_name, uint32_t* property_count,
     VkExtensionProperties* properties) {
-  // pass through any queries that aren't to us
   if (layer_name == nullptr || strcmp(layer_name, kLayerName) != 0) {
     if (physical_device == VK_NULL_HANDLE) {
       return VK_SUCCESS;
@@ -174,7 +166,6 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceExtensionPr
                                                                  property_count, properties);
   }
 
-  // don't expose any extensions
   if (property_count != nullptr) {
     *property_count = 0;
   }
