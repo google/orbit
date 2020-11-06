@@ -49,6 +49,8 @@ target_sources(OrbitLinuxTracing PRIVATE
         PerfEventRingBuffer.cpp
         PerfEventRingBuffer.h
         PerfEventVisitor.h
+        ThreadStateManager.cpp
+        ThreadStateManager.h
         ThreadStateVisitor.cpp
         ThreadStateVisitor.h
         Tracer.cpp
@@ -77,7 +79,7 @@ if (NOT WIN32)
             LinuxTracingUtilsTest.cpp
             PerfEventProcessorTest.cpp
             PerfEventQueueTest.cpp
-            ThreadStateVisitorTest.cpp
+            ThreadStateManagerTest.cpp
             UprobesFunctionCallManagerTest.cpp
             UprobesReturnAddressManagerTest.cpp)
 endif()
