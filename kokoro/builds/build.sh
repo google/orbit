@@ -63,10 +63,10 @@ if [ -n "$1" ]; then
 	  # /c/mnt/github/orbitprofiler/kokoro
 	  find "$MOUNT_POINT" -depth -mindepth 1 -maxdepth 1 -type d | \
         grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'build' | \
+        grep -v 'orbitprofiler/build' | \
         while read file; do
 		  echo "Delete directory: $file"
-          rm -rf  "$file"
+          #rm -rf  "$file"
 		done
       
 	  echo "First step done."
@@ -75,9 +75,10 @@ if [ -n "$1" ]; then
         grep -v 'build/testresults' | \
         while read file; do
 		  echo "Delete directory: $file"
-          rm -rf "$file"
+          #rm -rf "$file"
 		done
-		
+  	  echo "Second step done."
+
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'testresults/' | \
