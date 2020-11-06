@@ -39,7 +39,7 @@ using orbit_grpc_protos::ThreadName;
 
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
-      pid_{capture_options.pid()},
+      target_pid_{capture_options.pid()},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
@@ -122,7 +122,7 @@ bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
 
 void TracerThread::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
+  uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(target_pid_));
   uprobes_unwinding_visitor_->SetListener(listener_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.discarded_samples_in_uretprobes_count);
@@ -530,7 +530,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   // Record calls to dynamically instrumented functions and sample only on cores
   // in this process's cgroup's cpuset, as these are the only cores the process
   // will be scheduled on.
-  std::vector<int32_t> cpuset_cpus = GetCpusetCpus(pid_);
+  std::vector<int32_t> cpuset_cpus = GetCpusetCpus(target_pid_);
   if (cpuset_cpus.empty()) {
     ERROR("Could not read cpuset");
     cpuset_cpus = all_cpus;
@@ -802,7 +802,7 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
     return;
   }
 
-  if (event.GetPid() != pid_) {
+  if (event.GetPid() != target_pid_) {
     return;
   }
 
@@ -818,7 +818,7 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
     return;
   }
 
-  if (event.GetPid() != pid_) {
+  if (event.GetPid() != target_pid_) {
     return;
   }
 
@@ -830,13 +830,13 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
   pid_t pid = ReadMmapRecordPid(ring_buffer);
   ring_buffer->SkipRecord(header);
 
-  if (pid != pid_) {
+  if (pid != target_pid_) {
     return;
   }
 
-  // There was a call to mmap with PROT_EXEC, hence refresh the maps.
-  // This should happen rarely.
-  auto event = std::make_unique<MapsPerfEvent>(pid_, MonotonicTimestampNs(), ReadMaps(pid_));
+  // There was a call to mmap with PROT_EXEC, hence refresh the maps. This should happen rarely.
+  auto event =
+      std::make_unique<MapsPerfEvent>(target_pid_, MonotonicTimestampNs(), ReadMaps(target_pid_));
   event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }
@@ -878,7 +878,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     using perf_event_uprobe = perf_event_sp_ip_arguments_8bytes_sample;
     constexpr size_t size_of_uprobes = sizeof(perf_event_uprobe);
     CHECK(header.size == size_of_uprobes);
-    if (event->GetPid() != pid_) {
+    if (event->GetPid() != target_pid_) {
       return;
     }
 
@@ -892,7 +892,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
     constexpr size_t size_of_uretprobes = sizeof(perf_event_ax_sample);
     CHECK(header.size == size_of_uretprobes);
-    if (event->GetPid() != pid_) {
+    if (event->GetPid() != target_pid_) {
       return;
     }
 
@@ -914,7 +914,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       ring_buffer->SkipRecord(header);
       return;
     }
-    if (pid != pid_) {
+    if (pid != target_pid_) {
       ring_buffer->SkipRecord(header);
       return;
     }
@@ -929,7 +929,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   } else if (is_callchain_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-    if (pid != pid_) {
+    if (pid != target_pid_) {
       ring_buffer->SkipRecord(header);
       return;
     }

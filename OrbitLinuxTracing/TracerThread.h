@@ -123,7 +123,7 @@ class TracerThread {
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 1000;
 
   bool trace_context_switches_;
-  pid_t pid_;
+  pid_t target_pid_;
   uint64_t sampling_period_ns_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
