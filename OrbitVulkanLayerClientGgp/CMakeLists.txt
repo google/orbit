@@ -7,17 +7,12 @@ add_library(OrbitVulkanLayerClientGgp SHARED)
 
 target_compile_options(OrbitVulkanLayerClientGgp PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitVulkanLayerClientGgp PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/include)
-
 target_include_directories(OrbitVulkanLayerClientGgp PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitVulkanLayerClientGgp PUBLIC
-        include/OrbitVulkanLayerClientGgp/DispatchTable.h)
-
 target_sources(OrbitVulkanLayerClientGgp PRIVATE
         DispatchTable.cpp
+        DispatchTable.h
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC
