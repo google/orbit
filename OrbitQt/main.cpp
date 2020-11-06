@@ -14,6 +14,7 @@
 #include <QProcessEnvironment>
 #include <QProgressDialog>
 #include <QStyleFactory>
+#include <optional>
 
 #ifdef _WIN32
 #include <process.h>
@@ -228,6 +229,27 @@ static void StyleOrbit(QApplication& app) {
       "solid white; }");
 }
 
+static std::optional<std::string> GetCollectorRootPassword(
+    const QProcessEnvironment& process_environment) {
+  const char* const kEnvRootPassword = "ORBIT_COLLECTOR_ROOT_PASSWORD";
+  if (FLAGS_collector_root_password.IsSpecifiedOnCommandLine()) {
+    return absl::GetFlag(FLAGS_collector_root_password);
+  } else if (process_environment.contains(kEnvRootPassword)) {
+    return process_environment.value(kEnvRootPassword).toStdString();
+  }
+  return std::nullopt;
+}
+
+static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& process_environment) {
+  const char* const kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
+  if (FLAGS_collector.IsSpecifiedOnCommandLine()) {
+    return absl::GetFlag(FLAGS_collector);
+  } else if (process_environment.contains(kEnvExecutablePath)) {
+    return process_environment.value(kEnvExecutablePath).toStdString();
+  }
+  return std::nullopt;
+}
+
 static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
   if (absl::GetFlag(FLAGS_local)) {
     return std::nullopt;
@@ -235,27 +257,17 @@ static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfig
     return OrbitQt::NoDeployment{};
   }
 
-  auto env = QProcessEnvironment::systemEnvironment();
-
-  const char* const kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
-  const char* const kEnvRootPassword = "ORBIT_COLLECTOR_ROOT_PASSWORD";
   const char* const kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
   const char* const kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
   const char* const kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
 
-  // Program argument have higher precedence than environment variables.
-  std::string collector_override = absl::GetFlag(FLAGS_collector);
-  std::string collector_password = absl::GetFlag(FLAGS_collector_root_password);
-  std::string password = !collector_password.empty() ? collector_password
-                         : env.contains(kEnvRootPassword)
-                             ? env.value(kEnvRootPassword).toStdString()
-                             : "";
+  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+  std::optional<std::string> collector_path = GetCollectorPath(env);
+  std::optional<std::string> collector_password = GetCollectorRootPassword(env);
 
-  if (!collector_override.empty() && !password.empty()) {
-    return OrbitQt::BareExecutableAndRootPasswordDeployment{collector_override, password};
-  } else if (env.contains(kEnvExecutablePath) && !password.empty()) {
-    return OrbitQt::BareExecutableAndRootPasswordDeployment{
-        env.value(kEnvExecutablePath).toStdString(), password};
+  if (collector_path.has_value() && collector_password.has_value()) {
+    return OrbitQt::BareExecutableAndRootPasswordDeployment{collector_path.value(),
+                                                            collector_password.value()};
   } else if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
     return OrbitQt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
                                                   env.value(kEnvSignaturePath).toStdString()};
