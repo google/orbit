@@ -157,7 +157,7 @@ outcome::result<void> Tunnel::shutdown() {
 
 outcome::result<void> Tunnel::readFromChannel() {
   while (true) {
-    const size_t kChunkSize = 8192;
+    const size_t kChunkSize = 1024 * 1024;
     const auto result = channel_->ReadStdOut(kChunkSize);
 
     if (!result && !OrbitSsh::ShouldITryAgain(result)) {
@@ -180,6 +180,7 @@ outcome::result<void> Tunnel::readFromChannel() {
     if (bytes_written == -1) {
       SetError(Error::kLocalSocketClosed);
     } else {
+      // TODO: avoid extra copy b/172686811.
       read_buffer_ = read_buffer_.substr(bytes_written);
     }
   }
