@@ -3,14 +3,13 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <sys/types.h>
 
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
-#include "ThreadStateVisitor.h"
+#include "ThreadStateManager.h"
 #include "capture.pb.h"
 
 namespace LinuxTracing {
