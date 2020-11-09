@@ -52,6 +52,7 @@ if [ -n "$1" ]; then
     
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
+      # In the presubmit case we only spare the test-results and this script.
       echo "Cleanup for presubmit."
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
@@ -60,10 +61,10 @@ if [ -n "$1" ]; then
           if [[ -d $file ]]; then
             # That might give an error message when the directory is not empty.
             # That's okay.
-			echo "Delete directory: $file."
+            echo "Delete directory: $file."
             rmdir --ignore-fail-on-non-empty "$file"
           elif [[ -e $file ]]; then
-			echo "Delete file: $file."
+            echo "Delete file: $file."
             rm "$file"
           fi
         done
