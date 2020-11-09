@@ -51,7 +51,8 @@ class Tunnel : public StateMachineHelper<Tunnel, details::TunnelState> {
   friend StateMachineHelper;
 
  public:
-  explicit Tunnel(Session* session, std::string remote_host, uint16_t remote_port);
+  explicit Tunnel(Session* session, std::string remote_host, uint16_t remote_port,
+                  QObject* parent = nullptr);
 
   void Start();
   void Stop();
