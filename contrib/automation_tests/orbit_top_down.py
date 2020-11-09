@@ -21,7 +21,7 @@ This automation script covers a basic workflow:
  - verify that the top-down view contains at least 3 rows
  - verify that the first item is "hello_* (all threads)"
  - verify that the second item is "hello_*]" or "Ggp*]"
- - verify that the children of the first item are "*clone" and "_start"
+ - verify that the children of the first item are "*clone" and "_start" (in any order)
 """
 
 
@@ -77,9 +77,10 @@ def main(argv):
 
   if row_count_after_expansion != row_count_before_expansion + 2:
     raise RuntimeError('First item of the top-down view doesn\'t have exactly two children')
-
-  if (not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().endswith('clone') or
-      tree_items[2 * TOP_DOWN_ROW_CELL_COUNT].window_text() != '_start'):
+  if (not ((tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().endswith('clone') and 
+            tree_items[2 * TOP_DOWN_ROW_CELL_COUNT].window_text() == '_start') or 
+           (tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text() == '_start') and
+            tree_items[2 * TOP_DOWN_ROW_CELL_COUNT].window_text().endswith('clone'))):
     raise RuntimeError('Children of the first item of the top-down view '
                        'are not "*clone" and "_start"')
   logging.info('Verified that children of the first item are "*clone" and "_start"')
