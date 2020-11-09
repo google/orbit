@@ -180,7 +180,7 @@ outcome::result<void> Tunnel::readFromChannel() {
     if (bytes_written == -1) {
       SetError(Error::kLocalSocketClosed);
     } else {
-      // TODO: avoid extra copy b/172686811.
+      // TODO(b/172686811): avoid extra copy.
       read_buffer_ = read_buffer_.substr(bytes_written);
     }
   }
