@@ -12,10 +12,10 @@ namespace LinuxTracing {
 
 using orbit_grpc_protos::SchedulingSlice;
 
-void ContextSwitchManager::ProcessContextSwitchIn(pid_t pid, pid_t tid, uint16_t core,
-                                                  uint64_t timestamp_ns) {
-  // In case of lost out switches, a previous OpenSwitchIn for this core can
-  // be present. Simply overwrite it.
+void ContextSwitchManager::ProcessContextSwitchIn(std::optional<pid_t> pid, pid_t tid,
+                                                  uint16_t core, uint64_t timestamp_ns) {
+  // In case of lost out switches, a previous OpenSwitchIn for this core can be already present.
+  // Simply overwrite it.
   open_switches_by_core_.emplace(core, OpenSwitchIn{pid, tid, timestamp_ns});
 }
 
@@ -27,36 +27,36 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
     return std::nullopt;
   }
 
-  pid_t open_pid = open_switch_it->second.pid;
+  std::optional<pid_t> open_pid = open_switch_it->second.pid;
   pid_t open_tid = open_switch_it->second.tid;
   uint64_t open_timestamp_ns = open_switch_it->second.timestamp_ns;
 
   CHECK(timestamp_ns >= open_timestamp_ns);
 
-  // Remove the OpenSwitchIn for this core before returning,
-  // as it will have been processed.
+  // Remove the OpenSwitchIn for this core before returning, as it will have been processed.
   open_switches_by_core_.erase(core);
 
-  // When a context switch out is caused by a thread exiting, the
-  // perf_event_open event has pid and tid set to -1:
-  // in such case, use pid and tid from the OpenSwitchIn.
-  if (pid == -1 || tid == -1) {
-    SchedulingSlice scheduling_slice;
-    scheduling_slice.set_pid(open_pid);
-    scheduling_slice.set_tid(open_tid);
-    scheduling_slice.set_core(core);
-    scheduling_slice.set_in_timestamp_ns(open_timestamp_ns);
-    scheduling_slice.set_out_timestamp_ns(timestamp_ns);
-    return scheduling_slice;
-  }
-
   // This can happen in case of lost in/out switches.
-  if (open_pid != pid || open_tid != tid) {
+  if ((open_pid.has_value() && pid != -1 && open_pid.value() != pid) || open_tid != tid) {
     return std::nullopt;
   }
 
+  // When a context witch out is caused by a thread exiting, the perf_event_open event
+  // has pid set to -1 (and also the tid, but we use the one from the tracepoint data):
+  // in such case, use the pid from the OpenSwitchIn, if available.
+  // If this is not available either, the pid will then just incorrectly be -1
+  // (we prefer this to discarding the SchedulingSlice altogether).
+  pid_t pid_to_set;
+  if (pid != -1) {
+    pid_to_set = pid;
+  } else if (open_pid.has_value()) {
+    pid_to_set = open_pid.value();
+  } else {
+    pid_to_set = -1;
+  }
+
   SchedulingSlice scheduling_slice;
-  scheduling_slice.set_pid(pid);
+  scheduling_slice.set_pid(pid_to_set);
   scheduling_slice.set_tid(tid);
   scheduling_slice.set_core(core);
   scheduling_slice.set_in_timestamp_ns(open_timestamp_ns);

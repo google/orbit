@@ -21,6 +21,7 @@
 #include <optional>
 #include <vector>
 
+#include "ContextSwitchAndThreadStateVisitor.h"
 #include "ContextSwitchManager.h"
 #include "GpuTracepointEventProcessor.h"
 #include "LinuxTracingUtils.h"
@@ -28,7 +29,6 @@
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
-#include "ThreadStateVisitor.h"
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 
@@ -57,7 +57,6 @@ class TracerThread {
     return std::nullopt;
   }
 
-  bool OpenContextSwitches(const std::vector<int32_t>& cpus);
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
   bool OpenUprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
@@ -76,16 +75,14 @@ class TracerThread {
       const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu);
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
-  void InitThreadStateVisitor();
-  bool OpenThreadStateTracepoints(const std::vector<int32_t>& cpus);
+  void InitContextSwitchAndThreadStateVisitor();
+  bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
 
   bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
 
-  void ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
-                                        PerfEventRingBuffer* ring_buffer);
   void ProcessForkEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
   void ProcessExitEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
   void ProcessMmapEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
@@ -111,12 +108,11 @@ class TracerThread {
   // These values are supposed to be large enough to accommodate enough events
   // in case TracerThread::Run's thread is not scheduled for a few tens of
   // milliseconds.
-  static constexpr uint64_t CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 8 * 1024;
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
   static constexpr uint64_t THREAD_NAMES_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
+  static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
 
@@ -157,9 +153,8 @@ class TracerThread {
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
-  ContextSwitchManager context_switch_manager_;
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
-  std::unique_ptr<ThreadStateVisitor> thread_state_visitor_;
+  std::unique_ptr<ContextSwitchAndThreadStateVisitor> context_switch_and_thread_state_visitor_;
   PerfEventProcessor event_processor_;
   std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 

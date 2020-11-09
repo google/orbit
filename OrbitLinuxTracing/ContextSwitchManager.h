@@ -28,19 +28,18 @@ class ContextSwitchManager {
   ContextSwitchManager(ContextSwitchManager&&) = default;
   ContextSwitchManager& operator=(ContextSwitchManager&&) = default;
 
-  void ProcessContextSwitchIn(pid_t pid, pid_t tid, uint16_t core, uint64_t timestamp_ns);
+  void ProcessContextSwitchIn(std::optional<pid_t> pid, pid_t tid, uint16_t core,
+                              uint64_t timestamp_ns);
 
   std::optional<orbit_grpc_protos::SchedulingSlice> ProcessContextSwitchOut(pid_t pid, pid_t tid,
                                                                             uint16_t core,
                                                                             uint64_t timestamp_ns);
 
-  void Clear() { open_switches_by_core_.clear(); }
-
  private:
   struct OpenSwitchIn {
-    OpenSwitchIn(pid_t pid, pid_t tid, uint64_t timestamp_ns)
-        : pid(pid), tid(tid), timestamp_ns(timestamp_ns) {}
-    pid_t pid;
+    OpenSwitchIn(std::optional<pid_t> pid, pid_t tid, uint64_t timestamp_ns)
+        : pid{pid}, tid{tid}, timestamp_ns{timestamp_ns} {}
+    std::optional<pid_t> pid;
     pid_t tid;
     uint64_t timestamp_ns;
   };

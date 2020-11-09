@@ -24,6 +24,8 @@ target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/TracerListener.h)
 
 target_sources(OrbitLinuxTracing PRIVATE
+        ContextSwitchAndThreadStateVisitor.cpp
+        ContextSwitchAndThreadStateVisitor.h
         ContextSwitchManager.cpp
         ContextSwitchManager.h
         Function.h
@@ -51,8 +53,6 @@ target_sources(OrbitLinuxTracing PRIVATE
         PerfEventVisitor.h
         ThreadStateManager.cpp
         ThreadStateManager.h
-        ThreadStateVisitor.cpp
-        ThreadStateVisitor.h
         Tracer.cpp
         TracerThread.cpp
         TracerThread.h
