@@ -403,6 +403,14 @@ class SchedSwitchPerfEvent : public TracepointPerfEvent {
 
   void Accept(PerfEventVisitor* visitor) override;
 
+  // As the tracepoint data does not include the pid of the process that the thread being switched
+  // out belongs to, we use the pid set by perf_event_open in the corresponding generic field of the
+  // PERF_RECORD_SAMPLE.
+  // Note, though, that this value is -1 when the switch out is caused by the thread exiting.
+  // This is not the case for GetPrevTid(), whose value is always correct as it comes directly from
+  // the tracepoint data.
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+
   const char* GetPrevComm() const {
     return GetTypedTracepointData<sched_switch_tracepoint>().prev_comm;
   }

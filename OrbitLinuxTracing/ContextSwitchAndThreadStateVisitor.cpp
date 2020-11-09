@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ThreadStateVisitor.h"
+#include "ContextSwitchAndThreadStateVisitor.h"
 
 #include <absl/container/flat_hash_map.h>
 
 #include <algorithm>
-#include <type_traits>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
@@ -15,16 +14,17 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadStateSlice;
 
-void ThreadStateVisitor::ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid) {
+void ContextSwitchAndThreadStateVisitor::ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid) {
   bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
   if (!new_insertion) {
     ERROR("Overwriting previous pid for tid %d with initial pid %d", tid, pid);
   }
 }
 
-void ThreadStateVisitor::visit(ForkPerfEvent* event) {
+void ContextSwitchAndThreadStateVisitor::visit(ForkPerfEvent* event) {
   pid_t pid = event->GetPid();
   pid_t tid = event->GetTid();
   bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
@@ -33,8 +33,8 @@ void ThreadStateVisitor::visit(ForkPerfEvent* event) {
   }
 }
 
-bool ThreadStateVisitor::TidMatchesPidFilter(pid_t tid) {
-  if (pid_filter_ == kPidFilterNoThreadState) {
+bool ContextSwitchAndThreadStateVisitor::TidMatchesPidFilter(pid_t tid) {
+  if (thread_state_pid_filter_ == kPidFilterNoThreadState) {
     return false;
   }
 
@@ -43,10 +43,19 @@ bool ThreadStateVisitor::TidMatchesPidFilter(pid_t tid) {
     return false;
   }
 
-  return tid_to_pid_it->second == pid_filter_;
+  return tid_to_pid_it->second == thread_state_pid_filter_;
 }
 
-void ThreadStateVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char) {
+std::optional<pid_t> ContextSwitchAndThreadStateVisitor::GetPidOfTid(pid_t tid) {
+  auto tid_to_pid_it = tid_to_pid_association_.find(tid);
+  if (tid_to_pid_it == tid_to_pid_association_.end()) {
+    return std::nullopt;
+  }
+  return tid_to_pid_it->second;
+}
+
+void ContextSwitchAndThreadStateVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_t tid,
+                                                             char state_char) {
   if (!TidMatchesPidFilter(tid)) {
     return;
   }
@@ -59,15 +68,49 @@ void ThreadStateVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_t tid, c
   state_manager_.OnInitialState(timestamp_ns, tid, initial_state.value());
 }
 
-void ThreadStateVisitor::visit(TaskNewtaskPerfEvent* event) {
+void ContextSwitchAndThreadStateVisitor::visit(TaskNewtaskPerfEvent* event) {
   if (!TidMatchesPidFilter(event->GetTid())) {
     return;
   }
   state_manager_.OnNewTask(event->GetTimestamp(), event->GetTid());
 }
 
-void ThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
-  // Switches with tid 0 are associated with idle CPU, don't consider them.
+void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
+  // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
+
+  // Process the context switch out for scheduling slices.
+  if (event->GetPrevTid() != 0) {
+    // TracepointPerfEvent::ring_buffer_record.sample_id.pid (which doesn't come from the tracepoint
+    // data, but from the generic field of the PERF_RECORD_SAMPLE) is the pid of the process that
+    // the thread being switched out belongs to. But when the switch out is caused by the thread
+    // exiting, it has value -1. In such cases, use the association between tid and pid that we keep
+    // internally to obtain the process id.
+    pid_t prev_pid = event->GetPid();
+    if (prev_pid == -1) {
+      if (std::optional<pid_t> fallback_prev_pid = GetPidOfTid(event->GetPrevTid());
+          fallback_prev_pid.has_value()) {
+        prev_pid = fallback_prev_pid.value();
+      }
+    }
+    std::optional<SchedulingSlice> scheduling_slice = switch_manager_.ProcessContextSwitchOut(
+        prev_pid, event->GetPrevTid(), event->GetCpu(), event->GetTimestamp());
+    if (scheduling_slice.has_value()) {
+      CHECK(listener_ != nullptr);
+      if (scheduling_slice->pid() == -1) {
+        ERROR("SchedulingSlice with unknown pid");
+      }
+      listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
+    }
+  }
+
+  // Process the context switch in for scheduling slices.
+  if (event->GetNextTid() != 0) {
+    std::optional<pid_t> next_pid = GetPidOfTid(event->GetNextTid());
+    switch_manager_.ProcessContextSwitchIn(next_pid, event->GetNextTid(), event->GetCpu(),
+                                           event->GetTimestamp());
+  }
+
+  // Process the context switch out for thread state.
   if (event->GetPrevTid() != 0 && TidMatchesPidFilter(event->GetPrevTid())) {
     ThreadStateSlice::ThreadState new_state = GetThreadStateFromBits(event->GetPrevState());
     std::optional<ThreadStateSlice> out_slice =
@@ -78,6 +121,7 @@ void ThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
     }
   }
 
+  // Process the context switch in for thread state.
   if (event->GetNextTid() != 0 && TidMatchesPidFilter(event->GetNextTid())) {
     std::optional<ThreadStateSlice> in_slice =
         state_manager_.OnSchedSwitchIn(event->GetTimestamp(), event->GetNextTid());
@@ -88,7 +132,7 @@ void ThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
   }
 }
 
-void ThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
+void ContextSwitchAndThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
   if (!TidMatchesPidFilter(event->GetWokenTid())) {
     return;
   }
@@ -101,7 +145,7 @@ void ThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
   }
 }
 
-void ThreadStateVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
+void ContextSwitchAndThreadStateVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
   std::vector<ThreadStateSlice> state_slices = state_manager_.OnCaptureFinished(timestamp_ns);
   for (ThreadStateSlice& slice : state_slices) {
     CHECK(listener_ != nullptr);
@@ -110,12 +154,13 @@ void ThreadStateVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
 }
 
 // Associates a ThreadStateSlice::ThreadState to a thread state character retrieved from
-// /proc/<pid>/stat or the `ps` command. The possible characters are obtained from
+// /proc/<pid>/stat or the `ps` command. The possible characters were manually obtained from
 // /sys/kernel/debug/tracing/events/sched/sched_switch/format and compared with the ones listed in
 // https://man7.org/linux/man-pages/man5/proc.5.html and
 // https://www.man7.org/linux/man-pages/man1/ps.1.html#PROCESS_STATE_CODES to make sure we are not
 // missing any additional valid one.
-std::optional<ThreadStateSlice::ThreadState> ThreadStateVisitor::GetThreadStateFromChar(char c) {
+std::optional<ThreadStateSlice::ThreadState>
+ContextSwitchAndThreadStateVisitor::GetThreadStateFromChar(char c) {
   switch (c) {
     case 'R':
       return ThreadStateSlice::kRunnable;
@@ -149,7 +194,8 @@ std::optional<ThreadStateSlice::ThreadState> ThreadStateVisitor::GetThreadStateF
 // sched:sched_switch tracepoint. The association is given away by "print fmt" in
 // /sys/kernel/debug/tracing/events/sched/sched_switch/format or by
 // https://github.com/torvalds/linux/blob/master/fs/proc/array.c.
-ThreadStateSlice::ThreadState ThreadStateVisitor::GetThreadStateFromBits(uint64_t bits) {
+ThreadStateSlice::ThreadState ContextSwitchAndThreadStateVisitor::GetThreadStateFromBits(
+    uint64_t bits) {
   if (__builtin_popcountl(bits & 0xFF) > 1) {
     ERROR("The thread state mask %#lx is a combination of states, reporting only the first",
           bits & 0xFF);

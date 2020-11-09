@@ -93,33 +93,6 @@ void CloseFileDescriptors(const absl::flat_hash_map<int32_t, int>& fds_per_cpu) 
 }
 }  // namespace
 
-bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
-  std::vector<int> context_switch_tracing_fds;
-  std::vector<PerfEventRingBuffer> context_switch_ring_buffers;
-  for (int32_t cpu : cpus) {
-    int context_switch_fd = context_switch_event_open(-1, cpu);
-    std::string buffer_name = absl::StrFormat("context_switch_%d", cpu);
-    PerfEventRingBuffer context_switch_ring_buffer{
-        context_switch_fd, CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB, buffer_name};
-    if (context_switch_ring_buffer.IsOpen()) {
-      context_switch_tracing_fds.push_back(context_switch_fd);
-      context_switch_ring_buffers.push_back(std::move(context_switch_ring_buffer));
-    } else {
-      ERROR("Opening context switch events for cpu %d", cpu);
-      CloseFileDescriptors(context_switch_tracing_fds);
-      return false;
-    }
-  }
-
-  for (int fd : context_switch_tracing_fds) {
-    tracing_fds_.push_back(fd);
-  }
-  for (PerfEventRingBuffer& buffer : context_switch_ring_buffers) {
-    ring_buffers_.emplace_back(std::move(buffer));
-  }
-  return true;
-}
-
 void TracerThread::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(target_pid_));
@@ -446,22 +419,34 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
       &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
-void TracerThread::InitThreadStateVisitor() {
+void TracerThread::InitContextSwitchAndThreadStateVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  thread_state_visitor_ = std::make_unique<ThreadStateVisitor>();
-  thread_state_visitor_->SetListener(listener_);
-  thread_state_visitor_->SetPidFilter(target_pid_);
-  event_processor_.AddVisitor(thread_state_visitor_.get());
+  context_switch_and_thread_state_visitor_ = std::make_unique<ContextSwitchAndThreadStateVisitor>();
+  context_switch_and_thread_state_visitor_->SetListener(listener_);
+  if (trace_thread_state_) {
+    context_switch_and_thread_state_visitor_->SetThreadStatePidFilter(target_pid_);
+  }
+  event_processor_.AddVisitor(context_switch_and_thread_state_visitor_.get());
 }
 
-bool TracerThread::OpenThreadStateTracepoints(const std::vector<int32_t>& cpus) {
+bool TracerThread::OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
+  std::vector<TracepointToOpen> tracepoints_to_open;
+  if (trace_thread_state_ || trace_context_switches_) {
+    tracepoints_to_open.emplace_back("sched", "sched_switch", &sched_switch_ids_);
+  }
+  if (trace_thread_state_) {
+    // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
+    tracepoints_to_open.emplace_back("sched", "sched_wakeup", &sched_wakeup_ids_);
+  }
+  if (tracepoints_to_open.empty()) {
+    return true;
+  }
+
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
-  // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
-      {{"sched", "sched_switch", &sched_switch_ids_},
-       {"sched", "sched_wakeup", &sched_wakeup_ids_}},
-      cpus, &tracing_fds_, THREAD_STATE_RING_BUFFER_SIZE_KB,
+      tracepoints_to_open, cpus, &tracing_fds_,
+      CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB,
       &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
@@ -545,26 +530,6 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
   bool perf_event_open_errors = false;
 
-  if (trace_context_switches_) {
-    // TODO(dpallotti,b/170102150): When the sched:sched_switch tracepoint is already used to
-    //  collect thread states (or even for callstacks on context switches), also use it for
-    //  scheduling events in place of the built-in context switch collection of perf_event_open.
-    //  This is for a few reasons:
-    //  - avoid the overhead of using both;
-    //  - the timings of the two methods don't coincide perfectly (see b/170102150);
-    //  - the built-in context switch collection reports one event for the switch out plus one of
-    //    the switch in, with a gap of a few microseconds in between. While this behavior might seem
-    //    reasonable, it's different from the sched:sched_switch tracepoints, where only one event
-    //    per switch is generated and the time of the switch is unique.
-    //  Note that the built-in context switch collection cannot be used for thread states as it
-    //  doesn't provide the new state on the switch out.
-    //  The main problem to solve is that, for the thread switching in, sched:sched_switch reports
-    //  only the tid, not the pid. While this is seemingly solvable by using the pid from the
-    //  corresponding switch out when building the slice, this doesn't work in the special case of
-    //  the switch out on thread exit, where the pid reported by the tracepoint is -1.
-    perf_event_open_errors |= !OpenContextSwitches(all_cpus);
-  }
-
   perf_event_open_errors |= !OpenMmapTask(all_cpus);
 
   bool uprobes_event_open_errors = false;
@@ -586,9 +551,9 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
   perf_event_open_errors |= !OpenThreadNameTracepoints(all_cpus);
 
-  if (trace_thread_state_) {
-    InitThreadStateVisitor();
-    perf_event_open_errors |= !OpenThreadStateTracepoints(all_cpus);
+  if (trace_context_switches_ || trace_thread_state_) {
+    InitContextSwitchAndThreadStateVisitor();
+    perf_event_open_errors |= !OpenContextSwitchAndThreadStateTracepoints(all_cpus);
   }
 
   bool gpu_event_open_errors = false;
@@ -627,11 +592,14 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   // Get the initial thread names and notify the listener_.
   RetrieveThreadNamesSystemWide();
 
-  if (trace_thread_state_) {
-    // Get the initial association of tids to pids and pass it to thread_state_visitor_.
+  if (trace_context_switches_ || trace_thread_state_) {
+    // Get the initial association of tids to pids and
+    // pass it to context_switch_and_thread_state_visitor_.
     RetrieveTidToPidAssociationSystemWide();
+  }
 
-    // Get the initial thread states and pass them to thread_state_visitor_.
+  if (trace_thread_state_) {
+    // Get the initial thread states and pass them to context_switch_and_thread_state_visitor_.
     RetrieveThreadStatesOfTarget();
   }
 
@@ -688,15 +656,12 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
         // perf_event_type in linux/perf_event.h.
         switch (header.type) {
           case PERF_RECORD_SWITCH:
-            // Note: as we are recording context switches on CPUs and not on
-            // threads, we don't expect this type of record.
-            ERROR(
-                "Unexpected PERF_RECORD_SWITCH in ring buffer '%s' (only "
-                "PERF_RECORD_SWITCH_CPU_WIDE are expected)",
-                ring_buffer.GetName().c_str());
+            ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'",
+                  ring_buffer.GetName().c_str());
             break;
           case PERF_RECORD_SWITCH_CPU_WIDE:
-            ProcessContextSwitchCpuWideEvent(header, &ring_buffer);
+            ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'",
+                  ring_buffer.GetName().c_str());
             break;
           case PERF_RECORD_FORK:
             ProcessForkEvent(header, &ring_buffer);
@@ -739,7 +704,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   event_processor_.ProcessAllEvents();
 
   if (trace_thread_state_) {
-    thread_state_visitor_->ProcessRemainingOpenStates(MonotonicTimestampNs());
+    context_switch_and_thread_state_visitor_->ProcessRemainingOpenStates(MonotonicTimestampNs());
   }
 
   // Stop recording.
@@ -766,38 +731,6 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 }
 
-void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
-                                                    PerfEventRingBuffer* ring_buffer) {
-  SystemWideContextSwitchPerfEvent event;
-  ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
-    return;
-  }
-
-  pid_t pid = event.GetPid();
-  pid_t tid = event.GetTid();
-  uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
-  uint64_t time = event.GetTimestamp();
-
-  // Switches with pid/tid 0 are associated with idle state, discard them.
-  if (tid != 0) {
-    // TODO: Consider deferring context switches.
-    if (event.IsSwitchOut()) {
-      // Careful: when a switch out is caused by the thread exiting, pid and tid
-      // have value -1.
-      std::optional<SchedulingSlice> scheduling_slice =
-          context_switch_manager_.ProcessContextSwitchOut(pid, tid, cpu, time);
-      if (scheduling_slice.has_value()) {
-        listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
-      }
-    } else {
-      context_switch_manager_.ProcessContextSwitchIn(pid, tid, cpu, time);
-    }
-  }
-
-  ++stats_.sched_switch_count;
-}
-
 void TracerThread::ProcessForkEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   auto event = make_unique_for_overwrite<ForkPerfEvent>();
@@ -806,8 +739,9 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
     return;
   }
 
-  if (trace_thread_state_) {
-    // PERF_RECORD_FORK is used by ThreadStateVisitor to keep the association between tid and pid.
+  if (trace_context_switches_ || trace_thread_state_) {
+    // PERF_RECORD_FORK is used by ContextSwitchAndThreadStateVisitor
+    // to keep the association between tid and pid.
     event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
     DeferEvent(std::move(event));
   }
@@ -962,6 +896,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
+    ++stats_.sched_switch_count;
   } else if (is_sched_wakeup) {
     auto event = ConsumeTracepointPerfEvent<SchedWakeupPerfEvent>(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
@@ -1077,7 +1012,7 @@ void TracerThread::RetrieveThreadNamesSystemWide() {
 void TracerThread::RetrieveTidToPidAssociationSystemWide() {
   for (pid_t pid : GetAllPids()) {
     for (pid_t tid : GetTidsOfProcess(pid)) {
-      thread_state_visitor_->ProcessInitialTidToPidAssociation(tid, pid);
+      context_switch_and_thread_state_visitor_->ProcessInitialTidToPidAssociation(tid, pid);
     }
   }
 }
@@ -1089,7 +1024,7 @@ void TracerThread::RetrieveThreadStatesOfTarget() {
     if (!state.has_value()) {
       continue;
     }
-    thread_state_visitor_->ProcessInitialState(timestamp_ns, tid, state.value());
+    context_switch_and_thread_state_visitor_->ProcessInitialState(timestamp_ns, tid, state.value());
   }
 }
 
@@ -1116,9 +1051,8 @@ void TracerThread::Reset() {
 
   stop_deferred_thread_ = false;
   deferred_events_.clear();
-  context_switch_manager_.Clear();
   uprobes_unwinding_visitor_.reset();
-  thread_state_visitor_.reset();
+  context_switch_and_thread_state_visitor_.reset();
   event_processor_.ClearVisitors();
   gpu_event_processor_.reset();
 }

@@ -14,7 +14,7 @@ namespace LinuxTracing {
 // ThreadStateManager stores the state of threads, handles the state transitions,
 // builds and returns ThreadStateSlices.
 // The following diagram shows the relationship between the states and the tracepoints.
-// Note that, for some state transitions multiple tracepoints could be used
+// Note that, for some state transitions, multiple tracepoints could be used
 // (e.g., both sched:sched_waking and sched:sched_wakeup for "not runnable" to "runnable").
 // The diagram indicates them all but we only use the ones not in parentheses.
 // Also note we don't have a transition out of the diagram for a thread that exits.
