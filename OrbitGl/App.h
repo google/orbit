@@ -310,6 +310,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void AddFrameTrack(const orbit_client_protos::FunctionInfo& function);
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
+  void ClearFrameTrackFunctions();
 
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,

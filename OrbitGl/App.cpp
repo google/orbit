@@ -763,6 +763,10 @@ void OrbitApp::ClearCapture() {
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }
+  // The following call only removes any functions stored as frame track
+  // functions in App, it does not remove the frame tracks from the
+  // time graph. This was done with the call above to TimeGraph::Clear().
+  ClearFrameTrackFunctions();
 
   CHECK(capture_cleared_callback_);
   capture_cleared_callback_();
@@ -1463,3 +1467,5 @@ bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
   auto function_address = capture_data.GetAbsoluteAddress(function);
   return frame_track_functions_.contains(function_address);
 }
+
+void OrbitApp::ClearFrameTrackFunctions() { frame_track_functions_.clear(); }
