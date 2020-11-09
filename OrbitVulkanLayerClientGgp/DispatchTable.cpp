@@ -63,12 +63,12 @@ PFN_vkVoidFunction DispatchTable::CallGetDeviceProcAddr(VkDevice device, const c
 }
 
 PFN_vkVoidFunction DispatchTable::CallGetInstanceProcAddr(VkInstance instance, const char* name) {
-  return instance_dispatch_[GetDispatchTableKey(instance)].GetInstanceProcAddr(instance, name);
+  return instance_dispatch_.at(GetDispatchTableKey(instance)).GetInstanceProcAddr(instance, name);
 }
 
 VkResult DispatchTable::CallEnumerateDeviceExtensionProperties(
     const VkPhysicalDevice& physical_device, const char* layer_name, uint32_t* property_count,
     VkExtensionProperties* properties) {
-  return instance_dispatch_[GetDispatchTableKey(physical_device)]
+  return instance_dispatch_.at(GetDispatchTableKey(physical_device))
       .EnumerateDeviceExtensionProperties(physical_device, layer_name, property_count, properties);
 }
