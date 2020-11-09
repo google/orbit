@@ -13,7 +13,10 @@ target_include_directories(OrbitVulkanLayerClientGgp PRIVATE
 target_sources(OrbitVulkanLayerClientGgp PRIVATE
         DispatchTable.cpp
         DispatchTable.h
+        LayerLogic.cpp
+        LayerLogic.h
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC
-        OrbitBase)
+        OrbitBase
+        OrbitCaptureGgpClientLib)
