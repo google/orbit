@@ -61,10 +61,8 @@ if [ -n "$1" ]; then
           if [[ -d $file ]]; then
             # That might give an error message when the directory is not empty.
             # That's okay.
-            echo "Delete directory: $file."
             rmdir --ignore-fail-on-non-empty "$file"
           elif [[ -e $file ]]; then
-            echo "Delete file: $file."
             rm "$file"
           fi
         done
