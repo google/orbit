@@ -128,7 +128,7 @@ class TimeGraph {
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
   [[nodiscard]] float GetRightMargin() const { return right_margin_; }
-  void SetRightMargin(float margin);
+  void UpdateRightMargin(float margin);
 
   [[nodiscard]] const TextBox* FindPrevious(const TextBox* from);
   [[nodiscard]] const TextBox* FindNext(const TextBox* from);

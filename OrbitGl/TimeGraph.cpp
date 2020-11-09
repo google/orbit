@@ -1179,12 +1179,12 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
   }
 }
 
-void TimeGraph::SetRightMargin(float margin) {
+void TimeGraph::UpdateRightMargin(float margin) {
   {
     if (right_margin_ != margin) {
+      right_margin_ = margin;
       NeedsUpdate();
     }
-    right_margin_ = margin;
   }
 }
 

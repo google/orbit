@@ -569,7 +569,7 @@ void CaptureWindow::DrawScreenSpace() {
   }
 
   // Right vertical margin.
-  time_graph_.SetRightMargin(right_margin);
+  time_graph_.UpdateRightMargin(right_margin);
   auto margin_x1 = static_cast<float>(GetWidth());
   float margin_x0 = margin_x1 - right_margin;
 
