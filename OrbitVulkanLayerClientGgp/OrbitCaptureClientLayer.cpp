@@ -129,8 +129,8 @@ VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceLayerProperties(
   }
 
   if (properties != nullptr) {
-    strcpy(properties->layerName, kLayerName);
-    strcpy(properties->description, kLayerDescription);
+    snprintf(properties->layerName, strlen(kLayerName), "%s", kLayerName);
+    snprintf(properties->description, strlen(kLayerDescription), "%s", kLayerDescription);
     properties->implementationVersion = kLayerImplementationVersion;
     properties->specVersion = kLayerSpecVersion;
   }
