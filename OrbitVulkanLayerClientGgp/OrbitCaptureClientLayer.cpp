@@ -37,7 +37,7 @@ DispatchTable dispatch_table;
 // Layer init and shutdown
 // --------------------------------------------------------------------------------
 
-VK_LAYER_EXPORT VkResult VKAPI_CALL
+VkResult VKAPI_CALL
 OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_info,
                                  const VkAllocationCallbacks* allocator, VkInstance* instance) {
   auto* layer_instance_create_info =
@@ -70,15 +70,16 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
   return result;
 }
 
-VK_LAYER_EXPORT void VKAPI_CALL
-OrbitCaptureClientDestroyInstance(VkInstance instance, const VkAllocationCallbacks* /*allocator*/) {
+void VKAPI_CALL OrbitCaptureClientDestroyInstance(VkInstance instance,
+                                                  const VkAllocationCallbacks* /*allocator*/) {
   absl::WriterMutexLock lock(&layer_mutex);
   dispatch_table.DestroyInstance(instance);
 }
 
-VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(
-    VkPhysicalDevice physical_device, const VkDeviceCreateInfo* device_create_info,
-    const VkAllocationCallbacks* allocator, VkDevice* device) {
+VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(VkPhysicalDevice physical_device,
+                                                   const VkDeviceCreateInfo* device_create_info,
+                                                   const VkAllocationCallbacks* allocator,
+                                                   VkDevice* device) {
   auto* layer_device_create_info =
       absl::bit_cast<VkLayerDeviceCreateInfo*>(device_create_info->pNext);
 
@@ -111,8 +112,8 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientCreateDevice(
   return result;
 }
 
-VK_LAYER_EXPORT void VKAPI_CALL
-OrbitCaptureClientDestroyDevice(VkDevice device, const VkAllocationCallbacks* /*allocator*/) {
+void VKAPI_CALL OrbitCaptureClientDestroyDevice(VkDevice device,
+                                                const VkAllocationCallbacks* /*allocator*/) {
   absl::WriterMutexLock lock(&layer_mutex);
   dispatch_table.DestroyDevice(device);
 }
@@ -121,7 +122,7 @@ OrbitCaptureClientDestroyDevice(VkDevice device, const VkAllocationCallbacks* /*
 // Enumeration function
 // --------------------------------------------------------------------------------
 
-VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceLayerProperties(
+VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceLayerProperties(
     uint32_t* property_count, VkLayerProperties* properties) {
   if (property_count != nullptr) {
     *property_count = 1;
@@ -137,12 +138,12 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceLayerProp
   return VK_SUCCESS;
 }
 
-VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceLayerProperties(
+VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceLayerProperties(
     VkPhysicalDevice /*physical_device*/, uint32_t* property_count, VkLayerProperties* properties) {
   return OrbitCaptureClientEnumerateInstanceLayerProperties(property_count, properties);
 }
 
-VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceExtensionProperties(
+VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceExtensionProperties(
     const char* layer_name, uint32_t* property_count, VkExtensionProperties* /*properties*/) {
   if (layer_name == nullptr || strcmp(layer_name, kLayerName) != 0) {
     return VK_ERROR_LAYER_NOT_PRESENT;
@@ -154,7 +155,7 @@ VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateInstanceExtension
   return VK_SUCCESS;
 }
 
-VK_LAYER_EXPORT VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceExtensionProperties(
+VkResult VKAPI_CALL OrbitCaptureClientEnumerateDeviceExtensionProperties(
     VkPhysicalDevice physical_device, const char* layer_name, uint32_t* property_count,
     VkExtensionProperties* properties) {
   if (layer_name == nullptr || strcmp(layer_name, kLayerName) != 0) {
