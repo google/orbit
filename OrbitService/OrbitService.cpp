@@ -43,6 +43,11 @@ namespace orbit_service {
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
   LOG("Running Orbit Service version %s", OrbitCore::GetVersion());
+#ifndef NDEBUG
+  LOG("**********************************");
+  LOG("Orbit Service is running in DEBUG!");
+  LOG("**********************************");
+#endif
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
   LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server;
