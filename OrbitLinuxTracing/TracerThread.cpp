@@ -450,6 +450,7 @@ void TracerThread::InitThreadStateVisitor() {
   ORBIT_SCOPE_FUNCTION;
   thread_state_visitor_ = std::make_unique<ThreadStateVisitor>();
   thread_state_visitor_->SetListener(listener_);
+  thread_state_visitor_->SetPidFilter(target_pid_);
   event_processor_.AddVisitor(thread_state_visitor_.get());
 }
 
@@ -564,7 +565,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
-  perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
+  perf_event_open_errors |= !OpenMmapTask(all_cpus);
 
   bool uprobes_event_open_errors = false;
   if (!instrumented_functions_.empty()) {
@@ -627,8 +628,11 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   RetrieveThreadNamesSystemWide();
 
   if (trace_thread_state_) {
+    // Get the initial association of tids to pids and pass it to thread_state_visitor_.
+    RetrieveTidToPidAssociationSystemWide();
+
     // Get the initial thread states and pass them to thread_state_visitor_.
-    RetrieveThreadStatesSystemWide();
+    RetrieveThreadStatesOfTarget();
   }
 
   stats_.Reset();
@@ -796,18 +800,17 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(const perf_event_header& hea
 
 void TracerThread::ProcessForkEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
-  ForkPerfEvent event;
-  ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
+  auto event = make_unique_for_overwrite<ForkPerfEvent>();
+  ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+  if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
     return;
   }
 
-  if (event.GetPid() != target_pid_) {
-    return;
+  if (trace_thread_state_) {
+    // PERF_RECORD_FORK is used by ThreadStateVisitor to keep the association between tid and pid.
+    event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
+    DeferEvent(std::move(event));
   }
-
-  // A new thread of the sampled process was spawned.
-  // Nothing to do for now.
 }
 
 void TracerThread::ProcessExitEvent(const perf_event_header& header,
@@ -815,10 +818,6 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
   ExitPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
   if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
-    return;
-  }
-
-  if (event.GetPid() != target_pid_) {
     return;
   }
 
@@ -1075,8 +1074,16 @@ void TracerThread::RetrieveThreadNamesSystemWide() {
   }
 }
 
-void TracerThread::RetrieveThreadStatesSystemWide() {
-  for (pid_t tid : GetAllTids()) {
+void TracerThread::RetrieveTidToPidAssociationSystemWide() {
+  for (pid_t pid : GetAllPids()) {
+    for (pid_t tid : GetTidsOfProcess(pid)) {
+      thread_state_visitor_->ProcessInitialTidToPidAssociation(tid, pid);
+    }
+  }
+}
+
+void TracerThread::RetrieveThreadStatesOfTarget() {
+  for (pid_t tid : GetTidsOfProcess(target_pid_)) {
     uint64_t timestamp_ns = MonotonicTimestampNs();
     std::optional<char> state = GetThreadState(tid);
     if (!state.has_value()) {

@@ -24,6 +24,10 @@ namespace LinuxTracing {
 class ThreadStateVisitor : public PerfEventVisitor {
  public:
   void SetListener(TracerListener* listener) { listener_ = listener; }
+  void SetPidFilter(pid_t pid) { pid_filter_ = pid; }
+
+  void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
+  void visit(ForkPerfEvent* event) override;
 
   void ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char);
   void visit(TaskNewtaskPerfEvent* event) override;
@@ -37,6 +41,12 @@ class ThreadStateVisitor : public PerfEventVisitor {
   static orbit_grpc_protos::ThreadStateSlice::ThreadState GetThreadStateFromBits(uint64_t bits);
 
   TracerListener* listener_ = nullptr;
+
+  bool TidMatchesPidFilter(pid_t tid);
+  static constexpr pid_t kPidFilterNoThreadState = -1;
+  pid_t pid_filter_ = kPidFilterNoThreadState;
+  absl::flat_hash_map<pid_t, pid_t> tid_to_pid_association_;
+
   ThreadStateManager state_manager_;
 };
 
