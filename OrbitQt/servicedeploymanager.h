@@ -8,6 +8,7 @@
 #include <QEventLoop>
 #include <QObject>
 #include <QPointer>
+#include <QThread>
 #include <QTimer>
 #include <string>
 
@@ -34,10 +35,12 @@ class ServiceDeployManager : public QObject {
                                 const OrbitSsh::Context* context, OrbitSsh::Credentials creds,
                                 const GrpcPort& grpc_port, QObject* parent = nullptr);
 
+  ~ServiceDeployManager() noexcept;
+
   outcome::result<GrpcPort> Exec();
 
   // This method copies remote source file to local destination.
-  ErrorMessageOr<void> CopyFileToLocal(std::string_view source, std::string_view destination);
+  ErrorMessageOr<void> CopyFileToLocal(std::string source, std::string destination);
 
   void Shutdown();
   void Cancel();
@@ -59,6 +62,8 @@ class ServiceDeployManager : public QObject {
   std::unique_ptr<OrbitSshQt::SftpChannel> sftp_channel_;
   QTimer ssh_watchdog_timer_;
 
+  QThread background_thread_;
+
   outcome::result<void> ConnectToServer();
   outcome::result<bool> CheckIfInstalled();
   outcome::result<void> CopyOrbitServicePackage();
@@ -71,6 +76,9 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> StopSftpChannel(EventLoop* loop, OrbitSshQt::SftpChannel* sftp_channel);
   outcome::result<void> CopyFileToRemote(const std::string& source, const std::string& dest,
                                          OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode);
+
+  ErrorMessageOr<void> CopyFileToLocalImpl(std::string_view source, std::string_view destination);
+  outcome::result<GrpcPort> ExecImpl();
 
   void StartWatchdog();
   void StopSftpChannel();
