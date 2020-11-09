@@ -17,7 +17,40 @@ namespace LinuxTracing {
 
 using orbit_grpc_protos::ThreadStateSlice;
 
+void ThreadStateVisitor::ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid) {
+  bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
+  if (!new_insertion) {
+    ERROR("Overwriting previous pid for tid %d with initial pid %d", tid, pid);
+  }
+}
+
+void ThreadStateVisitor::visit(ForkPerfEvent* event) {
+  pid_t pid = event->GetPid();
+  pid_t tid = event->GetTid();
+  bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
+  if (!new_insertion) {
+    ERROR("Overwriting previous pid for tid %d with pid %d from PERF_RECORD_FORK", tid, pid);
+  }
+}
+
+bool ThreadStateVisitor::TidMatchesPidFilter(pid_t tid) {
+  if (pid_filter_ == kPidFilterNoThreadState) {
+    return false;
+  }
+
+  auto tid_to_pid_it = tid_to_pid_association_.find(tid);
+  if (tid_to_pid_it == tid_to_pid_association_.end()) {
+    return false;
+  }
+
+  return tid_to_pid_it->second == pid_filter_;
+}
+
 void ThreadStateVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char) {
+  if (!TidMatchesPidFilter(tid)) {
+    return;
+  }
+
   std::optional<ThreadStateSlice::ThreadState> initial_state = GetThreadStateFromChar(state_char);
   if (!initial_state.has_value()) {
     ERROR("Parsing thread state char '%c' for tid %d", state_char, tid);
@@ -27,43 +60,51 @@ void ThreadStateVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_t tid, c
 }
 
 void ThreadStateVisitor::visit(TaskNewtaskPerfEvent* event) {
-  CHECK(listener_ != nullptr);
+  if (!TidMatchesPidFilter(event->GetTid())) {
+    return;
+  }
   state_manager_.OnNewTask(event->GetTimestamp(), event->GetTid());
 }
 
 void ThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
-  CHECK(listener_ != nullptr);
   // Switches with tid 0 are associated with idle CPU, don't consider them.
-  if (event->GetPrevTid() != 0) {
+  if (event->GetPrevTid() != 0 && TidMatchesPidFilter(event->GetPrevTid())) {
     ThreadStateSlice::ThreadState new_state = GetThreadStateFromBits(event->GetPrevState());
     std::optional<ThreadStateSlice> out_slice =
         state_manager_.OnSchedSwitchOut(event->GetTimestamp(), event->GetPrevTid(), new_state);
     if (out_slice.has_value()) {
+      CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
     }
   }
-  if (event->GetNextTid() != 0) {
+
+  if (event->GetNextTid() != 0 && TidMatchesPidFilter(event->GetNextTid())) {
     std::optional<ThreadStateSlice> in_slice =
         state_manager_.OnSchedSwitchIn(event->GetTimestamp(), event->GetNextTid());
     if (in_slice.has_value()) {
+      CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
     }
   }
 }
 
 void ThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
-  CHECK(listener_ != nullptr);
+  if (!TidMatchesPidFilter(event->GetWokenTid())) {
+    return;
+  }
+
   std::optional<ThreadStateSlice> state_slice =
       state_manager_.OnSchedWakeup(event->GetTimestamp(), event->GetWokenTid());
   if (state_slice.has_value()) {
+    CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
   }
 }
 
 void ThreadStateVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
-  CHECK(listener_ != nullptr);
   std::vector<ThreadStateSlice> state_slices = state_manager_.OnCaptureFinished(timestamp_ns);
   for (ThreadStateSlice& slice : state_slices) {
+    CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(slice);
   }
 }
