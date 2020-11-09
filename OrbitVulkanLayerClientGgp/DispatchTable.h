@@ -31,6 +31,8 @@ class DispatchTable {
       const VkPhysicalDevice& physical_device, const char* layer_name, uint32_t* property_count,
       VkExtensionProperties* properties);
 
+  [[nodiscard]] VkResult CallQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info);
+
  private:
   absl::flat_hash_map<void*, VkLayerInstanceDispatchTable> instance_dispatch_;
   absl::flat_hash_map<void*, VkLayerDispatchTable> device_dispatch_;

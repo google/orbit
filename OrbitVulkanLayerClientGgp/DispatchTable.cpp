@@ -46,6 +46,8 @@ void DispatchTable::CreateDeviceDispatchTable(const VkDevice& device,
       absl::bit_cast<PFN_vkGetDeviceProcAddr>(get_device_proc_addr(device, "vkGetDeviceProcAddr"));
   dispatch_table.DestroyDevice =
       absl::bit_cast<PFN_vkDestroyDevice>(get_device_proc_addr(device, "vkDestroyDevice"));
+  dispatch_table.QueuePresentKHR =
+      absl::bit_cast<PFN_vkQueuePresentKHR>(get_device_proc_addr(device, "vkQueuePresentKHR"));
 
   device_dispatch_[GetDispatchTableKey(device)] = dispatch_table;
 }
@@ -71,4 +73,8 @@ VkResult DispatchTable::CallEnumerateDeviceExtensionProperties(
     VkExtensionProperties* properties) {
   return instance_dispatch_.at(GetDispatchTableKey(physical_device))
       .EnumerateDeviceExtensionProperties(physical_device, layer_name, property_count, properties);
+}
+
+VkResult DispatchTable::CallQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info) {
+  return device_dispatch_.at(GetDispatchTableKey(queue)).QueuePresentKHR(queue, present_info);
 }

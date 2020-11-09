@@ -119,6 +119,16 @@ void VKAPI_CALL OrbitCaptureClientDestroyDevice(VkDevice device,
 }
 
 // --------------------------------------------------------------------------------
+// Layer implementation
+// --------------------------------------------------------------------------------
+
+VkResult VKAPI_CALL OrbitCaptureClientQueuePresentKHR(VkQueue queue,
+                                                      const VkPresentInfoKHR* present_info) {
+  LOG("OrbitCaptureClientQueuePresentKHR called");
+  return dispatch_table.CallQueuePresentKHR(queue, present_info);
+}
+
+// --------------------------------------------------------------------------------
 // Enumeration function
 // --------------------------------------------------------------------------------
 
@@ -190,6 +200,7 @@ OrbitCaptureClientGetDeviceProcAddr(VkDevice device, const char* name) {
   GETPROCADDR(EnumerateDeviceExtensionProperties);
   GETPROCADDR(CreateDevice);
   GETPROCADDR(DestroyDevice);
+  GETPROCADDR(QueuePresentKHR);
 
   absl::ReaderMutexLock lock(&layer_mutex);
   return dispatch_table.CallGetDeviceProcAddr(device, name);
@@ -210,6 +221,7 @@ OrbitCaptureClientGetInstanceProcAddr(VkInstance instance, const char* name) {
   GETPROCADDR(EnumerateDeviceExtensionProperties);
   GETPROCADDR(CreateDevice);
   GETPROCADDR(DestroyDevice);
+  GETPROCADDR(QueuePresentKHR);
 
   absl::ReaderMutexLock lock(&layer_mutex);
   return dispatch_table.CallGetInstanceProcAddr(instance, name);
