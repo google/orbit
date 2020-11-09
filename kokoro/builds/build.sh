@@ -85,7 +85,7 @@ if [ -n "$1" ]; then
           fi
         done
       echo "Cleanup for non-presubmit done."
-   fi
+    fi
   }
   trap cleanup EXIT
 
