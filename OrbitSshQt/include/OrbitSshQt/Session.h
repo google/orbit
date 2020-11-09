@@ -80,7 +80,8 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
     QSocketNotifier write;
 
     explicit NotifierSet(qintptr socket, QObject* parent = nullptr)
-        : read(socket, QSocketNotifier::Read, parent), write(socket, QSocketNotifier::Write, parent) {}
+        : read(socket, QSocketNotifier::Read, parent),
+          write(socket, QSocketNotifier::Write, parent) {}
   };
 
   std::optional<NotifierSet> notifiers_;

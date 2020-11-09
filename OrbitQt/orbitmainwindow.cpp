@@ -209,11 +209,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
   GOrbitApp->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
 
-  GOrbitApp->SetSecureCopyCallback(
-      [service_deploy_manager](std::string_view source, std::string_view destination) {
-        CHECK(service_deploy_manager != nullptr);
-        return service_deploy_manager->CopyFileToLocal(source, destination);
-      });
+  GOrbitApp->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
+                                                            std::string_view destination) {
+    CHECK(service_deploy_manager != nullptr);
+    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
+  });
 
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
 
