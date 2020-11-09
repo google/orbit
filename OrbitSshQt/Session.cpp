@@ -20,7 +20,7 @@ outcome::result<void> Session::startup() {
     case State::kDisconnected: {
       OUTCOME_TRY(socket, OrbitSsh::Socket::Create());
       socket_ = std::move(socket);
-      notifiers_.emplace(socket_->GetFileDescriptor());
+      notifiers_.emplace(socket_->GetFileDescriptor(), this);
       QObject::connect(&notifiers_->read, &QSocketNotifier::activated, this, &Session::OnEvent);
       QObject::connect(&notifiers_->write, &QSocketNotifier::activated, this, &Session::OnEvent);
       SetState(State::kSocketCreated);

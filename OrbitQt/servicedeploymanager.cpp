@@ -64,10 +64,12 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
                                            const ServiceDeployManager::GrpcPort& grpc_port,
                                            QObject* parent)
     : QObject(parent),
+      loop_(this),
       deployment_configuration_(deployment_configuration),
       context_(context),
       credentials_(std::move(credentials)),
-      grpc_port_(grpc_port) {
+      grpc_port_(grpc_port),
+      ssh_watchdog_timer_(this) {
   CHECK(deployment_configuration != nullptr);
   CHECK(context != nullptr);
 }
@@ -115,7 +117,7 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
   emit statusMessage("Setting up port forwarding...");
   LOG("Setting up tunnel on port %d", grpc_port_.grpc_port);
 
-  tunnel->emplace(&session_.value(), kLocalhost, port);
+  tunnel->emplace(&session_.value(), kLocalhost, port, this);
 
   auto error_handler = ConnectErrorHandler(&tunnel->value(), &OrbitSshQt::Tunnel::errorOccurred);
   auto quit_handler = ConnectQuitHandler(&tunnel->value(), &OrbitSshQt::Tunnel::started);
@@ -350,7 +352,7 @@ outcome::result<void> ServiceDeployManager::ConnectToServer() {
                          .arg(QString::fromStdString(credentials_.addr_and_port.addr))
                          .arg(credentials_.addr_and_port.port));
 
-  session_.emplace(context_);
+  session_.emplace(context_, this);
 
   using OrbitSshQt::Session;
   auto quit_handler = ConnectQuitHandler(&session_.value(), &Session::started);
