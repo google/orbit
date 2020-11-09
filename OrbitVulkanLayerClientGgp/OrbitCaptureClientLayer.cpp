@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "DispatchTable.h"
+#include "LayerLogic.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
 #include "absl/container/flat_hash_map.h"
@@ -33,6 +34,9 @@ static constexpr uint32_t const kLayerSpecVersion = VK_API_VERSION_1_1;
 absl::Mutex layer_mutex;
 DispatchTable dispatch_table;
 
+// Layer data and implementation
+LayerLogic layer_logic;
+
 // --------------------------------------------------------------------------------
 // Layer init and shutdown
 // --------------------------------------------------------------------------------
@@ -40,6 +44,7 @@ DispatchTable dispatch_table;
 VkResult VKAPI_CALL
 OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_info,
                                  const VkAllocationCallbacks* allocator, VkInstance* instance) {
+  LOG("OrbitCaptureClientCreateInstance called");
   auto* layer_instance_create_info =
       absl::bit_cast<VkLayerInstanceCreateInfo*>(instance_create_info->pNext);
 
@@ -65,6 +70,9 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
   {
     absl::WriterMutexLock lock(&layer_mutex);
     dispatch_table.CreateInstanceDispatchTable(*instance, get_instance_proc_addr);
+    // Making the initialisations needed for the layer here because vKCreateInstance is called at
+    // the start of the dispatch chain.
+    layer_logic.InitLayerData();
   }
 
   return result;
@@ -72,7 +80,11 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
 
 void VKAPI_CALL OrbitCaptureClientDestroyInstance(VkInstance instance,
                                                   const VkAllocationCallbacks* /*allocator*/) {
+  LOG("OrbitCaptureClientDestroyInstance called");
   absl::WriterMutexLock lock(&layer_mutex);
+  // Cleaning up the data initialised in the layer before the instance is destroyed. This method is
+  // expected to be called before exiting the program so the data is not longer needed.
+  layer_logic.CleanLayerData();
   dispatch_table.DestroyInstance(instance);
 }
 
@@ -124,7 +136,7 @@ void VKAPI_CALL OrbitCaptureClientDestroyDevice(VkDevice device,
 
 VkResult VKAPI_CALL OrbitCaptureClientQueuePresentKHR(VkQueue queue,
                                                       const VkPresentInfoKHR* present_info) {
-  LOG("OrbitCaptureClientQueuePresentKHR called");
+  absl::WriterMutexLock lock(&layer_mutex);
   return dispatch_table.CallQueuePresentKHR(queue, present_info);
 }
 
