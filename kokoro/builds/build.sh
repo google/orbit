@@ -53,32 +53,6 @@ if [ -n "$1" ]; then
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       echo "Cleanup for presubmit."
-      # In the presubmit case we only spare the test-results and this script.
-	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | wc -l )"; echo "Number of files $NR_FILES"
-	  NR_FILES="$(find "$MOUNT_POINT" -depth -mindepth 1 | grep -v 'orbitprofiler/kokoro' | grep -v 'testresults/' | wc -l )"; echo "Number of files to delete $NR_FILES"
-	  
-	  # we want to keep 
-	  # /c/mnt/github/orbitprofiler/build/testresults
-	  # and
-	  # /c/mnt/github/orbitprofiler/kokoro
-	  find "$MOUNT_POINT" -depth -mindepth 1 -maxdepth 1 -type d | \
-        grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'orbitprofiler/build' | \
-        while read file; do
-		  echo "Delete directory: $file"
-          #rm -rf  "$file"
-		done
-      
-	  echo "First step done."
-	  # build dir can be cleaned up further
-	  find "$MOUNT_POINT/build" -depth -mindepth 1 -maxdepth 1 -type d  | \
-        grep -v 'build/testresults' | \
-        while read file; do
-		  echo "Delete directory: $file"
-          #rm -rf "$file"
-		done
-  	  echo "Second step done."
-
       find "$MOUNT_POINT" -depth -mindepth 1 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'testresults/' | \
