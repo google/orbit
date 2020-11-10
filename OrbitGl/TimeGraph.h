@@ -181,6 +181,7 @@ class TimeGraph {
       const orbit_client_protos::FunctionInfo& function);
 
   void AddTrack(std::shared_ptr<Track> track);
+  int FindMovingTrackIndex();
 
   [[nodiscard]] std::vector<int32_t> GetSortedThreadIds();
 
