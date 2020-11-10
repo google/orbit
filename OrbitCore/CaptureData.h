@@ -16,6 +16,7 @@
 #include "TracepointCustom.h"
 #include "TracepointEventBuffer.h"
 #include "TracepointInfoManager.h"
+#include "UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
@@ -203,6 +204,11 @@ class CaptureData {
     sampling_profiler_ = std::move(sampling_profiler);
   }
 
+  void InsertFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void EraseFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  [[nodiscard]] bool ContainsFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
+  void ClearUserDefinedCaptureData();
+
  private:
   ProcessData process_;
   OrbitClientData::ModuleManager* module_manager_;
@@ -231,6 +237,8 @@ class CaptureData {
   mutable std::unique_ptr<absl::Mutex> thread_state_slices_mutex_ = std::make_unique<absl::Mutex>();
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
+
+  UserDefinedCaptureData user_defined_capture_data_;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_DATA_H_

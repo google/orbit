@@ -795,9 +795,9 @@ void OrbitApp::ClearCapture() {
     GCurrentTimeGraph->Clear();
   }
   // The following call only removes any functions stored as frame track
-  // functions in App, it does not remove the frame tracks from the
+  // functions in DataManager, it does not remove the frame tracks from the
   // time graph. This was done with the call above to TimeGraph::Clear().
-  ClearFrameTrackFunctions();
+  capture_data_.ClearUserDefinedCaptureData();
 
   CHECK(capture_cleared_callback_);
   capture_cleared_callback_();
@@ -1436,12 +1436,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   const CaptureData& capture_data = GetCaptureData();
   const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
 
-  if (frame_track_functions_.contains(function_address)) {
-    ERROR("Trying to add duplicate frame track for function: %s",
-          FunctionUtils::GetDisplayName(function));
-    DCHECK(false);
-    return;
-  }
+  capture_data_.InsertFrameTrack(function);
 
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllThreadTrackTimerChains();
@@ -1475,28 +1470,13 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
 
     GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
   }
-  frame_track_functions_.insert(std::make_pair(function_address, function));
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
-  const CaptureData& capture_data = GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(function);
-
-  if (!frame_track_functions_.contains(function_address)) {
-    ERROR("Trying to remove non-existent frame track for function: %s",
-          FunctionUtils::GetDisplayName(function));
-    DCHECK(false);
-    return;
-  }
-
-  frame_track_functions_.erase(function_address);
+  capture_data_.EraseFrameTrack(function);
   GCurrentTimeGraph->RemoveFrameTrack(function);
 }
 
 bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
-  const CaptureData& capture_data = GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(function);
-  return frame_track_functions_.contains(function_address);
+  return capture_data_.ContainsFrameTrack(function);
 }
-
-void OrbitApp::ClearFrameTrackFunctions() { frame_track_functions_.clear(); }

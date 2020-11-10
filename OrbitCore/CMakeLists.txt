@@ -25,7 +25,8 @@ target_sources(
          Threading.h
          TracepointCustom.h
          TracepointEventBuffer.h
-         TracepointInfoManager.h)
+         TracepointInfoManager.h
+         UserDefinedCaptureData.h)
 
 target_sources(
   OrbitCore
@@ -37,7 +38,8 @@ target_sources(
           StringManager.cpp
           SymbolHelper.cpp
           TracepointEventBuffer.cpp
-          TracepointInfoManager.cpp)
+          TracepointInfoManager.cpp
+          UserDefinedCaptureData.cpp)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
@@ -83,7 +85,8 @@ target_sources(OrbitCoreTests PRIVATE
     StringManagerTest.cpp
     SymbolHelperTest.cpp
     TracepointEventBufferTest.cpp
-    TracepointInfoManagerTest.cpp)
+    TracepointInfoManagerTest.cpp
+    UserDefinedCaptureDataTest.cpp)
 
 target_link_libraries(
   OrbitCoreTests
