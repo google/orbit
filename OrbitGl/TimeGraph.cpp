@@ -1052,36 +1052,59 @@ void TimeGraph::UpdateMovingTrackSorting() {
   // Note: We do an O(n) search for the correct position in the sorted_tracks_ array which
   // could be optimized, but this is not worth the effort for the limited number of tracks.
 
-  std::shared_ptr<Track> moving_track = nullptr;
-  for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
-       ++track_it) {
-    if ((*track_it)->IsMoving()) {
-      moving_track = *track_it;
-      sorted_filtered_tracks_.erase(track_it);
-      sorted_tracks_.erase(std::find(sorted_tracks_.begin(), sorted_tracks_.end(), moving_track));
-      break;
-    }
-  }
+  int moving_track_previous_position = FindMovingTrackIndex();
 
-  if (moving_track != nullptr) {
-    bool inserted = false;
+  if (moving_track_previous_position != -1) {
+    std::shared_ptr<Track> moving_track = sorted_filtered_tracks_[moving_track_previous_position];
+    sorted_filtered_tracks_.erase(sorted_filtered_tracks_.begin() + moving_track_previous_position);
 
+    int moving_track_current_position = -1;
     for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
          ++track_it) {
       if (moving_track->GetPos()[1] >= (*track_it)->GetPos()[1]) {
-        auto sorted_track_it = std::find(sorted_tracks_.begin(), sorted_tracks_.end(), *track_it);
-        sorted_tracks_.insert(sorted_track_it, moving_track);
         sorted_filtered_tracks_.insert(track_it, moving_track);
-        inserted = true;
+        moving_track_current_position = track_it - sorted_filtered_tracks_.begin();
         break;
       }
     }
 
-    if (!inserted) {
-      sorted_tracks_.push_back(moving_track);
+    if (moving_track_current_position == -1) {
       sorted_filtered_tracks_.push_back(moving_track);
+      moving_track_current_position = static_cast<int>(sorted_filtered_tracks_.size()) - 1;
+    }
+
+    // Now we have to change the position of the moving_track in the non-filtered array
+    if (moving_track_current_position == moving_track_previous_position) {
+      return;
+    }
+    sorted_tracks_.erase(std::find(sorted_tracks_.begin(), sorted_tracks_.end(), moving_track));
+    if (moving_track_current_position > moving_track_previous_position) {
+      // In this case we will insert the moving_track right after the one who is before in the
+      // filtered array
+      auto& previous_filtered_track = sorted_filtered_tracks_[moving_track_current_position - 1];
+      sorted_tracks_.insert(
+          ++std::find(sorted_tracks_.begin(), sorted_tracks_.end(), previous_filtered_track),
+          moving_track);
+    } else {
+      // In this case we will insert the moving_track right before the one who is after in the
+      // filtered array
+      auto& next_filtered_track = sorted_filtered_tracks_[moving_track_current_position + 1];
+      sorted_tracks_.insert(
+          std::find(sorted_tracks_.begin(), sorted_tracks_.end(), next_filtered_track),
+          moving_track);
     }
   }
+}
+
+int TimeGraph::FindMovingTrackIndex() {
+  // Returns the position of the moving track, or -1 if there is none.
+  for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
+       ++track_it) {
+    if ((*track_it)->IsMoving()) {
+      return track_it - sorted_filtered_tracks_.begin();
+    }
+  }
+  return -1;
 }
 
 void TimeGraph::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
