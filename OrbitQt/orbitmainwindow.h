@@ -57,7 +57,7 @@ class OrbitMainWindow : public QMainWindow {
   void OnCaptureCleared();
 
  protected:
-  virtual void closeEvent(QCloseEvent* event) override;
+  void closeEvent(QCloseEvent* event) override;
 
  private slots:
   void on_actionAbout_triggered();

@@ -7,76 +7,70 @@
 #include "ImGuiOrbit.h"
 
 TimeGraphLayout::TimeGraphLayout() {
-  m_NumCores = 0;
-  m_TextBoxHeight = 20.f;
-  m_CoresHeight = 10.f;
+  num_cores_ = 0;
+  text_box_height_ = 20.f;
+  core_height_ = 10.f;
   thread_state_track_height_ = 4.0f;
-  m_EventTrackHeight = 10.f;
-  m_GraphTrackHeight = 20.f;
-  m_TrackBottomMargin = 5.f;
-  m_TrackTopMargin = 5.f;
-  m_SpaceBetweenCores = 2.f;
+  event_track_height_ = 10.f;
+  graph_track_height_ = 20.f;
+  track_bottom_margin_ = 5.f;
+  track_top_margin_ = 5.f;
+  space_between_cores_ = 2.f;
   space_between_gpu_depths_ = 2.f;
-  m_SpaceBetweenTracks = 40.f;
-  m_SpaceBetweenTracksAndThread = 5.f;
-  m_SpaceBetweenThreadBlocks = 35.f;
-  m_TrackLabelOffsetX = 30.f;
-  m_SliderWidth = 15.f;
-  m_TrackTabWidth = 350.f;
-  m_TrackTabHeight = 30.f;
-  m_TrackTabOffset = 0.f;
-  m_CollapseButtonOffset = 15.f;
-  m_RoundingRadius = 8.f;
-  m_RoundingNumSides = 16;
-  m_TextOffset = 5.f;
+  space_between_tracks_ = 40.f;
+  space_between_tracks_and_thread_ = 5.f;
+  space_between_thread_blocks_ = 35.f;
+  track_label_offset_x_ = 30.f;
+  slider_width_ = 15.f;
+  track_tab_width_ = 350.f;
+  track_tab_height_ = 30.f;
+  track_tab_offset_ = 0.f;
+  collapse_button_offset_ = 15.f;
+  rounding_radius_ = 8.f;
+  rounding_num_sides_ = 16;
+  text_offset_ = 5.f;
   right_margin_ = 10.f;
-  m_SchedulerTrackOffset = 10.f;
-  m_ToolbarIconHeight = 24.f;
+  scheduler_track_offset_ = 10.f;
+  toolbar_icon_height_ = 24.f;
   scale_ = 1.f;
   time_bar_height_ = 15.f;
 };
 
+#define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
 #define FLOAT_SLIDER_MIN_MAX(x, min, max)     \
   if (ImGui::SliderFloat(#x, &x, min, max)) { \
     needs_redraw = true;                      \
   }
 
-#define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
-
 bool TimeGraphLayout::DrawProperties() {
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-  ImVec2 size(400, 400);
-
-  ImGui::Begin("Layout Properties", &m_DrawProperties, size, 1.f, 0);
   bool needs_redraw = false;
-  FLOAT_SLIDER(m_TrackLabelOffsetX);
-  FLOAT_SLIDER(m_TextBoxHeight);
-  FLOAT_SLIDER(m_CoresHeight);
+  FLOAT_SLIDER(track_label_offset_x_);
+  FLOAT_SLIDER(text_box_height_);
+  FLOAT_SLIDER(core_height_);
   FLOAT_SLIDER(thread_state_track_height_);
-  FLOAT_SLIDER(m_EventTrackHeight);
-  FLOAT_SLIDER(m_GraphTrackHeight);
-  FLOAT_SLIDER(m_SpaceBetweenCores);
+  FLOAT_SLIDER(event_track_height_);
+  FLOAT_SLIDER(graph_track_height_);
+  FLOAT_SLIDER(space_between_cores_);
   FLOAT_SLIDER(space_between_gpu_depths_);
-  FLOAT_SLIDER(m_SpaceBetweenTracks);
-  FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
-  FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
-  FLOAT_SLIDER(m_SliderWidth);
+  FLOAT_SLIDER(space_between_tracks_);
+  FLOAT_SLIDER(space_between_tracks_and_thread_);
+  FLOAT_SLIDER(space_between_thread_blocks_);
+  FLOAT_SLIDER(slider_width_);
   FLOAT_SLIDER(time_bar_height_);
-  FLOAT_SLIDER(m_TrackTabHeight);
-  FLOAT_SLIDER(m_TrackTabOffset);
-  FLOAT_SLIDER(m_CollapseButtonOffset);
-  FLOAT_SLIDER(m_RoundingRadius);
-  FLOAT_SLIDER(m_RoundingNumSides);
-  FLOAT_SLIDER(m_TextOffset);
+  FLOAT_SLIDER(track_tab_height_);
+  FLOAT_SLIDER(track_tab_offset_);
+  FLOAT_SLIDER(collapse_button_offset_);
+  FLOAT_SLIDER(rounding_radius_);
+  FLOAT_SLIDER(rounding_num_sides_);
+  FLOAT_SLIDER(text_offset_);
   FLOAT_SLIDER(right_margin_);
-  FLOAT_SLIDER(m_SchedulerTrackOffset);
-  FLOAT_SLIDER_MIN_MAX(m_TrackTabWidth, 0, 1000.f);
-  FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20.f);
-  FLOAT_SLIDER_MIN_MAX(m_TrackTopMargin, 0, 20.f);
-  FLOAT_SLIDER(m_ToolbarIconHeight);
+  FLOAT_SLIDER(scheduler_track_offset_);
+  FLOAT_SLIDER_MIN_MAX(track_tab_width_, 0, 1000.f);
+  FLOAT_SLIDER_MIN_MAX(track_bottom_margin_, 0, 20.f);
+  FLOAT_SLIDER_MIN_MAX(track_top_margin_, 0, 20.f);
+  FLOAT_SLIDER(toolbar_icon_height_);
   FLOAT_SLIDER_MIN_MAX(scale_, 0.05f, 20.f);
-  ImGui::Checkbox("DrawTrackBackground", &m_DrawTrackBackground);
-  ImGui::End();
+  ImGui::Checkbox("Draw Track Background", &draw_track_background_);
 
   return needs_redraw;
 }

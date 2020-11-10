@@ -13,11 +13,29 @@
 // https://github.com/ocornut/imgui
 
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "imgui.h"
 #include "imgui_internal.h"
+
+#define IMGUI_VAR_TO_TEXT(var) ImGuiOrbit::VariableToText(#var, var)
+#define IMGUI_VARN_TO_TEXT(var, name) ImGuiOrbit::VariableToText(name, var)
+
+#define IMGUI_FLOAT_SLIDER(x) IMGUI_FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
+#define IMGUI_FLOAT_SLIDER_MIN_MAX(x, min, max) ImGui::SliderFloat(#x, &x, min, max)
+
+namespace ImGuiOrbit {
+
+template <class T>
+inline void VariableToText(std::string_view name, const T& value) {
+  std::stringstream string_stream{};
+  string_stream << name << " = " << value;
+  ImGui::Text("%s", string_stream.str().c_str());
+}
+
+}  // namespace ImGuiOrbit
 
 class GlCanvas;
 
@@ -30,10 +48,11 @@ IMGUI_API void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas);
 // GLFW callbacks (installed by default if you enable 'install_callbacks' during
 // initialization) Provided here if you want to chain callbacks. You can also
 // handle inputs yourself and use those as a reference.
-IMGUI_API void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_Canvas, int button, bool down);
-IMGUI_API void Orbit_ImGui_ScrollCallback(GlCanvas* a_Canvas, int scroll);
-IMGUI_API void Orbit_ImGui_KeyCallback(GlCanvas* a_Canvas, int key, bool down);
-IMGUI_API void Orbit_ImGui_CharCallback(GlCanvas* a_Canvas, unsigned int c);
+IMGUI_API void Orbit_ImGui_MouseButtonCallback(ImGuiContext* context, int button, bool down);
+IMGUI_API void Orbit_ImGui_ScrollCallback(ImGuiContext* context, int scroll);
+IMGUI_API void Orbit_ImGui_KeyCallback(ImGuiContext* context, int key, bool down, bool ctrl,
+                                       bool shift, bool alt);
+IMGUI_API void Orbit_ImGui_CharCallback(ImGuiContext* context, unsigned int c);
 
 // Returns OpenGL texture id or 0 in case of an error.
 uint32_t LoadTextureFromFile(const char* filename);

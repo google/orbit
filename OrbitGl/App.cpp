@@ -412,6 +412,29 @@ void OrbitApp::RefreshCaptureView() {
   DoZoom = true;  // TODO: remove global, review logic
 }
 
+void OrbitApp::RenderImGui() {
+  CHECK(debug_canvas_ != nullptr);
+  CHECK(capture_window_ != nullptr);
+  ScopeImguiContext context(debug_canvas_->GetImGuiContext());
+  Orbit_ImGui_NewFrame(debug_canvas_);
+
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
+
+  ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(25, 25, 25, 255));
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+  ImGui::Begin("OrbitDebug", nullptr, ImVec2(0, 0), 1.f, window_flags);
+  capture_window_->RenderImGui();
+  ImGui::PopStyleVar();
+  ImGui::PopStyleColor();
+  ImGui::End();
+
+  ImGui::Render();
+  debug_canvas_->NeedsRedraw();
+}
+
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   const ProcessData* process = data_manager_->GetProcessByPid(pid);
   CHECK(process != nullptr);
@@ -471,6 +494,14 @@ void OrbitApp::MainTick() {
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* capture) {
   CHECK(capture_window_ == nullptr);
   capture_window_ = capture;
+}
+
+void OrbitApp::RegisterDebugCanvas(GlCanvas* debug_canvas) {
+  CHECK(debug_canvas_ == nullptr);
+  debug_canvas_ = debug_canvas;
+  debug_canvas_->EnableImGui();
+  Orbit_ImGui_Init(debug_canvas_->GetInitialFontSize());
+  debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
 }
 
 void OrbitApp::NeedsRedraw() {

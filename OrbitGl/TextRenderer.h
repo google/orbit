@@ -26,7 +26,8 @@ class TextRenderer {
   void Display(Batcher* batcher);
   void DisplayLayer(Batcher* batcher, float layer);
   void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
-               uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false);
+               uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false,
+               Vec2* out_text_pos = nullptr, Vec2* out_text_size = nullptr);
   // Returns the width of the rendered string.
   int AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y, float a_Z,
                                       const Color& a_Color, size_t a_TrailingCharsLength,
@@ -46,7 +47,8 @@ class TextRenderer {
 
  protected:
   void AddTextInternal(texture_font_t* font, const char* text, const vec4& color, vec2* pen,
-                       float a_MaxSize = -1.f, float a_Z = -0.01f, bool a_Static = false);
+                       float a_MaxSize = -1.f, float a_Z = -0.01f, vec2* out_text_pos = nullptr,
+                       vec2* out_text_size = nullptr);
   void ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y);
   float ToScreenSpace(float a_Size);
   void DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer);

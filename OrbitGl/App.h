@@ -26,6 +26,7 @@
 #include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
+#include "ImGuiOrbit.h"
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
@@ -118,6 +119,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
 
   void RegisterCaptureWindow(CaptureWindow* capture);
+  void RegisterDebugCanvas(GlCanvas* debug_canvas);
 
   void SetSamplingReport(
       SamplingProfiler sampling_profiler,
@@ -247,6 +249,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
+  void RenderImGui();
 
   void LoadModules(
       const std::vector<ModuleData*>& modules,
@@ -367,6 +370,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
+  GlCanvas* debug_canvas_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;

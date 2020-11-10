@@ -11,18 +11,13 @@
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(CaptureWindow::StatsMode stats_mode, uint32_t font_size)
-    : GlCanvas(font_size),
-      font_size_(font_size),
-      time_graph_(font_size),
-      stats_enabled_(stats_mode == StatsMode::kEnabled) {
+CaptureWindow::CaptureWindow(uint32_t font_size)
+    : GlCanvas(font_size), font_size_(font_size), time_graph_(font_size) {
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&text_renderer_);
   time_graph_.SetCanvas(this);
   draw_help_ = true;
   draw_filter_ = false;
-  first_help_draw_ = true;
-  draw_stats_ = false;
   world_top_left_x_ = 0;
   world_top_left_y_ = 0;
   world_max_y_ = 0;
@@ -78,10 +73,10 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
   float world_x, world_y;
   ScreenToWorld(x, y, world_x, world_y);
 
-  mouse_x_ = world_x;
-  mouse_y_ = world_y;
-  mouse_pos_x_ = x;
-  mouse_pos_y_ = y;
+  mouse_world_x_ = world_x;
+  mouse_world_y_ = world_y;
+  mouse_screen_x_ = x;
+  mouse_screen_y_ = y;
 
   // Pan
   if (left && !im_gui_active_ && !picking_manager_.IsDragging() && !GOrbitApp->IsCapturing()) {
@@ -128,8 +123,6 @@ void CaptureWindow::LeftDown(int x, int y) {
   ref_time_click_ = static_cast<uint64_t>(time_graph_.GetTime(static_cast<double>(x) / GetWidth()));
 
   is_selecting_ = false;
-
-  Orbit_ImGui_MouseButtonCallback(this, 0, true);
 
   picking_ = true;
   click_was_drag_ = false;
@@ -244,9 +237,9 @@ void CaptureWindow::PostRender() {
     picking_ = false;
     hover_timer_.Restart();
 
-    Hover(mouse_pos_x_, mouse_pos_y_);
+    Hover(mouse_screen_x_, mouse_screen_y_);
     NeedsUpdate();
-    GlCanvas::Render(width_, height_);
+    GlCanvas::Render(screen_width_, screen_height_);
     hover_timer_.Restart();
   }
 
@@ -254,7 +247,7 @@ void CaptureWindow::PostRender() {
     picking_ = false;
     Pick(screen_click_x_, screen_click_y_);
     NeedsRedraw();
-    GlCanvas::Render(width_, height_);
+    GlCanvas::Render(screen_width_, screen_height_);
   }
 }
 
@@ -321,8 +314,8 @@ void CaptureWindow::Zoom(int delta) {
   float world_x;
   float world_y;
 
-  ScreenToWorld(mouse_pos_x_, mouse_pos_y_, world_x, world_y);
-  mouse_ratio_ = static_cast<double>(mouse_pos_x_) / GetWidth();
+  ScreenToWorld(mouse_screen_x_, mouse_screen_y_, world_x, world_y);
+  mouse_ratio_ = static_cast<double>(mouse_screen_x_) / GetWidth();
 
   time_graph_.ZoomTime(delta_float, mouse_ratio_);
   wheel_momentum_ = delta_float * wheel_momentum_ < 0 ? 0 : wheel_momentum_ + delta_float;
@@ -331,9 +324,9 @@ void CaptureWindow::Zoom(int delta) {
 }
 
 void CaptureWindow::Pan(float ratio) {
-  double ref_time = time_graph_.GetTime(static_cast<double>(mouse_pos_x_) / GetWidth());
-  time_graph_.PanTime(mouse_pos_x_,
-                      mouse_pos_x_ + static_cast<int>(ratio * static_cast<float>(GetWidth())),
+  double ref_time = time_graph_.GetTime(static_cast<double>(mouse_screen_x_) / GetWidth());
+  time_graph_.PanTime(mouse_screen_x_,
+                      mouse_screen_x_ + static_cast<int>(ratio * static_cast<float>(GetWidth())),
                       GetWidth(), ref_time);
   NeedsUpdate();
 }
@@ -363,9 +356,6 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
     time_graph_.VerticalZoom(delta_float, mouse_relative_y_position);
   }
 
-  // Use the original sign of a_Delta here.
-  Orbit_ImGui_ScrollCallback(this, -delta);
-
   can_hover_ = true;
 
   NeedsUpdate();
@@ -382,15 +372,10 @@ void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta,
   } else {
     Pan(-0.1f);
   }
-
-  // Use the original sign of delta here.
-  Orbit_ImGui_ScrollCallback(this, -delta_normalized);
 }
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-
-  ScopeImguiContext state(im_gui_context_);
 
   if (!im_gui_active_) {
     switch (key_code) {
@@ -413,9 +398,6 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
         break;
       case 'F':
         draw_filter_ = !draw_filter_;
-        break;
-      case 'I':
-        draw_stats_ = !draw_stats_ && stats_enabled_;
         break;
       case 'H':
         draw_help_ = !draw_help_;
@@ -475,13 +457,6 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     }
   }
 
-  ImGuiIO& io = ImGui::GetIO();
-  io.KeyCtrl = ctrl;
-  io.KeyShift = shift;
-  io.KeyAlt = alt;
-
-  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), true);
-
   NeedsRedraw();
 }
 
@@ -511,10 +486,15 @@ void CaptureWindow::Draw() {
   if (GetPickingMode() == PickingMode::kNone) {
     RenderTimeBar();
 
-    Vec2 pos(mouse_x_, world_top_left_y_);
+    Vec2 pos(mouse_world_x_, world_top_left_y_);
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
+
+    if (draw_help_) {
+      RenderHelpUi();
+    }
   }
+
   DrawScreenSpace();
 
   // We start by getting all layers
@@ -668,56 +648,47 @@ void CaptureWindow::RenderImGui() {
     return;
   }
 
-  ScopeImguiContext state(im_gui_context_);
-  Orbit_ImGui_NewFrame(this);
-
-#define VAR_TO_STR(var) VariableToString(#var, var)
-
-  if (draw_stats_) {
-    ImGui::ShowDemoWindow();
-    if (time_graph_.GetLayout().DrawProperties()) {
-      NeedsUpdate();
+  if (ImGui::BeginTabBar("CaptureWindowTabBar", ImGuiTabBarFlags_None)) {
+    if (ImGui::BeginTabItem("Layout Properties")) {
+      if (time_graph_.GetLayout().DrawProperties()) {
+        NeedsUpdate();
+      }
+      ImGui::EndTabItem();
     }
 
-    m_StatsWindow.Clear();
+    if (ImGui::BeginTabItem("Capture Info")) {
+      IMGUI_VAR_TO_TEXT(screen_width_);
+      IMGUI_VAR_TO_TEXT(screen_height_);
+      IMGUI_VAR_TO_TEXT(world_height_);
+      IMGUI_VAR_TO_TEXT(world_width_);
+      IMGUI_VAR_TO_TEXT(world_top_left_x_);
+      IMGUI_VAR_TO_TEXT(world_top_left_y_);
+      IMGUI_VAR_TO_TEXT(world_min_width_);
+      IMGUI_VAR_TO_TEXT(mouse_screen_x_);
+      IMGUI_VAR_TO_TEXT(mouse_screen_y_);
+      IMGUI_VAR_TO_TEXT(mouse_world_x_);
+      IMGUI_VAR_TO_TEXT(mouse_world_y_);
+      IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
+      IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
+      IMGUI_VAR_TO_TEXT(time_graph_.GetThreadTotalHeight());
 
-    m_StatsWindow.AddLine(VAR_TO_STR(width_));
-    m_StatsWindow.AddLine(VAR_TO_STR(height_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_height_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_width_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_top_left_x_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_top_left_y_));
-    m_StatsWindow.AddLine(VAR_TO_STR(world_min_width_));
-    m_StatsWindow.AddLine(VAR_TO_STR(mouse_x_));
-    m_StatsWindow.AddLine(VAR_TO_STR(mouse_y_));
-    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumDrawnTextBoxes()));
-    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumTimers()));
-    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetThreadTotalHeight()));
+      IMGUI_VAR_TO_TEXT(
+          GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size());
+      IMGUI_VAR_TO_TEXT(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
 
-    m_StatsWindow.AddLine(VAR_TO_STR(
-        GOrbitApp->GetCaptureData().GetCallstackData()->callstack_events_by_tid().size()));
-    m_StatsWindow.AddLine(
-        VAR_TO_STR(GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount()));
-
-    m_StatsWindow.Draw("Capture Stats", &draw_stats_);
-  }
-
-#undef VAR_TO_STR
-
-  if (draw_help_) {
-    RenderHelpUi();
-
-    if (first_help_draw_) {
-      // Redraw so that Imgui resizes the
-      // window properly on first draw
-      NeedsRedraw();
-      first_help_draw_ = false;
+      ImGui::EndTabItem();
     }
-  }
 
-  // Rendering
-  glViewport(0, 0, GetWidth(), GetHeight());
-  ImGui::Render();
+    if (ImGui::BeginTabItem("Misc")) {
+      static bool show_imgui_demo = false;
+      ImGui::Checkbox("Show ImGui Demo", &show_imgui_demo);
+      if (show_imgui_demo) {
+        ImGui::ShowDemoWindow();
+      }
+      ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+  }
 }
 
 void CaptureWindow::RenderText(float layer) {
@@ -732,33 +703,42 @@ void ColorToFloat(Color color, float* output) {
   }
 }
 
+Vec2 ScreenToWorld(GlCanvas* canvas, Vec2 screen_pos) {
+  Vec2 world_pos;
+  canvas->ScreenToWorld(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1]),
+                        world_pos[0], world_pos[1]);
+  return world_pos;
+}
+
 void CaptureWindow::RenderHelpUi() {
-  constexpr float kYOffset = 8.f;
-  ImGui::SetNextWindowPos(ImVec2(0, kYOffset));
+  constexpr int kXOffset = 50;
+  constexpr int kYOffset = 80;
+  float world_x = 0;
+  float world_y = 0;
+  ScreenToWorld(kXOffset, kYOffset, world_x, world_y);
 
-  ImVec4 color(1.f, 0, 0, 1.f);
-  ColorToFloat(slider_->GetBarColor(), &color.x);
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
+  const char* help_message =
+      "Start/Stop Capture: 'X'\n"
+      "Pan: 'A','D' or \"Left Click + Drag\"\n"
+      "Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"\n"
+      "Vertical Zoom: \"Ctrl + Scroll\"\n"
+      "Select: Left Click\n"
+      "Measure: \"Right Click + Drag\"\n"
+      "Toggle Help: 'H'";
 
-  if (!ImGui::Begin("Help Overlay", &draw_help_, ImVec2(0, 0), 1.f,
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
-    ImGui::PopStyleColor();
-    ImGui::End();
-    return;
-  }
+  const uint32_t kHelpMessageFontSize = 2 * font_size_;
+  Vec2 text_bounding_box_pos;
+  Vec2 text_bounding_box_size;
+  text_renderer_.AddText(help_message, world_x, world_y, GlCanvas::kZValueTextUi,
+                         Color(255, 255, 255, 255), kHelpMessageFontSize, -1.f /*max_size*/,
+                         false /*right_justified*/, &text_bounding_box_pos,
+                         &text_bounding_box_size);
 
-  ImGui::Text("Start/Stop Capture: 'X'");
-  ImGui::Text("Pan: 'A','D' or \"Left Click + Drag\"");
-  ImGui::Text("Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"");
-  ImGui::Text("Vertical Zoom: \"Ctrl + Scroll\"");
-  ImGui::Text("Select: Left Click");
-  ImGui::Text("Measure: \"Right Click + Drag\"");
-  ImGui::Text("Toggle Help: 'H'");
-
-  ImGui::End();
-
-  ImGui::PopStyleColor();
+  const Color kBoxColor(50, 50, 50, 230);
+  const float kMargin = 15.f;
+  const float kRoundingRadius = 20.f;
+  ui_batcher_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size, GlCanvas::kZValueUi,
+                            kRoundingRadius, kBoxColor, kMargin);
 }
 
 inline double GetIncrementMs(double milli_seconds) {

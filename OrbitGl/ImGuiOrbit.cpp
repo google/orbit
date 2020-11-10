@@ -20,6 +20,8 @@
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 #include "absl/base/casts.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/strip.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -586,31 +588,39 @@ ImFont* AddOrbitFont(float pixel_size) {
 
 }  // namespace
 
-void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_GlCanvas, int button, bool down) {
-  ScopeImguiContext state(a_GlCanvas->GetImGuiContext());
+void Orbit_ImGui_MouseButtonCallback(ImGuiContext* context, int button, bool down) {
+  if (context == nullptr) return;
+  ScopeImguiContext state(context);
   if (button >= 0 && button < 3) {
     g_MousePressed[button] = down;
   }
 }
 
-void Orbit_ImGui_ScrollCallback(GlCanvas* a_GlCanvas, int scroll) {
-  ScopeImguiContext state(a_GlCanvas->GetImGuiContext());
+void Orbit_ImGui_ScrollCallback(ImGuiContext* context, int scroll) {
+  if (context == nullptr) return;
+  ScopeImguiContext state(context);
   g_MouseWheel += scroll;  // Use fractional mouse wheel, 1.0 unit 5 lines.
 }
 
-void Orbit_ImGui_KeyCallback(GlCanvas* a_Canvas, int key, bool down) {
+void Orbit_ImGui_KeyCallback(ImGuiContext* context, int key, bool down, bool ctrl, bool shift,
+                             bool alt) {
+  if (context == nullptr) return;
   // Convert "enter" into "return"
   if (key == 5) key = 4;
 
-  ScopeImguiContext state(a_Canvas->GetImGuiContext());
+  ScopeImguiContext state(context);
+  ImGuiIO& io = ImGui::GetIO();
+  io.KeyCtrl = ctrl;
+  io.KeyShift = shift;
+  io.KeyAlt = alt;
   if (key >= 0 && key < 512) {
-    ImGuiIO& io = ImGui::GetIO();
     io.KeysDown[key] = down;
   }
 }
 
-void Orbit_ImGui_CharCallback(GlCanvas* a_GlCanvas, unsigned int c) {
-  ScopeImguiContext state(a_GlCanvas->GetImGuiContext());
+void Orbit_ImGui_CharCallback(ImGuiContext* context, unsigned int c) {
+  if (context == nullptr) return;
+  ScopeImguiContext state(context);
   ImGuiIO& io = ImGui::GetIO();
   if (c > 0 && c < 0x10000) io.AddInputCharacter(static_cast<uint16_t>(c));
 }
@@ -727,14 +737,6 @@ void OutputWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
   }
 
   ImGui::TextUnformatted(Buf.begin());
-
-  static bool checked = true;
-  ImGui::Checkbox("blah", &checked);
-
-  static int i1 = 0;
-  if (ImGui::SliderInt("slider int", &i1, 10, 100)) {
-    GCurrentTimeGraph->SetFontSize(i1);
-  }
 
   ImGui::End();
   ImGui::PopStyleVar();

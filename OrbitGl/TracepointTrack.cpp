@@ -109,9 +109,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   }
 }
 
-void TracepointTrack::SetPos(float x, float y) {
-  pos_ = Vec2(x, y);
-}
+void TracepointTrack::SetPos(float x, float y) { pos_ = Vec2(x, y); }
 
 void TracepointTrack::OnPick(int x, int y) {
   Vec2& mouse_pos = mouse_pos_[0];

@@ -11,7 +11,7 @@
 
 class CaptureWindow : public GlCanvas {
  public:
-  explicit CaptureWindow(StatsMode stats_mode, uint32_t font_size);
+  explicit CaptureWindow(uint32_t font_size);
   ~CaptureWindow() override;
 
   void Initialize() override;
@@ -66,12 +66,8 @@ class CaptureWindow : public GlCanvas {
  private:
   uint32_t font_size_;
   TimeGraph time_graph_;
-  OutputWindow m_StatsWindow;
   bool draw_help_;
   bool draw_filter_;
-  bool first_help_draw_;
-  bool draw_stats_;
-  bool stats_enabled_;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
 

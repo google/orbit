@@ -92,6 +92,85 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
   AddBox(box, colors, std::move(user_data));
 }
 
+static std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, uint32_t num_sides) {
+  std::vector<Triangle> triangles;
+  const Vec3 origin(0, 0, 0);
+
+  float increment_radians = std::fabs(angle_1 - angle_0) / static_cast<float>(num_sides);
+  Vec3 last_point(cosf(angle_0), sinf(angle_0), 0);
+  for (uint32_t i = 1; i <= num_sides; ++i) {
+    float angle = angle_0 + static_cast<float>(i) * increment_radians;
+    Vec3 current_point(cosf(angle), sinf(angle), 0);
+    triangles.emplace_back(Triangle(origin, last_point, current_point));
+    last_point = current_point;
+  }
+
+  return triangles;
+}
+
+static void AddRoundedCornerTriangles(Batcher* batcher, const std::vector<Triangle> unit_triangles,
+                                      Vec2 pos, float radius, float z, const Color& color) {
+  for (auto& unit_triangle : unit_triangles) {
+    Triangle triangle = unit_triangle;
+    triangle.vertices[1] *= radius;
+    triangle.vertices[2] *= radius;
+
+    for (size_t i = 0; i < 3; ++i) {
+      triangle.vertices[i][0] += pos[0];
+      triangle.vertices[i][1] += pos[1];
+      triangle.vertices[i][2] = z;
+    }
+
+    batcher->AddTriangle(triangle, color);
+  }
+}
+
+void Batcher::AddBottomLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color) {
+  static auto unit_triangles = GetUnitArcTriangles(kPiFloat, 1.5f * kPiFloat, kNumArcSides);
+  AddRoundedCornerTriangles(this, unit_triangles, pos, radius, z, color);
+}
+
+void Batcher::AddTopLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color) {
+  static auto unit_triangles = GetUnitArcTriangles(0.5f * kPiFloat, kPiFloat, kNumArcSides);
+  AddRoundedCornerTriangles(this, unit_triangles, pos, radius, z, color);
+}
+
+void Batcher::AddTopRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color) {
+  static auto unit_triangles = GetUnitArcTriangles(0, 0.5f * kPiFloat, kNumArcSides);
+  AddRoundedCornerTriangles(this, unit_triangles, pos, radius, z, color);
+}
+
+void Batcher::AddBottomRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color) {
+  static auto unit_triangles = GetUnitArcTriangles(-0.5f * kPiFloat, 0, kNumArcSides);
+  AddRoundedCornerTriangles(this, unit_triangles, pos, radius, z, color);
+}
+
+void Batcher::AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Color& color,
+                            float margin) {
+  const Vec2 extra_margin(margin, margin);
+  pos -= extra_margin;
+  size += 2.f * extra_margin;
+
+  Box left_box(Vec2(pos[0], pos[1] + radius), Vec2(radius, size[1] - 2 * radius), z);
+  Box middle_box(Vec2(pos[0] + radius, pos[1]), Vec2(size[0] - 2 * radius, size[1]), z);
+  Box right_box(Vec2(pos[0] + size[0] - radius, pos[1] + radius),
+                Vec2(radius, size[1] - 2 * radius), z);
+
+  AddBox(left_box, color);
+  AddBox(middle_box, color);
+  AddBox(right_box, color);
+
+  Vec2 bottom_left_pos(pos[0] + radius, pos[1] + radius);
+  Vec2 top_left_pos(pos[0] + radius, pos[1] + size[1] - radius);
+  Vec2 top_right_pos(pos[0] + size[0] - radius, pos[1] + size[1] - radius);
+  Vec2 bottom_right_pos(pos[0] + size[0] - radius, pos[1] + radius);
+
+  AddBottomLeftRoundedCorner(bottom_left_pos, radius, z, color);
+  AddTopLeftRoundedCorner(top_left_pos, radius, z, color);
+  AddTopRightRoundedCorner(top_right_pos, radius, z, color);
+  AddBottomRightRoundedCorner(bottom_right_pos, radius, z, color);
+}
+
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                            std::shared_ptr<Pickable> pickable, ShadingDirection shading_direction) {
   std::array<Color, 4> colors;

@@ -48,8 +48,8 @@ GlCanvas::GlCanvas(uint32_t font_size)
     : text_renderer_(font_size), ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
-  width_ = 0;
-  height_ = 0;
+  screen_width_ = 0;
+  screen_height_ = 0;
   world_width_ = 0;
   world_height_ = 0;
   world_top_left_x_ = -5.f;
@@ -65,10 +65,10 @@ GlCanvas::GlCanvas(uint32_t font_size)
   control_key_ = false;
   m_NeedsRedraw = true;
 
-  mouse_pos_x_ = 0.0;
-  mouse_pos_y_ = 0.0;
-  mouse_x_ = 0.0;
-  mouse_y_ = 0.0;
+  mouse_screen_x_ = 0.0;
+  mouse_screen_y_ = 0.0;
+  mouse_world_x_ = 0.0;
+  mouse_world_y_ = 0.0;
   world_click_x_ = 0.0;
   world_click_y_ = 0.0;
   world_max_y_ = 0.0;
@@ -86,15 +86,25 @@ GlCanvas::GlCanvas(uint32_t font_size)
   hover_delay_ms_ = 300;
   can_hover_ = false;
   is_hovering_ = false;
+  initial_font_size_ = font_size;
   ResetHoverTimer();
-
-  im_gui_context_ = ImGui::CreateContext();
-  ScopeImguiContext state(im_gui_context_);
 }
 
 GlCanvas::~GlCanvas() {
-  ImGui::DestroyContext(im_gui_context_);
-  ScopeImguiContext state(im_gui_context_);
+  if (imgui_context_ != nullptr) {
+    ImGui::DestroyContext(imgui_context_);
+  }
+}
+
+std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size) {
+  switch (canvas_type) {
+    case CanvasType::kCaptureWindow:
+      return std::make_unique<CaptureWindow>(font_size);
+    case CanvasType::kDebug:
+      return std::make_unique<GlCanvas>(font_size);
+    default:
+      UNREACHABLE();
+  }
 }
 
 void GlCanvas::Initialize() {
@@ -112,6 +122,12 @@ void GlCanvas::Initialize() {
   }
 }
 
+void GlCanvas::EnableImGui() {
+  if (imgui_context_ == nullptr) {
+    imgui_context_ = ImGui::CreateContext();
+  }
+}
+
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
   int mouse_x = x;
   int mouse_y = y;
@@ -119,10 +135,10 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
   float world_x, world_y;
   ScreenToWorld(mouse_x, mouse_y, world_x, world_y);
 
-  mouse_x_ = world_x;
-  mouse_y_ = world_y;
-  mouse_pos_x_ = mouse_x;
-  mouse_pos_y_ = mouse_y;
+  mouse_world_x_ = world_x;
+  mouse_world_y_ = world_y;
+  mouse_screen_x_ = mouse_x;
+  mouse_screen_y_ = mouse_y;
 
   // Pan
   if (left && !im_gui_active_) {
@@ -147,7 +163,7 @@ void GlCanvas::LeftDown(int x, int y) {
   screen_click_y_ = y;
   is_selecting_ = false;
 
-  Orbit_ImGui_MouseButtonCallback(this, 0, true);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, true);
 
   NeedsRedraw();
 }
@@ -177,19 +193,18 @@ void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   }
 
   // Use the original sign of a_Delta here.
-  Orbit_ImGui_ScrollCallback(this, -delta_normalized);
+  Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 
   NeedsRedraw();
 }
 
 void GlCanvas::LeftUp() {
   picking_manager_.Release();
-  Orbit_ImGui_MouseButtonCallback(this, 0, false);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, false);
   NeedsRedraw();
 }
 
 void GlCanvas::LeftDoubleClick() {
-  ScopeImguiContext state(im_gui_context_);
   double_clicking_ = true;
   NeedsRedraw();
 }
@@ -201,34 +216,30 @@ void GlCanvas::RightDown(int x, int y) {
   select_start_ = select_stop_ = Vec2(world_x, world_y);
   is_selecting_ = true;
 
-  Orbit_ImGui_MouseButtonCallback(this, 1, true);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, true);
   NeedsRedraw();
 }
 
 bool GlCanvas::RightUp() {
-  Orbit_ImGui_MouseButtonCallback(this, 1, false);
+  Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, false);
   is_selecting_ = true;
   NeedsRedraw();
   return false;
 }
 
-void GlCanvas::CharEvent(unsigned int character) { Orbit_ImGui_CharCallback(this, character); }
+void GlCanvas::CharEvent(unsigned int character) {
+  Orbit_ImGui_CharCallback(imgui_context_, character);
+}
 
 void GlCanvas::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-  ScopeImguiContext state(im_gui_context_);
-  ImGuiIO& io = ImGui::GetIO();
-  io.KeyCtrl = ctrl;
-  io.KeyShift = shift;
-  io.KeyAlt = alt;
-
-  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), true);
+  Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), true, ctrl, shift, alt);
   NeedsRedraw();
 }
 
 void GlCanvas::KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-  Orbit_ImGui_KeyCallback(this, static_cast<int>(key_code), false);
+  Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), false, ctrl, shift, alt);
   NeedsRedraw();
 }
 
@@ -256,8 +267,8 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  world_width_ = static_cast<float>(width_);
-  world_height_ = static_cast<float>(height_);
+  world_width_ = static_cast<float>(screen_width_);
+  world_height_ = static_cast<float>(screen_height_);
 
   if (world_width_ <= 0) world_width_ = 1.f;
   if (world_height_ <= 0) world_height_ = 1.f;
@@ -304,6 +315,15 @@ void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
       world_top_left_y_ - (static_cast<float>(y) / static_cast<float>(GetHeight())) * world_height_;
 }
 
+Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) {
+  Vec2 world_pos;
+  world_pos[0] =
+      world_top_left_x_ + (screen_pos[0] / static_cast<float>(GetWidth())) * world_width_;
+  world_pos[1] =
+      world_top_left_y_ - (screen_pos[1] / static_cast<float>(GetHeight())) * world_height_;
+  return world_pos;
+}
+
 float GlCanvas::ScreenToWorldHeight(int height) const {
   return (static_cast<float>(height) / static_cast<float>(GetHeight())) * world_height_;
 }
@@ -312,13 +332,13 @@ float GlCanvas::ScreenToWorldWidth(int width) const {
   return (static_cast<float>(width) / static_cast<float>(GetWidth())) * world_width_;
 }
 
-int GlCanvas::GetWidth() const { return width_; }
+int GlCanvas::GetWidth() const { return screen_width_; }
 
-int GlCanvas::GetHeight() const { return height_; }
+int GlCanvas::GetHeight() const { return screen_height_; }
 
 void GlCanvas::Render(int width, int height) {
-  width_ = width;
-  height_ = height;
+  screen_width_ = width;
+  screen_height_ = height;
 
   if (!m_NeedsRedraw) {
     return;
@@ -326,8 +346,6 @@ void GlCanvas::Render(int width, int height) {
 
   m_NeedsRedraw = false;
   ui_batcher_.StartNewFrame();
-
-  ScopeImguiContext state(im_gui_context_);
 
   PrepareGlState();
   Prepare2DViewport(0, 0, GetWidth(), GetHeight());
@@ -343,11 +361,16 @@ void GlCanvas::Render(int width, int height) {
 
   Draw();
 
-  RenderImGui();
+  for (auto render_callback : render_callbacks_) {
+    render_callback();
+  }
+
   glFlush();
   CleanupGlState();
 
-  im_gui_active_ = ImGui::IsAnyItemActive();
+  if (imgui_context_) {
+    im_gui_active_ = ImGui::IsAnyItemActive();
+  }
 
   PostRender();
 
@@ -356,8 +379,8 @@ void GlCanvas::Render(int width, int height) {
 }
 
 void GlCanvas::Resize(int width, int height) {
-  width_ = width;
-  height_ = height;
+  screen_width_ = width;
+  screen_height_ = height;
   NeedsRedraw();
 }
 
