@@ -489,10 +489,10 @@ void CaptureWindow::Draw() {
     Vec2 pos(mouse_world_x_, world_top_left_y_);
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
-  }
 
-  if (draw_help_) {
-    RenderHelpUi();
+    if (draw_help_) {
+      RenderHelpUi();
+    }
   }
 
   DrawScreenSpace();
