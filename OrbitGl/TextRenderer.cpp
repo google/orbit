@@ -144,7 +144,7 @@ void TextRenderer::Display(Batcher* batcher) {
 }
 
 void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
-  if (m_Buffer == nullptr) return;
+  if (a_Buffer == nullptr) return;
   // TODO: No color was set here before.
   Color color(255, 255, 255, 255);
 

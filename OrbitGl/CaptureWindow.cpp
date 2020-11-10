@@ -492,7 +492,7 @@ void CaptureWindow::Draw() {
   }
 
   if (draw_help_) {
-      RenderHelpUi();
+    RenderHelpUi();
   }
 
   DrawScreenSpace();
@@ -647,9 +647,7 @@ void CaptureWindow::RenderImGui() {
   if (GetPickingMode() != PickingMode::kNone) {
     return;
   }
-}
 
-void CaptureWindow::RenderImGui() {
   if (ImGui::BeginTabBar("CaptureWindowTabBar", ImGuiTabBarFlags_None)) {
     if (ImGui::BeginTabItem("Layout Properties")) {
       if (time_graph_.GetLayout().DrawProperties()) {
