@@ -137,6 +137,7 @@ void VKAPI_CALL OrbitCaptureClientDestroyDevice(VkDevice device,
 VkResult VKAPI_CALL OrbitCaptureClientQueuePresentKHR(VkQueue queue,
                                                       const VkPresentInfoKHR* present_info) {
   absl::WriterMutexLock lock(&layer_mutex);
+  layer_logic.ProcessQueuePresentKHR();
   return dispatch_table.CallQueuePresentKHR(queue, present_info);
 }
 
