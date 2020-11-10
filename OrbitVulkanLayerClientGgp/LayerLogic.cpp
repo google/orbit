@@ -12,7 +12,9 @@
 
 namespace {
 static constexpr uint16_t kGrpcPort = 44767;
-}
+static constexpr float_t kFrameTimeThreshold = 16.66;  // milliseconds
+static constexpr uint32_t kCaptureLength = 10;         // seconds
+}  // namespace
 
 void LayerLogic::StartOrbitCaptureService() {
   LOG("Starting Orbit capture service");
@@ -56,10 +58,55 @@ void LayerLogic::CleanLayerData() {
   if (data_initialised_ == true) {
     ggp_capture_client_->ShutdownService();
     data_initialised_ = false;
+    orbit_capture_running_ = false;
+    skip_logic_call_ = true;
   }
 }
 
+// QueuePresentKHR is called once per frame so we can calculate the time per frame. When this value
+// is higher than a certain threshold, an Orbit capture is started and runs during a certain period
+// of time; after which is stopped and saved.
 void LayerLogic::ProcessQueuePresentKHR() {
-  // TODO(crisguerrero): complete
-  LOG("ProcessQueuePresentKHR called");
+  std::chrono::steady_clock::time_point current_frame = std::chrono::steady_clock::now();
+  // Ignore logic on the first call because times are not initialised. Also skipped right after a
+  // capture has been stopped
+  if (skip_logic_call_ == false) {
+    if (orbit_capture_running_ == false) {
+      auto frame_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+          current_frame - layer_times_.last_frame);
+      if (frame_time.count() > kFrameTimeThreshold) {
+        RunCapture();
+        LOG("Time frame is %.2fms and exceeds the %.2fms threshold; starting capture",
+            frame_time.count(), kFrameTimeThreshold);
+      }
+    } else {
+      // Stop capture if it has been running enough time
+      auto capture_time = std::chrono::duration_cast<std::chrono::seconds>(
+          current_frame - layer_times_.capture_started);
+      if (capture_time.count() >= kCaptureLength) {
+        LOG("Capture has been running for %ds; stopping it", kCaptureLength);
+        StopCapture();
+      }
+    }
+  } else {
+    skip_logic_call_ = false;
+  }
+  layer_times_.last_frame = current_frame;
+}
+
+void LayerLogic::RunCapture() {
+  int capture_started = ggp_capture_client_->StartCapture();
+  if (capture_started == 1) {
+    layer_times_.capture_started = std::chrono::steady_clock::now();
+    orbit_capture_running_ = true;
+  }
+}
+
+void LayerLogic::StopCapture() {
+  int capture_stopped = ggp_capture_client_->StopAndSaveCapture();
+  if (capture_stopped == 1) {
+    orbit_capture_running_ = false;
+    // The frame time is expected to be longer the next call so we skip the check
+    skip_logic_call_ = true;
+  }
 }
