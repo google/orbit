@@ -158,3 +158,17 @@ uint64_t CaptureData::GetAbsoluteAddress(const orbit_client_protos::FunctionInfo
 int32_t CaptureData::process_id() const { return process_.pid(); }
 
 std::string CaptureData::process_name() const { return process_.name(); }
+
+void CaptureData::InsertFrameTrack(const FunctionInfo& function) {
+  user_defined_capture_data_.InsertFrameTrack(function);
+}
+
+void CaptureData::EraseFrameTrack(const FunctionInfo& function) {
+  user_defined_capture_data_.EraseFrameTrack(function);
+}
+
+[[nodiscard]] bool CaptureData::ContainsFrameTrack(const FunctionInfo& function) const {
+  return user_defined_capture_data_.ContainsFrameTrack(function);
+}
+
+void CaptureData::ClearUserDefinedCaptureData() { user_defined_capture_data_.Clear(); }
