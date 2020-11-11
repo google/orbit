@@ -24,6 +24,7 @@
 
 #include "App.h"
 #include "ApplicationOptions.h"
+#include "ConnectionArtifacts.h"
 #include "Error.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
@@ -34,6 +35,7 @@
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
+#include "ProfilingTargetDialog.h"
 #include "deploymentconfigurations.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
@@ -79,6 +81,9 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
 
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 ABSL_FLAG(bool, track_ordering_feature, false, "Allow reordering and pinning of threads");
+
+// TODO(170468590): Remove this flag when the new UI is finished
+ABSL_FLAG(bool, enable_ui_beta, false, "Enable the new user interface");
 
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
@@ -187,6 +192,36 @@ static outcome::result<void> RunUiInstance(
   } else {
     return outcome::success();
   }
+}
+
+static outcome::result<void> RunBetaUiInstance(
+    QApplication* /*app*/, std::optional<OrbitQt::DeploymentConfiguration> deployment_configuration,
+    const Context* ssh_context) {
+  // TODO(170468590) handle --local flag
+  if (!deployment_configuration) {
+    ERROR("--local flag not supported by UI beta");
+    return outcome::success();
+  }
+
+  const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
+  OrbitQt::ConnectionArtifacts connection_artifacts{ssh_context, grpc_port,
+                                                    &(deployment_configuration.value())};
+
+  std::unique_ptr<MainThreadExecutor> main_thread_executer = CreateMainThreadExecutor();
+  OrbitQt::ProfilingTargetDialog target_dialog{&connection_artifacts, main_thread_executer.get()};
+
+  const auto dialog_result = target_dialog.Exec();
+  if (std::holds_alternative<std::monostate>(dialog_result)) {
+    // User closed dialog
+  } else if (std::holds_alternative<const OrbitQt::ConnectionArtifacts*>(dialog_result)) {
+    LOG("selected process: %s",
+        std::get<const OrbitQt::ConnectionArtifacts*>(dialog_result)->process_->name());
+  } else if (std::holds_alternative<QString>(dialog_result)) {
+    LOG("selected file: %s", std::get<QString>(dialog_result).toStdString());
+  }
+
+  // TODO(antonrohr) continue here to start main window.
+  return outcome::success();
 }
 
 static void StyleOrbit(QApplication& app) {
@@ -380,6 +415,16 @@ int main(int argc, char* argv[]) {
       DisplayErrorToUser(QString("An error occurred while initializing ssh: %1")
                              .arg(QString::fromStdString(context.error().message())));
       return -1;
+    }
+
+    if (absl::GetFlag(FLAGS_enable_ui_beta)) {
+      auto result = RunBetaUiInstance(&app, deployment_configuration, &context.value());
+      if (result) {
+        return 0;
+      } else {
+        execv(path_to_executable.toLocal8Bit().constData(), original_argv);
+        UNREACHABLE();
+      }
     }
 
     while (true) {
