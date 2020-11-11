@@ -34,6 +34,7 @@ target_sources(
           orbittreeview.h
           opengldetect.h
           OverlayWidget.h
+          ProcessItemModel.h
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
@@ -69,6 +70,7 @@ target_sources(
           opengldetect.cpp
           OverlayWidget.cpp
           OverlayWidget.ui
+          ProcessItemModel.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
           TutorialContent.cpp
