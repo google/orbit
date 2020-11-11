@@ -36,6 +36,7 @@ target_sources(
           OverlayWidget.h
           ProcessItemModel.h
           processlauncherwidget.h
+          ProfilingTargetDialog.h
           resource.h
           servicedeploymanager.h
           TutorialContent.h
@@ -72,6 +73,8 @@ target_sources(
           OverlayWidget.ui
           ProcessItemModel.cpp
           processlauncherwidget.cpp
+          ProfilingTargetDialog.cpp
+          ProfilingTargetDialog.ui
           servicedeploymanager.cpp
           TutorialContent.cpp
           TutorialOverlay.cpp

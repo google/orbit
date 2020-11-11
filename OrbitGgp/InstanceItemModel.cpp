@@ -4,6 +4,8 @@
 
 #include "OrbitGgp/InstanceItemModel.h"
 
+#include <iterator>
+
 namespace {
 enum class Columns { DisplayName, ID, IPAddress, LastUpdated, Owner, Pool, NumberOfColumns };
 }  // namespace
@@ -138,6 +140,16 @@ void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
     CHECK(old_instances.size() == new_instances.size());
     endRemoveRows();
   }
+}
+
+int InstanceItemModel::GetRowOfInstanceById(const QString& instance_id) {
+  const auto it =
+      std::find_if(instances_.begin(), instances_.end(),
+                   [&instance_id](const Instance& instance) { return instance.id == instance_id; });
+
+  if (it == instances_.end()) return -1;
+
+  return std::distance(instances_.begin(), it);
 }
 
 }  // namespace OrbitGgp
