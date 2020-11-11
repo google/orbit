@@ -5,7 +5,7 @@
 #ifndef ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
 #define ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
 
-#include "CaptureResponseListener.h"
+#include "CaptureEventBuffer.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitLinuxTracing/Tracer.h"
@@ -18,8 +18,8 @@ namespace orbit_service {
 
 class LinuxTracingHandler : public LinuxTracing::TracerListener {
  public:
-  explicit LinuxTracingHandler(CaptureResponseListener* capture_response_listener)
-      : capture_response_listener_{capture_response_listener} {}
+  explicit LinuxTracingHandler(CaptureEventBuffer* capture_event_buffer)
+      : capture_event_buffer_{capture_event_buffer} {}
 
   ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
@@ -41,7 +41,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override;
 
  private:
-  CaptureResponseListener* capture_response_listener_;
+  CaptureEventBuffer* capture_event_buffer_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
@@ -53,7 +53,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   [[nodiscard]] static uint64_t ComputeStringKey(const std::string& str);
   [[nodiscard]] uint64_t InternStringIfNecessaryAndGetKey(std::string str);
   [[nodiscard]] uint64_t InternTracepointInfoIfNecessaryAndGetKey(
-      orbit_grpc_protos::TracepointInfo tracepoint_info);
+      const orbit_grpc_protos::TracepointInfo& tracepoint_info);
 
   absl::flat_hash_set<uint64_t> addresses_seen_;
   absl::Mutex addresses_seen_mutex_;
@@ -65,11 +65,6 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   absl::Mutex tracepoint_keys_sent_mutex_;
 
   void SetupIntrospection();
-  void SenderThread();
-
-  std::vector<orbit_grpc_protos::CaptureEvent> event_buffer_;
-  absl::Mutex event_buffer_mutex_;
-  std::thread sender_thread_;
 };
 
 }  // namespace orbit_service
