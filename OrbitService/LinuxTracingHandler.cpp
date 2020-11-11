@@ -23,19 +23,11 @@ using orbit_grpc_protos::ThreadStateSlice;
 
 void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
-  CHECK(!sender_thread_.joinable());
   bool enable_introspection = capture_options.enable_introspection();
 
-  {
-    // Protect tracer_ with event_buffer_mutex_ so that we can use tracer_ in
-    // Conditions for Await/LockWhen (specifically, in SenderThread).
-    absl::MutexLock lock{&event_buffer_mutex_};
-    tracer_ = std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
-  }
+  tracer_ = std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
   tracer_->SetListener(this);
   tracer_->Start();
-
-  sender_thread_ = std::thread{[this] { SenderThread(); }};
 
   if (enable_introspection) {
     SetupIntrospection();
@@ -64,24 +56,14 @@ void LinuxTracingHandler::SetupIntrospection() {
 
 void LinuxTracingHandler::Stop() {
   CHECK(tracer_ != nullptr);
-  CHECK(sender_thread_.joinable());
-
   tracer_->Stop();
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    tracer_.reset();
-  }
-
-  sender_thread_.join();
+  tracer_.reset();
 }
 
 void LinuxTracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
   CaptureEvent event;
   *event.mutable_scheduling_slice() = std::move(scheduling_slice);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnCallstackSample(CallstackSample callstack_sample) {
@@ -91,29 +73,20 @@ void LinuxTracingHandler::OnCallstackSample(CallstackSample callstack_sample) {
 
   CaptureEvent event;
   *event.mutable_callstack_sample() = std::move(callstack_sample);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnFunctionCall(FunctionCall function_call) {
   CaptureEvent event;
   *event.mutable_function_call() = std::move(function_call);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnIntrospectionScope(
     orbit_grpc_protos::IntrospectionScope introspection_scope) {
   CaptureEvent event;
   *event.mutable_introspection_scope() = std::move(introspection_scope);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
@@ -123,28 +96,19 @@ void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
 
   CaptureEvent event;
   *event.mutable_gpu_job() = std::move(gpu_job);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnThreadName(ThreadName thread_name) {
   CaptureEvent event;
   *event.mutable_thread_name() = std::move(thread_name);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice) {
   CaptureEvent event;
   *event.mutable_thread_state_slice() = std::move(thread_state_slice);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
@@ -165,10 +129,7 @@ void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
 
   CaptureEvent event;
   *event.mutable_address_info() = std::move(address_info);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) {
@@ -179,10 +140,7 @@ void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent t
 
   CaptureEvent event;
   *event.mutable_tracepoint_event() = std::move(tracepoint_event);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
 }
 
 uint64_t LinuxTracingHandler::ComputeCallstackKey(const Callstack& callstack) {
@@ -206,10 +164,7 @@ uint64_t LinuxTracingHandler::InternCallstackIfNecessaryAndGetKey(Callstack call
   CaptureEvent event;
   event.mutable_interned_callstack()->set_key(key);
   *event.mutable_interned_callstack()->mutable_intern() = std::move(callstack);
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
   return key;
 }
 
@@ -230,15 +185,12 @@ uint64_t LinuxTracingHandler::InternStringIfNecessaryAndGetKey(std::string str) 
   CaptureEvent event;
   event.mutable_interned_string()->set_key(key);
   event.mutable_interned_string()->set_intern(std::move(str));
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
   return key;
 }
 
 uint64_t LinuxTracingHandler::InternTracepointInfoIfNecessaryAndGetKey(
-    orbit_grpc_protos::TracepointInfo tracepoint_info) {
+    const orbit_grpc_protos::TracepointInfo& tracepoint_info) {
   uint64_t key =
       ComputeStringKey(absl::StrCat(tracepoint_info.category(), ":", tracepoint_info.name()));
   {
@@ -254,39 +206,8 @@ uint64_t LinuxTracingHandler::InternTracepointInfoIfNecessaryAndGetKey(
   event.mutable_interned_tracepoint_info()->mutable_intern()->set_name(tracepoint_info.name());
   event.mutable_interned_tracepoint_info()->mutable_intern()->set_category(
       tracepoint_info.category());
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    event_buffer_.emplace_back(std::move(event));
-  }
+  capture_event_buffer_->AddEvent(std::move(event));
   return key;
-}
-
-void LinuxTracingHandler::SenderThread() {
-  pthread_setname_np(pthread_self(), "SenderThread");
-  constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
-  // This should be lower than kMaxEventsPerResponse in SendBufferedEvents as
-  // a few more events are likely to arrive after the condition becomes true.
-  constexpr uint64_t kSendEventCountInterval = 5000;
-
-  bool stopped = false;
-  while (!stopped) {
-    ORBIT_SCOPE("SenderThread iteration");
-    event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
-                                                +[](LinuxTracingHandler* self) {
-                                                  return self->event_buffer_.size() >=
-                                                             kSendEventCountInterval ||
-                                                         self->tracer_ == nullptr;
-                                                },
-                                                this),
-                                            kSendTimeInterval);
-    if (tracer_ == nullptr) {
-      stopped = true;
-    }
-    std::vector<CaptureEvent> buffered_events = std::move(event_buffer_);
-    event_buffer_.clear();
-    event_buffer_mutex_.Unlock();
-    capture_response_listener_->ProcessEvents(std::move(buffered_events));
-  }
 }
 
 }  // namespace orbit_service

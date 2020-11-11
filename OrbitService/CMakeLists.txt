@@ -11,7 +11,7 @@ add_library(OrbitServiceLib STATIC)
 target_compile_options(OrbitServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitServiceLib PRIVATE
-        CaptureResponseListener.h
+        CaptureEventBuffer.h
         CaptureServiceImpl.cpp
         CaptureServiceImpl.h
         CrashServiceImpl.cpp
