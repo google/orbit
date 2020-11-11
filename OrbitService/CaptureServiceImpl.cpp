@@ -5,6 +5,7 @@
 #include "CaptureServiceImpl.h"
 
 #include "CaptureEventBuffer.h"
+#include "CaptureEventSender.h"
 #include "LinuxTracingHandler.h"
 #include "OrbitBase/Logging.h"
 
@@ -17,19 +18,16 @@ namespace {
 
 using orbit_grpc_protos::CaptureEvent;
 
-class CaptureEventBufferAndResponseSender final : public CaptureEventBuffer {
+class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
  public:
-  explicit CaptureEventBufferAndResponseSender(
-      grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
-      : reader_writer_{reader_writer} {
-    CHECK(reader_writer_ != nullptr);
+  explicit SenderThreadCaptureEventBuffer(CaptureEventSender* event_sender)
+      : capture_event_sender_{event_sender} {
+    CHECK(capture_event_sender_ != nullptr);
     sender_thread_ = std::thread{[this] { SenderThread(); }};
   }
 
   void AddEvent(orbit_grpc_protos::CaptureEvent&& event) override {
     absl::MutexLock lock{&event_buffer_mutex_};
-    // Protect stop_requested_ with event_buffer_mutex_ so that we can use stop_requested_
-    // in Conditions for Await/LockWhen (specifically, in SenderThread).
     if (stop_requested_) {
       return;
     }
@@ -39,27 +37,29 @@ class CaptureEventBufferAndResponseSender final : public CaptureEventBuffer {
   void StopAndWait() {
     CHECK(sender_thread_.joinable());
     {
+      // Protect stop_requested_ with event_buffer_mutex_ so that we can use stop_requested_
+      // in Conditions for Await/LockWhen (specifically, in SenderThread).
       absl::MutexLock lock{&event_buffer_mutex_};
       stop_requested_ = true;
     }
     sender_thread_.join();
   }
 
-  ~CaptureEventBufferAndResponseSender() override { CHECK(!sender_thread_.joinable()); }
+  ~SenderThreadCaptureEventBuffer() override { CHECK(!sender_thread_.joinable()); }
 
  private:
   void SenderThread() {
     pthread_setname_np(pthread_self(), "SenderThread");
     constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
-    // This should be lower than kMaxEventsPerResponse in SendBufferedEvents as
-    // a few more events are likely to arrive after the condition becomes true.
+    // This should be lower than kMaxEventsPerResponse in GrpcCaptureEventSender::SendEvents
+    // as a few more events are likely to arrive after the condition becomes true.
     constexpr uint64_t kSendEventCountInterval = 5000;
 
     bool stopped = false;
     while (!stopped) {
       ORBIT_SCOPE("SenderThread iteration");
       event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
-                                                  +[](CaptureEventBufferAndResponseSender* self) {
+                                                  +[](SenderThreadCaptureEventBuffer* self) {
                                                     return self->event_buffer_.size() >=
                                                                kSendEventCountInterval ||
                                                            self->stop_requested_;
@@ -72,11 +72,26 @@ class CaptureEventBufferAndResponseSender final : public CaptureEventBuffer {
       std::vector<CaptureEvent> buffered_events = std::move(event_buffer_);
       event_buffer_.clear();
       event_buffer_mutex_.Unlock();
-      SendBufferedEvents(std::move(buffered_events));
+      capture_event_sender_->SendEvents(std::move(buffered_events));
     }
   }
 
-  void SendBufferedEvents(std::vector<CaptureEvent>&& events) {
+  std::vector<orbit_grpc_protos::CaptureEvent> event_buffer_;
+  absl::Mutex event_buffer_mutex_;
+  CaptureEventSender* capture_event_sender_;
+  std::thread sender_thread_;
+  bool stop_requested_ = false;
+};
+
+class GrpcCaptureEventSender final : public CaptureEventSender {
+ public:
+  explicit GrpcCaptureEventSender(
+      grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
+      : reader_writer_{reader_writer} {
+    CHECK(reader_writer_ != nullptr);
+  }
+
+  void SendEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& events) override {
     ORBIT_SCOPE_FUNCTION;
     ORBIT_UINT64("Number of sent buffered events", events.size());
     if (events.empty()) {
@@ -98,11 +113,8 @@ class CaptureEventBufferAndResponseSender final : public CaptureEventBuffer {
     reader_writer_->Write(response);
   }
 
-  std::vector<orbit_grpc_protos::CaptureEvent> event_buffer_;
-  absl::Mutex event_buffer_mutex_;
+ private:
   grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer_;
-  std::thread sender_thread_;
-  bool stop_requested_ = false;
 };
 
 }  // namespace
@@ -111,8 +123,9 @@ grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   pthread_setname_np(pthread_self(), "CSImpl::Capture");
-  CaptureEventBufferAndResponseSender buffer_and_sender{reader_writer};
-  LinuxTracingHandler tracing_handler{&buffer_and_sender};
+  GrpcCaptureEventSender capture_event_sender{reader_writer};
+  SenderThreadCaptureEventBuffer capture_event_buffer{&capture_event_sender};
+  LinuxTracingHandler tracing_handler{&capture_event_buffer};
 
   CaptureRequest request;
   reader_writer->Read(&request);
@@ -129,7 +142,7 @@ grpc::Status CaptureServiceImpl::Capture(
   tracing_handler.Stop();
   LOG("LinuxTracingHandler stopped: perf_event_open tracing is done");
 
-  buffer_and_sender.StopAndWait();
+  capture_event_buffer.StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");
   return grpc::Status::OK;
 }

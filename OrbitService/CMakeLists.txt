@@ -12,6 +12,7 @@ target_compile_options(OrbitServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitServiceLib PRIVATE
         CaptureEventBuffer.h
+        CaptureEventSender.h
         CaptureServiceImpl.cpp
         CaptureServiceImpl.h
         CrashServiceImpl.cpp
