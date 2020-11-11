@@ -32,4 +32,7 @@
     <file alias="skip_next">outline_skip_next_white_48dp.png</file>
     <file alias="stop">outline_stop_white_48dp.png</file>
   </qresource>
+  <qresource prefix="/animations">
+    <file alias="spinner">material_spinner_450p.gif</file>
+  </qresource>
 </RCC>
