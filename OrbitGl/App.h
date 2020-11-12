@@ -25,6 +25,7 @@
 #include "DataViewTypes.h"
 #include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
+#include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "ImGuiOrbit.h"
 #include "LiveFunctionsDataView.h"
@@ -405,6 +406,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
   CaptureData capture_data_;
+
+  FrameTrackOnlineProcessor frame_track_online_processor_;
 };
 
 extern std::unique_ptr<OrbitApp> GOrbitApp;

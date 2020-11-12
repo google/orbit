@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_DELTA_TRACK_H_
-#define ORBIT_GL_DELTA_TRACK_H_
+#ifndef ORBIT_GL_FRAME_TRACK_H_
+#define ORBIT_GL_FRAME_TRACK_H_
 
 #include "TimerTrack.h"
 
@@ -45,4 +45,4 @@ class FrameTrack : public TimerTrack {
   orbit_client_protos::FunctionStats stats_;
 };
 
-#endif  // ORBIT_GL_THREAD_TRACK_H_
+#endif  // ORBIT_GL_FRAME_TRACK_H_

@@ -26,6 +26,7 @@ target_sources(
          EventTrack.h
          FramePointerValidatorClient.h
          FrameTrack.h
+         FrameTrackOnlineProcessor.h
          FunctionsDataView.h
          Geometry.h
          GlCanvas.h
@@ -78,6 +79,7 @@ target_sources(
           EventTrack.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
+          FrameTrackOnlineProcessor.cpp
           LiveFunctionsController.cpp
           FunctionsDataView.cpp
           GlCanvas.cpp
