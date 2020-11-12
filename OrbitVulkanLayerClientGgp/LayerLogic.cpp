@@ -10,10 +10,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
-#include "absl/base/casts.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
+#include "absl/strings/str_format.h"
 #include "absl/time/time.h"
 
 namespace {
@@ -42,7 +39,7 @@ void LayerLogic::StartOrbitCaptureService() {
   }
 }
 
-void LayerLogic::InitLayerData() {
+void LayerLogic::Init() {
   // Although this method is expected to be called just once, we include a flag to make sure the
   // gRPC service and client are not initialised more than once.
   if (data_initialised_ == false) {
@@ -60,7 +57,7 @@ void LayerLogic::InitLayerData() {
   }
 }
 
-void LayerLogic::CleanLayerData() {
+void LayerLogic::Destroy() {
   if (data_initialised_ == true) {
     ggp_capture_client_->ShutdownService();
     data_initialised_ = false;
@@ -80,9 +77,9 @@ void LayerLogic::ProcessQueuePresentKHR() {
     if (orbit_capture_running_ == false) {
       absl::Duration frame_time = current_time - last_frame_time_;
       if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold)) {
-        RunCapture();
         LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
             absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold);
+        RunCapture();
       }
     } else {
       // Stop capture if it has been running enough time
