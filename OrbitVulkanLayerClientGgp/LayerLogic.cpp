@@ -1,5 +1,6 @@
 #include "LayerLogic.h"
 
+#include <math.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -9,11 +10,12 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 
 namespace {
 static constexpr uint16_t kGrpcPort = 44767;
-static constexpr float_t kFrameTimeThreshold = 16.66;  // milliseconds
-static constexpr uint32_t kCaptureLength = 10;         // seconds
+static constexpr double kFrameTimeThreshold = 1000 / 60.0;  // milliseconds
+static constexpr int64_t kCaptureLength = 10;               // seconds
 }  // namespace
 
 void LayerLogic::StartOrbitCaptureService() {
@@ -67,23 +69,21 @@ void LayerLogic::CleanLayerData() {
 // is higher than a certain threshold, an Orbit capture is started and runs during a certain period
 // of time; after which is stopped and saved.
 void LayerLogic::ProcessQueuePresentKHR() {
-  std::chrono::steady_clock::time_point current_frame = std::chrono::steady_clock::now();
+  absl::Time current_frame = absl::Now();
   // Ignore logic on the first call because times are not initialised. Also skipped right after a
   // capture has been stopped
   if (skip_logic_call_ == false) {
     if (orbit_capture_running_ == false) {
-      auto frame_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-          current_frame - layer_times_.last_frame);
-      if (frame_time.count() > kFrameTimeThreshold) {
+      absl::Duration frame_time = current_frame - layer_times_.last_frame;
+      if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold)) {
         RunCapture();
-        LOG("Time frame is %.2fms and exceeds the %.2fms threshold; starting capture",
-            frame_time.count(), kFrameTimeThreshold);
+        LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
+            absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold);
       }
     } else {
       // Stop capture if it has been running enough time
-      auto capture_time = std::chrono::duration_cast<std::chrono::seconds>(
-          current_frame - layer_times_.capture_started);
-      if (capture_time.count() >= kCaptureLength) {
+      absl::Duration capture_time = current_frame - layer_times_.capture_started;
+      if (absl::ToInt64Seconds(capture_time) >= kCaptureLength) {
         LOG("Capture has been running for %ds; stopping it", kCaptureLength);
         StopCapture();
       }
@@ -97,7 +97,7 @@ void LayerLogic::ProcessQueuePresentKHR() {
 void LayerLogic::RunCapture() {
   int capture_started = ggp_capture_client_->StartCapture();
   if (capture_started == 1) {
-    layer_times_.capture_started = std::chrono::steady_clock::now();
+    layer_times_.capture_started = absl::Now();
     orbit_capture_running_ = true;
   }
 }
