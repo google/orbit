@@ -123,8 +123,11 @@ void CaptureClient::Capture(ProcessData&& process,
   if (!reader_writer_->Write(request)) {
     ERROR("Sending CaptureRequest on Capture's gRPC stream");
     reader_writer_->WritesDone();
-    FinishCapture();
-    capture_listener_->OnCaptureFailed(ErrorMessage("Error sending capture request."));
+    ErrorMessageOr<void> finish_result = FinishCapture();
+    std::string error_string =
+        absl::StrFormat("Error sending capture request.%s",
+                        finish_result.has_error() ? ("\n" + finish_result.error().message()) : "");
+    capture_listener_->OnCaptureFailed(ErrorMessage{error_string});
     return;
   }
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
@@ -144,19 +147,24 @@ void CaptureClient::Capture(ProcessData&& process,
     event_processor.ProcessEvents(response.capture_events());
   }
 
+  ErrorMessageOr<void> finish_result = FinishCapture();
   if (try_abort_) {
     LOG("TryCancel on Capture's gRPC context was called: Read on Capture's gRPC stream failed");
     capture_listener_->OnCaptureCancelled();
   } else if (writes_done_failed_) {
     LOG("WritesDone on Capture's gRPC stream failed: stop reading and try to finish the gRPC call");
-    capture_listener_->OnCaptureFailed(
-        ErrorMessage("WritesDone on Capture's gRPC stream failed: unable to finish the "
-                     "capture in orderly manner, performing emergency stop."));
+    std::string error_string = absl::StrFormat(
+        "Unable to finish the capture in orderly manner, performing emergency stop.%s",
+        finish_result.has_error() ? ("\n" + finish_result.error().message()) : "");
+    capture_listener_->OnCaptureFailed(ErrorMessage{error_string});
   } else {
     LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
-    capture_listener_->OnCaptureComplete();
+    if (finish_result.has_error()) {
+      capture_listener_->OnCaptureFailed(finish_result.error());
+    } else {
+      capture_listener_->OnCaptureComplete();
+    }
   }
-  FinishCapture();
 }
 
 bool CaptureClient::StopCapture() {
@@ -206,18 +214,23 @@ bool CaptureClient::TryAbortCapture() {
   return true;
 }
 
-void CaptureClient::FinishCapture() {
+ErrorMessageOr<void> CaptureClient::FinishCapture() {
   if (reader_writer_ == nullptr) {
-    return;
+    return outcome::success();
   }
 
   grpc::Status status = reader_writer_->Finish();
-  if (!status.ok()) {
-    ERROR("Finishing gRPC call to Capture: %s", status.error_message());
-  }
   reader_writer_.reset();
   client_context_.reset();
 
-  absl::MutexLock lock(&state_mutex_);
-  state_ = State::kStopped;
+  {
+    absl::MutexLock lock(&state_mutex_);
+    state_ = State::kStopped;
+  }
+
+  if (!status.ok()) {
+    ERROR("Finishing gRPC call to Capture: %s", status.error_message());
+    return ErrorMessage{status.error_message()};
+  }
+  return outcome::success();
 }

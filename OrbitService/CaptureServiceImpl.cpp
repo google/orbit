@@ -123,6 +123,13 @@ grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   pthread_setname_np(pthread_self(), "CSImpl::Capture");
+  if (is_capturing) {
+    ERROR("Cannot start capture because another capture is already in progress");
+    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
+                        "Cannot start capture because another capture is already in progress.");
+  }
+  is_capturing = true;
+
   GrpcCaptureEventSender capture_event_sender{reader_writer};
   SenderThreadCaptureEventBuffer capture_event_buffer{&capture_event_sender};
   LinuxTracingHandler tracing_handler{&capture_event_buffer};
@@ -144,6 +151,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   capture_event_buffer.StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");
+  is_capturing = false;
   return grpc::Status::OK;
 }
 

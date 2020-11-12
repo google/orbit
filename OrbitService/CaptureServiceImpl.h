@@ -15,6 +15,9 @@ class CaptureServiceImpl final : public orbit_grpc_protos::CaptureService::Servi
       grpc::ServerContext* context,
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer) override;
+
+ private:
+  std::atomic<bool> is_capturing = false;
 };
 
 }  // namespace orbit_service
