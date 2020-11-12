@@ -118,7 +118,8 @@ OrbitApp::~OrbitApp() {
 
 void OrbitApp::OnCaptureStarted(ProcessData&& process,
                                 absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-                                TracepointInfoSet selected_tracepoints) {
+                                TracepointInfoSet selected_tracepoints,
+                                UserDefinedCaptureData user_defined_capture_data) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -128,15 +129,17 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
   main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, process = std::move(process),
        selected_functions = std::move(selected_functions),
-       selected_tracepoints = std::move(selected_tracepoints)]() mutable {
+       selected_tracepoints = std::move(selected_tracepoints),
+       user_defined_capture_data = std::move(user_defined_capture_data)]() mutable {
         const bool has_selected_functions = !selected_functions.empty();
 
         ClearCapture();
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ = CaptureData(std::move(process), module_manager_.get(),
-                                    std::move(selected_functions), std::move(selected_tracepoints));
+        capture_data_ =
+            CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
+                        std::move(selected_tracepoints), std::move(user_defined_capture_data));
 
         CHECK(capture_started_callback_);
         capture_started_callback_();
@@ -159,6 +162,8 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
 void OrbitApp::OnCaptureComplete() {
   capture_data_.FilterBrokenCallstacks();
   SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
+  RefreshFrameTracks();
+
   main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(sampling_profiler)]() mutable {
         capture_data_.set_sampling_profiler(sampling_profiler);
@@ -753,10 +758,11 @@ bool OrbitApp::StartCapture() {
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
   bool enable_introspection = absl::GetFlag(FLAGS_devmode);
+  UserDefinedCaptureData user_defined_capture_data = data_manager_->user_defined_capture_data();
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), enable_introspection);
+      std::move(selected_tracepoints), std::move(user_defined_capture_data), enable_introspection);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -794,10 +800,6 @@ void OrbitApp::ClearCapture() {
   if (GCurrentTimeGraph != nullptr) {
     GCurrentTimeGraph->Clear();
   }
-  // The following call only removes any functions stored as frame track
-  // functions in DataManager, it does not remove the frame tracks from the
-  // time graph. This was done with the call above to TimeGraph::Clear().
-  capture_data_.ClearUserDefinedCaptureData();
 
   CHECK(capture_cleared_callback_);
   capture_cleared_callback_();
@@ -1433,10 +1435,31 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 }
 
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
+  capture_data_.InsertFrameTrack(function);
+  data_manager_->set_user_defined_capture_data(capture_data_.user_defined_capture_data());
+  AddFrameTrackTimers(function);
+}
+
+void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
+  capture_data_.EraseFrameTrack(function);
+  data_manager_->set_user_defined_capture_data(capture_data_.user_defined_capture_data());
+  GCurrentTimeGraph->RemoveFrameTrack(function);
+}
+
+bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
+  return capture_data_.ContainsFrameTrack(function);
+}
+
+void OrbitApp::RefreshFrameTracks() {
+  for (auto& function : capture_data_.user_defined_capture_data().frame_track_functions()) {
+    GCurrentTimeGraph->RemoveFrameTrack(function);
+    AddFrameTrackTimers(function);
+  }
+}
+
+void OrbitApp::AddFrameTrackTimers(const FunctionInfo& function) {
   const CaptureData& capture_data = GetCaptureData();
   const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
-
-  capture_data_.InsertFrameTrack(function);
 
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllThreadTrackTimerChains();
@@ -1470,13 +1493,4 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
 
     GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
   }
-}
-
-void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
-  capture_data_.EraseFrameTrack(function);
-  GCurrentTimeGraph->RemoveFrameTrack(function);
-}
-
-bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
-  return capture_data_.ContainsFrameTrack(function);
 }

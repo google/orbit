@@ -12,6 +12,7 @@
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "TracepointCustom.h"
+#include "UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 #include "grpcpp/channel.h"
@@ -32,7 +33,8 @@ class CaptureClient {
       ThreadPool* thread_pool, const ProcessData& process,
       const OrbitClientData::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints, bool enable_introspection);
+      TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data,
+      bool enable_introspection);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -57,7 +59,8 @@ class CaptureClient {
  private:
   void Capture(ProcessData&& process, const OrbitClientData::ModuleManager& module_manager,
                absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-               TracepointInfoSet selected_tracepoints, bool enable_introspection);
+               TracepointInfoSet selected_tracepoints,
+               UserDefinedCaptureData user_defined_capture_data, bool enable_introspection);
 
   void FinishCapture();
 

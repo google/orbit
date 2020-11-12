@@ -150,6 +150,13 @@ CaptureInfo GenerateCaptureInfo(
 
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 
+  for (const auto& function : capture_data.user_defined_capture_data().frame_track_functions()) {
+    capture_info.mutable_user_defined_capture_info()
+        ->mutable_frame_tracks_info()
+        ->add_frame_track_functions()
+        ->CopyFrom(function);
+  }
+
   return capture_info;
 }
 

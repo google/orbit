@@ -108,8 +108,15 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
 
+  UserDefinedCaptureData user_defined_capture_data;
+  FunctionInfo frame_track_function;
+  frame_track_function.set_name("foo");
+  frame_track_function.set_address(123);
+  selected_function.set_loaded_module_path("path/to/module");
+  user_defined_capture_data.InsertFrameTrack(frame_track_function);
+
   CaptureData capture_data{std::move(process), &module_manager, selected_functions,
-                           selected_tracepoints};
+                           selected_tracepoints, user_defined_capture_data};
 
   capture_data.AddOrAssignThreadName(42, "t42");
   capture_data.AddOrAssignThreadName(43, "t43");
@@ -206,25 +213,35 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
                                               actual_callstack.data().end()};
   EXPECT_THAT(actual_callstack_data, ElementsAreArray(callstack.GetFrames()));
 
-  EXPECT_EQ(1, capture_info.callstack_events_size());
+  ASSERT_EQ(1, capture_info.callstack_events_size());
   const CallstackEvent& actual_callstack_event = capture_info.callstack_events(0);
   EXPECT_EQ(callstack_event.thread_id(), actual_callstack_event.thread_id());
   EXPECT_EQ(callstack_event.time(), actual_callstack_event.time());
   EXPECT_EQ(callstack_event.callstack_hash(), actual_callstack_event.callstack_hash());
 
-  EXPECT_EQ(1, capture_info.tracepoint_infos_size());
+  ASSERT_EQ(1, capture_info.tracepoint_infos_size());
   const orbit_client_protos::TracepointInfo& actual_tracepoint_info =
       capture_info.tracepoint_infos(0);
   ASSERT_EQ(actual_tracepoint_info.category(), selected_tracepoint_info.category());
   ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
   ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 0);
 
-  EXPECT_EQ(1, capture_info.tracepoint_event_infos_size());
+  ASSERT_EQ(1, capture_info.tracepoint_event_infos_size());
   const orbit_client_protos::TracepointEventInfo& actual_tracepoint_event =
       capture_info.tracepoint_event_infos(0);
   EXPECT_EQ(tracepoint_event.tid(), actual_tracepoint_event.tid());
   EXPECT_EQ(tracepoint_event.time(), actual_tracepoint_event.time());
   EXPECT_EQ(tracepoint_event.tracepoint_info_key(), actual_tracepoint_event.tracepoint_info_key());
+
+  ASSERT_EQ(
+      1,
+      capture_info.user_defined_capture_info().frame_tracks_info().frame_track_functions().size());
+  const orbit_client_protos::FunctionInfo& actual_frame_track_function =
+      capture_info.user_defined_capture_info().frame_tracks_info().frame_track_functions(0);
+  EXPECT_EQ(frame_track_function.name(), actual_frame_track_function.name());
+  EXPECT_EQ(frame_track_function.address(), actual_frame_track_function.address());
+  EXPECT_EQ(frame_track_function.loaded_module_path(),
+            actual_frame_track_function.loaded_module_path());
 
   ASSERT_EQ(1, capture_info.function_stats_size());
   ASSERT_TRUE(capture_info.function_stats().contains(selected_function_absolute_address));

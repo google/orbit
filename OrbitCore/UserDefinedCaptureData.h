@@ -12,7 +12,9 @@
 // Note that this class is not thread-safe.
 class UserDefinedCaptureData {
  public:
-  [[nodiscard]] FunctionInfoSet frame_track_functions() const { return frame_track_functions_; }
+  [[nodiscard]] const FunctionInfoSet& frame_track_functions() const {
+    return frame_track_functions_;
+  }
   void InsertFrameTrack(const orbit_client_protos::FunctionInfo& function);
   void EraseFrameTrack(const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] bool ContainsFrameTrack(const orbit_client_protos::FunctionInfo& function) const;

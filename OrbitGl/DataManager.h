@@ -12,6 +12,7 @@
 #include "OrbitClientData/ProcessData.h"
 #include "TextBox.h"
 #include "TracepointCustom.h"
+#include "UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/container/node_hash_map.h"
@@ -53,6 +54,13 @@ class DataManager final {
 
   [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
 
+  void set_user_defined_capture_data(const UserDefinedCaptureData& user_defined_capture_data) {
+    user_defined_capture_data_ = user_defined_capture_data;
+  }
+  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
+    return user_defined_capture_data_;
+  }
+
  private:
   const std::thread::id main_thread_id_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
@@ -66,6 +74,10 @@ class DataManager final {
   const TextBox* selected_text_box_ = nullptr;
 
   const ProcessData* selected_process_ = nullptr;
+
+  // DataManager needs a copy of this so that we can persist user choices like frame tracks between
+  // captures.
+  UserDefinedCaptureData user_defined_capture_data_;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_
