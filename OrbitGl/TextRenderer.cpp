@@ -195,10 +195,10 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
 
-      float x0 = pen->x + glyph->offset_x;
-      float y0 = pen->y + glyph->offset_y;
-      float x1 = x0 + glyph->width;
-      float y1 = y0 - glyph->height;
+      float x0 = floorf(pen->x + glyph->offset_x);
+      float y0 = floorf(pen->y + glyph->offset_y);
+      float x1 = floorf(x0 + glyph->width);
+      float y1 = floorf(y0 - glyph->height);
 
       float s0 = glyph->s0;
       float t0 = glyph->t0;
