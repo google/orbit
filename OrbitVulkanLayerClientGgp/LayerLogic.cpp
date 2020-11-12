@@ -73,12 +73,12 @@ void LayerLogic::CleanLayerData() {
 // is higher than a certain threshold, an Orbit capture is started and runs during a certain period
 // of time; after which is stopped and saved.
 void LayerLogic::ProcessQueuePresentKHR() {
-  absl::Time current_frame = absl::Now();
+  absl::Time current_time = absl::Now();
   // Ignore logic on the first call because times are not initialised. Also skipped right after a
   // capture has been stopped
   if (skip_logic_call_ == false) {
     if (orbit_capture_running_ == false) {
-      absl::Duration frame_time = current_frame - layer_times_.last_frame;
+      absl::Duration frame_time = current_time - last_frame_time_;
       if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold)) {
         RunCapture();
         LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
@@ -86,7 +86,7 @@ void LayerLogic::ProcessQueuePresentKHR() {
       }
     } else {
       // Stop capture if it has been running enough time
-      absl::Duration capture_time = current_frame - layer_times_.capture_started;
+      absl::Duration capture_time = current_time - capture_started_time_;
       if (absl::ToInt64Seconds(capture_time) >= kCaptureLength) {
         LOG("Capture has been running for %ds; stopping it", kCaptureLength);
         StopCapture();
@@ -95,13 +95,13 @@ void LayerLogic::ProcessQueuePresentKHR() {
   } else {
     skip_logic_call_ = false;
   }
-  layer_times_.last_frame = current_frame;
+  last_frame_time_ = current_time;
 }
 
 void LayerLogic::RunCapture() {
   int capture_started = ggp_capture_client_->StartCapture();
   if (capture_started == 1) {
-    layer_times_.capture_started = absl::Now();
+    capture_started_time_ = absl::Now();
     orbit_capture_running_ = true;
   }
 }
