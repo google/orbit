@@ -22,6 +22,7 @@
 #include "SamplingProfiler.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -81,7 +82,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   bool enable_introspection = false;
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool, target_process_, module_manager_, selected_functions_, selected_tracepoints,
-      enable_introspection);
+      UserDefinedCaptureData(), enable_introspection);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -266,9 +267,9 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 void ClientGgp::OnCaptureStarted(
     ProcessData&& process,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints) {
+    TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data) {
   capture_data_ = CaptureData(std::move(process), &module_manager_, std::move(selected_functions),
-                              std::move(selected_tracepoints));
+                              std::move(selected_tracepoints), user_defined_capture_data);
   LOG("Capture started");
 }
 

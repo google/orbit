@@ -26,7 +26,7 @@ class CaptureData {
   explicit CaptureData(
       ProcessData&& process, OrbitClientData::ModuleManager* module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints)
+      TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data)
       : process_(std::move(process)),
         module_manager_(module_manager),
         selected_functions_{std::move(selected_functions)},
@@ -34,7 +34,8 @@ class CaptureData {
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
-        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {}
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()),
+        user_defined_capture_data_(std::move(user_defined_capture_data)) {}
 
   explicit CaptureData()
       : process_(),
@@ -208,6 +209,9 @@ class CaptureData {
   void EraseFrameTrack(const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] bool ContainsFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
   void ClearUserDefinedCaptureData();
+  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
+    return user_defined_capture_data_;
+  }
 
  private:
   ProcessData process_;

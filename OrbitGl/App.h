@@ -102,7 +102,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCaptureStarted(
       ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints) override;
+      TracepointInfoSet selected_tracepoints,
+      UserDefinedCaptureData user_defined_capture_data) override;
   void OnCaptureComplete() override;
   void OnCaptureCancelled() override;
   void OnCaptureFailed(ErrorMessage error_message) override;
@@ -329,6 +330,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
+
+  void AddFrameTrackTimers(const orbit_client_protos::FunctionInfo& function);
+  void RefreshFrameTracks();
 
   ApplicationOptions options_;
 

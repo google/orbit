@@ -109,6 +109,14 @@ message CaptureHeader {
   string version = 1;
 }
 
+message FrameTracksInfo {
+  repeated FunctionInfo frame_track_functions = 1;
+}
+
+message UserDefinedCaptureInfo {
+  FrameTracksInfo frame_tracks_info = 1;
+}
+
 message CaptureInfo {
   reserved 2, 3;
   repeated FunctionInfo selected_functions = 1;
@@ -124,6 +132,7 @@ message CaptureInfo {
   repeated TracepointEventInfo tracepoint_event_infos = 11;
   ProcessInfo process = 13;
   repeated ModuleInfo modules = 14;
+  UserDefinedCaptureInfo user_defined_capture_info = 15;
 }
 
 message TimerInfo {

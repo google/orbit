@@ -10,6 +10,7 @@
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
+#include "UserDefinedCaptureData.h"
 #include "absl/base/casts.h"
 #include "capture_data.pb.h"
 #include "gmock/gmock-actions.h"
@@ -48,7 +49,8 @@ class MockCaptureListener : public CaptureListener {
       void, OnCaptureStarted,
       (ProcessData&& /*process*/,
        (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
-       TracepointInfoSet /*selected_tracepoints*/),
+       TracepointInfoSet /*selected_tracepoints*/,
+       UserDefinedCaptureData /*user_defined_capture_data*/),
       (override));
   MOCK_METHOD(void, OnCaptureComplete, (), (override));
   MOCK_METHOD(void, OnCaptureCancelled, (), (override));
@@ -184,14 +186,14 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
   // There will be no call to OnCaptureStarted other then the one specified next.
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, _)).Times(0);
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty()))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
       .Times(1)
       .WillOnce([selected_function, module_info](
                     ProcessData&& process,
                     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
                         actual_selected_functions,
-                    Unused) {
+                    Unused, Unused) {
         EXPECT_EQ(process.name(), "process");
         EXPECT_EQ(process.pid(), 42);
         EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
@@ -635,6 +637,41 @@ TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   EXPECT_EQ(timer_2.end(), actual_timer_2.end());
   EXPECT_EQ(timer_1.process_id(), actual_timer_1.process_id());
   EXPECT_EQ(timer_2.process_id(), actual_timer_2.process_id());
+}
+
+TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
+  MockCaptureListener listener;
+  CaptureInfo capture_info;
+
+  FunctionInfo frame_track_function;
+  frame_track_function.set_name("foo");
+  frame_track_function.set_address(123);
+  frame_track_function.set_loaded_module_path("path/to/module");
+  capture_info.mutable_user_defined_capture_info()
+      ->mutable_frame_tracks_info()
+      ->add_frame_track_functions()
+      ->CopyFrom(frame_track_function);
+
+  std::atomic<bool> cancellation_requested = false;
+  uint8_t empty_data = 0;
+  google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
+
+  // There will be no call to OnCaptureStarted other then the one specified next.
+  UserDefinedCaptureData actual_capture_data;
+  EXPECT_CALL(listener, OnCaptureStarted).Times(1).WillOnce(SaveArg<3>(&actual_capture_data));
+  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
+  EXPECT_CALL(listener, OnCaptureFailed).Times(0);
+  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
+
+  ModuleManager module_manager;
+  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                  &empty_stream, &cancellation_requested);
+
+  ASSERT_EQ(1, actual_capture_data.frame_track_functions().size());
+  FunctionInfo actual_function_info = *actual_capture_data.frame_track_functions().begin();
+  EXPECT_EQ(frame_track_function.name(), actual_function_info.name());
+  EXPECT_EQ(frame_track_function.address(), actual_function_info.address());
+  EXPECT_EQ(frame_track_function.loaded_module_path(), actual_function_info.loaded_module_path());
 }
 
 }  // namespace

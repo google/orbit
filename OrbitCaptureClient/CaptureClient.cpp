@@ -39,7 +39,8 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, const ProcessData& process,
     const OrbitClientData::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints, bool enable_introspection) {
+    TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data,
+    bool enable_introspection) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return ErrorMessage(
@@ -57,9 +58,11 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   thread_pool->Schedule([this, process = std::move(process_copy), &module_manager,
                          selected_functions = std::move(selected_functions), selected_tracepoints,
+                         user_defined_capture_data = std::move(user_defined_capture_data),
                          enable_introspection]() mutable {
     Capture(std::move(process), module_manager, std::move(selected_functions),
-            std::move(selected_tracepoints), enable_introspection);
+            std::move(selected_tracepoints), std::move(user_defined_capture_data),
+            enable_introspection);
   });
 
   return outcome::success();
@@ -68,7 +71,9 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 void CaptureClient::Capture(ProcessData&& process,
                             const OrbitClientData::ModuleManager& module_manager,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-                            TracepointInfoSet selected_tracepoints, bool enable_introspection) {
+                            TracepointInfoSet selected_tracepoints,
+                            UserDefinedCaptureData user_defined_capture_data,
+                            bool enable_introspection) {
   CHECK(client_context_ == nullptr);
   CHECK(reader_writer_ == nullptr);
 
@@ -131,7 +136,8 @@ void CaptureClient::Capture(ProcessData&& process,
   CaptureEventProcessor event_processor(capture_listener_);
 
   capture_listener_->OnCaptureStarted(std::move(process), std::move(selected_functions),
-                                      std::move(selected_tracepoints));
+                                      std::move(selected_tracepoints),
+                                      std::move(user_defined_capture_data));
 
   CaptureResponse response;
   while (!writes_done_failed_ && !try_abort_ && reader_writer_->Read(&response)) {

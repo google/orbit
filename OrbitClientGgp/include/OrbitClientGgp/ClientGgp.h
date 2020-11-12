@@ -19,6 +19,7 @@
 #include "OrbitClientServices/ProcessClient.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"
+#include "UserDefinedCaptureData.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {
@@ -37,7 +38,8 @@ class ClientGgp final : public CaptureListener {
   void OnCaptureStarted(
       ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints) override;
+      TracepointInfoSet selected_tracepoints,
+      UserDefinedCaptureData user_defined_capture_data) override;
   void OnCaptureComplete() override;
   void OnCaptureCancelled() override;
   void OnCaptureFailed(ErrorMessage error_message) override;

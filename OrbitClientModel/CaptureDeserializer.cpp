@@ -166,8 +166,15 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     return;
   }
 
+  UserDefinedCaptureData user_defined_capture_data;
+  for (const auto& function :
+       capture_info.user_defined_capture_info().frame_tracks_info().frame_track_functions()) {
+    user_defined_capture_data.InsertFrameTrack(function);
+  }
+
   capture_listener->OnCaptureStarted(std::move(process), std::move(selected_functions),
-                                     std::move(selected_tracepoints));
+                                     std::move(selected_tracepoints),
+                                     std::move(user_defined_capture_data));
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {
