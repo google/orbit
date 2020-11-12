@@ -201,7 +201,10 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   }
 }
 
-void ThreadTrack::OnPick(int /*x*/, int /*y*/) { GOrbitApp->set_selected_thread_id(thread_id_); }
+void ThreadTrack::OnPick(int x, int y) {
+  Track::OnPick(x, y);
+  GOrbitApp->set_selected_thread_id(thread_id_);
+}
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                    float z_offset) {
