@@ -520,8 +520,10 @@ void CaptureWindow::Draw() {
     ui_batcher_.DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
 
     PrepareScreenSpaceViewport();
-    text_renderer_.DisplayLayer(&ui_batcher_, layer);
-    RenderText(layer);
+    if (GetPickingMode() == PickingMode::kNone) {
+      text_renderer_.DisplayLayer(&ui_batcher_, layer);
+      RenderText(layer);
+    }
   }
 }
 
@@ -692,7 +694,7 @@ void CaptureWindow::RenderImGui() {
 }
 
 void CaptureWindow::RenderText(float layer) {
-  if (!picking_) {
+  if (GetPickingMode() == PickingMode::kNone) {
     time_graph_.DrawText(this, layer);
   }
 }
