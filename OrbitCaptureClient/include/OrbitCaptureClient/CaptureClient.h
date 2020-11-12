@@ -62,7 +62,7 @@ class CaptureClient {
                TracepointInfoSet selected_tracepoints,
                UserDefinedCaptureData user_defined_capture_data, bool enable_introspection);
 
-  void FinishCapture();
+  [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 
   std::unique_ptr<orbit_grpc_protos::CaptureService::Stub> capture_service_;
   std::unique_ptr<grpc::ClientContext> client_context_;
