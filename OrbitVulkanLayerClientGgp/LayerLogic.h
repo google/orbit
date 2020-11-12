@@ -17,8 +17,8 @@ class LayerLogic {
  public:
   LayerLogic() : data_initialised_{false}, orbit_capture_running_{false}, skip_logic_call_{true} {}
 
-  void InitLayerData();
-  void CleanLayerData();
+  void Init();
+  void Destroy();
   void ProcessQueuePresentKHR();
 
  private:

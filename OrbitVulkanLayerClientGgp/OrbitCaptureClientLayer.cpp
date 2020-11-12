@@ -72,7 +72,7 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
     dispatch_table.CreateInstanceDispatchTable(*instance, get_instance_proc_addr);
     // Making the initialisations needed for the layer here because vKCreateInstance is called at
     // the start of the dispatch chain.
-    layer_logic.InitLayerData();
+    layer_logic.Init();
   }
 
   return result;
@@ -84,7 +84,7 @@ void VKAPI_CALL OrbitCaptureClientDestroyInstance(VkInstance instance,
   absl::WriterMutexLock lock(&layer_mutex);
   // Cleaning up the data initialised in the layer before the instance is destroyed. This method is
   // expected to be called before exiting the program so the data is not longer needed.
-  layer_logic.CleanLayerData();
+  layer_logic.Destroy();
   dispatch_table.DestroyInstance(instance);
 }
 
