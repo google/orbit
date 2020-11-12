@@ -221,7 +221,7 @@ void Tunnel::SetError(std::error_code e) {
 // local_socket -> write_buffer_
 void Tunnel::HandleIncomingDataLocalSocket() {
   const auto data = local_socket_->readAll();
-  write_buffer_.append(data.toStdString());
+  write_buffer_.insert(write_buffer_.end(), data.begin(), data.end());
 
   const auto result = writeToChannel();
 
