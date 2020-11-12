@@ -7,8 +7,8 @@
 
 #include <string.h>
 
-#include "LayerTimes.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
+#include "absl/time/time.h"
 
 // Contains the logic of the OrbitVulkanLayerClientGgp to run Orbit captures automatically when the
 // time per frame is higher than a certain threshold. It also instantiates the classes and variables
@@ -26,7 +26,8 @@ class LayerLogic {
   bool orbit_capture_running_;
   bool skip_logic_call_;
   std::unique_ptr<CaptureClientGgpClient> ggp_capture_client_;
-  LayerTimes layer_times_;
+  absl::Time last_frame_time_;
+  absl::Time capture_started_time_;
 
   void StartOrbitCaptureService();
   void RunCapture();

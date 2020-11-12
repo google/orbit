@@ -15,7 +15,6 @@ target_sources(OrbitVulkanLayerClientGgp PRIVATE
         DispatchTable.h
         LayerLogic.cpp
         LayerLogic.h
-        LayerTimes.h
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC
