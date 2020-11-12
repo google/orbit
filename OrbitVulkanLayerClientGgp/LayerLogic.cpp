@@ -27,11 +27,11 @@ void LayerLogic::StartOrbitCaptureService() {
   } else if (pid == 0) {
     std::string game_pid = absl::StrFormat("%d", getppid());
     // TODO(crisguerrero): Read the arguments from a config file.
-    char* argv[] = {strdup("/mnt/developer/OrbitCaptureGgpService"),
-                    strdup("-pid"),
+    char* argv[] = {const_cast<char*>("/mnt/developer/OrbitCaptureGgpService"),
+                    const_cast<char*>("-pid"),
                     game_pid.data(),
-                    strdup("-log_directory"),
-                    strdup("/var/game/"),
+                    const_cast<char*>("-log_directory"),
+                    const_cast<char*>("/var/game/"),
                     NULL};
 
     LOG("Making call to %s %s %s %s %s", argv[0], argv[1], argv[2], argv[3], argv[4]);
