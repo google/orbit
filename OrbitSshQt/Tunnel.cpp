@@ -183,8 +183,8 @@ outcome::result<void> Tunnel::readFromChannel() {
     if (bytes_written == -1) {
       SetError(Error::kLocalSocketClosed);
     } else {
-      // TODO(b/172686811): avoid extra copy.
-      read_buffer_ = read_buffer_.substr(bytes_written);
+      CHECK(static_cast<size_t>(bytes_written) <= read_buffer_.size());
+      read_buffer_.erase(read_buffer_.begin(), read_buffer_.begin() + bytes_written);
     }
   }
 
@@ -193,8 +193,10 @@ outcome::result<void> Tunnel::readFromChannel() {
 
 outcome::result<void> Tunnel::writeToChannel() {
   if (!write_buffer_.empty()) {
-    OUTCOME_TRY(bytes_written, channel_->Write(write_buffer_));
-    write_buffer_ = write_buffer_.substr(bytes_written);
+    const std::string_view buffer_view{write_buffer_.data(), write_buffer_.size()};
+    OUTCOME_TRY(bytes_written, channel_->Write(buffer_view));
+    CHECK(static_cast<size_t>(bytes_written) <= write_buffer_.size());
+    write_buffer_.erase(write_buffer_.begin(), write_buffer_.begin() + bytes_written);
   }
   return outcome::success();
 }
