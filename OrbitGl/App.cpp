@@ -24,6 +24,7 @@
 #include "CoreUtils.h"
 #include "Disassembler.h"
 #include "DisassemblyReport.h"
+#include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
@@ -141,6 +142,8 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
                         std::move(selected_tracepoints), std::move(user_defined_capture_data));
 
+        frame_track_online_processor_ = FrameTrackOnlineProcessor(capture_data_, GCurrentTimeGraph);
+
         CHECK(capture_started_callback_);
         capture_started_callback_();
 
@@ -216,6 +219,7 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
     capture_data_.UpdateFunctionStats(func, elapsed_nanos);
     GCurrentTimeGraph->ProcessTimer(timer_info, &func);
+    frame_track_online_processor_.ProcessTimer(timer_info, func);
   } else {
     GCurrentTimeGraph->ProcessTimer(timer_info, nullptr);
   }
