@@ -246,7 +246,6 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
 
 ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocal(std::string source,
                                                            std::string destination) {
-  CHECK(QThread::currentThread() == thread());
   ErrorMessageOr<void> result = outcome::success();
   DeferToBackgroundThreadAndWait(
       this, [&, source = std::move(source), destination = std::move(destination)]() {
