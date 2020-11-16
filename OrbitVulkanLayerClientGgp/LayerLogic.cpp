@@ -74,25 +74,28 @@ void LayerLogic::ProcessQueuePresentKHR() {
   absl::Time current_time = absl::Now();
   // Ignore logic on the first call because times are not initialized. Also skipped right after a
   // capture has been stopped
-  if (skip_logic_call_ == false) {
-    if (orbit_capture_running_ == false) {
-      absl::Duration frame_time = current_time - last_frame_time_;
-      if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThresholdMilliseconds)) {
-        LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
-            absl::ToDoubleMilliseconds(frame_time), kFrameTimeThresholdMilliseconds);
-        RunCapture();
-      }
-    } else {
-      // Stop capture if it has been running long enough
-      absl::Duration capture_time = current_time - capture_started_time_;
-      if (absl::ToInt64Seconds(capture_time) >= kCaptureLengthSeconds) {
-        LOG("Capture has been running for %ds; stopping it", kCaptureLengthSeconds);
-        StopCapture();
-      }
+  if (skip_logic_call_) {
+    skip_logic_call_ = false;
+    last_frame_time_ = current_time;
+    return;
+  }
+
+  if (!orbit_capture_running_) {
+    absl::Duration frame_time = current_time - last_frame_time_;
+    if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThresholdMilliseconds)) {
+      LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
+          absl::ToDoubleMilliseconds(frame_time), kFrameTimeThresholdMilliseconds);
+      RunCapture();
     }
   } else {
-    skip_logic_call_ = false;
+    // Stop capture if it has been running long enough
+    absl::Duration capture_time = current_time - capture_started_time_;
+    if (absl::ToInt64Seconds(capture_time) >= kCaptureLengthSeconds) {
+      LOG("Capture has been running for %ds; stopping it", kCaptureLengthSeconds);
+      StopCapture();
+    }
   }
+
   last_frame_time_ = current_time;
 }
 
