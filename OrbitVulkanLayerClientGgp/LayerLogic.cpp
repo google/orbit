@@ -14,9 +14,10 @@
 #include "absl/time/time.h"
 
 namespace {
+static constexpr const int kCaptureClientResultSuccess = 1;
 static constexpr uint16_t kGrpcPort = 44767;
-static constexpr double kFrameTimeThreshold = 1000 / 60.0;  // milliseconds
-static constexpr int64_t kCaptureLength = 10;               // seconds
+static constexpr double kFrameTimeThresholdMilliseconds = 1000.0 / 60.0;
+static constexpr int64_t kCaptureLengthSeconds = 10;
 }  // namespace
 
 void LayerLogic::StartOrbitCaptureService() {
@@ -41,26 +42,26 @@ void LayerLogic::StartOrbitCaptureService() {
 
 void LayerLogic::Init() {
   // Although this method is expected to be called just once, we include a flag to make sure the
-  // gRPC service and client are not initialised more than once.
-  if (data_initialised_ == false) {
+  // gRPC service and client are not initialized more than once.
+  if (data_initialized_ == false) {
     LOG("Making initialisations required in the layer");
 
     // Start the orbit capture service in a new thread.
     StartOrbitCaptureService();
 
-    // Initialise the client and establish the channel to make calls to the service.
+    // Initialize the client and establish the channel to make calls to the service.
     std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", kGrpcPort);
     ggp_capture_client_ =
         std::unique_ptr<CaptureClientGgpClient>(new CaptureClientGgpClient(grpc_server_address));
 
-    data_initialised_ = true;
+    data_initialized_ = true;
   }
 }
 
 void LayerLogic::Destroy() {
-  if (data_initialised_ == true) {
+  if (data_initialized_ == true) {
     ggp_capture_client_->ShutdownService();
-    data_initialised_ = false;
+    data_initialized_ = false;
     orbit_capture_running_ = false;
     skip_logic_call_ = true;
   }
@@ -71,21 +72,21 @@ void LayerLogic::Destroy() {
 // of time; after which is stopped and saved.
 void LayerLogic::ProcessQueuePresentKHR() {
   absl::Time current_time = absl::Now();
-  // Ignore logic on the first call because times are not initialised. Also skipped right after a
+  // Ignore logic on the first call because times are not initialized. Also skipped right after a
   // capture has been stopped
   if (skip_logic_call_ == false) {
     if (orbit_capture_running_ == false) {
       absl::Duration frame_time = current_time - last_frame_time_;
-      if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold)) {
+      if (isgreater(absl::ToDoubleMilliseconds(frame_time), kFrameTimeThresholdMilliseconds)) {
         LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
-            absl::ToDoubleMilliseconds(frame_time), kFrameTimeThreshold);
+            absl::ToDoubleMilliseconds(frame_time), kFrameTimeThresholdMilliseconds);
         RunCapture();
       }
     } else {
-      // Stop capture if it has been running enough time
+      // Stop capture if it has been running long enough
       absl::Duration capture_time = current_time - capture_started_time_;
-      if (absl::ToInt64Seconds(capture_time) >= kCaptureLength) {
-        LOG("Capture has been running for %ds; stopping it", kCaptureLength);
+      if (absl::ToInt64Seconds(capture_time) >= kCaptureLengthSeconds) {
+        LOG("Capture has been running for %ds; stopping it", kCaptureLengthSeconds);
         StopCapture();
       }
     }
@@ -97,7 +98,7 @@ void LayerLogic::ProcessQueuePresentKHR() {
 
 void LayerLogic::RunCapture() {
   int capture_started = ggp_capture_client_->StartCapture();
-  if (capture_started == 1) {
+  if (capture_started == kCaptureClientResultSuccess) {
     capture_started_time_ = absl::Now();
     orbit_capture_running_ = true;
   }
@@ -105,7 +106,7 @@ void LayerLogic::RunCapture() {
 
 void LayerLogic::StopCapture() {
   int capture_stopped = ggp_capture_client_->StopAndSaveCapture();
-  if (capture_stopped == 1) {
+  if (capture_stopped == kCaptureClientResultSuccess) {
     orbit_capture_running_ = false;
     // The frame time is expected to be longer the next call so we skip the check
     skip_logic_call_ = true;

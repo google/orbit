@@ -82,7 +82,7 @@ void VKAPI_CALL OrbitCaptureClientDestroyInstance(VkInstance instance,
                                                   const VkAllocationCallbacks* /*allocator*/) {
   LOG("OrbitCaptureClientDestroyInstance called");
   absl::WriterMutexLock lock(&layer_mutex);
-  // Cleaning up the data initialised in the layer before the instance is destroyed. This method is
+  // Cleaning up the data initialized in the layer before the instance is destroyed. This method is
   // expected to be called before exiting the program so the data is not longer needed.
   layer_logic.Destroy();
   dispatch_table.DestroyInstance(instance);
