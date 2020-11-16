@@ -27,7 +27,7 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::ProcessService;
 
-constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
+constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 3000;
 
 std::unique_ptr<grpc::ClientContext> CreateContext(
     uint64_t timeout_milliseconds = kGrpcDefaultTimeoutMilliseconds) {
