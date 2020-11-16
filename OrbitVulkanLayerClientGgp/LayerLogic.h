@@ -15,14 +15,14 @@
 // needed for this so the layer itself is transparent to it.
 class LayerLogic {
  public:
-  LayerLogic() : data_initialised_{false}, orbit_capture_running_{false}, skip_logic_call_{true} {}
+  LayerLogic() : data_initialized_{false}, orbit_capture_running_{false}, skip_logic_call_{true} {}
 
   void Init();
   void Destroy();
   void ProcessQueuePresentKHR();
 
  private:
-  bool data_initialised_;
+  bool data_initialized_;
   bool orbit_capture_running_;
   bool skip_logic_call_;
   std::unique_ptr<CaptureClientGgpClient> ggp_capture_client_;
