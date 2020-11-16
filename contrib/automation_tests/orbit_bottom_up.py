@@ -51,9 +51,9 @@ def main(argv):
   logging.info('Listing items of the bottom-up view...')
   tree_items = main_wnd.TreeView.children(control_type='TreeItem')
   BOTTOM_UP_ROW_CELL_COUNT = 5
-  row_count_before_expansion = len(tree_items) / BOTTOM_UP_ROW_CELL_COUNT
+  row_count = len(tree_items) / BOTTOM_UP_ROW_CELL_COUNT
   
-  if row_count_before_expansion < 10:
+  if row_count < 10:
     raise RuntimeError('Less than 10 rows in the bottom-up view')
 
   if tree_items[0].window_text() != 'ioctl':
@@ -65,9 +65,6 @@ def main(argv):
 
   logging.info('Re-listing items of the bottom-up view...')
   tree_items = main_wnd.TreeView.children(control_type='TreeItem')
-  row_count_after_expansion = len(tree_items) / BOTTOM_UP_ROW_CELL_COUNT
-  if row_count_after_expansion <= row_count_before_expansion:
-    raise RuntimeError('First item of the bottom-up view has no children')
   
   if not tree_items[BOTTOM_UP_ROW_CELL_COUNT].window_text().startswith('drm'):
     raise RuntimeError('First child of the first item ("ioctl") '
