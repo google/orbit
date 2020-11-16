@@ -44,9 +44,6 @@ void LayerData::Init() {
     layer_config_.Clear();
   } else {
     LOG("Config data loaded successfully");
-    std::string temp_str;
-    google::protobuf::TextFormat::PrintToString(layer_config_, &temp_str);
-    LOG("%s", temp_str);
   }
 
   if (close(config_file_descriptor) < 0) {

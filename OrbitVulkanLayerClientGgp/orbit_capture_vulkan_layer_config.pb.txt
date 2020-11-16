@@ -6,13 +6,13 @@
 # proto-message: orbit_vulkan_capture_protos.LayerConfig
 
 capture_service_arguments {
-  functions: "player::draw,function2"
-  file_directory: "test/path/file/directory/"
-  log_directory: "test/path/log/directory/"
-  sampling_rate: "1500"
+  functions: []
+  file_directory: ""
+  log_directory: ""
+  sampling_rate: 0
 }
 
 layer_options {
-  frame_time_threshold_ms: 16.66
-  capture_length_s: 10
+  frame_time_threshold_ms: 0
+  capture_length_s: 0
 }
