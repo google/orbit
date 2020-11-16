@@ -81,6 +81,8 @@ class TimeGraph {
                                 const orbit_client_protos::TimerInfo& timer_info,
                                 double distance = 0.3);
   void VerticallyMoveIntoView(const orbit_client_protos::TimerInfo& timer_info);
+  void VerticallyMoveIntoView(Track& track);
+
   [[nodiscard]] double GetTime(double ratio) const;
   void Select(const TextBox* text_box);
   enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };

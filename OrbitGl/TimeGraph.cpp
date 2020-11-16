@@ -192,13 +192,7 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 
-  // If we zoomed-out, we would like to see most part of the screen with events,
-  // so we set a minimum and maximum for the y-top coordinate.
-  new_world_top_left_y = std::max(new_world_top_left_y, world_height - GetThreadTotalHeight());
-  // TODO: TopMargin has to be 1.5f * layout_.GetSliderWidth()?
-  new_world_top_left_y = std::min(new_world_top_left_y, 1.5f * layout_.GetSliderWidth());
-
-  canvas_->SetWorldTopLeftY(new_world_top_left_y);
+  canvas_->UpdateWorldTopLeftY(new_world_top_left_y);
 
   // Finally, we have to scale every item in the layout.
   const float old_scale = layout_.GetScale();
@@ -259,19 +253,17 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInf
 }
 
 void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
-  auto thread_track = GetOrCreateThreadTrack(timer_info.thread_id());
-  auto text_box_y_position = thread_track->GetYFromDepth(timer_info.depth());
+  VerticallyMoveIntoView(*GetOrCreateThreadTrack(timer_info.thread_id()));
+}
 
+void TimeGraph::VerticallyMoveIntoView(Track& track) {
+  float pos = track.GetPos()[1];
+  float height = track.GetHeight();
   float world_top_left_y = canvas_->GetWorldTopLeftY();
-  float min_world_top_left_y =
-      text_box_y_position + layout_.GetSpaceBetweenTracks() + layout_.GetTopMargin();
-  float max_world_top_left_y = text_box_y_position + canvas_->GetWorldHeight() -
-                               GetTextBoxHeight() - layout_.GetBottomMargin();
-  CHECK(min_world_top_left_y <= max_world_top_left_y);
-  world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
-  world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
-  canvas_->SetWorldTopLeftY(world_top_left_y);
-  NeedsUpdate();
+
+  float min_world_top_left_y = pos + layout_.GetTrackTabHeight();
+  float max_world_top_left_y = pos + canvas_->GetWorldHeight() - height - layout_.GetBottomMargin();
+  canvas_->UpdateWorldTopLeftY(clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
 
 void TimeGraph::UpdateHorizontalScroll(float ratio) {
