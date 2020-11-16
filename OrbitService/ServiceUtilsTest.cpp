@@ -101,15 +101,17 @@ TEST(ServiceUtils, GetCumulativeTotalCpuTime) {
   // We know the optional should return a value and we know it's positive and
   // monotonically increasing.
 
-  const auto& jiffies1 = GetCumulativeTotalCpuTime();
-  ASSERT_TRUE(jiffies1.has_value());
-  ASSERT_TRUE(jiffies1->value > 0ul);
+  const auto& total_cpu_time1 = GetCumulativeTotalCpuTime();
+  ASSERT_TRUE(total_cpu_time1.has_value());
+  ASSERT_TRUE(total_cpu_time1->jiffies.value > 0ul);
+  ASSERT_TRUE(total_cpu_time1->cpus > 0ul);
 
-  const auto& jiffies2 = GetCumulativeTotalCpuTime();
-  ASSERT_TRUE(jiffies2.has_value());
-  ASSERT_TRUE(jiffies2->value > 0ul);
+  const auto& total_cpu_time2 = GetCumulativeTotalCpuTime();
+  ASSERT_TRUE(total_cpu_time2.has_value());
+  ASSERT_TRUE(total_cpu_time2->jiffies.value > 0ul);
+  ASSERT_TRUE(total_cpu_time2->cpus == total_cpu_time1->cpus);
 
-  ASSERT_TRUE(jiffies2->value >= jiffies1->value);
+  ASSERT_TRUE(total_cpu_time2->jiffies.value >= total_cpu_time1->jiffies.value);
 }
 
 TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
@@ -121,12 +123,12 @@ TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
 
   ASSERT_TRUE(jiffies2->value >= jiffies1->value);
 
-  const auto& jiffies_total = GetCumulativeTotalCpuTime();
-  ASSERT_TRUE(jiffies_total.has_value());
-  ASSERT_TRUE(jiffies_total->value > 0ul);
+  const auto& total_cpu_time = GetCumulativeTotalCpuTime();
+  ASSERT_TRUE(total_cpu_time.has_value());
+  ASSERT_TRUE(total_cpu_time->jiffies.value > 0ul);
 
   // A single process should never have consumed more CPU cycles than the total CPU time
-  ASSERT_TRUE(jiffies2->value <= jiffies_total->value);
+  ASSERT_TRUE(jiffies2->value <= total_cpu_time->jiffies.value);
 }
 
 TEST(ServiceUtils, GetExecutablePath) {

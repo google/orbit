@@ -221,7 +221,7 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   return Jiffies{utime + stime};
 }
 
-std::optional<Jiffies> GetCumulativeTotalCpuTime() {
+std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   std::ifstream stat_stream{"/proc/stat"};
 
   // /proc/stat looks like so (example):
@@ -274,16 +274,17 @@ std::optional<Jiffies> GetCumulativeTotalCpuTime() {
 
   std::vector<std::string_view> splits = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
 
-  return Jiffies{std::accumulate(splits.begin() + 1, splits.end(), 0ul,
-                                 [](auto sum, const auto& str) {
-                                   int potential_time = 0;
-                                   if (absl::SimpleAtoi(str, &potential_time)) {
-                                     sum += potential_time;
-                                   }
+  const Jiffies jiffies{
+      std::accumulate(splits.begin() + 1, splits.end(), 0ul, [](auto sum, const auto& str) {
+        int potential_time = 0;
+        if (absl::SimpleAtoi(str, &potential_time)) {
+          sum += potential_time;
+        }
 
-                                   return sum;
-                                 }) /
-                 cpus};
+        return sum;
+      })};
+
+  return TotalCpuTime{jiffies, cpus};
 }
 
 ErrorMessageOr<Path> GetExecutablePath(int32_t pid) {
