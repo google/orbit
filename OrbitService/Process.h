@@ -15,7 +15,7 @@ class Process : public orbit_grpc_protos::ProcessInfo {
  public:
   using orbit_grpc_protos::ProcessInfo::ProcessInfo;
 
-  void UpdateCpuUsage(utils::Jiffies process_cpu_time, utils::Jiffies total_cpu_time);
+  void UpdateCpuUsage(utils::Jiffies process_cpu_time, utils::TotalCpuTime total_cpu_time);
 
   // Creates a `Process` by reading details from the `/proc` filesystem.
   // This might fail due to a non existing pid or due to permission problems.

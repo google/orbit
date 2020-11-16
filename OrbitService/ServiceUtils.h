@@ -32,7 +32,15 @@ struct Jiffies {
   uint64_t value;
 };
 
-std::optional<Jiffies> GetCumulativeTotalCpuTime();
+struct TotalCpuTime {
+  // jiffies is the sum over all cycles executed on all cores.
+  Jiffies jiffies;
+
+  // cpus is the number of (logical) cores available and accumulated in jiffies.
+  size_t cpus;
+};
+
+std::optional<TotalCpuTime> GetCumulativeTotalCpuTime();
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
 
 ErrorMessageOr<Path> GetExecutablePath(int32_t pid);

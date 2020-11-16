@@ -22,7 +22,8 @@ TEST(ProcessList, ProcessList) {
   const auto total_cpu_cycles = utils::GetCumulativeTotalCpuTime().value();
 
   // We wait until the stats have been updated
-  while (utils::GetCumulativeTotalCpuTime().value().value == total_cpu_cycles.value) {
+  while (utils::GetCumulativeTotalCpuTime().value().jiffies.value ==
+         total_cpu_cycles.jiffies.value) {
     // If this loop never ends it will be caught by the automatic timeout feature
     usleep(10'000);
   }
