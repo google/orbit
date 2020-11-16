@@ -13,10 +13,22 @@ target_include_directories(OrbitVulkanLayerClientGgp PRIVATE
 target_sources(OrbitVulkanLayerClientGgp PRIVATE
         DispatchTable.cpp
         DispatchTable.h
+        LayerData.cpp
+        LayerData.h
         LayerLogic.cpp
         LayerLogic.h
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC
         OrbitBase
-        OrbitCaptureGgpClientLib)
+        OrbitCaptureGgpClientLib
+        OrbitVulkanLayerClientGgpProtos)
+
+project(OrbitVulkanLayerClientGgpProtos)
+add_library(OrbitVulkanLayerClientGgpProtos STATIC)
+
+protobuf_generate(TARGET OrbitVulkanLayerClientGgpProtos PROTOS 
+        layer_config.proto)
+
+target_include_directories(OrbitVulkanLayerClientGgpProtos PUBLIC 
+        ${CMAKE_CURRENT_BINARY_DIR})

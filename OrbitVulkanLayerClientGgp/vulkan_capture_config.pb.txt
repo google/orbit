@@ -1,0 +1,18 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# proto-file: layer_config.proto
+# proto-message: orbit_vulkan_capture_protos.LayerConfig
+
+capture_service_arguments {
+  functions: "player::draw,function2"
+  file_directory: "test/path/file/directory/"
+  log_directory: "test/path/log/directory/"
+  sampling_rate: "1500"
+}
+
+layer_options {
+  frame_time_threshold_ms: 16.66
+  capture_length_s: 10
+}

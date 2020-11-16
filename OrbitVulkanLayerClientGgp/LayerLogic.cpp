@@ -8,46 +8,50 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <cstdint>
 #include <string>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "layer_config.pb.h"
 
 namespace {
-static constexpr const int kCaptureClientResultSuccess = 1;
-static constexpr uint16_t kGrpcPort = 44767;
-static constexpr double kFrameTimeThresholdMilliseconds = 1000.0 / 60.0;
-static constexpr int64_t kCaptureLengthSeconds = 10;
+constexpr const int kCaptureClientResultSuccess = 1;
+constexpr uint16_t kGrpcPort = 44767;
 }  // namespace
 
 void LayerLogic::StartOrbitCaptureService() {
-  LOG("Starting Orbit capture service");
   pid_t pid = fork();
   if (pid < 0) {
-    ERROR("Fork failed; not able to start the capture service");
+    ERROR("Fork failed; not able to start Orbit capture service");
   } else if (pid == 0) {
-    std::string game_pid = absl::StrFormat("%d", getppid());
-    // TODO(crisguerrero): Read the arguments from a config file.
-    char* argv[] = {const_cast<char*>("/mnt/developer/OrbitCaptureGgpService"),
-                    const_cast<char*>("-pid"),
-                    game_pid.data(),
-                    const_cast<char*>("-log_directory"),
-                    const_cast<char*>("/var/game/"),
-                    NULL};
+    LOG("Starting Orbit capture service");
+    std::string game_pid_str = absl::StrFormat("%d", getppid());
+    std::vector<char*> argv = layer_data_.buildObritCaptureServiceArgv(game_pid_str);
 
-    LOG("Making call to %s %s %s %s %s", argv[0], argv[1], argv[2], argv[3], argv[4]);
-    execv(argv[0], argv);
+    std::string log_message = "Executing";
+    for (auto const& arg : argv) {
+      absl::StrAppendFormat(&log_message, " %s", arg);
+    }
+    LOG("%s", log_message);
+    LOG("%d arguments", argv.size());
+
+    execv(argv[0], argv.data());
   }
 }
 
 void LayerLogic::Init() {
   // Although this method is expected to be called just once, we include a flag to make sure the
   // gRPC service and client are not initialized more than once.
-  if (data_initialized_ == false) {
+  if (!data_initialized_) {
     LOG("Making initializations required in the layer");
 
-    // Start the orbit capture service in a new thread.
+    // Initialise and load data from config file
+    layer_data_.Init();
+
+    // Start the orbit capture service in a new process.
     StartOrbitCaptureService();
 
     // Initialize the client and establish the channel to make calls to the service.
@@ -60,7 +64,7 @@ void LayerLogic::Init() {
 }
 
 void LayerLogic::Destroy() {
-  if (data_initialized_ == true) {
+  if (data_initialized_) {
     ggp_capture_client_->ShutdownService();
     data_initialized_ = false;
     orbit_capture_running_ = false;
@@ -84,17 +88,17 @@ void LayerLogic::ProcessQueuePresentKHR() {
   if (!orbit_capture_running_) {
     auto frame_time = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
         current_time - last_frame_time_);
-    if (isgreater(frame_time.count(), kFrameTimeThresholdMilliseconds)) {
+    if (isgreater(frame_time.count(), layer_data_.getFrameTimeThresholdMilliseconds())) {
       LOG("Time frame is %fms and exceeds the %fms threshold; starting capture", frame_time.count(),
-          kFrameTimeThresholdMilliseconds);
+          layer_data_.getFrameTimeThresholdMilliseconds());
       RunCapture();
     }
   } else {
     // Stop capture if it has been running long enough
     auto capture_time = std::chrono::duration_cast<std::chrono::duration<int64_t>>(
         current_time - capture_started_time_);
-    if (capture_time.count() >= kCaptureLengthSeconds) {
-      LOG("Capture has been running for %ds; stopping it", kCaptureLengthSeconds);
+    if (capture_time.count() >= layer_data_.getCaptureLengthSeconds()) {
+      LOG("Capture has been running for %ds; stopping it", layer_data_.getCaptureLengthSeconds());
       StopCapture();
     }
   }
