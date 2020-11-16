@@ -45,6 +45,10 @@ int main(int argc, char** argv) {
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
+  LOG("------------------------------------");
+  LOG("OrbitCaptureGgpService started");
+  LOG("------------------------------------");
+
   const std::string log_directory = absl::GetFlag(FLAGS_log_directory);
   if (!log_directory.empty()) {
     InitLogFile(GetLogFilePath(log_directory));

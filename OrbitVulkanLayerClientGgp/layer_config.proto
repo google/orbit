@@ -1,0 +1,25 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package orbit_vulkan_capture_protos;
+
+message LayerConfig {
+  CaptureServiceArguments capture_service_arguments = 1;
+
+  LayerOptions layer_options = 2; 
+}
+
+message CaptureServiceArguments {
+  repeated string functions = 1; // Functions to hook to the capture
+  string file_directory = 2;     // Path to locate .orbit file. By default it is /var/game/
+  string log_directory = 3;      // Path to locate debug file. By default it is /var/game/
+  uint32 sampling_rate = 4;      // Frequency of callstack sampling in samples per second. By default it is 1000
+}
+
+message LayerOptions {
+  float frame_time_threshold_ms = 1; // 16.66ms by default
+  uint32 capture_length_s = 2;       // 10s by default
+}
