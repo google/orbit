@@ -67,9 +67,10 @@ class GlCanvas {
 
   float GetWorldWidth() const { return world_width_; }
   float GetWorldHeight() const { return world_height_; }
+  float GetWorldMaxY() const { return world_max_y_; }
   float GetWorldTopLeftX() const { return world_top_left_x_; }
   float GetWorldTopLeftY() const { return world_top_left_y_; }
-  void SetWorldTopLeftY(float val) { world_top_left_y_ = val; }
+  virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
   TextRenderer& GetTextRenderer() { return text_renderer_; }
   uint32_t GetInitialFontSize() const { return initial_font_size_; }

@@ -241,5 +241,6 @@ void Track::OnDrag(int a_X, int a_Y) {
   canvas_->ScreenToWorld(a_X, a_Y, x, pos_[1]);
   mouse_pos_[1] = pos_;
   pos_[1] -= picking_offset_[1];
+  time_graph_->VerticallyMoveIntoView(*this);
   time_graph_->NeedsUpdate();
 }

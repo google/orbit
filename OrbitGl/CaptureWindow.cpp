@@ -614,6 +614,12 @@ void CaptureWindow::UpdateVerticalSliderFromWorld() {
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
 }
 
+void CaptureWindow::UpdateWorldTopLeftY(float val) {
+  float min_world_top_left = GetWorldHeight() - time_graph_.GetThreadTotalHeight();
+  GlCanvas::UpdateWorldTopLeftY(clamp(val, min_world_top_left, GetWorldMaxY()));
+  NeedsUpdate();
+}
+
 void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
 
 void CaptureWindow::set_draw_help(bool draw_help) {

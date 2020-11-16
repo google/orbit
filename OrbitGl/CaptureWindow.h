@@ -53,6 +53,7 @@ class CaptureWindow : public GlCanvas {
   void UpdateHorizontalZoom(float normalized_start, float normalized_end);
   void UpdateVerticalSliderFromWorld();
   void UpdateHorizontalSliderFromWorld();
+  void UpdateWorldTopLeftY(float val) override;
 
   void NeedsUpdate();
   void OnCaptureStarted();
