@@ -29,7 +29,7 @@ void LayerLogic::StartOrbitCaptureService() {
   } else if (pid == 0) {
     LOG("Starting Orbit capture service");
     std::string game_pid_str = absl::StrFormat("%d", getppid());
-    std::vector<std::string> argv_str = layer_data_.BuildOrbitCaptureServiceArgv(game_pid_str);
+    std::vector<std::string> argv_str = layer_options_.BuildOrbitCaptureServiceArgv(game_pid_str);
 
     // Build argv in the format execv expects
     std::vector<char*> argv;
@@ -57,7 +57,7 @@ void LayerLogic::Init() {
     LOG("Making initializations required in the layer");
 
     // Initialize and load data from config file
-    layer_data_.Init();
+    layer_options_.Init();
 
     // Start the orbit capture service in a new process.
     StartOrbitCaptureService();
@@ -96,17 +96,18 @@ void LayerLogic::ProcessQueuePresentKHR() {
   if (!orbit_capture_running_) {
     auto frame_time = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
         current_time - last_frame_time_);
-    if (isgreater(frame_time.count(), layer_data_.GetFrameTimeThresholdMilliseconds())) {
+    if (isgreater(frame_time.count(), layer_options_.GetFrameTimeThresholdMilliseconds())) {
       LOG("Time frame is %fms and exceeds the %fms threshold; starting capture", frame_time.count(),
-          layer_data_.GetFrameTimeThresholdMilliseconds());
+          layer_options_.GetFrameTimeThresholdMilliseconds());
       RunCapture();
     }
   } else {
     // Stop capture if it has been running long enough
     auto capture_time = std::chrono::duration_cast<std::chrono::duration<int64_t>>(
         current_time - capture_started_time_);
-    if (capture_time.count() >= layer_data_.GetCaptureLengthSeconds()) {
-      LOG("Capture has been running for %ds; stopping it", layer_data_.GetCaptureLengthSeconds());
+    if (capture_time.count() >= layer_options_.GetCaptureLengthSeconds()) {
+      LOG("Capture has been running for %ds; stopping it",
+          layer_options_.GetCaptureLengthSeconds());
       StopCapture();
     }
   }

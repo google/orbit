@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "LayerData.h"
+#include "LayerOptions.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -29,7 +29,7 @@ constexpr double kFrameTimeThresholdMillisecondsDefault = 1000.0 / 60.0;
 constexpr uint32_t kCaptureLengthSecondsDefault = 10;
 }  // namespace
 
-void LayerData::Init() {
+void LayerOptions::Init() {
   // Load data from config file
   LOG("Loading  vulkan layer config file from %s", std::string(kConfigFileName));
 
@@ -53,7 +53,7 @@ void LayerData::Init() {
   }
 }
 
-double LayerData::GetFrameTimeThresholdMilliseconds() {
+double LayerOptions::GetFrameTimeThresholdMilliseconds() {
   if (layer_config_.has_layer_options() &&
       layer_config_.layer_options().frame_time_threshold_ms() > 0) {
     return layer_config_.layer_options().frame_time_threshold_ms();
@@ -61,14 +61,14 @@ double LayerData::GetFrameTimeThresholdMilliseconds() {
   return kFrameTimeThresholdMillisecondsDefault;
 }
 
-uint32_t LayerData::GetCaptureLengthSeconds() {
+uint32_t LayerOptions::GetCaptureLengthSeconds() {
   if (layer_config_.has_layer_options() && layer_config_.layer_options().capture_length_s() > 0) {
     return layer_config_.layer_options().capture_length_s();
   }
   return kCaptureLengthSecondsDefault;
 }
 
-std::vector<std::string> LayerData::BuildOrbitCaptureServiceArgv(const std::string& game_pid) {
+std::vector<std::string> LayerOptions::BuildOrbitCaptureServiceArgv(const std::string& game_pid) {
   std::vector<std::string> argv;
 
   // Set mandatory arguments: service, pid
