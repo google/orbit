@@ -35,6 +35,7 @@ target_sources(
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
+          TutorialContent.h
           TutorialOverlay.h)
 
 target_sources(
@@ -66,6 +67,7 @@ target_sources(
           opengldetect.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
+          TutorialContent.cpp
           TutorialOverlay.cpp
           TutorialOverlay.ui
           ../icons/orbiticons.qrc

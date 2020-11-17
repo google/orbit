@@ -60,6 +60,8 @@ ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
+ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
+
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 

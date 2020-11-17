@@ -27,6 +27,7 @@
 #include "Path.h"
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
+#include "TutorialContent.h"
 #include "TutorialOverlay.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -41,6 +42,7 @@
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
+ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
@@ -255,6 +257,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->menuDebug->menuAction()->setVisible(false);
   }
 
+  if (absl::GetFlag(FLAGS_enable_tutorials_feature)) {
+    InitTutorials(this);
+  }
+
   SetupCaptureToolbar();
 
   StartMainTimer();
@@ -310,7 +316,10 @@ void OrbitMainWindow::SetupCodeView() {
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
 }
 
-OrbitMainWindow::~OrbitMainWindow() { delete ui; }
+OrbitMainWindow::~OrbitMainWindow() {
+  DeinitTutorials();
+  delete ui;
+}
 
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   if (a_Type == DataViewType::kAll) {
