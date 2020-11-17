@@ -137,9 +137,6 @@ void TutorialOverlay::StartSection(const std::string& section) {
   active_section_ = it;
   it->second.active_step_index = it->second.step_names.empty() ? -1 : 0;
   StartActiveStep();
-  if (!isVisible()) {
-    show();
-  }
 }
 
 void TutorialOverlay::AddSection(std::string section_name, std::string title,
@@ -201,6 +198,8 @@ void TutorialOverlay::closeEvent(QCloseEvent* event) {
     RecursiveUpdate(parentWidget());
     parentWidget()->removeEventFilter(this);
   }
+
+  emit Hidden();
 }
 
 void TutorialOverlay::showEvent(QShowEvent* event) {
@@ -208,6 +207,7 @@ void TutorialOverlay::showEvent(QShowEvent* event) {
   if (parentWidget() != nullptr) {
     parentWidget()->installEventFilter(this);
   }
+  emit Shown();
 }
 
 bool TutorialOverlay::eventFilter(QObject*, QEvent* event) {

@@ -105,6 +105,10 @@ TEST(TutorialOverlay, SignalsAndSlots) {
   QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
 
+  bool shown = false, hidden = false;
+  QObject::connect(overlay.get(), &TutorialOverlay::Shown, [&shown]() { shown = true; });
+  QObject::connect(overlay.get(), &TutorialOverlay::Hidden, [&hidden]() { hidden = true; });
+
   auto button = std::make_unique<QPushButton>();
 
   TutorialOverlay::StepSetup setup;
@@ -121,9 +125,11 @@ TEST(TutorialOverlay, SignalsAndSlots) {
   emit button->clicked();
   EXPECT_EQ(overlay->GetActiveStepName(), "");
 
+  EXPECT_FALSE(shown);
   overlay->AddSection("unitTest", "Unit Testing", {"unitTest1", "unitTest2"});
   overlay->StartSection("unitTest");
   EXPECT_EQ(overlay->GetActiveStepName(), "unitTest1");
+  EXPECT_TRUE(shown);
 
   emit button->clicked();
   EXPECT_EQ(overlay->GetActiveStepName(), "unitTest2");
@@ -134,10 +140,12 @@ TEST(TutorialOverlay, SignalsAndSlots) {
   EXPECT_EQ(overlay->GetActiveStepName(), "unitTest2");
 
   bool completed = false;
+  EXPECT_FALSE(hidden);
   QObject::connect(overlay.get(), &TutorialOverlay::SectionCompleted,
                    [&completed] { completed = true; });
   overlay->NextStep();
   EXPECT_TRUE(completed);
+  EXPECT_TRUE(hidden);
 }
 
 TEST(TutorialOverlay, FailTests) {

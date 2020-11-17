@@ -56,6 +56,8 @@ class OrbitMainWindow : public QMainWindow {
   void OpenCapture(const std::string& filepath);
   void OnCaptureCleared();
 
+  Ui::OrbitMainWindow* GetUi() { return ui; }
+
  protected:
   void closeEvent(QCloseEvent* event) override;
 

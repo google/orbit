@@ -100,6 +100,8 @@ class TutorialOverlay : public QDialog {
 
  Q_SIGNALS:
   void SectionCompleted(const std::string& section_name);
+  void Shown();
+  void Hidden();
 
  protected:
   void closeEvent(QCloseEvent* event) override;
