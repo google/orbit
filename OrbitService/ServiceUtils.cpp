@@ -62,6 +62,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     uint64_t end_address;
     bool is_executable;
   };
+
   const std::vector<std::string> proc_maps = absl::StrSplit(proc_maps_data, '\n');
 
   LOG("Build address map.");
