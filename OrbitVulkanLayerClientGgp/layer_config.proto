@@ -15,14 +15,15 @@ message LayerConfig {
 message CaptureServiceArguments {
   repeated string functions = 1;  // Functions to hook to the capture
 
-  string file_directory =
-      2;  // Path to locate .orbit file. By default it is /var/game/
+  // Path to locate .orbit file. By default it is /var/game/
+  string file_directory = 2;
 
-  string log_directory =
-      3;  // Path to locate debug file. By default it is /var/game/
+  // Path to locate debug file. By default it is /var/game/
+  string log_directory = 3;
 
-  uint32 sampling_rate = 4;  // Frequency of callstack sampling in samples per
-                             // second. By default it is 1000
+  // Frequency of callstack sampling in samples per second. By default it is
+  // 1000
+  uint32 sampling_rate = 4;
 }
 
 message LayerOptions {
