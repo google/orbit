@@ -21,7 +21,8 @@
 using orbit_vulkan_capture_protos::LayerConfig;
 
 namespace {
-constexpr char const* kConfigFileName = "/mnt/developer/orbit_capture_vulkan_layer_config.pb.txt";
+constexpr char const* kConfigFileName =
+    "/mnt/developer/orbit_trigger_capture_vulkan_layer_config.pb.txt";
 constexpr char const* kOrbitCaptureService = "/mnt/developer/OrbitCaptureGgpService";
 constexpr char const* kLogDirectory = "/var/game/";
 constexpr double kFrameTimeThresholdMillisecondsDefault = 1000.0 / 60.0;

@@ -3,15 +3,15 @@
   "layer": {
     "name": "VK_LAYER_ORBIT_CAPTURE_CLIENT",
     "type": "GLOBAL",
-    "library_path": "./libOrbitCaptureVulkanLayer.so",
+    "library_path": "./libOrbitTriggerCaptureVulkanLayer.so",
     "api_version": "1.1.77",
     "implementation_version": "1",
     "description": "Layer that contains Orbit Client implementation to run captures",
     "enable_environment": {
-      "ENABLE_ORBIT_CAPTURE_VULKAN_LAYER": "1"
+      "ENABLE_ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER": "1"
     },
     "disable_environment": {
-      "DISABLE_ORBIT_CAPTURE_VULKAN_LAYER": "1"
+      "DISABLE_ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER": "1"
     },
     "functions": {
       "vkGetInstanceProcAddr": "OrbitCaptureClientGetInstanceProcAddr",
