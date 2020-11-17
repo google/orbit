@@ -641,6 +641,12 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     (*preset.mutable_path_to_module())[function.loaded_module_path()].add_function_hashes(hash);
   }
 
+  for (const auto& function : data_manager_->user_defined_capture_data().frame_track_functions()) {
+    uint64_t hash = FunctionUtils::GetHash(function);
+    (*preset.mutable_path_to_module())[function.loaded_module_path()]
+        .add_frame_track_function_hashes(hash);
+  }
+
   std::string filename_with_ext = filename;
   if (!absl::EndsWith(filename, ".opr")) {
     filename_with_ext += ".opr";
@@ -892,11 +898,13 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
 }
 
 void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
-                                  std::vector<uint64_t> function_hashes_to_hook) {
+                                  std::vector<uint64_t> function_hashes_to_hook,
+                                  std::vector<uint64_t> frame_track_function_hashes) {
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance (module \"%s\")...", module_data->file_path()));
   thread_pool_->Schedule([this, module_data,
                           function_hashes_to_hook = std::move(function_hashes_to_hook),
+                          frame_track_function_hashes = std::move(frame_track_function_hashes),
                           scoped_status = std::move(scoped_status)]() mutable {
     const auto result = process_manager_->FindDebugInfoFile(module_data->file_path());
 
@@ -915,7 +923,8 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
 
     main_thread_executor_->Schedule(
         [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
-         debug_file_path, scoped_status = std::move(scoped_status)]() mutable {
+         frame_track_function_hashes = std::move(frame_track_function_hashes), debug_file_path,
+         scoped_status = std::move(scoped_status)]() mutable {
           const std::filesystem::path local_debug_file_path =
               symbol_helper_.GenerateCachedFileName(module_data->file_path());
 
@@ -935,14 +944,16 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
             }
           }
 
-          LoadSymbols(local_debug_file_path, module_data, std::move(function_hashes_to_hook));
+          LoadSymbols(local_debug_file_path, module_data, std::move(function_hashes_to_hook),
+                      std::move(frame_track_function_hashes));
         });
   });
 }
 
 void OrbitApp::LoadModules(
     const std::vector<ModuleData*>& modules,
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map) {
+    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
+    absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map) {
   for (const auto& module : modules) {
     if (modules_currently_loading_.contains(module->file_path())) {
       continue;
@@ -954,14 +965,21 @@ void OrbitApp::LoadModules(
       function_hashes_to_hook = function_hashes_to_hook_map.at(module->file_path());
     }
 
+    std::vector<uint64_t> frame_track_function_hashes;
+    if (frame_track_function_hashes_map.contains(module->file_path())) {
+      frame_track_function_hashes = frame_track_function_hashes_map.at(module->file_path());
+    }
+
     const auto& symbols_path = FindSymbolsLocally(module->file_path(), module->build_id());
     if (symbols_path) {
-      LoadSymbols(symbols_path.value(), module, std::move(function_hashes_to_hook));
+      LoadSymbols(symbols_path.value(), module, std::move(function_hashes_to_hook),
+                  std::move(frame_track_function_hashes));
       continue;
     }
 
     if (!absl::GetFlag(FLAGS_local)) {
-      LoadModuleOnRemote(module, std::move(function_hashes_to_hook));
+      LoadModuleOnRemote(module, std::move(function_hashes_to_hook),
+                         std::move(frame_track_function_hashes));
       continue;
     }
 
@@ -1020,12 +1038,15 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindSymbolsLocally(
 }
 
 void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                           std::vector<uint64_t> function_hashes_to_hook) {
+                           std::vector<uint64_t> function_hashes_to_hook,
+                           std::vector<uint64_t> frame_track_function_hashes) {
   auto scoped_status =
       CreateScopedStatus(absl::StrFormat(R"(Loading symbols for "%s" from file "%s"...)",
                                          module_data->file_path(), symbols_path.string()));
   thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, module_data,
-                          function_hashes_to_hook = std::move(function_hashes_to_hook)]() mutable {
+                          function_hashes_to_hook = std::move(function_hashes_to_hook),
+                          frame_track_function_hashes =
+                              std::move(frame_track_function_hashes)]() mutable {
     auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
     CHECK(symbols_result);
     module_data->AddSymbols(symbols_result.value());
@@ -1037,7 +1058,9 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
     LOG("%s", message);
 
     main_thread_executor_->Schedule([this, scoped_status = std::move(scoped_status), module_data,
-                                     function_hashes_to_hook = std::move(function_hashes_to_hook)] {
+                                     function_hashes_to_hook = std::move(function_hashes_to_hook),
+                                     frame_track_function_hashes =
+                                         std::move(frame_track_function_hashes)] {
       modules_currently_loading_.erase(module_data->file_path());
 
       const ProcessData* selected_process = GetSelectedProcess();
@@ -1057,23 +1080,33 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
         LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
       }
 
+      if (!frame_track_function_hashes.empty()) {
+        const auto frame_track_result =
+            InsertFrameTracksFromHashes(module_data, frame_track_function_hashes);
+        if (!frame_track_result) {
+          LOG("Warning, could not insert frame tracks: %s", frame_track_result.error().message());
+        }
+        LOG("Added frame tracks in module \"%s\"", module_data->file_path());
+      }
+
       UpdateAfterSymbolLoading();
       GOrbitApp->FireRefreshCallbacks();
     });
   });
 }
 
-ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
-    const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
+ErrorMessageOr<void> OrbitApp::GetFunctionInfosFromHashes(
+    const ModuleData* module, const std::vector<uint64_t>& function_hashes,
+    std::vector<const FunctionInfo*>* function_infos) {
   const ProcessData* process = GetSelectedProcess();
   if (process == nullptr) {
     return ErrorMessage(absl::StrFormat(
-        "Unable to select preset functions for module \"%s\", because no process is selected",
+        "Unable to get function infos for module \"%s\", because no process is selected",
         module->file_path()));
   }
   if (!process->IsModuleLoaded(module->file_path())) {
     return ErrorMessage(absl::StrFormat(
-        R"(Unable to select preset functions for module "%s", because the module is not loaded by process "%s")",
+        R"(Unable to get function infos for module "%s", because the module is not loaded by process "%s")",
         module->file_path(), process->name()));
   }
 
@@ -1084,13 +1117,34 @@ ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
       count_missing++;
       continue;
     }
-    SelectFunction(*function);
+    function_infos->push_back(function);
   }
   if (count_missing != 0) {
-    return ErrorMessage(absl::StrFormat("* %d preset functions missing from module \"%s\"\n",
+    return ErrorMessage(absl::StrFormat("* %d function infos missing from module \"%s\"\n",
                                         count_missing, module->file_path()));
   }
   return outcome::success();
+}
+
+ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
+    const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
+  std::vector<const FunctionInfo*> function_infos;
+  const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
+  for (const auto* function : function_infos) {
+    SelectFunction(*function);
+  }
+  return error;
+}
+
+ErrorMessageOr<void> OrbitApp::InsertFrameTracksFromHashes(
+    const ModuleData* module, const std::vector<uint64_t> function_hashes) {
+  std::vector<const FunctionInfo*> function_infos;
+  const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
+  for (const auto* function : function_infos) {
+    capture_data_.InsertFrameTrack(*function);
+    data_manager_->set_user_defined_capture_data(capture_data_.user_defined_capture_data());
+  }
+  return error;
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
@@ -1110,6 +1164,12 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
       if (!selecting_result) {
         LOG("Warning: %s", selecting_result.error().message());
       }
+      std::vector<uint64_t> frame_track_hashes{preset_module.frame_track_function_hashes().begin(),
+                                               preset_module.frame_track_function_hashes().end()};
+      const auto frame_track_result = InsertFrameTracksFromHashes(module_data, frame_track_hashes);
+      if (!frame_track_result) {
+        LOG("Warning: %s", frame_track_result.error().message());
+      }
       continue;
     }
     modules_to_load.push_back(module_data);
@@ -1128,13 +1188,19 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
   }
   if (!modules_to_load.empty()) {
     absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
+    absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
     for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
       function_hashes_to_hook_map[module_path] = std::vector<uint64_t>{};
       for (const uint64_t function_hash : preset_module.function_hashes()) {
         function_hashes_to_hook_map.at(module_path).push_back(function_hash);
       }
+      frame_track_function_hashes_map[module_path] = std::vector<uint64_t>{};
+      for (const uint64_t function_hash : preset_module.frame_track_function_hashes()) {
+        frame_track_function_hashes_map.at(module_path).push_back(function_hash);
+      }
     }
-    LoadModules(modules_to_load, std::move(function_hashes_to_hook_map));
+    LoadModules(modules_to_load, std::move(function_hashes_to_hook_map),
+                std::move(frame_track_function_hashes_map));
   }
   FireRefreshCallbacks();
 }
@@ -1176,6 +1242,8 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // anymore. These functions are saved (C), so the module can be loaded again and the functions
       // are then selected (hooked) again (D).
 
+      // This all applies similarly to frame tracks that are based on selected functions.
+
       // Update modules and get the ones to reload.
       std::vector<ModuleData*> modules_to_reload =
           module_manager_->AddOrUpdateModules(module_infos);
@@ -1186,18 +1254,30 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         // (A) deselect functions when the module is not loaded by the process anymore
         if (!process->IsModuleLoaded(module->file_path())) {
           data_manager_->DeselectFunction(func);
-        } else {
-          if (!module->is_loaded()) {
-            // (B) deselect when module does not have functions anymore (!is_loaded())
-            data_manager_->DeselectFunction(func);
-            // (C) Save function hashes, so they can be hooked again after reload
-            function_hashes_to_hook_map[module->file_path()].push_back(
-                FunctionUtils::GetHash(func));
-          }
+        } else if (!module->is_loaded()) {
+          // (B) deselect when module does not have functions anymore (!is_loaded())
+          data_manager_->DeselectFunction(func);
+          // (C) Save function hashes, so they can be hooked again after reload
+          function_hashes_to_hook_map[module->file_path()].push_back(FunctionUtils::GetHash(func));
+        }
+      }
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
+      for (const FunctionInfo& func :
+           data_manager_->user_defined_capture_data().frame_track_functions()) {
+        const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+        // Frame tracks are only meaningful if the module for the underlying function is actually
+        // loaded by the process.
+        if (!process->IsModuleLoaded(module->file_path())) {
+          RemoveFrameTrack(func);
+        } else if (!module->is_loaded()) {
+          RemoveFrameTrack(func);
+          frame_track_function_hashes_map[module->file_path()].push_back(
+              FunctionUtils::GetHash(func));
         }
       }
       // (D) Load Modules again (and pass on functions to hook after loading)
-      LoadModules(modules_to_reload, std::move(function_hashes_to_hook_map));
+      LoadModules(modules_to_reload, std::move(function_hashes_to_hook_map),
+                  std::move(frame_track_function_hashes_map));
 
       // Refresh UI
       modules_data_view_->UpdateModules(process);

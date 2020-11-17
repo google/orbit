@@ -256,7 +256,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void LoadModules(
       const std::vector<ModuleData*>& modules,
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {});
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {},
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map = {});
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
@@ -321,9 +322,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
                                                            const std::string& build_id);
   void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                   std::vector<uint64_t> function_hashes_to_hook);
+                   std::vector<uint64_t> function_hashes_to_hook,
+                   std::vector<uint64_t> frame_track_function_hashes);
 
-  void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook);
+  void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook,
+                          std::vector<uint64_t> frame_track_function_hashes);
   ErrorMessageOr<void> SelectFunctionsFromHashes(const ModuleData* module,
                                                  const std::vector<uint64_t>& function_hashes);
 
@@ -332,6 +335,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
+  ErrorMessageOr<void> GetFunctionInfosFromHashes(
+      const ModuleData* module, const std::vector<uint64_t>& function_hashes,
+      std::vector<const orbit_client_protos::FunctionInfo*>* function_infos);
+
+  ErrorMessageOr<void> InsertFrameTracksFromHashes(const ModuleData* module,
+                                                   const std::vector<uint64_t> function_hashes);
   void AddFrameTrackTimers(const orbit_client_protos::FunctionInfo& function);
   void RefreshFrameTracks();
 
