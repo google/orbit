@@ -45,7 +45,7 @@ void LayerLogic::Init() {
   // Although this method is expected to be called just once, we include a flag to make sure the
   // gRPC service and client are not initialized more than once.
   if (data_initialized_ == false) {
-    LOG("Making initialisations required in the layer");
+    LOG("Making initializations required in the layer");
 
     // Start the orbit capture service in a new thread.
     StartOrbitCaptureService();
