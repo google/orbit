@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-project(OrbitVulkanLayerClientGgp)
-add_library(OrbitVulkanLayerClientGgp SHARED)
+project(OrbitCaptureVulkanLayer)
+add_library(OrbitCaptureVulkanLayer SHARED)
 
-target_compile_options(OrbitVulkanLayerClientGgp PRIVATE ${STRICT_COMPILE_FLAGS})
+target_compile_options(OrbitCaptureVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitVulkanLayerClientGgp PRIVATE
+target_include_directories(OrbitCaptureVulkanLayer PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitVulkanLayerClientGgp PRIVATE
+target_sources(OrbitCaptureVulkanLayer PRIVATE
         DispatchTable.cpp
         DispatchTable.h
         LayerData.cpp
@@ -19,16 +19,16 @@ target_sources(OrbitVulkanLayerClientGgp PRIVATE
         LayerLogic.h
         OrbitCaptureClientLayer.cpp)
 
-target_link_libraries(OrbitVulkanLayerClientGgp PUBLIC
+target_link_libraries(OrbitCaptureVulkanLayer PUBLIC
         OrbitBase
         OrbitCaptureGgpClientLib
-        OrbitVulkanLayerClientGgpProtos)
+        OrbitCaptureVulkanLayerProtos)
 
-project(OrbitVulkanLayerClientGgpProtos)
-add_library(OrbitVulkanLayerClientGgpProtos STATIC)
+project(OrbitCaptureVulkanLayerProtos)
+add_library(OrbitCaptureVulkanLayerProtos STATIC)
 
-protobuf_generate(TARGET OrbitVulkanLayerClientGgpProtos PROTOS 
+protobuf_generate(TARGET OrbitCaptureVulkanLayerProtos PROTOS 
         layer_config.proto)
 
-target_include_directories(OrbitVulkanLayerClientGgpProtos PUBLIC 
+target_include_directories(OrbitCaptureVulkanLayerProtos PUBLIC 
         ${CMAKE_CURRENT_BINARY_DIR})
