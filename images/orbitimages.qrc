@@ -1,12 +1,12 @@
 <RCC>
   <qresource prefix="/images">
-    <file>tutorial/blue_arrow_down.svg</file>
-    <file>tutorial/blue_arrow_left.svg</file>
-    <file>tutorial/blue_arrow_right.svg</file>
-    <file>tutorial/grey_arrow_down.svg</file>
-    <file>tutorial/grey_arrow_left.svg</file>
-    <file>tutorial/grey_arrow_right.svg</file>
-    <file>tutorial/grey_arrow_up.svg</file>
-    <file>tutorial/blue_arrow_up.svg</file>
+    <file>tutorial/blue_arrow_down.png</file>
+    <file>tutorial/blue_arrow_left.png</file>
+    <file>tutorial/blue_arrow_right.png</file>
+    <file>tutorial/blue_arrow_up.png</file>
+    <file>tutorial/grey_arrow_down.png</file>
+    <file>tutorial/grey_arrow_left.png</file>
+    <file>tutorial/grey_arrow_right.png</file>
+    <file>tutorial/grey_arrow_up.png</file>
   </qresource>
 </RCC>

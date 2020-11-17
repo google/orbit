@@ -46,6 +46,7 @@ TutorialOverlay::TutorialOverlay(QWidget* parent)
   tabBar->hide();
 
   InitAllStepsFromUi();
+  hide();
 }
 
 TutorialOverlay::Step TutorialOverlay::InitializeStep(int tab_index) {
@@ -86,7 +87,8 @@ QRect TutorialOverlay::AbsoluteGeometry(QWidget* widget) const {
   QRect result = widget->geometry();
   QRect parent_geo = AbsoluteGeometry(parent_widget);
 
-  result.moveTo(parent_geo.topLeft());
+  result.setTopLeft(result.topLeft() + parent_geo.topLeft());
+  result.setBottomRight(result.bottomRight() + parent_geo.topLeft());
 
   return result;
 }
@@ -135,6 +137,9 @@ void TutorialOverlay::StartSection(const std::string& section) {
   active_section_ = it;
   it->second.active_step_index = it->second.step_names.empty() ? -1 : 0;
   StartActiveStep();
+  if (!isVisible()) {
+    show();
+  }
 }
 
 void TutorialOverlay::AddSection(std::string section_name, std::string title,
@@ -230,7 +235,7 @@ bool TutorialOverlay::StepExists(const std::string& name) const {
   return it != steps_.end();
 }
 
-static const auto margin = QPoint(20, 20);
+static const auto margin = QPoint(10, 10);
 
 void TutorialOverlay::UpdateOverlayLayout() {
   if (parentWidget() != nullptr) {
