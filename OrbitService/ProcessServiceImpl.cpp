@@ -61,7 +61,9 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
     return Status(StatusCode::NOT_FOUND, module_infos.error().message());
   }
 
+  LOG("Construct response containing %d modules.", module_infos.value().size());
   for (const auto& module_info : module_infos.value()) {
+    LOG("Add module: %s", module_info.name());
     *(response->add_modules()) = module_info;
   }
 
