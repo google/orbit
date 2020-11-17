@@ -15,12 +15,10 @@ class LayerData {
   void Init();
   double GetFrameTimeThresholdMilliseconds();
   uint32_t GetCaptureLengthSeconds();
-  std::vector<char*> BuildOrbitCaptureServiceArgv(const std::string&);
+  std::vector<std::string> BuildOrbitCaptureServiceArgv(const std::string&);
 
  private:
   orbit_vulkan_capture_protos::LayerConfig layer_config_;
-  std::string builder_functions_str_;
-  std::string builder_sampling_rate_str_;
 };
 
 #endif  // ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_DATA_H_

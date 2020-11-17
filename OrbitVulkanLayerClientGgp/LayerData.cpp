@@ -68,23 +68,22 @@ uint32_t LayerData::GetCaptureLengthSeconds() {
   return kCaptureLengthSecondsDefault;
 }
 
-std::vector<char*> LayerData::BuildOrbitCaptureServiceArgv(const std::string& game_pid) {
-  std::vector<char*> argv;
+std::vector<std::string> LayerData::BuildOrbitCaptureServiceArgv(const std::string& game_pid) {
+  std::vector<std::string> argv;
 
   // Set mandatory arguments: service, pid
-  argv.push_back(const_cast<char*>(kOrbitCaptureService));
-  argv.push_back(const_cast<char*>("-pid"));
-  argv.push_back(const_cast<char*>(game_pid.c_str()));
+  argv.push_back(kOrbitCaptureService);
+  argv.push_back("-pid");
+  argv.push_back(game_pid);
 
   // Set arguments that are always provided but can be set by the user
   // Create a log file for OrbitCaptureService; by default kLogDirectory
-  argv.push_back(const_cast<char*>("-log_directory"));
+  argv.push_back("-log_directory");
   if (layer_config_.has_capture_service_arguments() &&
       !layer_config_.capture_service_arguments().log_directory().empty()) {
-    auto& log_directory = layer_config_.capture_service_arguments().log_directory();
-    argv.push_back(const_cast<char*>(log_directory.c_str()));
+    argv.push_back(layer_config_.capture_service_arguments().log_directory());
   } else {
-    argv.push_back(const_cast<char*>(kLogDirectory));
+    argv.push_back(kLogDirectory);
   }
 
   // Set optional arguments if set by the user; otherwise not included in the call
@@ -92,35 +91,31 @@ std::vector<char*> LayerData::BuildOrbitCaptureServiceArgv(const std::string& ga
   // file_directory and sample_rate are given default values in OrbitCaptureGgpService
   if (layer_config_.has_capture_service_arguments() &&
       layer_config_.capture_service_arguments().functions_size() > 0) {
-    argv.push_back(const_cast<char*>("-functions"));
-    builder_functions_str_ = "";
+    argv.push_back("-functions");
+    std::string functions_str;
     for (auto& function : layer_config_.capture_service_arguments().functions()) {
-      if (builder_functions_str_.empty()) {
-        absl::StrAppendFormat(&builder_functions_str_, "%s", function);
+      if (functions_str.empty()) {
+        absl::StrAppendFormat(&functions_str, "%s", function);
       } else {
-        absl::StrAppendFormat(&builder_functions_str_, ",%s", function);
+        absl::StrAppendFormat(&functions_str, ",%s", function);
       }
     }
-    argv.push_back(const_cast<char*>(builder_functions_str_.c_str()));
+    argv.push_back(functions_str);
   }
 
   if (layer_config_.has_capture_service_arguments() &&
       !layer_config_.capture_service_arguments().file_directory().empty()) {
-    argv.push_back(const_cast<char*>("-file_directory"));
-    auto& file_directory = layer_config_.capture_service_arguments().file_directory();
-    argv.push_back(const_cast<char*>(file_directory.c_str()));
+    argv.push_back("-file_directory");
+    argv.push_back(layer_config_.capture_service_arguments().file_directory());
   }
 
   if (layer_config_.has_capture_service_arguments() &&
       layer_config_.capture_service_arguments().sampling_rate() > 0) {
-    argv.push_back(const_cast<char*>("-sampling_rate"));
-    builder_sampling_rate_str_ =
+    argv.push_back("-sampling_rate");
+    std::string sampling_rate_str =
         absl::StrFormat("%d", layer_config_.capture_service_arguments().sampling_rate());
-    argv.push_back(const_cast<char*>(builder_sampling_rate_str_.c_str()));
+    argv.push_back(sampling_rate_str);
   }
-
-  // Execv requires NULL as the last argument
-  argv.push_back(nullptr);
 
   return argv;
 }
