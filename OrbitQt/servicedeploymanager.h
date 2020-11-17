@@ -5,7 +5,6 @@
 #ifndef ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
 #define ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
 
-#include <QEventLoop>
 #include <QObject>
 #include <QPointer>
 #include <QThread>
@@ -20,7 +19,6 @@
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 #include "deploymentconfigurations.h"
-#include "eventloop.h"
 
 namespace OrbitQt {
 
@@ -49,11 +47,9 @@ class ServiceDeployManager : public QObject {
  signals:
   void statusMessage(const QString&);
   void socketErrorOccurred(std::error_code);
+  void cancelRequested();
 
  private:
-  std::optional<EventLoop> loop_;  // It's an optional since it's initialization needs to happen in
-                                   // the background thread.
-
   const DeploymentConfiguration* deployment_configuration_;
   const OrbitSsh::Context* context_;
   OrbitSsh::Credentials credentials_;
@@ -74,8 +70,8 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> StartOrbitService();
   outcome::result<void> StartOrbitServicePrivileged();
   outcome::result<uint16_t> StartTunnel(std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port);
-  outcome::result<std::unique_ptr<OrbitSshQt::SftpChannel>> StartSftpChannel(EventLoop* loop);
-  outcome::result<void> StopSftpChannel(EventLoop* loop, OrbitSshQt::SftpChannel* sftp_channel);
+  outcome::result<std::unique_ptr<OrbitSshQt::SftpChannel>> StartSftpChannel();
+  outcome::result<void> StopSftpChannel(OrbitSshQt::SftpChannel* sftp_channel);
   outcome::result<void> CopyFileToRemote(const std::string& source, const std::string& dest,
                                          OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode);
 
@@ -89,32 +85,6 @@ class ServiceDeployManager : public QObject {
   void ShutdownTunnel(std::optional<OrbitSshQt::Tunnel>*);
 
   void handleSocketError(std::error_code);
-
-  template <typename Func>
-  [[nodiscard]] OrbitSshQt::ScopedConnection ConnectQuitHandler(
-      const typename QtPrivate::FunctionPointer<Func>::Object* sender, Func signal) {
-    return ConnectQuitHandler(&loop_.value(), sender, signal);
-  }
-
-  template <typename Func>
-  [[nodiscard]] OrbitSshQt::ScopedConnection ConnectQuitHandler(
-      EventLoop* loop, const typename QtPrivate::FunctionPointer<Func>::Object* sender,
-      Func signal) {
-    return OrbitSshQt::ScopedConnection{QObject::connect(sender, signal, loop, &EventLoop::quit)};
-  }
-
-  template <typename Func>
-  [[nodiscard]] OrbitSshQt::ScopedConnection ConnectErrorHandler(
-      const typename QtPrivate::FunctionPointer<Func>::Object* sender, Func signal) {
-    return ConnectErrorHandler(&loop_.value(), sender, signal);
-  }
-
-  template <typename Func>
-  [[nodiscard]] OrbitSshQt::ScopedConnection ConnectErrorHandler(
-      EventLoop* loop, const typename QtPrivate::FunctionPointer<Func>::Object* sender,
-      Func signal) {
-    return OrbitSshQt::ScopedConnection{QObject::connect(sender, signal, loop, &EventLoop::error)};
-  }
 };
 
 }  // namespace OrbitQt
