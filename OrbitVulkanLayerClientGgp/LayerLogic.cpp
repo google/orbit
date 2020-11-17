@@ -29,7 +29,15 @@ void LayerLogic::StartOrbitCaptureService() {
   } else if (pid == 0) {
     LOG("Starting Orbit capture service");
     std::string game_pid_str = absl::StrFormat("%d", getppid());
-    std::vector<char*> argv = layer_data_.BuildOrbitCaptureServiceArgv(game_pid_str);
+    std::vector<std::string> argv_str = layer_data_.BuildOrbitCaptureServiceArgv(game_pid_str);
+
+    // Build argv in the format execv expects
+    std::vector<char*> argv;
+    for (auto const& arg_str : argv_str) {
+      argv.push_back(const_cast<char*>(arg_str.c_str()));
+    }
+    // Execv requires NULL as the last argument
+    argv.push_back(nullptr);
 
     std::string log_message = "Executing";
     for (auto const& arg : argv) {
