@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-project(OrbitCaptureVulkanLayer)
-add_library(OrbitCaptureVulkanLayer SHARED)
+project(OrbitTriggerCaptureVulkanLayer)
+add_library(OrbitTriggerCaptureVulkanLayer SHARED)
 
-target_compile_options(OrbitCaptureVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
+target_compile_options(OrbitTriggerCaptureVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitCaptureVulkanLayer PRIVATE
+target_include_directories(OrbitTriggerCaptureVulkanLayer PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitCaptureVulkanLayer PRIVATE
+target_sources(OrbitTriggerCaptureVulkanLayer PRIVATE
         DispatchTable.cpp
         DispatchTable.h
         LayerData.cpp
@@ -19,16 +19,16 @@ target_sources(OrbitCaptureVulkanLayer PRIVATE
         LayerLogic.h
         OrbitCaptureClientLayer.cpp)
 
-target_link_libraries(OrbitCaptureVulkanLayer PUBLIC
+target_link_libraries(OrbitTriggerCaptureVulkanLayer PUBLIC
         OrbitBase
         OrbitCaptureGgpClientLib
-        OrbitCaptureVulkanLayerProtos)
+        OrbitTriggerCaptureVulkanLayerProtos)
 
-project(OrbitCaptureVulkanLayerProtos)
-add_library(OrbitCaptureVulkanLayerProtos STATIC)
+project(OrbitTriggerCaptureVulkanLayerProtos)
+add_library(OrbitTriggerCaptureVulkanLayerProtos STATIC)
 
-protobuf_generate(TARGET OrbitCaptureVulkanLayerProtos PROTOS 
+protobuf_generate(TARGET OrbitTriggerCaptureVulkanLayerProtos PROTOS 
         layer_config.proto)
 
-target_include_directories(OrbitCaptureVulkanLayerProtos PUBLIC 
+target_include_directories(OrbitTriggerCaptureVulkanLayerProtos PUBLIC 
         ${CMAKE_CURRENT_BINARY_DIR})
