@@ -48,7 +48,7 @@ void LayerLogic::Init() {
   if (!data_initialized_) {
     LOG("Making initializations required in the layer");
 
-    // Initialise and load data from config file
+    // Initialize and load data from config file
     layer_data_.Init();
 
     // Start the orbit capture service in a new process.
