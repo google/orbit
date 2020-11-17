@@ -8,6 +8,7 @@ package orbit_client_protos;
 
 message PresetModule {
   repeated uint64 function_hashes = 1;
+  repeated uint64 frame_track_function_hashes = 2;
 }
 
 message PresetInfo {
