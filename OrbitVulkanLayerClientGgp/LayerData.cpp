@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/text_format.h"
 #include "layer_config.pb.h"
@@ -34,7 +35,7 @@ void LayerData::Init() {
   // Config is a proto text file
   int config_file_descriptor = open(kConfigFileName, O_RDONLY);
   if (config_file_descriptor < 0) {
-    ERROR("Not being able to open file. Default values will be used");
+    ERROR("Not being able to open file: %s. Default values will be used", SafeStrerror(errno));
     return;
   }
 
@@ -47,11 +48,11 @@ void LayerData::Init() {
   }
 
   if (close(config_file_descriptor) < 0) {
-    ERROR("Closing config file");
+    ERROR("Closing config file: %s", SafeStrerror(errno));
   }
 }
 
-double LayerData::getFrameTimeThresholdMilliseconds() {
+double LayerData::GetFrameTimeThresholdMilliseconds() {
   if (layer_config_.has_layer_options() &&
       layer_config_.layer_options().frame_time_threshold_ms() > 0) {
     return layer_config_.layer_options().frame_time_threshold_ms();
@@ -59,15 +60,14 @@ double LayerData::getFrameTimeThresholdMilliseconds() {
   return kFrameTimeThresholdMillisecondsDefault;
 }
 
-uint32_t LayerData::getCaptureLengthSeconds() {
+uint32_t LayerData::GetCaptureLengthSeconds() {
   if (layer_config_.has_layer_options() && layer_config_.layer_options().capture_length_s() > 0) {
     return layer_config_.layer_options().capture_length_s();
   }
   return kCaptureLengthSecondsDefault;
 }
 
-std::vector<char*> LayerData::buildObritCaptureServiceArgv(const std::string& game_pid) {
-  LOG("Building argv");
+std::vector<char*> LayerData::BuildOrbitCaptureServiceArgv(const std::string& game_pid) {
   std::vector<char*> argv;
 
   // Set mandatory arguments: service, pid

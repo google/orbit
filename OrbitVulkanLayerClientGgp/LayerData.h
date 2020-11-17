@@ -13,9 +13,9 @@
 class LayerData {
  public:
   void Init();
-  double getFrameTimeThresholdMilliseconds();
-  uint32_t getCaptureLengthSeconds();
-  std::vector<char*> buildObritCaptureServiceArgv(const std::string&);
+  double GetFrameTimeThresholdMilliseconds();
+  uint32_t GetCaptureLengthSeconds();
+  std::vector<char*> BuildOrbitCaptureServiceArgv(const std::string&);
 
  private:
   orbit_vulkan_capture_protos::LayerConfig layer_config_;

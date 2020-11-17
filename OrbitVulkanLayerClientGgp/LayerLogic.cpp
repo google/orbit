@@ -29,7 +29,7 @@ void LayerLogic::StartOrbitCaptureService() {
   } else if (pid == 0) {
     LOG("Starting Orbit capture service");
     std::string game_pid_str = absl::StrFormat("%d", getppid());
-    std::vector<char*> argv = layer_data_.buildObritCaptureServiceArgv(game_pid_str);
+    std::vector<char*> argv = layer_data_.BuildOrbitCaptureServiceArgv(game_pid_str);
 
     std::string log_message = "Executing";
     for (auto const& arg : argv) {
@@ -88,17 +88,17 @@ void LayerLogic::ProcessQueuePresentKHR() {
   if (!orbit_capture_running_) {
     auto frame_time = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
         current_time - last_frame_time_);
-    if (isgreater(frame_time.count(), layer_data_.getFrameTimeThresholdMilliseconds())) {
+    if (isgreater(frame_time.count(), layer_data_.GetFrameTimeThresholdMilliseconds())) {
       LOG("Time frame is %fms and exceeds the %fms threshold; starting capture", frame_time.count(),
-          layer_data_.getFrameTimeThresholdMilliseconds());
+          layer_data_.GetFrameTimeThresholdMilliseconds());
       RunCapture();
     }
   } else {
     // Stop capture if it has been running long enough
     auto capture_time = std::chrono::duration_cast<std::chrono::duration<int64_t>>(
         current_time - capture_started_time_);
-    if (capture_time.count() >= layer_data_.getCaptureLengthSeconds()) {
-      LOG("Capture has been running for %ds; stopping it", layer_data_.getCaptureLengthSeconds());
+    if (capture_time.count() >= layer_data_.GetCaptureLengthSeconds()) {
+      LOG("Capture has been running for %ds; stopping it", layer_data_.GetCaptureLengthSeconds());
       StopCapture();
     }
   }
