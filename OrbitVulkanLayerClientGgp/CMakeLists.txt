@@ -13,8 +13,8 @@ target_include_directories(OrbitTriggerCaptureVulkanLayer PRIVATE
 target_sources(OrbitTriggerCaptureVulkanLayer PRIVATE
         DispatchTable.cpp
         DispatchTable.h
-        LayerData.cpp
-        LayerData.h
+        LayerOptions.cpp
+        LayerOptions.h
         LayerLogic.cpp
         LayerLogic.h
         OrbitCaptureClientLayer.cpp)

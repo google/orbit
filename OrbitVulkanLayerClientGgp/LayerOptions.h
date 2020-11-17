@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_DATA_H_
-#define ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_DATA_H_
+#ifndef ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_OPTIONS_H_
+#define ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_OPTIONS_H_
 
 #include <string>
 
 #include "layer_config.pb.h"
 
 // Reads the config file into a proto to be used in the layer.
-class LayerData {
+class LayerOptions {
  public:
   void Init();
   double GetFrameTimeThresholdMilliseconds();
@@ -21,4 +21,4 @@ class LayerData {
   orbit_vulkan_capture_protos::LayerConfig layer_config_;
 };
 
-#endif  // ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_DATA_H_
+#endif  // ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_OPTIONS_H_

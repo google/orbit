@@ -8,7 +8,7 @@
 #include <chrono>
 #include <string>
 
-#include "LayerData.h"
+#include "LayerOptions.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 #include "layer_config.pb.h"
 
@@ -30,7 +30,7 @@ class LayerLogic {
   std::unique_ptr<CaptureClientGgpClient> ggp_capture_client_;
   std::chrono::steady_clock::time_point last_frame_time_;
   std::chrono::steady_clock::time_point capture_started_time_;
-  LayerData layer_data_;
+  LayerOptions layer_options_;
 
   void StartOrbitCaptureService();
   void RunCapture();
