@@ -12,9 +12,9 @@
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 #include "layer_config.pb.h"
 
-// Contains the logic of the OrbitTriggerCaptureVulkanLayer to run Orbit captures automatically when the
-// time per frame is higher than a certain threshold. It also instantiates the classes and variables
-// needed for this so the layer itself is transparent to it.
+// Contains the logic of the OrbitTriggerCaptureVulkanLayer to run Orbit captures automatically when
+// the time per frame is higher than a certain threshold. It also instantiates the classes and
+// variables needed for this so the layer itself is transparent to it.
 class LayerLogic {
  public:
   LayerLogic() : data_initialized_{false}, orbit_capture_running_{false}, skip_logic_call_{true} {}
