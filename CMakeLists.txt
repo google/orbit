@@ -145,6 +145,7 @@ else()
   add_subdirectory(OrbitCaptureGgpService)
   add_subdirectory(OrbitLinuxTracing)
   add_subdirectory(OrbitService)
+  add_subdirectory(OrbitVulkanLayer)
   add_subdirectory(OrbitVulkanLayerClientGgp)
 endif()
 
