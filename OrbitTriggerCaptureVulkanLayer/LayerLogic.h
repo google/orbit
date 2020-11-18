@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_LOGIC_H_
-#define ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_LOGIC_H_
+#ifndef ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_LOGIC_H_
+#define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_LOGIC_H_
 
 #include <chrono>
 #include <string>
@@ -12,7 +12,7 @@
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 #include "layer_config.pb.h"
 
-// Contains the logic of the OrbitVulkanLayerClientGgp to run Orbit captures automatically when the
+// Contains the logic of the OrbitTriggerCaptureVulkanLayer to run Orbit captures automatically when the
 // time per frame is higher than a certain threshold. It also instantiates the classes and variables
 // needed for this so the layer itself is transparent to it.
 class LayerLogic {
@@ -37,4 +37,4 @@ class LayerLogic {
   void StopCapture();
 };
 
-#endif  // ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_LOGIC_H_
+#endif  // ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_LOGIC_H_
