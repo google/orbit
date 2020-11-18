@@ -4,11 +4,11 @@
 
 #include "ThreadTrack.h"
 
-#include "../Orbit.h"
 #include "App.h"
 #include "GlCanvas.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "TextBox.h"
 #include "TimeGraph.h"

@@ -4,7 +4,6 @@
 
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 
-#include "../Orbit.h"
 #include "CoreUtils.h"
 #include "OrbitBase/Tracing.h"
 #include "capture_data.pb.h"

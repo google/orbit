@@ -5,8 +5,8 @@
 #ifndef ORBIT_GL_MANUAL_INSTRUMENTATION_MANAGER_H_
 #define ORBIT_GL_MANUAL_INSTRUMENTATION_MANAGER_H_
 
-#include "../Orbit.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 #include "StringManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"

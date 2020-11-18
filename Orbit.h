@@ -280,10 +280,12 @@ enum class Color : uint32_t {
 #define ORBIT_TRACK(type, name, val, col) \
   orbit_api::TrackValue(type, name, orbit_api::Encode<uint64_t>(val), col)
 
-#if _WIN32
+#if defined(_WIN32)
 #define ORBIT_STUB inline __declspec(noinline)
+#define ORBIT_FORCE_INLINE __forceinline
 #else
 #define ORBIT_STUB inline __attribute__((noinline))
+#define ORBIT_FORCE_INLINE __attribute__((always_inline))
 #endif
 
 namespace orbit_api {
@@ -343,33 +345,34 @@ union EncodedEvent {
 };
 
 template <typename Dest, typename Source>
-inline Dest Encode(const Source& source) {
-  static_assert(sizeof(Source) <= sizeof(Dest));
+ORBIT_FORCE_INLINE Dest Encode(const Source& source) {
+  static_assert(sizeof(Source) <= sizeof(Dest), "orbit_api::Encode destination type is too small");
   Dest dest = 0;
   std::memcpy(&dest, &source, sizeof(Source));
   return dest;
 }
 
 template <typename Dest, typename Source>
-inline Dest Decode(const Source& source) {
-  static_assert(sizeof(Dest) <= sizeof(Source));
+ORBIT_FORCE_INLINE Dest Decode(const Source& source) {
+  static_assert(sizeof(Dest) <= sizeof(Source), "orbit_api::Decode destination type is too big");
   Dest dest = 0;
   std::memcpy(&dest, &source, sizeof(Dest));
   return dest;
 }
 
 // Used to prevent compiler from stripping out empty function.
-inline void Noop() {
-  static volatile int x;
-  x;
-}
+#define ORB_NOOP           \
+  do {                     \
+    static volatile int x; \
+    x;                     \
+  } while (0)
 
 // The stub functions below are automatically dynamically instrumented.
-ORBIT_STUB void Start(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { Noop(); }
-ORBIT_STUB void Stop(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { Noop(); }
-ORBIT_STUB void StartAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { Noop(); }
-ORBIT_STUB void StopAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { Noop(); }
-ORBIT_STUB void TrackValue(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { Noop(); }
+ORBIT_STUB void Start(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
+ORBIT_STUB void Stop(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
+ORBIT_STUB void StartAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
+ORBIT_STUB void StopAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
+ORBIT_STUB void TrackValue(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
 
 // NOTE: Do not use these directly, use corresponding macros instead.
 #ifndef ORBIT_API_INTERNAL_IMPL
@@ -379,27 +382,27 @@ constexpr const char* kNameNullPtr = nullptr;
 constexpr uint64_t kDataZero = 0;
 constexpr orbit::Color kColorAuto = orbit::Color::kAuto;
 
-inline void Start(const char* name, orbit::Color color) {
+ORBIT_FORCE_INLINE void Start(const char* name, orbit::Color color) {
   EncodedEvent e(EventType::kScopeStart, name, kDataZero, color);
   Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void Stop() {
+ORBIT_FORCE_INLINE void Stop() {
   EncodedEvent e(EventType::kScopeStop);
   Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void StartAsync(const char* name, uint64_t id, orbit::Color color) {
+ORBIT_FORCE_INLINE void StartAsync(const char* name, uint64_t id, orbit::Color color) {
   EncodedEvent e(EventType::kScopeStartAsync, name, id, color);
   StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void StopAsync(uint64_t id) {
+ORBIT_FORCE_INLINE void StopAsync(uint64_t id) {
   EncodedEvent e(EventType::kScopeStopAsync, kNameNullPtr, id, kColorAuto);
   StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-inline void AsyncString(const char* str, uint64_t id, orbit::Color color) {
+ORBIT_FORCE_INLINE void AsyncString(const char* str, uint64_t id, orbit::Color color) {
   if (str == nullptr) return;
   constexpr size_t chunk_size = kMaxEventStringSize - 1;
   const char* end = str + strlen(str);
@@ -412,7 +415,8 @@ inline void AsyncString(const char* str, uint64_t id, orbit::Color color) {
   }
 }
 
-inline void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color) {
+ORBIT_FORCE_INLINE void TrackValue(EventType type, const char* name, uint64_t value,
+                                   orbit::Color color) {
   EncodedEvent e(type, name, value, color);
   TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
@@ -423,7 +427,7 @@ void Start(const char* name, orbit::Color color);
 void Stop();
 void StartAsync(const char* name, uint64_t id, orbit::Color color);
 void StopAsync(uint64_t id);
-void AsyncString(const char* str, uint64_t id);
+void AsyncString(const char* str, uint64_t id, orbit::Color color);
 void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color);
 
 #endif  // ORBIT_API_INTERNAL_IMPL

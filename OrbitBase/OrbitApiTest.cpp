@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../Orbit.h"
+#include "OrbitBase/Tracing.h"
 
 static orbit_api::Event Decode(uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5,
                                uint64_t a6) {
