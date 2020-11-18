@@ -282,7 +282,7 @@ enum class Color : uint32_t {
 
 #if defined(_WIN32)
 #define ORBIT_STUB inline __declspec(noinline)
-#define ORBIT_FORCE_INLINE __declspec(__forceinline)
+#define ORBIT_FORCE_INLINE __forceinline
 #else
 #define ORBIT_STUB inline __attribute__((noinline))
 #define ORBIT_FORCE_INLINE __attribute__((always_inline))
