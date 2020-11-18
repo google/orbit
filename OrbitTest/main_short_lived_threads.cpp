@@ -2,16 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <string>
 #include <chrono>
 #include <iostream>
+#include <mutex>
+#include <random>
+#include <set>
+#include <string>
 #include <thread>
 #include <vector>
-#include <mutex>
-#include <set>
-#include <random>
-
-uint32_t g_thread_count{0};
 
 std::mutex g_joinable_mutex;
 std::set<std::thread::id> g_joinable_threads;
@@ -21,7 +19,7 @@ void Worker(int ttl_ms) {
   auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(ttl_ms);
   while (true) {
     if (std::chrono::system_clock::now() > deadline) {
-        break;
+      break;
     }
   }
   g_joinable_mutex.lock();
@@ -33,7 +31,7 @@ void Worker(int ttl_ms) {
 // The spawned threads go into a busy wait.
 // The first command line parameter gives the number of threads to spawn.
 // The second command line parameter gives the live time of each spawned thread.
-// The actual live time is varied between 100% and 200% of that value to 
+// The actual live time is varied between 100% and 200% of that value to
 // make things slightly more interesting.
 int main(int argc, char* argv[]) {
   if (argc != 3) {
@@ -50,9 +48,8 @@ int main(int argc, char* argv[]) {
   std::vector<std::thread> ts;
   while (true) {
     // Spawn as many threads as there are missing.
-    while (num_threads > g_thread_count) {
+    while (num_threads > ts.size()) {
       ts.emplace_back(std::thread(Worker, ttl_ms * dis(gen)));
-      g_thread_count++;
     }
     // Join the finished threads.
     std::lock_guard lock(g_joinable_mutex);
@@ -60,18 +57,17 @@ int main(int argc, char* argv[]) {
       auto id = t.get_id();
       if (g_joinable_threads.count(id) != 0) {
         g_joinable_threads.erase(id);
-        g_thread_count--;
-        t.join();           
+        t.join();
       }
     }
-    for (auto it = ts.begin(); it != ts.end(); ) {
+    for (auto it = ts.begin(); it != ts.end();) {
       if (!it->joinable()) {
-          it = ts.erase(it);
+        it = ts.erase(it);
       } else {
-          ++it;
+        ++it;
       }
     }
-  }  
+  }
 
   return 0;
 }
