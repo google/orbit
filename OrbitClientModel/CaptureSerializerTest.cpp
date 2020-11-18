@@ -31,10 +31,29 @@ using OrbitClientData::ModuleManager;
 using ::testing::ElementsAreArray;
 
 TEST(CaptureSerializer, GetCaptureFileName) {
-  CaptureData capture_data;
+  int32_t process_id = 42;
+  std::string process_name = "p";
+  orbit_grpc_protos::ProcessInfo process_info;
+  process_info.set_name(process_name);
+  process_info.set_pid(process_id);
+  ProcessData process(process_info);
+
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_load_bias(0);
+  module_info.set_file_path("path/to/module");
+  module_info.set_address_start(15);
+  module_info.set_address_end(1000);
+  ModuleData module(module_info);
+
+  std::vector<orbit_grpc_protos::ModuleInfo> module_infos{module_info};
+  process.UpdateModuleInfos(module_infos);
+  ModuleManager module_manager;
+  module_manager.AddOrUpdateModules(module_infos);
+
+  CaptureData capture_data{std::move(process), &module_manager, {}, {}, UserDefinedCaptureData{}};
 
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string expected_file_name = absl::StrCat("_", OrbitUtils::FormatTime(timestamp), ".orbit");
+  std::string expected_file_name = absl::StrCat("p_", OrbitUtils::FormatTime(timestamp), ".orbit");
   EXPECT_EQ(expected_file_name, capture_serializer::GetCaptureFileName(capture_data));
 }
 
@@ -47,31 +66,6 @@ TEST(CaptureSerializer, IncludeOrbitExtensionInFile) {
   std::string file_name_without_extension = "process_000";
   capture_serializer::IncludeOrbitExtensionInFile(file_name_without_extension);
   EXPECT_EQ(expected_file_name, file_name_without_extension);
-}
-
-TEST(CaptureSerializer, GenerateCaptureInfoEmpty) {
-  CaptureData capture_data;
-  absl::flat_hash_map<uint64_t, std::string> key_to_string_map;
-
-  CaptureInfo capture_info =
-      capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
-  EXPECT_EQ(0, capture_info.selected_functions_size());
-  EXPECT_EQ(0, capture_info.thread_names_size());
-  EXPECT_EQ(0, capture_info.thread_state_slices_size());
-  EXPECT_EQ(0, capture_info.address_infos_size());
-  EXPECT_EQ(0, capture_info.callstacks_size());
-  EXPECT_EQ(0, capture_info.callstack_events_size());
-  EXPECT_EQ(0, capture_info.key_to_string_size());
-  EXPECT_EQ(0, capture_info.function_stats_size());
-  EXPECT_EQ(0, capture_info.modules_size());
-
-  const orbit_client_protos::ProcessInfo& process_info = capture_info.process();
-  EXPECT_EQ(process_info.pid(), -1);
-  EXPECT_EQ(process_info.name(), "");
-  EXPECT_EQ(process_info.cpu_usage(), 0);
-  EXPECT_EQ(process_info.full_path(), "");
-  EXPECT_EQ(process_info.command_line(), "");
-  EXPECT_EQ(process_info.is_64_bit(), false);
 }
 
 TEST(CaptureSerializer, GenerateCaptureInfo) {

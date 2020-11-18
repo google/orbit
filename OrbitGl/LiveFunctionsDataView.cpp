@@ -41,6 +41,9 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
 }
 
 std::string LiveFunctionsDataView::GetValue(int row, int column) {
+  if (!GOrbitApp->HasCaptureData()) {
+    return "";
+  }
   if (row >= static_cast<int>(GetNumElements())) {
     return "";
   }
@@ -93,6 +96,10 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 
 void LiveFunctionsDataView::DoSort() {
+  if (!GOrbitApp->HasCaptureData()) {
+    CHECK(functions_.size() == 0);
+    return;
+  }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
@@ -279,6 +286,10 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
 }
 
 void LiveFunctionsDataView::DoFilter() {
+  if (!GOrbitApp->HasCaptureData()) {
+    CHECK(functions_.size() == 0);
+    return;
+  }
   std::vector<uint32_t> indices;
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
@@ -315,6 +326,13 @@ void LiveFunctionsDataView::DoFilter() {
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
+  indices_.clear();
+
+  if (!GOrbitApp->HasCaptureData()) {
+    DataView::OnDataChanged();
+    return;
+  }
+
   const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
       GOrbitApp->GetCaptureData().selected_functions();
   size_t functions_count = selected_functions.size();

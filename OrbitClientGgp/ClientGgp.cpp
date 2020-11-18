@@ -101,7 +101,7 @@ bool ClientGgp::SaveCapture() {
   const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
   std::string file_name = options_.capture_file_name;
   if (file_name.empty()) {
-    file_name = capture_serializer::GetCaptureFileName(capture_data_);
+    file_name = capture_serializer::GetCaptureFileName(GetCaptureData());
   } else {
     // Make sure the file is saved with orbit extension
     capture_serializer::IncludeOrbitExtensionInFile(file_name);
@@ -110,7 +110,7 @@ bool ClientGgp::SaveCapture() {
   file_name.insert(0, options_.capture_file_directory);
 
   ErrorMessageOr<void> result = capture_serializer::Save(
-      file_name, capture_data_, key_to_string_map, timer_infos_.begin(), timer_infos_.end());
+      file_name, GetCaptureData(), key_to_string_map, timer_infos_.begin(), timer_infos_.end());
   if (result.has_error()) {
     ERROR("Could not save the capture: %s", result.error().message());
     return false;
@@ -256,7 +256,7 @@ void ClientGgp::UpdateCaptureFunctions(std::vector<std::string> capture_function
 }
 
 void ClientGgp::ClearCapture() {
-  capture_data_ = CaptureData();
+  capture_data_.reset();
   string_manager_->Clear();
   timer_infos_.clear();
 }
@@ -275,8 +275,8 @@ void ClientGgp::OnCaptureStarted(
 
 void ClientGgp::OnCaptureComplete() {
   LOG("Capture completed");
-  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
-  capture_data_.set_sampling_profiler(sampling_profiler);
+  SamplingProfiler sampling_profiler(*GetCaptureData().GetCallstackData(), GetCaptureData());
+  GetMutableCaptureData().set_sampling_profiler(sampling_profiler);
 }
 
 void ClientGgp::OnCaptureCancelled() {}
@@ -286,11 +286,11 @@ void ClientGgp::OnCaptureFailed(ErrorMessage /*error_message*/) {}
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
     const FunctionInfo* func =
-        capture_data_.FindFunctionByAddress(timer_info.function_address(), false);
+        GetCaptureData().FindFunctionByAddress(timer_info.function_address(), false);
     // For timers, the function must be present in the process
     CHECK(func != nullptr);
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-    capture_data_.UpdateFunctionStats(*func, elapsed_nanos);
+    GetMutableCaptureData().UpdateFunctionStats(*func, elapsed_nanos);
   }
   ProcessTimer(timer_info);
 }
@@ -300,35 +300,35 @@ void ClientGgp::OnKeyAndString(uint64_t key, std::string str) {
 }
 
 void ClientGgp::OnUniqueCallStack(CallStack callstack) {
-  capture_data_.AddUniqueCallStack(std::move(callstack));
+  GetMutableCaptureData().AddUniqueCallStack(std::move(callstack));
 }
 
 void ClientGgp::OnCallstackEvent(CallstackEvent callstack_event) {
-  capture_data_.AddCallstackEvent(std::move(callstack_event));
+  GetMutableCaptureData().AddCallstackEvent(std::move(callstack_event));
 }
 
 void ClientGgp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
+  GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
 }
 
 void ClientGgp::OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) {
-  capture_data_.AddThreadStateSlice(std::move(thread_state_slice));
+  GetMutableCaptureData().AddThreadStateSlice(std::move(thread_state_slice));
 }
 
 void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
-  capture_data_.InsertAddressInfo(std::move(address_info));
+  GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
 }
 
 void ClientGgp::OnUniqueTracepointInfo(uint64_t key,
                                        orbit_grpc_protos::TracepointInfo tracepoint_info) {
-  capture_data_.AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+  GetMutableCaptureData().AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
 }
 
 void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  int32_t capture_process_id = capture_data_.process_id();
+  int32_t capture_process_id = GetCaptureData().process_id();
   bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
 
-  capture_data_.AddTracepointEventAndMapToThreads(
+  GetMutableCaptureData().AddTracepointEventAndMapToThreads(
       tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
       tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
       is_same_pid_as_target);
