@@ -9,7 +9,7 @@ namespace orbit_vulkan_layer {
 
 TEST(QueueManager, AnNonTrackedQueueCanNotBeRetrieved) {
   QueueManager manager;
-  VkQueue queue = nullptr;
+  VkQueue queue = {};
   EXPECT_DEATH({ (void)manager.GetDeviceOfQueue(queue); }, "");
 }
 

@@ -28,13 +28,13 @@ class QueueManager {
    * Establishes a mapping from the given queue to the given logical device. There must be no
    * existing mapping for that queue to a different device.
    */
-  void TrackQueue(const VkQueue& queue, const VkDevice& device);
+  void TrackQueue(VkQueue queue, VkDevice device);
 
   /*
    * Returns the logical device associated with that queue. It expects that the mapping for that
    * queue is known.
    */
-  [[nodiscard]] const VkDevice& GetDeviceOfQueue(const VkQueue& queue);
+  [[nodiscard]] VkDevice GetDeviceOfQueue(VkQueue queue);
 
  private:
   absl::Mutex mutex_;
