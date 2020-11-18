@@ -146,6 +146,7 @@ else()
   add_subdirectory(OrbitLinuxTracing)
   add_subdirectory(OrbitService)
   add_subdirectory(OrbitVulkanLayerClientGgp)
+  add_subdirectory(OrbitVulkanLayer)
 endif()
 
 add_subdirectory(ElfUtils)
