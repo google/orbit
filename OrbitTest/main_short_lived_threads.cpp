@@ -29,10 +29,14 @@ void Worker(int ttl_ms) {
 // Main thread goes into a busy loop that spawns and joins threads.
 // The spawned threads perform a busy wait.
 // The first command line parameter gives the number of threads to spawn. When
-// a thread finishs it will be replaced by a new one.
+// a thread finishes it will be replaced by a new one.
 // The second command line parameter gives the live time of each spawned thread.
 // The actual live time is varied between 100% and 200% of that value to
 // make things slightly more interesting.
+//
+// This test program is useful to test places in Orbit that need to handle a
+// change in the set of threads e.g. attaching and stopping a process via
+// ptrace or stress testing the bookkeeping of threads during a capture.
 int main(int argc, char* argv[]) {
   if (argc != 3) {
     std::cerr
