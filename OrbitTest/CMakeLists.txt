@@ -13,3 +13,8 @@ target_sources(OrbitTest PUBLIC OrbitTest.h)
 
 target_include_directories(OrbitTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(OrbitTest PRIVATE Threads::Threads PUBLIC OrbitBase)
+
+add_executable(OrbitTestShortLivedThreads)
+target_compile_options(OrbitTestShortLivedThreads PRIVATE ${STRICT_COMPILE_FLAGS})
+target_sources(OrbitTestShortLivedThreads PRIVATE main_short_lived_threads.cpp)
+target_link_libraries(OrbitTestShortLivedThreads PRIVATE Threads::Threads)
