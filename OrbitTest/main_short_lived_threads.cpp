@@ -34,7 +34,7 @@ void Worker(int ttl_ms) {
 // make things slightly more interesting.
 int main(int argc, char* argv[]) {
   if (argc != 3) {
-    std::cerr << "Usage:\n./OrbitTestShortLivedThreads number_of_threads time_to_live_per_thread\n";
+    std::cerr << "Usage:\n./OrbitTestShortLivedThreads number_of_threads time_to_live_per_thread_ms\n";
     return -1;
   }
 
