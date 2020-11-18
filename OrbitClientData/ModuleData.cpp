@@ -79,8 +79,9 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   CHECK(!is_loaded_);
 
   uint32_t address_reuse_counter = 0;
+  uint32_t name_reuse_counter = 0;
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
-    auto [inserted_it, success] = functions_.try_emplace(
+    auto [inserted_it, success_functions] = functions_.try_emplace(
         symbol_info.address(), FunctionUtils::CreateFunctionInfo(symbol_info, file_path()));
     FunctionInfo* function = inserted_it->second.get();
     // It happens that the same address has multiple symbol names associated
@@ -90,13 +91,11 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     // __cxxabiv1::__array_type_info::~__array_type_info()
     // __cxxabiv1::__class_type_info::~__class_type_info()
     // __cxxabiv1::__pbase_type_info::~__pbase_type_info()
-    if (success) {
-      const bool success =
+    if (success_functions) {
+      const bool success_func_hashes =
           hash_to_function_map_.try_emplace(FunctionUtils::GetHash(*function), function).second;
-      if (!success) {
-        LOG("Warning: Multiple functions with the same demangled name: %s (this is currently not "
-            "supported by presets)",
-            function->pretty_name());
+      if (!success_func_hashes) {
+        name_reuse_counter++;
       }
     } else {
       address_reuse_counter++;
@@ -104,6 +103,12 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   }
   if (address_reuse_counter != 0) {
     LOG("Warning: %d absolute addresses are used by more than one symbol", address_reuse_counter);
+  }
+  if (name_reuse_counter != 0) {
+    LOG("Warning: %d function name collisions happened (functions with the same demangled name). "
+        "This is currently not supported by presets, since the presets are based on a hash of the "
+        "demangled name.",
+        name_reuse_counter);
   }
 
   is_loaded_ = true;
