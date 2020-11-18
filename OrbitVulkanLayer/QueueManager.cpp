@@ -11,7 +11,7 @@ namespace orbit_vulkan_layer {
 void QueueManager::TrackQueue(const VkQueue& queue, const VkDevice& device) {
   absl::WriterMutexLock lock(&mutex_);
   CHECK(!queue_to_device_.contains(queue) || queue_to_device_.at(queue) == device);
-  queue_to_device_[queue] = device;
+  queue_to_device_.emplace(queue, device);
 }
 
 const VkDevice& QueueManager::GetDeviceOfQueue(const VkQueue& queue) {

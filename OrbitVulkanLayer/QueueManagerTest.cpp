@@ -5,19 +5,12 @@
 #include "QueueManager.h"
 #include "gtest/gtest.h"
 
-#define UNUSED(x) (void)(x)
-
 namespace orbit_vulkan_layer {
 
 TEST(QueueManager, AnNonTrackedQueueCanNotBeRetrieved) {
   QueueManager manager;
   VkQueue queue = nullptr;
-  EXPECT_DEATH(
-      {
-        VkDevice device = manager.GetDeviceOfQueue(queue);
-        UNUSED(device);
-      },
-      "");
+  EXPECT_DEATH({ (void)manager.GetDeviceOfQueue(queue); }, "");
 }
 
 TEST(QueueManager, AQueueCanBeTrackedAndRetrieved) {

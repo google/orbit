@@ -17,7 +17,6 @@ target_sources(OrbitVulkanLayer PRIVATE
         QueueManager.cpp
         QueueManager.h)
 
-
 target_link_libraries(OrbitVulkanLayer PUBLIC
         OrbitBase
         OrbitProtos)
@@ -26,13 +25,12 @@ add_executable(OrbitVulkanLayerTests)
 
 target_compile_options(OrbitVulkanLayerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-
 target_sources(OrbitVulkanLayerTests PRIVATE
         QueueManagerTest.cpp)
 
 target_link_libraries(
-        OrbitVulkanLayerTests
-        PRIVATE OrbitVulkanLayer
+        OrbitVulkanLayerTests PRIVATE
+        OrbitVulkanLayer
         GTest::Main)
 
 register_test(OrbitVulkanLayerTests)

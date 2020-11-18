@@ -6,7 +6,6 @@
 #define ORBIT_VULKAN_LAYER_QUEUE_MANAGER_H_
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "vulkan/vulkan.h"
 
@@ -15,7 +14,7 @@ namespace orbit_vulkan_layer {
 /*
  * This class tracks the mapping from queues to the device (via vkGetDeviceQueue).
  *
- * Note: There is no "untrack" function as there is no such mechanism in vulkan. We could
+ * Note: There is no "untrack" function as there is no such mechanism in Vulkan. We could
  *  use vkDestroyDevice, and iterate over all queues of that device, but as there is usually only
  *  one device anyways and destroy will be called at the end of a game, that would not really help.
  *
@@ -25,7 +24,16 @@ namespace orbit_vulkan_layer {
 class QueueManager {
  public:
   QueueManager() = default;
+  /*
+   * Establishes a mapping from the given queue to the given logical device. There must be no
+   * existing mapping for that queue to a different device.
+   */
   void TrackQueue(const VkQueue& queue, const VkDevice& device);
+
+  /*
+   * Returns the logical device associated with that queue. It expects that the mapping for that
+   * queue is known.
+   */
   [[nodiscard]] const VkDevice& GetDeviceOfQueue(const VkQueue& queue);
 
  private:
