@@ -91,8 +91,16 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void StopCapture();
   void AbortCapture();
   void ClearCapture();
+  bool HasCaptureData() const { return capture_data_.has_value(); }
   void SetCaptureData(CaptureData capture_data) { capture_data_ = std::move(capture_data); }
-  [[nodiscard]] const CaptureData& GetCaptureData() const { return capture_data_; }
+  [[nodiscard]] CaptureData& GetMutableCaptureData() {
+    CHECK(capture_data_.has_value());
+    return capture_data_.value();
+  }
+  [[nodiscard]] const CaptureData& GetCaptureData() const {
+    CHECK(capture_data_.has_value());
+    return capture_data_.value();
+  }
   void ToggleDrawHelp();
   void ToggleCapture();
   void LoadFileMapping();
@@ -414,7 +422,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   // TODO(kuebler): This is mostely written during capture by the capture thread on the
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
-  CaptureData capture_data_;
+  std::optional<CaptureData> capture_data_;
 
   FrameTrackOnlineProcessor frame_track_online_processor_;
 };

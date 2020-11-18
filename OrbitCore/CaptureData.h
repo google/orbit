@@ -37,13 +37,6 @@ class CaptureData {
         tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()),
         user_defined_capture_data_(std::move(user_defined_capture_data)) {}
 
-  explicit CaptureData()
-      : process_(),
-        callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()),
-        tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
-        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()){};
-
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
   CaptureData(const CaptureData& other) = delete;

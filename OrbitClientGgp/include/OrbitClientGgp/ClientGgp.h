@@ -55,6 +55,14 @@ class ClientGgp final : public CaptureListener {
   void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
 
  private:
+  [[nodiscard]] CaptureData& GetMutableCaptureData() {
+    CHECK(capture_data_.has_value());
+    return capture_data_.value();
+  }
+  [[nodiscard]] const CaptureData& GetCaptureData() const {
+    CHECK(capture_data_.has_value());
+    return capture_data_.value();
+  }
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
   ProcessData target_process_;
@@ -64,7 +72,7 @@ class ClientGgp final : public CaptureListener {
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
-  CaptureData capture_data_;
+  std::optional<CaptureData> capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 
   ErrorMessageOr<ProcessData> GetOrbitProcessByPid(int32_t pid);

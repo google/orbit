@@ -116,7 +116,8 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
   }
   mutex_.unlock();
 
-  if (GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount() > 0) {
+  if (GOrbitApp->HasCaptureData() &&
+      GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount() > 0) {
     capture_min_timestamp_ = std::min(capture_min_timestamp_,
                                       GOrbitApp->GetCaptureData().GetCallstackData()->min_time());
     capture_max_timestamp_ = std::max(capture_max_timestamp_,
@@ -557,6 +558,10 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
 
   batcher_.StartNewFrame();
   text_renderer_static_.Clear();
+
+  if (!GOrbitApp->HasCaptureData()) {
+    return;
+  }
 
   UpdateMaxTimeStamp(GOrbitApp->GetCaptureData().GetCallstackData()->max_time());
 

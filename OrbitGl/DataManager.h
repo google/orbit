@@ -57,7 +57,10 @@ class DataManager final {
   void set_user_defined_capture_data(const UserDefinedCaptureData& user_defined_capture_data) {
     user_defined_capture_data_ = user_defined_capture_data;
   }
-  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
+  [[nodiscard]] const UserDefinedCaptureData& mutable_user_defined_capture_data() const {
+    return user_defined_capture_data_;
+  }
+  [[nodiscard]] UserDefinedCaptureData& user_defined_capture_data() {
     return user_defined_capture_data_;
   }
 

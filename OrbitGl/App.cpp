@@ -142,7 +142,8 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
                         std::move(selected_tracepoints), std::move(user_defined_capture_data));
 
-        frame_track_online_processor_ = FrameTrackOnlineProcessor(capture_data_, GCurrentTimeGraph);
+        frame_track_online_processor_ =
+            FrameTrackOnlineProcessor(GetCaptureData(), GCurrentTimeGraph);
 
         CHECK(capture_started_callback_);
         capture_started_callback_();
@@ -163,13 +164,13 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
 }
 
 void OrbitApp::OnCaptureComplete() {
-  capture_data_.FilterBrokenCallstacks();
-  SamplingProfiler sampling_profiler(*capture_data_.GetCallstackData(), capture_data_);
+  GetMutableCaptureData().FilterBrokenCallstacks();
+  SamplingProfiler sampling_profiler(*GetCaptureData().GetCallstackData(), GetCaptureData());
   RefreshFrameTracks();
 
   main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(sampling_profiler)]() mutable {
-        capture_data_.set_sampling_profiler(sampling_profiler);
+        GetMutableCaptureData().set_sampling_profiler(sampling_profiler);
         RefreshCaptureView();
 
         SetSamplingReport(std::move(sampling_profiler),
@@ -214,10 +215,10 @@ void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
-    const FunctionInfo& func =
-        GetCaptureData().selected_functions().at(timer_info.function_address());
+    CaptureData& capture_data = GetMutableCaptureData();
+    const FunctionInfo& func = capture_data.selected_functions().at(timer_info.function_address());
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-    capture_data_.UpdateFunctionStats(func, elapsed_nanos);
+    capture_data.UpdateFunctionStats(func, elapsed_nanos);
     GCurrentTimeGraph->ProcessTimer(timer_info, &func);
     frame_track_online_processor_.ProcessTimer(timer_info, func);
   } else {
@@ -230,35 +231,35 @@ void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
 }
 
 void OrbitApp::OnUniqueCallStack(CallStack callstack) {
-  capture_data_.AddUniqueCallStack(std::move(callstack));
+  GetMutableCaptureData().AddUniqueCallStack(std::move(callstack));
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
-  capture_data_.AddCallstackEvent(std::move(callstack_event));
+  GetMutableCaptureData().AddCallstackEvent(std::move(callstack_event));
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  capture_data_.AddOrAssignThreadName(thread_id, std::move(thread_name));
+  GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
 }
 
 void OrbitApp::OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) {
-  capture_data_.AddThreadStateSlice(std::move(thread_state_slice));
+  GetMutableCaptureData().AddThreadStateSlice(std::move(thread_state_slice));
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  capture_data_.InsertAddressInfo(std::move(address_info));
+  GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
 }
 
 void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
                                       orbit_grpc_protos::TracepointInfo tracepoint_info) {
-  capture_data_.AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+  GetMutableCaptureData().AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
 }
 
 void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  int32_t capture_process_id = capture_data_.process_id();
+  int32_t capture_process_id = GetCaptureData().process_id();
   bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
 
-  capture_data_.AddTracepointEventAndMapToThreads(
+  GetMutableCaptureData().AddTracepointEventAndMapToThreads(
       tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
       tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
       is_same_pid_as_target);
@@ -492,7 +493,7 @@ Timer GMainTimer;
 void OrbitApp::MainTick() {
   GMainTimer.Restart();
 
-  if (DoZoom) {
+  if (DoZoom && GOrbitApp->HasCaptureData()) {
     GCurrentTimeGraph->SortTracks();
     GOrbitApp->capture_window_->ZoomAll();
     GOrbitApp->NeedsRedraw();
@@ -768,7 +769,8 @@ bool OrbitApp::StartCapture() {
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
   bool enable_introspection = absl::GetFlag(FLAGS_devmode);
-  UserDefinedCaptureData user_defined_capture_data = data_manager_->user_defined_capture_data();
+  UserDefinedCaptureData user_defined_capture_data =
+      data_manager_->mutable_user_defined_capture_data();
 
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
@@ -801,7 +803,7 @@ void OrbitApp::AbortCapture() {
 }
 
 void OrbitApp::ClearCapture() {
-  capture_data_ = CaptureData();
+  capture_data_.reset();
   set_selected_thread_id(SamplingProfiler::kAllThreadsFakeTid);
   SelectTextBox(nullptr);
 
@@ -1141,8 +1143,7 @@ ErrorMessageOr<void> OrbitApp::InsertFrameTracksFromHashes(
   std::vector<const FunctionInfo*> function_infos;
   const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
   for (const auto* function : function_infos) {
-    capture_data_.InsertFrameTrack(*function);
-    data_manager_->set_user_defined_capture_data(capture_data_.user_defined_capture_data());
+    data_manager_->user_defined_capture_data().InsertFrameTrack(*function);
   }
   return error;
 }
@@ -1362,29 +1363,32 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
     selection_callstack_data->AddCallStackFromKnownCallstackData(event, callstack_data);
   }
   // TODO: this might live on the data_manager
-  capture_data_.set_selection_callstack_data(std::move(selection_callstack_data));
+  GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.
   bool generate_summary = thread_id == SamplingProfiler::kAllThreadsFakeTid;
-  SamplingProfiler sampling_profiler(*capture_data_.GetSelectionCallstackData(), GetCaptureData(),
-                                     generate_summary);
+  SamplingProfiler sampling_profiler(*GetCaptureData().GetSelectionCallstackData(),
+                                     GetCaptureData(), generate_summary);
 
   SetSelectionTopDownView(sampling_profiler, GetCaptureData());
   SetSelectionBottomUpView(sampling_profiler, GetCaptureData());
 
   SetSelectionReport(std::move(sampling_profiler),
-                     capture_data_.GetSelectionCallstackData()->GetUniqueCallstacksCopy(),
+                     GetCaptureData().GetSelectionCallstackData()->GetUniqueCallstacksCopy(),
                      generate_summary);
 }
 
 void OrbitApp::UpdateAfterSymbolLoading() {
+  if (!HasCaptureData()) {
+    return;
+  }
   const CaptureData& capture_data = GetCaptureData();
 
   if (sampling_report_ != nullptr) {
     SamplingProfiler sampling_profiler(*capture_data.GetCallstackData(), capture_data);
     sampling_report_->UpdateReport(sampling_profiler,
                                    capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
-    capture_data_.set_sampling_profiler(sampling_profiler);
+    GetMutableCaptureData().set_sampling_profiler(sampling_profiler);
     SetTopDownView(capture_data);
     SetBottomUpView(capture_data);
   }
@@ -1519,23 +1523,24 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 }
 
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  capture_data_.InsertFrameTrack(function);
-  data_manager_->set_user_defined_capture_data(capture_data_.user_defined_capture_data());
+  GetMutableCaptureData().InsertFrameTrack(function);
+  data_manager_->set_user_defined_capture_data(GetCaptureData().user_defined_capture_data());
   AddFrameTrackTimers(function);
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
-  capture_data_.EraseFrameTrack(function);
-  data_manager_->set_user_defined_capture_data(capture_data_.user_defined_capture_data());
+  GetMutableCaptureData().EraseFrameTrack(function);
+  data_manager_->set_user_defined_capture_data(GetCaptureData().user_defined_capture_data());
   GCurrentTimeGraph->RemoveFrameTrack(function);
 }
 
 bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
-  return capture_data_.ContainsFrameTrack(function);
+  return GetCaptureData().ContainsFrameTrack(function);
 }
 
 void OrbitApp::RefreshFrameTracks() {
-  for (auto& function : capture_data_.user_defined_capture_data().frame_track_functions()) {
+  for (const auto& function :
+       GetCaptureData().user_defined_capture_data().frame_track_functions()) {
     GCurrentTimeGraph->RemoveFrameTrack(function);
     AddFrameTrackTimers(function);
   }

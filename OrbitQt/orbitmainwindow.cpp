@@ -56,6 +56,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
   ui->setupUi(this);
+  // Cannot save a capture as long as no capture has been loaded or captured.
+  ui->actionSave_Capture->setDisabled(true);
 
   ui->ProcessesList->SetDataView(data_view_factory->GetOrCreateDataView(DataViewType::kProcesses));
 
@@ -684,7 +686,10 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
   GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
 }
 
-void OrbitMainWindow::OnCaptureCleared() { ui->liveFunctions->Reset(); }
+void OrbitMainWindow::OnCaptureCleared() {
+  ui->liveFunctions->Reset();
+  ui->actionSave_Capture->setDisabled(true);
+}
 
 void OrbitMainWindow::closeEvent(QCloseEvent* event) {
   if (GOrbitApp->IsCapturing()) {
