@@ -27,8 +27,9 @@ void Worker(int ttl_ms) {
 }
 
 // Main thread goes into a busy loop that spawns and joins threads.
-// The spawned threads go into a busy wait.
-// The first command line parameter gives the number of threads to spawn.
+// The spawned threads perform a busy wait.
+// The first command line parameter gives the number of threads to spawn. When
+// a thread finishs it will be replaced by a new one.
 // The second command line parameter gives the live time of each spawned thread.
 // The actual live time is varied between 100% and 200% of that value to
 // make things slightly more interesting.
