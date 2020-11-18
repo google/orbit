@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_VULKAN_LAYER_CLIENT_GGP_DISPATCH_TABLE_H_
-#define ORBIT_VULKAN_LAYER_CLIENT_GGP_DISPATCH_TABLE_H_
+#ifndef ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_DISPATCH_TABLE_H_
+#define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_DISPATCH_TABLE_H_
 
 #include <vulkan/vulkan_core.h>
 
@@ -38,4 +38,4 @@ class DispatchTable {
   absl::flat_hash_map<void*, VkLayerDispatchTable> device_dispatch_;
 };
 
-#endif  // ORBIT_VULKAN_LAYER_CLIENT_GGP_DISPATCH_TABLE_H_
+#endif  // ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_DISPATCH_TABLE_H_

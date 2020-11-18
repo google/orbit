@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_OPTIONS_H_
-#define ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_OPTIONS_H_
+#ifndef ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_OPTIONS_H_
+#define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_OPTIONS_H_
 
 #include <string>
 
@@ -21,4 +21,4 @@ class LayerOptions {
   orbit_vulkan_capture_protos::LayerConfig layer_config_;
 };
 
-#endif  // ORBIT_VULKAN_LAYER_CLIENT_GGP_LAYER_OPTIONS_H_
+#endif  // ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_OPTIONS_H_
