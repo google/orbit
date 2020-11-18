@@ -103,6 +103,20 @@ void StopAsync(uint64_t id) {
   Listener::DeferScopeProcessing(scope);
 }
 
+void AsyncString(const char* str, uint64_t id, orbit::Color color) {
+  if (str == nullptr) return;
+  orbit::tracing::Scope scope(orbit_api::kString, /*name*/ nullptr, id, color);
+  auto& e = scope.encoded_event;
+  constexpr size_t chunk_size = kMaxEventStringSize - 1;
+  const char* end = str + strlen(str);
+  while (str < end) {
+    std::strncpy(e.event.name, str, chunk_size);
+    e.event.name[chunk_size] = 0;
+    Listener::DeferScopeProcessing(scope);
+    str += chunk_size;
+  }
+}
+
 void TrackValue(orbit_api::EventType type, const char* name, uint64_t value, orbit::Color color) {
   orbit::tracing::Scope scope(type, name, value, color);
   scope.begin = MonotonicTimestampNs();

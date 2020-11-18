@@ -8,7 +8,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../Orbit.h"
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
@@ -18,6 +17,7 @@
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Tracing.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
