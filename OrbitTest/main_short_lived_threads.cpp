@@ -22,9 +22,8 @@ void Worker(int ttl_ms) {
       break;
     }
   }
-  g_joinable_mutex.lock();
+  std::lock_guard lock(g_joinable_mutex);
   g_joinable_threads.emplace(std::this_thread::get_id());
-  g_joinable_mutex.unlock();
 }
 
 // Main thread goes into a busy loop that spawns and joins threads.
@@ -52,9 +51,9 @@ int main(int argc, char* argv[]) {
       ts.emplace_back(std::thread(Worker, ttl_ms * dis(gen)));
     }
     // Join the finished threads.
-    std::lock_guard lock(g_joinable_mutex);
     for (auto& t : ts) {
       auto id = t.get_id();
+      std::lock_guard lock(g_joinable_mutex);
       if (g_joinable_threads.count(id) != 0) {
         g_joinable_threads.erase(id);
         t.join();
