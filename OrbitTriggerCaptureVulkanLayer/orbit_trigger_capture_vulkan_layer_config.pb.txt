@@ -7,12 +7,12 @@
 
 capture_service_arguments {
   functions: []
-  file_directory: ""
-  log_directory: ""
-  sampling_rate: 0
+  file_directory: "/var/game/"
+  log_directory: "/var/game/"
+  sampling_rate: 1000
 }
 
 layer_options {
-  frame_time_threshold_ms: 0
-  capture_length_s: 0
+  frame_time_threshold_ms: 16.66
+  capture_length_s: 10
 }
