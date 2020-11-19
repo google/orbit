@@ -16,14 +16,14 @@ class MockDispatchTable {
               (VkPhysicalDevice dispatchable_object));
 };
 
-TEST(PhysicalDeviceManager, AnUnrackedDeviceCannotBeQuerried) {
+TEST(DeviceManager, AnUntrackedDeviceCannotBeQueried) {
   MockDispatchTable dispatch_table;
   DeviceManager manager(&dispatch_table);
   VkDevice device = {};
   EXPECT_DEATH({ (void)manager.GetPhysicalDeviceOfLogicalDevice(device); }, "");
 }
 
-TEST(PhysicalDeviceManager, DevicePropertiesCannotBeQuerriedForNonTrackedDevices) {
+TEST(DeviceManager, DevicePropertiesCannotBeQueriedForUntrackedDevices) {
   MockDispatchTable dispatch_table;
   DeviceManager manager(&dispatch_table);
   VkPhysicalDevice device = {};
@@ -37,7 +37,7 @@ static void MockGetPhysicalDeviceProperties(VkPhysicalDevice,
   *out_properties = physical_device_properties;
 }
 
-TEST(PhysicalDeviceManager, ATrackedDeviceCanBeQueried) {
+TEST(DeviceManager, ATrackedDeviceCanBeQueried) {
   MockDispatchTable dispatch_table;
   DeviceManager manager(&dispatch_table);
   VkDevice logical_device = {};
@@ -57,7 +57,7 @@ TEST(PhysicalDeviceManager, ATrackedDeviceCanBeQueried) {
             physical_device_properties.limits.timestampPeriod);
 }
 
-TEST(PhysicalDeviceManager, UntrackingRemovesTrackedDevice) {
+TEST(DeviceManager, UntrackingRemovesTrackedDevice) {
   MockDispatchTable dispatch_table;
   DeviceManager manager(&dispatch_table);
   VkDevice logical_device = {};
@@ -72,7 +72,7 @@ TEST(PhysicalDeviceManager, UntrackingRemovesTrackedDevice) {
   EXPECT_DEATH({ (void)manager.GetPhysicalDeviceOfLogicalDevice(logical_device); }, "");
 }
 
-TEST(PhysicalDeviceManager, UntrackingRemovesDeviceProperties) {
+TEST(DeviceManager, UntrackingRemovesDeviceProperties) {
   MockDispatchTable dispatch_table;
   DeviceManager manager(&dispatch_table);
   VkDevice logical_device = {};

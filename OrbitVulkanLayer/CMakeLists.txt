@@ -27,7 +27,7 @@ add_executable(OrbitVulkanLayerTests)
 target_compile_options(OrbitVulkanLayerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitVulkanLayerTests PRIVATE
-        PhysicalDeviceManagerTest.cpp
+        DeviceManagerTest.cpp
         QueueManagerTest.cpp)
 
 target_link_libraries(
