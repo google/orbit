@@ -8,6 +8,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QPoint>
+#include <QRadioButton>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -136,13 +137,13 @@ class TutorialOverlay : public QDialog {
   std::unordered_map<std::string, Step> steps_;
   SectionMap sections_ = SectionMap();
 
+  std::vector<std::unique_ptr<QRadioButton>> progress_indicators_;
+
   SectionMap::iterator active_section_ = sections_.end();
 
  private:
   [[nodiscard]] Step InitializeStep(int tab_index);
   void InitAllStepsFromUi();
-
-  void UpdateButtons();
 
   [[nodiscard]] bool HasActiveStep() const;
   [[nodiscard]] Step& GetActiveStep();
@@ -151,6 +152,7 @@ class TutorialOverlay : public QDialog {
   [[nodiscard]] const Section& GetActiveSection() const;
   [[nodiscard]] bool HasActiveSection() const { return active_section_ != sections_.end(); }
   [[nodiscard]] bool ActiveStepIsFirstInSection() const;
+  [[nodiscard]] bool ActiveStepIsLastInSection() const;
 
   void UnhookActiveStep();
   [[nodiscard]] bool VerifyActiveStep();
@@ -162,6 +164,10 @@ class TutorialOverlay : public QDialog {
   void UpdateHintWidgetPosition(const QRect& anchor_rect, Hint& hint);
 
   [[nodiscard]] QRect AbsoluteGeometry(QWidget* widget) const;
+
+  void DeleteProgressIndicators();
+  void CreateProgressIndicators();
+  void UpdateProgressIndicators();
 
  private Q_SLOTS:
   void UpdateOverlayLayout();

@@ -38,10 +38,8 @@ TutorialOverlay::TutorialOverlay(QWidget* parent)
 
   background_label_ = std::make_unique<QLabel>(this);
   background_label_->setStyleSheet("background-color: rgba(0, 0, 0, 150);");
+  background_label_->lower();
 
-  ui_->tabWidget->raise();
-  ui_->titleFrame->raise();
-  ui_->btnClose->raise();
   QTabBar* tabBar = ui_->tabWidget->findChild<QTabBar*>();
   tabBar->hide();
 
@@ -93,7 +91,37 @@ QRect TutorialOverlay::AbsoluteGeometry(QWidget* widget) const {
   return result;
 }
 
-TutorialOverlay::~TutorialOverlay() {}
+void TutorialOverlay::DeleteProgressIndicators() {
+  auto layout = ui_->progressLayout;
+  // First and last element of the layout are spacers, only remove elements in-between
+  while (layout->count() > 2) {
+    layout->takeAt(1);
+  }
+  progress_indicators_.clear();
+}
+
+void TutorialOverlay::CreateProgressIndicators() {
+  DeleteProgressIndicators();
+  auto layout = ui_->progressLayout;
+  auto spacer = layout->takeAt(1);
+  auto section = GetActiveSection();
+  for (size_t i = 0; i < section.step_names.size(); ++i) {
+    auto& radio_button = progress_indicators_.emplace_back(new QRadioButton(this));
+    radio_button->setText("");
+    radio_button->setEnabled(false);
+    layout->addWidget(radio_button.get());
+  }
+  layout->addItem(spacer);
+}
+
+void TutorialOverlay::UpdateProgressIndicators() {
+  CHECK(HasActiveStep());
+  int active_step = GetActiveSection().active_step_index;
+  CHECK(active_step >= 0 && static_cast<size_t>(active_step) < progress_indicators_.size());
+  progress_indicators_[active_step]->setChecked(true);
+}
+
+TutorialOverlay::~TutorialOverlay() { DeleteProgressIndicators(); }
 
 void TutorialOverlay::StartActiveStep() {
   const Step& step = GetActiveStep();
@@ -104,10 +132,9 @@ void TutorialOverlay::StartActiveStep() {
   }
 
   ui_->btnPrev->setEnabled(!ActiveStepIsFirstInSection());
-  const Section& section = GetActiveSection();
-  const std::string text = absl::StrFormat(
-      "%s: %d/%d", section.title, section.active_step_index + 1, section.step_names.size());
-  ui_->labelStep->setText(QString::fromStdString(text));
+  ui_->btnNext->setText(ActiveStepIsLastInSection() ? "Got it!" : "Next");
+
+  UpdateProgressIndicators();
 
   if (step.setup.anchor_widget) {
     step.setup.anchor_widget->installEventFilter(this);
@@ -136,6 +163,8 @@ void TutorialOverlay::StartSection(const std::string& section) {
 
   active_section_ = it;
   it->second.active_step_index = it->second.step_names.empty() ? -1 : 0;
+
+  CreateProgressIndicators();
   StartActiveStep();
 }
 
@@ -199,6 +228,8 @@ void TutorialOverlay::closeEvent(QCloseEvent* event) {
     parentWidget()->removeEventFilter(this);
   }
 
+  DeleteProgressIndicators();
+
   emit Hidden();
 }
 
@@ -243,7 +274,6 @@ void TutorialOverlay::UpdateOverlayLayout() {
     setGeometry(parent_rect);
     ui_->tabWidget->setGeometry(parent_rect);
   }
-  UpdateButtons();
   background_label_->setGeometry(rect());
 
   Step& step = GetActiveStep();
@@ -271,25 +301,6 @@ void TutorialOverlay::UpdateOverlayLayout() {
   if (parentWidget() != nullptr) {
     RecursiveUpdate(parentWidget());
   }
-}
-
-void TutorialOverlay::UpdateButtons() {
-  if (parentWidget() == nullptr) {
-    return;
-  }
-
-  const int kMargin[] = {20, 20};
-
-  const QRect parent_rect = parentWidget()->rect();
-
-  QRect rect = ui_->btnClose->geometry();
-  ui_->btnClose->setGeometry(QRect(parent_rect.width() - rect.width() - kMargin[0], kMargin[1],
-                                   rect.width(), rect.height()));
-
-  rect = ui_->titleFrame->geometry();
-  ui_->titleFrame->setGeometry(QRect((parent_rect.width() - rect.width()) / 2,
-                                     parent_rect.height() - rect.height() - kMargin[1],
-                                     rect.width(), rect.height()));
 }
 
 bool TutorialOverlay::VerifyActiveStep() {
@@ -413,6 +424,12 @@ TutorialOverlay::Section& TutorialOverlay::GetActiveSection() {
 bool TutorialOverlay::ActiveStepIsFirstInSection() const {
   CHECK(HasActiveSection());
   return GetActiveSection().active_step_index == 0;
+}
+
+bool TutorialOverlay::ActiveStepIsLastInSection() const {
+  CHECK(HasActiveSection());
+  return static_cast<size_t>(GetActiveSection().active_step_index) ==
+         GetActiveSection().step_names.size() - 1;
 }
 
 void TutorialOverlay::UnhookActiveStep() {
