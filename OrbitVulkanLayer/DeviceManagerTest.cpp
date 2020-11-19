@@ -18,7 +18,7 @@ class MockDispatchTable {
               (VkPhysicalDevice dispatchable_object));
 };
 
-}  //  namespace
+}  // namespace
 
 TEST(DeviceManager, AnUntrackedDeviceCannotBeQueried) {
   MockDispatchTable dispatch_table;
