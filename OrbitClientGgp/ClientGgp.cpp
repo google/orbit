@@ -275,13 +275,17 @@ void ClientGgp::OnCaptureStarted(
 
 void ClientGgp::OnCaptureComplete() {
   LOG("Capture completed");
+  GetMutableCaptureData().FilterBrokenCallstacks();
   SamplingProfiler sampling_profiler(*GetCaptureData().GetCallstackData(), GetCaptureData());
   GetMutableCaptureData().set_sampling_profiler(sampling_profiler);
 }
 
-void ClientGgp::OnCaptureCancelled() {}
+void ClientGgp::OnCaptureCancelled() { ClearCapture(); }
 
-void ClientGgp::OnCaptureFailed(ErrorMessage /*error_message*/) {}
+void ClientGgp::OnCaptureFailed(ErrorMessage error_message) {
+  ClearCapture();
+  ERROR("Capture failed: %s", error_message.message());
+}
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
