@@ -32,17 +32,17 @@ class DeviceManager {
  public:
   explicit DeviceManager(DispatchTable* dispatch_table) : dispatch_table_(dispatch_table) {}
 
-  void TrackLogicalDevice(VkPhysicalDevice physical_device, VkDevice device) {
+  void TrackLogicalDevice(VkPhysicalDevice physical_device, VkDevice logical_device) {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(!logica_device_to_physical_device_.contains(device));
-    logica_device_to_physical_device_[device] = physical_device;
+    CHECK(!logical_device_to_physical_device_.contains(logical_device));
+    logical_device_to_physical_device_[logical_device] = physical_device;
 
     CHECK(!physical_device_to_logical_devices_.contains(physical_device) ||
-          !physical_device_to_logical_devices_.at(physical_device).contains(device));
+          !physical_device_to_logical_devices_.at(physical_device).contains(logical_device));
     if (!physical_device_to_logical_devices_.contains(physical_device)) {
-      physical_device_to_logical_devices_[physical_device] = {device};
+      physical_device_to_logical_devices_[physical_device] = {logical_device};
     } else {
-      physical_device_to_logical_devices_.at(physical_device).insert(device);
+      physical_device_to_logical_devices_.at(physical_device).insert(logical_device);
     }
 
     if (physical_device_to_properties_.contains(physical_device)) {
@@ -54,42 +54,43 @@ class DeviceManager {
     physical_device_to_properties_[physical_device] = properties;
   }
 
-  [[nodiscard]] VkPhysicalDevice GetPhysicalDeviceOfLogicalDevice(VkDevice device) {
+  [[nodiscard]] VkPhysicalDevice GetPhysicalDeviceOfLogicalDevice(VkDevice logical_device) {
     absl::ReaderMutexLock lock(&mutex_);
-    CHECK(logica_device_to_physical_device_.contains(device));
-    return logica_device_to_physical_device_.at(device);
+    CHECK(logical_device_to_physical_device_.contains(logical_device));
+    return logical_device_to_physical_device_.at(logical_device);
   }
 
-  void UntrackLogicalDevice(VkDevice device) {
+  void UntrackLogicalDevice(VkDevice logical_device) {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(logica_device_to_physical_device_.contains(device));
-    VkPhysicalDevice physical_device = logica_device_to_physical_device_.at(device);
-    logica_device_to_physical_device_.erase(device);
+    CHECK(logical_device_to_physical_device_.contains(logical_device));
+    VkPhysicalDevice physical_device = logical_device_to_physical_device_.at(logical_device);
+    logical_device_to_physical_device_.erase(logical_device);
 
     CHECK(physical_device_to_logical_devices_.contains(physical_device));
     absl::flat_hash_set<VkDevice>& logical_devices =
         physical_device_to_logical_devices_.at(physical_device);
-    CHECK(logical_devices.contains(device));
-    logical_devices.erase(device);
+    CHECK(logical_devices.contains(logical_device));
+    logical_devices.erase(logical_device);
 
     if (!logical_devices.empty()) {
       return;
     }
     physical_device_to_logical_devices_.erase(physical_device);
-    physical_device_to_properties_.erase(logica_device_to_physical_device_.at(device));
+    physical_device_to_properties_.erase(physical_device);
   }
 
-  [[nodiscard]] VkPhysicalDeviceProperties GetPhysicalDeviceProperties(VkPhysicalDevice device) {
+  [[nodiscard]] VkPhysicalDeviceProperties GetPhysicalDeviceProperties(
+      VkPhysicalDevice physical_device) {
     absl::ReaderMutexLock lock(&mutex_);
-    CHECK(physical_device_to_properties_.contains(device));
-    return physical_device_to_properties_.at(device);
+    CHECK(physical_device_to_properties_.contains(physical_device));
+    return physical_device_to_properties_.at(physical_device);
   }
 
  private:
   absl::Mutex mutex_;
   DispatchTable* dispatch_table_;
   absl::flat_hash_map<VkPhysicalDevice, VkPhysicalDeviceProperties> physical_device_to_properties_;
-  absl::flat_hash_map<VkDevice, VkPhysicalDevice> logica_device_to_physical_device_;
+  absl::flat_hash_map<VkDevice, VkPhysicalDevice> logical_device_to_physical_device_;
   absl::flat_hash_map<VkPhysicalDevice, absl::flat_hash_set<VkDevice>>
       physical_device_to_logical_devices_;
 };
