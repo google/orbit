@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PhysicalDeviceManager.h"
+#include "DeviceManager.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -16,36 +16,36 @@ class MockDispatchTable {
               (VkPhysicalDevice dispatchable_object));
 };
 
-TEST(PhysicalDeviceManager, ANonTrackedDeviceCanNotBeQuerried) {
+TEST(PhysicalDeviceManager, ANonTrackedDeviceCannotBeQuerried) {
   MockDispatchTable dispatch_table;
-  PhysicalDeviceManager manager(&dispatch_table);
+  DeviceManager manager(&dispatch_table);
   VkDevice device = {};
   EXPECT_DEATH({ (void)manager.GetPhysicalDeviceOfLogicalDevice(device); }, "");
 }
 
-TEST(PhysicalDeviceManager, DevicePropertiesCanNotBeQuerriedForNonTrackedDevices) {
+TEST(PhysicalDeviceManager, DevicePropertiesCannotBeQuerriedForNonTrackedDevices) {
   MockDispatchTable dispatch_table;
-  PhysicalDeviceManager manager(&dispatch_table);
+  DeviceManager manager(&dispatch_table);
   VkPhysicalDevice device = {};
   EXPECT_DEATH({ (void)manager.GetPhysicalDeviceProperties(device); }, "");
 }
 
 VkPhysicalDeviceProperties physical_device_properties = {
     .apiVersion = 1, .driverVersion = 2, .limits = {.timestampPeriod = 3.14f}};
-void mockGetPhysicalDeviceProperties(VkPhysicalDevice, VkPhysicalDeviceProperties* out_properties) {
+void MockGetPhysicalDeviceProperties(VkPhysicalDevice, VkPhysicalDeviceProperties* out_properties) {
   *out_properties = physical_device_properties;
 }
 
-TEST(PhysicalDeviceManager, ATrackedDeviceCanBeQuerried) {
+TEST(PhysicalDeviceManager, ATrackedDeviceCanBeQueried) {
   MockDispatchTable dispatch_table;
-  PhysicalDeviceManager manager(&dispatch_table);
+  DeviceManager manager(&dispatch_table);
   VkDevice logical_device = {};
   VkPhysicalDevice physical_device = {};
 
   EXPECT_CALL(dispatch_table, GetPhysicalDeviceProperties)
-      .WillOnce(Return(&mockGetPhysicalDeviceProperties));
+      .WillOnce(Return(&MockGetPhysicalDeviceProperties));
 
-  manager.TrackPhysicalDevice(physical_device, logical_device);
+  manager.TrackLogicalDevice(physical_device, logical_device);
 
   ASSERT_EQ(physical_device, manager.GetPhysicalDeviceOfLogicalDevice(logical_device));
   VkPhysicalDeviceProperties actual_properties =
@@ -58,14 +58,14 @@ TEST(PhysicalDeviceManager, ATrackedDeviceCanBeQuerried) {
 
 TEST(PhysicalDeviceManager, UntrackingRemovesTrackedDevice) {
   MockDispatchTable dispatch_table;
-  PhysicalDeviceManager manager(&dispatch_table);
+  DeviceManager manager(&dispatch_table);
   VkDevice logical_device = {};
   VkPhysicalDevice physical_device = {};
 
   EXPECT_CALL(dispatch_table, GetPhysicalDeviceProperties)
-      .WillOnce(Return(&mockGetPhysicalDeviceProperties));
+      .WillOnce(Return(&MockGetPhysicalDeviceProperties));
 
-  manager.TrackPhysicalDevice(physical_device, logical_device);
+  manager.TrackLogicalDevice(physical_device, logical_device);
   manager.UntrackLogicalDevice(logical_device);
 
   EXPECT_DEATH({ (void)manager.GetPhysicalDeviceOfLogicalDevice(logical_device); }, "");
@@ -73,14 +73,14 @@ TEST(PhysicalDeviceManager, UntrackingRemovesTrackedDevice) {
 
 TEST(PhysicalDeviceManager, UntrackingRemovesDeviceProperties) {
   MockDispatchTable dispatch_table;
-  PhysicalDeviceManager manager(&dispatch_table);
+  DeviceManager manager(&dispatch_table);
   VkDevice logical_device = {};
   VkPhysicalDevice physical_device = {};
 
   EXPECT_CALL(dispatch_table, GetPhysicalDeviceProperties)
-      .WillOnce(Return(&mockGetPhysicalDeviceProperties));
+      .WillOnce(Return(&MockGetPhysicalDeviceProperties));
 
-  manager.TrackPhysicalDevice(physical_device, logical_device);
+  manager.TrackLogicalDevice(physical_device, logical_device);
 
   manager.UntrackLogicalDevice(logical_device);
   EXPECT_DEATH({ (void)manager.GetPhysicalDeviceProperties(physical_device); }, "");
