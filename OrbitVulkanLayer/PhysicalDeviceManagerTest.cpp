@@ -31,7 +31,7 @@ TEST(PhysicalDeviceManager, DevicePropertiesCanNotBeQuerriedForNonTrackedDevices
 }
 
 VkPhysicalDeviceProperties physical_device_properties = {
-    .apiVersion = 1, .driverVersion = 2, .limits = {.timestampPeriod = 3.14}};
+    .apiVersion = 1, .driverVersion = 2, .limits = {.timestampPeriod = 3.14f}};
 void mockGetPhysicalDeviceProperties(VkPhysicalDevice, VkPhysicalDeviceProperties* out_properties) {
   *out_properties = physical_device_properties;
 }
