@@ -16,7 +16,7 @@ class MockDispatchTable {
               (VkPhysicalDevice dispatchable_object));
 };
 
-TEST(PhysicalDeviceManager, ANonTrackedDeviceCannotBeQuerried) {
+TEST(PhysicalDeviceManager, AnUnrackedDeviceCannotBeQuerried) {
   MockDispatchTable dispatch_table;
   DeviceManager manager(&dispatch_table);
   VkDevice device = {};
@@ -32,7 +32,8 @@ TEST(PhysicalDeviceManager, DevicePropertiesCannotBeQuerriedForNonTrackedDevices
 
 VkPhysicalDeviceProperties physical_device_properties = {
     .apiVersion = 1, .driverVersion = 2, .limits = {.timestampPeriod = 3.14f}};
-void MockGetPhysicalDeviceProperties(VkPhysicalDevice, VkPhysicalDeviceProperties* out_properties) {
+static void MockGetPhysicalDeviceProperties(VkPhysicalDevice,
+                                            VkPhysicalDeviceProperties* out_properties) {
   *out_properties = physical_device_properties;
 }
 

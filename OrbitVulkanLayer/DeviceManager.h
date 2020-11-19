@@ -21,7 +21,7 @@ namespace orbit_vulkan_layer {
  *
  * For each physical device, it also provides the `VkPhysicalDeviceProperties`, which can be queried
  * using `GetPhysicalDeviceProperties`. The `DeviceManager` is responsible for retrieving this
- * information (using `vkGetPhysicalDeviceProperties`). These properties can be e.g. used for
+ * information (using `vkGetPhysicalDeviceProperties`). These properties can be used e.g. for
  * converting clock cycles to nanosecond timestamps.
  *
  * Thread-Safety: This class is internally synchronized (using read/write locks) and can be safely
