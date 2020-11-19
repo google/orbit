@@ -11,6 +11,7 @@
 
 #include "CaptureData.h"
 #include "OrbitBase/Result.h"
+#include "UserDefinedCaptureData.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
@@ -20,6 +21,7 @@ namespace capture_serializer {
 
 template <class TimersIterator>
 ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data,
+                          const UserDefinedCaptureData& user_defined_capture_data,
                           const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
                           TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end);
 
@@ -35,11 +37,12 @@ namespace internal {
 inline const std::string kRequiredCaptureVersion = "1.55";
 
 orbit_client_protos::CaptureInfo GenerateCaptureInfo(
-    const CaptureData& capture_data,
+    const CaptureData& capture_data, const UserDefinedCaptureData& user_defined_capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
 
 template <class TimersIterator>
 void Save(std::ostream& stream, const CaptureData& capture_data,
+          const UserDefinedCaptureData& user_defined_capture_data,
           const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
           TimersIterator timers_iterator_begin, TimersIterator timers_iterator_end) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
@@ -50,7 +53,7 @@ void Save(std::ostream& stream, const CaptureData& capture_data,
   WriteMessage(&header, &coded_output);
 
   orbit_client_protos::CaptureInfo capture_info =
-      GenerateCaptureInfo(capture_data, key_to_string_map);
+      GenerateCaptureInfo(capture_data, user_defined_capture_data, key_to_string_map);
   WriteMessage(&capture_info, &coded_output);
 
   // Timers
@@ -63,6 +66,7 @@ void Save(std::ostream& stream, const CaptureData& capture_data,
 
 template <class TimersIterator>
 ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& capture_data,
+                          const UserDefinedCaptureData& user_defined_capture_data,
                           const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map,
                           TimersIterator timers_iterator_begin,
                           TimersIterator timers_iterator_end) {
@@ -74,8 +78,8 @@ ErrorMessageOr<void> Save(const std::string& filename, const CaptureData& captur
 
   {
     SCOPED_TIMED_LOG("Saving capture in \"%s\"", filename);
-    internal::Save(file, capture_data, key_to_string_map, std::move(timers_iterator_begin),
-                   std::move(timers_iterator_end));
+    internal::Save(file, capture_data, user_defined_capture_data, key_to_string_map,
+                   std::move(timers_iterator_begin), std::move(timers_iterator_end));
   }
 
   return outcome::success();

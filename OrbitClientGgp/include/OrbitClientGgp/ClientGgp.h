@@ -19,7 +19,6 @@
 #include "OrbitClientServices/ProcessClient.h"
 #include "StringManager.h"
 #include "TracepointCustom.h"
-#include "UserDefinedCaptureData.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {

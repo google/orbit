@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_FRAME_TRACK_ONLINE_PROCESSOR_H_
 #define ORBIT_GL_FRAME_TRACK_ONLINE_PROCESSOR_H_
 
+#include "CaptureData.h"
+#include "UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -15,7 +17,9 @@ class TimeGraph;
 class FrameTrackOnlineProcessor {
  public:
   FrameTrackOnlineProcessor() : time_graph_(nullptr) {}
-  FrameTrackOnlineProcessor(const CaptureData& capture_data, TimeGraph* time_graph);
+  FrameTrackOnlineProcessor(const CaptureData& capture_data,
+                            const UserDefinedCaptureData& user_defined_capture_data,
+                            TimeGraph* time_graph);
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo& function);
 

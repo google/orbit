@@ -50,7 +50,7 @@ TEST(CaptureSerializer, GetCaptureFileName) {
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules(module_infos);
 
-  CaptureData capture_data{std::move(process), &module_manager, {}, {}, UserDefinedCaptureData{}};
+  CaptureData capture_data{std::move(process), &module_manager, {}, {}};
 
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
   std::string expected_file_name = absl::StrCat("p_", OrbitUtils::FormatTime(timestamp), ".orbit");
@@ -102,15 +102,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
 
-  UserDefinedCaptureData user_defined_capture_data;
-  FunctionInfo frame_track_function;
-  frame_track_function.set_name("foo");
-  frame_track_function.set_address(123);
-  selected_function.set_loaded_module_path("path/to/module");
-  user_defined_capture_data.InsertFrameTrack(frame_track_function);
-
   CaptureData capture_data{std::move(process), &module_manager, selected_functions,
-                           selected_tracepoints, user_defined_capture_data};
+                           selected_tracepoints};
 
   capture_data.AddOrAssignThreadName(42, "t42");
   capture_data.AddOrAssignThreadName(43, "t43");
@@ -169,8 +162,15 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   key_to_string_map[1] = "b";
   key_to_string_map[2] = "c";
 
-  CaptureInfo capture_info =
-      capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
+  UserDefinedCaptureData user_defined_capture_data;
+  FunctionInfo frame_track_function;
+  frame_track_function.set_name("foo");
+  frame_track_function.set_address(123);
+  selected_function.set_loaded_module_path("path/to/module");
+  user_defined_capture_data.InsertFrameTrack(frame_track_function);
+
+  CaptureInfo capture_info = capture_serializer::internal::GenerateCaptureInfo(
+      capture_data, user_defined_capture_data, key_to_string_map);
 
   ASSERT_EQ(1, capture_info.selected_functions_size());
   const FunctionInfo& actual_selected_function = capture_info.selected_functions(0);

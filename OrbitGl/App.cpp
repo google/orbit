@@ -138,12 +138,12 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ =
-            CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
-                        std::move(selected_tracepoints), std::move(user_defined_capture_data));
+        capture_data_ = CaptureData(std::move(process), module_manager_.get(),
+                                    std::move(selected_functions), std::move(selected_tracepoints));
 
-        frame_track_online_processor_ =
-            FrameTrackOnlineProcessor(GetCaptureData(), GCurrentTimeGraph);
+        data_manager_->set_user_defined_capture_data(std::move(user_defined_capture_data));
+        frame_track_online_processor_ = FrameTrackOnlineProcessor(
+            GetCaptureData(), data_manager_->user_defined_capture_data(), GCurrentTimeGraph);
 
         CHECK(capture_started_callback_);
         capture_started_callback_();
@@ -712,8 +712,9 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   TimerInfosIterator timers_it_end(chains.end(), chains.end());
   const CaptureData& capture_data = GetCaptureData();
 
-  return capture_serializer::Save(file_name, capture_data, key_to_string_map, timers_it_begin,
-                                  timers_it_end);
+  return capture_serializer::Save(file_name, capture_data,
+                                  data_manager_->user_defined_capture_data(), key_to_string_map,
+                                  timers_it_begin, timers_it_end);
 }
 
 void OrbitApp::OnLoadCapture(const std::string& file_name) {
@@ -1143,7 +1144,7 @@ ErrorMessageOr<void> OrbitApp::InsertFrameTracksFromHashes(
   std::vector<const FunctionInfo*> function_infos;
   const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
   for (const auto* function : function_infos) {
-    data_manager_->user_defined_capture_data().InsertFrameTrack(*function);
+    data_manager_->mutable_user_defined_capture_data().InsertFrameTrack(*function);
   }
   return error;
 }
@@ -1523,24 +1524,21 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 }
 
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  GetMutableCaptureData().InsertFrameTrack(function);
-  data_manager_->set_user_defined_capture_data(GetCaptureData().user_defined_capture_data());
+  data_manager_->mutable_user_defined_capture_data().InsertFrameTrack(function);
   AddFrameTrackTimers(function);
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
-  GetMutableCaptureData().EraseFrameTrack(function);
-  data_manager_->set_user_defined_capture_data(GetCaptureData().user_defined_capture_data());
+  data_manager_->mutable_user_defined_capture_data().EraseFrameTrack(function);
   GCurrentTimeGraph->RemoveFrameTrack(function);
 }
 
 bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
-  return GetCaptureData().ContainsFrameTrack(function);
+  return data_manager_->user_defined_capture_data().ContainsFrameTrack(function);
 }
 
 void OrbitApp::RefreshFrameTracks() {
-  for (const auto& function :
-       GetCaptureData().user_defined_capture_data().frame_track_functions()) {
+  for (const auto& function : data_manager_->user_defined_capture_data().frame_track_functions()) {
     GCurrentTimeGraph->RemoveFrameTrack(function);
     AddFrameTrackTimers(function);
   }

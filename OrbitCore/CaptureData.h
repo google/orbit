@@ -16,7 +16,6 @@
 #include "TracepointCustom.h"
 #include "TracepointEventBuffer.h"
 #include "TracepointInfoManager.h"
-#include "UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
@@ -26,7 +25,7 @@ class CaptureData {
   explicit CaptureData(
       ProcessData&& process, OrbitClientData::ModuleManager* module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data)
+      TracepointInfoSet selected_tracepoints)
       : process_(std::move(process)),
         module_manager_(module_manager),
         selected_functions_{std::move(selected_functions)},
@@ -34,8 +33,7 @@ class CaptureData {
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_info_manager_(std::make_unique<TracepointInfoManager>()),
-        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()),
-        user_defined_capture_data_(std::move(user_defined_capture_data)) {}
+        tracepoint_event_buffer_(std::make_unique<TracepointEventBuffer>()) {}
 
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
@@ -198,14 +196,6 @@ class CaptureData {
     sampling_profiler_ = std::move(sampling_profiler);
   }
 
-  void InsertFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  void EraseFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  [[nodiscard]] bool ContainsFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
-  void ClearUserDefinedCaptureData();
-  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
-    return user_defined_capture_data_;
-  }
-
  private:
   ProcessData process_;
   OrbitClientData::ModuleManager* module_manager_;
@@ -234,8 +224,6 @@ class CaptureData {
   mutable std::unique_ptr<absl::Mutex> thread_state_slices_mutex_ = std::make_unique<absl::Mutex>();
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
-
-  UserDefinedCaptureData user_defined_capture_data_;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_DATA_H_

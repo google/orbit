@@ -10,11 +10,10 @@
 #include "TimeGraph.h"
 #include "UserDefinedCaptureData.h"
 
-FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(const CaptureData& capture_data,
-                                                     TimeGraph* time_graph)
+FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(
+    const CaptureData& capture_data, const UserDefinedCaptureData& user_defined_capture_data,
+    TimeGraph* time_graph)
     : time_graph_(time_graph) {
-  const UserDefinedCaptureData& user_defined_capture_data =
-      capture_data.user_defined_capture_data();
   for (const auto& function : user_defined_capture_data.frame_track_functions()) {
     const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
     current_frame_track_functions_.insert(function_address);
