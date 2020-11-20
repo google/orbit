@@ -14,7 +14,7 @@ IntrospectionWindow::IntrospectionWindow(uint32_t font_size) : CaptureWindow(fon
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
 
-const char* IntrospectionWindow::GetHelpText() {
+const char* IntrospectionWindow::GetHelpText() const {
   const char* help_message =
       "Client Side Introspection\n\n"
       "Start/Stop Capture: 'X'\n"
@@ -22,7 +22,7 @@ const char* IntrospectionWindow::GetHelpText() {
   return help_message;
 }
 
-bool IntrospectionWindow::IsIntrospecting() { return introspection_listener_ != nullptr; }
+bool IntrospectionWindow::IsIntrospecting() const { return introspection_listener_ != nullptr; }
 
 void IntrospectionWindow::StartIntrospection() {
   CHECK(!IsIntrospecting());
@@ -56,4 +56,4 @@ void IntrospectionWindow::ToggleCapture() {
   }
 }
 
-bool IntrospectionWindow::ShouldAutoZoom() { return IsIntrospecting(); }
+bool IntrospectionWindow::ShouldAutoZoom() const { return IsIntrospecting(); }

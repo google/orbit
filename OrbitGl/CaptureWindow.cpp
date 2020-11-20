@@ -462,7 +462,7 @@ void CaptureWindow::OnCaptureStarted() {
   NeedsRedraw();
 }
 
-bool CaptureWindow::ShouldAutoZoom() { return GOrbitApp->IsCapturing(); }
+bool CaptureWindow::ShouldAutoZoom() const { return GOrbitApp->IsCapturing(); }
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
@@ -754,7 +754,7 @@ void CaptureWindow::RenderHelpUi() {
                             kRoundingRadius, kBoxColor, kMargin);
 }
 
-const char* CaptureWindow::GetHelpText() {
+const char* CaptureWindow::GetHelpText() const {
   const char* help_message =
       "Start/Stop Capture: 'X'\n"
       "Pan: 'A','D' or \"Left Click + Drag\"\n"

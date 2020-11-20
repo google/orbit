@@ -67,8 +67,8 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(BatcherId batcher_id);
 
  protected:
-  [[nodiscard]] virtual const char* GetHelpText();
-  [[nodiscard]] virtual bool ShouldAutoZoom();
+  [[nodiscard]] virtual const char* GetHelpText() const;
+  [[nodiscard]] virtual bool ShouldAutoZoom() const;
 
  protected:
   uint32_t font_size_;

@@ -15,13 +15,13 @@ class IntrospectionWindow : public CaptureWindow {
   ~IntrospectionWindow() override;
   void ToggleCapture() override;
 
-  [[nodiscard]] bool IsIntrospecting();
+  [[nodiscard]] bool IsIntrospecting() const;
   void StartIntrospection();
   void StopIntrospection();
 
  protected:
-  [[nodiscard]] const char* GetHelpText() override;
-  [[nodiscard]] bool ShouldAutoZoom() override;
+  [[nodiscard]] const char* GetHelpText() const override;
+  [[nodiscard]] bool ShouldAutoZoom() const override;
 
  private:
   std::unique_ptr<orbit::tracing::Listener> introspection_listener_;
