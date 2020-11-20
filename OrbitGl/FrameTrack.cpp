@@ -228,7 +228,7 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = time_graph_->CalculateZoomedFontSize();
   float string_width = canvas->GetTextRenderer().GetStringWidth(label.c_str(), font_size);
-  Vec2 white_text_box_size(static_cast<float>(string_width), layout.GetTextBoxHeight());
+  Vec2 white_text_box_size(string_width, layout.GetTextBoxHeight());
   Vec2 white_text_box_position(pos_[0] + layout.GetRightMargin(),
                                y - layout.GetTextBoxHeight() / 2.f);
 
