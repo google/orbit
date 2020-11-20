@@ -1269,6 +1269,10 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
   }
 }
 
+bool TimeGraph::HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const {
+  return frame_tracks_.count(function.address()) > 0;
+}
+
 void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) {
   frame_tracks_.erase(function.address());
   sorting_invalidated_ = true;

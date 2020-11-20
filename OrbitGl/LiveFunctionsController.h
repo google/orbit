@@ -39,8 +39,6 @@ class LiveFunctionsController {
   uint64_t GetStartTime(uint64_t index);
 
   void AddIterator(orbit_client_protos::FunctionInfo* function);
-  void AddFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
 
  private:
   void Move();

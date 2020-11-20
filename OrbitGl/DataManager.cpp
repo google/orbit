@@ -134,3 +134,17 @@ bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
 }
 
 const TracepointInfoSet& DataManager::selected_tracepoints() const { return selected_tracepoints_; }
+
+void DataManager::EnableFrameTrack(const FunctionInfo& function) {
+  user_defined_capture_data_.InsertFrameTrack(function);
+}
+
+void DataManager::DisableFrameTrack(const FunctionInfo& function) {
+  user_defined_capture_data_.EraseFrameTrack(function);
+}
+
+[[nodiscard]] bool DataManager::IsFrameTrackEnabled(const FunctionInfo& function) const {
+  return user_defined_capture_data_.ContainsFrameTrack(function);
+}
+
+void DataManager::ClearUserDefinedCaptureData() { user_defined_capture_data_.Clear(); }

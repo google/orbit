@@ -12,8 +12,10 @@ class FunctionsDataView : public DataView {
  public:
   FunctionsDataView();
 
-  static const std::string kSelectedFunctionString;
   static const std::string kUnselectedFunctionString;
+  static const std::string kSelectedFunctionString;
+  static const std::string kFrameTrackString;
+  static std::string BuildSelectedColumnsString(const orbit_client_protos::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }
@@ -49,6 +51,8 @@ class FunctionsDataView : public DataView {
 
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionEnableFrameTrack;
+  static const std::string kMenuActionDisableFrameTrack;
   static const std::string kMenuActionDisassembly;
 
  private:

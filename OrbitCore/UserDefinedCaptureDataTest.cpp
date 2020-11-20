@@ -34,7 +34,8 @@ TEST(UserDefinedCaptureData, InsertFrameTrackDuplicateFunctions) {
   UserDefinedCaptureData data;
   FunctionInfo info = CreateFunctionInfo("fun0_name", 0);
   data.InsertFrameTrack(info);
-  EXPECT_DEATH(data.InsertFrameTrack(info), "");
+  data.InsertFrameTrack(info);
+  EXPECT_TRUE(data.ContainsFrameTrack(info));
 }
 
 TEST(UserDefinedCaptureData, InsertFrameTrackDifferentFunctions) {
@@ -50,7 +51,8 @@ TEST(UserDefinedCaptureData, InsertFrameTrackDifferentFunctions) {
 TEST(UserDefinedCaptureData, EraseNonExistentFrameTrack) {
   UserDefinedCaptureData data;
   FunctionInfo info = CreateFunctionInfo("fun0_name", 0);
-  EXPECT_DEATH(data.EraseFrameTrack(info), "");
+  data.EraseFrameTrack(info);
+  EXPECT_FALSE(data.ContainsFrameTrack(info));
 }
 
 TEST(UserDefinedCaptureData, EraseFrameTrack) {

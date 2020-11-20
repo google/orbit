@@ -58,8 +58,8 @@ class LiveFunctionsDataView : public DataView {
   static const std::string kMenuActionJumpToMax;
   static const std::string kMenuActionDisassembly;
   static const std::string kMenuActionIterate;
-  static const std::string kMenuActionFrameTrack;
-  static const std::string kMenuActionRemoveFrameTrack;
+  static const std::string kMenuActionEnableFrameTrack;
+  static const std::string kMenuActionDisableFrameTrack;
 };
 
 #endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_

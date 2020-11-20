@@ -13,8 +13,9 @@ using orbit_client_protos::FunctionInfo;
 
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::kFunctions) {}
 
-const std::string FunctionsDataView::kSelectedFunctionString = "✓";
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
+const std::string FunctionsDataView::kSelectedFunctionString = "✓";
+const std::string FunctionsDataView::kFrameTrackString = "F";
 
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -32,6 +33,19 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   return columns;
 }
 
+std::string FunctionsDataView::BuildSelectedColumnsString(const FunctionInfo& function) {
+  std::string result = kUnselectedFunctionString;
+  if (GOrbitApp->IsFunctionSelected(function)) {
+    absl::StrAppend(&result, kSelectedFunctionString);
+    if (GOrbitApp->IsFrameTrackEnabled(function)) {
+      absl::StrAppend(&result, " ", kFrameTrackString);
+    }
+  } else if (GOrbitApp->IsFrameTrackEnabled(function)) {
+    absl::StrAppend(&result, kFrameTrackString);
+  }
+  return result;
+}
+
 std::string FunctionsDataView::GetValue(int row, int column) {
   if (row >= static_cast<int>(GetNumElements())) {
     return "";
@@ -41,8 +55,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return GOrbitApp->IsFunctionSelected(function) ? kSelectedFunctionString
-                                                     : kUnselectedFunctionString;
+      return BuildSelectedColumnsString(function);
     case kColumnName:
       return FunctionUtils::GetDisplayName(function);
     case kColumnSize:
@@ -127,21 +140,30 @@ void FunctionsDataView::DoSort() {
 
 const std::string FunctionsDataView::kMenuActionSelect = "Hook";
 const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
+const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
+const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
 const std::string FunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
 
 std::vector<std::string> FunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_enable_frame_track = false;
+  bool enable_disable_frame_track = false;
+
   for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunction(index);
     enable_select |= !GOrbitApp->IsFunctionSelected(function);
     enable_unselect |= GOrbitApp->IsFunctionSelected(function);
+    enable_enable_frame_track |= !GOrbitApp->IsFrameTrackEnabled(function);
+    enable_disable_frame_track |= GOrbitApp->IsFrameTrackEnabled(function);
   }
 
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
+  if (enable_enable_frame_track) menu.emplace_back(kMenuActionEnableFrameTrack);
+  if (enable_disable_frame_track) menu.emplace_back(kMenuActionDisableFrameTrack);
   menu.emplace_back(kMenuActionDisassembly);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
@@ -156,6 +178,27 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
       GOrbitApp->DeselectFunction(*GetFunction(i));
+      // If a function is deselected, we have to make sure that the frame track is
+      // not created for this function on the next capture. However, we do not
+      // want to remove the frame track from the capture data.
+      GOrbitApp->DisableFrameTrack(*GetFunction(i));
+    }
+  } else if (action == kMenuActionEnableFrameTrack) {
+    for (int i : item_indices) {
+      const FunctionInfo& function = *GetFunction(i);
+      // Functions used as frame tracks must be hooked (selected), otherwise the
+      // data to produce the frame track will not be captured.
+      GOrbitApp->SelectFunction(function);
+      GOrbitApp->EnableFrameTrack(function);
+      GOrbitApp->AddFrameTrack(function);
+    }
+  } else if (action == kMenuActionDisableFrameTrack) {
+    for (int i : item_indices) {
+      // When we remove a frame track, we do not unhook (deselect) the function as
+      // it may have been selected manually (not as part of adding a frame track).
+      // However, disable the frame track, so it is not recreated on the next capture.
+      GOrbitApp->DisableFrameTrack(*GetFunction(i));
+      GOrbitApp->RemoveFrameTrack(*GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
     for (int i : item_indices) {

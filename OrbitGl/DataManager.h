@@ -54,13 +54,18 @@ class DataManager final {
 
   [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
 
+  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
+  void ClearUserDefinedCaptureData();
+
   void set_user_defined_capture_data(const UserDefinedCaptureData& user_defined_capture_data) {
     user_defined_capture_data_ = user_defined_capture_data;
   }
-  [[nodiscard]] const UserDefinedCaptureData& mutable_user_defined_capture_data() const {
+  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
     return user_defined_capture_data_;
   }
-  [[nodiscard]] UserDefinedCaptureData& user_defined_capture_data() {
+  [[nodiscard]] UserDefinedCaptureData& mutable_user_defined_capture_data() {
     return user_defined_capture_data_;
   }
 

@@ -53,8 +53,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return GOrbitApp->IsFunctionSelected(function) ? FunctionsDataView::kSelectedFunctionString
-                                                     : FunctionsDataView::kUnselectedFunctionString;
+      return FunctionsDataView::BuildSelectedColumnsString(function);
     case kColumnName:
       return FunctionUtils::GetDisplayName(function);
     case kColumnCount:
@@ -150,8 +149,8 @@ const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
 const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
 const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
-const std::string LiveFunctionsDataView::kMenuActionFrameTrack = "Add frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionRemoveFrameTrack = "Remove frame track(s)";
+const std::string LiveFunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
+const std::string LiveFunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
 
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -159,8 +158,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_unselect = false;
   bool enable_disassembly = false;
   bool enable_iterator = false;
-  bool enable_frame_track = false;
-  bool enable_remove_frame_track = false;
+  bool enable_enable_frame_track = false;
+  bool enable_disable_frame_track = false;
 
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   for (int index : selected_indices) {
@@ -175,10 +174,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
     // We need at least one function call to a function so that adding iterators makes sense.
     enable_iterator |= stats.count() > 0;
-    // We need at least two function calls to a function so that it's possible to use it
-    // as a frame marker.
-    enable_frame_track |= stats.count() > 1 && !GOrbitApp->HasFrameTrack(selected_function);
-    enable_remove_frame_track |= GOrbitApp->HasFrameTrack(selected_function);
+    enable_enable_frame_track |= !GOrbitApp->IsFrameTrackEnabled(selected_function);
+    enable_disable_frame_track |= GOrbitApp->IsFrameTrackEnabled(selected_function);
   }
 
   std::vector<std::string> menu;
@@ -189,11 +186,11 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   if (enable_iterator) {
     menu.emplace_back(kMenuActionIterate);
   }
-  if (enable_frame_track) {
-    menu.emplace_back(kMenuActionFrameTrack);
+  if (enable_enable_frame_track) {
+    menu.emplace_back(kMenuActionEnableFrameTrack);
   }
-  if (enable_remove_frame_track) {
-    menu.emplace_back(kMenuActionRemoveFrameTrack);
+  if (enable_disable_frame_track) {
+    menu.emplace_back(kMenuActionDisableFrameTrack);
   }
 
   // For now, these actions only make sense when one function is selected,
@@ -221,6 +218,8 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
         GOrbitApp->SelectFunction(*selected_function);
       } else if (action == kMenuActionUnselect) {
         GOrbitApp->DeselectFunction(*selected_function);
+        // We disable the frame track, but do not remove it from current capture data.
+        GOrbitApp->DisableFrameTrack(*selected_function);
       } else if (action == kMenuActionDisassembly) {
         int32_t pid = capture_data.process_id();
         GOrbitApp->Disassemble(pid, *selected_function);
@@ -265,20 +264,18 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
         live_functions_->AddIterator(selected_function);
       }
     }
-  } else if (action == kMenuActionFrameTrack) {
+  } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(*function);
-      if (stats.count() > 1 && !GOrbitApp->HasFrameTrack(*function)) {
-        live_functions_->AddFrameTrack(*function);
-      }
+      GOrbitApp->SelectFunction(*function);
+      GOrbitApp->EnableFrameTrack(*function);
+      GOrbitApp->AddFrameTrack(*function);
     }
-  } else if (action == kMenuActionRemoveFrameTrack) {
+  } else if (action == kMenuActionDisableFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      if (GOrbitApp->HasFrameTrack(*function)) {
-        live_functions_->RemoveFrameTrack(*function);
-      }
+      GOrbitApp->DisableFrameTrack(*function);
+      GOrbitApp->RemoveFrameTrack(*function);
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
