@@ -96,7 +96,7 @@ class TimerQueryPool {
   // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
   // of `NextReadyQuerySlot` and must not have been reset yet.
   void ResetQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices) {
-    ResetQuerySlots(device, slot_indices, false);
+    ResetQuerySlotsInternal(device, slot_indices, false);
   }
 
   // Resets an occupied slot to be ready for queries again. It will *not* call to Vulkan to reset
@@ -108,7 +108,7 @@ class TimerQueryPool {
   // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
   // of `NextReadyQuerySlot` and must not have been reset yet.
   void RollbackPendingQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices) {
-    ResetQuerySlots(device, slot_indices, true);
+    ResetQuerySlotsInternal(device, slot_indices, true);
   }
 
  private:
@@ -122,8 +122,8 @@ class TimerQueryPool {
   // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
   // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
   // of `NextReadyQuerySlot` and must not have been reset yet.
-  void ResetQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices,
-                       bool rollback_only) {
+  void ResetQuerySlotsInternal(VkDevice device, const std::vector<uint32_t>& slot_indices,
+                               bool rollback_only) {
     if (slot_indices.empty()) {
       return;
     }
