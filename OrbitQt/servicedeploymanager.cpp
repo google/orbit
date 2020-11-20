@@ -17,12 +17,12 @@
 #include <thread>
 
 #include "Error.h"
+#include "EventLoop.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
-#include "eventloop.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
