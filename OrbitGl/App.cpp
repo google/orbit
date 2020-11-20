@@ -509,13 +509,13 @@ void OrbitApp::MainTick() {
   }
 }
 
-void OrbitApp::RegisterCaptureWindow(CaptureWindow* capture) {
+void OrbitApp::SetCaptureWindow(CaptureWindow* capture) {
   CHECK(capture_window_ == nullptr);
   GCurrentTimeGraph = capture->GetTimeGraph();
   capture_window_ = capture;
 }
 
-void OrbitApp::RegisterDebugCanvas(GlCanvas* debug_canvas) {
+void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {
   CHECK(debug_canvas_ == nullptr);
   debug_canvas_ = debug_canvas;
   debug_canvas_->EnableImGui();
@@ -523,7 +523,7 @@ void OrbitApp::RegisterDebugCanvas(GlCanvas* debug_canvas) {
   debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
 }
 
-void OrbitApp::RegisterIntrospectionWindow(IntrospectionWindow* introspection_window) {
+void OrbitApp::SetIntrospectionWindow(IntrospectionWindow* introspection_window) {
   CHECK(introspection_window_ == nullptr);
   introspection_window_ = introspection_window;
 }

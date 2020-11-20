@@ -130,9 +130,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
 
-  void RegisterCaptureWindow(CaptureWindow* capture);
-  void RegisterDebugCanvas(GlCanvas* debug_canvas);
-  void RegisterIntrospectionWindow(IntrospectionWindow* canvas);
+  void SetCaptureWindow(CaptureWindow* capture);
+  void SetDebugCanvas(GlCanvas* debug_canvas);
+  void SetIntrospectionWindow(IntrospectionWindow* canvas);
   void StopIntrospection();
 
   void SetSamplingReport(

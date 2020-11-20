@@ -400,7 +400,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
         draw_help_ = !draw_help_;
         break;
       case 'X':
-        ToggleCapture();
+        ToggleRecording();
         break;
       case 'O':
         if (ctrl) {
@@ -617,7 +617,7 @@ void CaptureWindow::UpdateWorldTopLeftY(float val) {
   NeedsUpdate();
 }
 
-void CaptureWindow::ToggleCapture() {
+void CaptureWindow::ToggleRecording() {
   GOrbitApp->ToggleCapture();
   draw_help_ = false;
 #ifdef __linux__

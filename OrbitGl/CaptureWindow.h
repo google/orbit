@@ -59,7 +59,7 @@ class CaptureWindow : public GlCanvas {
   void OnCaptureStarted();
   std::vector<std::string> GetContextMenu() override;
   void OnContextMenu(const std::string& action, int menu_index) override;
-  virtual void ToggleCapture();
+  virtual void ToggleRecording();
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
   [[nodiscard]] TimeGraph* GetTimeGraph() { return &time_graph_; }

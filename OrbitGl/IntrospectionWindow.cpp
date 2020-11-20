@@ -48,7 +48,7 @@ void IntrospectionWindow::StartIntrospection() {
 }
 void IntrospectionWindow::StopIntrospection() { introspection_listener_ = nullptr; }
 
-void IntrospectionWindow::ToggleCapture() {
+void IntrospectionWindow::ToggleRecording() {
   if (!IsIntrospecting()) {
     StartIntrospection();
   } else {

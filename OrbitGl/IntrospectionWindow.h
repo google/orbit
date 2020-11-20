@@ -13,7 +13,7 @@ class IntrospectionWindow : public CaptureWindow {
  public:
   explicit IntrospectionWindow(uint32_t font_size);
   ~IntrospectionWindow() override;
-  void ToggleCapture() override;
+  void ToggleRecording() override;
 
   [[nodiscard]] bool IsIntrospecting() const;
   void StartIntrospection();
