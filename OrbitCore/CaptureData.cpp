@@ -159,15 +159,15 @@ int32_t CaptureData::process_id() const { return process_.pid(); }
 
 std::string CaptureData::process_name() const { return process_.name(); }
 
-void CaptureData::InsertFrameTrack(const FunctionInfo& function) {
+void CaptureData::EnableFrameTrack(const FunctionInfo& function) {
   user_defined_capture_data_.InsertFrameTrack(function);
 }
 
-void CaptureData::EraseFrameTrack(const FunctionInfo& function) {
+void CaptureData::DisableFrameTrack(const FunctionInfo& function) {
   user_defined_capture_data_.EraseFrameTrack(function);
 }
 
-[[nodiscard]] bool CaptureData::ContainsFrameTrack(const FunctionInfo& function) const {
+[[nodiscard]] bool CaptureData::IsFrameTrackEnabled(const FunctionInfo& function) const {
   return user_defined_capture_data_.ContainsFrameTrack(function);
 }
 

@@ -219,6 +219,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
   });
 
+  GOrbitApp->SetShowEmptyFrameTrackWarningCallback(
+      [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
+
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
 
   if (absl::GetFlag(FLAGS_devmode)) {
@@ -610,6 +613,30 @@ void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
     QObject::connect(&check_box, &QCheckBox::stateChanged,
                      [&settings, &skip_capture_warning](int state) {
                        settings.setValue(skip_capture_warning, static_cast<bool>(state));
+                     });
+
+    message_box.exec();
+  }
+}
+
+void OrbitMainWindow::ShowEmptyFrameTrackWarningIfNeeded(std::string_view function) {
+  QSettings settings("The Orbit Authors", "Orbit Profiler");
+  const QString empty_frame_track_warning("EmptyFrameTrackWarning");
+  std::string message = absl::StrFormat(
+      "Frame track enabled for function %s, but since the function "
+      "does not have any hits in the current capture, a frame track "
+      "was not added to the capture.",
+      function);
+  if (!settings.value(empty_frame_track_warning, false).toBool()) {
+    QMessageBox message_box;
+    message_box.setText(message.c_str());
+    message_box.addButton(QMessageBox::Ok);
+    QCheckBox check_box("Don't show this message again.");
+    message_box.setCheckBox(&check_box);
+
+    QObject::connect(&check_box, &QCheckBox::stateChanged,
+                     [&settings, &empty_frame_track_warning](int state) {
+                       settings.setValue(empty_frame_track_warning, static_cast<bool>(state));
                      });
 
     message_box.exec();

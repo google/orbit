@@ -229,6 +229,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   } else if (action == kMenuActionUnselect) {
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       GOrbitApp->DeselectFunction(*function);
+      GOrbitApp->DisableFrameTrack(*function);
     }
   } else if (action == kMenuActionLoadSymbols) {
     std::vector<ModuleData*> modules_to_load;

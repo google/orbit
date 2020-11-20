@@ -58,6 +58,7 @@ ABSL_DECLARE_FLAG(bool, track_ordering_feature);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
@@ -1108,7 +1109,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
 
       if (!frame_track_function_hashes.empty()) {
         const auto frame_track_result =
-            InsertFrameTracksFromHashes(module_data, frame_track_function_hashes);
+            EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
         if (!frame_track_result) {
           LOG("Warning, could not insert frame tracks: %s", frame_track_result.error().message());
         }
@@ -1162,12 +1163,12 @@ ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
   return error;
 }
 
-ErrorMessageOr<void> OrbitApp::InsertFrameTracksFromHashes(
+ErrorMessageOr<void> OrbitApp::EnableFrameTracksFromHashes(
     const ModuleData* module, const std::vector<uint64_t> function_hashes) {
   std::vector<const FunctionInfo*> function_infos;
   const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
   for (const auto* function : function_infos) {
-    data_manager_->user_defined_capture_data().InsertFrameTrack(*function);
+    data_manager_->EnableFrameTrack(*function);
   }
   return error;
 }
@@ -1191,7 +1192,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
       }
       std::vector<uint64_t> frame_track_hashes{preset_module.frame_track_function_hashes().begin(),
                                                preset_module.frame_track_function_hashes().end()};
-      const auto frame_track_result = InsertFrameTracksFromHashes(module_data, frame_track_hashes);
+      const auto frame_track_result = EnableFrameTracksFromHashes(module_data, frame_track_hashes);
       if (!frame_track_result) {
         LOG("Warning: %s", frame_track_result.error().message());
       }
@@ -1548,23 +1549,59 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
   return data_manager_->IsTracepointSelected(info);
 }
 
+void OrbitApp::EnableFrameTrack(const FunctionInfo& function) {
+  data_manager_->EnableFrameTrack(function);
+}
+
+void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
+  data_manager_->DisableFrameTrack(function);
+}
+
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  GetMutableCaptureData().InsertFrameTrack(function);
-  data_manager_->set_user_defined_capture_data(GetCaptureData().user_defined_capture_data());
-  AddFrameTrackTimers(function);
+  if (!HasCaptureData()) {
+    return;
+  }
+  const uint64_t function_address = GetCaptureData().GetAbsoluteAddress(function);
+  if (GetCaptureData().GetSelectedFunction(function_address) == nullptr) {
+    return;
+  }
+  // We only add a frame track to the actual capture data if the function for the frame
+  // track actually has hits in the capture data. Otherwise we can end up in inconsistent
+  // states where "empty" frame tracks exist in the capture data (which would also be
+  // serialized).
+  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(function);
+  if (stats.count() > 1) {
+    GetMutableCaptureData().EnableFrameTrack(function);
+    AddFrameTrackTimers(function);
+  } else {
+    CHECK(empty_frame_track_warning_callback_);
+    empty_frame_track_warning_callback_(function.pretty_name());
+  }
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
-  GetMutableCaptureData().EraseFrameTrack(function);
-  data_manager_->set_user_defined_capture_data(GetCaptureData().user_defined_capture_data());
-  GCurrentTimeGraph->RemoveFrameTrack(function);
+  // Removing a frame track requires that the frame track is disabled in the settings
+  // (what is stored in DataManager).
+  CHECK(!IsFrameTrackEnabled(function));
+
+  // We can only remove the frame track from the capture data if we have capture data and
+  // the frame track is actually enabled in the capture data.
+  if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(function)) {
+    GetMutableCaptureData().DisableFrameTrack(function);
+    GCurrentTimeGraph->RemoveFrameTrack(function);
+  }
 }
 
-bool OrbitApp::HasFrameTrack(const FunctionInfo& function) const {
-  return GetCaptureData().ContainsFrameTrack(function);
+bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
+  return data_manager_->IsFrameTrackEnabled(function);
+}
+
+bool OrbitApp::HasFrameTrackInCaptureData(const FunctionInfo& function) const {
+  return GCurrentTimeGraph->HasFrameTrack(function);
 }
 
 void OrbitApp::RefreshFrameTracks() {
+  CHECK(HasCaptureData());
   for (const auto& function :
        GetCaptureData().user_defined_capture_data().frame_track_functions()) {
     GCurrentTimeGraph->RemoveFrameTrack(function);
@@ -1573,8 +1610,13 @@ void OrbitApp::RefreshFrameTracks() {
 }
 
 void OrbitApp::AddFrameTrackTimers(const FunctionInfo& function) {
+  CHECK(HasCaptureData());
   const CaptureData& capture_data = GetCaptureData();
   const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
+  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(function);
+  if (stats.count() == 0) {
+    return;
+  }
 
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllThreadTrackTimerChains();

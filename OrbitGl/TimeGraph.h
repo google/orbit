@@ -169,6 +169,7 @@ class TimeGraph {
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
   [[nodiscard]] uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
+  [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
 
  protected:

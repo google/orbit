@@ -213,14 +213,6 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
   Move();
 }
 
-void LiveFunctionsController::AddFrameTrack(const FunctionInfo& function) {
-  GOrbitApp->AddFrameTrack(function);
-}
-
-void LiveFunctionsController::RemoveFrameTrack(const FunctionInfo& function) {
-  GOrbitApp->RemoveFrameTrack(function);
-}
-
 uint64_t LiveFunctionsController::GetStartTime(uint64_t index) {
   const auto& it = current_textboxes_.find(index);
   if (it != current_textboxes_.end()) {

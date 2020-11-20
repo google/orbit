@@ -7,13 +7,11 @@
 #include "OrbitClientData/FunctionUtils.h"
 
 void UserDefinedCaptureData::InsertFrameTrack(const orbit_client_protos::FunctionInfo& function) {
-  // We do not allow insertion of frame tracks twice.
-  CHECK(frame_track_functions_.insert(function).second);
+  frame_track_functions_.insert(function);
 }
 
 void UserDefinedCaptureData::EraseFrameTrack(const orbit_client_protos::FunctionInfo& function) {
-  // We do not allow erasing a frame track that does not exist.
-  CHECK(frame_track_functions_.erase(function));
+  frame_track_functions_.erase(function);
 }
 
 [[nodiscard]] bool UserDefinedCaptureData::ContainsFrameTrack(

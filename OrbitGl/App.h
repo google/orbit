@@ -254,6 +254,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSecureCopyCallback(SecureCopyCallback callback) {
     secure_copy_callback_ = std::move(callback);
   }
+  using ShowEmptyFrameTrackWarningCallback = std::function<void(std::string_view)>;
+  void SetShowEmptyFrameTrackWarningCallback(ShowEmptyFrameTrackWarningCallback callback) {
+    empty_frame_track_warning_callback_ = std::move(callback);
+  }
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
@@ -325,9 +329,25 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
 
+  // Only enables the frame track in the capture settings (in DataManager) and does not
+  // add a frame track to the current capture data.
+  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
+
+  // Only disables the frame track in the capture settings (in DataManager) and does
+  // not remove the frame track from the capture data.
+  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
+
+  [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
+
+  // Adds the frame track to the capture settings and also adds a frame track to the current
+  // capture data, *if* the captures contains function calls to the function.
   void AddFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  // Removes the frame track from the capture settings and also removes the frame track
+  // (if it exists) from the capture data.
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
+
+  [[nodiscard]] bool HasFrameTrackInCaptureData(
+      const orbit_client_protos::FunctionInfo& function) const;
 
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
@@ -350,7 +370,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const ModuleData* module, const std::vector<uint64_t>& function_hashes,
       std::vector<const orbit_client_protos::FunctionInfo*>* function_infos);
 
-  ErrorMessageOr<void> InsertFrameTracksFromHashes(const ModuleData* module,
+  ErrorMessageOr<void> EnableFrameTracksFromHashes(const ModuleData* module,
                                                    const std::vector<uint64_t> function_hashes);
   void AddFrameTrackTimers(const orbit_client_protos::FunctionInfo& function);
   void RefreshFrameTracks();
@@ -383,6 +403,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;
+  ShowEmptyFrameTrackWarningCallback empty_frame_track_warning_callback_;
 
   std::vector<DataView*> panels_;
 
