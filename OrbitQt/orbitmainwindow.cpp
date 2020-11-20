@@ -221,7 +221,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
-    GOrbitApp->RegisterDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
+    GOrbitApp->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
   } else {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
   }

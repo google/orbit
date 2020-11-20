@@ -17,7 +17,7 @@ class GlCanvas {
   explicit GlCanvas(uint32_t font_size);
   virtual ~GlCanvas();
 
-  enum class CanvasType { kCaptureWindow, kDebug };
+  enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
   static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size);
 
   virtual void Initialize();

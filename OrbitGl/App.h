@@ -28,6 +28,7 @@
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "ImGuiOrbit.h"
+#include "IntrospectionWindow.h"
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
@@ -129,8 +130,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
 
-  void RegisterCaptureWindow(CaptureWindow* capture);
-  void RegisterDebugCanvas(GlCanvas* debug_canvas);
+  void SetCaptureWindow(CaptureWindow* capture);
+  void SetDebugCanvas(GlCanvas* debug_canvas);
+  void SetIntrospectionWindow(IntrospectionWindow* canvas);
+  void StopIntrospection();
 
   void SetSamplingReport(
       SamplingProfiler sampling_profiler,
@@ -392,6 +395,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;
+  IntrospectionWindow* introspection_window_ = nullptr;
   GlCanvas* debug_canvas_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;

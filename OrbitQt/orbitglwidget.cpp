@@ -167,6 +167,7 @@ void OrbitGLWidget::resizeGL(int w, int h) {
 }
 
 void OrbitGLWidget::paintGL() {
+  ORBIT_SCOPE_FUNCTION;
   if (gl_canvas_) {
     gl_canvas_->Render(width(), height());
   }
