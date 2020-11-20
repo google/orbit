@@ -17,7 +17,7 @@ target_sources(
           deploymentconfigurations.h
           ElidedLabel.h
           Error.h
-          eventloop.h
+          EventLoop.h
           orbitaboutdialog.h
           orbitcodeeditor.h
           orbitdataviewpanel.h
