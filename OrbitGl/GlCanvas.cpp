@@ -9,6 +9,7 @@
 #include "App.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
+#include "IntrospectionWindow.h"
 #include "OpenGl.h"
 #include "SamplingProfiler.h"
 #include "TextBox.h"
@@ -98,8 +99,16 @@ GlCanvas::~GlCanvas() {
 
 std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size) {
   switch (canvas_type) {
-    case CanvasType::kCaptureWindow:
-      return std::make_unique<CaptureWindow>(font_size);
+    case CanvasType::kCaptureWindow: {
+      auto main_capture_window = std::make_unique<CaptureWindow>(font_size);
+      GOrbitApp->RegisterCaptureWindow(main_capture_window.get());
+      return main_capture_window;
+    }
+    case CanvasType::kIntrospectionWindow: {
+      auto introspection_window = std::make_unique<IntrospectionWindow>(font_size);
+      GOrbitApp->RegisterIntrospectionWindow(introspection_window.get());
+      return introspection_window;
+    }
     case CanvasType::kDebug:
       return std::make_unique<GlCanvas>(font_size);
     default:
@@ -280,6 +289,7 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
 }
 
 void GlCanvas::PrepareScreenSpaceViewport() {
+  ORBIT_SCOPE_FUNCTION;
   glViewport(0, 0, GetWidth(), GetHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -337,6 +347,7 @@ int GlCanvas::GetWidth() const { return screen_width_; }
 int GlCanvas::GetHeight() const { return screen_height_; }
 
 void GlCanvas::Render(int width, int height) {
+  ORBIT_SCOPE("GlCanvas::Render");
   screen_width_ = width;
   screen_height_ = height;
 

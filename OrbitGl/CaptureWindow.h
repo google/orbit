@@ -59,12 +59,18 @@ class CaptureWindow : public GlCanvas {
   void OnCaptureStarted();
   std::vector<std::string> GetContextMenu() override;
   void OnContextMenu(const std::string& action, int menu_index) override;
+  virtual void ToggleCapture();
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
+  [[nodiscard]] TimeGraph* GetTimeGraph() { return &time_graph_; }
 
   Batcher& GetBatcherById(BatcherId batcher_id);
 
- private:
+ protected:
+  [[nodiscard]] virtual const char* GetHelpText();
+  [[nodiscard]] virtual bool ShouldAutoZoom();
+
+ protected:
   uint32_t font_size_;
   TimeGraph time_graph_;
   bool draw_help_;
