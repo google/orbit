@@ -12,16 +12,10 @@
 
 namespace orbit_vulkan_layer {
 
-namespace internal {
-enum SlotState {
-  kReadyForQueryIssue = 0,
-  kQueryPendingOnGPU,
-};
-}
-
 /*
- * This class wraps Vulkan's VkQueryPool specific for timestamp queries, and provides utility
- * methods to (1) initialize a poo, (2) retrieve an available slot index and (3) reset slot indices.
+ * This class wraps Vulkan's VkQueryPool explicitly for timestamp queries, and provides utility
+ * methods to (1) initialize a pool, (2) retrieve an available slot index and (3) reset slot
+ * indices.
  * In order to do so, it stores the internal `SlotState` for each index.
  *
  * Thread-Safety: This class is internally synchronized (using read/write locks) and can be safely
@@ -33,9 +27,7 @@ class TimerQueryPool {
   explicit TimerQueryPool(DispatchTable* dispatch_table, uint32_t num_timer_query_slots)
       : dispatch_table_(dispatch_table), num_timer_query_slots_(num_timer_query_slots) {}
 
-  /*
-   * Creates and resets a vulkan `VkQueryPool`, ready to use for timestamp queries.
-   */
+  // Creates and resets a vulkan `VkQueryPool`, ready to use for timestamp queries.
   void InitializeTimerQueryPool(VkDevice device) {
     VkQueryPool query_pool;
 
@@ -54,43 +46,40 @@ class TimerQueryPool {
 
     {
       absl::WriterMutexLock lock(&mutex_);
+      CHECK(!device_to_query_pool_.contains(device));
       device_to_query_pool_[device] = query_pool;
-      std::vector<internal::SlotState> slots{num_timer_query_slots_};
-      std::fill(slots.begin(), slots.end(), internal::SlotState::kReadyForQueryIssue);
+      std::vector<SlotState> slots{num_timer_query_slots_};
+      std::fill(slots.begin(), slots.end(), SlotState::kReadyForQueryIssue);
       device_to_query_slots_[device] = slots;
       device_to_potential_next_free_index_[device] = 0;
     }
   }
 
-  /*
-   * Retrieves the query pool for a give device. Note, that the pool must be initialized using
-   * `InitializeTimerQueryPool` before.
-   */
+  // Retrieves the query pool for a given device. Note that the pool must be initialized using
+  // `InitializeTimerQueryPool` before.
   [[nodiscard]] VkQueryPool GetQueryPool(VkDevice device) {
     absl::ReaderMutexLock lock(&mutex_);
     CHECK(device_to_query_pool_.contains(device));
     return device_to_query_pool_.at(device);
   }
 
-  /*
-   * Tries to find a free query slot in the device`s pool. It returns `false` if no slot was found
-   * (all slots are occupied) and true otherwise.
-   * In case it successfully found a slot, the index will be written to the given `allocated_index`.
-   *
-   * Note, that the pool pool must be initialized using `InitializeTimerQueryPool` before.
-   * See also `ResetQuerySlots` to make occupied slots available again.
-   */
+  // Tries to find a free query slot in the device's pool. It returns `false` if no slot was found
+  // (all slots are occupied) and true otherwise.
+  // In case it successfully found a slot, the index will be written to the given `allocated_index`.
+  //
+  // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
+  // See also `ResetQuerySlots` to make occupied slots available again.
   [[nodiscard]] bool NextReadyQuerySlot(VkDevice device, uint32_t* allocated_index) {
     absl::WriterMutexLock lock(&mutex_);
     CHECK(device_to_potential_next_free_index_.contains(device));
     CHECK(device_to_query_slots_.contains(device));
     uint32_t potential_next_free_slot = device_to_potential_next_free_index_.at(device);
-    std::vector<internal::SlotState>& slots = device_to_query_slots_.at(device);
+    std::vector<SlotState>& slots = device_to_query_slots_.at(device);
     uint32_t current_slot = potential_next_free_slot;
     do {
-      if (slots.at(current_slot) == internal::SlotState::kReadyForQueryIssue) {
+      if (slots.at(current_slot) == SlotState::kReadyForQueryIssue) {
         device_to_potential_next_free_index_[device] = (current_slot + 1) % num_timer_query_slots_;
-        slots.at(current_slot) = internal::SlotState::kQueryPendingOnGPU;
+        slots.at(current_slot) = SlotState::kQueryPendingOnGpu;
         *allocated_index = current_slot;
         return true;
       }
@@ -100,29 +89,52 @@ class TimerQueryPool {
     return false;
   }
 
-  /*
-   * Resets an occupied slot to be ready for queries again.
-   * If `rollback_only` is set, it will not call to Vulkan to reset the content at that slot.
-   * This is useful, if the slot was retrieved, but the actual query was not yet submitted to
-   * Vulkan (e.g. if on resetting the command buffer).
-   *
-   * Note, that the pool pool must be initialized using `InitializeTimerQueryPool` before.
-   * Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
-   * of `NextReadyQuerySlot` and have not been reset yet.
-   */
-  void ResetQuerySlots(VkDevice device, const std::vector<uint32_t>& physical_slot_indices,
+  // Resets an occupied slot to be ready for queries again. It will also call to Vulkan to reset the
+  // content of that slot (in contrast to `RollbackPendingQuerySlots`).
+  //
+  // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
+  // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
+  // of `NextReadyQuerySlot` and must not have been reset yet.
+  void ResetQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices) {
+    ResetQuerySlots(device, slot_indices, false);
+  }
+
+  // Resets an occupied slot to be ready for queries again. It will *not* call to Vulkan to reset
+  // the content of that slot (in contrast to `ResetQuerySlots`).
+  // This is useful, if the slot was retrieved, but the actual query was not yet submitted to
+  // Vulkan (e.g. if on resetting the command buffer).
+  //
+  // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
+  // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
+  // of `NextReadyQuerySlot` and must not have been reset yet.
+  void RollbackPendingQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices) {
+    ResetQuerySlots(device, slot_indices, true);
+  }
+
+ private:
+  enum class SlotState { kReadyForQueryIssue = 0, kQueryPendingOnGpu };
+
+  // Resets an occupied slot to be ready for queries again.
+  // If `rollback_only` is set, it will not call to Vulkan to reset the content of that slot.
+  // This is useful, if the slot was retrieved, but the actual query was not yet submitted to
+  // Vulkan (e.g. if on resetting the command buffer).
+  //
+  // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
+  // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
+  // of `NextReadyQuerySlot` and must not have been reset yet.
+  void ResetQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices,
                        bool rollback_only) {
-    if (physical_slot_indices.empty()) {
+    if (slot_indices.empty()) {
       return;
     }
     absl::WriterMutexLock lock(&mutex_);
     CHECK(device_to_query_slots_.contains(device));
-    std::vector<internal::SlotState>& slot_states = device_to_query_slots_.at(device);
-    for (uint32_t physical_slot_index : physical_slot_indices) {
+    std::vector<SlotState>& slot_states = device_to_query_slots_.at(device);
+    for (uint32_t physical_slot_index : slot_indices) {
       CHECK(physical_slot_index < num_timer_query_slots_);
-      const internal::SlotState& current_state = slot_states.at(physical_slot_index);
-      CHECK(current_state == internal::SlotState::kQueryPendingOnGPU);
-      slot_states.at(physical_slot_index) = internal::SlotState::kReadyForQueryIssue;
+      const SlotState& current_state = slot_states.at(physical_slot_index);
+      CHECK(current_state == SlotState::kQueryPendingOnGpu);
+      slot_states.at(physical_slot_index) = SlotState::kReadyForQueryIssue;
       if (rollback_only) {
         continue;
       }
@@ -131,14 +143,13 @@ class TimerQueryPool {
     }
   }
 
- private:
   DispatchTable* dispatch_table_;
   const uint32_t num_timer_query_slots_;
 
   absl::Mutex mutex_;
 
   absl::flat_hash_map<VkDevice, VkQueryPool> device_to_query_pool_;
-  absl::flat_hash_map<VkDevice, std::vector<internal::SlotState>> device_to_query_slots_;
+  absl::flat_hash_map<VkDevice, std::vector<SlotState>> device_to_query_slots_;
   absl::flat_hash_map<VkDevice, uint32_t> device_to_potential_next_free_index_;
 };
 }  // namespace orbit_vulkan_layer
