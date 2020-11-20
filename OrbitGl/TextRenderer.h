@@ -10,71 +10,73 @@
 
 #include "Batcher.h"
 #include "OpenGl.h"
-#include "TextBox.h"
 
 namespace ftgl {
 struct vertex_buffer_t;
 struct texture_font_t;
 }  // namespace ftgl
 
+class GlCanvas;
+
 class TextRenderer {
  public:
-  explicit TextRenderer(uint32_t font_size);
+  explicit TextRenderer();
   ~TextRenderer();
 
   void Init();
-  void Display(Batcher* batcher);
-  void DisplayLayer(Batcher* batcher, float layer);
-  void AddText(const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
-               uint32_t font_size, float a_MaxSize = -1.f, bool a_RightJustified = false,
-               Vec2* out_text_pos = nullptr, Vec2* out_text_size = nullptr);
-  // Returns the width of the rendered string.
-  int AddTextTrailingCharsPrioritized(const char* a_Text, float a_X, float a_Y, float a_Z,
-                                      const Color& a_Color, size_t a_TrailingCharsLength,
-                                      uint32_t font_size, float a_MaxSize);
-  int AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z, const Color& a_Color,
-                float a_MaxSize = -1.f, bool a_RightJustified = false, bool a_InvertY = true);
-
-  int GetStringWidth(const char* a_Text) const;
-  [[nodiscard]] std::vector<float> GetLayers() const;
   void Clear();
-  void SetCanvas(class GlCanvas* a_Canvas) { m_Canvas = a_Canvas; }
-  const GlCanvas* GetCanvas() const { return m_Canvas; }
-  GlCanvas* GetCanvas() { return m_Canvas; }
-  void ToggleDrawOutline() { m_DrawOutline = !m_DrawOutline; }
-  void SetFontSize(uint32_t a_Size);
-  uint32_t GetFontSize() const;
+  void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
+
+  void RenderLayer(Batcher* batcher, float layer);
+  void RenderDebug(Batcher* batcher);
+  [[nodiscard]] std::vector<float> GetLayers() const;
+
+  void AddText(const char* text, float x, float y, float z, const Color& color, uint32_t font_size,
+               float max_size = -1.f, bool right_justified = false, Vec2* out_text_pos = nullptr,
+               Vec2* out_text_size = nullptr);
+
+  float AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
+                                        const Color& color, size_t trailing_chars_length,
+                                        uint32_t font_size, float max_size);
+
+  [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size);
+  [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size);
+
+  static void SetDrawOutline(bool value) { draw_outline_ = value; }
 
  protected:
   void AddTextInternal(texture_font_t* font, const char* text, const vec4& color, vec2* pen,
-                       float a_MaxSize = -1.f, float a_Z = -0.01f, vec2* out_text_pos = nullptr,
+                       float max_size = -1.f, float z = -0.01f, vec2* out_text_pos = nullptr,
                        vec2* out_text_size = nullptr);
-  void ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y);
-  float ToScreenSpace(float a_Size);
-  void DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer);
+
+  void ToScreenSpace(float x, float y, float& o_x, float& o_y);
+  [[nodiscard]] float ToScreenSpace(float width);
+  [[nodiscard]] int GetStringWidthScreenSpace(const char* text, uint32_t font_size);
+  [[nodiscard]] int GetStringHeightScreenSpace(const char* text, uint32_t font_size);
+  [[nodiscard]] texture_font_t* GetFont(uint32_t size);
+
+  void DrawOutline(Batcher* batcher, vertex_buffer_t* buffer);
 
  private:
-  texture_atlas_t* m_Atlas;
-  std::unordered_map<float, vertex_buffer_t*> buffers_by_layer_;
-  texture_font_t* m_Font;
-  std::map<int, texture_font_t*> m_FontsBySize;
-  uint32_t current_font_size_;
-  GlCanvas* m_Canvas;
-  GLuint m_Shader;
-  mat4 m_Model;
-  mat4 m_View;
-  mat4 m_Proj;
-  vec2 m_Pen;
-  bool m_Initialized;
-  bool m_DrawOutline;
+  texture_atlas_t* texture_atlas_;
+  std::unordered_map<float, vertex_buffer_t*> vertex_buffers_by_layer_;
+  std::map<uint32_t, texture_font_t*> fonts_by_size_;
+  GlCanvas* canvas_;
+  GLuint shader_;
+  mat4 model_;
+  mat4 view_;
+  mat4 projection_;
+  vec2 pen_;
+  bool initialized_;
+  static bool draw_outline_;
 };
 
-inline vec4 ColorToVec4(const Color& a_Col) {
+inline vec4 ColorToVec4(const Color& color) {
   const float coeff = 1.f / 255.f;
-  vec4 color;
-  color.r = a_Col[0] * coeff;
-  color.g = a_Col[1] * coeff;
-  color.b = a_Col[2] * coeff;
-  color.a = a_Col[3] * coeff;
-  return color;
+  vec4 vec;
+  vec.r = color[0] * coeff;
+  vec.g = color[1] * coeff;
+  vec.b = color[2] * coeff;
+  vec.a = color[3] * coeff;
+  return vec;
 }

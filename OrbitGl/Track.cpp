@@ -158,17 +158,19 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   collapse_toggle_->SetPos(toggle_pos);
   collapse_toggle_->Draw(canvas, picking_mode, z_offset);
 
+  // Draw label.
   if (!picking) {
-    // Draw label.
+    uint32_t font_size = time_graph_->CalculateZoomedFontSize();
+    auto& text_renderer = canvas->GetTextRenderer();
     float label_offset_x = layout.GetTrackLabelOffsetX();
-    // Vertical offset for the text to be aligned to the center of the triangle.
-    float label_offset_y = GCurrentTimeGraph->GetFontSize() / 3.f;
+    float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;
+
     const Color kColor =
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
-    canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
+
+    text_renderer.AddTextTrailingCharsPrioritized(
         label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
-        GetNumberOfPrioritizedTrailingCharacters(), time_graph_->CalculateZoomedFontSize(),
-        label_width - label_offset_x);
+        GetNumberOfPrioritizedTrailingCharacters(), font_size, label_width - label_offset_x);
   }
 
   canvas_ = canvas;

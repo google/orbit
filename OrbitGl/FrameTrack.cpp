@@ -226,8 +226,8 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   std::string avg_time = GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
-
-  int string_width = canvas->GetTextRenderer().GetStringWidth(label.c_str());
+  uint32_t font_size = time_graph_->CalculateZoomedFontSize();
+  float string_width = canvas->GetTextRenderer().GetStringWidth(label.c_str(), font_size);
   Vec2 white_text_box_size(static_cast<float>(string_width), layout.GetTextBoxHeight());
   Vec2 white_text_box_position(pos_[0] + layout.GetRightMargin(),
                                y - layout.GetTextBoxHeight() / 2.f);
@@ -238,8 +238,8 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
 
   canvas->GetTextRenderer().AddText(label.c_str(), white_text_box_position[0],
                                     white_text_box_position[1] + layout.GetTextOffset(),
-                                    GlCanvas::kZValueTextUi, kWhiteColor,
-                                    time_graph_->CalculateZoomedFontSize(), white_text_box_size[0]);
+                                    GlCanvas::kZValueTextUi, kWhiteColor, font_size,
+                                    white_text_box_size[0]);
 }
 
 void FrameTrack::UpdateBoxHeight() {

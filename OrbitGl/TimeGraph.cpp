@@ -34,8 +34,7 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-TimeGraph::TimeGraph(uint32_t font_size)
-    : font_size_(font_size), text_renderer_static_(font_size), batcher_(BatcherId::kTimeGraph) {
+TimeGraph::TimeGraph(uint32_t font_size) : font_size_(font_size), batcher_(BatcherId::kTimeGraph) {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ =
@@ -64,11 +63,6 @@ void TimeGraph::SetCanvas(GlCanvas* canvas) {
   text_renderer_->SetCanvas(canvas);
   text_renderer_static_.SetCanvas(canvas);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
-}
-
-void TimeGraph::SetFontSize(uint32_t font_size) {
-  text_renderer_->SetFontSize(font_size);
-  text_renderer_static_.SetFontSize(font_size);
 }
 
 void TimeGraph::Clear() {
@@ -661,9 +655,9 @@ void TimeGraph::DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Col
   float max_size = size[0];
 
   const Color kBlack(0, 0, 0, 255);
-  int text_width = canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
+  float text_width = canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
       text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueText, kBlack,
-      time.length(), GetFontSize(), max_size);
+      time.length(), font_size_, max_size);
 
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), GetTextBoxHeight());
   Vec2 white_box_position(pos[0], text_box_y);
@@ -1246,7 +1240,7 @@ const TextBox* TimeGraph::FindDown(const TextBox* from) {
 
 void TimeGraph::DrawText(GlCanvas* canvas, float layer) {
   if (draw_text_) {
-    text_renderer_static_.DisplayLayer(canvas->GetBatcher(), layer);
+    text_renderer_static_.RenderLayer(canvas->GetBatcher(), layer);
   }
 }
 
