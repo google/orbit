@@ -47,6 +47,16 @@ target_sources(OrbitBase PRIVATE
         ExecutablePathLinux.cpp)
 endif()
 
+if(WIN32)
+target_sources(OrbitBase PRIVATE
+        include/OrbitBase/Platform/Windows/Profiling.h
+        Platform/Windows/Profiling.cpp)
+elseif(UNIX)
+target_sources(OrbitBase PRIVATE
+        include/OrbitBase/Platform/Linux/Profiling.h
+        Platform/Linux/Profiling.cpp)
+endif()
+
 target_link_libraries(OrbitBase PUBLIC
         CONAN_PKG::Outcome
         CONAN_PKG::abseil
