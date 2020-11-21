@@ -58,6 +58,7 @@ class OrbitMainWindow : public QMainWindow {
 
  protected:
   void closeEvent(QCloseEvent* event) override;
+  bool eventFilter(QObject* object, QEvent* event) override;
 
  private slots:
   void on_actionAbout_triggered();
@@ -79,6 +80,7 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionOpen_Capture_triggered();
   void on_actionClear_Capture_triggered();
   void on_actionHelp_triggered();
+  void on_actionIntrospection_triggered();
 
   void on_actionCheckFalse_triggered();
   void on_actionNullPointerDereference_triggered();
@@ -99,6 +101,7 @@ class OrbitMainWindow : public QMainWindow {
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> m_GlWidgets;
+  OrbitGLWidget* introspection_widget_ = nullptr;
 
   // Capture toolbar.
   QIcon icon_start_capture_;

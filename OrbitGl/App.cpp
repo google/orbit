@@ -1359,6 +1359,10 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   return data_manager_->IsFunctionSelected(*function);
 }
 
+const FunctionInfo* OrbitApp::GetSelectedFunction(uint64_t absolute_address) const {
+  return HasCaptureData() ? GetCaptureData().GetSelectedFunction(absolute_address) : nullptr;
+}
+
 void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions) {
   data_manager_->set_visible_functions(std::move(visible_functions));
   NeedsRedraw();

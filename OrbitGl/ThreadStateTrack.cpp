@@ -15,6 +15,7 @@ ThreadStateTrack::ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id) : T
 }
 
 bool ThreadStateTrack::IsEmpty() const {
+  if (!GOrbitApp->HasCaptureData()) return true;
   return !GOrbitApp->GetCaptureData().HasThreadStatesForThread(thread_id_);
 }
 

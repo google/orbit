@@ -115,6 +115,7 @@ QPushButton:disabled {
            <addaction name="actionOpen_Capture"/>
            <addaction name="actionSave_Capture"/>
            <addaction name="actionHelp"/>
+           <addaction name="actionIntrospection"/>
           </widget>
          </item>
          <item>
@@ -536,6 +537,18 @@ QPushButton:disabled {
    </property>
    <property name="toolTip">
     <string>Help</string>
+   </property>
+  </action>
+  <action name="actionIntrospection">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/info</normaloff>:/actions/info</iconset>
+   </property>
+   <property name="text">
+    <string>Introspection</string>
+   </property>
+   <property name="toolTip">
+    <string>Introspection</string>
    </property>
   </action>
   <action name="actionQuit">

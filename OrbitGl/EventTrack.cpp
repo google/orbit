@@ -161,6 +161,7 @@ void EventTrack::SelectEvents() {
 }
 
 bool EventTrack::IsEmpty() const {
+  if (!GOrbitApp->HasCaptureData()) return true;
   const uint32_t callstack_count =
       (thread_id_ == SamplingProfiler::kAllThreadsFakeTid)
           ? GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount()

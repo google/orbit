@@ -509,6 +509,7 @@ void OrbitMainWindow::StartMainTimer() {
 }
 
 void OrbitMainWindow::OnTimer() {
+  ORBIT_SCOPE("OrbitMainWindow::OnTimer");
   GOrbitApp->MainTick();
 
   for (OrbitGLWidget* glWidget : m_GlWidgets) {
@@ -584,6 +585,26 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { GOrbitApp->ToggleCap
 void OrbitMainWindow::on_actionClear_Capture_triggered() { GOrbitApp->ClearCapture(); }
 
 void OrbitMainWindow::on_actionHelp_triggered() { GOrbitApp->ToggleDrawHelp(); }
+
+void OrbitMainWindow::on_actionIntrospection_triggered() {
+  if (introspection_widget_ == nullptr) {
+    introspection_widget_ = new OrbitGLWidget();
+    introspection_widget_->setWindowFlags(Qt::WindowStaysOnTopHint);
+    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, 14);
+    introspection_widget_->installEventFilter(this);
+  }
+
+  introspection_widget_->show();
+}
+
+bool OrbitMainWindow::eventFilter(QObject* object, QEvent* event) {
+  if (object == introspection_widget_) {
+    if (event->type() == QEvent::Close) {
+      GOrbitApp->StopIntrospection();
+    }
+  }
+  return false;
+}
 
 void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
   QSettings settings("The Orbit Authors", "Orbit Profiler");
