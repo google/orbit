@@ -6,7 +6,6 @@
 #define ORBIT_BASE_PLATFORM_WINDOWS_PROFILING_H_
 
 #include <Windows.h>
-
 #include <string>
 
 using pid_t = uint32_t;

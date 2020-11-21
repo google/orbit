@@ -9,7 +9,6 @@
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
-
 #include <string>
 
 [[nodiscard]] inline uint64_t MonotonicTimestampNs() {
