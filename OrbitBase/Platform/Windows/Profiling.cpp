@@ -15,7 +15,7 @@ std::string GetThreadName(pid_t tid) {
   const std::string kEmptyString;
 
   // Get thread handle from tid.
-  HANDLE thread_handle = OpenThread(READ_CONTROL, FALSE, tid);
+  HANDLE thread_handle = OpenThread(THREAD_QUERY_INFORMATION, FALSE, tid);
   if (thread_handle == nullptr) {
     ERROR("Retrieving threand name for tid %u", tid);
     return kEmptyString;
@@ -34,7 +34,7 @@ std::string GetThreadName(pid_t tid) {
 }
 
 void SetThreadName(const std::string& name) {
-  std::wstring wide_name(name);
+  std::wstring wide_name(name.begin(), name.end());
   if (!SUCCEEDED(SetThreadDescription(GetCurrentThread(), wide_name.c_str()))) {
     ERROR("Setting thread name %s", name);
   }
