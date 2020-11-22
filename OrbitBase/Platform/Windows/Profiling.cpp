@@ -33,7 +33,7 @@ std::string GetThreadName(pid_t tid) {
   }
 
   // Get thread handle from tid.
-  HANDLE thread_handle = OpenThread(THREAD_QUERY_INFORMATION, FALSE, tid);
+  HANDLE thread_handle = OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, tid);
   if (thread_handle == nullptr) {
     ERROR("Retrieving thread handle for tid %u", tid);
     return kEmptyString;
