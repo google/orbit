@@ -15,6 +15,7 @@ target_include_directories(OrbitVulkanLayer PRIVATE
 
 target_sources(OrbitVulkanLayer PRIVATE
         DeviceManager.h
+        DispatchTable.cpp
         DispatchTable.h
         QueueManager.cpp
         QueueManager.h

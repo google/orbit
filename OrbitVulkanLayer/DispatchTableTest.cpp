@@ -7,10 +7,13 @@
 
 namespace orbit_vulkan_layer {
 
+// Note the following for all the following tests:
+// We can not create an actual VkInstance/VkDevice, but the first bytes of any dispatchable type in
+// Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
+// table wrapper, so we need to mimic it.
+// Thus, we will create VkLayer(Instance)DispatchTables and cast its address to VkInstance/VkDevice.
+
 TEST(DispatchTable, CanInitializeInstance) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -21,9 +24,6 @@ TEST(DispatchTable, CanInitializeInstance) {
 }
 
 TEST(DispatchTable, CannotInitializeInstanceTwice) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -39,9 +39,6 @@ TEST(DispatchTable, CannotInitializeInstanceTwice) {
 }
 
 TEST(DispatchTable, CanRemoveInstance) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -53,9 +50,6 @@ TEST(DispatchTable, CanRemoveInstance) {
 }
 
 TEST(DispatchTable, CanInitializeInstanceTwiceAfterRemove) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -68,9 +62,6 @@ TEST(DispatchTable, CanInitializeInstanceTwiceAfterRemove) {
 }
 
 TEST(DispatchTable, CanInitializeDevice) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -81,9 +72,6 @@ TEST(DispatchTable, CanInitializeDevice) {
 }
 
 TEST(DispatchTable, CannotInitializeDeviceTwice) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -97,9 +85,6 @@ TEST(DispatchTable, CannotInitializeDeviceTwice) {
 }
 
 TEST(DispatchTable, CanRemoveDevice) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -111,9 +96,6 @@ TEST(DispatchTable, CanRemoveDevice) {
 }
 
 TEST(DispatchTable, CanInitializeDeviceTwiceAfterRemove) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -126,9 +108,6 @@ TEST(DispatchTable, CanInitializeDeviceTwiceAfterRemove) {
 }
 
 TEST(DispatchTable, NoExtensionAvailable) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -141,9 +120,6 @@ TEST(DispatchTable, NoExtensionAvailable) {
 }
 
 TEST(DispatchTable, CanSupportDebugUtilsExtension) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -166,9 +142,6 @@ TEST(DispatchTable, CanSupportDebugUtilsExtension) {
 }
 
 TEST(DispatchTable, CanSupportDebugMarkerExtension) {
-  // We can not create an actual VkDevice, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -192,9 +165,6 @@ TEST(DispatchTable, CanSupportDebugMarkerExtension) {
 }
 
 TEST(DispatchTable, CanCallEnumerateDeviceExtensionProperties) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -225,9 +195,6 @@ TEST(DispatchTable, CanCallEnumerateDeviceExtensionProperties) {
 }
 
 TEST(DispatchTable, CanCallGetPhysicalDeviceProperties) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
@@ -250,12 +217,10 @@ TEST(DispatchTable, CanCallGetPhysicalDeviceProperties) {
   VkPhysicalDevice device = {};
   dispatch_table.GetPhysicalDeviceProperties(instance)(device, nullptr);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallGetInstanceProcAddr) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
@@ -279,12 +244,10 @@ TEST(DispatchTable, CanCallGetInstanceProcAddr) {
 
   dispatch_table.GetInstanceProcAddr(instance)(instance, "");
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallGetDeviceProcAddr) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -308,12 +271,10 @@ TEST(DispatchTable, CanCallGetDeviceProcAddr) {
 
   dispatch_table.GetDeviceProcAddr(device)(device, "");
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallResetCommandPool) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -337,9 +298,6 @@ TEST(DispatchTable, CanCallResetCommandPool) {
 }
 
 TEST(DispatchTable, CanCallAllocateCommandBuffers) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -363,9 +321,6 @@ TEST(DispatchTable, CanCallAllocateCommandBuffers) {
 }
 
 TEST(DispatchTable, CanCallFreeCommandBuffers) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -389,12 +344,10 @@ TEST(DispatchTable, CanCallFreeCommandBuffers) {
   VkCommandPool command_pool = {};
   dispatch_table.FreeCommandBuffers(device)(device, command_pool, 0, nullptr);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallBeginCommandBuffer) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -418,9 +371,6 @@ TEST(DispatchTable, CanCallBeginCommandBuffer) {
 }
 
 TEST(DispatchTable, CanCallEndCommandBuffer) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -443,9 +393,6 @@ TEST(DispatchTable, CanCallEndCommandBuffer) {
 }
 
 TEST(DispatchTable, CanCallResetCommandBuffer) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -470,9 +417,6 @@ TEST(DispatchTable, CanCallResetCommandBuffer) {
 }
 
 TEST(DispatchTable, CanCallGetDeviceQueue) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -494,12 +438,10 @@ TEST(DispatchTable, CanCallGetDeviceQueue) {
 
   dispatch_table.GetDeviceQueue(device)(device, 0, 0, nullptr);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallGetDeviceQueue2) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -521,12 +463,10 @@ TEST(DispatchTable, CanCallGetDeviceQueue2) {
 
   dispatch_table.GetDeviceQueue2(device)(device, nullptr, nullptr);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallQueueSubmit) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -551,9 +491,6 @@ TEST(DispatchTable, CanCallQueueSubmit) {
 }
 
 TEST(DispatchTable, CanCallQueuePresentKHR) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -576,9 +513,6 @@ TEST(DispatchTable, CanCallQueuePresentKHR) {
 }
 
 TEST(DispatchTable, CanCallCreateQueryPool) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -602,9 +536,6 @@ TEST(DispatchTable, CanCallCreateQueryPool) {
 }
 
 TEST(DispatchTable, CanCallResetQueryPoolEXT) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -628,12 +559,10 @@ TEST(DispatchTable, CanCallResetQueryPoolEXT) {
   VkQueryPool query_pool = {};
   dispatch_table.ResetQueryPoolEXT(device)(device, query_pool, 0, 0);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallGetQueryPoolResults) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -660,9 +589,6 @@ TEST(DispatchTable, CanCallGetQueryPoolResults) {
 }
 
 TEST(DispatchTable, CanCallCmdWriteTimestamp) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -687,12 +613,10 @@ TEST(DispatchTable, CanCallCmdWriteTimestamp) {
   dispatch_table.CmdWriteTimestamp(device)(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
                                            query_pool, 0);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallCmdBeginDebugUtilsLabelEXT) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -716,12 +640,10 @@ TEST(DispatchTable, CanCallCmdBeginDebugUtilsLabelEXT) {
   VkCommandBuffer command_buffer = {};
   dispatch_table.CmdBeginDebugUtilsLabelEXT(device)(command_buffer, nullptr);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallCmdEndDebugUtilsLabelEXT) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -743,12 +665,10 @@ TEST(DispatchTable, CanCallCmdEndDebugUtilsLabelEXT) {
   VkCommandBuffer command_buffer = {};
   dispatch_table.CmdEndDebugUtilsLabelEXT(device)(command_buffer);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallCmdDebugMarkerBeginEXT) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -771,12 +691,10 @@ TEST(DispatchTable, CanCallCmdDebugMarkerBeginEXT) {
   VkCommandBuffer command_buffer = {};
   dispatch_table.CmdDebugMarkerBeginEXT(device)(command_buffer, nullptr);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 TEST(DispatchTable, CanCallCmdDebugMarkerEndEXT) {
-  // We can not create an actual VkInstance, but the first bytes of an any dispatchable type in
-  // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
-  // table wrapper, so we need to mimic it.
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
@@ -798,6 +716,7 @@ TEST(DispatchTable, CanCallCmdDebugMarkerEndEXT) {
   VkCommandBuffer command_buffer = {};
   dispatch_table.CmdDebugMarkerEndEXT(device)(command_buffer);
   EXPECT_TRUE(was_called);
+  was_called = false;
 }
 
 }  // namespace orbit_vulkan_layer
