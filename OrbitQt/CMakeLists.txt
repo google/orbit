@@ -14,7 +14,7 @@ target_sources(
           CallTreeWidget.h
           CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
-          deploymentconfigurations.h
+          DeploymentConfigurations.h
           ElidedLabel.h
           Error.h
           EventLoop.h
@@ -48,7 +48,7 @@ target_sources(
           ElidedLabel.cpp
           MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
-          deploymentconfigurations.cpp
+          DeploymentConfigurations.cpp
           main.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui

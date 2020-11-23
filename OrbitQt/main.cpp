@@ -24,6 +24,7 @@
 
 #include "App.h"
 #include "ApplicationOptions.h"
+#include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
@@ -34,7 +35,6 @@
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
-#include "deploymentconfigurations.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
 #include "servicedeploymanager.h"
