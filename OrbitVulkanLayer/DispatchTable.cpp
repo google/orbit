@@ -7,7 +7,7 @@
 namespace orbit_vulkan_layer {
 
 void DispatchTable::CreateInstanceDispatchTable(
-    VkInstance instance, const PFN_vkGetInstanceProcAddr& next_get_instance_proc_addr_function) {
+    VkInstance instance, PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function) {
   VkLayerInstanceDispatchTable dispatch_table;
   dispatch_table.DestroyInstance = absl::bit_cast<PFN_vkDestroyInstance>(
       next_get_instance_proc_addr_function(instance, "vkDestroyInstance"));
@@ -35,7 +35,7 @@ void DispatchTable::RemoveInstanceDispatchTable(VkInstance instance) {
 }
 
 void DispatchTable::CreateDeviceDispatchTable(
-    VkDevice device, const PFN_vkGetDeviceProcAddr& next_get_device_proc_addr_function) {
+    VkDevice device, PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function) {
   VkLayerDispatchTable dispatch_table;
 
   dispatch_table.DestroyDevice = absl::bit_cast<PFN_vkDestroyDevice>(

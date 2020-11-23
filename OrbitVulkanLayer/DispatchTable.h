@@ -32,12 +32,12 @@ class DispatchTable {
  public:
   DispatchTable() = default;
 
-  void CreateInstanceDispatchTable(
-      VkInstance instance, const PFN_vkGetInstanceProcAddr& next_get_instance_proc_addr_function);
+  void CreateInstanceDispatchTable(VkInstance instance,
+                                   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function);
   void RemoveInstanceDispatchTable(VkInstance instance);
 
   void CreateDeviceDispatchTable(VkDevice device,
-                                 const PFN_vkGetDeviceProcAddr& next_get_device_proc_addr_function);
+                                 PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function);
   void RemoveDeviceDispatchTable(VkDevice device);
 
   template <typename DispatchableType>
