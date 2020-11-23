@@ -498,7 +498,7 @@ void CaptureWindow::Draw() {
   Append(all_layers, text_renderer_.GetLayers());
   Append(all_layers, time_graph_.GetTextRenderer()->GetLayers());
 
-  // Remove duplicates.
+  // Sort and remove duplicates.
   std::sort(all_layers.begin(), all_layers.end());
   auto it = std::unique(all_layers.begin(), all_layers.end());
   all_layers.resize(std::distance(all_layers.begin(), it));
