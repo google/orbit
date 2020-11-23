@@ -33,7 +33,7 @@ namespace {
 std::string GetLogFilePath(const std::string& log_directory) {
   std::filesystem::path log_directory_path{log_directory};
   std::filesystem::create_directory(log_directory_path);
-  const std::string log_file_path = log_directory_path / "OrbitClientGgp.log";
+  const std::string log_file_path = log_directory_path / "OrbitCaptureGgpService.log";
   LOG("Log file: %s", log_file_path);
   return log_file_path;
 }
