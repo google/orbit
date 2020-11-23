@@ -137,9 +137,11 @@ target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitQtTests
         PRIVATE
                 CutoutWidget.h
+                EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE ProcessItemModelTest.cpp
+        PRIVATE EventLoopTest.cpp
+                ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 StatusListenerImplTest.cpp
                 StatusListenerImpl.cpp
