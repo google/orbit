@@ -15,6 +15,7 @@ target_include_directories(OrbitVulkanLayer PRIVATE
 
 target_sources(OrbitVulkanLayer PRIVATE
         DeviceManager.h
+        DispatchTable.h
         QueueManager.cpp
         QueueManager.h
         TimerQueryPool.h)
@@ -29,6 +30,7 @@ target_compile_options(OrbitVulkanLayerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitVulkanLayerTests PRIVATE
         DeviceManagerTest.cpp
+        DispatchTableTest.cpp
         TimerQueryPoolTest.cpp
         QueueManagerTest.cpp)
 
