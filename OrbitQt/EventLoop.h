@@ -26,7 +26,8 @@ class EventLoop : public QObject {
   Q_OBJECT
 
  public:
-  using QObject::QObject;
+  explicit EventLoop(QObject* parent = nullptr) : QObject{parent}, loop_{this} {}
+
   using ProcessEventsFlag = QEventLoop::ProcessEventsFlag;
   using ProcessEventsFlags = QEventLoop::ProcessEventsFlags;
 
