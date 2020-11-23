@@ -12,13 +12,13 @@
 #include <optional>
 #include <string>
 
+#include "DeploymentConfigurations.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
-#include "deploymentconfigurations.h"
 
 namespace OrbitQt {
 
