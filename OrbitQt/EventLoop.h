@@ -9,7 +9,7 @@
 #include <optional>
 #include <outcome.hpp>
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 /**
  * A wrapper around QEventLoop to allow returning a std::error_code instead of
@@ -67,6 +67,6 @@ class EventLoop : public QObject {
   QEventLoop loop_;
 };
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
 
 #endif  // ORBIT_QT_EVENT_LOOP_H_

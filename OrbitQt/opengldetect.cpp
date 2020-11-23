@@ -7,7 +7,7 @@
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 // Detects the supported version of Desktop OpenGL by requesting the most
 // recent version of OpenGL and checking what the system could provide.
@@ -39,4 +39,4 @@ std::optional<OpenGlVersion> DetectOpenGlVersion() {
   return OpenGlVersion{gl_context.format().majorVersion(), gl_context.format().minorVersion()};
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt

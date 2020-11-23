@@ -52,7 +52,7 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 extern QMenu* GContextMenu;
 
 OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
-                                 OrbitQt::ServiceDeployManager* service_deploy_manager,
+                                 orbit_qt::ServiceDeployManager* service_deploy_manager,
                                  uint32_t font_size)
     : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
   DataViewFactory* data_view_factory = GOrbitApp.get();
@@ -499,7 +499,7 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 }
 
 void OrbitMainWindow::on_actionAbout_triggered() {
-  OrbitQt::OrbitAboutDialog dialog{this};
+  orbit_qt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle("About");
   dialog.SetVersionString(QCoreApplication::applicationVersion());
   dialog.SetBuildInformation(QString::fromStdString(OrbitCore::GetBuildReport()));

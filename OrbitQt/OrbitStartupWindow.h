@@ -22,7 +22,7 @@
 #include "OrbitGgp/InstanceItemModel.h"
 #include "OrbitGgp/SshInfo.h"
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 class OrbitStartupWindow : public QDialog {
   using Client = OrbitGgp::Client;
@@ -72,6 +72,6 @@ class OrbitStartupWindow : public QDialog {
   QPointer<QPushButton> refresh_button_;
 };
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
 
 #endif  // ORBIT_QT_ORBIT_STARTUP_WINDOW_H_

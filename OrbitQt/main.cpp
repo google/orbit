@@ -79,10 +79,10 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
 
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 
-using ServiceDeployManager = OrbitQt::ServiceDeployManager;
-using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
-using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;
-using Error = OrbitQt::Error;
+using ServiceDeployManager = orbit_qt::ServiceDeployManager;
+using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
+using OrbitStartupWindow = orbit_qt::OrbitStartupWindow;
+using Error = orbit_qt::Error;
 using ScopedConnection = OrbitSshQt::ScopedConnection;
 using GrpcPort = ServiceDeployManager::GrpcPort;
 using SshCredentials = OrbitSsh::Credentials;
@@ -108,7 +108,7 @@ static outcome::result<GrpcPort> DeployOrbitService(
 static outcome::result<void> RunUiInstance(
     QApplication* app, std::optional<DeploymentConfiguration> deployment_configuration,
     Context* context) {
-  std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
+  std::optional<orbit_qt::ServiceDeployManager> service_deploy_manager;
 
   OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
     const GrpcPort remote_ports{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
@@ -249,11 +249,11 @@ static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& pr
   return std::nullopt;
 }
 
-static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
+static std::optional<orbit_qt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
   if (absl::GetFlag(FLAGS_local)) {
     return std::nullopt;
   } else if (absl::GetFlag(FLAGS_nodeploy)) {
-    return OrbitQt::NoDeployment{};
+    return orbit_qt::NoDeployment{};
   }
 
   const char* const kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
@@ -265,15 +265,15 @@ static std::optional<OrbitQt::DeploymentConfiguration> FigureOutDeploymentConfig
   std::optional<std::string> collector_password = GetCollectorRootPassword(env);
 
   if (collector_path.has_value() && collector_password.has_value()) {
-    return OrbitQt::BareExecutableAndRootPasswordDeployment{collector_path.value(),
-                                                            collector_password.value()};
+    return orbit_qt::BareExecutableAndRootPasswordDeployment{collector_path.value(),
+                                                             collector_password.value()};
   } else if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
-    return OrbitQt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
-                                                  env.value(kEnvSignaturePath).toStdString()};
+    return orbit_qt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
+                                                   env.value(kEnvSignaturePath).toStdString()};
   } else if (env.contains(kEnvNoDeployment)) {
-    return OrbitQt::NoDeployment{};
+    return orbit_qt::NoDeployment{};
   } else {
-    return OrbitQt::SignedDebianPackageDeployment{};
+    return orbit_qt::SignedDebianPackageDeployment{};
   }
 }
 
@@ -352,7 +352,7 @@ int main(int argc, char* argv[]) {
 
     const auto deployment_configuration = FigureOutDeploymentConfiguration();
 
-    const auto open_gl_version = OrbitQt::DetectOpenGlVersion();
+    const auto open_gl_version = orbit_qt::DetectOpenGlVersion();
 
     if (!open_gl_version) {
       DisplayErrorToUser(

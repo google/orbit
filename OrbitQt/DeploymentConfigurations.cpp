@@ -11,7 +11,7 @@ static const char* const kSignatureExtension = ".asc";
 static const char* const kPackageNameTemplate = "OrbitProfiler-%1.deb";
 static const char* const kCollectorSubdirectory = "collector";
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 SignedDebianPackageDeployment::SignedDebianPackageDeployment() {
   const auto version = []() {
@@ -32,4 +32,4 @@ SignedDebianPackageDeployment::SignedDebianPackageDeployment() {
   path_to_signature = (deb_path + kSignatureExtension).toStdString();
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt

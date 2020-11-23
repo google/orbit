@@ -6,7 +6,7 @@
 
 #include <absl/strings/str_format.h>
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 std::string ErrorCategory::message(int condition) const {
   switch (static_cast<Error>(condition)) {
@@ -31,4 +31,4 @@ std::string ErrorCategory::message(int condition) const {
 
   return absl::StrFormat("Unknown error condition: %i.", condition);
 }
-}  // namespace OrbitQt
+}  // namespace orbit_qt
