@@ -49,7 +49,7 @@ TEST(DispatchTable, CanRemoveInstance) {
   dispatch_table.RemoveInstanceDispatchTable(instance);
 }
 
-TEST(DispatchTable, CanInitializeInstanceTwiceAfterRemove) {
+TEST(DispatchTable, CanReinitializeInstanceAfterRemove) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -95,7 +95,7 @@ TEST(DispatchTable, CanRemoveDevice) {
   dispatch_table.RemoveDeviceDispatchTable(device);
 }
 
-TEST(DispatchTable, CanInitializeDeviceTwiceAfterRemove) {
+TEST(DispatchTable, CanReinitializeDeviceAfterRemove) {
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
