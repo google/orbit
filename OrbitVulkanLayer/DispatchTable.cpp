@@ -29,9 +29,11 @@ void DispatchTable::CreateInstanceDispatchTable(
 
 void DispatchTable::RemoveInstanceDispatchTable(VkInstance instance) {
   void* key = GetDispatchTableKey(instance);
-  absl::WriterMutexLock lock(&mutex_);
-  CHECK(instance_dispatch_table_.contains(key));
-  instance_dispatch_table_.erase(key);
+  {
+    absl::WriterMutexLock lock(&mutex_);
+    CHECK(instance_dispatch_table_.contains(key));
+    instance_dispatch_table_.erase(key);
+  }
 }
 
 void DispatchTable::CreateDeviceDispatchTable(
@@ -109,16 +111,18 @@ void DispatchTable::CreateDeviceDispatchTable(
 
 void DispatchTable::RemoveDeviceDispatchTable(VkDevice device) {
   void* key = GetDispatchTableKey(device);
-  absl::WriterMutexLock lock(&mutex_);
+  {
+    absl::WriterMutexLock lock(&mutex_);
 
-  CHECK(device_dispatch_table_.contains(key));
-  device_dispatch_table_.erase(key);
+    CHECK(device_dispatch_table_.contains(key));
+    device_dispatch_table_.erase(key);
 
-  CHECK(device_supports_debug_utils_extension_.contains(key));
-  device_supports_debug_utils_extension_.erase(key);
+    CHECK(device_supports_debug_utils_extension_.contains(key));
+    device_supports_debug_utils_extension_.erase(key);
 
-  CHECK(device_supports_debug_marker_extension_.contains(key));
-  device_supports_debug_marker_extension_.erase(key);
+    CHECK(device_supports_debug_marker_extension_.contains(key));
+    device_supports_debug_marker_extension_.erase(key);
+  }
 }
 
 }  // namespace orbit_vulkan_layer
