@@ -402,11 +402,6 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       case 'X':
         ToggleRecording();
         break;
-      case 'O':
-        if (ctrl) {
-          text_renderer_.ToggleDrawOutline();
-        }
-        break;
       case 18:  // Left
         if (shift) {
           time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
@@ -493,11 +488,17 @@ void CaptureWindow::Draw() {
 
   DrawScreenSpace();
 
-  // We start by getting all layers
+  if (GetPickingMode() == PickingMode::kNone) {
+    text_renderer_.RenderDebug(&ui_batcher_);
+  }
+
+  // Get all layers.
   std::vector<float> all_layers = time_graph_.GetBatcher().GetLayers();
   Append(all_layers, ui_batcher_.GetLayers());
   Append(all_layers, text_renderer_.GetLayers());
   Append(all_layers, time_graph_.GetTextRenderer()->GetLayers());
+
+  // Sort and remove duplicates.
   std::sort(all_layers.begin(), all_layers.end());
   auto it = std::unique(all_layers.begin(), all_layers.end());
   all_layers.resize(std::distance(all_layers.begin(), it));
@@ -517,7 +518,7 @@ void CaptureWindow::Draw() {
 
     PrepareScreenSpaceViewport();
     if (GetPickingMode() == PickingMode::kNone) {
-      text_renderer_.DisplayLayer(&ui_batcher_, layer);
+      text_renderer_.RenderLayer(&ui_batcher_, layer);
       RenderText(layer);
     }
   }
@@ -666,6 +667,12 @@ void CaptureWindow::RenderImGui() {
       if (time_graph_.GetLayout().DrawProperties()) {
         NeedsUpdate();
       }
+
+      static bool draw_text_outline = false;
+      if (ImGui::Checkbox("Draw Text Outline", &draw_text_outline)) {
+        TextRenderer::SetDrawOutline(draw_text_outline);
+        NeedsUpdate();
+      }
       ImGui::EndTabItem();
     }
 
@@ -733,17 +740,15 @@ Vec2 ScreenToWorld(GlCanvas* canvas, Vec2 screen_pos) {
 }
 
 void CaptureWindow::RenderHelpUi() {
-  constexpr int kXOffset = 50;
-  constexpr int kYOffset = 80;
+  constexpr int kOffset = 30;
   float world_x = 0;
   float world_y = 0;
-  ScreenToWorld(kXOffset, kYOffset, world_x, world_y);
+  ScreenToWorld(kOffset, kOffset, world_x, world_y);
 
-  const uint32_t kHelpMessageFontSize = 2 * font_size_;
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   text_renderer_.AddText(GetHelpText(), world_x, world_y, GlCanvas::kZValueTextUi,
-                         Color(255, 255, 255, 255), kHelpMessageFontSize, -1.f /*max_size*/,
+                         Color(255, 255, 255, 255), font_size_, -1.f /*max_size*/,
                          false /*right_justified*/, &text_bounding_box_pos,
                          &text_bounding_box_size);
 

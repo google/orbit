@@ -102,8 +102,9 @@ void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, floa
 void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string text,
                            Color text_color, Color font_color, float z) {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
+  uint32_t font_size = time_graph_->CalculateZoomedFontSize();
 
-  int text_width = canvas->GetTextRenderer().GetStringWidth(text.c_str());
+  float text_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
   Vec2 text_box_size(text_width, layout.GetTextBoxHeight());
 
   float arrow_width = text_box_size[1] / 2.f;
@@ -130,7 +131,7 @@ void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string 
 
   canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
                                     text_box_position[1] + layout.GetTextOffset(), z, text_color,
-                                    time_graph_->CalculateZoomedFontSize(), text_box_size[0]);
+                                    font_size, text_box_size[0]);
 }
 
 void GraphTrack::AddValue(double value, uint64_t time) {
