@@ -7,7 +7,7 @@
 
 #include <system_error>
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 enum class Error {
   kCouldNotConnectToServer,
@@ -35,11 +35,11 @@ inline std::error_code make_error_code(Error e) {
   return std::error_code{static_cast<int>(e), GetErrorCategory()};
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
 
 namespace std {
 template <>
-struct is_error_condition_enum<OrbitQt::Error> : std::true_type {};
+struct is_error_condition_enum<orbit_qt::Error> : std::true_type {};
 }  // namespace std
 
 #endif  // ORBIT_QT_ERROR_H_

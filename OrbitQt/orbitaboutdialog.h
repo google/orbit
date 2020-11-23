@@ -10,7 +10,7 @@
 
 #include "ui_orbitaboutdialog.h"
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 class OrbitAboutDialog : public QDialog {
  public:
@@ -26,6 +26,6 @@ class OrbitAboutDialog : public QDialog {
   std::unique_ptr<Ui::OrbitAboutDialog> ui_;
 };
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
 
 #endif  // ORBIT_QT_ORBIT_ABOUT_DIALOG_H_

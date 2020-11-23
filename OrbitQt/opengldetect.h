@@ -7,7 +7,7 @@
 
 #include <optional>
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 struct OpenGlVersion {
   int major;
@@ -16,6 +16,6 @@ struct OpenGlVersion {
 
 std::optional<OpenGlVersion> DetectOpenGlVersion();
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
 
 #endif  // ORBIT_QT_OPEN_GL_DETECT__H_

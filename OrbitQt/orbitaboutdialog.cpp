@@ -4,7 +4,7 @@
 
 #include "orbitaboutdialog.h"
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 OrbitAboutDialog::OrbitAboutDialog(QWidget* parent)
     : QDialog(parent), ui_(new Ui::OrbitAboutDialog) {
@@ -23,4 +23,4 @@ void OrbitAboutDialog::SetBuildInformation(const QString& build_info) {
   ui_->buildInformationEdit->setPlainText(build_info);
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt

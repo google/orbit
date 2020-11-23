@@ -9,7 +9,7 @@
 #include <utility>
 #include <variant>
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 struct SignedDebianPackageDeployment {
   SignedDebianPackageDeployment();
@@ -32,6 +32,6 @@ struct NoDeployment {};
 using DeploymentConfiguration = std::variant<SignedDebianPackageDeployment,
                                              BareExecutableAndRootPasswordDeployment, NoDeployment>;
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
 
 #endif  // ORBIT_QT_DEPLOYMENT_CONFIGURATIONS_H_

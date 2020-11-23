@@ -31,7 +31,7 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(QApplication* a_App, OrbitQt::ServiceDeployManager* service_deploy_manager,
+  OrbitMainWindow(QApplication* a_App, orbit_qt::ServiceDeployManager* service_deploy_manager,
                   uint32_t font_size);
   ~OrbitMainWindow() override;
 

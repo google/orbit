@@ -20,7 +20,7 @@
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
     : QDialog{parent, Qt::Dialog}, model_{new InstanceItemModel{{}, this}} {
@@ -143,4 +143,4 @@ void OrbitStartupWindow::ReloadInstances() {
   });
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt

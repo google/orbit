@@ -32,7 +32,7 @@ static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
 static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
 static const std::chrono::milliseconds kSshWatchdogInterval(1000);
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 namespace {
 template <typename Func>
@@ -387,7 +387,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   orbit_service_task_.emplace(&session_.value(), task_string);
 
   const auto& config =
-      std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
+      std::get<orbit_qt::BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
 
   orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
 
@@ -605,4 +605,4 @@ void ServiceDeployManager::Shutdown() {
   });
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
