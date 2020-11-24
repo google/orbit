@@ -200,7 +200,7 @@ void Track::SetY(float y) {
 }
 
 Color Track::GetBackgroundColor() const {
-  CaptureData* capture_data = time_graph_->GetCaptureData();
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
   int32_t capture_process_id = capture_data ? capture_data->process_id() : 0;
   if (GetType() == kSchedulerTrack) {
     return color_;

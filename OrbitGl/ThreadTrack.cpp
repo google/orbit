@@ -51,7 +51,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
 
-  CaptureData* capture_data = time_graph_->GetCaptureData();
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
       capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
                    : nullptr;

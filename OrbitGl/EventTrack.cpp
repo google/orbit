@@ -75,6 +75,8 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  CHECK(capture_data);
 
   if (!picking) {
     // Sampling Events
@@ -85,12 +87,12 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
         batcher->AddVerticalLine(pos, -track_height, z, kWhite);
       }
     };
+
     if (thread_id_ == SamplingProfiler::kAllThreadsFakeTid) {
-      GOrbitApp->GetCaptureData().GetCallstackData()->ForEachCallstackEvent(
-          action_on_callstack_events);
+      capture_data->GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
     } else {
-      GOrbitApp->GetCaptureData().GetCallstackData()->ForEachCallstackEventOfTid(
-          thread_id_, action_on_callstack_events);
+      capture_data->GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
+                                                                   action_on_callstack_events);
     }
 
     // Draw selected events
@@ -119,11 +121,10 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       }
     };
     if (thread_id_ == SamplingProfiler::kAllThreadsFakeTid) {
-      GOrbitApp->GetCaptureData().GetCallstackData()->ForEachCallstackEvent(
-          action_on_callstack_events);
+      capture_data->GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
     } else {
-      GOrbitApp->GetCaptureData().GetCallstackData()->ForEachCallstackEventOfTid(
-          thread_id_, action_on_callstack_events);
+      capture_data->GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
+                                                                   action_on_callstack_events);
     }
   }
 }
@@ -161,27 +162,32 @@ void EventTrack::SelectEvents() {
 }
 
 bool EventTrack::IsEmpty() const {
-  if (!GOrbitApp->HasCaptureData()) return true;
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  if (capture_data == nullptr) return true;
   const uint32_t callstack_count =
       (thread_id_ == SamplingProfiler::kAllThreadsFakeTid)
-          ? GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsCount()
-          : GOrbitApp->GetCaptureData().GetCallstackData()->GetCallstackEventsOfTidCount(
-                thread_id_);
+          ? capture_data->GetCallstackData()->GetCallstackEventsCount()
+          : capture_data->GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_);
   return callstack_count == 0;
 }
 
 [[nodiscard]] uint64_t EventTrack::GetMinTime() const {
-  CHECK(GOrbitApp->HasCaptureData());
-  return GOrbitApp->GetCaptureData().GetCallstackData()->min_time();
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  CHECK(capture_data);
+  return capture_data->GetCallstackData()->min_time();
 }
 
 [[nodiscard]] uint64_t EventTrack::GetMaxTime() const {
-  CHECK(GOrbitApp->HasCaptureData());
-  return GOrbitApp->GetCaptureData().GetCallstackData()->max_time();
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  CHECK(capture_data);
+  return capture_data->GetCallstackData()->max_time();
 }
 
-static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
-  const std::string& function_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(addr);
+[[nodiscard]] std::string EventTrack::SafeGetFormattedFunctionName(uint64_t addr,
+                                                                   int max_line_length) const {
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  CHECK(capture_data);
+  const std::string& function_name = capture_data->GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
   }
@@ -197,8 +203,8 @@ static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_leng
   return fn_name;
 };
 
-static std::string FormatCallstackForTooltip(const CallStack& callstack, int max_line_length = 80,
-                                             int max_lines = 20, int bottom_n_lines = 5) {
+std::string EventTrack::FormatCallstackForTooltip(const CallStack& callstack, int max_line_length,
+                                                  int max_lines, int bottom_n_lines) const {
   std::string result;
   int size = static_cast<int>(callstack.GetFramesCount());
   if (max_lines <= 0) {
@@ -230,7 +236,9 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
     return unknown_return_text;
   }
 
-  const CallstackData* callstack_data = GOrbitApp->GetCaptureData().GetCallstackData();
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  CHECK(capture_data);
+  const CallstackData* callstack_data = capture_data->GetCallstackData();
   const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_hash = callstack_event->callstack_hash();

@@ -53,7 +53,7 @@ class TimeGraph {
                     const orbit_client_protos::FunctionInfo* function);
   void UpdateMaxTimeStamp(uint64_t time);
 
-  [[nodiscard]] CaptureData* GetCaptureData() const { return capture_data_; }
+  [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
   void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
 
   [[nodiscard]] float GetThreadTotalHeight() const;

@@ -690,7 +690,7 @@ void CaptureWindow::RenderImGui() {
       IMGUI_VAR_TO_TEXT(time_graph_.GetCaptureMax());
       IMGUI_VAR_TO_TEXT(time_graph_.GetTimeWindowUs());
 
-      CaptureData* capture_data = GetCaptureData();
+      const CaptureData* capture_data = GetCaptureData();
       if (capture_data != nullptr) {
         IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->callstack_events_by_tid().size());
         IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->GetCallstackEventsCount());
