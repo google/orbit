@@ -17,7 +17,8 @@ target_sources(OrbitVulkanLayer PRIVATE
         DeviceManager.h
         QueueManager.cpp
         QueueManager.h
-        TimerQueryPool.h)
+        TimerQueryPool.h
+        VulkanLayerProducer.h)
 
 target_link_libraries(OrbitVulkanLayer PUBLIC
         OrbitBase
