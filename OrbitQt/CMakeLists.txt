@@ -32,6 +32,7 @@ target_sources(
           orbittablemodel.h
           orbittreeview.h
           opengldetect.h
+          ProcessItemModel.h
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
@@ -65,6 +66,7 @@ target_sources(
           orbittablemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
+          ProcessItemModel.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
           TutorialContent.cpp
@@ -134,7 +136,9 @@ target_sources(OrbitQtTests
                 CutoutWidget.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE StatusListenerImplTest.cpp
+        PRIVATE ProcessItemModelTest.cpp
+                ProcessItemModel.cpp
+                StatusListenerImplTest.cpp
                 StatusListenerImpl.cpp
                 TutorialOverlayTest.cpp
                 TutorialOverlay.cpp
@@ -149,6 +153,7 @@ target_link_libraries(
           OrbitGl
           Qt5::Widgets
           Qt5::Core
+          Qt5::Test
           GTest::Main)
 
 set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
