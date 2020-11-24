@@ -107,6 +107,7 @@ if(WITH_GUI)
     Qt5 CONFIG REQUIRED
     COMPONENTS Core
                Network
+               Test
                Widgets
                WebEngine
                WebEngineWidgets
