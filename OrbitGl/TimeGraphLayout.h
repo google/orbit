@@ -29,7 +29,7 @@ class TimeGraphLayout {
   float GetBottomMargin() const;
   float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetRightMargin() const { return right_margin_; }
-  float GetSchedulerTrackOffset() const { return scheduler_track_offset_ * scale_; }
+  float GetSchedulerTrackOffset() const { return scheduler_track_offset_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
