@@ -119,6 +119,33 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
 
 }  // namespace
 
+// LinuxTracingHandler::Stop is blocking, until all perf_event_open events have been processed
+// and all perf_event_open file descriptors have been closed.
+// CaptureStartStopListener::OnCaptureStopRequested is also to be assumed blocking,
+// for example until all CaptureEvents from external producers have been received.
+// Hence why these methods need to be called in parallel on different threads.
+static void StopTracingHandlerAndCaptureStartStopListenersInParallel(
+    LinuxTracingHandler* tracing_handler,
+    absl::flat_hash_set<CaptureStartStopListener*>* capture_start_stop_listeners) {
+  std::vector<std::thread> stop_threads;
+
+  stop_threads.emplace_back([&tracing_handler] {
+    tracing_handler->Stop();
+    LOG("LinuxTracingHandler stopped: perf_event_open tracing is done");
+  });
+
+  for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
+    stop_threads.emplace_back([&listener] {
+      listener->OnCaptureStopRequested();
+      LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
+    });
+  }
+
+  for (std::thread& stop_thread : stop_threads) {
+    stop_thread.join();
+  }
+}
+
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
@@ -137,7 +164,11 @@ grpc::Status CaptureServiceImpl::Capture(
   CaptureRequest request;
   reader_writer->Read(&request);
   LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+
   tracing_handler.Start(std::move(*request.mutable_capture_options()));
+  for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
+    listener->OnCaptureStartRequested(&capture_event_buffer);
+  }
 
   // The client asks for the capture to be stopped by calling WritesDone.
   // At that point, this call to Read will return false.
@@ -146,13 +177,23 @@ grpc::Status CaptureServiceImpl::Capture(
   }
   LOG("Client finished writing on Capture's gRPC stream: stopping capture");
 
-  tracing_handler.Stop();
-  LOG("LinuxTracingHandler stopped: perf_event_open tracing is done");
+  StopTracingHandlerAndCaptureStartStopListenersInParallel(&tracing_handler,
+                                                           &capture_start_stop_listeners_);
 
   capture_event_buffer.StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");
   is_capturing = false;
   return grpc::Status::OK;
+}
+
+void CaptureServiceImpl::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
+  bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
+  CHECK(new_insertion);
+}
+
+void CaptureServiceImpl::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
+  bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
+  CHECK(was_removed);
 }
 
 }  // namespace orbit_service

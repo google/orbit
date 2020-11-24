@@ -15,6 +15,7 @@ target_sources(OrbitServiceLib PRIVATE
         CaptureEventSender.h
         CaptureServiceImpl.cpp
         CaptureServiceImpl.h
+        CaptureStartStopListener.h
         CrashServiceImpl.cpp
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp

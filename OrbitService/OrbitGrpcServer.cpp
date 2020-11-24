@@ -32,6 +32,9 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   void Shutdown() override;
   void Wait() override;
 
+  void AddCaptureStartStopListener(CaptureStartStopListener* listener) override;
+  void RemoveCaptureStartStopListener(CaptureStartStopListener* listener) override;
+
  private:
   CaptureServiceImpl capture_service_;
   ProcessServiceImpl process_service_;
@@ -64,6 +67,14 @@ bool OrbitGrpcServerImpl::Init(std::string_view server_address) {
 void OrbitGrpcServerImpl::Shutdown() { server_->Shutdown(); }
 
 void OrbitGrpcServerImpl::Wait() { server_->Wait(); }
+
+void OrbitGrpcServerImpl::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
+  capture_service_.AddCaptureStartStopListener(listener);
+}
+
+void OrbitGrpcServerImpl::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
+  capture_service_.RemoveCaptureStartStopListener(listener);
+}
 
 }  // namespace
 
