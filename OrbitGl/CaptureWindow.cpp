@@ -461,8 +461,6 @@ bool CaptureWindow::ShouldAutoZoom() const { return GOrbitApp->IsCapturing(); }
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
-  world_max_y_ = 1.5f * ScreenToWorldHeight(static_cast<int>(slider_->GetPixelHeight()));
-
   if (ShouldAutoZoom()) {
     ZoomAll();
   }
