@@ -15,6 +15,7 @@ build_type=RelWithDebInfo
 [options]
 OrbitProfiler:with_gui=False
 OrbitProfiler:with_orbitgl=False
+OrbitProfiler:with_vulkan_layer=True
 [build_requires]
 &: cmake_installer/3.16.3@conan/stable
 ggp_sdk/1.43.0.14282@orbitdeps/stable
