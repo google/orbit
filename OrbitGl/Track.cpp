@@ -12,8 +12,6 @@
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
 
-ABSL_DECLARE_FLAG(bool, track_ordering_feature);
-
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
@@ -180,13 +178,8 @@ void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode
                              float /*z_offset*/) {}
 
 void Track::SetPinned(bool value) {
-  const bool track_ordering_feature = absl::GetFlag(FLAGS_track_ordering_feature);
-  pinned_ = value && track_ordering_feature;
-  if (pinned_) {
-    picking_enabled_ = false;
-  } else {
-    picking_enabled_ = track_ordering_feature;
-  }
+  pinned_ = value;
+  picking_enabled_ = !pinned_;
 }
 
 void Track::SetPos(float a_X, float a_Y) {
