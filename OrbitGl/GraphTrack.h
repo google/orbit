@@ -24,6 +24,7 @@ class GraphTrack : public Track {
   void AddValue(double value, uint64_t time);
   [[nodiscard]] std::optional<std::pair<uint64_t, double> > GetPreviousValueAndTime(
       uint64_t time) const;
+  [[nodiscard]] bool IsEmpty() const override { return values_.empty(); }
 
  protected:
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, Color color);

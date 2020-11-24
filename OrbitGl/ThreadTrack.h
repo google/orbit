@@ -49,6 +49,7 @@ class ThreadTrack : public TimerTrack {
   [[nodiscard]] float GetHeaderHeight() const override;
 
   void UpdatePositionOfSubtracks();
+  void UpdateMinMaxTimestamps();
 
   std::shared_ptr<ThreadStateTrack> thread_state_track_;
   std::shared_ptr<EventTrack> event_track_;

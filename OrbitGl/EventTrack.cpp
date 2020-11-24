@@ -170,6 +170,16 @@ bool EventTrack::IsEmpty() const {
   return callstack_count == 0;
 }
 
+[[nodiscard]] uint64_t EventTrack::GetMinTime() const {
+  CHECK(GOrbitApp->HasCaptureData());
+  return GOrbitApp->GetCaptureData().GetCallstackData()->min_time();
+}
+
+[[nodiscard]] uint64_t EventTrack::GetMaxTime() const {
+  CHECK(GOrbitApp->HasCaptureData());
+  return GOrbitApp->GetCaptureData().GetCallstackData()->max_time();
+}
+
 static std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
   const std::string& function_name = GOrbitApp->GetCaptureData().GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {

@@ -141,6 +141,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
         capture_data_ =
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
                         std::move(selected_tracepoints), std::move(user_defined_capture_data));
+        capture_window_->SetCaptureData(&capture_data_.value());
 
         frame_track_online_processor_ =
             FrameTrackOnlineProcessor(GetCaptureData(), GCurrentTimeGraph);
@@ -827,6 +828,7 @@ void OrbitApp::AbortCapture() {
 
 void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
+  capture_window_->SetCaptureData(nullptr);
   capture_data_.reset();
   set_selected_thread_id(SamplingProfiler::kAllThreadsFakeTid);
   SelectTextBox(nullptr);

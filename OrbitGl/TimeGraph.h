@@ -11,6 +11,7 @@
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
+#include "CaptureData.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
@@ -52,6 +53,9 @@ class TimeGraph {
                     const orbit_client_protos::FunctionInfo* function);
   void UpdateMaxTimeStamp(uint64_t time);
 
+  [[nodiscard]] CaptureData* GetCaptureData() const { return capture_data_; }
+  void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
+
   [[nodiscard]] float GetThreadTotalHeight() const;
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
   [[nodiscard]] float GetWorldFromTick(uint64_t time) const;
@@ -61,7 +65,7 @@ class TimeGraph {
   [[nodiscard]] double GetUsFromTick(uint64_t time) const;
   [[nodiscard]] double GetTimeWindowUs() const { return time_window_us_; }
   void GetWorldMinMax(float& min, float& max) const;
-  [[nodiscard]] bool UpdateCaptureMinMaxTimestamps();
+  void UpdateCaptureMinMaxTimestamps();
 
   void Clear();
   void ZoomAll();
@@ -264,6 +268,7 @@ class TimeGraph {
   std::shared_ptr<StringManager> string_manager_;
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
+  CaptureData* capture_data_ = nullptr;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

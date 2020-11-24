@@ -51,8 +51,10 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
 
+  CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
+      capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
+                   : nullptr;
 
   if (!func) {
     return text_box->GetText();
@@ -175,9 +177,17 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_track_->SetPos(pos_[0], current_y);
 }
 
+void ThreadTrack::UpdateMinMaxTimestamps() {
+  if (!event_track_->IsEmpty()) {
+    min_time_ = std::min(min_time_.load(), event_track_->GetMinTime());
+    max_time_ = std::max(max_time_.load(), event_track_->GetMaxTime());
+  }
+}
+
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   TimerTrack::Draw(canvas, picking_mode, z_offset);
 
+  UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
