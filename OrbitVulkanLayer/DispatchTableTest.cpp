@@ -8,7 +8,7 @@
 namespace orbit_vulkan_layer {
 
 // Note the following for all the following tests:
-// We can not create an actual VkInstance/VkDevice, but the first bytes of any dispatchable type in
+// We cannot create an actual VkInstance/VkDevice, but the first bytes of any dispatchable type in
 // Vulkan will be a pointer to a dispatch table. This characteristic will be used by our dispatch
 // table wrapper, so we need to mimic it.
 // Thus, we will create VkLayer(Instance)DispatchTables and cast its address to VkInstance/VkDevice.
@@ -198,6 +198,8 @@ TEST(DispatchTable, CanCallGetPhysicalDeviceProperties) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
+  // This bool needs to be static, as it will be used in the lambda below, which must not capture
+  // anything in order to convert it to a function pointer.
   static bool was_called = false;
 
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =

@@ -329,7 +329,7 @@ class DispatchTable {
 
  private:
   // Vulkan has the concept of "dispatchable types". Basically every Vulkan type whose objects can
-  // be associated with a VkInstance or VkDevice are "dispatchable". As an example both, a device
+  // be associated with a VkInstance or VkDevice are "dispatchable". As an example, both a device
   // and a command buffer corresponding to this device are "dispatchable".
   // Every "dispatchable type" has as a very first field in memory a pointer to the internal
   // dispatch table. This pointer is unique per device/instance. So for example for a command buffer
@@ -337,7 +337,9 @@ class DispatchTable {
   // we can use that pointer to uniquely map "dispatchable types" to their dispatch table.
   template <typename DispatchableType>
   void* GetDispatchTableKey(DispatchableType dispatchable_object) {
-    return *absl::bit_cast<void**>(dispatchable_object);
+    void* dispatch;
+    memcpy(&dispatch, dispatchable_object, sizeof(void*));
+    return dispatch;
   }
 
   // Dispatch tables required for routing instance and device calls onto the next

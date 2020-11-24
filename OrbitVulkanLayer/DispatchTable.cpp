@@ -91,7 +91,6 @@ void DispatchTable::CreateDeviceDispatchTable(
       next_get_device_proc_addr_function(device, "vkCmdDebugMarkerEndEXT"));
 
   void* key = GetDispatchTableKey(device);
-
   {
     absl::WriterMutexLock lock(&mutex_);
     CHECK(!device_dispatch_table_.contains(key));
