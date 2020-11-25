@@ -132,7 +132,8 @@ message GpuQueueSubmission {
   GpuQueueSubmissionMetaInfo meta_info = 1;
   repeated GpuSubmitInfo submit_infos = 2;
   repeated GpuDebugMarker completed_markers = 3;
-  int32 num_begin_markers = 4; // This is the total number of begin markers submitted in this submission.
+  // This is the total number of begin markers submitted in this submission.
+  int32 num_begin_markers = 4;
 }
 
 message GpuQueueSubmissionMetaInfo {
@@ -151,8 +152,9 @@ message GpuCommandBuffer {
 }
 
 message GpuDebugMarkerBeginInfo {
-  // Begin markers can be submitted in a different submission then the end markers, thus the submission meta info
-  // of a begin marker might differ from the one of the submission containing the complete debug marker.
+  // Begin markers can be submitted in a different submission then the end
+  // markers, thus the submission meta info of a begin marker might differ from
+  // the one of the submission containing the complete debug marker.
   GpuQueueSubmissionMetaInfo meta_info = 1;
   uint64 gpu_timestamp_ns = 2;
 }
