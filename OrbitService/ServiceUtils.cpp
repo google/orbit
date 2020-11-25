@@ -75,6 +75,9 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 
     const std::string& module_path = tokens[5];
 
+    // This excludes mapped character or block devices.
+    if (module_path.rfind("/dev/", 0) == 0) continue;
+
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
 

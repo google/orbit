@@ -38,12 +38,13 @@ TEST(ServiceUtils, ParseMaps) {
   const Path text_file = test_path / "textfile.txt";
 
   {
-    // Testing correct size of result. The last entry has a valid path, but the
-    // executable flag is not set.
+    // Testing correct size of result. The entry with dev/zero is ignored due to the path starting
+    // with /dev/. The last entry has a valid path, but the executable flag is not set.
     const std::string data{absl::StrFormat(
         "7f687428f000-7f6874290000 r-xp 00009000 fe:01 661216                     "
         "/not/a/valid/file/path\n"
         "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     %s\n"
+        "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     /dev/zero\n"
         "7f6874290001-7f6874297002 r-dp 00000000 fe:01 661214                     %s\n",
         hello_world_path, text_file)};
     const auto result = ParseMaps(data);
