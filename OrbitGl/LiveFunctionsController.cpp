@@ -69,6 +69,10 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
   if (box->GetTimerInfo().start() <= center) {
     const TextBox* next_box = GCurrentTimeGraph->FindNextFunctionCall(absolute_function_address,
                                                                       box->GetTimerInfo().end());
+    if (!next_box) {
+      return box;
+    }
+
     return ClosestTo(center, box, next_box);
   }
 
