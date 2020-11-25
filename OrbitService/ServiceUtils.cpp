@@ -5,6 +5,7 @@
 #include "ServiceUtils.h"
 
 #include <absl/base/casts.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <cxxabi.h>
@@ -74,6 +75,9 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     if (tokens.size() != 6 || tokens[4] == "0") continue;
 
     const std::string& module_path = tokens[5];
+
+    // This excludes mapped character or block devices.
+    if (absl::StartsWith(module_path, "/dev/")) continue;
 
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
