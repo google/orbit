@@ -44,7 +44,7 @@ def main(argv):
   for i in range(len(children)):
     if 'DrawFrame' in children[i].window_text():
       children[i].click_input(button='right')
-      main_wnd.child_window(title='Add frame track(s)', control_type="MenuItem").click_input()
+      main_wnd.child_window(title='Enable frame track(s)', control_type="MenuItem").click_input()
 
   # Since the frame track is only a visualization and only affects the 
   # OpenGL rendered capture window, there is currently no way to verify
