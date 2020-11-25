@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "capture_data.pb.h"
@@ -190,10 +191,15 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     symbol_info->set_name("mangled_not_an_orbit_function");
     symbol_info->set_demangled_name("not an orbit function");
   }
+
+  const auto& orbit_name_to_orbit_type_map = FunctionUtils::GetFunctionNameToOrbitTypeMap();
+  const std::string kOrbitName = orbit_name_to_orbit_type_map.begin()->first;
+  const std::string kOrbitNameMangled = absl::StrFormat("mangled_%s", kOrbitName);
+
   {
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name("mangled_orbit_api::Start()");
-    symbol_info->set_demangled_name("orbit_api::Start()");
+    symbol_info->set_name(kOrbitNameMangled);
+    symbol_info->set_demangled_name(kOrbitName);
     symbol_info->set_address(500);
   }
 
@@ -207,8 +213,8 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     ASSERT_EQ(functions.size(), 1);
 
     FunctionInfo& function{functions[0]};
-    EXPECT_EQ(function.name(), "mangled_orbit_api::Start()");
-    EXPECT_EQ(function.pretty_name(), "orbit_api::Start()");
+    EXPECT_EQ(function.name(), kOrbitNameMangled);
+    EXPECT_EQ(function.pretty_name(), kOrbitName);
     EXPECT_EQ(function.address(), 500);
   }
 }

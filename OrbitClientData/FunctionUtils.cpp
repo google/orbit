@@ -55,11 +55,11 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
 
 const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
   static absl::flat_hash_map<const char*, FunctionInfo::OrbitType> function_name_to_type_map{
-      {"Start" STUB_PARAMS, FunctionInfo::kOrbitTimerStart},
-      {"Stop" STUB_PARAMS, FunctionInfo::kOrbitTimerStop},
-      {"StartAsync" STUB_PARAMS, FunctionInfo::kOrbitTimerStartAsync},
-      {"StopAsync" STUB_PARAMS, FunctionInfo::kOrbitTimerStopAsync},
-      {"TrackValue" STUB_PARAMS, FunctionInfo::kOrbitTrackValue}};
+      {"orbit_api::Start" STUB_PARAMS, FunctionInfo::kOrbitTimerStart},
+      {"orbit_api::Stop" STUB_PARAMS, FunctionInfo::kOrbitTimerStop},
+      {"orbit_api::StartAsync" STUB_PARAMS, FunctionInfo::kOrbitTimerStartAsync},
+      {"orbit_api::StopAsync" STUB_PARAMS, FunctionInfo::kOrbitTimerStopAsync},
+      {"orbit_api::TrackValue" STUB_PARAMS, FunctionInfo::kOrbitTrackValue}};
   return function_name_to_type_map;
 }
 
