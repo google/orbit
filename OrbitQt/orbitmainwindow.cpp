@@ -58,8 +58,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
   ui->setupUi(this);
-  // Cannot save a capture as long as no capture has been loaded or captured.
-  ui->actionSave_Capture->setDisabled(true);
 
   ui->ProcessesList->SetDataView(data_view_factory->GetOrCreateDataView(DataViewType::kProcesses));
 
@@ -75,13 +73,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetStatusListener(status_listener_.get());
 
   GOrbitApp->SetCaptureStartedCallback([this] {
-    ui->actionToggle_Capture->setIcon(icon_stop_capture_);
-    ui->actionClear_Capture->setDisabled(true);
-    ui->actionOpen_Capture->setDisabled(true);
-    ui->actionSave_Capture->setDisabled(true);
-    ui->actionOpen_Preset->setDisabled(true);
-    ui->actionSave_Preset_As->setDisabled(true);
-    ui->HomeTab->setDisabled(true);
+    UpdateCaptureStateDependentWidgets();
     setWindowTitle({});
   });
 
@@ -105,19 +97,12 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   finalizing_capture_dialog->close();
 
   GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
-    ui->actionToggle_Capture->setDisabled(true);
+    ui->actionToggle_Capture->setEnabled(false);
     finalizing_capture_dialog->show();
   });
   auto capture_finished_callback = [this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
-    ui->actionToggle_Capture->setDisabled(false);
-    ui->actionToggle_Capture->setIcon(icon_start_capture_);
-    ui->actionClear_Capture->setDisabled(false);
-    ui->actionOpen_Capture->setDisabled(false);
-    ui->actionSave_Capture->setDisabled(false);
-    ui->actionOpen_Preset->setDisabled(false);
-    ui->actionSave_Preset_As->setDisabled(false);
-    ui->HomeTab->setDisabled(false);
+    UpdateCaptureStateDependentWidgets();
   };
   GOrbitApp->SetCaptureStoppedCallback(capture_finished_callback);
   GOrbitApp->SetCaptureFailedCallback(capture_finished_callback);
@@ -166,7 +151,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
       });
 
-  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), false);
   GOrbitApp->SetSelectionReportCallback(
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
@@ -176,7 +160,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     this->OnNewTopDownView(std::move(top_down_view));
   });
 
-  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), false);
   GOrbitApp->SetSelectionTopDownViewCallback(
       [this](std::unique_ptr<CallTreeView> selection_top_down_view) {
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
@@ -186,7 +169,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     this->OnNewBottomUpView(std::move(bottom_up_view));
   });
 
-  ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab), false);
   GOrbitApp->SetSelectionBottomUpViewCallback(
       [this](std::unique_ptr<CallTreeView> selection_bottom_up_view) {
         this->OnNewSelectionBottomUpView(std::move(selection_bottom_up_view));
@@ -266,6 +248,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   SetupCaptureToolbar();
 
+  icon_keyboard_arrow_left_ = QIcon(":/actions/keyboard_arrow_left");
+  icon_keyboard_arrow_right_ = QIcon(":/actions/keyboard_arrow_right");
+
   StartMainTimer();
 
   ui->liveFunctions->Initialize(SelectionType::kExtended, FontType::kDefault);
@@ -277,6 +262,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->selectionTopDownWidget->Initialize(GOrbitApp.get());
   ui->bottomUpWidget->Initialize(GOrbitApp.get());
   ui->selectionBottomUpWidget->Initialize(GOrbitApp.get());
+
+  ui->MainTabWidget->tabBar()->installEventFilter(this);
+  ui->RightTabWidget->tabBar()->installEventFilter(this);
 
   setWindowTitle({});
   std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
@@ -317,6 +305,85 @@ void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
   ui->FileMappingWidget->hide();
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
+}
+
+void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index,
+                                              const QPoint pos) {
+  QMenu context_menu(this);
+  QAction move_action;
+  QTabWidget* other_widget;
+
+  if (tab_widget == ui->MainTabWidget) {
+    move_action.setIcon(icon_keyboard_arrow_right_);
+    move_action.setText(QString("Move \"") + tab_widget->tabText(tab_index) + "\" to right pane");
+    other_widget = ui->RightTabWidget;
+  } else if (tab_widget == ui->RightTabWidget) {
+    move_action.setIcon(icon_keyboard_arrow_left_);
+    move_action.setText(QString("Move \"") + tab_widget->tabText(tab_index) + "\" to left pane");
+    other_widget = ui->MainTabWidget;
+  } else {
+    UNREACHABLE();
+  }
+
+  move_action.setEnabled(tab_widget->count() > 0);
+
+  QObject::connect(&move_action, &QAction::triggered, [this, tab_widget, other_widget, tab_index] {
+    QWidget* tab = tab_widget->widget(tab_index);
+    QString text = tab_widget->tabText(tab_index);
+    tab_widget->removeTab(tab_index);
+    other_widget->addTab(tab, text);
+    UpdateCaptureStateDependentWidgets();
+    if (tab->isEnabled()) {
+      other_widget->setCurrentWidget(tab);
+    }
+  });
+  context_menu.addAction(&move_action);
+  context_menu.exec(pos);
+}
+
+void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
+  auto SetTabEnabled = [this](QWidget* widget, bool enabled) -> void {
+    QTabWidget* tab_widget = FindParentTabWidget(widget);
+    CHECK(tab_widget != nullptr);
+    tab_widget->setTabEnabled(tab_widget->indexOf(widget), enabled);
+  };
+
+  const bool has_data = GOrbitApp->HasCaptureData();
+  const bool has_process = GOrbitApp->GetSelectedProcess() != nullptr;
+  const bool has_selection = has_data && GOrbitApp->HasSampleSelection();
+  const bool is_connected = GOrbitApp->IsConnectedToInstance();
+  const bool is_capturing = GOrbitApp->IsCapturing();
+
+  SetTabEnabled(ui->HomeTab, !is_capturing);
+  SetTabEnabled(ui->FunctionsTab, true);
+  SetTabEnabled(ui->liveTab, has_data);
+  SetTabEnabled(ui->samplingTab, has_data && !is_capturing);
+  SetTabEnabled(ui->topDownTab, has_data && !is_capturing);
+  SetTabEnabled(ui->bottomUpTab, has_data && !is_capturing);
+  SetTabEnabled(ui->selectionSamplingTab, has_selection);
+  SetTabEnabled(ui->selectionTopDownTab, has_selection);
+  SetTabEnabled(ui->selectionBottomUpTab, has_selection);
+
+  ui->actionToggle_Capture->setEnabled(true);
+  ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
+  ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
+  ui->actionOpen_Capture->setEnabled(!is_capturing);
+  ui->actionSave_Capture->setEnabled(!is_capturing);
+  ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
+  ui->actionSave_Preset_As->setEnabled(!is_capturing);
+}
+
+QTabWidget* OrbitMainWindow::FindParentTabWidget(const QWidget* widget) const {
+  std::array<QTabWidget*, 2> potential_parents = {ui->MainTabWidget, ui->RightTabWidget};
+  for (QTabWidget* tab_widget : potential_parents) {
+    for (int i = 0; i < tab_widget->count(); ++i) {
+      if (tab_widget->widget(i) == widget) {
+        return tab_widget;
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 OrbitMainWindow::~OrbitMainWindow() {
@@ -375,16 +442,26 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
   ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
   // Switch to sampling tab if sampling report is not empty and if not already in live tab.
-  bool has_samples = sampling_report->HasSamples();
+  /*bool has_samples = sampling_report->HasSamples();
   if (has_samples && (ui->RightTabWidget->currentWidget() != ui->liveTab)) {
     ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
-  }
+  }*/
+
+  UpdateCaptureStateDependentWidgets();
 }
 
 void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
                                            std::shared_ptr<SamplingReport> sampling_report) {
-  if (sampling_report->HasSamples()) {
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), true);
+  ui->selectionGridLayout->removeWidget(ui->selectionReport);
+  delete ui->selectionReport;
+
+  ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
+  ui->selectionReport->Initialize(callstack_data_view, std::move(sampling_report));
+  ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
+
+  UpdateCaptureStateDependentWidgets();
+
+  /*if (sampling_report->HasSamples()) {
     // This condition and the corresponding ones in OnNewSelectionTopDownView,
     // OnNewSelectionBottomUpView need to be complementary, such that one doesn't cause switching
     // away from or to a tab that the other method would switch from when such a tab is selected.
@@ -402,16 +479,7 @@ void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
     if (ui->RightTabWidget->currentWidget() == ui->selectionSamplingTab) {
       ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
     }
-    // ...and then disable this tab.
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionSamplingTab), false);
-  }
-
-  ui->selectionGridLayout->removeWidget(ui->selectionReport);
-  delete ui->selectionReport;
-
-  ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
-  ui->selectionReport->Initialize(callstack_data_view, std::move(sampling_report));
-  ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
+  }*/
 }
 
 void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
@@ -420,8 +488,7 @@ void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_vi
 
 void OrbitMainWindow::OnNewSelectionTopDownView(
     std::unique_ptr<CallTreeView> selection_top_down_view) {
-  if (selection_top_down_view->child_count() > 0) {
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), true);
+  /*if (selection_top_down_view->child_count() > 0) {
     // This condition and the corresponding ones in OnNewSelectionReport, OnNewSelectionBottomUpView
     // need to be complementary, such that one doesn't cause switching away from or to a tab that
     // the other method would switch from when such a tab is selected. Otherwise, which tab ends up
@@ -435,9 +502,7 @@ void OrbitMainWindow::OnNewSelectionTopDownView(
     if (ui->RightTabWidget->currentWidget() == ui->selectionTopDownTab) {
       ui->RightTabWidget->setCurrentWidget(ui->topDownTab);
     }
-    // ...and then disable this tab.
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionTopDownTab), false);
-  }
+  }*/
   ui->selectionTopDownWidget->SetTopDownView(std::move(selection_top_down_view));
 }
 
@@ -447,8 +512,7 @@ void OrbitMainWindow::OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_
 
 void OrbitMainWindow::OnNewSelectionBottomUpView(
     std::unique_ptr<CallTreeView> selection_bottom_up_view) {
-  if (selection_bottom_up_view->child_count() > 0) {
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab), true);
+  /*if (selection_bottom_up_view->child_count() > 0) {
     // This condition and the corresponding ones in OnNewSelectionReport, OnNewSelectionTopDownView
     // need to be complementary, such that one doesn't cause switching away from or to a tab that
     // the other method would switch from when such a tab is selected. Otherwise, which tab ends up
@@ -462,9 +526,7 @@ void OrbitMainWindow::OnNewSelectionBottomUpView(
     if (ui->RightTabWidget->currentWidget() == ui->selectionBottomUpTab) {
       ui->RightTabWidget->setCurrentWidget(ui->bottomUpTab);
     }
-    // ...and then disable this tab.
-    ui->RightTabWidget->setTabEnabled(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab), false);
-  }
+  }*/
   ui->selectionBottomUpWidget->SetBottomUpView(std::move(selection_bottom_up_view));
 }
 
@@ -679,7 +741,7 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   GOrbitApp->OnLoadCapture(filepath);
   setWindowTitle(QString::fromStdString(filepath));
-  ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
+  // ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
 }
 
 void OrbitMainWindow::OpenDisassembly(std::string a_String, DisassemblyReport report) {
@@ -724,7 +786,27 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
 
 void OrbitMainWindow::OnCaptureCleared() {
   ui->liveFunctions->Reset();
-  ui->actionSave_Capture->setDisabled(true);
+  UpdateCaptureStateDependentWidgets();
+}
+
+bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == ui->MainTabWidget->tabBar() || watched == ui->RightTabWidget->tabBar()) {
+    if (event->type() == QEvent::MouseButtonRelease) {
+      QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+      if (mouse_event->button() == Qt::MouseButton::RightButton) {
+        int index = static_cast<QTabBar*>(watched)->tabAt(mouse_event->pos());
+        if (index >= 0) {
+          auto tab_widget = static_cast<QTabWidget*>(watched->parent());
+          if (tab_widget->isTabEnabled(index)) {
+            tab_widget->setCurrentIndex(index);
+          }
+          CreateTabBarContextMenu(tab_widget, index, mouse_event->globalPos());
+        }
+      }
+    }
+  }
+
+  return QObject::eventFilter(watched, event);
 }
 
 void OrbitMainWindow::closeEvent(QCloseEvent* event) {

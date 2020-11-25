@@ -102,6 +102,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     CHECK(capture_data_.has_value());
     return capture_data_.value();
   }
+
+  [[nodiscard]] bool HasSampleSelection() const {
+    return selection_report_ != nullptr && selection_report_->HasSamples();
+  }
+
   void ToggleDrawHelp();
   void ToggleCapture();
   void LoadFileMapping();
@@ -158,6 +163,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   // This needs to be called from the main thread.
   [[nodiscard]] bool IsCaptureConnected(const CaptureData& capture) const;
+
+  [[nodiscard]] bool IsConnectedToInstance() const {
+    return grpc_channel_ != nullptr && grpc_channel_->GetState(false) == GRPC_CHANNEL_READY;
+  }
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
