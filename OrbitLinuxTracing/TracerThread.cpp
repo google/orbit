@@ -835,7 +835,7 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 
   // There was a call to mmap with PROT_EXEC, hence refresh the maps.
   // This should happen rarely.
-  auto event = std::make_unique<MapsPerfEvent>(MonotonicTimestampNs(), ReadMaps(pid_));
+  auto event = std::make_unique<MapsPerfEvent>(pid_, MonotonicTimestampNs(), ReadMaps(pid_));
   event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }

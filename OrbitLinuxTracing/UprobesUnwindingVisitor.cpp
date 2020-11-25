@@ -13,6 +13,7 @@
 #include <optional>
 #include <utility>
 
+#include "ElfUtils/LinuxMap.h"
 #include "Function.h"
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
@@ -184,7 +185,22 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
 }
 
 void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
+  CHECK(listener_ != nullptr);
   current_maps_ = LibunwindstackUnwinder::ParseMaps(event->GetMaps());
+
+  auto result_or_error = orbit_elf_utils::ParseMaps(event->GetMaps());
+  if (!result_or_error) {
+    ERROR("Couldn't parse maps: %s", result_or_error.error().message());
+    return;
+  }
+
+  orbit_grpc_protos::ModulesUpdateEvent modules_update_event;
+  modules_update_event.set_pid(event->GetPid());
+  modules_update_event.set_timestamp_ns(event->GetTimestamp());
+  const auto& modules = result_or_error.value();
+  *modules_update_event.mutable_modules() = {modules.begin(), modules.end()};
+
+  listener_->OnModulesUpdate(std::move(modules_update_event));
 }
 
 }  // namespace LinuxTracing

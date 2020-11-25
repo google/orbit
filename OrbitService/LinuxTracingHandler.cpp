@@ -143,6 +143,14 @@ void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent t
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void LinuxTracingHandler::OnModulesUpdate(
+    orbit_grpc_protos::ModulesUpdateEvent modules_update_event) {
+  orbit_grpc_protos::CaptureEvent event;
+  *event.mutable_modules_update_event() = std::move(modules_update_event);
+
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 uint64_t LinuxTracingHandler::ComputeCallstackKey(const Callstack& callstack) {
   uint64_t key = 17;
   for (uint64_t pc : callstack.pcs()) {
