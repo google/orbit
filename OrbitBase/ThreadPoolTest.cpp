@@ -306,6 +306,9 @@ TEST(ThreadPool, CheckGetNumberOfBusyThreads) {
         << "actions_executed=" << actions_executed << ", expected 2";
   }
 
+  // Give it some time to finish the action
+  absl::SleepFor(absl::Milliseconds(50));
+
   // Check there are no busy threads anymore
   EXPECT_EQ(thread_pool->GetNumberOfBusyThreads(), 0);
 
