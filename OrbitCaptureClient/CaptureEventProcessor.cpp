@@ -64,6 +64,9 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
     case CaptureEvent::kTracepointEvent:
       ProcessTracepointEvent(event.tracepoint_event());
       break;
+    case CaptureEvent::kGpuQueueSubmission:
+      UNREACHABLE();
+      break;
     case CaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
