@@ -60,6 +60,7 @@ target_sources(OrbitLinuxTracing PRIVATE
         UprobesUnwindingVisitor.h)
 
 target_link_libraries(OrbitLinuxTracing PUBLIC
+        ElfUtils
         OrbitBase
         OrbitProtos
         CONAN_PKG::abseil

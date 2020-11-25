@@ -6,6 +6,7 @@ syntax = "proto3";
 
 package orbit_grpc_protos;
 
+import "module.proto";
 import "tracepoint.proto";
 
 message CaptureOptions {
@@ -224,6 +225,12 @@ message AddressInfo {
   }
 }
 
+message ModulesUpdateEvent {
+  int32 pid = 1;
+  uint64 timestamp_ns = 2;
+  repeated ModuleInfo modules = 3;
+}
+
 message CaptureEvent {
   oneof event {
     SchedulingSlice scheduling_slice = 1;
@@ -239,5 +246,6 @@ message CaptureEvent {
     InternedTracepointInfo interned_tracepoint_info = 9;
     TracepointEvent tracepoint_event = 10;
     IntrospectionScope introspection_scope = 12;
+    ModulesUpdateEvent modules_update_event = 14;
   }
 }

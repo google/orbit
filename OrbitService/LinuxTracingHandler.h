@@ -39,6 +39,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override;
   void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) override;
   void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override;
+  void OnModulesUpdate(orbit_grpc_protos::ModulesUpdateEvent modules_update_event) override;
 
  private:
   CaptureEventBuffer* capture_event_buffer_;

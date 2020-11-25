@@ -309,16 +309,18 @@ class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
 // perf_event_open event, but we want it to be part of the same hierarchy.
 class MapsPerfEvent : public PerfEvent {
  public:
-  MapsPerfEvent(uint64_t timestamp, std::string maps)
-      : timestamp_{timestamp}, maps_{std::move(maps)} {}
+  MapsPerfEvent(int32_t pid, uint64_t timestamp, std::string maps)
+      : pid_{pid}, timestamp_{timestamp}, maps_{std::move(maps)} {}
 
   uint64_t GetTimestamp() const override { return timestamp_; }
 
   void Accept(PerfEventVisitor* visitor) override;
 
-  const std::string& GetMaps() const { return maps_; }
+  [[nodiscard]] const std::string& GetMaps() const { return maps_; }
+  [[nodiscard]] int32_t GetPid() const { return pid_; }
 
  private:
+  int32_t pid_;
   uint64_t timestamp_;
   std::string maps_;
 };
