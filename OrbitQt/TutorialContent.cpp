@@ -12,6 +12,11 @@
 
 std::unique_ptr<TutorialOverlay> overlay;
 
+void StartTutorialSection(OrbitMainWindow* main_window, const std::string& section_name) {
+  main_window->RestoreDefaultTabLayout();
+  overlay->StartSection(section_name);
+}
+
 TutorialOverlay::StepSetup CreateTakeACaptureStepSetup(OrbitMainWindow* main_window) {
   TutorialOverlay::StepSetup setup;
 
@@ -30,12 +35,13 @@ void SetupAllSteps(OrbitMainWindow* main_window) {
   overlay->SetupStep("analyze", CreateAnalyzeResultsStepSetup(main_window));
 }
 
-void SetupDynamicInstrumentationTutorial(QMenu* menu) {
+void SetupDynamicInstrumentationTutorial(OrbitMainWindow* main_window, QMenu* menu) {
   auto action = menu->addAction("Dynamic Instrumentation");
 
   overlay->AddSection("dynamicInstrumentation", "Dynamic Instrumentation", {"capture", "analyze"});
-  QObject::connect(action, &QAction::triggered,
-                   []() { overlay->StartSection("dynamicInstrumentation"); });
+  QObject::connect(action, &QAction::triggered, [main_window]() {
+    StartTutorialSection(main_window, "dynamicInstrumentation");
+  });
 }
 
 void InitTutorials(OrbitMainWindow* main_window) {
@@ -55,7 +61,7 @@ void InitTutorials(OrbitMainWindow* main_window) {
   });
 
   SetupAllSteps(main_window);
-  SetupDynamicInstrumentationTutorial(tutorials_menu);
+  SetupDynamicInstrumentationTutorial(main_window, tutorials_menu);
 }
 
 void DeinitTutorials() { overlay.reset(); }

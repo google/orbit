@@ -271,6 +271,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   this->setWindowIcon(QIcon(iconFileName.c_str()));
 
   GOrbitApp->PostInit();
+
+  SaveCurrentTabLayoutAsDefaultInMemory();
+  UpdateCaptureStateDependentWidgets();
 }
 
 static QWidget* CreateSpacer(QWidget* parent) {
@@ -305,6 +308,20 @@ void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
   ui->FileMappingWidget->hide();
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
+}
+
+void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {
+  default_tab_layout_.clear();
+  std::array<QTabWidget*, 2> tab_widgets = {ui->MainTabWidget, ui->RightTabWidget};
+  for (QTabWidget* tab_widget : tab_widgets) {
+    TabWidgetLayout layout;
+    for (int i = 0; i < tab_widget->count(); ++i) {
+      layout.tabs_and_titles.push_back(
+          std::make_pair(tab_widget->widget(i), tab_widget->tabText(i)));
+    }
+    layout.current_index = tab_widget->currentIndex();
+    default_tab_layout_[tab_widget] = layout;
+  }
 }
 
 void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index,
@@ -349,13 +366,13 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   };
 
   const bool has_data = GOrbitApp->HasCaptureData();
-  const bool has_process = GOrbitApp->GetSelectedProcess() != nullptr;
   const bool has_selection = has_data && GOrbitApp->HasSampleSelection();
   const bool is_connected = GOrbitApp->IsConnectedToInstance();
   const bool is_capturing = GOrbitApp->IsCapturing();
 
   SetTabEnabled(ui->HomeTab, !is_capturing);
   SetTabEnabled(ui->FunctionsTab, true);
+  SetTabEnabled(ui->CaptureTab, true);
   SetTabEnabled(ui->liveTab, has_data);
   SetTabEnabled(ui->samplingTab, has_data && !is_capturing);
   SetTabEnabled(ui->topDownTab, has_data && !is_capturing);
@@ -706,6 +723,19 @@ void OrbitMainWindow::ShowEmptyFrameTrackWarningIfNeeded(std::string_view functi
 
     message_box.exec();
   }
+}
+
+void OrbitMainWindow::RestoreDefaultTabLayout() {
+  for (auto& widget_and_layout : default_tab_layout_) {
+    QTabWidget* tab_widget = widget_and_layout.first;
+    tab_widget->clear();
+    for (auto& tab_and_title : widget_and_layout.second.tabs_and_titles) {
+      tab_widget->addTab(tab_and_title.first, tab_and_title.second);
+    }
+    tab_widget->setCurrentIndex(widget_and_layout.second.current_index);
+  }
+
+  UpdateCaptureStateDependentWidgets();
 }
 
 void OrbitMainWindow::on_actionSave_Capture_triggered() {

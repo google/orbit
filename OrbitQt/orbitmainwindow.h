@@ -60,6 +60,8 @@ class OrbitMainWindow : public QMainWindow {
 
   bool eventFilter(QObject* watched, QEvent* event) override;
 
+  void RestoreDefaultTabLayout();
+
  protected:
   void closeEvent(QCloseEvent* event) override;
 
@@ -99,6 +101,8 @@ class OrbitMainWindow : public QMainWindow {
   void SetupCaptureToolbar();
   void SetupCodeView();
 
+  void SaveCurrentTabLayoutAsDefaultInMemory();
+
   void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint pos);
   void UpdateCaptureStateDependentWidgets();
 
@@ -121,6 +125,12 @@ class OrbitMainWindow : public QMainWindow {
 
   // Status listener
   std::unique_ptr<StatusListener> status_listener_;
+
+  struct TabWidgetLayout {
+    std::vector<std::pair<QWidget*, QString>> tabs_and_titles;
+    int current_index;
+  };
+  std::map<QTabWidget*, TabWidgetLayout> default_tab_layout_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

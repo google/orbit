@@ -223,7 +223,7 @@ QPushButton:disabled {
       <widget class="QTabWidget" name="RightTabWidget">
        <property name="currentIndex">
         <number>0</number>
-	   </property>
+       </property>
        <property name="movable">
         <bool>true</bool>
        </property>
