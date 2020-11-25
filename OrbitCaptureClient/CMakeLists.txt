@@ -30,3 +30,17 @@ add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcess
 target_link_libraries(
   CaptureEventProcessorProcessEventsFuzzer
   PRIVATE OrbitCaptureClient libprotobuf-mutator::libprotobuf-mutator)
+
+add_executable(OrbitCaptureClientTests)
+
+target_compile_options(OrbitCaptureClientTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitCaptureClientTests PRIVATE
+        CaptureEventProcessorTest.cpp)
+
+target_link_libraries(
+        OrbitCaptureClientTests PRIVATE
+        OrbitCaptureClient
+        GTest::Main)
+
+register_test(OrbitCaptureClientTests)
