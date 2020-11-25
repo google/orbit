@@ -104,7 +104,7 @@ message InternedTracepointInfo {
 message TracepointEvent {
   int32 pid = 1;
   int32 tid = 2;
-  int64 time = 3;
+  uint64 time = 3;
   int32 cpu = 4;
   oneof tracepoint_info_or_key {
     TracepointInfo tracepoint_info = 5;
@@ -177,6 +177,50 @@ message AddressInfo {
   }
 }
 
+message GpuQueueSubmission {
+  GpuQueueSubmissionMetaInfo meta_info = 1;
+  repeated GpuSubmitInfo submit_infos = 2;
+  repeated GpuDebugMarker completed_markers = 3;
+  uint32 num_begin_markers = 4;
+}
+
+message GpuQueueSubmissionMetaInfo {
+  int32 thread_id = 1;
+  uint64 pre_submission_cpu_timestamp = 2;
+  uint64 post_submission_cpu_timestamp = 3;
+}
+
+message GpuSubmitInfo {
+  repeated GpuCommandBuffer command_buffers = 1;
+}
+
+message GpuCommandBuffer {
+  uint64 begin_gpu_timestamp_ns = 1;
+  uint64 end_gpu_timestamp_ns = 2;
+}
+
+message GpuDebugMarkerBeginInfo {
+  GpuQueueSubmissionMetaInfo meta_info = 1;
+  uint64 gpu_timestamp_ns = 2;
+}
+
+message GpuDebugMarker {
+  oneof begin_marker_option {
+    GpuDebugMarkerBeginInfo begin_marker = 1;
+  };
+  uint64 end_gpu_timestamp_ns = 2;
+  uint64 text_key = 3;
+  uint64 depth = 4;
+  Color color = 5;
+}
+
+message Color {
+  float red = 1;
+  float green = 2;
+  float blue = 3;
+  float alpha = 4;
+}
+
 message CaptureEvent {
   oneof event {
     SchedulingSlice scheduling_slice = 1;
@@ -191,5 +235,6 @@ message CaptureEvent {
     InternedTracepointInfo interned_tracepoint_info = 9;
     TracepointEvent tracepoint_event = 10;
     IntrospectionScope introspection_scope = 12;
+    GpuQueueSubmission gpu_queue_submission = 13;
   }
 }
