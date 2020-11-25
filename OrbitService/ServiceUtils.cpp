@@ -51,9 +51,7 @@ ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
 
 ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
   std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%d/maps", pid)};
-  LOG("Read module information from file: %s", proc_maps_path.string());
   OUTCOME_TRY(proc_maps_data, ReadFileToString(proc_maps_path));
-  LOG("Parse content of maps file.");
   return ParseMaps(proc_maps_data);
 }
 
@@ -66,7 +64,6 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 
   const std::vector<std::string> proc_maps = absl::StrSplit(proc_maps_data, '\n');
 
-  LOG("Build address map.");
   std::map<std::string, AddressRange> address_map;
   for (const std::string& line : proc_maps) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
@@ -97,10 +94,8 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     }
   }
 
-  LOG("Build ModuleInfos.");
   std::vector<ModuleInfo> result;
   for (const auto& [module_path, address_range] : address_map) {
-    LOG("Processing module %s", module_path);
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
     if (!std::filesystem::exists(module_path)) continue;
@@ -133,7 +128,6 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 
     result.push_back(module_info);
   }
-  LOG("Returning %d module infos.", result.size());
 
   return result;
 }
