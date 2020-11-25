@@ -227,12 +227,12 @@ message CaptureEvent {
     FunctionCall function_call = 4;
     InternedString interned_string = 5;
     GpuJob gpu_job = 6;
+    GpuQueueSubmission gpu_queue_submission = 13;
     ThreadName thread_name = 7;
     ThreadStateSlice thread_state_slice = 11;
     AddressInfo address_info = 8;
     InternedTracepointInfo interned_tracepoint_info = 9;
     TracepointEvent tracepoint_event = 10;
     IntrospectionScope introspection_scope = 12;
-    GpuQueueSubmission gpu_queue_submission = 13;
   }
 }
