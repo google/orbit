@@ -33,14 +33,34 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   return columns;
 }
 
+bool FunctionsDataView::ShouldShowSelectedFunctionIcon(const FunctionInfo& function) {
+  return GOrbitApp->IsFunctionSelected(function);
+}
+
+bool FunctionsDataView::ShouldShowFrameTrackIcon(const FunctionInfo& function) {
+  if (GOrbitApp->IsFrameTrackEnabled(function)) {
+    return true;
+  }
+  if (GOrbitApp->HasCaptureData()) {
+    const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+    if (!GOrbitApp->IsCaptureConnected(capture_data) &&
+        GOrbitApp->HasFrameTrackInCaptureData(function)) {
+      // This case occurs when loading a capture. We still want to show the indicator that a frame
+      // track is enabled for the function.
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string FunctionsDataView::BuildSelectedColumnsString(const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
-  if (GOrbitApp->IsFunctionSelected(function)) {
+  if (ShouldShowSelectedFunctionIcon(function)) {
     absl::StrAppend(&result, kSelectedFunctionString);
-    if (GOrbitApp->IsFrameTrackEnabled(function)) {
+    if (ShouldShowFrameTrackIcon(function)) {
       absl::StrAppend(&result, " ", kFrameTrackString);
     }
-  } else if (GOrbitApp->IsFrameTrackEnabled(function)) {
+  } else if (ShouldShowFrameTrackIcon(function)) {
     absl::StrAppend(&result, kFrameTrackString);
   }
   return result;
