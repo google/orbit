@@ -174,8 +174,14 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
     // We need at least one function call to a function so that adding iterators makes sense.
     enable_iterator |= stats.count() > 0;
-    enable_enable_frame_track |= !GOrbitApp->IsFrameTrackEnabled(selected_function);
-    enable_disable_frame_track |= GOrbitApp->IsFrameTrackEnabled(selected_function);
+
+    if (GOrbitApp->IsCaptureConnected(capture_data)) {
+      enable_enable_frame_track |= !GOrbitApp->IsFrameTrackEnabled(selected_function);
+      enable_disable_frame_track |= GOrbitApp->IsFrameTrackEnabled(selected_function);
+    } else {
+      enable_enable_frame_track |= !GOrbitApp->HasFrameTrackInCaptureData(selected_function);
+      enable_disable_frame_track |= GOrbitApp->HasFrameTrackInCaptureData(selected_function);
+    }
   }
 
   std::vector<std::string> menu;
@@ -267,7 +273,9 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      GOrbitApp->SelectFunction(*function);
+      if (GOrbitApp->IsCaptureConnected(capture_data)) {
+        GOrbitApp->SelectFunction(*function);
+      }
       GOrbitApp->EnableFrameTrack(*function);
       GOrbitApp->AddFrameTrack(*function);
     }

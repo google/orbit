@@ -56,6 +56,8 @@ class FunctionsDataView : public DataView {
   static const std::string kMenuActionDisassembly;
 
  private:
+  static bool ShowSelectedFunctionIcon(const orbit_client_protos::FunctionInfo& function);
+  static bool ShowFrameTrackIcon(const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
 };
 
