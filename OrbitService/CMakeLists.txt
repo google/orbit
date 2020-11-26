@@ -32,6 +32,8 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
+        ProducerSideServer.cpp
+        ProducerSideServer.h
         ProducerSideServiceImpl.cpp
         ProducerSideServiceImpl.h
         TracepointServiceImpl.h
