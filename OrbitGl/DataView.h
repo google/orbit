@@ -78,6 +78,7 @@ class DataView {
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
   DataViewType GetType() const { return type_; }
+  int GetRowFromFunctionAddress(uint64_t function);
 
  protected:
   void InitSortingOrders();

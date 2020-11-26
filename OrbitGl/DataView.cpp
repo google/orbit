@@ -121,3 +121,32 @@ void DataView::CopySelection(const std::vector<int>& selection) {
 
   GOrbitApp->SetClipboard(clipboard);
 }
+
+int DataView::GetRowFromFunctionAddress(uint64_t function) {
+  auto columns = GetColumns();
+  int address_column = -1;
+  int function_row = -1;
+  bool find_address_column = false;
+  bool find_function_row = false;
+
+  for (auto column : columns) {
+    address_column++;
+    if (column.header == "Address") {
+      find_address_column = true;
+      break;
+    }
+  }
+
+  if (find_address_column) {
+    do {
+      function_row++;
+      find_function_row =
+          absl::StrFormat("0x%llx", function) == GetValue(function_row, address_column);
+    } while (GetValue(function_row, address_column) != "" && !find_function_row);
+  }
+  if (find_function_row) {
+    return function_row;
+  } else {
+    return -1;
+  }
+}

@@ -1263,6 +1263,17 @@ void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functio
   return data_manager_->IsFunctionVisible(function_address);
 }
 
+uint64_t OrbitApp::highlighted_function() const {
+  return data_manager_->highlighted_function();
+}
+
+void OrbitApp::set_highlighted_function(uint64_t highlighted_function) {
+  data_manager_->set_highlighted_function(highlighted_function);
+  data_manager_->set_selected_text_box(nullptr);
+  NeedsRedraw();
+}
+
+
 ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_thread_id(); }
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
@@ -1272,6 +1283,7 @@ void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
 const TextBox* OrbitApp::selected_text_box() const { return data_manager_->selected_text_box(); }
 void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_selected_text_box(text_box);
+  data_manager_->set_highlighted_function(0);
 }
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,

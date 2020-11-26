@@ -107,3 +107,12 @@ void OrbitLiveFunctions::Reset() {
   iterator_uis.clear();
   all_events_iterator_->DisableButtons();
 }
+
+ void OrbitLiveFunctions::onRowSelected(int row) {
+  if (row < 0) { return; }
+
+  QItemSelectionModel* selection = ui->data_view_panel_->GetTreeView()->selectionModel();
+  QModelIndex idx = ui->data_view_panel_->GetTreeView()->GetModel()->CreateIndex(row, 0);
+  selection->select(idx, 
+	  QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+}

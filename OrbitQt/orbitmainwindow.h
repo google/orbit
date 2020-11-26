@@ -88,6 +88,7 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionServiceStackOverflow_triggered();
 
   void ShowCaptureOnSaveWarningIfNeeded();
+  void CheckAndChangeFunctionHighlight();
 
  private:
   void StartMainTimer();

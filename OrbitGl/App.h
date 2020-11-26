@@ -298,6 +298,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions);
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address);
 
+  [[nodiscard]] uint64_t highlighted_function() const;
+  void set_highlighted_function(uint64_t highlighted_function);
+
   [[nodiscard]] ThreadID selected_thread_id() const;
   void set_selected_thread_id(ThreadID thread_id);
 

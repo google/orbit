@@ -216,6 +216,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       });
 
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
+  connect(ui->CaptureGLWidget, SIGNAL(checkFunctionHighlightChange()), this,
+          SLOT(CheckAndChangeFunctionHighlight()));
 
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
@@ -602,6 +604,35 @@ void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
                      });
 
     message_box.exec();
+  }
+}
+
+void OrbitMainWindow::CheckAndChangeFunctionHighlight() {
+  if (GOrbitApp->selected_text_box() &&
+      GOrbitApp->selected_thread_id() != SamplingProfiler::kAllThreadsFakeTid) {
+    uint64_t function = GOrbitApp->selected_text_box()->GetTimerInfo().function_address();
+
+    if (GOrbitApp->highlighted_function() != function) {
+      LiveFunctionsDataView live_functions_data_view =
+          ui->liveFunctions->GetLiveFunctionsController().GetDataView();
+
+      int selected_row = live_functions_data_view.GetRowFromFunctionAddress(function);
+      if (selected_row >= 0) {
+        ui->liveFunctions->onRowSelected(selected_row);
+      }
+
+	  /*
+      DataView* functions_data_view = ui->FunctionsList->GetTreeView()->GetModel()->GetDataView();
+      selected_row = functions_data_view->GetRowFromFunctionAddress(function);
+
+      if (selected_row >=0) {
+        QItemSelectionModel* selection = ui->FunctionsList->GetTreeView()->selectionModel();
+        QModelIndex idx =
+            ui->FunctionsList->GetTreeView()->GetModel()->CreateIndex(selected_row, 0);
+        selection->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+      }
+	  */
+    }
   }
 }
 

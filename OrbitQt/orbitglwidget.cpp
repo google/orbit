@@ -187,6 +187,7 @@ void OrbitGLWidget::mousePressEvent(QMouseEvent* event) {
   if (gl_canvas_) {
     if (event->buttons() == Qt::LeftButton) {
       gl_canvas_->LeftDown(event->x(), event->y());
+      checkFunctionHighlightChange();
     }
 
     if (event->buttons() == Qt::RightButton) {

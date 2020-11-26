@@ -34,6 +34,7 @@ class DataManager final {
   void DeselectFunction(const orbit_client_protos::FunctionInfo& function);
   void ClearSelectedFunctions();
   void set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions);
+  void set_highlighted_function(uint64_t highlighted_function);
   void set_selected_thread_id(int32_t thread_id);
   void set_selected_text_box(const TextBox* text_box);
   void set_selected_process(int32_t pid);
@@ -43,6 +44,7 @@ class DataManager final {
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
+  [[nodiscard]] uint64_t highlighted_function() const;
   [[nodiscard]] int32_t selected_thread_id() const;
   [[nodiscard]] const TextBox* selected_text_box() const;
   [[nodiscard]] const ProcessData* selected_process() const;
@@ -67,6 +69,7 @@ class DataManager final {
   absl::node_hash_map<int32_t, ProcessData> process_map_;
   FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
+  uint64_t highlighted_function_;
 
   TracepointInfoSet selected_tracepoints_;
 

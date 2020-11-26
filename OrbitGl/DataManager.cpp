@@ -50,6 +50,11 @@ void DataManager::set_visible_functions(absl::flat_hash_set<uint64_t> visible_fu
   visible_functions_ = std::move(visible_functions);
 }
 
+void DataManager::set_highlighted_function(uint64_t highlighted_function) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  highlighted_function_ = highlighted_function;
+}
+
 void DataManager::set_selected_thread_id(int32_t thread_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_thread_id_ = thread_id;
@@ -58,6 +63,11 @@ void DataManager::set_selected_thread_id(int32_t thread_id) {
 bool DataManager::IsFunctionVisible(uint64_t function_address) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return visible_functions_.contains(function_address);
+}
+
+uint64_t DataManager::highlighted_function() const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  return highlighted_function_;
 }
 
 int32_t DataManager::selected_thread_id() const {
