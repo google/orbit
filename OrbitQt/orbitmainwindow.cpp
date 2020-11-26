@@ -97,11 +97,13 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   finalizing_capture_dialog->close();
 
   GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
-    ui->actionToggle_Capture->setEnabled(false);
+    capture_stop_requested_ = true;
     finalizing_capture_dialog->show();
+    UpdateCaptureStateDependentWidgets();
   });
   auto capture_finished_callback = [this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
+    capture_stop_requested_ = false;
     UpdateCaptureStateDependentWidgets();
   };
   GOrbitApp->SetCaptureStoppedCallback(capture_finished_callback);
@@ -135,9 +137,12 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetOpenCaptureFailedCallback([this, loading_capture_dialog] {
     setWindowTitle({});
     loading_capture_dialog->close();
+    UpdateCaptureStateDependentWidgets();
   });
-  GOrbitApp->SetOpenCaptureFinishedCallback(
-      [loading_capture_dialog] { loading_capture_dialog->close(); });
+  GOrbitApp->SetOpenCaptureFinishedCallback([this, loading_capture_dialog] {
+    loading_capture_dialog->close();
+    UpdateCaptureStateDependentWidgets();
+  });
 
   GOrbitApp->SetRefreshCallback([this](DataViewType type) {
     if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
@@ -359,7 +364,7 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
 }
 
 void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
-  auto SetTabEnabled = [this](QWidget* widget, bool enabled) -> void {
+  auto set_tab_enabled = [this](QWidget* widget, bool enabled) -> void {
     QTabWidget* tab_widget = FindParentTabWidget(widget);
     CHECK(tab_widget != nullptr);
     tab_widget->setTabEnabled(tab_widget->indexOf(widget), enabled);
@@ -370,18 +375,19 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   const bool is_connected = GOrbitApp->IsConnectedToInstance();
   const bool is_capturing = GOrbitApp->IsCapturing();
 
-  SetTabEnabled(ui->HomeTab, !is_capturing);
-  SetTabEnabled(ui->FunctionsTab, true);
-  SetTabEnabled(ui->CaptureTab, true);
-  SetTabEnabled(ui->liveTab, has_data);
-  SetTabEnabled(ui->samplingTab, has_data && !is_capturing);
-  SetTabEnabled(ui->topDownTab, has_data && !is_capturing);
-  SetTabEnabled(ui->bottomUpTab, has_data && !is_capturing);
-  SetTabEnabled(ui->selectionSamplingTab, has_selection);
-  SetTabEnabled(ui->selectionTopDownTab, has_selection);
-  SetTabEnabled(ui->selectionBottomUpTab, has_selection);
+  set_tab_enabled(ui->HomeTab, true);
+  ui->HomeTab->setEnabled(!is_capturing);
+  set_tab_enabled(ui->FunctionsTab, true);
+  set_tab_enabled(ui->CaptureTab, true);
+  set_tab_enabled(ui->liveTab, has_data);
+  set_tab_enabled(ui->samplingTab, has_data && !is_capturing);
+  set_tab_enabled(ui->topDownTab, has_data && !is_capturing);
+  set_tab_enabled(ui->bottomUpTab, has_data && !is_capturing);
+  set_tab_enabled(ui->selectionSamplingTab, has_selection);
+  set_tab_enabled(ui->selectionTopDownTab, has_selection);
+  set_tab_enabled(ui->selectionBottomUpTab, has_selection);
 
-  ui->actionToggle_Capture->setEnabled(true);
+  ui->actionToggle_Capture->setEnabled(!capture_stop_requested_);
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
   ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
@@ -395,9 +401,9 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
 
   // Automatically switch between (complete capture) report and selection report tabs
   // if applicable
-  auto ShowCorrespondingSelectionTab = [this, capture_parent, selection_has_samples](
-                                           const std::vector<QWidget*>& report_tabs,
-                                           QWidget* selection_tab) {
+  auto show_corresponding_selection_tab = [this, capture_parent, selection_has_samples](
+                                              const std::vector<QWidget*>& report_tabs,
+                                              QWidget* selection_tab) {
     QTabWidget* selection_parent = FindParentTabWidget(selection_tab);
 
     // If the capture window is in the same tab widget as the selection, do not change anything
@@ -428,12 +434,12 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
     }
   };
 
-  ShowCorrespondingSelectionTab({ui->samplingTab, ui->liveTab, ui->FunctionsTab},
-                                ui->selectionSamplingTab);
-  ShowCorrespondingSelectionTab({ui->topDownTab, ui->liveTab, ui->FunctionsTab},
-                                ui->selectionTopDownTab);
-  ShowCorrespondingSelectionTab({ui->bottomUpTab, ui->liveTab, ui->FunctionsTab},
-                                ui->selectionBottomUpTab);
+  show_corresponding_selection_tab({ui->samplingTab, ui->liveTab, ui->FunctionsTab},
+                                   ui->selectionSamplingTab);
+  show_corresponding_selection_tab({ui->topDownTab, ui->liveTab, ui->FunctionsTab},
+                                   ui->selectionTopDownTab);
+  show_corresponding_selection_tab({ui->bottomUpTab, ui->liveTab, ui->FunctionsTab},
+                                   ui->selectionBottomUpTab);
 }
 
 QTabWidget* OrbitMainWindow::FindParentTabWidget(const QWidget* widget) const {

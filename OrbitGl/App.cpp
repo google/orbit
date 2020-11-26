@@ -777,6 +777,10 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
+  if (capture_window_ != nullptr) {
+    capture_window_->set_draw_help(false);
+  }
+
   std::vector<FunctionInfo> selected_functions = data_manager_->GetSelectedFunctions();
   std::vector<FunctionInfo> orbit_functions = module_manager_->GetOrbitFunctionsOfProcess(*process);
   selected_functions.insert(selected_functions.end(), orbit_functions.begin(),
