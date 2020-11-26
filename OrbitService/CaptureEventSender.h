@@ -11,7 +11,6 @@ namespace orbit_service {
 
 // Interface used to process at once multiple CaptureEvents that were previously buffered
 // (e.g., to group all those CaptureEvents into a single CaptureResponse).
-
 class CaptureEventSender {
  public:
   virtual ~CaptureEventSender() = default;

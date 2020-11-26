@@ -32,6 +32,8 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
+        ProducerSideServiceImpl.cpp
+        ProducerSideServiceImpl.h
         TracepointServiceImpl.h
         TracepointServiceImpl.cpp
         ServiceUtils.cpp
@@ -60,9 +62,11 @@ strip_symbols(OrbitService)
 add_executable(OrbitServiceTests)
 target_compile_options(OrbitServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(OrbitServiceTests PRIVATE ProcessListTest.cpp
-                                         ProcessTest.cpp
-                                         ServiceUtilsTest.cpp)
+target_sources(OrbitServiceTests PRIVATE
+        ProcessListTest.cpp
+        ProcessTest.cpp
+        ProducerSideServiceImplTest.cpp
+        ServiceUtilsTest.cpp)
 
 target_link_libraries(OrbitServiceTests PRIVATE 
         OrbitServiceLib
