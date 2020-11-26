@@ -16,6 +16,7 @@ target_sources(OrbitProtos PRIVATE
         code_block.proto
         module.proto
         process.proto
+        producer_side_services.proto
         services.proto
         services_ggp.proto
         symbol.proto
