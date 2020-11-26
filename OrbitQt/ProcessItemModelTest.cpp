@@ -2,12 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
+
 #include <QAbstractItemModelTester>
-#include <QtGlobal>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QString>
+#include <string>
 
 #include "OrbitBase/Logging.h"
 #include "ProcessItemModel.h"
-#include "gtest/gtest.h"
 #include "process.pb.h"
 
 namespace {
@@ -49,7 +53,7 @@ class AssertNoQtLogWarnings {
 
 }  // namespace
 
-namespace OrbitQt {
+namespace orbit_qt {
 
 TEST(ProcessItemModel, ProcessItemModel) {
   // This installs a QtMessageHandler for this scope. Any warning, critical or fatal message
@@ -88,4 +92,4 @@ TEST(ProcessItemModel, ProcessItemModel) {
   EXPECT_EQ(model.rowCount(), 0);
 }
 
-}  // namespace OrbitQt
+}  // namespace orbit_qt
