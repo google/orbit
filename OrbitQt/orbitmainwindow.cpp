@@ -373,6 +373,52 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
 }
 
+void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
+  const QTabWidget* capture_parent = FindParentTabWidget(ui->CaptureTab);
+
+  // Automatically switch between (complete capture) report and selection report tabs
+  // if applicable
+  auto ShowCorrespondingSelectionTab = [this, capture_parent, selection_has_samples](
+                                           const std::vector<QWidget*>& report_tabs,
+                                           QWidget* selection_tab) {
+    QTabWidget* selection_parent = FindParentTabWidget(selection_tab);
+
+    // If the capture window is in the same tab widget as the selection, do not change anything
+    if (selection_parent == capture_parent) {
+      return;
+    }
+
+    if (selection_has_samples) {
+      // Non-empty selection: If one of the corresponding complete reports was visible,
+      // show the selection tab instead
+      if (std::find(report_tabs.begin(), report_tabs.end(), selection_parent->currentWidget()) !=
+          report_tabs.end()) {
+        selection_parent->setCurrentWidget(selection_tab);
+      }
+    } else {
+      // Empty selection: If the selection tab was visible, switch back to the first complete report
+      // that is in the same tab widget
+      if (selection_parent->currentWidget() == selection_tab) {
+        for (auto& report_tab : report_tabs) {
+          QTabWidget* report_parent = FindParentTabWidget(report_tab);
+          if (selection_parent == report_parent &&
+              report_parent->isTabEnabled(report_parent->indexOf(report_tab))) {
+            selection_parent->setCurrentWidget(report_tab);
+            break;
+          }
+        }
+      }
+    }
+  };
+
+  ShowCorrespondingSelectionTab({ui->samplingTab, ui->liveTab, ui->FunctionsTab},
+                                ui->selectionSamplingTab);
+  ShowCorrespondingSelectionTab({ui->topDownTab, ui->liveTab, ui->FunctionsTab},
+                                ui->selectionTopDownTab);
+  ShowCorrespondingSelectionTab({ui->bottomUpTab, ui->liveTab, ui->FunctionsTab},
+                                ui->selectionBottomUpTab);
+}
+
 QTabWidget* OrbitMainWindow::FindParentTabWidget(const QWidget* widget) const {
   std::array<QTabWidget*, 2> potential_parents = {ui->MainTabWidget, ui->RightTabWidget};
   for (QTabWidget* tab_widget : potential_parents) {
@@ -441,45 +487,32 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
   ui->samplingReport->Initialize(callstack_data_view, sampling_report);
   ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
-  // Switch to sampling tab if sampling report is not empty and if not already in live tab.
-  /*bool has_samples = sampling_report->HasSamples();
-  if (has_samples && (ui->RightTabWidget->currentWidget() != ui->liveTab)) {
-    ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
-  }*/
-
   UpdateCaptureStateDependentWidgets();
+
+  // Switch to sampling tab if:
+  //  * Report is non-empty
+  //  * Sampling-tab is not in the same widget as the capture tab
+  //  * Live-tab isn't selected in the same widget as the sampling tab
+  QTabWidget* sampling_tab_parent = FindParentTabWidget(ui->samplingTab);
+  if (sampling_report->HasSamples() &&
+      (FindParentTabWidget(ui->CaptureTab) != sampling_tab_parent) &&
+      (sampling_tab_parent->currentWidget() != ui->liveTab)) {
+    sampling_tab_parent->setCurrentWidget(ui->samplingTab);
+  }
 }
 
 void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
                                            std::shared_ptr<SamplingReport> sampling_report) {
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;
+  bool has_samples = sampling_report->HasSamples();
 
   ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
   ui->selectionReport->Initialize(callstack_data_view, std::move(sampling_report));
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 
+  UpdateActiveTabsAfterSelection(has_samples);
   UpdateCaptureStateDependentWidgets();
-
-  /*if (sampling_report->HasSamples()) {
-    // This condition and the corresponding ones in OnNewSelectionTopDownView,
-    // OnNewSelectionBottomUpView need to be complementary, such that one doesn't cause switching
-    // away from or to a tab that the other method would switch from when such a tab is selected.
-    // Otherwise, which tab ends up being selected would depend on the order in which these two
-    // methods are called.
-    if (ui->RightTabWidget->currentWidget() != ui->topDownTab &&
-        ui->RightTabWidget->currentWidget() != ui->selectionTopDownTab &&
-        ui->RightTabWidget->currentWidget() != ui->bottomUpTab &&
-        ui->RightTabWidget->currentWidget() != ui->selectionBottomUpTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->selectionSamplingTab);
-    }
-  } else {
-    // If the selection is empty, if this tab is currently selected switch to the corresponding tab
-    // for the entire capture...
-    if (ui->RightTabWidget->currentWidget() == ui->selectionSamplingTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
-    }
-  }*/
 }
 
 void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
@@ -488,21 +521,6 @@ void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_vi
 
 void OrbitMainWindow::OnNewSelectionTopDownView(
     std::unique_ptr<CallTreeView> selection_top_down_view) {
-  /*if (selection_top_down_view->child_count() > 0) {
-    // This condition and the corresponding ones in OnNewSelectionReport, OnNewSelectionBottomUpView
-    // need to be complementary, such that one doesn't cause switching away from or to a tab that
-    // the other method would switch from when such a tab is selected. Otherwise, which tab ends up
-    // being selected would depend on the order in which these two methods are called.
-    if (ui->RightTabWidget->currentWidget() == ui->topDownTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->selectionTopDownTab);
-    }
-  } else {
-    // If the selection is empty, if this tab is currently selected switch to the corresponding tab
-    // for the entire capture...
-    if (ui->RightTabWidget->currentWidget() == ui->selectionTopDownTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->topDownTab);
-    }
-  }*/
   ui->selectionTopDownWidget->SetTopDownView(std::move(selection_top_down_view));
 }
 
@@ -512,21 +530,6 @@ void OrbitMainWindow::OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_
 
 void OrbitMainWindow::OnNewSelectionBottomUpView(
     std::unique_ptr<CallTreeView> selection_bottom_up_view) {
-  /*if (selection_bottom_up_view->child_count() > 0) {
-    // This condition and the corresponding ones in OnNewSelectionReport, OnNewSelectionTopDownView
-    // need to be complementary, such that one doesn't cause switching away from or to a tab that
-    // the other method would switch from when such a tab is selected. Otherwise, which tab ends up
-    // being selected would depend on the order in which these two methods are called.
-    if (ui->RightTabWidget->currentWidget() == ui->bottomUpTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->selectionBottomUpTab);
-    }
-  } else {
-    // If the selection is empty, if this tab is currently selected switch to the corresponding tab
-    // for the entire capture...
-    if (ui->RightTabWidget->currentWidget() == ui->selectionBottomUpTab) {
-      ui->RightTabWidget->setCurrentWidget(ui->bottomUpTab);
-    }
-  }*/
   ui->selectionBottomUpWidget->SetBottomUpView(std::move(selection_bottom_up_view));
 }
 
@@ -741,7 +744,8 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   GOrbitApp->OnLoadCapture(filepath);
   setWindowTitle(QString::fromStdString(filepath));
-  // ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
+  UpdateCaptureStateDependentWidgets();
+  FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);
 }
 
 void OrbitMainWindow::OpenDisassembly(std::string a_String, DisassemblyReport report) {

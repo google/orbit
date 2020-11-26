@@ -101,6 +101,9 @@ class OrbitMainWindow : public QMainWindow {
 
   void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint pos);
   void UpdateCaptureStateDependentWidgets();
+
+  void UpdateActiveTabsAfterSelection(bool selection_has_samples);
+
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
  private:

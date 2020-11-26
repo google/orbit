@@ -571,9 +571,9 @@ void OrbitApp::SetSelectionReport(
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler),
                                                  std::move(unique_callstacks), has_summary);
   DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
-  selection_report_callback_(callstack_data_view, report);
 
   selection_report_ = report;
+  selection_report_callback_(callstack_data_view, report);
   FireRefreshCallbacks();
 }
 
