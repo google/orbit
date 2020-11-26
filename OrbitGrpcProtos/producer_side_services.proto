@@ -1,0 +1,41 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package orbit_grpc_protos;
+
+import "capture.proto";
+
+message ReceiveCommandsAndSendEventsRequest {
+  message BufferedCaptureEvents {
+    repeated CaptureEvent capture_events = 1;
+  }
+  message AllEventsSent {}
+
+  oneof event {
+    BufferedCaptureEvents buffered_capture_events = 1;
+    AllEventsSent all_events_sent = 2;
+  }
+}
+
+message ReceiveCommandsAndSendEventsResponse {
+  message StartCaptureCommand {}
+  message StopCaptureCommand {}
+
+  oneof command {
+    StartCaptureCommand start_capture_command = 1;
+    StopCaptureCommand stop_capture_command = 2;
+  }
+}
+
+// This service offers a channel to send CaptureEvents
+// from external producers to OrbitService.
+// This is done with a single bi-directional streaming RPC
+// on which CaptureEvents and AllEventsSent notifications are sent,
+// and on which Start/StopCaptureCommands are received.
+service ProducerSideService {
+  rpc ReceiveCommandsAndSendEvents(stream ReceiveCommandsAndSendEventsRequest)
+      returns (stream ReceiveCommandsAndSendEventsResponse) {}
+}
