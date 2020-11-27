@@ -21,6 +21,7 @@ class LiveFunctionsDataView : public DataView {
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
+  void OnSelect(int row) override;
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;

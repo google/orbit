@@ -77,6 +77,12 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 }
 
+void LiveFunctionsDataView::OnSelect(int row) {
+  GOrbitApp->SelectTextBox(nullptr);
+  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  GOrbitApp->set_highlighted_function(capture_data.GetAbsoluteAddress(*GetSelectedFunction(row)));
+}
+
 #define ORBIT_FUNC_SORT(Member)                                                      \
   [&](int a, int b) {                                                                \
     return OrbitUtils::Compare(functions[a].Member, functions[b].Member, ascending); \

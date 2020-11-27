@@ -107,11 +107,21 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
         bool is_selected = &text_box == GOrbitApp->selected_text_box();
+        bool need_highlight =
+            (GOrbitApp->selected_text_box() && /*if picking from the capture window*/
+             GOrbitApp->selected_text_box()->GetTimerInfo().function_address() > 0 &&
+             timer_info.function_address() ==
+                 GOrbitApp->selected_text_box()->GetTimerInfo().function_address()) ||
+            (!GOrbitApp->selected_text_box() && /*if picking from the live functions panel*/
+             GOrbitApp->highlighted_function() != DataManager::kUnusedHighlightedFunctionAddress &&
+             GOrbitApp->highlighted_function() == timer_info.function_address());
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
         float z = GlCanvas::kZValueBox + z_offset;
-        Color color = GetTimerColor(timer_info, is_selected);
+        const Color kHighlight(100, 181, 246, 255);
+        Color color =
+            need_highlight && !is_selected ? kHighlight : GetTimerColor(timer_info, is_selected);
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
