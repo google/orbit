@@ -28,7 +28,6 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
   {
     absl::MutexLock lock{&service_state_mutex_};
     service_state_.capture_status = CaptureStatus::kCaptureStopping;
-    static constexpr absl::Duration kMaxWaitForAllEventsSent = absl::Seconds(10);
 
     // Wait (for a limited amount of time) for all producers to send AllEventsSent or to disconnect.
     service_state_mutex_.AwaitWithTimeout(absl::Condition(
@@ -37,7 +36,7 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
                                                        service_state->exit_requested;
                                               },
                                               &service_state_),
-                                          kMaxWaitForAllEventsSent);
+                                          max_wait_for_all_events_sent_);
     CHECK(service_state_.producers_remaining >= 0);
     if (service_state_.producers_remaining == 0) {
       LOG("All CaptureEventProducers have finished sending their CaptureEvents");
