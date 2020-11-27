@@ -18,10 +18,7 @@ namespace {
 // This class fakes a client of ProducerSideService for use in tests.
 class FakeProducer {
  public:
-  void RunRpc(std::string_view unix_domain_socket_path) {
-    std::string server_address = absl::StrFormat("unix:%s", unix_domain_socket_path);
-    std::shared_ptr<grpc::Channel> channel = grpc::CreateCustomChannel(
-        server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments{});
+  void RunRpc(const std::shared_ptr<grpc::Channel>& channel) {
     ASSERT_NE(channel, nullptr);
 
     std::unique_ptr<orbit_grpc_protos::ProducerSideService::Stub> stub =
@@ -104,21 +101,20 @@ class MockCaptureEventBuffer : public CaptureEventBuffer {
 class ProducerSideServiceImplTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    static const std::string kUnixDomainSocketPath = "./producer-side-service-impl-test-socket";
+    service.emplace();
 
     grpc::ServerBuilder builder;
-    builder.AddListeningPort(absl::StrFormat("unix:%s", kUnixDomainSocketPath),
-                             grpc::InsecureServerCredentials());
-
-    service.emplace();
     builder.RegisterService(&*service);
     fake_server = builder.BuildAndStart();
+
+    std::shared_ptr<grpc::Channel> channel =
+        fake_server->InProcessChannel(grpc::ChannelArguments{});
 
     fake_producer.emplace();
     ON_CALL(*fake_producer, OnStopCaptureCommandReceived).WillByDefault([this] {
       fake_producer->SendAllEventsSent();
     });
-    fake_producer->RunRpc(kUnixDomainSocketPath);
+    fake_producer->RunRpc(channel);
 
     // Leave some time for the ReceiveCommandsAndSendEvents RPC to actually happen.
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -144,7 +140,7 @@ class ProducerSideServiceImplTest : public ::testing::Test {
   std::optional<FakeProducer> fake_producer;
 };
 
-constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(25);
+constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(10);
 
 }  // namespace
 
