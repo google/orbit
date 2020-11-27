@@ -571,9 +571,9 @@ void OrbitApp::SetSelectionReport(
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler),
                                                  std::move(unique_callstacks), has_summary);
   DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
-  selection_report_callback_(callstack_data_view, report);
 
   selection_report_ = report;
+  selection_report_callback_(callstack_data_view, report);
   FireRefreshCallbacks();
 }
 
@@ -775,6 +775,10 @@ bool OrbitApp::StartCapture() {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please select a target process for the capture.");
     return false;
+  }
+
+  if (capture_window_ != nullptr) {
+    capture_window_->set_draw_help(false);
   }
 
   std::vector<FunctionInfo> selected_functions = data_manager_->GetSelectedFunctions();
@@ -1524,6 +1528,10 @@ void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) 
   if (absl::GetFlag(FLAGS_devmode)) {
     thread_pool_->Schedule([crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
   }
+}
+
+CaptureClient::State OrbitApp::GetCaptureState() const {
+  return capture_client_ ? capture_client_->state() : CaptureClient::State::kStopped;
 }
 
 bool OrbitApp::IsCapturing() const {

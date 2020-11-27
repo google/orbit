@@ -58,6 +58,10 @@ class OrbitMainWindow : public QMainWindow {
 
   Ui::OrbitMainWindow* GetUi() { return ui; }
 
+  bool eventFilter(QObject* watched, QEvent* event) override;
+
+  void RestoreDefaultTabLayout();
+
  protected:
   void closeEvent(QCloseEvent* event) override;
 
@@ -97,6 +101,15 @@ class OrbitMainWindow : public QMainWindow {
   void SetupCaptureToolbar();
   void SetupCodeView();
 
+  void SaveCurrentTabLayoutAsDefaultInMemory();
+
+  void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint pos);
+  void UpdateCaptureStateDependentWidgets();
+
+  void UpdateActiveTabsAfterSelection(bool selection_has_samples);
+
+  QTabWidget* FindParentTabWidget(const QWidget* widget) const;
+
  private:
   QApplication* m_App;
   Ui::OrbitMainWindow* ui;
@@ -107,8 +120,17 @@ class OrbitMainWindow : public QMainWindow {
   QIcon icon_start_capture_;
   QIcon icon_stop_capture_;
 
+  QIcon icon_keyboard_arrow_left_;
+  QIcon icon_keyboard_arrow_right_;
+
   // Status listener
   std::unique_ptr<StatusListener> status_listener_;
+
+  struct TabWidgetLayout {
+    std::vector<std::pair<QWidget*, QString>> tabs_and_titles;
+    int current_index;
+  };
+  std::map<QTabWidget*, TabWidgetLayout> default_tab_layout_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

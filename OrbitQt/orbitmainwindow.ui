@@ -54,6 +54,9 @@ QPushButton:disabled {
        <property name="currentIndex">
         <number>0</number>
        </property>
+       <property name="movable">
+        <bool>true</bool>
+       </property>
        <widget class="QWidget" name="HomeTab">
         <attribute name="title">
          <string>Home</string>
@@ -220,6 +223,9 @@ QPushButton:disabled {
       <widget class="QTabWidget" name="RightTabWidget">
        <property name="currentIndex">
         <number>0</number>
+       </property>
+       <property name="movable">
+        <bool>true</bool>
        </property>
        <widget class="QWidget" name="FunctionsTab">
         <attribute name="title">
