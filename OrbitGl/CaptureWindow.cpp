@@ -534,11 +534,9 @@ void CaptureWindow::DrawScreenSpace() {
 
   if (time_span > 0) {
     UpdateHorizontalSliderFromWorld();
-    UpdateHorizontalScroll(slider_->GetPosRatio());
     slider_->Draw(this);
 
     UpdateVerticalSliderFromWorld();
-    UpdateVerticalScroll(vertical_slider_->GetPosRatio());
     if (vertical_slider_->GetLengthRatio() < 1.f) {
       vertical_slider_->Draw(this);
       int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
