@@ -91,7 +91,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
     world_top_left_y_ =
         clamp(world_top_left_y_, world_height_ - time_graph_.GetThreadTotalHeight(), world_max_y_);
 
-    time_graph_.PanTime(screen_click_x_, x, GetWidth(), static_cast<double>(ref_time_click_));
+    time_graph_.PanTime(screen_click_x_, x, GetWidth(), ref_time_click_);
     NeedsUpdate();
 
     click_was_drag_ = true;
@@ -117,7 +117,7 @@ void CaptureWindow::LeftDown(int x, int y) {
   ScreenToWorld(x, y, world_click_x_, world_click_y_);
   screen_click_x_ = x;
   screen_click_y_ = y;
-  ref_time_click_ = static_cast<uint64_t>(time_graph_.GetTime(static_cast<double>(x) / GetWidth()));
+  ref_time_click_ = time_graph_.GetTime(static_cast<double>(x) / GetWidth());
 
   is_selecting_ = false;
 

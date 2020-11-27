@@ -173,7 +173,7 @@ class GlCanvas {
   uint32_t initial_font_size_;
 
   ImGuiContext* imgui_context_ = nullptr;
-  uint64_t ref_time_click_;
+  double ref_time_click_;
   TextRenderer text_renderer_;
   Timer update_timer_;
   PickingManager picking_manager_;
