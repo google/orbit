@@ -74,7 +74,7 @@ GlCanvas::GlCanvas(uint32_t font_size) : ui_batcher_(BatcherId::kUi, &picking_ma
   world_max_y_ = 0.0;
   screen_click_x_ = 0;
   screen_click_y_ = 0;
-  ref_time_click_ = 0;
+  ref_time_click_ = 0.0;
 
   min_wheel_delta_ = INT_MAX;
   max_wheel_delta_ = INT_MIN;
