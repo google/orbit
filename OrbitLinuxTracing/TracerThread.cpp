@@ -618,7 +618,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   std::thread deferred_events_thread(&TracerThread::ProcessDeferredEvents, this);
 
   while (!(*exit_requested)) {
-    ORBIT_SCOPE("Tracer iteration");
+    ORBIT_SCOPE("TracerThread::Run iteration");
 
     if (!last_iteration_saw_events) {
       // Periodically print event statistics.
@@ -1016,20 +1016,27 @@ void TracerThread::ProcessDeferredEvents() {
   pthread_setname_np(pthread_self(), "Proc.Def.Events");
   bool should_exit = false;
   while (!should_exit) {
+    ORBIT_SCOPE("ProcessDeferredEvents iteration");
     // When "should_exit" becomes true, we know that we have stopped generating
     // deferred events. The last iteration will consume all remaining events.
     should_exit = stop_deferred_thread_;
     std::vector<std::unique_ptr<PerfEvent>> events = ConsumeDeferredEvents();
     if (events.empty()) {
       // TODO: use a wait/notify mechanism instead of check/sleep.
+      ORBIT_SCOPE("Sleep");
       usleep(IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US);
     } else {
-      for (auto& event : events) {
-        int fd = event->GetOriginFileDescriptor();
-        event_processor_.AddEvent(fd, std::move(event));
+      {
+        ORBIT_SCOPE("AddEvents");
+        for (auto& event : events) {
+          int fd = event->GetOriginFileDescriptor();
+          event_processor_.AddEvent(fd, std::move(event));
+        }
       }
-
-      event_processor_.ProcessOldEvents();
+      {
+        ORBIT_SCOPE("ProcessOldEvents");
+        event_processor_.ProcessOldEvents();
+      }
     }
   }
 }
