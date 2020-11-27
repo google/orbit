@@ -123,8 +123,6 @@ class OrbitMainWindow : public QMainWindow {
   QIcon icon_keyboard_arrow_left_;
   QIcon icon_keyboard_arrow_right_;
 
-  bool capture_stop_requested_ = false;
-
   // Status listener
   std::unique_ptr<StatusListener> status_listener_;
 

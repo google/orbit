@@ -87,7 +87,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
   void OnLoadCapture(const std::string& file_name);
   void OnLoadCaptureCancelRequested();
+
+  [[nodiscard]] CaptureClient::State GetCaptureState() const;
   [[nodiscard]] bool IsCapturing() const;
+
   bool StartCapture();
   void StopCapture();
   void AbortCapture();

@@ -1530,6 +1530,10 @@ void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) 
   }
 }
 
+CaptureClient::State OrbitApp::GetCaptureState() const {
+  return capture_client_ ? capture_client_->state() : CaptureClient::State::kStopped;
+}
+
 bool OrbitApp::IsCapturing() const {
   return capture_client_ ? capture_client_->IsCapturing() : false;
 }

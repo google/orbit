@@ -97,13 +97,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   finalizing_capture_dialog->close();
 
   GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
-    capture_stop_requested_ = true;
     finalizing_capture_dialog->show();
     UpdateCaptureStateDependentWidgets();
   });
   auto capture_finished_callback = [this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
-    capture_stop_requested_ = false;
     UpdateCaptureStateDependentWidgets();
   };
   GOrbitApp->SetCaptureStoppedCallback(capture_finished_callback);
@@ -373,7 +371,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   const bool has_data = GOrbitApp->HasCaptureData();
   const bool has_selection = has_data && GOrbitApp->HasSampleSelection();
   const bool is_connected = GOrbitApp->IsConnectedToInstance();
-  const bool is_capturing = GOrbitApp->IsCapturing();
+  CaptureClient::State capture_state = GOrbitApp->GetCaptureState();
+  const bool is_capturing = capture_state != CaptureClient::State::kStopped;
 
   set_tab_enabled(ui->HomeTab, true);
   ui->HomeTab->setEnabled(!is_capturing);
@@ -387,7 +386,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   set_tab_enabled(ui->selectionTopDownTab, has_selection);
   set_tab_enabled(ui->selectionBottomUpTab, has_selection);
 
-  ui->actionToggle_Capture->setEnabled(!capture_stop_requested_);
+  ui->actionToggle_Capture->setEnabled(capture_state == CaptureClient::State::kStarted ||
+                                       capture_state == CaptureClient::State::kStopped);
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
   ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
