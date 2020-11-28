@@ -42,6 +42,9 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void keyReleaseEvent(QKeyEvent* event) override;
   void wheelEvent(QWheelEvent* event) override;
 
+ signals:
+  void checkFunctionHighlightChange();
+
  protected slots:
   void messageLogged(const QOpenGLDebugMessage& msg);
   void showContextMenu();
