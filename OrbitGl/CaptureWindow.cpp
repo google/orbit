@@ -183,6 +183,7 @@ void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   if (text_box == nullptr) return;
   GOrbitApp->SelectTextBox(text_box);
   GOrbitApp->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
+  needs_check_highlight_change_ = true;
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
 
@@ -416,6 +417,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
           time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameDepth);
+          needs_check_highlight_change_ = true;
         }
         break;
       case 20:  // Right
@@ -431,6 +433,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
           time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
                                         TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameDepth);
+          needs_check_highlight_change_ = true;
         }
         break;
       case 19:  // Up
