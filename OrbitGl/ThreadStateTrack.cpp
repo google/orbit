@@ -124,7 +124,7 @@ void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   uint64_t ignore_until_ns = 0;
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   capture_data->ForEachThreadStateSliceIntersectingTimeRange(
       thread_id_, min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
         if (slice.end_timestamp_ns() <= ignore_until_ns) {

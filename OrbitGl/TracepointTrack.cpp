@@ -71,7 +71,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   const Color kGreenSelection(0, 255, 0, 255);
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
 
   if (!picking) {
     capture_data->ForEachTracepointEventOfThreadInTimeRange(
@@ -132,7 +132,7 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
   uint64_t tracepoint_info_key = tracepoint_event_info->tracepoint_info_key();
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
 
   TracepointInfo tracepoint_info = capture_data->GetTracepointInfo(tracepoint_info_key);
 

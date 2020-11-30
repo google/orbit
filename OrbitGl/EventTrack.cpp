@@ -76,7 +76,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
 
   if (!picking) {
     // Sampling Events
@@ -173,20 +173,20 @@ bool EventTrack::IsEmpty() const {
 
 [[nodiscard]] uint64_t EventTrack::GetMinTime() const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   return capture_data->GetCallstackData()->min_time();
 }
 
 [[nodiscard]] uint64_t EventTrack::GetMaxTime() const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   return capture_data->GetCallstackData()->max_time();
 }
 
 [[nodiscard]] std::string EventTrack::SafeGetFormattedFunctionName(uint64_t addr,
                                                                    int max_line_length) const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   const std::string& function_name = capture_data->GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
@@ -237,7 +237,7 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
   }
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   const CallstackData* callstack_data = capture_data->GetCallstackData();
   const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 

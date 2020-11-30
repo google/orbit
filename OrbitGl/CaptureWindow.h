@@ -63,8 +63,6 @@ class CaptureWindow : public GlCanvas {
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
   [[nodiscard]] TimeGraph* GetTimeGraph() { return &time_graph_; }
-  [[nodiscard]] const CaptureData* GetCaptureData() const { return time_graph_.GetCaptureData(); }
-  void SetCaptureData(CaptureData* capture_data) { time_graph_.SetCaptureData(capture_data); }
 
   Batcher& GetBatcherById(BatcherId batcher_id);
 

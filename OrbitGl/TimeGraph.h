@@ -198,7 +198,6 @@ class TimeGraph {
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
   void SetNumCores(uint32_t num_cores) { num_cores_ = num_cores; }
-  [[nodiscard]] bool IsMainCaptureTimegraph();
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
  private:

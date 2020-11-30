@@ -199,7 +199,7 @@ std::string GpuTrack::GetBoxTooltip(PickingId id) const {
 
 std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   return absl::StrFormat(
       "<b>Software Queue</b><br/>"
       "<i>Time between amdgpu_cs_ioctl (job submitted) and "
@@ -214,7 +214,7 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
 
 std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   return absl::StrFormat(
       "<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
       "(job scheduled) and start of GPU execution</i>"
@@ -228,7 +228,7 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
 
 std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data);
+  CHECK(capture_data != nullptr);
   return absl::StrFormat(
       "<b>Harware Execution</b><br/>"
       "<i>End is marked by \"dma_fence_signaled\" event for this command "

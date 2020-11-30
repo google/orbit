@@ -34,8 +34,6 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-bool TimeGraph::IsMainCaptureTimegraph() { return this == GCurrentTimeGraph; }
-
 TimeGraph::TimeGraph(uint32_t font_size)
     : font_size_(font_size), text_renderer_static_(font_size), batcher_(BatcherId::kTimeGraph) {
   scheduler_track_ = GetOrCreateSchedulerTrack();
