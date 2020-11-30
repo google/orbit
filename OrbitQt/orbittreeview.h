@@ -33,6 +33,7 @@ class OrbitTreeView : public QTreeView {
   std::string GetLabel();
   bool HasRefreshButton() const;
   void OnRefreshButtonClicked();
+  void SetIsInternalRefresh(bool status) { is_internal_refresh_ = status; }
 
  protected:
   void drawRow(QPainter* painter, const QStyleOptionViewItem& options,

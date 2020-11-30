@@ -233,7 +233,7 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
   // Row selection callback.
   QModelIndex index = selectionModel()->currentIndex();
   if (index.isValid()) {
-    OnRowSelected(selectionModel()->currentIndex().row());
+    OnRowSelected(index.row());
   }
 }
 

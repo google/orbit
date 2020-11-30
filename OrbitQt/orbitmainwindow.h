@@ -95,6 +95,7 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionServiceStackOverflow_triggered();
 
   void ShowCaptureOnSaveWarningIfNeeded();
+  void CheckAndChangeFunctionHighlight();
   void ShowEmptyFrameTrackWarningIfNeeded(std::string_view function);
 
  private:
