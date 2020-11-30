@@ -155,11 +155,23 @@ void ProducerSideServiceImpl::SendCommandsThread(
     if (service_state_.capture_status != prev_capture_status) {
       switch (service_state_.capture_status) {
         case CaptureStatus::kCaptureStarted: {
-          prev_capture_status = service_state_.capture_status;
           ++service_state_.producers_remaining;
           *all_events_sent_received = false;
-          service_state_mutex_.Unlock();
+        } break;
 
+        case CaptureStatus::kCaptureStopping:
+          break;
+
+        case CaptureStatus::kCaptureFinished: {
+          *all_events_sent_received = true;
+        } break;
+      }
+      prev_capture_status = service_state_.capture_status;
+
+      service_state_mutex_.Unlock();
+
+      switch (prev_capture_status) {
+        case CaptureStatus::kCaptureStarted: {
           orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
           command.mutable_start_capture_command();
           if (!stream->Write(command)) {
@@ -173,9 +185,6 @@ void ProducerSideServiceImpl::SendCommandsThread(
         } break;
 
         case CaptureStatus::kCaptureStopping: {
-          prev_capture_status = service_state_.capture_status;
-          service_state_mutex_.Unlock();
-
           orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
           command.mutable_stop_capture_command();
           if (!stream->Write(command)) {
@@ -188,12 +197,10 @@ void ProducerSideServiceImpl::SendCommandsThread(
           LOG("Sent StopCaptureCommand to CaptureEventProducer");
         } break;
 
-        case CaptureStatus::kCaptureFinished: {
-          prev_capture_status = service_state_.capture_status;
-          *all_events_sent_received = true;
-          service_state_mutex_.Unlock();
-        } break;
+        case CaptureStatus::kCaptureFinished:
+          break;
       }
+
       continue;
     }
 
@@ -203,10 +210,10 @@ void ProducerSideServiceImpl::SendCommandsThread(
     // for *terminate_send_commands_thread, set by ReceiveCommandsAndSendEvents.
     static constexpr absl::Duration kCheckExitSendCommandsThreadInterval = absl::Seconds(1);
 
-    // The three cases in this switch are almost identical,
-    // except for the value service_state->capture_status is compared with.
-    // The reason for the duplication is that AwaitWithTimeout takes a function pointer,
-    // which means that the lambda cannot capture the initial state.
+    // The three cases in this switch are almost identical, except
+    // for the value service_state->capture_status is compared with.
+    // The reason for the duplication is that AwaitWithTimeout takes a function pointer, which
+    // means that the lambda cannot capture the initial value of service_state_.capture_status.
     switch (service_state_.capture_status) {
       case CaptureStatus::kCaptureStarted: {
         service_state_mutex_.AwaitWithTimeout(absl::Condition(
@@ -217,7 +224,6 @@ void ProducerSideServiceImpl::SendCommandsThread(
                                                   },
                                                   &service_state_),
                                               kCheckExitSendCommandsThreadInterval);
-        service_state_mutex_.Unlock();
       } break;
 
       case CaptureStatus::kCaptureStopping: {
@@ -229,7 +235,6 @@ void ProducerSideServiceImpl::SendCommandsThread(
                                                   },
                                                   &service_state_),
                                               kCheckExitSendCommandsThreadInterval);
-        service_state_mutex_.Unlock();
       } break;
 
       case CaptureStatus::kCaptureFinished: {
@@ -241,9 +246,9 @@ void ProducerSideServiceImpl::SendCommandsThread(
                                                   },
                                                   &service_state_),
                                               kCheckExitSendCommandsThreadInterval);
-        service_state_mutex_.Unlock();
       } break;
     }
+    service_state_mutex_.Unlock();
   }
 }
 
