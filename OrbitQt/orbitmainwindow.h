@@ -64,7 +64,6 @@ class OrbitMainWindow : public QMainWindow {
 
  protected:
   void closeEvent(QCloseEvent* event) override;
-  bool eventFilter(QObject* object, QEvent* event) override;
 
  private slots:
   void on_actionAbout_triggered();

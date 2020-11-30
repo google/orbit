@@ -697,15 +697,6 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   introspection_widget_->show();
 }
 
-bool OrbitMainWindow::eventFilter(QObject* object, QEvent* event) {
-  if (object == introspection_widget_) {
-    if (event->type() == QEvent::Close) {
-      GOrbitApp->StopIntrospection();
-    }
-  }
-  return false;
-}
-
 void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
   QSettings settings("The Orbit Authors", "Orbit Profiler");
   const QString skip_capture_warning("SkipCaptureVersionWarning");
@@ -864,6 +855,10 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
           CreateTabBarContextMenu(tab_widget, index, mouse_event->globalPos());
         }
       }
+    }
+  } else if (watched == introspection_widget_) {
+    if (event->type() == QEvent::Close) {
+      GOrbitApp->StopIntrospection();
     }
   }
 
