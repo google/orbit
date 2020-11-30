@@ -31,9 +31,28 @@ function conan_create_profile($profile) {
   $build_type = $profile -replace "default_"
   $profile_path = "$conan_dir/profiles/$profile"
 
+  if (!$Env:Qt5_DIR) {
+    Write-Host ""
+    Write-Host "Compile Qt from source or use official distribution?"
+    Write-Host "====================================================`r`n"
+    Write-Host "Orbit depends on the Qt framework which can be either automatically compiled from source (can take several hours!)"
+    Write-Host "or can be provided by an official Qt distribution. We recommend the latter which is less cumbersome."
+    Write-Host "Check out DEVELOPMENT.md for more details on how to use an official Qt distribution.`r`n"
+    Write-Host "Press Ctrl+C to stop here and install Qt first. Press Enter to continue with compiling Qt from source."
+    Write-Host "Google-internal devs: Please press Enter!`r`n"
+    Read-Host  "Answer"
+  }
+
   "include(${compiler_version}_${build_type})`r`n" | Set-Content -Path $profile_path
   "[settings]`r`n[options]" | Add-Content -Path $profile_path
-  "[build_requires]`r`n[env]" | Add-Content -Path $profile_path
+
+  if ($Env:Qt5_DIR) {
+    Write-Host "Found Qt5_DIR environment variable. Using system provided Qt distribution."
+    "OrbitProfiler:system_qt=True`r`n[build_requires]`r`n[env]" | Add-Content -Path $profile_path
+    "OrbitProfiler:Qt5_DIR=`"$Env:Qt5_DIR`"" | Add-Content -Path $profile_path
+  } else {
+    "[build_requires]`r`n[env]" | Add-Content -Path $profile_path
+  }
 }
 
 $profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
