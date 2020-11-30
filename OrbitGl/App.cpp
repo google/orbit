@@ -141,6 +141,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
         capture_data_ =
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
                         std::move(selected_tracepoints), std::move(user_defined_capture_data));
+        capture_window_->GetTimeGraph()->SetCaptureData(&capture_data_.value());
 
         frame_track_online_processor_ =
             FrameTrackOnlineProcessor(GetCaptureData(), GCurrentTimeGraph);
@@ -831,6 +832,7 @@ void OrbitApp::AbortCapture() {
 
 void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
+  capture_window_->GetTimeGraph()->SetCaptureData(nullptr);
   capture_data_.reset();
   set_selected_thread_id(SamplingProfiler::kAllThreadsFakeTid);
   SelectTextBox(nullptr);
@@ -1361,6 +1363,10 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   if (function == nullptr) return false;
 
   return data_manager_->IsFunctionSelected(*function);
+}
+
+const FunctionInfo* OrbitApp::GetSelectedFunction(uint64_t absolute_address) const {
+  return HasCaptureData() ? GetCaptureData().GetSelectedFunction(absolute_address) : nullptr;
 }
 
 void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions) {

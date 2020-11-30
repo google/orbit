@@ -28,8 +28,10 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
 
   // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
   // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
+      capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
+                   : nullptr;
   CHECK(func || timer_info.type() == TimerInfo::kIntrospection);
   std::string module_name = func != nullptr ? FunctionUtils::GetLoadedModuleName(*func) : "unknown";
   const uint64_t event_id = event.data;

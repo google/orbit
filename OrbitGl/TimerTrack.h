@@ -39,8 +39,6 @@ class TimerTrack : public Track {
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
-  [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
-  [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
 
   [[nodiscard]] const TextBox* GetFirstAfterTime(uint64_t time, uint32_t depth) const;
   [[nodiscard]] const TextBox* GetFirstBeforeTime(uint64_t time, uint32_t depth) const;
@@ -55,7 +53,7 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() override;
-  [[nodiscard]] virtual bool IsEmpty() const;
+  [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] bool IsCollapsable() const override { return depth_ > 1; }
 

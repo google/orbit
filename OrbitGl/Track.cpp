@@ -195,7 +195,8 @@ void Track::SetY(float y) {
 }
 
 Color Track::GetBackgroundColor() const {
-  int32_t capture_process_id = GOrbitApp->GetCaptureData().process_id();
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  int32_t capture_process_id = capture_data ? capture_data->process_id() : -1;
   if (GetType() == kSchedulerTrack) {
     return color_;
   } else if (process_id_ != -1 && process_id_ != capture_process_id) {

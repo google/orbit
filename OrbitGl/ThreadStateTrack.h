@@ -26,7 +26,7 @@ class ThreadStateTrack final : public Track {
   void OnRelease() override { picked_ = false; };
   float GetHeight() const override { return size_[1]; }
 
-  bool IsEmpty() const;
+  bool IsEmpty() const override;
 
  private:
   std::string GetThreadStateSliceTooltip(PickingId id) const;

@@ -51,8 +51,10 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
 
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      GOrbitApp->GetCaptureData().GetSelectedFunction(text_box->GetTimerInfo().function_address());
+      capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
+                   : nullptr;
 
   if (!func) {
     return text_box->GetText();
@@ -118,7 +120,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
   }
 
   uint64_t address = timer_info.function_address();
-  const FunctionInfo* function_info = GOrbitApp->GetCaptureData().GetSelectedFunction(address);
+  const FunctionInfo* function_info = GOrbitApp->GetSelectedFunction(address);
   CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection);
   std::optional<Color> user_color =
       function_info ? GetUserColor(timer_info, *function_info) : std::nullopt;
@@ -175,9 +177,17 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_track_->SetPos(pos_[0], current_y);
 }
 
+void ThreadTrack::UpdateMinMaxTimestamps() {
+  if (!event_track_->IsEmpty()) {
+    min_time_ = std::min(min_time_.load(), event_track_->GetMinTime());
+    max_time_ = std::max(max_time_.load(), event_track_->GetMaxTime());
+  }
+}
+
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   TimerTrack::Draw(canvas, picking_mode, z_offset);
 
+  UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -234,11 +244,9 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
-    const FunctionInfo* func =
-        GOrbitApp->GetCaptureData().GetSelectedFunction(timer_info.function_address());
-
     text_box->SetElapsedTimeTextLength(time.length());
 
+    const FunctionInfo* func = GOrbitApp->GetSelectedFunction(timer_info.function_address());
     if (func) {
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;

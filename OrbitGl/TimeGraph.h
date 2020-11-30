@@ -11,6 +11,7 @@
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
+#include "CaptureData.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
@@ -52,6 +53,9 @@ class TimeGraph {
                     const orbit_client_protos::FunctionInfo* function);
   void UpdateMaxTimeStamp(uint64_t time);
 
+  [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
+  void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
+
   [[nodiscard]] float GetThreadTotalHeight() const;
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
   [[nodiscard]] float GetWorldFromTick(uint64_t time) const;
@@ -61,7 +65,7 @@ class TimeGraph {
   [[nodiscard]] double GetUsFromTick(uint64_t time) const;
   [[nodiscard]] double GetTimeWindowUs() const { return time_window_us_; }
   void GetWorldMinMax(float& min, float& max) const;
-  [[nodiscard]] bool UpdateCaptureMinMaxTimestamps();
+  void UpdateCaptureMinMaxTimestamps();
 
   void Clear();
   void ZoomAll();
@@ -193,6 +197,7 @@ class TimeGraph {
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
   void SetNumCores(uint32_t num_cores) { num_cores_ = num_cores; }
+  [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
  private:
   uint32_t font_size_;
@@ -261,6 +266,7 @@ class TimeGraph {
   std::shared_ptr<StringManager> string_manager_;
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
+  CaptureData* capture_data_ = nullptr;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

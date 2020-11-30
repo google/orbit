@@ -7,6 +7,7 @@
 #include "CallstackTypes.h"
 #include "Track.h"
 
+class CallStack;
 class GlCanvas;
 class TimeGraph;
 
@@ -32,9 +33,15 @@ class EventTrack : public Track {
   void SetPos(float a_X, float a_Y);
   void SetSize(float a_SizeX, float a_SizeY);
   void SetColor(Color color) { color_ = color; }
-  bool IsEmpty() const;
+  bool IsEmpty() const override;
+  [[nodiscard]] uint64_t GetMinTime() const override;
+  [[nodiscard]] uint64_t GetMaxTime() const override;
 
  protected:
   void SelectEvents();
-  std::string GetSampleTooltip(PickingId id) const;
+  [[nodiscard]] std::string GetSampleTooltip(PickingId id) const;
+  [[nodiscard]] std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) const;
+  [[nodiscard]] std::string FormatCallstackForTooltip(const CallStack& callstack,
+                                                      int max_line_length = 80, int max_lines = 20,
+                                                      int bottom_n_lines = 5) const;
 };

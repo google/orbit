@@ -322,6 +322,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
   [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetSelectedFunction(
+      uint64_t absolute_address) const;
 
   void SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions);
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address);

@@ -57,8 +57,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void SetVisible(bool value) { visible_ = value; }
 
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
-  [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
-  [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
+  [[nodiscard]] virtual uint64_t GetMinTime() const { return min_time_; }
+  [[nodiscard]] virtual uint64_t GetMaxTime() const { return max_time_; }
   void SetNumberOfPrioritizedTrailingCharacters(int num_characters) {
     num_prioritized_trailing_characters_ = num_characters;
   }
@@ -97,6 +97,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] virtual bool IsCollapsable() const { return false; }
   [[nodiscard]] int32_t GetProcessId() const { return process_id_; }
   void SetProcessId(uint32_t pid) { process_id_ = pid; }
+  [[nodiscard]] virtual bool IsEmpty() const = 0;
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
