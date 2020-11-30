@@ -88,7 +88,6 @@ If you needed remote profiling support you could tunnel the mentioned TCP port t
 a SSH connection to an arbitrary Linux server. There are plans on adding generic
 SSH tunneling support but we can't promise any timeframe for that.
 
-
 ## Consistent code styling
 
 We use `clang-format` to achieve a consistent code styling across
@@ -120,9 +119,10 @@ style.
 
 `bootstrap-orbit.{sh,ps1}` performs all the tasks which have to be done once per developer machine.
 This includes:
-* Installing system dependencies
-* Installing the correct version of conan if necessary.
-* Installing the conan configuration (which changes rarely).
+
+- Installing system dependencies
+- Installing the correct version of conan if necessary.
+- Installing the conan configuration (which changes rarely).
 
 Afterwards `bootstrap-orbit.{sh,ps1}` calls `build.{sh,ps1}`.
 
@@ -142,6 +142,7 @@ a clean build by deleting the build directory and calling `build.{sh,ps1}`.
 
 `build.{sh,ps1}` can initialize as many build configurations as you like from the
 same invocation. Just pass conan profile names as command line arguments. Example for Linux:
+
 ```bash
 ./build.sh clang7_debug gcc9_release clang9_relwithdebinfo ggp_release
 # is equivalent to
@@ -158,6 +159,7 @@ a build directory. (Check out the previous section for more information on what 
 does.)
 
 For incremental builds, switch to the build directory and ask cmake to run the build:
+
 ```bash
 cd <build_folder>/
 cmake --build . # On Linux
@@ -177,6 +179,7 @@ So create a build directory from scratch, install the conan-managed dependencies
 and invoke `cmake` manually. Here is how it works:
 
 Let's assume you want to build Orbit in debug mode with `clang-9`:
+
 ```bash
 mkdir build_clang9_debug # Create a build directory; should not exist before.
 cd build_clang9_debug/
@@ -187,11 +190,14 @@ ninja
 ```
 
 > ### Note:
+>
 > Please be aware that it is your responsibility to ensure that the conan profile is compatible
 > with the toolchain parameters cmake uses. In this example clang9 in debug mode is used in both cases.
 
 #### Another example without toolchain files:
+
 You can also manually pass the toolchain options to cmake via the command line:
+
 ```bash
 mkdir build_clang9_debug # Create a build directory; should not exist before.
 cd build_clang9_debug/
@@ -223,7 +229,7 @@ between CLion build configurations and conan profiles. Check out
 [this blog post](https://blog.jetbrains.com/clion/2019/05/getting-started-with-the-conan-clion-plugin)
 on how to do it.
 
-Add ```-DCMAKE_CXX_FLAGS=-fsized-deallocation``` to Settings -> Build, Execution, Deployment -> CMake -> CMake options.
+Add `-DCMAKE_CXX_FLAGS=-fsized-deallocation` to Settings -> Build, Execution, Deployment -> CMake -> CMake options.
 This flag is needed because Orbit's codebase makes use of C++14's [sized-deallocation feature](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3536.html)
 which is not enabled by default on the clang compiler.
 
@@ -244,6 +250,7 @@ Visual Studio.
 ### How do I integrate with Visual Studio Code?
 
 Visual Studio Code uses configuration files to specify tasks that can be executed. These files are provided in the `contrib/.vscode` folder. To enable building from Visual Studio Code, simply copy the whole folder into the root directory with the name `.vscode`:
+
 ```bash
 cp -r contrib/vscode .vscode
 ```
@@ -271,6 +278,7 @@ There is also a `deactivate.{sh,bat,ps1}` which make your shell leave the virtua
 This message or a similar one indicates that your build profiles are
 outdated and need to be updated. You can either just call the bootstrap
 script again or you can manually update your conan config:
+
 ```bash
 conan config install third_party/conan/configs/[windows,linux]
 ```
@@ -278,8 +286,9 @@ conan config install third_party/conan/configs/[windows,linux]
 ### How can I use separate debugging symbols for Linux binaries?
 
 Orbit supports loading symbols from your workstation. Simply add directories that contain debugging symbols to the `SymbolPaths.txt` file. This file can be found at
-* Windows: `C:\Users\<user>\AppData\Roaming\OrbitProfiler\config\SymbolPaths.txt`
-* Linux: `~/orbitprofiler/config/SymbolPaths.txt`
+
+- Windows: `C:\Users\<user>\AppData\Roaming\OrbitProfiler\config\SymbolPaths.txt`
+- Linux: `~/orbitprofiler/config/SymbolPaths.txt`
 
 The symbols file must named in one of three ways. The same fname as the binary (`game.elf`), the same name plus the `.debug` extension (`game.elf.debug`) or the same name but the `.debug` extension instead of the original one (`game.debug`). To make sure the binary and symbols file have been produced in the same build, Orbit checks that they have a matching build id.
 
@@ -298,11 +307,13 @@ for deployment), and compiles Orbit against the toolchain from the GGP SDK packa
 
 Finally, `build_ggp_release/package/bin/OrbitService` can be copied over
 to the instance:
+
 ```bash
 ggp ssh put build_ggp_release/package/bin/OrbitService /mnt/developer/
 ```
 
 before the service can be started with:
+
 ```bash
 ggp ssh shell
 > sudo /mnt/developer/OrbitService
