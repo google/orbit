@@ -58,7 +58,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
       grpc::ServerContext* context,
       grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                                orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
-      bool* all_events_sent_received, std::atomic<bool>* exit_send_commands_thread);
+      bool* all_events_sent_received, std::atomic<bool>* receive_events_thread_exited);
 
   void ReceiveEventsThread(
       grpc::ServerContext* context,

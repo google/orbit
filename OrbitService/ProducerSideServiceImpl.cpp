@@ -92,7 +92,7 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
   // Note that this will also be protected by service_state_mutex_.
   bool all_events_sent_received = true;
 
-  std::atomic<bool> exit_send_commands_thread = false;
+  std::atomic<bool> receive_events_thread_exited = false;
 
   // This thread is responsible for writing on stream, and specifically for
   // sending StartCaptureCommands and StopCaptureCommands to the connected producer.
@@ -101,7 +101,7 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
                                    context,
                                    stream,
                                    &all_events_sent_received,
-                                   &exit_send_commands_thread};
+                                   &receive_events_thread_exited};
 
   // This thread is responsible for reading from stream, and specifically for
   // receiving CaptureEvents and AllEventsSent messages.
@@ -111,7 +111,7 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
 
   // When receive_events_thread exits because stream->Read(&request) fails,
   // it means that the producer has disconnected: ask send_commands_thread to exit, too.
-  exit_send_commands_thread = true;
+  receive_events_thread_exited = true;
   send_commands_thread.join();
 
   {
@@ -127,7 +127,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
     grpc::ServerContext* context,
     grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                              orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
-    bool* all_events_sent_received, std::atomic<bool>* exit_send_commands_thread) {
+    bool* all_events_sent_received, std::atomic<bool>* receive_events_thread_exited) {
   // As a result of initializing prev_capture_status to kCaptureFinished,
   // an initial StartCaptureCommand is sent
   // if service_state_.capture_status is actually CaptureStatus::kCaptureStarted,
@@ -138,11 +138,11 @@ void ProducerSideServiceImpl::SendCommandsThread(
   // This loop keeps track of changes to service_state_.capture_status using
   // conditional critical sections on service_state_mutex_ and updating prev_capture_status,
   // and sends StartCaptureCommands and StopCaptureCommands accordingly.
-  // It exits when *exit_send_commands_thread is true, when service_state_.exit_requested is true,
+  // It exits when one of *receive_events_thread_exited and service_state_.exit_requested is true,
   // or when Write fails (because the producer disconnected or because the context was cancelled).
   while (true) {
     // This is set when ReceiveEventsThread has exited. At that point this thread should also exit.
-    if (*exit_send_commands_thread) {
+    if (*receive_events_thread_exited) {
       return;
     }
 
