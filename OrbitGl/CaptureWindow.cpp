@@ -572,7 +572,7 @@ void CaptureWindow::UpdateVerticalScroll(float ratio) {
   float range = max - min;
   float new_top_left_y = min + ratio * range;
   if (new_top_left_y != world_top_left_y_) {
-    world_top_left_y_ = min + ratio * range;
+    world_top_left_y_ = new_top_left_y;
     NeedsUpdate();
   }
 }

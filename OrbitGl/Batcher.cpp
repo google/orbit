@@ -4,6 +4,8 @@
 
 #include "Batcher.h"
 
+#include <math.h>
+
 #include "CoreUtils.h"
 #include "OpenGl.h"
 
@@ -40,8 +42,8 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  line.start_point = Vec3(from[0], from[1], z);
-  line.end_point = Vec3(to[0], to[1], z);
+  line.start_point = Vec3(floorf(from[0]), floorf(from[1]), z);
+  line.end_point = Vec3(floorf(to[0]), floorf(to[1]), z);
   auto& buffer = primitive_buffers_by_layer_[z];
 
   buffer.line_buffer.lines_.push_back(line);
@@ -182,9 +184,14 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
 
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
                      std::unique_ptr<PickingUserData> user_data) {
-  float layer_z_value = box.vertices[0][2];
+  Box rounded_box = box;
+  for (size_t v = 0; v < 4; ++v) {
+    rounded_box.vertices[v][0] = floorf(rounded_box.vertices[v][0]);
+    rounded_box.vertices[v][1] = floorf(rounded_box.vertices[v][1]);
+  }
+  float layer_z_value = rounded_box.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.box_buffer.boxes_.push_back(box);
+  buffer.box_buffer.boxes_.push_back(rounded_box);
   buffer.box_buffer.colors_.push_back(colors);
   buffer.box_buffer.picking_colors_.push_back_n(picking_color, 4);
   user_data_.push_back(std::move(user_data));
@@ -208,9 +215,14 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                           std::unique_ptr<PickingUserData> user_data) {
-  float layer_z_value = triangle.vertices[0][2];
+  Triangle rounded_tri = triangle;
+  for (size_t v = 0; v < 3; ++v) {
+    rounded_tri.vertices[v][0] = floorf(rounded_tri.vertices[v][0]);
+    rounded_tri.vertices[v][1] = floorf(rounded_tri.vertices[v][1]);
+  }
+  float layer_z_value = rounded_tri.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.triangle_buffer.triangles_.push_back(triangle);
+  buffer.triangle_buffer.triangles_.push_back(rounded_tri);
   buffer.triangle_buffer.colors_.push_back_n(color, 3);
   buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
   user_data_.push_back(std::move(user_data));

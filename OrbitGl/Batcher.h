@@ -77,6 +77,18 @@ struct PrimitiveBuffers {
 
 enum class ShadingDirection { kLeftToRight, kRightToLeft, kTopToBottom, kBottomToTop };
 
+/**
+Collects primitives to be rendered at a later point in time.
+
+By calling Batcher::AddXXX, primitives are added to internal CPU buffers, and sorted
+into layers formed by equal z-coordinates. Each layer can then be drawn seperately with
+Batcher::DrawLayer(), or all layers can be drawn at once in their correct order using
+Batcher::Draw():
+
+NOTE: The Batcher assumes x/y coordinates are in pixels and will automatically round those
+down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
+"jumping" around when their coordinates are changed slightly.
+**/
 class Batcher {
  public:
   explicit Batcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
