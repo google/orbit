@@ -29,10 +29,12 @@ class OrbitLiveFunctions : public QWidget {
   void Initialize(SelectionType selection_type, FontType font_type, bool is_main_instance = true);
   void Refresh();
   void OnDataChanged();
+  void onRowSelected(int row);
   void Reset();
   void SetFilter(const QString& a_Filter);
   void AddIterator(uint64_t id, orbit_client_protos::FunctionInfo* function);
   QLineEdit* GetFilterLineEdit();
+  LiveFunctionsController& GetLiveFunctionsController() { return live_functions_; }
 
  private:
   Ui::OrbitLiveFunctions* ui;

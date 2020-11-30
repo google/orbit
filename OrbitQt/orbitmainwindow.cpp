@@ -208,6 +208,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
 
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
+  connect(ui->CaptureGLWidget, &OrbitGLWidget::checkFunctionHighlightChange, this,
+          &OrbitMainWindow::CheckAndChangeFunctionHighlight);
 
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
@@ -755,6 +757,21 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
   }
 
   UpdateCaptureStateDependentWidgets();
+}
+
+void OrbitMainWindow::CheckAndChangeFunctionHighlight() {
+  uint64_t function = GOrbitApp->selected_text_box()->GetTimerInfo().function_address();
+
+  if (GOrbitApp->highlighted_function() != function) {
+    LiveFunctionsDataView& live_functions_data_view =
+        ui->liveFunctions->GetLiveFunctionsController().GetDataView();
+    int selected_row = live_functions_data_view.GetRowFromFunctionAddress(function);
+
+    if (selected_row != -1) {
+      ui->liveFunctions->onRowSelected(selected_row);
+      GOrbitApp->set_highlighted_function(function);
+    }
+  }
 }
 
 void OrbitMainWindow::on_actionSave_Capture_triggered() {

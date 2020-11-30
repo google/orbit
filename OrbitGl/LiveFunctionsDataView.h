@@ -26,6 +26,7 @@ class LiveFunctionsDataView : public DataView {
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void OnTimer() override;
+  int GetRowFromFunctionAddress(uint64_t function_address);
 
  protected:
   void DoFilter() override;
