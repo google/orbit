@@ -12,6 +12,14 @@
 
 namespace orbit_service {
 
+// This class implements the gRPC service ProducerSideService, and in particular its only RPC
+// ReceiveCommandsAndSendEvents, through which producers of CaptureEvents connect to OrbitService.
+// It also implements the CaptureStartStopListener interface, whose methods cause this service to
+// notify the producers that a capture has been started (and that they can start sending
+// CaptureEvents) or stopped (and that the producers should finish sending CaptureEvents).
+// As OnCaptureStopRequested waits for the remaining CaptureEvents, SetMaxWaitForAllCaptureEvents
+// allows to specify a timeout for that method.
+// OnExitRequest disconnects all producers, preparing this service for shutdown.
 class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideService::Service,
                                       public CaptureStartStopListener {
  public:
