@@ -82,6 +82,7 @@ texture_font_t* TextRenderer::GetFont(uint32_t size) {
 }
 
 void TextRenderer::RenderLayer(Batcher*, float layer) {
+  ORBIT_SCOPE_FUNCTION;
   if (!vertex_buffers_by_layer_.count(layer)) return;
   auto& buffer = vertex_buffers_by_layer_.at(layer);
 

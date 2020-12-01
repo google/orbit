@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -23,6 +24,7 @@ class ThreadPoolImpl : public ThreadPool {
   void Schedule(std::unique_ptr<Action> action) override;
   void Shutdown() override;
   void Wait() override;
+  void EnableAutoProfiling(bool value) override;
 
  private:
   bool ActionsAvailableOrShutdownInitiated();
@@ -41,6 +43,7 @@ class ThreadPoolImpl : public ThreadPool {
   absl::Duration thread_ttl_;
   size_t idle_threads_;
   bool shutdown_initiated_;
+  bool auto_profile_;
 };
 
 ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
@@ -49,7 +52,8 @@ ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_m
       thread_pool_max_size_(thread_pool_max_size),
       thread_ttl_(thread_ttl),
       idle_threads_(0),
-      shutdown_initiated_(false) {
+      shutdown_initiated_(false),
+      auto_profile_(true) {
   CHECK(thread_pool_min_size > 0);
   CHECK(thread_pool_max_size >= thread_pool_min_size);
   // Ttl should not be too small
@@ -116,6 +120,11 @@ void ThreadPoolImpl::Wait() {
   CleanupFinishedThreads();
 }
 
+void ThreadPoolImpl::EnableAutoProfiling(bool value) {
+  absl::MutexLock lock(&mutex_);
+  auto_profile_ = value;
+}
+
 bool ThreadPoolImpl::ActionsAvailableOrShutdownInitiated() {
   return !scheduled_actions_.empty() || shutdown_initiated_;
 }
@@ -162,8 +171,11 @@ void ThreadPoolImpl::WorkerFunction() {
       break;
     }
 
+    bool auto_profile = auto_profile_;
     mutex_.Unlock();
+    if (auto_profile) ORBIT_START("Execute Action");
     action->Execute();
+    if (auto_profile) ORBIT_STOP();
     mutex_.Lock();
     ++idle_threads_;
   }

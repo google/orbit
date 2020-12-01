@@ -47,6 +47,8 @@ class ThreadPool {
   // Shutdown().
   virtual void Wait() = 0;
 
+  virtual void EnableAutoProfiling(bool value) = 0;
+
   void ShutdownAndWait() {
     Shutdown();
     Wait();

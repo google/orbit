@@ -6,6 +6,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ProcessData.h"
@@ -74,6 +75,7 @@ void CaptureClient::Capture(ProcessData&& process,
                             TracepointInfoSet selected_tracepoints,
                             UserDefinedCaptureData user_defined_capture_data,
                             bool enable_introspection) {
+  ORBIT_SCOPE_FUNCTION;
   CHECK(client_context_ == nullptr);
   CHECK(reader_writer_ == nullptr);
 
@@ -215,6 +217,7 @@ bool CaptureClient::TryAbortCapture() {
 }
 
 ErrorMessageOr<void> CaptureClient::FinishCapture() {
+  ORBIT_SCOPE_FUNCTION;
   if (reader_writer_ == nullptr) {
     return outcome::success();
   }
