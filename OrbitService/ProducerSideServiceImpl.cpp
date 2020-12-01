@@ -146,13 +146,63 @@ void ProducerSideServiceImpl::SendCommandsThread(
       return;
     }
 
-    service_state_mutex_.Lock();
-    if (service_state_.exit_requested) {
-      service_state_mutex_.Unlock();
-      return;
-    }
+    {
+      absl::MutexLock lock{&service_state_mutex_};
+      if (service_state_.exit_requested) {
+        return;
+      }
 
-    if (service_state_.capture_status != prev_capture_status) {
+      if (service_state_.capture_status == prev_capture_status) {
+        // Wait for service_state_.capture_status to change or for service_state->exit_requested
+        // (the next iteration will handle the change).
+        // Use a timeout to periodically check (in the next iteration)
+        // for *terminate_send_commands_thread, set by ReceiveCommandsAndSendEvents.
+        static constexpr absl::Duration kCheckExitSendCommandsThreadInterval = absl::Seconds(1);
+
+        // The three cases in this switch are almost identical, except
+        // for the value service_state->capture_status is compared with.
+        // The reason for the duplication is that AwaitWithTimeout takes a function pointer, which
+        // means that the lambda cannot capture the initial value of service_state_.capture_status.
+        switch (service_state_.capture_status) {
+          case CaptureStatus::kCaptureStarted: {
+            service_state_mutex_.AwaitWithTimeout(absl::Condition(
+                                                      +[](ServiceState* service_state) {
+                                                        return service_state->exit_requested ||
+                                                               service_state->capture_status !=
+                                                                   CaptureStatus::kCaptureStarted;
+                                                      },
+                                                      &service_state_),
+                                                  kCheckExitSendCommandsThreadInterval);
+          } break;
+
+          case CaptureStatus::kCaptureStopping: {
+            service_state_mutex_.AwaitWithTimeout(absl::Condition(
+                                                      +[](ServiceState* service_state) {
+                                                        return service_state->exit_requested ||
+                                                               service_state->capture_status !=
+                                                                   CaptureStatus::kCaptureStopping;
+                                                      },
+                                                      &service_state_),
+                                                  kCheckExitSendCommandsThreadInterval);
+          } break;
+
+          case CaptureStatus::kCaptureFinished: {
+            service_state_mutex_.AwaitWithTimeout(absl::Condition(
+                                                      +[](ServiceState* service_state) {
+                                                        return service_state->exit_requested ||
+                                                               service_state->capture_status !=
+                                                                   CaptureStatus::kCaptureFinished;
+                                                      },
+                                                      &service_state_),
+                                                  kCheckExitSendCommandsThreadInterval);
+          } break;
+        }
+
+        continue;
+      }
+
+      // service_state_.capture_status has changed compared to prev_capture_status:
+      // handle the change.
       switch (service_state_.capture_status) {
         case CaptureStatus::kCaptureStarted: {
           ++service_state_.producers_remaining;
@@ -167,88 +217,39 @@ void ProducerSideServiceImpl::SendCommandsThread(
         } break;
       }
       prev_capture_status = service_state_.capture_status;
+    }  // absl::MutexLock lock{&service_state_mutex_}
 
-      service_state_mutex_.Unlock();
-
-      switch (prev_capture_status) {
-        case CaptureStatus::kCaptureStarted: {
-          orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
-          command.mutable_start_capture_command();
-          if (!stream->Write(command)) {
-            ERROR("Sending StartCaptureCommand to CaptureEventProducer");
-            LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
-            // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
-            context->TryCancel();
-            return;
-          }
-          LOG("Sent StartCaptureCommand to CaptureEventProducer");
-        } break;
-
-        case CaptureStatus::kCaptureStopping: {
-          orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
-          command.mutable_stop_capture_command();
-          if (!stream->Write(command)) {
-            ERROR("Sending StopCaptureCommand to CaptureEventProducer");
-            LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
-            // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
-            context->TryCancel();
-            return;
-          }
-          LOG("Sent StopCaptureCommand to CaptureEventProducer");
-        } break;
-
-        case CaptureStatus::kCaptureFinished:
-          break;
-      }
-
-      continue;
-    }
-
-    // Wait for service_state_.capture_status to change or for service_state->exit_requested
-    // (the next iteration will handle the change).
-    // Use a timeout to periodically check (in the next iteration)
-    // for *terminate_send_commands_thread, set by ReceiveCommandsAndSendEvents.
-    static constexpr absl::Duration kCheckExitSendCommandsThreadInterval = absl::Seconds(1);
-
-    // The three cases in this switch are almost identical, except
-    // for the value service_state->capture_status is compared with.
-    // The reason for the duplication is that AwaitWithTimeout takes a function pointer, which
-    // means that the lambda cannot capture the initial value of service_state_.capture_status.
-    switch (service_state_.capture_status) {
+    // prev_capture_status has now been updated to the new service_state_.capture_status.
+    switch (prev_capture_status) {
       case CaptureStatus::kCaptureStarted: {
-        service_state_mutex_.AwaitWithTimeout(absl::Condition(
-                                                  +[](ServiceState* service_state) {
-                                                    return service_state->exit_requested ||
-                                                           service_state->capture_status !=
-                                                               CaptureStatus::kCaptureStarted;
-                                                  },
-                                                  &service_state_),
-                                              kCheckExitSendCommandsThreadInterval);
+        orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
+        command.mutable_start_capture_command();
+        if (!stream->Write(command)) {
+          ERROR("Sending StartCaptureCommand to CaptureEventProducer");
+          LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+          // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
+          context->TryCancel();
+          return;
+        }
+        LOG("Sent StartCaptureCommand to CaptureEventProducer");
       } break;
 
       case CaptureStatus::kCaptureStopping: {
-        service_state_mutex_.AwaitWithTimeout(absl::Condition(
-                                                  +[](ServiceState* service_state) {
-                                                    return service_state->exit_requested ||
-                                                           service_state->capture_status !=
-                                                               CaptureStatus::kCaptureStopping;
-                                                  },
-                                                  &service_state_),
-                                              kCheckExitSendCommandsThreadInterval);
+        orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
+        command.mutable_stop_capture_command();
+        if (!stream->Write(command)) {
+          ERROR("Sending StopCaptureCommand to CaptureEventProducer");
+          LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+          // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
+          context->TryCancel();
+          return;
+        }
+        LOG("Sent StopCaptureCommand to CaptureEventProducer");
       } break;
 
-      case CaptureStatus::kCaptureFinished: {
-        service_state_mutex_.AwaitWithTimeout(absl::Condition(
-                                                  +[](ServiceState* service_state) {
-                                                    return service_state->exit_requested ||
-                                                           service_state->capture_status !=
-                                                               CaptureStatus::kCaptureFinished;
-                                                  },
-                                                  &service_state_),
-                                              kCheckExitSendCommandsThreadInterval);
-      } break;
+      case CaptureStatus::kCaptureFinished:
+        break;
     }
-    service_state_mutex_.Unlock();
   }
 }
 
