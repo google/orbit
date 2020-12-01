@@ -50,16 +50,15 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
   return function_info;
 }
 
-#define STUB_PARAMS \
-  "(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long)"
-
-const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
-  static absl::flat_hash_map<const char*, FunctionInfo::OrbitType> function_name_to_type_map{
-      {"orbit_api::Start" STUB_PARAMS, FunctionInfo::kOrbitTimerStart},
-      {"orbit_api::Stop" STUB_PARAMS, FunctionInfo::kOrbitTimerStop},
-      {"orbit_api::StartAsync" STUB_PARAMS, FunctionInfo::kOrbitTimerStartAsync},
-      {"orbit_api::StopAsync" STUB_PARAMS, FunctionInfo::kOrbitTimerStopAsync},
-      {"orbit_api::TrackValue" STUB_PARAMS, FunctionInfo::kOrbitTrackValue}};
+const absl::flat_hash_map<std::string, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
+  const char* kStubParams =
+      "(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long)";
+  static absl::flat_hash_map<std::string, FunctionInfo::OrbitType> function_name_to_type_map{
+      {absl::StrCat("orbit_api::Start", kStubParams), FunctionInfo::kOrbitTimerStart},
+      {absl::StrCat("orbit_api::Stop", kStubParams), FunctionInfo::kOrbitTimerStop},
+      {absl::StrCat("orbit_api::StartAsync", kStubParams), FunctionInfo::kOrbitTimerStartAsync},
+      {absl::StrCat("orbit_api::StopAsync", kStubParams), FunctionInfo::kOrbitTimerStopAsync},
+      {absl::StrCat("orbit_api::TrackValue", kStubParams), FunctionInfo::kOrbitTrackValue}};
   return function_name_to_type_map;
 }
 

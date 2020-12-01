@@ -37,7 +37,7 @@ namespace FunctionUtils {
 [[nodiscard]] std::unique_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
     const orbit_grpc_protos::SymbolInfo& symbol_info, const std::string& module_path);
 
-[[nodiscard]] const absl::flat_hash_map<const char*, orbit_client_protos::FunctionInfo::OrbitType>&
+[[nodiscard]] const absl::flat_hash_map<std::string, orbit_client_protos::FunctionInfo::OrbitType>&
 GetFunctionNameToOrbitTypeMap();
 bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
