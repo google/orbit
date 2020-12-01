@@ -50,13 +50,15 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
   return function_info;
 }
 
-const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
-  static absl::flat_hash_map<const char*, FunctionInfo::OrbitType> function_name_to_type_map{
-      {"Start(", FunctionInfo::kOrbitTimerStart},
-      {"Stop(", FunctionInfo::kOrbitTimerStop},
-      {"StartAsync(", FunctionInfo::kOrbitTimerStartAsync},
-      {"StopAsync(", FunctionInfo::kOrbitTimerStopAsync},
-      {"TrackValue(", FunctionInfo::kOrbitTrackValue}};
+const absl::flat_hash_map<std::string, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
+  const char* kStubParams =
+      "(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long)";
+  static absl::flat_hash_map<std::string, FunctionInfo::OrbitType> function_name_to_type_map{
+      {absl::StrCat("orbit_api::Start", kStubParams), FunctionInfo::kOrbitTimerStart},
+      {absl::StrCat("orbit_api::Stop", kStubParams), FunctionInfo::kOrbitTimerStop},
+      {absl::StrCat("orbit_api::StartAsync", kStubParams), FunctionInfo::kOrbitTimerStartAsync},
+      {absl::StrCat("orbit_api::StopAsync", kStubParams), FunctionInfo::kOrbitTimerStopAsync},
+      {absl::StrCat("orbit_api::TrackValue", kStubParams), FunctionInfo::kOrbitTrackValue}};
   return function_name_to_type_map;
 }
 
@@ -67,6 +69,7 @@ bool SetOrbitTypeFromName(FunctionInfo* func) {
   if (absl::StartsWith(name, "orbit_api::")) {
     for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(name, pair.first)) {
+        LOG("Found orbit_api function: %s", name);
         func->set_orbit_type(pair.second);
         return true;
       }

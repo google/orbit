@@ -12,7 +12,7 @@
 #include <sstream>
 #include <thread>
 
-#include "OrbitBase/Tracing.h"
+#include "../Orbit.h"
 #include "absl/strings/str_format.h"
 
 #if __linux__

@@ -282,10 +282,8 @@ enum class Color : uint32_t {
 
 #if defined(_WIN32)
 #define ORBIT_STUB inline __declspec(noinline)
-#define ORBIT_FORCE_INLINE __forceinline
 #else
 #define ORBIT_STUB inline __attribute__((noinline))
-#define ORBIT_FORCE_INLINE __attribute__((always_inline))
 #endif
 
 namespace orbit_api {
@@ -345,7 +343,7 @@ union EncodedEvent {
 };
 
 template <typename Dest, typename Source>
-ORBIT_FORCE_INLINE Dest Encode(const Source& source) {
+inline Dest Encode(const Source& source) {
   static_assert(sizeof(Source) <= sizeof(Dest), "orbit_api::Encode destination type is too small");
   Dest dest = 0;
   std::memcpy(&dest, &source, sizeof(Source));
@@ -353,7 +351,7 @@ ORBIT_FORCE_INLINE Dest Encode(const Source& source) {
 }
 
 template <typename Dest, typename Source>
-ORBIT_FORCE_INLINE Dest Decode(const Source& source) {
+inline Dest Decode(const Source& source) {
   static_assert(sizeof(Dest) <= sizeof(Source), "orbit_api::Decode destination type is too big");
   Dest dest = 0;
   std::memcpy(&dest, &source, sizeof(Dest));
@@ -382,27 +380,27 @@ constexpr const char* kNameNullPtr = nullptr;
 constexpr uint64_t kDataZero = 0;
 constexpr orbit::Color kColorAuto = orbit::Color::kAuto;
 
-ORBIT_FORCE_INLINE void Start(const char* name, orbit::Color color) {
+inline void Start(const char* name, orbit::Color color) {
   EncodedEvent e(EventType::kScopeStart, name, kDataZero, color);
   Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-ORBIT_FORCE_INLINE void Stop() {
+inline void Stop() {
   EncodedEvent e(EventType::kScopeStop);
   Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-ORBIT_FORCE_INLINE void StartAsync(const char* name, uint64_t id, orbit::Color color) {
+inline void StartAsync(const char* name, uint64_t id, orbit::Color color) {
   EncodedEvent e(EventType::kScopeStartAsync, name, id, color);
   StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-ORBIT_FORCE_INLINE void StopAsync(uint64_t id) {
+inline void StopAsync(uint64_t id) {
   EncodedEvent e(EventType::kScopeStopAsync, kNameNullPtr, id, kColorAuto);
   StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
 
-ORBIT_FORCE_INLINE void AsyncString(const char* str, uint64_t id, orbit::Color color) {
+inline void AsyncString(const char* str, uint64_t id, orbit::Color color) {
   if (str == nullptr) return;
   constexpr size_t chunk_size = kMaxEventStringSize - 1;
   const char* end = str + strlen(str);
@@ -415,8 +413,7 @@ ORBIT_FORCE_INLINE void AsyncString(const char* str, uint64_t id, orbit::Color c
   }
 }
 
-ORBIT_FORCE_INLINE void TrackValue(EventType type, const char* name, uint64_t value,
-                                   orbit::Color color) {
+inline void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color) {
   EncodedEvent e(type, name, value, color);
   TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
 }
