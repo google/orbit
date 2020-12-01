@@ -51,6 +51,9 @@ QPushButton:disabled {
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QTabWidget" name="MainTabWidget">
+       <property name="accessibleName">
+        <string>MainTabWidget</string>
+       </property>
        <property name="currentIndex">
         <number>0</number>
        </property>
@@ -224,6 +227,9 @@ QPushButton:disabled {
        </widget>
       </widget>
       <widget class="QTabWidget" name="RightTabWidget">
+       <property name="accessibleName">
+        <string>RightTabWidget</string>
+       </property>
        <property name="currentIndex">
         <number>0</number>
        </property>

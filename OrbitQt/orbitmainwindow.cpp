@@ -330,6 +330,7 @@ void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {
 void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index,
                                               const QPoint pos) {
   QMenu context_menu(this);
+  context_menu.setAccessibleName("TabBarContextMenu");
   QAction move_action;
   QTabWidget* other_widget;
 

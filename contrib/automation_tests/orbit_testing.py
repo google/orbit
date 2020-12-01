@@ -143,3 +143,4 @@ def capture(application, length):
     time.sleep(length)
     main_wnd.type_keys('X')
     logging.info('Captured for %d seconds', length)
+
