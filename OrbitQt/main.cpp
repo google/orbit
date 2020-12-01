@@ -6,15 +6,34 @@
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
+#include <absl/strings/str_format.h>
 
 #include <QApplication>
+#include <QByteArray>
+#include <QColor>
+#include <QCoreApplication>
 #include <QDir>
-#include <QFontDatabase>
 #include <QMessageBox>
+#include <QObject>
+#include <QPalette>
 #include <QProcessEnvironment>
 #include <QProgressDialog>
+#include <QString>
 #include <QStyleFactory>
+#include <Qt>
+#include <cstdint>
+#include <cstring>
+#include <filesystem>
+#include <memory>
 #include <optional>
+#include <outcome.hpp>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #ifdef _WIN32
 #include <process.h>
@@ -26,11 +45,13 @@
 #include "ApplicationOptions.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
+#include "ImGuiOrbit.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
+#include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
@@ -312,6 +333,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     QApplication app(argc, argv);
+    QApplication::setOrganizationName("The Orbit Authors");
     QApplication::setApplicationName("orbitprofiler");
 
     if (DevModeEnabledViaEnvironmentVariable()) {
