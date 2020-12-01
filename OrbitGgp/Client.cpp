@@ -8,6 +8,7 @@
 #include <QPointer>
 #include <QProcess>
 #include <QTimer>
+#include <optional>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
@@ -47,7 +48,7 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
                    parent,
                    [process, timeout_timer, callback](const int exit_code,
                                                       const QProcess::ExitStatus exit_status) {
-                     if (timeout_timer) {
+                     if (timeout_timer != nullptr) {
                        timeout_timer->stop();
                        timeout_timer->deleteLater();
                      }
@@ -56,7 +57,7 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
                        ERROR(
                            "Ggp list instances request failed with error: %s (exit code: "
                            "%d)",
-                           process->errorString().toStdString().c_str(), exit_code);
+                           process->errorString().toStdString(), exit_code);
                        callback(Error::kGgpListInstancesFailed);
                        return;
                      }
@@ -65,6 +66,16 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
 
                      process->deleteLater();
                    });
+
+  QObject::connect(process, &QProcess::errorOccurred, parent, [timeout_timer, process, callback]() {
+    if (timeout_timer != nullptr) {
+      timeout_timer->stop();
+      timeout_timer->deleteLater();
+    }
+    ERROR("Ggp list instances request failed with error: %s", process->errorString().toStdString());
+    callback(Error::kGgpListInstancesFailed);
+    process->deleteLater();
+  });
 
   process->start(QIODevice::ReadOnly);
   timeout_timer->start(kDefaultTimeoutInMs);
@@ -76,13 +87,17 @@ outcome::result<QPointer<Client>> Client::Create(QObject* parent) {
   QProcess ggp_process{};
   ggp_process.setProgram("ggp");
   ggp_process.setArguments({"version"});
+
   ggp_process.start(QIODevice::ReadOnly);
   ggp_process.waitForFinished();
 
-  if (ggp_process.exitStatus() != QProcess::NormalExit || ggp_process.exitCode() != 0) {
+  // QProcess::unknownError is the default, or in other words, if no error happened this will be the
+  // return value
+  if (ggp_process.exitStatus() != QProcess::NormalExit || ggp_process.exitCode() != 0 ||
+      ggp_process.error() != QProcess::UnknownError) {
     ERROR("Ggp command line process failed with error: %s (exit code: %d)",
-          ggp_process.errorString().toStdString().c_str(), ggp_process.exitCode());
-    return Error::kCouldNotUseGgpCli;
+          ggp_process.errorString().toStdString(), ggp_process.exitCode());
+    return outcome::failure(Error::kCouldNotUseGgpCli);
   }
 
   return QPointer<Client>(new Client{parent});
