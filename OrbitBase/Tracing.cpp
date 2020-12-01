@@ -27,6 +27,7 @@ Listener::Listener(TimerCallback callback) {
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
   thread_pool_ = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
+  thread_pool_->EnableAutoProfiling(false);  // To prevent feedback loop.
   user_callback_ = std::move(callback);
 
   // Activate listener (only one listener instance is supported).
