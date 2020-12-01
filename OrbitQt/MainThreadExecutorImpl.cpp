@@ -9,6 +9,8 @@
 #include <list>
 #include <thread>
 
+#include "OrbitBase/Tracing.h"
+
 namespace {
 
 class MainThreadExecutorImpl : public MainThreadExecutor {
@@ -19,8 +21,10 @@ class MainThreadExecutorImpl : public MainThreadExecutor {
 };
 
 void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
-  QMetaObject::invokeMethod(QCoreApplication::instance(),
-                            [action = std::move(action)]() { action->Execute(); });
+  QMetaObject::invokeMethod(QCoreApplication::instance(), [action = std::move(action)]() {
+    ORBIT_SCOPE("MainThreadExecutor Action");
+    action->Execute();
+  });
 }
 
 }  // namespace

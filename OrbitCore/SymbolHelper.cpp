@@ -14,6 +14,7 @@
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Tracing.h"
 #include "Path.h"
 
 using orbit_grpc_protos::ModuleSymbols;
@@ -141,6 +142,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
 }
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path) {
+  ORBIT_SCOPE_FUNCTION;
   SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
   ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result = ElfFile::Create(file_path.string());
 

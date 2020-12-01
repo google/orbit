@@ -6,6 +6,7 @@
 
 #include "CoreUtils.h"
 #include "OpenGl.h"
+#include "OrbitBase/Tracing.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
@@ -323,6 +324,7 @@ std::vector<float> Batcher::GetLayers() const {
 };
 
 void Batcher::DrawLayer(float layer, bool picking) const {
+  ORBIT_SCOPE_FUNCTION;
   if (!primitive_buffers_by_layer_.count(layer)) return;
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
   if (picking) {

@@ -176,6 +176,7 @@ void ProcessesDataView::UpdateProcessList() {
 }
 
 void ProcessesDataView::SetProcessList(const std::vector<ProcessInfo>& process_list) {
+  ORBIT_SCOPE("ProcessesDataView::SetProcessList");
   process_list_ = process_list;
   UpdateProcessList();
   OnDataChanged();
