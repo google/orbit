@@ -9,6 +9,11 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+#ifdef _WIN32
+#include "oqpi.hpp"
+#define OQPI_USE_DEFAULT
+#endif
+
 using orbit_client_protos::FunctionInfo;
 
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::kFunctions) {}
@@ -265,28 +270,28 @@ void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
   const std::vector<const FunctionInfo*>& functions(functions_);
   const auto prio = oqpi::task_priority::normal;
-  auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
+  auto numWorkers = oqpi::default_helpers::scheduler().workersCount(prio);
   // int numWorkers = oqpi::thread::hardware_concurrency();
   std::vector<std::vector<int>> indicesArray;
   indicesArray.resize(numWorkers);
 
-  oqpi_tk::parallel_for("FunctionsDataViewParallelFor", functions.size(),
-                        [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-                          std::vector<int>& result = indicesArray[a_BlockIndex];
-                          const std::string& name =
-                              ToLower(FunctionUtils::GetDisplayName(*functions[a_ElementIndex]));
-                          const std::string& module =
-                              FunctionUtils::GetLoadedModuleName(*functions[a_ElementIndex]);
+  oqpi::default_helpers::parallel_for(
+      "FunctionsDataViewParallelFor", functions.size(),
+      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
+        std::vector<int>& result = indicesArray[a_BlockIndex];
+        const std::string& name =
+            ToLower(FunctionUtils::GetDisplayName(*functions[a_ElementIndex]));
+        const std::string& module = FunctionUtils::GetLoadedModuleName(*functions[a_ElementIndex]);
 
-                          for (std::string& filterToken : m_FilterTokens) {
-                            if (name.find(filterToken) == std::string::npos &&
-                                module.find(filterToken) == std::string::npos) {
-                              return;
-                            }
-                          }
+        for (std::string& filterToken : m_FilterTokens) {
+          if (name.find(filterToken) == std::string::npos &&
+              module.find(filterToken) == std::string::npos) {
+            return;
+          }
+        }
 
-                          result.push_back(a_ElementIndex);
-                        });
+        result.push_back(a_ElementIndex);
+      });
 
   std::set<int> indicesSet;
   for (std::vector<int>& results : indicesArray) {

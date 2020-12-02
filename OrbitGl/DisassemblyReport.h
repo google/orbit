@@ -9,7 +9,7 @@
 
 #include "CodeReport.h"
 #include "Disassembler.h"
-#include "SamplingProfiler.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 
 class DisassemblyReport : public CodeReport {
  public:

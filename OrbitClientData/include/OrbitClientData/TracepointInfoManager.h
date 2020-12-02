@@ -8,7 +8,6 @@
 #include <optional>
 #include <string>
 
-#include "BlockChain.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"

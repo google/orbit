@@ -7,8 +7,8 @@
 #include <fstream>
 #include <memory>
 
-#include "Callstack.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "absl/strings/str_format.h"

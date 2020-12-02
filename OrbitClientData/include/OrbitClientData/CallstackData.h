@@ -8,7 +8,6 @@
 #include <memory>
 #include <mutex>
 
-#include "BlockChain.h"
 #include "Callstack.h"
 #include "CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"

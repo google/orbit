@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SamplingProfiler.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 
-#include "CaptureData.h"
-#include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientModel/CaptureData.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;

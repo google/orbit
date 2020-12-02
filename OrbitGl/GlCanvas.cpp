@@ -11,7 +11,7 @@
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
 #include "OpenGl.h"
-#include "SamplingProfiler.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 #include "TextBox.h"
 #include "absl/strings/str_format.h"
 

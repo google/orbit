@@ -5,13 +5,14 @@
 #ifndef ORBIT_GL_TIME_GRAPH_H_
 #define ORBIT_GL_TIME_GRAPH_H_
 
+#include <thread>
 #include <unordered_map>
 #include <utility>
 
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
-#include "CaptureData.h"
+#include "CoreUtils.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
@@ -19,6 +20,7 @@
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
@@ -243,7 +245,9 @@ class TimeGraph {
   Batcher batcher_;
   Timer last_thread_reorder_;
 
-  mutable Mutex mutex_;
+  // TODO(b/174655559): Use absl's mutex here.
+  mutable std::recursive_mutex mutex_;
+
   std::vector<std::shared_ptr<Track>> tracks_;
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;

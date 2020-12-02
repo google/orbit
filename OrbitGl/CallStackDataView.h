@@ -7,8 +7,8 @@
 
 #include <utility>
 
-#include "Callstack.h"
 #include "DataView.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ModuleData.h"
 
 class CallStackDataView : public DataView {

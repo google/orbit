@@ -19,8 +19,8 @@
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 #include "PickingManager.h"
-#include "SamplingProfiler.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
@@ -66,7 +66,7 @@ void TimeGraph::SetCanvas(GlCanvas* canvas) {
 }
 
 void TimeGraph::Clear() {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   batcher_.StartNewFrame();
   capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
@@ -97,7 +97,7 @@ void TimeGraph::Clear() {
 double GNumHistorySeconds = 2.f;
 
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto& track : tracks_) {
     if (!track->IsEmpty()) {
       capture_min_timestamp_ = std::min(capture_min_timestamp_, track->GetMinTime());
@@ -380,7 +380,7 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
 
 uint32_t TimeGraph::GetNumTimers() const {
   uint32_t num_timers = 0;
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (const auto& track : tracks_) {
     num_timers += track->GetNumTimers();
   }
@@ -767,7 +767,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
     track = std::make_shared<SchedulerTrack>(this);
@@ -781,7 +781,7 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
 }
 
 std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
     track = std::make_shared<ThreadTrack>(this, tid);
@@ -812,7 +812,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
 }
 
 std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash) {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
     track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
@@ -830,7 +830,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
 }
 
 GraphTrack* TimeGraph::GetOrCreateGraphTrack(const std::string& name) {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GraphTrack> track = graph_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<GraphTrack>(this, name);
@@ -844,7 +844,7 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(const std::string& name) {
 }
 
 AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<AsyncTrack>(this, name);
@@ -856,7 +856,7 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
 }
 
 std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo& function) {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
     track = std::make_shared<FrameTrack>(this, function);
@@ -932,7 +932,7 @@ void TimeGraph::SortTracks() {
   if (!GOrbitApp->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
     std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
 
-    ScopeLock lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     // Gather all tracks regardless of the process in sorted order
     std::vector<std::shared_ptr<Track>> all_processes_sorted_tracks;
 

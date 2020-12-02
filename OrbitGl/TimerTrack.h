@@ -9,13 +9,13 @@
 #include <memory>
 
 #include "BlockChain.h"
-#include "CallstackTypes.h"
 #include "EventTrack.h"
+#include "OrbitClientData/CallstackTypes.h"
 #include "TextBox.h"
-#include "Threading.h"
 #include "TimerChain.h"
 #include "TracepointTrack.h"
 #include "Track.h"
+#include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
 class TextRenderer;
@@ -86,7 +86,7 @@ class TimerTrack : public Track {
                                 TextBox* /*text_box*/) {}
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
-  mutable Mutex mutex_;
+  mutable absl::Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(PickingId id) const;

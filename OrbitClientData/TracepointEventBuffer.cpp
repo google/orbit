@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointEventBuffer.h"
+#include "OrbitClientData/TracepointEventBuffer.h"
 
 using orbit_client_protos::TracepointEventInfo;
 
@@ -14,7 +14,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
                                                               int32_t process_id, int32_t thread_id,
                                                               int32_t cpu,
                                                               bool is_same_pid_as_target) {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   num_total_tracepoints_++;
   if (!is_same_pid_as_target) {
     std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
@@ -42,7 +42,7 @@ void TracepointEventBuffer::AddTracepointEventAndMapToThreads(uint64_t time,
 
 [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
 TracepointEventBuffer::GetTracepointsOfThread(int32_t thread_id) const {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   static std::map<uint64_t, orbit_client_protos::TracepointEventInfo> empty;
   const auto& it = tracepoint_events_.find(thread_id);
   if (it == tracepoint_events_.end()) {
@@ -65,12 +65,12 @@ static void ForEachTracepointEventInEventMapInTimeRange(
 void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
     int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
-  ScopeLock lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (thread_id == TracepointEventBuffer::kAllTracepointsFakeTid) {
     for (const auto& entry : tracepoint_events_) {
       ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
     }
-  } else if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
+  } else if (thread_id == -1 /*TODO(b/166238019) Use a proper constant again*/) {
     for (const auto& entry : tracepoint_events_) {
       if (entry.first != kNotTargetProcessThreadId) {
         ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
@@ -82,14 +82,16 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
   }
 }
 
-uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) {
-  ScopeLock lock(mutex_);
-
-  if (thread_id == TracepointEventBuffer::kAllTracepointsFakeTid) {
-    return num_total_tracepoints_;
-  } else if (thread_id == SamplingProfiler::kAllThreadsFakeTid) {
-    return num_total_tracepoints_ - tracepoint_events_[kNotTargetProcessThreadId].size();
-  } else {
-    return GetTracepointsOfThread(thread_id).size();
+uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) const {
+  {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (thread_id == TracepointEventBuffer::kAllTracepointsFakeTid) {
+      return num_total_tracepoints_;
+    }
+    if (thread_id == -1 /*TODO(b/166238019) Use a proper constant again*/) {
+      return num_total_tracepoints_ - tracepoint_events_.at(kNotTargetProcessThreadId).size();
+    }
   }
+
+  return GetTracepointsOfThread(thread_id).size();
 }

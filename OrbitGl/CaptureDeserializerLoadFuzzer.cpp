@@ -10,7 +10,6 @@
 #include "App.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
-#include "SamplingProfiler.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
 #include "capture_data.pb.h"

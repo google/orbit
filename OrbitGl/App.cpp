@@ -19,7 +19,6 @@
 #include <utility>
 
 #include "CallStackDataView.h"
-#include "Callstack.h"
 #include "CaptureWindow.h"
 #include "CoreUtils.h"
 #include "Disassembler.h"
@@ -32,16 +31,17 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 #include "Path.h"
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
-#include "SamplingProfiler.h"
 #include "SamplingReport.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
@@ -50,6 +50,11 @@
 #include "capture_data.pb.h"
 #include "preset.pb.h"
 #include "symbol.pb.h"
+
+#ifdef _WIN32
+#include "oqpi.hpp"
+#define OQPI_USE_DEFAULT
+#endif
 
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
@@ -113,7 +118,7 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
 
 OrbitApp::~OrbitApp() {
 #ifdef _WIN32
-  oqpi_tk::stop_scheduler();
+  oqpi::default_helpers::stop_scheduler();
 #endif
 }
 
@@ -280,7 +285,7 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(
   auto app = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
 
 #ifdef _WIN32
-  oqpi_tk::start_default_scheduler();
+  oqpi::default_helpers::start_default_scheduler();
 #endif
 
   app->LoadFileMapping();

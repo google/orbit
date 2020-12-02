@@ -9,17 +9,17 @@
 #include <memory>
 #include <string>
 
-#include "CaptureData.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientServices/ProcessClient.h"
 #include "StringManager.h"
-#include "TracepointCustom.h"
-#include "UserDefinedCaptureData.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {

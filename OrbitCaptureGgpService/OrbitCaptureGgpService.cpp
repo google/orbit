@@ -5,10 +5,10 @@
 #include "OrbitCaptureGgpService.h"
 
 #include <string>
+#include <thread>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitCaptureGgpServiceImpl.h"
-#include "absl/strings/str_cat.h"
 #include "grpcpp/ext/proto_server_reflection_plugin.h"
 
 using grpc::Server;

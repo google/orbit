@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointEventBuffer.h"
+#include "OrbitClientData/TracepointEventBuffer.h"
 #include "gtest/gtest.h"
 
 TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
@@ -22,10 +22,8 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
   /*The number of threacepoints for thread id 6 is 0 because this tracepoint does not belong in the
    * target process*/
   EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(6), 0);
-
-  EXPECT_EQ(
-      tracepoint_event_buffer.GetNumTracepointsForThreadId(SamplingProfiler::kAllThreadsFakeTid),
-      4);
+  /*TODO(b/166238019) Use a proper constant for thread_id again*/
+  EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(-1), 4);
   EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(
                 TracepointEventBuffer::kAllTracepointsFakeTid),
             6);
@@ -58,8 +56,9 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
   /*Check the retrieval of the tracepoint events from all the threads in the target process
    * in the timestamp between 0 and 3*/
   std::vector<orbit_client_protos::TracepointEventInfo> all_tracepoint_events_target_process;
+  /*TODO(b/166238019) Use a proper constant for thread_id again*/
   tracepoint_event_buffer.ForEachTracepointEventOfThreadInTimeRange(
-      SamplingProfiler::kAllThreadsFakeTid, 0, 3,
+      -1, 0, 3,
       [&all_tracepoint_events_target_process](
           const orbit_client_protos::TracepointEventInfo& tracepoint_event_info) {
         all_tracepoint_events_target_process.emplace_back(tracepoint_event_info);

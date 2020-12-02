@@ -14,17 +14,21 @@ target_include_directories(OrbitClientModel PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(OrbitClientModel PUBLIC
+        include/OrbitClientModel/CaptureData.h
         include/OrbitClientModel/CaptureDeserializer.h
-        include/OrbitClientModel/CaptureSerializer.h)
+        include/OrbitClientModel/CaptureSerializer.h
+        include/OrbitClientModel/SamplingProfiler.h)
 
 target_sources(OrbitClientModel PRIVATE
+        CaptureData.cpp
         CaptureDeserializer.cpp
-        CaptureSerializer.cpp)
+        CaptureSerializer.cpp
+        SamplingProfiler.cpp)
 
 target_link_libraries(OrbitClientModel PUBLIC
         OrbitCaptureClient
         OrbitCore
-        OrbitProtos)
+        OrbitClientProtos)
 
 add_executable(OrbitClientModelTests)
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CallstackTypes.h"
+#include "OrbitClientData/CallstackTypes.h"
 #include "Track.h"
 
 class CallStack;
