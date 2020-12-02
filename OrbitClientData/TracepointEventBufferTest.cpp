@@ -22,7 +22,7 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
   /*The number of threacepoints for thread id 6 is 0 because this tracepoint does not belong in the
    * target process*/
   EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(6), 0);
-
+  /*TODO(b/166238019) Use a proper constant for thread_id again*/
   EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(-1), 4);
   EXPECT_EQ(tracepoint_event_buffer.GetNumTracepointsForThreadId(
                 TracepointEventBuffer::kAllTracepointsFakeTid),
@@ -56,6 +56,7 @@ TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {
   /*Check the retrieval of the tracepoint events from all the threads in the target process
    * in the timestamp between 0 and 3*/
   std::vector<orbit_client_protos::TracepointEventInfo> all_tracepoint_events_target_process;
+  /*TODO(b/166238019) Use a proper constant for thread_id again*/
   tracepoint_event_buffer.ForEachTracepointEventOfThreadInTimeRange(
       -1, 0, 3,
       [&all_tracepoint_events_target_process](
