@@ -17,8 +17,8 @@
 #include "GlCanvas.h"
 #include "Images.h"
 #include "OpenGl.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "Path.h"
 #include "absl/base/casts.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
@@ -581,8 +581,7 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
 }
 
 ImFont* AddOrbitFont(float pixel_size) {
-  const auto exe_dir = Path::GetExecutableDir();
-  const auto font_file_name = Path::JoinPath({exe_dir, "fonts", "Vera.ttf"});
+  const auto font_file_name = (orbit_base::GetExecutableDir() / "fonts" / "Vera.ttf").string();
   return ImGui::GetIO().Fonts->AddFontFromFileTTF(font_file_name.c_str(), pixel_size);
 }
 

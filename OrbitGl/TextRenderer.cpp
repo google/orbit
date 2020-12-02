@@ -10,7 +10,7 @@
 #include "App.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
-#include "Path.h"
+#include "OrbitBase/ExecutablePath.h"
 
 typedef struct {
   float x, y, z;     // position
@@ -44,11 +44,11 @@ void TextRenderer::Init() {
   int atlasSize = 2 * 1024;
   texture_atlas_ = texture_atlas_new(atlasSize, atlasSize, 1);
 
-  const auto exe_dir = Path::GetExecutableDir();
-  const auto fontFileName = exe_dir + "fonts/Vera.ttf";
+  const auto exe_dir = orbit_base::GetExecutableDir();
+  const auto font_file_name = (exe_dir / "fonts" / "Vera.ttf").string();
 
   for (int i = 1; i <= 100; i += 1) {
-    fonts_by_size_[i] = texture_font_new_from_file(texture_atlas_, i, fontFileName.c_str());
+    fonts_by_size_[i] = texture_font_new_from_file(texture_atlas_, i, font_file_name.c_str());
   }
 
   pen_.x = 0;
@@ -56,9 +56,9 @@ void TextRenderer::Init() {
 
   glGenTextures(1, &texture_atlas_->id);
 
-  const auto vertShaderFileName = Path::JoinPath({exe_dir, "shaders", "v3f-t2f-c4f.vert"});
-  const auto fragShaderFileName = Path::JoinPath({exe_dir, "shaders", "v3f-t2f-c4f.frag"});
-  shader_ = shader_load(vertShaderFileName.c_str(), fragShaderFileName.c_str());
+  const auto vert_shader_file_name = (exe_dir / "shaders" / "v3f-t2f-c4f.vert").string();
+  const auto frag_shader_file_name = (exe_dir / "shaders" / "v3f-t2f-c4f.frag").string();
+  shader_ = shader_load(vert_shader_file_name.c_str(), frag_shader_file_name.c_str());
 
   mat4_set_identity(&projection_);
   mat4_set_identity(&model_);

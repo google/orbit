@@ -194,7 +194,7 @@ bool OrbitCodeEditor::loadCode(std::string a_Msg) {
 }
 
 void OrbitCodeEditor::loadFileMap() {
-  QFile file(QString::fromStdString(Path::GetFileMappingFileName()));
+  QFile file(QString::fromStdString(Path::GetFileMappingFileName().string()));
   bool success = file.open(QFile::ReadWrite | QFile::Text);
   if (success) {
     QTextStream ReadFile(&file);
@@ -324,8 +324,7 @@ void OrbitCodeEditor::keyPressEvent(QKeyEvent* e) {
 }
 
 void OrbitCodeEditor::saveFileMap() {
-  std::string fileName = Path::GetFileMappingFileName();
-  std::wofstream outFile(fileName);
+  std::wofstream outFile(Path::GetFileMappingFileName());
   if (!outFile.fail()) {
     outFile << document()->toPlainText().toStdWString();
     outFile.close();

@@ -25,7 +25,7 @@ using ::ElfUtils::ElfFile;
 namespace {
 
 std::vector<fs::path> ReadSymbolsFile() {
-  std::string file_name = Path::GetSymbolsFileName();
+  fs::path file_name = Path::GetSymbolsFileName();
   if (!fs::exists(file_name)) {
     std::ofstream outfile(file_name);
     outfile << "//-------------------" << std::endl
@@ -67,7 +67,7 @@ std::vector<fs::path> ReadSymbolsFile() {
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
                                                      const std::string& build_id) {
-  OUTCOME_TRY(symbols_file, ElfFile::Create(symbols_path.string()));
+  OUTCOME_TRY(symbols_file, ElfFile::Create(symbols_path));
 
   if (!symbols_file->HasSymtab()) {
     return ErrorMessage(

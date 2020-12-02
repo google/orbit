@@ -21,6 +21,7 @@ target_include_directories(OrbitBase PRIVATE
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/DebugUtils.h
+        include/OrbitBase/ExecutablePath.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/Profiling.h
@@ -31,32 +32,43 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/SafeStrerror.h)
 
 target_sources(OrbitBase PRIVATE
+        ExecutablePath.cpp
         Logging.cpp
+        SafeStrerror.cpp
         ThreadPool.cpp
-        Tracing.cpp
-        SafeStrerror.cpp)
+        Tracing.cpp)
+
+if (WIN32)
+target_sources(OrbitBase PRIVATE
+        ExecutablePathWindows.cpp)
+else()
+target_sources(OrbitBase PRIVATE
+        ExecutablePathLinux.cpp)
+endif()
 
 target_link_libraries(OrbitBase PUBLIC
         CONAN_PKG::Outcome
         CONAN_PKG::abseil
         std::filesystem)
 
+
 add_executable(OrbitBaseTests)
 
 target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitBaseTests PRIVATE
-    UniqueResourceTest.cpp
-    OrbitApiTest.cpp
-    ProfilingTest.cpp
-    TracingTest.cpp
+        ExecutablePathTest.cpp
+        OrbitApiTest.cpp
+        ProfilingTest.cpp
+        TracingTest.cpp
+        UniqueResourceTest.cpp
 )
 
 # Threadpool test contains some sleeps we couldn't work around - disable them on the CI
 # since they are flaky there (but they work fine on local workstations).
 if (NOT (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen"))
 target_sources(OrbitBaseTests PRIVATE
-    ThreadPoolTest.cpp
+        ThreadPoolTest.cpp
 )
 endif()
 
@@ -65,5 +77,5 @@ target_link_libraries(OrbitBaseTests PRIVATE
         GTest::GTest
         GTest::Main)
 
-register_test(OrbitBaseTests)
 
+register_test(OrbitBaseTests)

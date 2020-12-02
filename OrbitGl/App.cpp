@@ -364,7 +364,7 @@ void OrbitApp::PostInit() {
 
 void OrbitApp::LoadFileMapping() {
   file_mapping_.clear();
-  std::string file_name = Path::GetFileMappingFileName();
+  std::filesystem::path file_name = Path::GetFileMappingFileName();
   if (!std::filesystem::exists(file_name)) {
     std::ofstream outfile(file_name);
     outfile << "//-------------------" << std::endl
@@ -409,18 +409,36 @@ void OrbitApp::LoadFileMapping() {
   }
 }
 
+static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
+    const std::filesystem::path& directory, std::string_view extension) {
+  std::vector<std::filesystem::path> files;
+
+  for (const auto& file : std::filesystem::directory_iterator(directory)) {
+    if (std::filesystem::is_regular_file(file)) {
+      auto path = file.path();
+      if (path.extension().string() == extension) {
+        files.push_back(path);
+      }
+    }
+  }
+
+  return files;
+}
+
 void OrbitApp::ListPresets() {
-  std::vector<std::string> preset_filenames = Path::ListFiles(Path::CreateOrGetPresetDir(), ".opr");
+  std::vector<std::filesystem::path> preset_filenames =
+      ListRegularFilesWithExtension(Path::CreateOrGetPresetDir(), ".opr");
   std::vector<std::shared_ptr<PresetFile>> presets;
-  for (std::string& filename : preset_filenames) {
+  for (const std::filesystem::path& filename : preset_filenames) {
     ErrorMessageOr<PresetInfo> preset_result = ReadPresetFromFile(filename);
     if (preset_result.has_error()) {
-      ERROR("Loading preset from \"%s\" failed: %s", filename, preset_result.error().message());
+      ERROR("Loading preset from \"%s\" failed: %s", filename.string(),
+            preset_result.error().message());
       continue;
     }
 
     auto preset = std::make_shared<PresetFile>();
-    preset->set_file_name(filename);
+    preset->set_file_name(filename.string());
     preset->mutable_preset_info()->CopyFrom(preset_result.value());
     presets.push_back(preset);
   }
@@ -701,22 +719,22 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   return outcome::success();
 }
 
-ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::string& filename) {
-  std::string file_path = filename;
+ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::path& filename) {
+  std::filesystem::path file_path = filename;
 
-  if (Path::GetDirectory(filename).empty()) {
-    file_path = Path::JoinPath({Path::CreateOrGetPresetDir(), filename});
+  if (filename.parent_path().empty()) {
+    file_path = Path::CreateOrGetPresetDir() / filename;
   }
 
   std::ifstream file(file_path, std::ios::binary);
   if (file.fail()) {
-    ERROR("Loading preset from \"%s\": file.fail()", file_path);
+    ERROR("Loading preset from \"%s\": file.fail()", file_path.string());
     return ErrorMessage("Error opening the file for reading");
   }
 
   PresetInfo preset_info;
   if (!preset_info.ParseFromIstream(&file)) {
-    ERROR("Loading preset from \"%s\" failed", file_path);
+    ERROR("Loading preset from \"%s\" failed", file_path.string());
     return ErrorMessage(absl::StrFormat("Error reading the preset"));
   }
   return preset_info;

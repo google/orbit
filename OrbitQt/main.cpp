@@ -31,7 +31,6 @@
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
-#include "OrbitSshQt/Session.h"
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
@@ -305,8 +304,7 @@ int main(int argc, char* argv[]) {
     absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
 
-    const std::string log_file_path = Path::GetLogFilePathAndCreateDir();
-    InitLogFile(log_file_path);
+    InitLogFile(Path::GetLogFilePathAndCreateDir());
     LOG("You are running Orbit Profiler version %s", OrbitCore::GetVersion());
 
 #if __linux__
@@ -334,7 +332,7 @@ int main(int argc, char* argv[]) {
     path_to_executable = QCoreApplication::applicationFilePath();
 
 #ifdef ORBIT_CRASH_HANDLING
-    const std::string dump_path = Path::CreateOrGetDumpDir();
+    const std::string dump_path = Path::CreateOrGetDumpDir().string();
 #ifdef _WIN32
     const char* handler_name = "crashpad_handler.exe";
 #else
@@ -343,7 +341,7 @@ int main(int argc, char* argv[]) {
     const std::string handler_path =
         QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
     const std::string crash_server_url = CrashServerOptions::GetUrl();
-    const std::vector<std::string> attachments = {Path::GetLogFilePathAndCreateDir()};
+    const std::vector<std::string> attachments = {Path::GetLogFilePathAndCreateDir().string()};
 
     CrashHandler crash_handler(dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING

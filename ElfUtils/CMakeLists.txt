@@ -37,7 +37,6 @@ target_sources(ElfUtilsTests PRIVATE
 target_link_libraries(
   ElfUtilsTests
   PRIVATE ElfUtils
-          OrbitCore # TODO: This is needed for GetExecutablePath - consider moving it to OrbitBase
           GTest::Main
           CONAN_PKG::llvm_object
           CONAN_PKG::abseil)

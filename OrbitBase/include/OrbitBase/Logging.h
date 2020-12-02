@@ -111,7 +111,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   }
 
 extern std::ofstream log_file;
-void InitLogFile(const std::string& path);
+void InitLogFile(const std::filesystem::path& path);
 void LogToFile(const std::string& message);
 
 // Internal.
