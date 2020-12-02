@@ -80,6 +80,7 @@ endif()
 include(cmake/fuzzing.cmake)
 include(cmake/strip.cmake)
 include(cmake/tests.cmake)
+include(cmake/iwyu.cmake)
 enable_testing()
 
 find_package(Threads REQUIRED)
@@ -88,7 +89,7 @@ find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
 
-include("third_party/protobuf/protobuf-generate.cmake")
+include("cmake/protobuf.cmake")
 include("cmake/grpc_helper.cmake")
 
 

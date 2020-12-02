@@ -1,0 +1,10 @@
+include(clang9_release)
+
+[settings]
+[options]
+OrbitProfiler:build_target=iwyu
+OrbitProfiler:run_tests=False
+[build_requires]
+[env]
+
+
