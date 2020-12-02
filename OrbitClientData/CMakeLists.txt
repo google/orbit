@@ -14,17 +14,28 @@ target_include_directories(OrbitClientData PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(OrbitClientData PUBLIC
+        include/OrbitClientData/Callstack.h
+        include/OrbitClientData/CallstackData.h
+        include/OrbitClientData/CallstackTypes.h
         include/OrbitClientData/FunctionInfoSet.h
         include/OrbitClientData/FunctionUtils.h
         include/OrbitClientData/ModuleData.h
         include/OrbitClientData/ModuleManager.h
-        include/OrbitClientData/ProcessData.h)
+        include/OrbitClientData/ProcessData.h
+        include/OrbitClientData/TracepointCustom.h
+        include/OrbitClientData/TracepointEventBuffer.h
+        include/OrbitClientData/TracepointInfoManager.h
+        include/OrbitClientData/UserDefinedCaptureData.h)
 
 target_sources(OrbitClientData PRIVATE
+        CallstackData.cpp
         FunctionUtils.cpp
         ModuleData.cpp
         ModuleManager.cpp
-        ProcessData.cpp)
+        ProcessData.cpp
+        TracepointEventBuffer.cpp
+        TracepointInfoManager.cpp
+        UserDefinedCaptureData.cpp)
 
 target_link_libraries(OrbitClientData PUBLIC 
         OrbitClientProtos
@@ -37,10 +48,14 @@ add_executable(OrbitClientDataTests)
 target_compile_options(OrbitClientDataTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitClientDataTests PRIVATE
+        CallstackDataTest.cpp
         FunctionInfoSetTest.cpp
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
-        ProcessDataTest.cpp)
+        ProcessDataTest.cpp
+        TracepointEventBufferTest.cpp
+        TracepointInfoManagerTest.cpp
+        UserDefinedCaptureDataTest.cpp)
 
 target_link_libraries(OrbitClientDataTests PRIVATE 
         OrbitClientData

@@ -5,11 +5,11 @@
 #ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
-#include "Callstack.h"
 #include "OrbitBase/Result.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ProcessData.h"
-#include "TracepointCustom.h"
-#include "UserDefinedCaptureData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 

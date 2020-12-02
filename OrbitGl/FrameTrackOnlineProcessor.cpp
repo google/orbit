@@ -6,9 +6,9 @@
 
 #include <limits>
 
-#include "CaptureData.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "TimeGraph.h"
-#include "UserDefinedCaptureData.h"
 
 FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(const CaptureData& capture_data,
                                                      TimeGraph* time_graph)

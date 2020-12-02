@@ -10,8 +10,7 @@
 #include <map>
 #include <vector>
 
-#include "SamplingProfiler.h"
-#include "Threading.h"
+#include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
 class TracepointEventBuffer {
@@ -29,7 +28,7 @@ class TracepointEventBuffer {
 
   void ForEachTracepointEvent(
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
-    ScopeLock lock(mutex_);
+    absl::MutexLock lock(&mutex_);
     for (auto const& entry : tracepoint_events_) {
       for (auto const& time_to_tracepoint_event : entry.second) {
         action(time_to_tracepoint_event.second);
@@ -37,7 +36,7 @@ class TracepointEventBuffer {
     }
   }
 
-  uint32_t GetNumTracepointsForThreadId(int32_t thread_id);
+  uint32_t GetNumTracepointsForThreadId(int32_t thread_id) const;
 
   static const int32_t kAllTracepointsFakeTid;
   static const int32_t kNotTargetProcessThreadId;
@@ -45,7 +44,7 @@ class TracepointEventBuffer {
  private:
   int32_t num_total_tracepoints_ = 0;
 
-  mutable Mutex mutex_;
+  mutable absl::Mutex mutex_;
   std::map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
       tracepoint_events_;
 };

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointInfoManager.h"
+#include "OrbitClientData/TracepointInfoManager.h"
 
 bool TracepointInfoManager::AddUniqueTracepointEventInfo(
     uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint) {

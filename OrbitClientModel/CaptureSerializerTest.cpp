@@ -5,13 +5,14 @@
 #include <memory>
 #include <string>
 
-#include "CaptureData.h"
 #include "CaptureSerializationTestMatchers.h"
+#include "CoreUtils.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
-#include "TracepointCustom.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "capture_data.pb.h"

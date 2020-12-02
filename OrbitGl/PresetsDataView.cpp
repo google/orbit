@@ -10,8 +10,8 @@
 #include <cstdio>
 
 #include "App.h"
-#include "Callstack.h"
 #include "ModulesDataView.h"
+#include "OrbitClientData/Callstack.h"
 #include "Path.h"
 #include "PresetLoadState.h"
 #include "absl/strings/str_format.h"

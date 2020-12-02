@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_SAMPLING_PROFILER_H_
-#define ORBIT_CORE_SAMPLING_PROFILER_H_
+#ifndef ORBIT_CLIENT_MODEL_SAMPLING_PROFILER_H_
+#define ORBIT_CLIENT_MODEL_SAMPLING_PROFILER_H_
 
 #include <cstdint>
 #include <cstring>
@@ -12,9 +12,9 @@
 #include <set>
 #include <vector>
 
-#include "Callstack.h"
-#include "CallstackData.h"
-#include "CallstackTypes.h"
+#include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -115,4 +115,4 @@ class SamplingProfiler {
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
-#endif  // ORBIT_CORE_SAMPLING_PROFILER_H_
+#endif  // ORBIT_CLIENT_MODEL_SAMPLING_PROFILER_H_

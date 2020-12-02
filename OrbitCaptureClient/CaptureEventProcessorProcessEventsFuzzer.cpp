@@ -8,8 +8,8 @@
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ProcessData.h"
-#include "TracepointCustom.h"
-#include "UserDefinedCaptureData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "absl/flags/flag.h"
 #include "services.pb.h"
 

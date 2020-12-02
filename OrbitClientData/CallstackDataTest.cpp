@@ -6,7 +6,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
-#include "CallstackData.h"
+#include "OrbitClientData/CallstackData.h"
 
 MATCHER(CallstackEventEq, "") {
   const orbit_client_protos::CallstackEvent& a = std::get<0>(arg);

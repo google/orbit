@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-#include "CallstackData.h"
-#include "CallstackTypes.h"
-#include "SamplingProfiler.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/CallstackTypes.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 #include "SamplingReportDataView.h"
 
 class SamplingReport {

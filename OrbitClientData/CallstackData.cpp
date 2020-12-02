@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CallstackData.h"
+#include "OrbitClientData/CallstackData.h"
 
-#include "Callstack.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitClientData/Callstack.h"
 #include "absl/container/flat_hash_set.h"
 
 using orbit_client_protos::CallstackEvent;

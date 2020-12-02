@@ -7,8 +7,8 @@
 #include <utility>
 
 #include "App.h"
-#include "Callstack.h"
 #include "ModulesDataView.h"
+#include "OrbitClientData/Callstack.h"
 #include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::ProcessInfo;

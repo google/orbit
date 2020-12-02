@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_CAPTURE_DATA_H_
-#define ORBIT_CORE_CAPTURE_DATA_H_
+#ifndef ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
+#define ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
 
 #include <memory>
 #include <vector>
 
-#include "CallstackData.h"
+#include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
-#include "SamplingProfiler.h"
-#include "TracepointCustom.h"
-#include "TracepointEventBuffer.h"
-#include "TracepointInfoManager.h"
-#include "UserDefinedCaptureData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/TracepointEventBuffer.h"
+#include "OrbitClientData/TracepointInfoManager.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
+#include "OrbitClientModel/SamplingProfiler.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
@@ -238,4 +238,4 @@ class CaptureData {
   UserDefinedCaptureData user_defined_capture_data_;
 };
 
-#endif  // ORBIT_CORE_CAPTURE_DATA_H_
+#endif  // ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_

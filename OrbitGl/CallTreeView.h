@@ -5,7 +5,7 @@
 #ifndef ORBIT_GL_CALL_TREE_VIEW_H_
 #define ORBIT_GL_CALL_TREE_VIEW_H_
 
-#include "CaptureData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "Path.h"
 #include "absl/container/node_hash_map.h"
 
