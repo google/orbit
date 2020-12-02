@@ -5,8 +5,10 @@
 # found in the LICENSE file.
 
 # Fail on any error.
-DIR="/mnt/github/orbitprofiler"
-SCRIPT="${DIR}/kokoro/checks/clang_format/check.sh"
+set -euo pipefail
+
+readonly REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&1 && pwd )"
+readonly SCRIPT="/mnt/kokoro/checks/clang_format/check.sh"
 
 if [ "$0" == "$SCRIPT" ]; then
   # We are inside the docker container
@@ -16,17 +18,17 @@ if [ "$0" == "$SCRIPT" ]; then
   echo -e "> but changes outside of the scope of your PR won't affect the outcome"
   echo -e "> of this presubmit check.\n"
   while read line; do
-    clang-format --output-replacements-xml $line | grep '<replacement ' > /dev/null
-    if [ $? -eq 0 ]; then
+    if clang-format --output-replacements-xml $line | grep '<replacement ' > /dev/null; then
       echo $line
     fi
-  done <<< $(find "$DIR" -name '*.cpp' -o -name '*.h' \
+  done <<< $(find /mnt -name '*.cpp' -o -name '*.h' \
         | grep -v "third_party/" \
         | grep -v "/build" )
   echo -e "--\n"
 
-  cd "$DIR"
-  REFERENCE="origin/master"
+  cd /mnt
+  # Use origin/master as reference branch, if not specified by kokoro
+  REFERENCE="${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-origin/master}"
   MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
   FORMATTING_DIFF="$(git diff -U0 --no-color --relative $MERGE_BASE | clang-format-diff-9 -p1)"
 
@@ -44,6 +46,7 @@ if [ "$0" == "$SCRIPT" ]; then
 
 else
   gcloud auth configure-docker --quiet
-  docker run --rm --network host -v ${KOKORO_ARTIFACTS_DIR}:/mnt gcr.io/orbitprofiler/clang_format:latest $SCRIPT
+  docker run --rm --network host -v ${REPO_ROOT}:/mnt -e KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH \
+    gcr.io/orbitprofiler/clang_format:latest $SCRIPT
 fi
 
