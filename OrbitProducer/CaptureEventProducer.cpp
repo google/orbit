@@ -12,8 +12,6 @@ using orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse;
 
 namespace orbit_producer {
 
-CaptureEventProducer::~CaptureEventProducer() = default;
-
 void CaptureEventProducer::BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) {
   CHECK(channel != nullptr);
 
@@ -49,10 +47,6 @@ void CaptureEventProducer::ShutdownAndWait() {
   // Give that a moment to complete, as otherwise that could lead to a SIGSEGV on exit.
   std::this_thread::sleep_for(std::chrono::milliseconds{1});
 }
-
-void CaptureEventProducer::OnCaptureStart() { LOG("CaptureEventProducer called OnCaptureStart"); }
-
-void CaptureEventProducer::OnCaptureStop() { LOG("CaptureEventProducer called OnCaptureStop"); }
 
 bool CaptureEventProducer::SendCaptureEvents(
     const orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest& send_events_request) {
