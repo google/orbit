@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # Clean up stuff in OrbitQt
 set (IGNORE_OTHER_EXE "OrbitTest.*;.*Fuzzer;.*Tests;")
 set (IGNORE_CONAN_LIB "CONAN_LIB::.*;")
