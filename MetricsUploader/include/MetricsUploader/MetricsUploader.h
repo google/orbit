@@ -9,6 +9,7 @@
 #include <windows.h>
 #endif  // WIN32
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 
@@ -51,7 +52,8 @@ class MetricsUploader {
 
   // Send log events to the server using metrics_uploader.
   // Returns true on success and false otherwise.
-  bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type);
+  bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                    std::chrono::milliseconds event_duration = std::chrono::milliseconds::zero());
 
  private:
 #ifdef _WIN32
