@@ -15,4 +15,6 @@ message OrbitLogEvent {
     ORBIT_INITIALIZED = 1;
   }
   LogEventType log_event_type = 1;
+
+  string orbit_version = 2;
 }
