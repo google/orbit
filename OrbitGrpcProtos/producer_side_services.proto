@@ -23,10 +23,12 @@ message ReceiveCommandsAndSendEventsRequest {
 message ReceiveCommandsAndSendEventsResponse {
   message StartCaptureCommand {}
   message StopCaptureCommand {}
+  message CaptureFinishedCommand {}
 
   oneof command {
     StartCaptureCommand start_capture_command = 1;
     StopCaptureCommand stop_capture_command = 2;
+    CaptureFinishedCommand capture_finished_command = 3;
   }
 }
 

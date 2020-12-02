@@ -45,6 +45,7 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
           "Stopped receiving CaptureEvents from CaptureEventProducers "
           "even if not all have sent all their CaptureEvents");
     }
+    LOG("About to send CaptureFinishedCommand to CaptureEventProducers (if any)");
     service_state_.capture_status = CaptureStatus::kCaptureFinished;
     service_state_.producers_remaining = 0;
   }
@@ -123,6 +124,57 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
   return grpc::Status::OK;
 }
 
+static bool SendStartCaptureCommand(
+    grpc::ServerContext* context,
+    grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
+                             orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream) {
+  orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
+  command.mutable_start_capture_command();
+  if (!stream->Write(command)) {
+    ERROR("Sending StartCaptureCommand to CaptureEventProducer");
+    LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+    // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
+    context->TryCancel();
+    return false;
+  }
+  LOG("Sent StartCaptureCommand to CaptureEventProducer");
+  return true;
+}
+
+static bool SendStopCaptureCommand(
+    grpc::ServerContext* context,
+    grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
+                             orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream) {
+  orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
+  command.mutable_stop_capture_command();
+  if (!stream->Write(command)) {
+    ERROR("Sending StopCaptureCommand to CaptureEventProducer");
+    LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+    // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
+    context->TryCancel();
+    return false;
+  }
+  LOG("Sent StopCaptureCommand to CaptureEventProducer");
+  return true;
+}
+
+static bool SendCaptureFinishedCommand(
+    grpc::ServerContext* context,
+    grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
+                             orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream) {
+  orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
+  command.mutable_capture_finished_command();
+  if (!stream->Write(command)) {
+    ERROR("Sending CaptureFinishedCommand to CaptureEventProducer");
+    LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+    // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
+    context->TryCancel();
+    return false;
+  }
+  LOG("Sent CaptureFinishedCommand to CaptureEventProducer");
+  return true;
+}
+
 void ProducerSideServiceImpl::SendCommandsThread(
     grpc::ServerContext* context,
     grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
@@ -146,6 +198,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
       return;
     }
 
+    CaptureStatus curr_capture_status;
     {
       absl::MutexLock lock{&service_state_mutex_};
       if (service_state_.exit_requested) {
@@ -201,8 +254,8 @@ void ProducerSideServiceImpl::SendCommandsThread(
         continue;
       }
 
-      // service_state_.capture_status has changed compared to prev_capture_status:
-      // handle the change.
+      // service_state_.capture_status has changed compared to prev_capture_status: handle the
+      // change while holding service_state_mutex_ (that also protects all_events_sent_received).
       switch (service_state_.capture_status) {
         case CaptureStatus::kCaptureStarted: {
           ++service_state_.producers_remaining;
@@ -216,40 +269,50 @@ void ProducerSideServiceImpl::SendCommandsThread(
           *all_events_sent_received = true;
         } break;
       }
-      prev_capture_status = service_state_.capture_status;
+      curr_capture_status = service_state_.capture_status;
     }  // absl::MutexLock lock{&service_state_mutex_}
 
-    // prev_capture_status has now been updated to the new service_state_.capture_status.
-    switch (prev_capture_status) {
-      case CaptureStatus::kCaptureStarted: {
-        orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
-        command.mutable_start_capture_command();
-        if (!stream->Write(command)) {
-          ERROR("Sending StartCaptureCommand to CaptureEventProducer");
-          LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
-          // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
-          context->TryCancel();
-          return;
-        }
-        LOG("Sent StartCaptureCommand to CaptureEventProducer");
-      } break;
+    // curr_capture_status now holds the new service_state_.capture_status. Send commands
+    // to the producer based on its value and also based on the value of prev_capture_status,
+    // in case this thread missed an intermediate change of service_state_.capture_status.
+    if (curr_capture_status == CaptureStatus::kCaptureStarted &&
+        prev_capture_status == CaptureStatus::kCaptureFinished) {
+      if (!SendStartCaptureCommand(context, stream)) {
+        return;
+      }
+    } else if (curr_capture_status == CaptureStatus::kCaptureStarted &&
+               prev_capture_status == CaptureStatus::kCaptureStopping) {
+      if (!SendCaptureFinishedCommand(context, stream) ||
+          !SendStartCaptureCommand(context, stream)) {
+        return;
+      }
 
-      case CaptureStatus::kCaptureStopping: {
-        orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
-        command.mutable_stop_capture_command();
-        if (!stream->Write(command)) {
-          ERROR("Sending StopCaptureCommand to CaptureEventProducer");
-          LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
-          // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
-          context->TryCancel();
-          return;
-        }
-        LOG("Sent StopCaptureCommand to CaptureEventProducer");
-      } break;
+    } else if (curr_capture_status == CaptureStatus::kCaptureStopping &&
+               prev_capture_status == CaptureStatus::kCaptureStarted) {
+      if (!SendStopCaptureCommand(context, stream)) {
+        return;
+      }
+    } else if (curr_capture_status == CaptureStatus::kCaptureStopping &&
+               prev_capture_status == CaptureStatus::kCaptureFinished) {
+      if (!SendStartCaptureCommand(context, stream) || !SendStopCaptureCommand(context, stream)) {
+        return;
+      }
 
-      case CaptureStatus::kCaptureFinished:
-        break;
+    } else if (curr_capture_status == CaptureStatus::kCaptureFinished &&
+               prev_capture_status == CaptureStatus::kCaptureStopping) {
+      if (!SendCaptureFinishedCommand(context, stream)) {
+        return;
+      }
+    } else if (curr_capture_status == CaptureStatus::kCaptureFinished &&
+               prev_capture_status == CaptureStatus::kCaptureStarted) {
+      if (!SendStopCaptureCommand(context, stream) ||
+          !SendCaptureFinishedCommand(context, stream)) {
+        return;
+      }
+    } else {
+      UNREACHABLE();
     }
+    prev_capture_status = curr_capture_status;
   }
 }
 

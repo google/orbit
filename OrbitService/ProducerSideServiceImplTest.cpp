@@ -43,6 +43,9 @@ class FakeProducer {
           case orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand:
             OnStopCaptureCommandReceived();
             break;
+          case orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand:
+            OnCaptureFinishedCommandReceived();
+            break;
           case orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::COMMAND_NOT_SET:
             break;
         }
@@ -84,6 +87,7 @@ class FakeProducer {
 
   MOCK_METHOD(void, OnStartCaptureCommandReceived, (), ());
   MOCK_METHOD(void, OnStopCaptureCommandReceived, (), ());
+  MOCK_METHOD(void, OnCaptureFinishedCommandReceived, (), ());
 
  private:
   std::unique_ptr<grpc::ClientContext> context_;
@@ -171,7 +175,11 @@ TEST_F(ProducerSideServiceImplTest, OneCapture) {
     std::this_thread::sleep_for(std::chrono::milliseconds{kSendAllEventsDelayMs});
     fake_producer_->SendAllEventsSent();
   });
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, kSendAllEventsDelayMs,
                           2 * kSendAllEventsDelayMs);
 }
@@ -195,9 +203,14 @@ TEST_F(ProducerSideServiceImplTest, TwoCaptures) {
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
     fake_producer_->SendAllEventsSent();
   });
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, 0,
                           kWaitMessagesSentDuration.count());
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
@@ -220,7 +233,11 @@ TEST_F(ProducerSideServiceImplTest, TwoCaptures) {
     std::this_thread::sleep_for(std::chrono::milliseconds{kSendAllEventsDelayMs});
     fake_producer_->SendAllEventsSent();
   });
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, kSendAllEventsDelayMs,
                           2 * kSendAllEventsDelayMs);
 }
@@ -244,7 +261,11 @@ TEST_F(ProducerSideServiceImplTest, NoCaptureEvents) {
     std::this_thread::sleep_for(std::chrono::milliseconds{kSendAllEventsDelayMs});
     fake_producer_->SendAllEventsSent();
   });
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, kSendAllEventsDelayMs,
                           2 * kSendAllEventsDelayMs);
 }
@@ -265,7 +286,11 @@ TEST_F(ProducerSideServiceImplTest, NoAllEventsSent) {
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
 
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   static constexpr uint64_t kMaxWaitForAllCaptureEventsMs = 50;
   service_->SetMaxWaitForAllCaptureEvents(absl::Milliseconds(kMaxWaitForAllCaptureEventsMs));
   // As the AllEventsSent is not sent by the producer, OnCaptureStopRequested
@@ -298,7 +323,11 @@ TEST_F(ProducerSideServiceImplTest, RedundantAllEventsSent) {
     std::this_thread::sleep_for(std::chrono::milliseconds{kSendAllEventsDelayMs});
     fake_producer_->SendAllEventsSent();
   });
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, kSendAllEventsDelayMs,
                           2 * kSendAllEventsDelayMs);
 
@@ -356,14 +385,21 @@ TEST_F(ProducerSideServiceImplTest, MultipleOnCaptureStartStop) {
     std::this_thread::sleep_for(std::chrono::milliseconds{kSendAllEventsDelayMs});
     fake_producer_->SendAllEventsSent();
   });
-  EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(1);
+    EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
+  }
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, kSendAllEventsDelayMs,
                           2 * kSendAllEventsDelayMs);
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
   EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(0);
-  // This should *not* cause StopCaptureCommand to be sent again and should be immediate.
+  EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(0);
+  // This should *not* cause StopCaptureCommand nor CaptureFinishedCommand to be sent again
+  // and should be immediate.
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, 0,
                           kSendAllEventsDelayMs / 2);
 }
@@ -390,6 +426,7 @@ TEST_F(ProducerSideServiceImplTest, NoOnCaptureStopRequested) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
 
   EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(0);
+  EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(0);
 }
 
 TEST_F(ProducerSideServiceImplTest, ProducerDisconnectsMidCapture) {

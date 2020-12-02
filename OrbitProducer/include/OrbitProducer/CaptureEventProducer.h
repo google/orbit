@@ -19,7 +19,10 @@ class CaptureEventProducer {
  public:
   virtual ~CaptureEventProducer() = default;
 
-  [[nodiscard]] bool IsCapturing() { return is_capturing_; }
+  [[nodiscard]] bool IsCapturing() {
+    return last_command_ ==
+           orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
+  }
 
   // This method allows to specify how frequently a reconnection with the service should
   // be attempted when the connection fails or is interrupted. The default is 5 seconds.
@@ -38,6 +41,8 @@ class CaptureEventProducer {
   virtual void OnCaptureStart() = 0;
   // Subclasses need to override this method to be notified of a request to stop the capture.
   virtual void OnCaptureStop() = 0;
+  // Subclasses need to override this method to be notified that the current capture has finished.
+  virtual void OnCaptureFinished() = 0;
 
   // Subclasses can use this method to send a batch of CaptureEvents to the ProducerSideService.
   // A full ReceiveCommandsAndSendEventsRequest with event_case() == kBufferedCaptureEvents
@@ -61,7 +66,8 @@ class CaptureEventProducer {
       stream_;
   absl::Mutex context_and_stream_mutex_;
 
-  std::atomic<bool> is_capturing_ = false;
+  std::atomic<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::CommandCase> last_command_ =
+      orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
 
   bool shutdown_requested_ = false;
   absl::Mutex shutdown_requested_mutex_;

@@ -148,9 +148,14 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
       }
       if (!read_succeeded) {
         ERROR("Receiving ReceiveCommandsAndSendEventsResponse from ProducerSideService");
-        if (is_capturing_) {
-          is_capturing_ = false;
+        if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
+          last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
           OnCaptureStop();
+          last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
+          OnCaptureFinished();
+        } else if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand) {
+          last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
+          OnCaptureFinished();
         }
         LOG("Terminating call to ReceiveCommandsAndSendEvents");
         {
@@ -173,17 +178,41 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
       switch (response.command_case()) {
         case ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand: {
           LOG("ProducerSideService sent StartCaptureCommand");
-          if (!is_capturing_) {
-            is_capturing_ = true;
+          if (last_command_ == ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand) {
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
+            OnCaptureStart();
+          } else if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand) {
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
+            OnCaptureFinished();
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
             OnCaptureStart();
           }
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand: {
           LOG("ProducerSideService sent StopCaptureCommand");
-          if (is_capturing_) {
-            is_capturing_ = false;
+          if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
             OnCaptureStop();
+          } else if (last_command_ ==
+                     ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand) {
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
+            OnCaptureStart();
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
+            OnCaptureStop();
+          }
+        } break;
+
+        case ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand: {
+          LOG("ProducerSideService sent CaptureFinishedCommand");
+          if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand) {
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
+            OnCaptureFinished();
+          } else if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
+            OnCaptureStop();
+            last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
+            OnCaptureFinished();
           }
         } break;
 

@@ -63,6 +63,14 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
     EXPECT_TRUE(written);
   }
 
+  void SendCaptureFinishedCommand() {
+    ASSERT_NE(stream_, nullptr);
+    orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
+    command.mutable_capture_finished_command();
+    bool written = stream_->Write(command);
+    EXPECT_TRUE(written);
+  }
+
   void FinishAndDisallowRpc() {
     rpc_allowed_ = false;
     if (context_ != nullptr) {
