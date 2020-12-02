@@ -8,16 +8,16 @@
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "Path.h"
-#include "include/OrbitFramePointerValidator/FramePointerValidator.h"
+#include "OrbitFramePointerValidator/FramePointerValidator.h"
 
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::SymbolInfo;
 
 TEST(FramePointerValidator, GetFpoFunctions) {
-  std::string executable_dir = Path::GetExecutableDir();
-  std::string test_elf_file = executable_dir + "/testdata/hello_world_elf";
+  const std::filesystem::path executable_dir = orbit_base::GetExecutableDir();
+  const std::filesystem::path test_elf_file = executable_dir / "testdata" / "hello_world_elf";
 
   auto elf_file = ElfUtils::ElfFile::Create(test_elf_file);
   ASSERT_TRUE(elf_file) << elf_file.error().message();

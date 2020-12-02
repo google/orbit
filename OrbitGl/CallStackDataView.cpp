@@ -5,9 +5,9 @@
 #include "CallStackDataView.h"
 
 #include "App.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "Path.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
@@ -63,7 +63,9 @@ std::string CallStackDataView::GetValue(int row, int column) {
         return module->name();
       }
       const CaptureData& capture_data = GOrbitApp->GetCaptureData();
-      return Path::GetFileName(capture_data.GetModulePathByAddress(frame.address));
+      return std::filesystem::path(capture_data.GetModulePathByAddress(frame.address))
+          .filename()
+          .string();
     }
     case kColumnAddress:
       return absl::StrFormat("%#llx", frame.address);

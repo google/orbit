@@ -7,7 +7,6 @@
 
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientModel/CaptureData.h"
-#include "Path.h"
 #include "absl/container/node_hash_map.h"
 
 class CallTreeThread;
@@ -86,7 +85,9 @@ class CallTreeFunction : public CallTreeNode {
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
 
-  [[nodiscard]] std::string GetModuleName() const { return Path::GetFileName(module_path()); }
+  [[nodiscard]] std::string GetModuleName() const {
+    return std::filesystem::path(module_path()).filename().string();
+  }
 
  private:
   uint64_t function_absolute_address_;

@@ -10,9 +10,7 @@
 #include <cstdio>
 
 #include "App.h"
-#include "ModulesDataView.h"
 #include "OrbitClientData/Callstack.h"
-#include "Path.h"
 #include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
@@ -31,7 +29,7 @@ constexpr const float kModulesColumnWidth = 0.34f;
 constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 
 namespace {
-std::string GetLoadStateString(std::shared_ptr<orbit_client_protos::PresetFile> preset) {
+std::string GetLoadStateString(const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
   PresetLoadState load_state = GOrbitApp->GetPresetLoadState(preset);
   return load_state.GetName();
 }
@@ -73,7 +71,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
     case kColumnLoadState:
       return GetLoadStateString(preset);
     case kColumnSessionName:
-      return Path::GetFileName(preset->file_name());
+      return std::filesystem::path(preset->file_name()).filename().string();
     case kColumnModules:
       return GetModulesList(GetModules(row));
     case kColumnFunctionCount:
@@ -165,12 +163,12 @@ void PresetsDataView::DoFilter() {
 
   for (size_t i = 0; i < presets_.size(); ++i) {
     const PresetFile& preset = *presets_[i];
-    std::string name = Path::GetFileName(ToLower(preset.file_name()));
+    std::string name = ToLower(std::filesystem::path(preset.file_name()).filename().string());
 
     bool match = true;
 
     for (std::string& filter_token : tokens) {
-      if (!(name.find(filter_token) != std::string::npos)) {
+      if (name.find(filter_token) == std::string::npos) {
         match = false;
         break;
       }
@@ -191,8 +189,8 @@ void PresetsDataView::OnDataChanged() {
     indices_[i] = i;
     std::vector<ModuleView> modules;
     for (const auto& pair : presets_[i]->preset_info().path_to_module()) {
-      modules.push_back(
-          ModuleView(Path::GetFileName(pair.first), pair.second.function_hashes_size()));
+      modules.emplace_back(std::filesystem::path(pair.first).filename().string(),
+                           pair.second.function_hashes_size());
     }
     modules_[i] = std::move(modules);
   }

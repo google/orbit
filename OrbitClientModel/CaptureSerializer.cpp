@@ -9,8 +9,8 @@
 #include <memory>
 
 #include "CoreUtils.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitClientData/Callstack.h"
-#include "Path.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"
@@ -37,14 +37,15 @@ void WriteMessage(const google::protobuf::Message* message,
 
 std::string GetCaptureFileName(const CaptureData& capture_data) {
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string result = absl::StrCat(Path::StripExtension(capture_data.process_name()), "_",
-                                    OrbitUtils::FormatTime(timestamp));
+  std::string result =
+      absl::StrCat(std::filesystem::path(capture_data.process_name()).stem().string(), "_",
+                   OrbitUtils::FormatTime(timestamp));
   IncludeOrbitExtensionInFile(result);
   return result;
 }
 
 void IncludeOrbitExtensionInFile(std::string& file_name) {
-  const std::string extension = Path::GetExtension(file_name);
+  const std::string extension = std::filesystem::path(file_name).extension().string();
   if (extension != kFileOrbitExtension) {
     file_name.append(kFileOrbitExtension);
   }

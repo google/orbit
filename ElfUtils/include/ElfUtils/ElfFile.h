@@ -5,6 +5,7 @@
 #ifndef ELF_UTILS_ELF_FILE_H_
 #define ELF_UTILS_ELF_FILE_H_
 
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -41,15 +42,17 @@ class ElfFile {
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
-  [[nodiscard]] virtual std::string GetFilePath() const = 0;
+  [[nodiscard]] virtual std::filesystem::path GetFilePath() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
 
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(std::string_view file_path);
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
-      std::string_view file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
+      const std::filesystem::path& file_path);
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
+      const std::filesystem::path& file_path,
+      llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(
-      std::string_view file_path, const void* buf, size_t len);
+      const std::filesystem::path& file_path, const void* buf, size_t len);
 };
 
 }  // namespace ElfUtils

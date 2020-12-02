@@ -7,7 +7,7 @@
 static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;
 
-void InitLogFile(const std::string& path) {
+void InitLogFile(const std::filesystem::path& path) {
   absl::MutexLock lock(&log_file_mutex);
   // Do not call CHECK here - it will end up calling LogToFile,
   // which tries to lock on the same mutex a second time. This will

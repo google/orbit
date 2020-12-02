@@ -9,19 +9,18 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QDesktopServices>
-#include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QProgressDialog>
 #include <QSettings>
-#include <QStatusBar>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
@@ -274,8 +273,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->RightTabWidget->tabBar()->installEventFilter(this);
 
   setWindowTitle({});
-  std::string iconFileName = Path::JoinPath({Path::GetExecutableDir(), "orbit.ico"});
-  this->setWindowIcon(QIcon(iconFileName.c_str()));
+  std::filesystem::path icon_file_name = (orbit_base::GetExecutableDir() / "orbit.ico");
+  this->setWindowIcon(QIcon(QString::fromStdString(icon_file_name.string())));
 
   GOrbitApp->PostInit();
 
@@ -641,8 +640,9 @@ void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
 }
 
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
-  QStringList list = QFileDialog::getOpenFileNames(this, "Select a file to open...",
-                                                   Path::CreateOrGetPresetDir().c_str(), "*.opr");
+  QStringList list = QFileDialog::getOpenFileNames(
+      this, "Select a file to open...",
+      QString::fromStdString(Path::CreateOrGetPresetDir().string()), "*.opr");
   for (const auto& file : list) {
     ErrorMessageOr<void> result = GOrbitApp->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
@@ -670,8 +670,9 @@ QPixmap QtGrab(OrbitMainWindow* a_Window) {
 }
 
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
-  QString file = QFileDialog::getSaveFileName(this, "Specify a file to save...",
-                                              Path::CreateOrGetPresetDir().c_str(), "*.opr");
+  QString file = QFileDialog::getSaveFileName(
+      this, "Specify a file to save...",
+      QString::fromStdString(Path::CreateOrGetPresetDir().string()), "*.opr");
   if (file.isEmpty()) {
     return;
   }
@@ -783,9 +784,9 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
-      Path::JoinPath(
-          {Path::CreateOrGetCaptureDir(), capture_serializer::GetCaptureFileName(capture_data)})
-          .c_str(),
+      QString::fromStdString(
+          (Path::CreateOrGetCaptureDir() / capture_serializer::GetCaptureFileName(capture_data))
+              .string()),
       "*.orbit");
   if (file.isEmpty()) {
     return;
@@ -802,7 +803,8 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
 
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
-      this, "Open capture...", QString::fromStdString(Path::CreateOrGetCaptureDir()), "*.orbit");
+      this, "Open capture...", QString::fromStdString(Path::CreateOrGetCaptureDir().string()),
+      "*.orbit");
   if (file.isEmpty()) {
     return;
   }

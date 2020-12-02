@@ -386,7 +386,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> SelectFunctionsFromHashes(const ModuleData* module,
                                                  const std::vector<uint64_t>& function_hashes);
 
-  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(const std::string& filename);
+  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
+      const std::filesystem::path& filename);
 
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
