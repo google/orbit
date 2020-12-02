@@ -11,11 +11,13 @@
 
 namespace orbit_metrics_uploader {
 
-bool MetricsUploader::SendLogEvent(OrbitLogEvent_LogEventType log_event_type) {
+bool MetricsUploader::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                                   std::chrono::milliseconds event_duration) {
   if (send_log_event_addr_ != nullptr) {
     OrbitLogEvent log_event;
     log_event.set_log_event_type(log_event_type);
     log_event.set_orbit_version(orbit_core::GetVersion());
+    log_event.set_event_duration_milliseconds(event_duration.count());
 
     int message_size = log_event.ByteSize();
     std::vector<uint8_t> buffer(message_size);
