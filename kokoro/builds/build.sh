@@ -145,9 +145,14 @@ if [ -n "$1" ]; then
           "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/'
   echo "Starting the build (conan build)."
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
-  echo "Start the packaging (conan package)."
-  conan package -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
-  echo "Packaging is done."
+
+  if [[ $CONAN_PROFILE != "iwyu" ]]; then
+    echo "Start the packaging (conan package)."
+    conan package -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
+    echo "Packaging is done."
+  else
+    echo "No packaging since we are in include-what-you-use mode."
+  fi
 
   # Uploading symbols to the symbol server
   if [ "${BUILD_TYPE}" == "release" ] \
@@ -193,7 +198,7 @@ if [ -n "$1" ]; then
   fi
 
   # Package build artifacts into a zip for integration in the installer.
-  if [[ $CONAN_PROFILE != ggp_* ]]; then
+  if [[ $CONAN_PROFILE != ggp_* && $CONAN_PROFILE != "iwyu" ]]; then
     echo "Create a zip containing Orbit UI for integration in the installer."
     pushd "${REPO_ROOT}/build/package" > /dev/null
     cp -av bin/ Orbit
@@ -205,6 +210,32 @@ if [ -n "$1" ]; then
     cp -v "${REPO_ROOT}/Orbit.h" Orbit/
     zip -r Orbit.zip Orbit/
     rm -rf Orbit/
+    popd > /dev/null
+  fi
+
+  # Analyze include-what-you-use results
+  if [[ $CONAN_PROFILE == "iwyu" ]]; then
+    pushd ${REPO_ROOT} > /dev/null
+
+    echo -e "\n\n\nHere is the full list of all things iwyu found:"
+    cat build/iwyu_results.txt
+
+    echo -e "\n\n\nThe following include problems occur in files this PR touched:"
+    readonly REFERENCE="${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-origin/master}"
+    readonly MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
+
+    PATTERN_FILE="$(mktemp)"
+    git diff -U0 --no-color --relative --name-only $MERGE_BASE | sed -e 's/$/:/' > ${PATTERN_FILE}
+    if grep -A1 -F "error:" build/iwyu_results.txt | grep -A1 -F -f ${PATTERN_FILE}; then
+      echo -e "\n\n"
+
+      # Replace `true` by `exit 1` here when the check is ready to fail in production!
+      true
+    else
+      echo -e "No include problem found!\n\n\n"
+      true
+    fi
+
     popd > /dev/null
   fi
 
