@@ -206,7 +206,6 @@ void ClientGgp::LoadSelectedFunctions() {
   } else {
     LOG("No functions provided; no functions hooked in the capture");
   }
-  return;
 }
 
 void ClientGgp::InformUsedSelectedCaptureFunctions(
@@ -250,9 +249,8 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
 }
 
 void ClientGgp::UpdateCaptureFunctions(std::vector<std::string> capture_functions) {
-  options_.capture_functions = capture_functions;
+  options_.capture_functions = std::move(capture_functions);
   LoadSelectedFunctions();
-  return;
 }
 
 void ClientGgp::ClearCapture() {
