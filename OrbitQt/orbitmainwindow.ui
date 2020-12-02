@@ -148,7 +148,9 @@ QPushButton:disabled {
                <string>filter</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">background-image: url(:/actions/filter_list_small_offset);</string>
+               <string notr="true">QLineEdit {
+	background-image: url(:/actions/filter_list_small_offset);
+}</string>
               </property>
               <property name="placeholderText">
                <string>Filter Tracks</string>
