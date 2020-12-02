@@ -1,0 +1,19 @@
+[
+  { "include": ["@<gtest/.*>", "private", "<gtest/gtest.h>", "public"] },
+  { "include": ["@<gmock/.*>", "private", "<gmock/gmock.h>", "public"] },
+  { "include": ["<GteVector.inl>", "private", "<GteVector.h>", "public"] },
+  { "include": ["<GteVector2.inl>", "private", "<GteVector2.h>", "public"] },
+  { "include": ["<GteVector3.inl>", "private", "<GteVector3.h>", "public"] },
+  { "include": ["<GteVector4.inl>", "private", "<GteVector4.h>", "public"] },
+  { "include": ["@<grpcpp/impl/.*>", "private", "<grpcpp/grpcpp.h>", "public"] },
+  { "include": ["<grpcpp/alarm_impl.h>", "private", "<grpcpp/alarm.h>", "public"] },
+  { "include": ["<grpcpp/channel_impl.h>", "private", "<grpcpp/channel.h>", "public"] },
+  { "include": ["<grpcpp/completion_queue_impl.h>", "private", "<grpcpp/completion_queue.h>", "public"] },
+  { "include": ["<grpcpp/create_channel_impl.h>", "private", "<grpcpp/create_channel.h>", "public"] },
+  { "include": ["<grpcpp/create_channel_posix_impl.h>", "private", "<grpcpp/create_channel_posix.h>", "public"] },
+  { "include": ["<grpcpp/health_check_service_interface_impl.h>", "private", "<grpcpp/health_check_service_interface.h>", "public"] },
+  { "include": ["<grpcpp/opencensus_impl.h>", "private", "<grpcpp/opencensus.h>", "public"] },
+  { "include": ["<grpcpp/resource_quota_impl.h>", "private", "<grpcpp/resource_quota.h>", "public"] },
+  { "include": ["<grpcpp/server_builder_impl.h>", "private", "<grpcpp/server_builder.h>", "public"] },
+  { "include": ["<grpcpp/server_posix_impl.h>", "private", "<grpcpp/server_posix.h>", "public"] }
+]
