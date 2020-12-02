@@ -192,7 +192,6 @@ class CaptureData {
   void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
   void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
-  void ClearUserDefinedCaptureData();
   [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
     return user_defined_capture_data_;
   }

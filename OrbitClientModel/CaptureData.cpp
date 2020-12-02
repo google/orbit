@@ -170,5 +170,3 @@ void CaptureData::DisableFrameTrack(const FunctionInfo& function) {
 [[nodiscard]] bool CaptureData::IsFrameTrackEnabled(const FunctionInfo& function) const {
   return user_defined_capture_data_.ContainsFrameTrack(function);
 }
-
-void CaptureData::ClearUserDefinedCaptureData() { user_defined_capture_data_.Clear(); }
