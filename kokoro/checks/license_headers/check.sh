@@ -33,7 +33,7 @@ if [ "$0" == "$SCRIPT" ]; then
   done <<< $(git diff -U0 --no-color --relative --name-only $MERGE_BASE \
   | grep -v third_party/ \
   | grep -v /build \
-  | egrep '\.cpp$|\.h$|CMakeLists\.txt$|\.js$')
+  | egrep '\.cpp$|\.h$|CMakeLists\.txt$|\.js$|\.proto$|\.py$')
 
   if [ -n "$LICENSE_HEADER_MISSED" ]; then
     exit 1
