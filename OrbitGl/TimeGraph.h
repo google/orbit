@@ -11,6 +11,7 @@
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
+#include "CoreUtils.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
@@ -28,6 +29,7 @@
 #include "Timer.h"
 #include "TimerChain.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
 class TimeGraph {
@@ -243,7 +245,7 @@ class TimeGraph {
   Batcher batcher_;
   Timer last_thread_reorder_;
 
-  mutable Mutex mutex_;
+  mutable absl::Mutex mutex_;
   std::vector<std::shared_ptr<Track>> tracks_;
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;

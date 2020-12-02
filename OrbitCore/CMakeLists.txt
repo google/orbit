@@ -16,8 +16,7 @@ target_sources(
          Path.h
          RingBuffer.h
          StringManager.h
-         SymbolHelper.h
-         Threading.h)
+         SymbolHelper.h)
 
 target_sources(
   OrbitCore

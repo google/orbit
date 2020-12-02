@@ -9,7 +9,6 @@
 
 #include "StringManager.h"
 #include "TextBox.h"
-#include "Threading.h"
 #include "TimerTrack.h"
 #include "capture_data.pb.h"
 

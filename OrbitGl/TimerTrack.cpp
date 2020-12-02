@@ -182,7 +182,7 @@ std::string TimerTrack::GetTooltip() const {
 
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
   std::vector<std::shared_ptr<TimerChain>> timers;
-  ScopeLock lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   for (auto& pair : timers_) {
     timers.push_back(pair.second);
   }
@@ -226,7 +226,7 @@ const TextBox* TimerTrack::GetFirstBeforeTime(uint64_t time, uint32_t depth) con
 }
 
 std::shared_ptr<TimerChain> TimerTrack::GetTimers(uint32_t depth) const {
-  ScopeLock lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   auto it = timers_.find(depth);
   if (it != timers_.end()) return it->second;
   return nullptr;
