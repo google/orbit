@@ -1,0 +1,7 @@
+FROM gcr.io/orbitprofiler/clang9_release:latest
+
+RUN sudo apt-get -qq update \
+    && sudo apt-get install -y --no-install-recommends \
+    clang-8 \
+    iwyu \
+    && sudo rm -rf /var/lib/apt/lists/*
