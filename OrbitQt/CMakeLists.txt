@@ -55,14 +55,20 @@ target_sources(
           orbitaboutdialog.ui
           orbitcodeeditor.cpp
           orbitdataviewpanel.cpp
+          orbitdataviewpanel.ui
           orbitdisassemblydialog.cpp
+          orbitdisassemblydialog.ui
           orbiteventiterator.cpp
           orbiteventiterator.ui
           orbitglwidget.cpp
           orbitglwidgetwithheader.cpp
+          orbitglwidgetwithheader.ui
           orbitlivefunctions.cpp
+          orbitlivefunctions.ui
           orbitmainwindow.cpp
+          orbitmainwindow.ui
           orbitsamplingreport.cpp
+          orbitsamplingreport.ui
           OrbitStartupWindow.cpp
           orbittablemodel.cpp
           orbittreeview.cpp
@@ -71,6 +77,7 @@ target_sources(
           OverlayWidget.cpp
           OverlayWidget.ui
           processlauncherwidget.cpp
+          processlauncherwidget.ui
           servicedeploymanager.cpp
           TutorialContent.cpp
           TutorialOverlay.cpp
