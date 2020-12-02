@@ -30,7 +30,8 @@ class OrbitConan(ConanFile):
                "with_crash_handling": [True, False],
                "with_orbitgl": [True, False],
                "run_tests": [True, False],
-               "with_vulkan_layer": [True, False]}
+               "with_vulkan_layer": [True, False],
+               "build_target": "ANY"}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
                        "debian_packaging": False,
@@ -39,7 +40,8 @@ class OrbitConan(ConanFile):
                        "with_crash_handling": True,
                        "with_orbitgl": True,
                        "with_vulkan_layer": False,
-                       "run_tests": True}
+                       "run_tests": True,
+                       "build_target": None}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
 
@@ -165,7 +167,7 @@ class OrbitConan(ConanFile):
                 cmake.definitions["WITH_CRASH_HANDLING"] = "OFF"
 
         cmake.configure()
-        cmake.build()
+        cmake.build(target=str(self.options.build_target) if self.options.build_target else None)
         if self.options.run_tests and not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":
             cmake.test(output_on_failure=True)
 
