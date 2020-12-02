@@ -8,6 +8,7 @@
 #include <absl/flags/usage_config.h>
 #include <absl/strings/str_format.h>
 
+#include <QAccessible>
 #include <QApplication>
 #include <QByteArray>
 #include <QColor>
@@ -46,6 +47,7 @@
 #include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "ImGuiOrbit.h"
+#include "GlAccessibility.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
@@ -166,6 +168,7 @@ static outcome::result<void> RunUiInstance(
   std::optional<std::error_code> error;
 
   GOrbitApp = OrbitApp::Create(std::move(options), CreateMainThreadExecutor());
+  QAccessible::installFactory(GlAccessibilityFactory);
 
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;

@@ -20,6 +20,7 @@ target_sources(
           ElidedLabel.h
           Error.h
           EventLoop.h
+          GlAccessibility.h
           orbitaboutdialog.h
           orbitcodeeditor.h
           orbitdataviewpanel.h
@@ -55,6 +56,7 @@ target_sources(
           MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
+          GlAccessibility.cpp
           main.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
