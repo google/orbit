@@ -27,6 +27,7 @@ target_sources(MetricsUploader PRIVATE MetricsUploaderLinux.cpp)
 endif()
 
 target_link_libraries(MetricsUploader PUBLIC OrbitBase
+                                             OrbitVersion
                                              CONAN_PKG::abseil)
 
 # generate protos for communication
