@@ -17,8 +17,7 @@ namespace orbit_producer {
 // to connect and communicate with a ProducerSideService.
 class CaptureEventProducer {
  public:
-  // Pure virtual destructor, but still with definition (in .cpp file), makes this class abstract.
-  virtual ~CaptureEventProducer() = 0;
+  virtual ~CaptureEventProducer() = default;
 
   [[nodiscard]] bool IsCapturing() { return is_capturing_; }
 
@@ -35,10 +34,10 @@ class CaptureEventProducer {
   // Subclasses that extend this method by overriding it must also call the overridden method.
   virtual void ShutdownAndWait();
 
-  // Subclasses can override this method to be notified of a request to start a capture.
-  virtual void OnCaptureStart();
-  // Subclasses can override this method to be notified of a request to stop the capture.
-  virtual void OnCaptureStop();
+  // Subclasses need to override this method to be notified of a request to start a capture.
+  virtual void OnCaptureStart() = 0;
+  // Subclasses need to override this method to be notified of a request to stop the capture.
+  virtual void OnCaptureStop() = 0;
 
   // Subclasses can use this method to send a batch of CaptureEvents to the ProducerSideService.
   // A full ReceiveCommandsAndSendEventsRequest with event_case() == kBufferedCaptureEvents

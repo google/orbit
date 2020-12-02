@@ -60,19 +60,13 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
 
  protected:
   void OnCaptureStart() override {
-    CaptureEventProducer::OnCaptureStart();
-    {
-      absl::MutexLock lock{&should_send_all_events_sent_mutex_};
-      should_send_all_events_sent_ = false;
-    }
+    absl::MutexLock lock{&should_send_all_events_sent_mutex_};
+    should_send_all_events_sent_ = false;
   }
 
   void OnCaptureStop() override {
-    CaptureEventProducer::OnCaptureStop();
-    {
-      absl::MutexLock lock{&should_send_all_events_sent_mutex_};
-      should_send_all_events_sent_ = true;
-    }
+    absl::MutexLock lock{&should_send_all_events_sent_mutex_};
+    should_send_all_events_sent_ = true;
   }
 
   // Subclasses need to implement this method to convert an IntermediateEventT enqueued
