@@ -60,13 +60,18 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
 
  protected:
   void OnCaptureStart() override {
-    absl::MutexLock lock{&should_send_all_events_sent_mutex_};
-    should_send_all_events_sent_ = false;
+    absl::MutexLock lock{&status_mutex_};
+    status_ = ProducerStatus::kShouldSendEvents;
   }
 
   void OnCaptureStop() override {
-    absl::MutexLock lock{&should_send_all_events_sent_mutex_};
-    should_send_all_events_sent_ = true;
+    absl::MutexLock lock{&status_mutex_};
+    status_ = ProducerStatus::kShouldNotifyAllEventsSent;
+  }
+
+  void OnCaptureFinished() override {
+    absl::MutexLock lock{&status_mutex_};
+    status_ = ProducerStatus::kShouldDropEvents;
   }
 
   // Subclasses need to implement this method to convert an IntermediateEventT enqueued
@@ -79,38 +84,52 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
     constexpr uint64_t kMaxEventsPerRequest = 10'000;
     std::vector<IntermediateEventT> dequeued_events(kMaxEventsPerRequest);
     while (!shutdown_requested_) {
-      size_t dequeued_event_count;
-      while ((dequeued_event_count = lock_free_queue_.try_dequeue_bulk(dequeued_events.begin(),
-                                                                       kMaxEventsPerRequest)) > 0) {
-        orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest send_request;
-        auto* capture_events =
-            send_request.mutable_buffered_capture_events()->mutable_capture_events();
-        for (size_t i = 0; i < dequeued_event_count; ++i) {
-          orbit_grpc_protos::CaptureEvent* event = capture_events->Add();
-          *event = TranslateIntermediateEvent(std::move(dequeued_events[i]));
+      while (true) {
+        size_t dequeued_event_count =
+            lock_free_queue_.try_dequeue_bulk(dequeued_events.begin(), kMaxEventsPerRequest);
+        bool queue_was_emptied = dequeued_event_count < kMaxEventsPerRequest;
+
+        ProducerStatus current_status;
+        {
+          absl::MutexLock lock{&status_mutex_};
+          current_status = status_;
+          if (status_ == ProducerStatus::kShouldNotifyAllEventsSent && queue_was_emptied) {
+            // We are about to send AllEventsSent: update status_ while we hold the mutex.
+            status_ = ProducerStatus::kShouldDropEvents;
+          }
         }
 
-        if (!SendCaptureEvents(send_request)) {
-          ERROR("Forwarding %lu CaptureEvents", dequeued_event_count);
-          break;
+        if ((current_status == ProducerStatus::kShouldSendEvents ||
+             current_status == ProducerStatus::kShouldNotifyAllEventsSent) &&
+            dequeued_event_count > 0) {
+          orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest send_request;
+          auto* capture_events =
+              send_request.mutable_buffered_capture_events()->mutable_capture_events();
+          for (size_t i = 0; i < dequeued_event_count; ++i) {
+            orbit_grpc_protos::CaptureEvent* event = capture_events->Add();
+            *event = TranslateIntermediateEvent(std::move(dequeued_events[i]));
+          }
+          if (!SendCaptureEvents(send_request)) {
+            ERROR("Forwarding %lu CaptureEvents", dequeued_event_count);
+            break;
+          }
         }
-        if (dequeued_event_count < kMaxEventsPerRequest) {
-          break;
-        }
-      }
 
-      // lock_free_queue_ is now empty: check if we need to send AllEventsSent.
-      {
-        should_send_all_events_sent_mutex_.Lock();
-        if (should_send_all_events_sent_) {
-          should_send_all_events_sent_ = false;
-          should_send_all_events_sent_mutex_.Unlock();
+        if (current_status == ProducerStatus::kShouldNotifyAllEventsSent && queue_was_emptied) {
+          // lock_free_queue_ is now empty and status_ == kShouldNotifyAllEventsSent,
+          // send AllEventsSent. status_ has already been changed to kShouldDropEvents.
           if (!NotifyAllEventsSent()) {
             ERROR("Notifying that all CaptureEvents have been sent");
           }
-          continue;
+          break;
         }
-        should_send_all_events_sent_mutex_.Unlock();
+
+        // Note that if current_status == ProducerStatus::kShouldDropEvents
+        // the events extracted from the lock_free_queue_ will just be dropped.
+
+        if (queue_was_emptied) {
+          break;
+        }
       }
 
       static constexpr std::chrono::duration kSleepOnEmptyQueue = std::chrono::microseconds{100};
@@ -125,8 +144,9 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   std::thread forwarder_thread_;
   std::atomic<bool> shutdown_requested_ = false;
 
-  bool should_send_all_events_sent_ = false;
-  absl::Mutex should_send_all_events_sent_mutex_;
+  enum class ProducerStatus { kShouldSendEvents, kShouldNotifyAllEventsSent, kShouldDropEvents };
+  ProducerStatus status_ = ProducerStatus::kShouldDropEvents;
+  absl::Mutex status_mutex_;
 };
 
 }  // namespace orbit_producer

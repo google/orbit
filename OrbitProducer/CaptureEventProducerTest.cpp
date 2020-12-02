@@ -36,6 +36,7 @@ class CaptureEventProducerImpl : public CaptureEventProducer {
 
   MOCK_METHOD(void, OnCaptureStart, (), (override));
   MOCK_METHOD(void, OnCaptureStop, (), (override));
+  MOCK_METHOD(void, OnCaptureFinished, (), (override));
 };
 
 class CaptureEventProducerTest : public ::testing::Test {
@@ -99,6 +100,13 @@ TEST_F(CaptureEventProducerTest, OnCaptureStartStopAndIsCapturing) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*producer_);
 
+  EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  fake_service_->SendCaptureFinishedCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_FALSE(producer_->IsCapturing());
+
+  ::testing::Mock::VerifyAndClearExpectations(&*producer_);
+
   EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
   fake_service_->SendStartCaptureCommand();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
@@ -108,6 +116,11 @@ TEST_F(CaptureEventProducerTest, OnCaptureStartStopAndIsCapturing) {
 
   EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
   fake_service_->SendStopCaptureCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_FALSE(producer_->IsCapturing());
+
+  EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  fake_service_->SendCaptureFinishedCommand();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_FALSE(producer_->IsCapturing());
 }
@@ -126,7 +139,7 @@ TEST_F(CaptureEventProducerTest, SendCaptureEventsAndAllEventsSent) {
   EXPECT_TRUE(producer_->NotifyAllEventsSent());
 }
 
-TEST_F(CaptureEventProducerTest, UnexpectedStartStopCaptureCommands) {
+TEST_F(CaptureEventProducerTest, DuplicatedCommands) {
   EXPECT_FALSE(producer_->IsCapturing());
 
   EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
@@ -156,9 +169,59 @@ TEST_F(CaptureEventProducerTest, UnexpectedStartStopCaptureCommands) {
   fake_service_->SendStopCaptureCommand();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_FALSE(producer_->IsCapturing());
+
+  ::testing::Mock::VerifyAndClearExpectations(&*producer_);
+
+  EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  fake_service_->SendCaptureFinishedCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_FALSE(producer_->IsCapturing());
+
+  ::testing::Mock::VerifyAndClearExpectations(&*producer_);
+
+  EXPECT_CALL(*producer_, OnCaptureFinished).Times(0);
+  // This should have no effect.
+  fake_service_->SendCaptureFinishedCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_FALSE(producer_->IsCapturing());
 }
 
-TEST_F(CaptureEventProducerTest, ServiceDisconnectCausesOnCaptureStop) {
+TEST_F(CaptureEventProducerTest, SkippedCommands) {
+  EXPECT_FALSE(producer_->IsCapturing());
+
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+  }
+  fake_service_->SendStopCaptureCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_FALSE(producer_->IsCapturing());
+
+  ::testing::Mock::VerifyAndClearExpectations(&*producer_);
+
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
+  }
+  fake_service_->SendStartCaptureCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_TRUE(producer_->IsCapturing());
+
+  ::testing::Mock::VerifyAndClearExpectations(&*producer_);
+
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  }
+  fake_service_->SendCaptureFinishedCommand();
+  std::this_thread::sleep_for(kWaitMessagesSentDuration);
+  EXPECT_FALSE(producer_->IsCapturing());
+}
+
+TEST_F(CaptureEventProducerTest, ServiceDisconnectCausesOnCaptureStopAndFinished) {
   EXPECT_FALSE(producer_->IsCapturing());
 
   EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
@@ -168,7 +231,11 @@ TEST_F(CaptureEventProducerTest, ServiceDisconnectCausesOnCaptureStop) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*producer_);
 
-  EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  }
   // Disconnect.
   fake_service_->FinishAndDisallowRpc();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
@@ -199,7 +266,11 @@ TEST_F(CaptureEventProducerTest, SendingMessagesFailsWhenDisconnected) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  }
   // Disconnect.
   fake_service_->FinishAndDisallowRpc();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
@@ -242,7 +313,11 @@ TEST_F(CaptureEventProducerTest, DisconnectAndReconnect) {
   static constexpr uint64_t kReconnectionDelayMs = 50;
   producer_->SetReconnectionDelayMs(kReconnectionDelayMs);
 
-  EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  }
   // Disconnect.
   fake_service_->FinishAndDisallowRpc();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
@@ -282,7 +357,11 @@ TEST_F(CaptureEventProducerTest, DisconnectAndReconnect) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+  {
+    ::testing::InSequence in_sequence;
+    EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
+  }
   fake_service_->SendStopCaptureCommand();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_FALSE(producer_->IsCapturing());
