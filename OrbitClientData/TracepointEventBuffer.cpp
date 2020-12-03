@@ -70,7 +70,7 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
     for (const auto& entry : tracepoint_events_) {
       ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
     }
-  } else if (thread_id == -1 /*TODO(b/166238019) Use a proper constant again*/) {
+  } else if (thread_id == -1 /*TODO(b/166238019) Use a proper constant for "all fake thread id"*/) {
     for (const auto& entry : tracepoint_events_) {
       if (entry.first != kNotTargetProcessThreadId) {
         ForEachTracepointEventInEventMapInTimeRange(min_tick, max_tick, entry.second, action);
@@ -83,19 +83,17 @@ void TracepointEventBuffer::ForEachTracepointEventOfThreadInTimeRange(
 }
 
 uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) const {
-  {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (thread_id == TracepointEventBuffer::kAllTracepointsFakeTid) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (thread_id == TracepointEventBuffer::kAllTracepointsFakeTid) {
+    return num_total_tracepoints_;
+  }
+  if (thread_id == -1 /*TODO(b/166238019) Use a proper constant for "all fake thread id"*/) {
+    const auto not_target_process_tracepoints_it =
+        tracepoint_events_.find(kNotTargetProcessThreadId);
+    if (not_target_process_tracepoints_it == tracepoint_events_.end()) {
       return num_total_tracepoints_;
     }
-    if (thread_id == -1 /*TODO(b/166238019) Use a proper constant again*/) {
-      auto const not_target_process_tracepoints_it =
-          tracepoint_events_.find(kNotTargetProcessThreadId);
-      if (not_target_process_tracepoints_it != tracepoint_events_.end()) {
-        return num_total_tracepoints_ - not_target_process_tracepoints_it->second.size();
-      }
-      return num_total_tracepoints_;
-    }
+    return num_total_tracepoints_ - not_target_process_tracepoints_it->second.size();
   }
 
   return GetTracepointsOfThread(thread_id).size();
