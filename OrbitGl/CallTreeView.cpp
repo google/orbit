@@ -99,7 +99,7 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
   CallTreeThread* thread_node = current_node->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
     std::string thread_name;
-    if (tid == SamplingProfiler::kAllThreadsFakeTid) {
+    if (tid == PostProcessedSamplingData::kAllThreadsFakeTid) {
       thread_name = process_name;
     } else if (auto thread_name_it = thread_names.find(tid); thread_name_it != thread_names.end()) {
       thread_name = thread_name_it->second;
@@ -110,22 +110,24 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
 }
 
 std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfiler(
-    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
+    const PostProcessedSamplingData& post_processed_sampling_data,
+    const CaptureData& capture_data) {
   auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
 
-  for (const ThreadSampleData& thread_sample_data : sampling_profiler.GetThreadSampleData()) {
+  for (const ThreadSampleData& thread_sample_data :
+       post_processed_sampling_data.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data.thread_id;
     CallTreeThread* thread_node =
         GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
 
     for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
       const CallStack& resolved_callstack =
-          sampling_profiler.GetResolvedCallstack(callstack_id_and_count.first);
+          post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
       // Don't count samples from the all-thread case again.
-      if (tid != SamplingProfiler::kAllThreadsFakeTid) {
+      if (tid != PostProcessedSamplingData::kAllThreadsFakeTid) {
         top_down_view->IncreaseSampleCount(sample_count);
       }
       thread_node->IncreaseSampleCount(sample_count);
@@ -152,20 +154,22 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
 }
 
 std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfiler(
-    const SamplingProfiler& sampling_profiler, const CaptureData& capture_data) {
+    const PostProcessedSamplingData& post_processed_sampling_data,
+    const CaptureData& capture_data) {
   auto bottom_up_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
 
-  for (const ThreadSampleData& thread_sample_data : sampling_profiler.GetThreadSampleData()) {
+  for (const ThreadSampleData& thread_sample_data :
+       post_processed_sampling_data.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data.thread_id;
-    if (tid == SamplingProfiler::kAllThreadsFakeTid) {
+    if (tid == PostProcessedSamplingData::kAllThreadsFakeTid) {
       continue;
     }
 
     for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
       const CallStack& resolved_callstack =
-          sampling_profiler.GetResolvedCallstack(callstack_id_and_count.first);
+          post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
       bottom_up_view->IncreaseSampleCount(sample_count);
 

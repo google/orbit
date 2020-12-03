@@ -11,12 +11,12 @@
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleManager.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/TracepointEventBuffer.h"
 #include "OrbitClientData/TracepointInfoManager.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
-#include "OrbitClientModel/SamplingProfiler.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
@@ -192,10 +192,13 @@ class CaptureData {
 
   [[nodiscard]] const ProcessData* process() const { return &process_; }
 
-  [[nodiscard]] const SamplingProfiler& sampling_profiler() const { return sampling_profiler_; }
+  [[nodiscard]] const PostProcessedSamplingData& post_processed_sampling_data() const {
+    CHECK(post_processed_sampling_data_.has_value());
+    return post_processed_sampling_data_.value();
+  }
 
-  void set_sampling_profiler(SamplingProfiler sampling_profiler) {
-    sampling_profiler_ = std::move(sampling_profiler);
+  void set_post_processed_sampling_data(PostProcessedSamplingData post_processed_sampling_data) {
+    post_processed_sampling_data_ = std::move(post_processed_sampling_data);
   }
 
   void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
@@ -221,7 +224,7 @@ class CaptureData {
   std::unique_ptr<TracepointInfoManager> tracepoint_info_manager_;
   std::unique_ptr<TracepointEventBuffer> tracepoint_event_buffer_;
 
-  SamplingProfiler sampling_profiler_;
+  std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 

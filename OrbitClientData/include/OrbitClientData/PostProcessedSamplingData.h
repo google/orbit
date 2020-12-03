@@ -2,25 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_MODEL_SAMPLING_PROFILER_H_
-#define ORBIT_CLIENT_MODEL_SAMPLING_PROFILER_H_
+#ifndef ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
+#define ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
 
-#include <cstdint>
-#include <cstring>
 #include <map>
-#include <memory>
-#include <set>
-#include <vector>
+#include <string>
 
 #include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
-
-// TODO(kuebler): Remove forward declaration as soon as SamplingProfiler is stateless.
-class CaptureData;
 
 struct SampledFunction {
   SampledFunction() = default;
@@ -61,18 +53,29 @@ struct SortedCallstackReport {
   std::vector<CallstackCount> callstacks_count;
 };
 
-class SamplingProfiler {
+class PostProcessedSamplingData {
  public:
-  explicit SamplingProfiler() = default;
-  explicit SamplingProfiler(const CallstackData& callstack_data, const CaptureData& capture_data,
-                            bool generate_summary = true) {
-    ProcessSamples(callstack_data, capture_data, generate_summary);
-  }
-  SamplingProfiler& operator=(const SamplingProfiler& other) = default;
-  SamplingProfiler(const SamplingProfiler& other) = default;
+  PostProcessedSamplingData() = default;
+  PostProcessedSamplingData(
+      absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data,
+      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks,
+      absl::flat_hash_map<CallstackID, CallstackID> original_to_resolved_callstack,
+      absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack,
+      absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
+          function_address_to_exact_addresses,
+      std::vector<ThreadSampleData> sorted_thread_sample_data)
+      : thread_id_to_sample_data_{std::move(thread_id_to_sample_data)},
+        unique_resolved_callstacks_{std::move(unique_resolved_callstacks)},
+        original_to_resolved_callstack_{std::move(original_to_resolved_callstack)},
+        function_address_to_callstack_{std::move(function_address_to_callstack)},
+        function_address_to_exact_addresses_{std::move(function_address_to_exact_addresses)},
+        sorted_thread_sample_data_{std::move(sorted_thread_sample_data)} {};
+  ~PostProcessedSamplingData() = default;
+  PostProcessedSamplingData(const PostProcessedSamplingData& other) = default;
+  PostProcessedSamplingData(PostProcessedSamplingData&& other) = default;
+  PostProcessedSamplingData& operator=(const PostProcessedSamplingData& other) = default;
 
-  SamplingProfiler(SamplingProfiler&& other) = default;
-  SamplingProfiler& operator=(SamplingProfiler&& other) = default;
+  PostProcessedSamplingData& operator=(PostProcessedSamplingData&& other) = default;
 
   [[nodiscard]] const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
@@ -95,24 +98,16 @@ class SamplingProfiler {
 
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
+
   static const int32_t kAllThreadsFakeTid;
 
  private:
-  void ProcessSamples(const CallstackData& callstack_data, const CaptureData& capture_data,
-                      bool generate_summary);
-  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
-  void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
-  void FillThreadSampleDataSampleReports(const CaptureData& capture_data);
-  void SortByThreadUsage();
-
-  // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks_;
   absl::flat_hash_map<CallstackID, CallstackID> original_to_resolved_callstack_;
   absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack_;
-  absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
-#endif  // ORBIT_CLIENT_MODEL_SAMPLING_PROFILER_H_
+#endif  // ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_

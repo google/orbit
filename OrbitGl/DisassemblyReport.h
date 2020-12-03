@@ -9,15 +9,15 @@
 
 #include "CodeReport.h"
 #include "Disassembler.h"
-#include "OrbitClientModel/SamplingProfiler.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 
 class DisassemblyReport : public CodeReport {
  public:
-  DisassemblyReport(Disassembler disasm, uint64_t function_address, SamplingProfiler profiler,
-                    uint32_t samples_count)
+  DisassemblyReport(Disassembler disasm, uint64_t function_address,
+                    PostProcessedSamplingData post_processed_sampling_data, uint32_t samples_count)
       : disasm_{std::move(disasm)},
-        profiler_{std::move(profiler)},
-        function_count_{profiler_.GetCountOfFunction(function_address)},
+        post_processed_sampling_data_{std::move(post_processed_sampling_data)},
+        function_count_{post_processed_sampling_data_->GetCountOfFunction(function_address)},
         samples_count_(samples_count) {}
 
   explicit DisassemblyReport(Disassembler disasm)
@@ -29,7 +29,7 @@ class DisassemblyReport : public CodeReport {
 
  private:
   const Disassembler disasm_;
-  const SamplingProfiler profiler_;
+  const std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
   const uint32_t function_count_;
   const uint32_t samples_count_;
 };

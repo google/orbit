@@ -10,6 +10,7 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 
@@ -87,7 +88,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
 }
 
 bool ThreadTrack::IsTrackSelected() const {
-  return thread_id_ != SamplingProfiler::kAllThreadsFakeTid &&
+  return thread_id_ != PostProcessedSamplingData::kAllThreadsFakeTid &&
          GOrbitApp->selected_thread_id() == thread_id_;
 }
 

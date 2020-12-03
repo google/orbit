@@ -8,10 +8,10 @@
 #include "absl/strings/str_format.h"
 
 SamplingReport::SamplingReport(
-    SamplingProfiler sampling_profiler,
+    PostProcessedSamplingData post_processed_sampling_data,
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
     bool has_summary)
-    : profiler_{std::move(sampling_profiler)},
+    : post_processed_sampling_data_{std::move(post_processed_sampling_data)},
       unique_callstacks_{std::move(unique_callstacks)},
       has_summary_{has_summary} {
   selected_address_ = 0;
@@ -31,7 +31,7 @@ void SamplingReport::ClearReport() {
 }
 
 void SamplingReport::FillReport() {
-  const auto& sample_data = profiler_.GetThreadSampleData();
+  const auto& sample_data = post_processed_sampling_data_.GetThreadSampleData();
 
   for (const ThreadSampleData& thread_sample_data : sample_data) {
     SamplingReportDataView thread_report;
@@ -44,7 +44,8 @@ void SamplingReport::FillReport() {
 
 void SamplingReport::UpdateDisplayedCallstack() {
   selected_sorted_callstack_report_ =
-      profiler_.GetSortedCallstackReportFromAddress(selected_address_, selected_thread_id_);
+      post_processed_sampling_data_.GetSortedCallstackReportFromAddress(selected_address_,
+                                                                        selected_thread_id_);
   if (selected_sorted_callstack_report_->callstacks_count.empty()) {
     ClearReport();
   } else {
@@ -53,14 +54,15 @@ void SamplingReport::UpdateDisplayedCallstack() {
 }
 
 void SamplingReport::UpdateReport(
-    SamplingProfiler profiler,
+    PostProcessedSamplingData post_processed_sampling_data,
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
   unique_callstacks_ = std::move(unique_callstacks);
-  profiler_ = std::move(profiler);
+  post_processed_sampling_data_ = std::move(post_processed_sampling_data);
 
   for (SamplingReportDataView& thread_report : thread_reports_) {
     ThreadID thread_id = thread_report.GetThreadID();
-    const ThreadSampleData* thread_sample_data = profiler_.GetThreadSampleDataByThreadId(thread_id);
+    const ThreadSampleData* thread_sample_data =
+        post_processed_sampling_data_.GetThreadSampleDataByThreadId(thread_id);
     if (thread_sample_data != nullptr) {
       thread_report.SetSampledFunctions(thread_sample_data->sampled_function);
     }

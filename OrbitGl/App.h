@@ -39,6 +39,7 @@
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientServices/CrashManager.h"
@@ -143,21 +144,21 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void StopIntrospection();
 
   void SetSamplingReport(
-      SamplingProfiler sampling_profiler,
+      PostProcessedSamplingData post_processed_sampling_data,
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
   void SetSelectionReport(
-      SamplingProfiler sampling_profiler,
+      PostProcessedSamplingData post_processed_sampling_data,
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
       bool has_summary);
   void SetTopDownView(const CaptureData& capture_data);
   void ClearTopDownView();
-  void SetSelectionTopDownView(const SamplingProfiler& selection_sampling_profiler,
+  void SetSelectionTopDownView(const PostProcessedSamplingData& selection_post_processed_data,
                                const CaptureData& capture_data);
   void ClearSelectionTopDownView();
 
   void SetBottomUpView(const CaptureData& capture_data);
   void ClearBottomUpView();
-  void SetSelectionBottomUpView(const SamplingProfiler& selection_sampling_profiler,
+  void SetSelectionBottomUpView(const PostProcessedSamplingData& selection_post_processed_data,
                                 const CaptureData& capture_data);
   void ClearSelectionBottomUpView();
 
