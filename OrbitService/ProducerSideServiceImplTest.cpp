@@ -292,9 +292,9 @@ TEST_F(ProducerSideServiceImplTest, NoAllEventsSent) {
     EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(1);
   }
   static constexpr uint64_t kMaxWaitForAllCaptureEventsMs = 50;
-  service_->SetMaxWaitForAllCaptureEvents(absl::Milliseconds(kMaxWaitForAllCaptureEventsMs));
+  service_->SetMaxWaitForAllCaptureEventsMs(kMaxWaitForAllCaptureEventsMs);
   // As the AllEventsSent is not sent by the producer, OnCaptureStopRequested
-  // this should take the time specified with SetMaxWaitForAllCaptureEvents.
+  // this should take the time specified with SetMaxWaitForAllCaptureEventsMs.
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); },
                           kMaxWaitForAllCaptureEventsMs, 2 * kMaxWaitForAllCaptureEventsMs);
 }
