@@ -45,7 +45,8 @@ unsigned GlCanvas::kMaxNumberRealZLayers = 16 + 4 + 4 + 4;
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas(uint32_t font_size) : ui_batcher_(BatcherId::kUi, &picking_manager_) {
+GlCanvas::GlCanvas(uint32_t font_size)
+    : ui_batcher_(BatcherId::kUi, &picking_manager_), test_aif_(this) {
   text_renderer_.SetCanvas(this);
 
   screen_width_ = 0;

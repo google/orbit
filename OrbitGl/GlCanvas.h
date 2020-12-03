@@ -7,12 +7,35 @@
 
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
+#include "OrbitGlAccessibility.h"
 #include "PickingManager.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "Timer.h"
 
-class GlCanvas {
+class TestA11yImpl : public orbit_gl::GlA11yControlInterface {
+ public:
+  TestA11yImpl(orbit_gl::GlA11yControlInterface* parent) : parent_(parent) {}
+  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
+  [[nodiscard]] orbit_gl::GlA11yControlInterface* AccessibleChild(int index) const override {
+    return nullptr;
+  }
+  [[nodiscard]] orbit_gl::GlA11yControlInterface* AccessibleChildAt(int x, int y) const override {
+    return nullptr;
+  }
+
+  [[nodiscard]] orbit_gl::GlA11yControlInterface* AccessibleParent() const { return parent_; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const { return orbit_gl::A11yRole::Grouping; }
+
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const { return orbit_gl::A11yRect(); }
+
+  [[nodiscard]] std::string AccessibleName() const { return "TestChild"; }
+
+ private:
+  orbit_gl::GlA11yControlInterface* parent_ = nullptr;
+};
+
+class GlCanvas : public orbit_gl::GlA11yWidgetBridge {
  public:
   explicit GlCanvas(uint32_t font_size);
   virtual ~GlCanvas();
@@ -116,6 +139,17 @@ class GlCanvas {
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
 
+  // Accessibility
+  [[nodiscard]] virtual int AccessibleChildCount() const override { return 1; }
+  [[nodiscard]] virtual const orbit_gl::GlA11yControlInterface* AccessibleChild(
+      int) const override {
+    return &test_aif_;
+  }
+  [[nodiscard]] virtual const orbit_gl::GlA11yControlInterface* AccessibleChildAt(
+      int, int) const override {
+    return nullptr;
+  }
+
   static float kZValueSlider;
   static float kZValueSliderBg;
   static float kZValueMargin;
@@ -143,6 +177,8 @@ class GlCanvas {
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
+
+  TestA11yImpl test_aif_;
 
   int screen_width_;
   int screen_height_;
