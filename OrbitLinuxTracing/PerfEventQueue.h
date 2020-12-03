@@ -31,30 +31,26 @@ namespace LinuxTracing {
 //  priority.
 class PerfEventQueue {
  public:
-  void PushEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
+  void PushEvent(std::unique_ptr<PerfEvent> event);
   bool HasEvent();
   PerfEvent* TopEvent();
   std::unique_ptr<PerfEvent> PopEvent();
 
  private:
-  // Comparator for the priority queue: pop will return the queue associated
-  // with the file descriptor from which the oldest event still to process
-  // originated.
+  // Comparator for the priority queue: pop will return the queue associated with
+  // the file descriptor from which the oldest event still to process originated.
   struct QueueFrontTimestampReverseCompare {
-    bool operator()(
-        const std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>& lhs,
-        const std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>& rhs) {
-      return lhs.second->front()->GetTimestamp() > rhs.second->front()->GetTimestamp();
+    bool operator()(std::queue<std::unique_ptr<PerfEvent>>* lhs,
+                    std::queue<std::unique_ptr<PerfEvent>>* rhs) {
+      return lhs->front()->GetTimestamp() > rhs->front()->GetTimestamp();
     }
   };
 
-  std::priority_queue<
-      std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>,
-      std::vector<std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>>,
-      QueueFrontTimestampReverseCompare>
-      event_queues_queue_{};
-  absl::flat_hash_map<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
-      fd_event_queues_{};
+  std::priority_queue<std::queue<std::unique_ptr<PerfEvent>>*,
+                      std::vector<std::queue<std::unique_ptr<PerfEvent>>*>,
+                      QueueFrontTimestampReverseCompare>
+      queues_heap_{};
+  absl::flat_hash_map<int, std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>> queues_{};
 };
 
 }  // namespace LinuxTracing

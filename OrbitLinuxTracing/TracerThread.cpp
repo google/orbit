@@ -1029,8 +1029,7 @@ void TracerThread::ProcessDeferredEvents() {
       {
         ORBIT_SCOPE("AddEvents");
         for (auto& event : events) {
-          int fd = event->GetOriginFileDescriptor();
-          event_processor_.AddEvent(fd, std::move(event));
+          event_processor_.AddEvent(std::move(event));
         }
       }
       {

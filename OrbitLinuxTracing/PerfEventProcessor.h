@@ -22,7 +22,7 @@ namespace LinuxTracing {
 // of order.
 class PerfEventProcessor {
  public:
-  void AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
+  void AddEvent(std::unique_ptr<PerfEvent> event);
 
   void ProcessAllEvents();
 

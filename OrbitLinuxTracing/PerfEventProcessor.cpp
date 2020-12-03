@@ -13,14 +13,14 @@
 
 namespace LinuxTracing {
 
-void PerfEventProcessor::AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event) {
+void PerfEventProcessor::AddEvent(std::unique_ptr<PerfEvent> event) {
   if (last_processed_timestamp_ns_ > 0 && event->GetTimestamp() < last_processed_timestamp_ns_) {
     if (discarded_out_of_order_counter_ != nullptr) {
       ++(*discarded_out_of_order_counter_);
     }
     return;
   }
-  event_queue_.PushEvent(origin_fd, std::move(event));
+  event_queue_.PushEvent(std::move(event));
 }
 
 void PerfEventProcessor::ProcessAllEvents() {
