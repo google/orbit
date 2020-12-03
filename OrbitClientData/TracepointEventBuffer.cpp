@@ -89,7 +89,12 @@ uint32_t TracepointEventBuffer::GetNumTracepointsForThreadId(int32_t thread_id) 
       return num_total_tracepoints_;
     }
     if (thread_id == -1 /*TODO(b/166238019) Use a proper constant again*/) {
-      return num_total_tracepoints_ - tracepoint_events_.at(kNotTargetProcessThreadId).size();
+      auto const not_target_process_tracepoints_it =
+          tracepoint_events_.find(kNotTargetProcessThreadId);
+      if (not_target_process_tracepoints_it != tracepoint_events_.end()) {
+        return num_total_tracepoints_ - not_target_process_tracepoints_it->second.size();
+      }
+      return num_total_tracepoints_;
     }
   }
 
