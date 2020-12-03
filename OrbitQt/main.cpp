@@ -42,12 +42,12 @@
 #include <unistd.h>
 #endif
 
+#include "AccessibilityAdapter.h"
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "ImGuiOrbit.h"
-#include "GlAccessibility.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
@@ -168,7 +168,7 @@ static outcome::result<void> RunUiInstance(
   std::optional<std::error_code> error;
 
   GOrbitApp = OrbitApp::Create(std::move(options), CreateMainThreadExecutor());
-  QAccessible::installFactory(GlAccessibilityFactory);
+  QAccessible::installFactory(orbit_qt::GlAccessibilityFactory);
 
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;

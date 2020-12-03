@@ -10,7 +10,8 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE CallTreeViewItemModel.h
+  PRIVATE AccessibilityAdapter.h
+          CallTreeViewItemModel.h
           CallTreeWidget.h
           Connections.h
           ConnectToStadiaWidget.h
@@ -20,7 +21,6 @@ target_sources(
           ElidedLabel.h
           Error.h
           EventLoop.h
-          GlAccessibility.h
           orbitaboutdialog.h
           orbitcodeeditor.h
           orbitdataviewpanel.h
@@ -46,7 +46,8 @@ target_sources(
 
 target_sources(
   OrbitQt
-  PRIVATE CallTreeViewItemModel.cpp
+  PRIVATE AccessibilityAdapter.cpp
+          CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
           ConnectToStadiaWidget.cpp
@@ -56,7 +57,6 @@ target_sources(
           MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
-          GlAccessibility.cpp
           main.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
@@ -155,9 +155,9 @@ target_sources(OrbitQtTests
                 EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE AccessibilityTests.cpp
+        PRIVATE AccessibilityAdapter.cpp
+                AccessibilityTests.cpp
                 EventLoopTest.cpp
-                GlAccessibility.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 RingBufferTest.cpp

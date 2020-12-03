@@ -6,23 +6,28 @@
 
 #include <list>
 
-#include "GlAccessibility.h"
+#include "AccessibilityAdapter.h"
 
-namespace orbit_qt {
+namespace orbit_qt_tests {
 
-class TestA11yImpl : public orbit_gl::GlA11yInterface {
+using orbit_gl::GlA11yControlInterface, orbit_gl::A11yRole, orbit_gl::A11yRect;
+using orbit_qt::A11yAdapter;
+
+class TestA11yImpl : public GlA11yControlInterface {
  public:
   TestA11yImpl(TestA11yImpl* parent) : parent_(parent) {}
-  int AccessibleChildCount() const override { return children_.size(); }
-  TestA11yImpl* AccessibleChild(int index) const override { return children_[index].get(); }
-  TestA11yImpl* AccessibleChildAt(int x, int y) const override {
+  [[nodiscard]] int AccessibleChildCount() const override { return children_.size(); }
+  [[nodiscard]] GlA11yControlInterface* AccessibleChild(int index) const override {
+    return children_[index].get();
+  }
+  [[nodiscard]] GlA11yControlInterface* AccessibleChildAt(int x, int y) const override {
     return y >= 0 && y < children_.size() ? children_[y].get() : nullptr;
   }
 
-  TestA11yImpl* AccessibleParent() const { return parent_; }
-  orbit_gl::A11yRole AccessibleRole() const { return orbit_gl::A11yRole::Grouping; }
+  [[nodiscard]] GlA11yControlInterface* AccessibleParent() const { return parent_; }
+  [[nodiscard]] A11yRole AccessibleRole() const { return A11yRole::Grouping; }
 
-  orbit_gl::A11yRect AccessibleLocalRect() const {
+  [[nodiscard]] A11yRect AccessibleLocalRect() const {
     orbit_gl::A11yRect result;
 
     int parent_idx = -1;
@@ -40,9 +45,9 @@ class TestA11yImpl : public orbit_gl::GlA11yInterface {
     return result;
   }
 
-  std::string AccessibleName() const { return "Test"; }
+  [[nodiscard]] std::string AccessibleName() const { return "Test"; }
 
-  std::vector<std::unique_ptr<TestA11yImpl>>& Children() { return children_; }
+  [[nodiscard]] std::vector<std::unique_ptr<TestA11yImpl>>& Children() { return children_; }
 
  private:
   std::vector<std::unique_ptr<TestA11yImpl>> children_;
@@ -89,4 +94,4 @@ TEST(Accessibility, Hierarchy) {
   EXPECT_EQ(root_adapter->indexOfChild(root_adapter->child(1)), 1);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_qt_tests

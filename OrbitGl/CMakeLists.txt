@@ -18,7 +18,6 @@ target_sources(
          CallStackDataView.h
          CallTreeView.h
          CaptureWindow.h
-         CaptureWindowAccessibility.h
          CodeReport.h
          CoreMath.h
          DataView.h
@@ -44,6 +43,7 @@ target_sources(
          ManualInstrumentationManager.h
          ModulesDataView.h
          OpenGl.h
+         OrbitGlAccessibility.h
          PickingManager.h
          PresetLoadState.h
          PresetsDataView.h
@@ -75,7 +75,6 @@ target_sources(
           CallStackDataView.cpp
           CallTreeView.cpp
           CaptureWindow.cpp
-          CaptureWindowAccessibility.cpp
           DataManager.cpp
           DataView.cpp
           Disassembler.cpp
