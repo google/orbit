@@ -4,14 +4,26 @@
 
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
+#include <absl/strings/numbers.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <sys/resource.h>
 
+#include <array>
+#include <ctime>
+#include <filesystem>
 #include <fstream>
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <system_error>
 #include <thread>
-
-#include "absl/strings/numbers.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_split.h"
+#include <vector>
 
 namespace LinuxTracing {
 

@@ -5,8 +5,17 @@
 #ifndef ORBIT_LINUX_TRACING_PERF_EVENT_H_
 #define ORBIT_LINUX_TRACING_PERF_EVENT_H_
 
+#include <asm/perf_regs.h>
+#include <linux/perf_event.h>
+#include <string.h>
+#include <sys/types.h>
+
 #include <array>
+#include <cstdint>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "Function.h"
 #include "KernelTracepoints.h"

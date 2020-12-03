@@ -5,8 +5,12 @@
 #ifndef ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_
 #define ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_
 
-#include <ctime>
+#include <stdint.h>
+
+#include <algorithm>
+#include <atomic>
 #include <memory>
+#include <vector>
 
 #include "PerfEvent.h"
 #include "PerfEventQueue.h"

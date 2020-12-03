@@ -7,6 +7,7 @@
 #include <OrbitBase/Logging.h>
 
 #include <memory>
+#include <utility>
 
 #include "LinuxTracingUtils.h"
 #include "PerfEvent.h"

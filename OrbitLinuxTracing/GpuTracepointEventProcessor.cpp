@@ -4,9 +4,16 @@
 
 #include "GpuTracepointEventProcessor.h"
 
+#include <absl/container/flat_hash_map.h>
+
+#include <algorithm>
+#include <ctime>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
+
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 

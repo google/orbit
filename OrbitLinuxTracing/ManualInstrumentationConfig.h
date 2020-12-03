@@ -5,9 +5,9 @@
 #ifndef ORBIT_LINUX_TRACING_MANUAL_INSTRUMENTATION_CONFIG_H_
 #define ORBIT_LINUX_TRACING_MANUAL_INSTRUMENTATION_CONFIG_H_
 
-#include <cstdint>
+#include <absl/container/flat_hash_set.h>
 
-#include "absl/container/flat_hash_set.h"
+#include <cstdint>
 
 class ManualInstrumentationConfig {
  public:

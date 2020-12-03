@@ -7,14 +7,18 @@
 
 #include <Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <linux/perf_event.h>
+#include <sys/types.h>
 #include <tracepoint.pb.h>
 
 #include <atomic>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <regex>
 #include <vector>
 
 #include "ContextSwitchManager.h"
@@ -23,12 +27,9 @@
 #include "ManualInstrumentationConfig.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
-#include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
 #include "ThreadStateVisitor.h"
 #include "UprobesUnwindingVisitor.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "capture.pb.h"
 
 namespace LinuxTracing {

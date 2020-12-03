@@ -6,14 +6,11 @@
 #define ORBIT_LINUX_TRACING_TRACER_H_
 
 #include <OrbitLinuxTracing/TracerListener.h>
-#include <unistd.h>
 
 #include <atomic>
-#include <functional>
 #include <memory>
-#include <optional>
 #include <thread>
-#include <vector>
+#include <utility>
 
 #include "capture.pb.h"
 

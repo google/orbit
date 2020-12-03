@@ -8,17 +8,13 @@
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
 #include <asm/perf_regs.h>
-#include <asm/unistd.h>
 #include <linux/perf_event.h>
-#include <linux/version.h>
 #include <sys/ioctl.h>
-#include <sys/mman.h>
+#include <syscall.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cstdint>
-#include <cstring>
-#include <ctime>
 
 inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu, int group_fd,
                            unsigned long flags) {

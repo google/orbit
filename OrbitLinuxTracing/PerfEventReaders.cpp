@@ -4,7 +4,7 @@
 
 #include "PerfEventReaders.h"
 
-#include <OrbitBase/Logging.h>
+#include <vector>
 
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"

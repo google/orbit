@@ -6,11 +6,11 @@
 #define ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_
 
 #include <OrbitBase/Logging.h>
+#include <absl/container/flat_hash_map.h>
 
 #include <stack>
 
 #include "PerfEventRecords.h"
-#include "absl/container/flat_hash_map.h"
 #include "capture.pb.h"
 
 namespace LinuxTracing {

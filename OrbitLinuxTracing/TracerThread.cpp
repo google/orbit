@@ -6,10 +6,28 @@
 
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/Tracing.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
+#include <absl/strings/str_format.h>
+#include <pthread.h>
+#include <stddef.h>
+#include <unistd.h>
 
+#include <algorithm>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <type_traits>
+#include <utility>
 
-#include "absl/strings/str_format.h"
+#include "Function.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitLinuxTracing/TracerListener.h"
+#include "PerfEventOpen.h"
+#include "PerfEventReaders.h"
+#include "PerfEventRecords.h"
+#include "tracepoint.pb.h"
 
 namespace LinuxTracing {
 

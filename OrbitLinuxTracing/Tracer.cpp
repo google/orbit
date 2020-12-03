@@ -2,10 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/Logging.h>
 #include <OrbitLinuxTracing/Tracer.h>
+#include <pthread.h>
 
+#include <atomic>
+#include <memory>
+
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "TracerThread.h"
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 

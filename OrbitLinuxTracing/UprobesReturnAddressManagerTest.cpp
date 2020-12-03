@@ -2,8 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <unwindstack/Maps.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <ctime>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "LibunwindstackUnwinder.h"
 #include "UprobesReturnAddressManager.h"
