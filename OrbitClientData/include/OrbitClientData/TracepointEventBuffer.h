@@ -6,6 +6,7 @@
 #define ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
 
 #include <atomic>
+#include <functional>
 #include <limits>
 #include <map>
 #include <thread>
