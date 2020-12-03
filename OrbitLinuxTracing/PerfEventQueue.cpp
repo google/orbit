@@ -8,42 +8,47 @@
 
 namespace LinuxTracing {
 
-void PerfEventQueue::PushEvent(int origin_fd, std::unique_ptr<PerfEvent> event) {
-  if (fd_event_queues_.count(origin_fd) > 0) {
-    std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>> event_queue =
-        fd_event_queues_.at(origin_fd);
-    CHECK(!event_queue->empty());
-    // Fundamental assumption: events from the same file descriptor come already
-    // in order.
-    CHECK(event->GetTimestamp() >= event_queue->front()->GetTimestamp());
-    event_queue->push(std::move(event));
+void PerfEventQueue::PushEvent(std::unique_ptr<PerfEvent> event) {
+  int origin_fd = event->GetOriginFileDescriptor();
+
+  if (auto queue_it = queues_.find(origin_fd); queue_it != queues_.end()) {
+    const std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>& queue = queue_it->second;
+
+    CHECK(!queue->empty());
+    // Fundamental assumption: events from the same file descriptor come already in order.
+    CHECK(event->GetTimestamp() >= queue->back()->GetTimestamp());
+    queue->push(std::move(event));
+
   } else {
-    auto event_queue = std::make_shared<std::queue<std::unique_ptr<PerfEvent>>>();
-    fd_event_queues_.insert(std::make_pair(origin_fd, event_queue));
-    event_queue->push(std::move(event));
-    event_queues_queue_.push(std::make_pair(origin_fd, event_queue));
+    queue_it =
+        queues_.emplace(origin_fd, std::make_unique<std::queue<std::unique_ptr<PerfEvent>>>())
+            .first;
+    const std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>& queue = queue_it->second;
+
+    queue->push(std::move(event));
+    queues_heap_.push(queue.get());
   }
 }
 
-bool PerfEventQueue::HasEvent() { return !event_queues_queue_.empty(); }
+bool PerfEventQueue::HasEvent() { return !queues_heap_.empty(); }
 
-PerfEvent* PerfEventQueue::TopEvent() { return event_queues_queue_.top().second->front().get(); }
+PerfEvent* PerfEventQueue::TopEvent() { return queues_heap_.top()->front().get(); }
 
 std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
-  std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>> top_fd_queue =
-      event_queues_queue_.top();
-  event_queues_queue_.pop();
-  const int& top_fd = top_fd_queue.first;
-  std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>& top_queue = top_fd_queue.second;
+  std::queue<std::unique_ptr<PerfEvent>>* top_queue = queues_heap_.top();
+  // Always remove the queue with the older PerfEvent. If it's not empty, it will be re-inserted,
+  // so that it's moved to the correct position. See below.
+  queues_heap_.pop();
 
   std::unique_ptr<PerfEvent> top_event = std::move(top_queue->front());
   top_queue->pop();
   if (top_queue->empty()) {
-    fd_event_queues_.erase(top_fd);
+    int top_fd = top_event->GetOriginFileDescriptor();
+    queues_.erase(top_fd);
   } else {
-    // Remove and re-insert so that the queue is in the right position in the
-    // heap after the front of the queue has been removed.
-    event_queues_queue_.push(top_fd_queue);
+    // The queue with the older PerfEvent is always removed. If it's not empty, re-insert it so that
+    // it is in the correct position in the heap after the front of the queue has been removed.
+    queues_heap_.push(top_queue);
   }
 
   return top_event;
