@@ -128,6 +128,53 @@ message GpuJob {
   uint64 dma_fence_signaled_time_ns = 11;
 }
 
+message GpuQueueSubmission {
+  GpuQueueSubmissionMetaInfo meta_info = 1;
+  repeated GpuSubmitInfo submit_infos = 2;
+  repeated GpuDebugMarker completed_markers = 3;
+  // This is the total number of begin markers submitted in this submission.
+  int32 num_begin_markers = 4;
+}
+
+message GpuQueueSubmissionMetaInfo {
+  int32 tid = 1;
+  uint64 pre_submission_cpu_timestamp = 2;
+  uint64 post_submission_cpu_timestamp = 3;
+}
+
+message GpuSubmitInfo {
+  repeated GpuCommandBuffer command_buffers = 1;
+}
+
+message GpuCommandBuffer {
+  uint64 begin_gpu_timestamp_ns = 1;
+  uint64 end_gpu_timestamp_ns = 2;
+}
+
+message GpuDebugMarkerBeginInfo {
+  // Begin markers can be submitted in a different submission then the end
+  // markers, thus the submission meta info of a begin marker might differ from
+  // the one of the submission containing the complete debug marker.
+  GpuQueueSubmissionMetaInfo meta_info = 1;
+  uint64 gpu_timestamp_ns = 2;
+}
+
+message GpuDebugMarker {
+  GpuDebugMarkerBeginInfo begin_marker = 1;
+  uint64 end_gpu_timestamp_ns = 2;
+  uint64 text_key = 3;
+  int32 depth = 4;
+  Color color = 5;
+}
+
+message Color {
+  // Color ranges are [0.f, 1.f] for the following fields.
+  float red = 1;
+  float green = 2;
+  float blue = 3;
+  float alpha = 4;
+}
+
 message ThreadName {
   int32 pid = 1;  // Note that pid is currently not set.
   int32 tid = 2;
@@ -185,6 +232,7 @@ message CaptureEvent {
     FunctionCall function_call = 4;
     InternedString interned_string = 5;
     GpuJob gpu_job = 6;
+    GpuQueueSubmission gpu_queue_submission = 13;
     ThreadName thread_name = 7;
     ThreadStateSlice thread_state_slice = 11;
     AddressInfo address_info = 8;
