@@ -75,6 +75,9 @@ ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, nodeploy);
 
+// TODO(irinashkviro): remove this flag when metrics uploading is finished
+ABSL_FLAG(bool, enable_metrics, false, "Enables sending log events");
+
 using ServiceDeployManager = orbit_qt::ServiceDeployManager;
 using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
 using OrbitStartupWindow = orbit_qt::OrbitStartupWindow;
@@ -130,7 +133,10 @@ static outcome::result<void> RunUiInstance(
   const auto& [ports, capture_path] = result;
 
   std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
-  auto metrics_uploader = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
+  ErrorMessageOr<orbit_metrics_uploader::MetricsUploader> metrics_uploader = ErrorMessage("");
+  if (absl::GetFlag(FLAGS_enable_metrics)) {
+    metrics_uploader = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
+  }
 
   ServiceDeployManager* service_deploy_manager_ptr = nullptr;
 
