@@ -5,12 +5,11 @@
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
 
 #include <cstdint>
-#include <cstring>
-#include <map>
 #include <memory>
 #include <set>
 #include <vector>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"

@@ -7,6 +7,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
