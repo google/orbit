@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "PerfEventProcessor.h"
+#include "PerfEventQueue.h"
 
 namespace LinuxTracing {
 
