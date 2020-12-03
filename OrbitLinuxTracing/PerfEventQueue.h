@@ -28,8 +28,8 @@ namespace LinuxTracing {
 class PerfEventQueue {
  public:
   void PushEvent(std::unique_ptr<PerfEvent> event);
-  bool HasEvent();
-  PerfEvent* TopEvent();
+  [[nodiscard]] bool HasEvent();
+  [[nodiscard]] PerfEvent* TopEvent();
   std::unique_ptr<PerfEvent> PopEvent();
 
  private:
