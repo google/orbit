@@ -4,6 +4,10 @@
 
 #include "ContextSwitchManager.h"
 
+#include <utility>
+
+#include "OrbitBase/Logging.h"
+
 namespace LinuxTracing {
 
 using orbit_grpc_protos::SchedulingSlice;

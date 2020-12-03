@@ -5,11 +5,17 @@
 #ifndef ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR
 #define ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
+#include <sys/types.h>
+
+#include <cstdint>
+#include <string>
 #include <tuple>
+#include <vector>
 
 #include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
-#include "absl/container/flat_hash_map.h"
 
 namespace LinuxTracing {
 

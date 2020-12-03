@@ -2,17 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <absl/strings/str_format.h>
+#include <absl/synchronization/mutex.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <pthread.h>
-#include <sys/syscall.h>
+#include <syscall.h>
+#include <unistd.h>
 
+#include <algorithm>
+#include <chrono>
 #include <condition_variable>
 #include <mutex>
+#include <optional>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "LinuxTracingUtils.h"
-#include "absl/synchronization/mutex.h"
 
 namespace LinuxTracing {
 

@@ -5,9 +5,12 @@
 #ifndef ORBIT_LINUX_TRACING_CONTEXT_SWITCH_MANAGER_H_
 #define ORBIT_LINUX_TRACING_CONTEXT_SWITCH_MANAGER_H_
 
-#include <OrbitBase/Logging.h>
+#include <absl/container/flat_hash_map.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-#include "absl/container/flat_hash_map.h"
+#include <optional>
+
 #include "capture.pb.h"
 
 namespace LinuxTracing {

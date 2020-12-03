@@ -4,11 +4,17 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <atomic>
+#include <chrono>
+#include <memory>
 #include <thread>
 
 #include "LinuxTracingUtils.h"
+#include "PerfEvent.h"
 #include "PerfEventProcessor.h"
+#include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
 
 namespace LinuxTracing {

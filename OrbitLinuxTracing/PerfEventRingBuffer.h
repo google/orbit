@@ -6,10 +6,9 @@
 #define ORBIT_LINUX_TRACING_PERF_RING_BUFFER_H_
 
 #include <linux/perf_event.h>
+#include <stdint.h>
 
 #include <string>
-
-#include "PerfEventOpen.h"
 
 namespace LinuxTracing {
 

@@ -6,10 +6,15 @@
 #define ORBIT_LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_
 
 #include <asm/perf_regs.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <unwindstack/Error.h>
 #include <unwindstack/MachineX86_64.h>
-#include <unwindstack/RegsX86_64.h>
+#include <unwindstack/Maps.h>
 #include <unwindstack/Unwinder.h>
 
+#include <array>
+#include <memory>
 #include <string>
 #include <vector>
 

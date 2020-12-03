@@ -6,13 +6,14 @@
 
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
+#include <absl/base/casts.h>
 #include <linux/perf_event.h>
+#include <sys/mman.h>
+#include <sys/time.h>
 
 #include <cerrno>
 
-#include "Function.h"
 #include "LinuxTracingUtils.h"
-#include "absl/base/casts.h"
 
 namespace LinuxTracing {
 namespace {

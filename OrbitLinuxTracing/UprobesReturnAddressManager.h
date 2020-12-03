@@ -6,14 +6,13 @@
 #define ORBIT_LINUX_TRACING_UPROBES_RETURN_ADDRESS_MANAGER_H_
 
 #include <OrbitBase/Logging.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_join.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 
 #include <stack>
 #include <vector>
-
-#include "absl/container/flat_hash_map.h"
 
 // Keeps a stack, for every thread, of the return addresses at the top of the
 // stack when uprobes are hit, before they are hijacked by uretprobes. Patches

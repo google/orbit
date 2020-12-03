@@ -2,10 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <sys/types.h>
+
+#include <memory>
+#include <optional>
 
 #include "ContextSwitchManager.h"
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 

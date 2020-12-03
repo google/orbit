@@ -6,16 +6,23 @@
 #define ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 
 #include <OrbitLinuxTracing/TracerListener.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
+#include <sys/types.h>
+#include <unwindstack/Maps.h>
 
-#include <stack>
-#include <utility>
+#include <atomic>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "LibunwindstackUnwinder.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
-#include "absl/container/flat_hash_map.h"
 
 namespace LinuxTracing {
 

@@ -4,7 +4,21 @@
 
 #include "UprobesUnwindingVisitor.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <asm/perf_regs.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Unwinder.h>
+
+#include <algorithm>
+#include <array>
+#include <optional>
+#include <utility>
+
+#include "Function.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitLinuxTracing/TracerListener.h"
+#include "PerfEventRecords.h"
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 

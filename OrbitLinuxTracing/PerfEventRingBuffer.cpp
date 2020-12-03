@@ -6,9 +6,12 @@
 
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
+#include <errno.h>
 #include <linux/perf_event.h>
+#include <string.h>
 #include <sys/mman.h>
 
+#include <cstdint>
 #include <utility>
 
 #include "LinuxTracingUtils.h"

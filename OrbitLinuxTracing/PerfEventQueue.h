@@ -5,11 +5,14 @@
 #ifndef ORBIT_LINUX_TRACING_PERF_EVENT_QUEUE_H_
 #define ORBIT_LINUX_TRACING_PERF_EVENT_QUEUE_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
+
 #include <memory>
 #include <queue>
+#include <vector>
 
 #include "PerfEvent.h"
-#include "absl/container/flat_hash_map.h"
 
 namespace LinuxTracing {
 

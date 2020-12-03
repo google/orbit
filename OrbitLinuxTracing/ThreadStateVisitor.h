@@ -6,9 +6,17 @@
 #define ORBIT_LINUX_TRACING_THREAD_STATE_VISITOR_H_
 
 #include <OrbitLinuxTracing/TracerListener.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
+#include <stdint.h>
+#include <sys/types.h>
 
+#include <optional>
+#include <vector>
+
+#include "PerfEvent.h"
 #include "PerfEventVisitor.h"
-#include "absl/container/flat_hash_map.h"
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 
