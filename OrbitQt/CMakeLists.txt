@@ -155,7 +155,9 @@ target_sources(OrbitQtTests
                 EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE EventLoopTest.cpp
+        PRIVATE AccessibilityTests.cpp
+                EventLoopTest.cpp
+                GlAccessibility.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 RingBufferTest.cpp

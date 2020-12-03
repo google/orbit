@@ -5,56 +5,85 @@
 #ifndef ORBIT_QT_GL_ACCESSIBILITY_H_
 #define ORBIT_QT_GL_ACCESSIBILITY_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+
 #include <QAccessible>
 #include <QAccessibleWidget>
 #include <QWidget>
 
-class TrackAccessibility : public QAccessibleInterface {
+#include "CaptureWindowAccessibility.h"
+#include "OrbitBase/Logging.h"
+
+namespace orbit_qt {
+
+class A11yAdapter : public QAccessibleInterface {
  public:
-  TrackAccessibility(QAccessibleInterface* parent, int index) : parent_(parent), index_(index){};
+  A11yAdapter() = delete;
+  A11yAdapter(A11yAdapter& rhs) = delete;
+  A11yAdapter(A11yAdapter&& rhs) = delete;
+
+  static A11yAdapter* GetOrCreateAdapter(orbit_gl::GlA11yInterface* iface);
+  static void ClearAdapterCache();
+  static void ReleaseAdapter(A11yAdapter* adapter);
 
   // check for valid pointers
-  virtual bool isValid() const { return parent_ != nullptr; }
+  virtual bool isValid() const {
+    bool result = info_ != nullptr && s_valid_adapters_.contains(this);
+    CHECK(!result || s_iface_to_adapter_.find(info_)->second == this);
+    return result;
+  }
   virtual QObject* object() const { return nullptr; }
 
-  // relations
-  virtual QVector<QPair<QAccessibleInterface*, QAccessible::Relation> > relations(
+  // relations & interactions - currently not supported
+  virtual QVector<QPair<QAccessibleInterface*, QAccessible::Relation>> relations(
       QAccessible::Relation match = QAccessible::AllRelations) const {
     return {};
   }
   virtual QAccessibleInterface* focusChild() const { return nullptr; }
 
-  virtual QAccessibleInterface* childAt(int x, int y) const { return nullptr; }
+  virtual QAccessibleInterface* childAt(int x, int y) const {
+    return GetOrCreateAdapter(info_->AccessibleChildAt(x, y));
+  }
 
   // navigation, hierarchy
-  virtual QAccessibleInterface* parent() const { return parent_; }
-  virtual QAccessibleInterface* child(int index) const { return nullptr; }
-  virtual int childCount() const { return 0; }
-  virtual int indexOfChild(const QAccessibleInterface*) const { return -1; }
+  virtual QAccessibleInterface* parent() const {
+    return GetOrCreateAdapter(info_->AccessibleParent());
+  }
+  virtual QAccessibleInterface* child(int index) const {
+    return GetOrCreateAdapter(info_->AccessibleChild(index));
+  }
+  virtual int childCount() const { return info_->AccessibleChildCount(); }
+  virtual int indexOfChild(const QAccessibleInterface* child) const;
 
   // properties and state
-  virtual QString text(QAccessible::Text t) const { return "Track"; }
+  virtual QString text(QAccessible::Text t) const { return info_->AccessibleName().c_str(); }
   virtual void setText(QAccessible::Text t, const QString& text){};
-  virtual QRect rect() const { return QRect(0, 0, 100, 100); }
-  virtual QAccessible::Role role() const { return QAccessible::Role::Grouping; }
+  virtual QRect rect() const;
+  virtual QAccessible::Role role() const {
+    return static_cast<QAccessible::Role>(info_->AccessibleRole());
+  }
   virtual QAccessible::State state() const { return QAccessible::State(); }
 
  private:
-  QAccessibleInterface* parent_;
-  int index_;
+  A11yAdapter(orbit_gl::GlA11yInterface* info) : info_(info){};
+
+  orbit_gl::GlA11yInterface* info_ = nullptr;
+
+  static absl::flat_hash_map<orbit_gl::GlA11yInterface*, A11yAdapter*> s_iface_to_adapter_;
+  static absl::flat_hash_set<A11yAdapter*> s_valid_adapters_;
 };
 
-class OrbitGLAccessibility : public QAccessibleInterface {
+/*class OrbitGLA11y : public QAccessibleInterface {
  public:
-  OrbitGLAccessibility(QWidget* o);
-  ~OrbitGLAccessibility();
+  OrbitGLA11y(QWidget* o);
 
   // check for valid pointers
   virtual bool isValid() const { return widget_ != nullptr; }
   virtual QObject* object() const { return widget_; }
 
   // relations
-  virtual QVector<QPair<QAccessibleInterface*, QAccessible::Relation> > relations(
+  virtual QVector<QPair<QAccessibleInterface*, QAccessible::Relation>> relations(
       QAccessible::Relation match = QAccessible::AllRelations) const {
     return {};
   }
@@ -82,9 +111,10 @@ class OrbitGLAccessibility : public QAccessibleInterface {
 
  private:
   QWidget* widget_ = nullptr;
-  std::vector<TrackAccessibility*> dummy_tracks_;
-};
+};*/
 
 QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* object);
+
+}  // namespace orbit_qt
 
 #endif
