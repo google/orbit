@@ -172,7 +172,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
 void OrbitApp::OnCaptureComplete() {
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
-      sampling_data_post_processor::CreatePostProcessedSamplingData(
+      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
           *GetCaptureData().GetCallstackData(), GetCaptureData());
   RefreshFrameTracks();
 
@@ -1418,7 +1418,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   // Generate selection report.
   bool generate_summary = thread_id == PostProcessedSamplingData::kAllThreadsFakeTid;
   PostProcessedSamplingData processed_sampling_data =
-      sampling_data_post_processor::CreatePostProcessedSamplingData(
+      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
           *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), generate_summary);
 
   SetSelectionTopDownView(processed_sampling_data, GetCaptureData());
@@ -1437,7 +1437,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   if (sampling_report_ != nullptr) {
     PostProcessedSamplingData post_processed_sampling_data =
-        sampling_data_post_processor::CreatePostProcessedSamplingData(
+        orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
             *capture_data.GetCallstackData(), capture_data);
     sampling_report_->UpdateReport(post_processed_sampling_data,
                                    capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
@@ -1451,7 +1451,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   }
 
   PostProcessedSamplingData selection_post_processed_sampling_data =
-      sampling_data_post_processor::CreatePostProcessedSamplingData(
+      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
           *capture_data.GetSelectionCallstackData(), capture_data,
           selection_report_->has_summary());
 
