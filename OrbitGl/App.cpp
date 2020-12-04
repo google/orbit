@@ -173,8 +173,8 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
 void OrbitApp::OnCaptureComplete() {
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
-      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
-          *GetCaptureData().GetCallstackData(), GetCaptureData());
+      orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
+                                                          GetCaptureData());
   RefreshFrameTracks();
 
   main_thread_executor_->Schedule(
@@ -1419,7 +1419,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   // Generate selection report.
   bool generate_summary = thread_id == orbit_base::kAllProcessThreadsFakeTid;
   PostProcessedSamplingData processed_sampling_data =
-      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
+      orbit_client_model::CreatePostProcessedSamplingData(
           *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), generate_summary);
 
   SetSelectionTopDownView(processed_sampling_data, GetCaptureData());
@@ -1438,8 +1438,8 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   if (sampling_report_ != nullptr) {
     PostProcessedSamplingData post_processed_sampling_data =
-        orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
-            *capture_data.GetCallstackData(), capture_data);
+        orbit_client_model::CreatePostProcessedSamplingData(*capture_data.GetCallstackData(),
+                                                            capture_data);
     sampling_report_->UpdateReport(post_processed_sampling_data,
                                    capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
     GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
@@ -1452,9 +1452,9 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   }
 
   PostProcessedSamplingData selection_post_processed_sampling_data =
-      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
-          *capture_data.GetSelectionCallstackData(), capture_data,
-          selection_report_->has_summary());
+      orbit_client_model::CreatePostProcessedSamplingData(*capture_data.GetSelectionCallstackData(),
+                                                          capture_data,
+                                                          selection_report_->has_summary());
 
   SetSelectionTopDownView(selection_post_processed_sampling_data, capture_data);
   SetSelectionBottomUpView(selection_post_processed_sampling_data, capture_data);

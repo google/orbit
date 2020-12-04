@@ -21,7 +21,7 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 
-namespace orbit_client_model::sampling_data_post_processor {
+namespace orbit_client_model {
 
 namespace {
 
@@ -246,4 +246,4 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureD
 
 }  // namespace
 
-}  // namespace orbit_client_model::sampling_data_post_processor
+}  // namespace orbit_client_model

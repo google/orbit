@@ -275,8 +275,8 @@ void ClientGgp::OnCaptureComplete() {
   LOG("Capture completed");
   GetMutableCaptureData().FilterBrokenCallstacks();
   GetMutableCaptureData().set_post_processed_sampling_data(
-      orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
-          *GetCaptureData().GetCallstackData(), GetCaptureData()));
+      orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
+                                                          GetCaptureData()));
 }
 
 void ClientGgp::OnCaptureCancelled() { ClearCapture(); }
