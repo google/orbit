@@ -68,6 +68,14 @@ TEST(PerfEventQueue, SingleFd) {
   EXPECT_FALSE(event_queue.HasEvent());
 }
 
+TEST(PerfEventQueue, FdWithDecreasingTimestamps) {
+  PerfEventQueue event_queue;
+
+  event_queue.PushEvent(MakeTestEvent(11, 101));
+  event_queue.PushEvent(MakeTestEvent(11, 103));
+  EXPECT_DEATH(event_queue.PushEvent(MakeTestEvent(11, 102)), "");
+}
+
 TEST(PerfEventQueue, MultipleFd) {
   PerfEventQueue event_queue;
   uint64_t current_oldest_timestamp;
