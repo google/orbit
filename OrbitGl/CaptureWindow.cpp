@@ -13,9 +13,8 @@
 using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(uint32_t font_size)
-    : GlCanvas(font_size), font_size_(font_size), time_graph_(font_size) {
+    : GlCanvas(font_size), font_size_(font_size), time_graph_(this, font_size) {
   time_graph_.SetTextRenderer(&text_renderer_);
-  time_graph_.SetCanvas(this);
   draw_help_ = true;
   draw_filter_ = false;
   world_top_left_x_ = 0;

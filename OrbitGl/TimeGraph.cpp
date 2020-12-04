@@ -32,9 +32,15 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_gl::GlA11yControlInterface;
+
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-TimeGraph::TimeGraph(uint32_t font_size) : font_size_(font_size), batcher_(BatcherId::kTimeGraph) {
+TimeGraph::TimeGraph(GlCanvas* canvas, uint32_t font_size)
+    : font_size_(font_size), batcher_(BatcherId::kTimeGraph), canvas_(canvas) {
+  text_renderer_static_.SetCanvas(canvas_);
+  batcher_.SetPickingManager(&canvas->GetPickingManager());
+
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
@@ -55,13 +61,6 @@ TimeGraph::~TimeGraph() {
 
 void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
   string_manager_ = std::move(str_manager);
-}
-
-void TimeGraph::SetCanvas(GlCanvas* canvas) {
-  canvas_ = canvas;
-  text_renderer_->SetCanvas(canvas);
-  text_renderer_static_.SetCanvas(canvas);
-  batcher_.SetPickingManager(&canvas->GetPickingManager());
 }
 
 void TimeGraph::Clear() {
@@ -764,6 +763,8 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   }
 }
 
+orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const { return orbit_gl::A11yRect(); }
+
 std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
@@ -1267,3 +1268,11 @@ void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& functi
   sorting_invalidated_ = true;
   NeedsUpdate();
 }
+
+int TimeGraph::AccessibleChildCount() const { return 0; }
+
+const GlA11yControlInterface* TimeGraph::AccessibleChild(int) const { return nullptr; }
+
+const GlA11yControlInterface* TimeGraph::AccessibleChildAt(int, int) const { return nullptr; }
+
+const GlA11yControlInterface* TimeGraph::AccessibleParent() const { return nullptr; }
