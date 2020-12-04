@@ -135,7 +135,7 @@ CaptureInfo GenerateCaptureInfo(
         capture_info.add_callstack_events()->CopyFrom(event);
       });
 
-  capture_data.GetTracepointInfoManager()->ForEachUniqueTracepointInfo(
+  capture_data.GetTracepointData()->ForEachUniqueTracepointInfo(
       [&capture_info](const orbit_client_protos::TracepointInfo& tracepoint_info) {
         orbit_client_protos::TracepointInfo* new_tracepoint_info =
             capture_info.add_tracepoint_infos();
@@ -144,7 +144,7 @@ CaptureInfo GenerateCaptureInfo(
         new_tracepoint_info->set_tracepoint_info_key(tracepoint_info.tracepoint_info_key());
       });
 
-  capture_data.GetTracepointEventBuffer()->ForEachTracepointEvent(
+  capture_data.GetTracepointData()->ForEachTracepointEvent(
       [&capture_info](const orbit_client_protos::TracepointEventInfo& tracepoint_event_info) {
         capture_info.add_tracepoint_event_infos()->CopyFrom(tracepoint_event_info);
       });

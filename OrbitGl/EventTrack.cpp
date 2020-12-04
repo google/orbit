@@ -20,7 +20,7 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
 
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+  if (thread_id_ == TracepointData::kAllTracepointsFakeTid) {
     return;
   }
 
