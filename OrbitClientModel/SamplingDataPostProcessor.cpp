@@ -10,9 +10,9 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -51,7 +51,7 @@ class SamplingDataPostProcessor {
 
           if (generate_summary) {
             ThreadSampleData* all_thread_sample_data =
-                &thread_id_to_sample_data_[PostProcessedSamplingData::kAllThreadsFakeTid];
+                &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsFakeTid];
             all_thread_sample_data->samples_count++;
             all_thread_sample_data->callstack_count[event.callstack_hash()]++;
             callstack_data.ForEachFrameInCallstack(

@@ -5,6 +5,7 @@
 #include "OrbitClientData/PostProcessedSamplingData.h"
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 
 namespace {
 
@@ -31,8 +32,6 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
   }
   return (*res).second;
 }
-
-const int32_t PostProcessedSamplingData::kAllThreadsFakeTid = -1;
 
 const CallStack& PostProcessedSamplingData::GetResolvedCallstack(
     CallstackID raw_callstack_id) const {
@@ -74,7 +73,7 @@ PostProcessedSamplingData::GetSortedCallstackReportFromAddress(uint64_t address,
 }
 
 const ThreadSampleData* PostProcessedSamplingData::GetSummary() const {
-  auto summary_it = thread_id_to_sample_data_.find(kAllThreadsFakeTid);
+  auto summary_it = thread_id_to_sample_data_.find(orbit_base::kAllProcessThreadsFakeTid);
   if (summary_it == thread_id_to_sample_data_.end()) {
     return nullptr;
   }

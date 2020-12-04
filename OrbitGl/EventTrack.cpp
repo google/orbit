@@ -6,7 +6,7 @@
 
 #include "App.h"
 #include "GlCanvas.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "PickingManager.h"
 
 using orbit_client_protos::CallstackEvent;
@@ -89,7 +89,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       }
     };
 
-    if (thread_id_ == PostProcessedSamplingData::kAllThreadsFakeTid) {
+    if (thread_id_ == orbit_base::kAllProcessThreadsFakeTid) {
       capture_data->GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
     } else {
       capture_data->GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
@@ -121,7 +121,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
         batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
       }
     };
-    if (thread_id_ == PostProcessedSamplingData::kAllThreadsFakeTid) {
+    if (thread_id_ == orbit_base::kAllProcessThreadsFakeTid) {
       capture_data->GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
     } else {
       capture_data->GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
@@ -166,7 +166,7 @@ bool EventTrack::IsEmpty() const {
   const CaptureData* capture_data = time_graph_->GetCaptureData();
   if (capture_data == nullptr) return true;
   const uint32_t callstack_count =
-      (thread_id_ == PostProcessedSamplingData::kAllThreadsFakeTid)
+      (thread_id_ == orbit_base::kAllProcessThreadsFakeTid)
           ? capture_data->GetCallstackData()->GetCallstackEventsCount()
           : capture_data->GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_);
   return callstack_count == 0;

@@ -4,6 +4,8 @@
 
 #include "CallTreeView.h"
 
+#include "OrbitBase/ThreadConstants.h"
+
 std::vector<const CallTreeNode*> CallTreeNode::children() const {
   std::vector<const CallTreeNode*> ret;
   for (const auto& tid_and_thread : thread_children_) {
@@ -99,7 +101,7 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
   CallTreeThread* thread_node = current_node->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
     std::string thread_name;
-    if (tid == PostProcessedSamplingData::kAllThreadsFakeTid) {
+    if (tid == orbit_base::kAllProcessThreadsFakeTid) {
       thread_name = process_name;
     } else if (auto thread_name_it = thread_names.find(tid); thread_name_it != thread_names.end()) {
       thread_name = thread_name_it->second;
@@ -127,7 +129,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
           post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
       // Don't count samples from the all-thread case again.
-      if (tid != PostProcessedSamplingData::kAllThreadsFakeTid) {
+      if (tid != orbit_base::kAllProcessThreadsFakeTid) {
         top_down_view->IncreaseSampleCount(sample_count);
       }
       thread_node->IncreaseSampleCount(sample_count);
@@ -163,7 +165,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfil
   for (const ThreadSampleData& thread_sample_data :
        post_processed_sampling_data.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data.thread_id;
-    if (tid == PostProcessedSamplingData::kAllThreadsFakeTid) {
+    if (tid == orbit_base::kAllProcessThreadsFakeTid) {
       continue;
     }
 

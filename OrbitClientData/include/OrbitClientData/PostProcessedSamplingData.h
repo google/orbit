@@ -100,8 +100,6 @@ class PostProcessedSamplingData {
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
-  static const int32_t kAllThreadsFakeTid;
-
  private:
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks_;

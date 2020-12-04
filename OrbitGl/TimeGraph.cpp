@@ -18,8 +18,8 @@
 #include "GpuTrack.h"
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
@@ -565,7 +565,7 @@ void TimeGraph::SelectEvents(float world_start, float world_end, int32_t thread_
 
   CHECK(capture_data_);
   std::vector<CallstackEvent> selected_callstack_events =
-      (thread_id == PostProcessedSamplingData::kAllThreadsFakeTid)
+      (thread_id == orbit_base::kAllProcessThreadsFakeTid)
           ? capture_data_->GetCallstackData()->GetCallstackEventsInTimeRange(t0, t1)
           : capture_data_->GetCallstackData()->GetCallstackEventsOfTidInTimeRange(thread_id, t0,
                                                                                   t1);
@@ -573,8 +573,8 @@ void TimeGraph::SelectEvents(float world_start, float world_end, int32_t thread_
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
     selected_callstack_events_per_thread_[event.thread_id()].emplace_back(event);
-    selected_callstack_events_per_thread_[PostProcessedSamplingData::kAllThreadsFakeTid]
-        .emplace_back(event);
+    selected_callstack_events_per_thread_[orbit_base::kAllProcessThreadsFakeTid].emplace_back(
+        event);
   }
 
   GOrbitApp->SelectCallstackEvents(selected_callstack_events, thread_id);
@@ -792,7 +792,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
     if (tid == TracepointEventBuffer::kAllTracepointsFakeTid) {
       track->SetName("All tracepoint events");
       track->SetLabel("All tracepoint events");
-    } else if (tid == PostProcessedSamplingData::kAllThreadsFakeTid) {
+    } else if (tid == orbit_base::kAllProcessThreadsFakeTid) {
       // This is the process track.
       CHECK(capture_data_);
       std::string process_name = capture_data_->process_name();
@@ -883,7 +883,7 @@ TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions f
   for (auto& pair : sorted_threads) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
     // separately.
-    if (pair.first != PostProcessedSamplingData::kAllThreadsFakeTid) {
+    if (pair.first != orbit_base::kAllProcessThreadsFakeTid) {
       sorted_thread_ids.push_back(pair.first);
     }
   }
@@ -894,7 +894,7 @@ TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions f
   for (auto& pair : sorted_by_events) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
     // separately.
-    if (pair.first == PostProcessedSamplingData::kAllThreadsFakeTid) continue;
+    if (pair.first == orbit_base::kAllProcessThreadsFakeTid) continue;
     if (thread_count_map_.find(pair.first) == thread_count_map_.end()) {
       sorted_thread_ids.push_back(pair.first);
     }
@@ -915,11 +915,11 @@ void TimeGraph::SortTracks() {
   if (capture_data_ != nullptr) {
     // Get or create thread track from events' thread id.
     event_count_.clear();
-    event_count_[PostProcessedSamplingData::kAllThreadsFakeTid] =
+    event_count_[orbit_base::kAllProcessThreadsFakeTid] =
         capture_data_->GetCallstackData()->GetCallstackEventsCount();
 
     // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
-    process_track = GetOrCreateThreadTrack(PostProcessedSamplingData::kAllThreadsFakeTid);
+    process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsFakeTid);
     for (const auto& tid_and_count :
          capture_data_->GetCallstackData()->GetCallstackEventsCountsPerTid()) {
       const int32_t thread_id = tid_and_count.first;

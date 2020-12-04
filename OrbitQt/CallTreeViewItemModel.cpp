@@ -4,7 +4,7 @@
 
 #include "CallTreeViewItemModel.h"
 
-#include "OrbitClientData/PostProcessedSamplingData.h"
+#include "OrbitBase/ThreadConstants.h"
 
 CallTreeViewItemModel::CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_tree_view,
                                              QObject* parent)
@@ -18,7 +18,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        if (thread_item->thread_id() == PostProcessedSamplingData::kAllThreadsFakeTid) {
+        if (thread_item->thread_id() == orbit_base::kAllProcessThreadsFakeTid) {
           return QString::fromStdString(
               thread_item->thread_name().empty()
                   ? "(all threads)"

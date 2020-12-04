@@ -30,6 +30,7 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
@@ -844,7 +845,7 @@ void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
   capture_window_->GetTimeGraph()->SetCaptureData(nullptr);
   capture_data_.reset();
-  set_selected_thread_id(PostProcessedSamplingData::kAllThreadsFakeTid);
+  set_selected_thread_id(orbit_base::kAllProcessThreadsFakeTid);
   SelectTextBox(nullptr);
 
   UpdateAfterCaptureCleared();
@@ -1416,7 +1417,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.
-  bool generate_summary = thread_id == PostProcessedSamplingData::kAllThreadsFakeTid;
+  bool generate_summary = thread_id == orbit_base::kAllProcessThreadsFakeTid;
   PostProcessedSamplingData processed_sampling_data =
       orbit_client_model::sampling_data_post_processor::CreatePostProcessedSamplingData(
           *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), generate_summary);

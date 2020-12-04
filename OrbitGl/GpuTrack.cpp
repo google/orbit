@@ -7,7 +7,7 @@
 #include "App.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Profiling.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "absl/strings/str_format.h"
 
@@ -56,7 +56,7 @@ bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
   // all jobs as active when no thread is selected, so this logic is a bit
   // different than SchedulerTrack::IsTimerActive.
   bool no_thread_selected =
-      GOrbitApp->selected_thread_id() == PostProcessedSamplingData::kAllThreadsFakeTid;
+      GOrbitApp->selected_thread_id() == orbit_base::kAllProcessThreadsFakeTid;
 
   return is_same_tid_as_selected || no_thread_selected;
 }
