@@ -4,15 +4,16 @@
 
 #include "OrbitClientServices/ProcessManager.h"
 
-#include <chrono>
+#include <absl/synchronization/mutex.h>
+
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitClientServices/ProcessClient.h"
-#include "grpcpp/grpcpp.h"
-#include "outcome.hpp"
-#include "symbol.pb.h"
 
 namespace {
 
@@ -23,6 +24,9 @@ class ProcessManagerImpl final : public ProcessManager {
  public:
   explicit ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& channel,
                               absl::Duration refresh_timeout);
+  ProcessManagerImpl(ProcessManagerImpl&&) = default;
+  ProcessManagerImpl& operator=(ProcessManagerImpl&&) = default;
+  ~ProcessManagerImpl() override { Shutdown(); }
 
   void SetProcessListUpdateListener(const std::function<void(ProcessManager*)>& listener) override;
 
