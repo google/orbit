@@ -18,19 +18,12 @@ target_include_directories(OrbitBase PUBLIC
 target_include_directories(OrbitBase PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-if(WIN32)
-set(PlatformDir "Windows")
-elseif(UNIX)
-set(PlatformDir "Linux")
-endif()
-
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/ReadFileToString.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
-        include/OrbitBase/Platform/${PlatformDir}/Profiling.h
         include/OrbitBase/Profiling.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/ThreadConstants.h
@@ -43,7 +36,6 @@ target_sources(OrbitBase PRIVATE
         ReadFileToString.cpp
         Logging.cpp
         SafeStrerror.cpp
-        Platform/${PlatformDir}/Profiling.cpp
         ThreadPool.cpp
         Tracing.cpp)
 

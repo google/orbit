@@ -2,26 +2,29 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// clang-format off
-#include <OrbitBase/Platform/Windows/Profiling.h>
-// clang-format on
-
+#include <OrbitBase/Logging.h>
+#include <Windows.h>
 #include <processthreadsapi.h>
 
-#include <OrbitBase/Logging.h>
 #include <string>
 
-template <typename T>
-inline T GetProcAddress(const std::string& library, const std::string& procedure) {
+[[nodiscard]] inline uint64_t MonotonicTimestampNs() {
+  __int64 time;
+  GetSystemTimeAsFileTime((FILETIME*)&time);
+  return static_cast<uint64_t>(time) * 100;
+}
+
+template <typename FunctionPrototypeT>
+inline FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
   HMODULE module_handle = LoadLibraryA(library.c_str());
-  if (module_handle == NULL) {
+  if (module_handle == nullptr) {
     ERROR("Could not find procedure %s in %s", procedure, library);
     return nullptr;
   }
-  return reinterpret_cast<T>(GetProcAddress(module_handle, procedure.c_str()));
+  return reinterpret_cast<FunctionPrototypeT>(GetProcAddress(module_handle, procedure.c_str()));
 }
 
-std::string GetThreadName(pid_t tid) {
+inline std::string GetThreadName(uint32_t tid) {
   static const std::string kEmptyString;
 
   // Find "GetThreadDescription" procedure.
@@ -52,7 +55,7 @@ std::string GetThreadName(pid_t tid) {
   return kEmptyString;
 }
 
-void SetCurrentThreadName(const std::string& name) {
+inline void SetCurrentThreadName(const std::string& name) {
   static auto set_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PCWSTR)>("kernel32.dll", "SetThreadDescription");
   std::wstring wide_name(name.begin(), name.end());

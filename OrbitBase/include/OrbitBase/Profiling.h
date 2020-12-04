@@ -5,10 +5,17 @@
 #ifndef ORBIT_BASE_PROFILING_H_
 #define ORBIT_BASE_PROFILING_H_
 
+#include <string>
+
+[[nodiscard]] inline uint64_t MonotonicTimestampNs();
+[[nodiscard]] inline uint32_t GetCurrentThreadId();
+[[nodiscard]] inline std::string GetThreadName(uint32_t tid);
+inline void SetCurrentThreadName(const std::string& thread_name);
+
 #ifdef _WIN32
-#include "Platform/Windows/Profiling.h"
+#include "ProfilingWindows.inc"
 #else
-#include "Platform/Linux/Profiling.h"
+#include "ProfilingLinux.inc"
 #endif
 
 #endif  // ORBIT_BASE_PROFILING_H_
