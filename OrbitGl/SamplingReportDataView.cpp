@@ -8,6 +8,7 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "Path.h"
@@ -276,7 +277,7 @@ void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFuncti
 
 void SamplingReportDataView::SetThreadID(ThreadID tid) {
   tid_ = tid;
-  if (tid == SamplingProfiler::kAllThreadsFakeTid) {
+  if (tid == orbit_base::kAllProcessThreadsFakeTid) {
     name_ = absl::StrFormat("%s\n(all threads)", GOrbitApp->GetCaptureData().process_name());
   } else {
     name_ = absl::StrFormat("%s\n[%d]", GOrbitApp->GetCaptureData().GetThreadName(tid_), tid_);

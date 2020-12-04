@@ -17,13 +17,13 @@ target_sources(OrbitClientModel PUBLIC
         include/OrbitClientModel/CaptureData.h
         include/OrbitClientModel/CaptureDeserializer.h
         include/OrbitClientModel/CaptureSerializer.h
-        include/OrbitClientModel/SamplingProfiler.h)
+        include/OrbitClientModel/SamplingDataPostProcessor.h)
 
 target_sources(OrbitClientModel PRIVATE
         CaptureData.cpp
         CaptureDeserializer.cpp
         CaptureSerializer.cpp
-        SamplingProfiler.cpp)
+        SamplingDataPostProcessor.cpp)
 
 target_link_libraries(OrbitClientModel PUBLIC
         OrbitCaptureClient

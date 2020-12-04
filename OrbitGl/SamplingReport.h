@@ -13,16 +13,16 @@
 
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/CallstackTypes.h"
-#include "OrbitClientModel/SamplingProfiler.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "SamplingReportDataView.h"
 
 class SamplingReport {
  public:
   explicit SamplingReport(
-      SamplingProfiler sampling_profiler,
+      PostProcessedSamplingData post_processed_sampling_data,
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
       bool has_summary = true);
-  void UpdateReport(SamplingProfiler profiler,
+  void UpdateReport(PostProcessedSamplingData post_processed_sampling_data,
                     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
@@ -42,7 +42,7 @@ class SamplingReport {
   void UpdateDisplayedCallstack();
 
  protected:
-  SamplingProfiler profiler_;
+  PostProcessedSamplingData post_processed_sampling_data_;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;

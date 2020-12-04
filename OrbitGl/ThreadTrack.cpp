@@ -8,6 +8,7 @@
 #include "GlCanvas.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "TextBox.h"
@@ -87,7 +88,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
 }
 
 bool ThreadTrack::IsTrackSelected() const {
-  return thread_id_ != SamplingProfiler::kAllThreadsFakeTid &&
+  return thread_id_ != orbit_base::kAllProcessThreadsFakeTid &&
          GOrbitApp->selected_thread_id() == thread_id_;
 }
 

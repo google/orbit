@@ -15,10 +15,11 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
-#include "OrbitClientModel/SamplingProfiler.h"
+#include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
@@ -273,8 +274,9 @@ void ClientGgp::OnCaptureStarted(
 void ClientGgp::OnCaptureComplete() {
   LOG("Capture completed");
   GetMutableCaptureData().FilterBrokenCallstacks();
-  SamplingProfiler sampling_profiler(*GetCaptureData().GetCallstackData(), GetCaptureData());
-  GetMutableCaptureData().set_sampling_profiler(sampling_profiler);
+  GetMutableCaptureData().set_post_processed_sampling_data(
+      orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
+                                                          GetCaptureData()));
 }
 
 void ClientGgp::OnCaptureCancelled() { ClearCapture(); }

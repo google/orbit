@@ -19,7 +19,10 @@ uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
   if (next_address == 0) {
     next_address = address + 1;
   }
-  const ThreadSampleData* data = profiler_.GetSummary();
+  if (!post_processed_sampling_data_.has_value()) {
+    return 0.0;
+  }
+  const ThreadSampleData* data = post_processed_sampling_data_->GetSummary();
   if (data == nullptr) {
     return 0.0;
   }

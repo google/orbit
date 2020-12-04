@@ -6,6 +6,7 @@
 
 #include "App.h"
 #include "GlUtils.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "absl/base/casts.h"
 
@@ -131,7 +132,7 @@ void CaptureWindow::LeftUp() {
 
   if (!click_was_drag_ && background_clicked_) {
     GOrbitApp->SelectTextBox(nullptr);
-    GOrbitApp->set_selected_thread_id(SamplingProfiler::kAllThreadsFakeTid);
+    GOrbitApp->set_selected_thread_id(orbit_base::kAllProcessThreadsFakeTid);
     NeedsUpdate();
   }
 }

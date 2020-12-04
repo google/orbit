@@ -6,7 +6,7 @@
 
 #include "CallStackDataView.h"
 #include "DataView.h"
-#include "OrbitClientModel/SamplingProfiler.h"
+#include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "absl/container/flat_hash_set.h"
 
 class SamplingReportDataView : public DataView {
