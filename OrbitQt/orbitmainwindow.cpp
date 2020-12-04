@@ -760,6 +760,11 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
   ShowCaptureOnSaveWarningIfNeeded();
 
+  if (!GOrbitApp->HasCaptureData()) {
+    QMessageBox::information(this, "Save capture", "Looks like there is no capture to save.");
+    return;
+  }
+
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
