@@ -65,6 +65,7 @@ PostProcessedSamplingData CreatePostProcessedSamplingData(const CallstackData& c
   return profiler.ProcessSamples(callstack_data, capture_data, generate_summary);
 }
 
+namespace {
 PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     const CallstackData& callstack_data, const CaptureData& capture_data, bool generate_summary) {
   // Unique call stacks and per thread data
@@ -242,5 +243,7 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureD
     }
   }
 }
+
+}  // namespace
 
 }  // namespace orbit_client_model::sampling_data_post_processor
