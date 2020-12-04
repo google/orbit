@@ -73,6 +73,7 @@ if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             ContextSwitchManagerTest.cpp
             LinuxTracingUtilsTest.cpp
+            PerfEventProcessorTest.cpp
             PerfEventQueueTest.cpp
             ThreadStateVisitorTest.cpp
             UprobesFunctionCallManagerTest.cpp
