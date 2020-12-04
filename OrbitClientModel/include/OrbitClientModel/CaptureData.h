@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleManager.h"
