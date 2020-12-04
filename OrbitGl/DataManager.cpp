@@ -65,7 +65,7 @@ bool DataManager::IsFunctionVisible(uint64_t function_address) const {
   return visible_functions_.contains(function_address);
 }
 
-const uint64_t DataManager::kUnusedHighlightedFunctionAddress = 0;
+const uint64_t DataManager::kInvalidFunctionAddress = std::numeric_limits<uint64_t>::max();
 
 uint64_t DataManager::highlighted_function() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
