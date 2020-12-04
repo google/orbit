@@ -24,14 +24,12 @@ class A11yAdapter : public QAccessibleInterface {
   A11yAdapter(A11yAdapter& rhs) = delete;
   A11yAdapter(A11yAdapter&& rhs) = delete;
 
-  static A11yAdapter* GetOrCreateAdapter(const orbit_gl::GlA11yControlInterface* iface);
-  static void ClearAdapterCache();
-  static void ReleaseAdapter(A11yAdapter* adapter);
+  static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlA11yControlInterface* iface);
 
   // check for valid pointers
   bool isValid() const override {
-    bool result = info_ != nullptr && s_valid_adapters_.contains(this);
-    CHECK(!result || s_iface_to_adapter_.find(info_)->second == this);
+    bool result = info_ != nullptr && s_owned_adapters_.contains(this);
+    CHECK(!result || s_adapter_map_.find(info_)->second == this);
     return result;
   }
   QObject* object() const override { return nullptr; }
@@ -66,30 +64,32 @@ class A11yAdapter : public QAccessibleInterface {
   }
   virtual QAccessible::State state() const override { return QAccessible::State(); }
 
+  static void AddBridge(const orbit_gl::GlA11yControlInterface* gl_control,
+                        QAccessibleInterface* qt_control) {
+    s_adapter_map_.insert(std::make_pair(gl_control, qt_control));
+  }
+
  private:
   A11yAdapter(const orbit_gl::GlA11yControlInterface* info) : info_(info){};
 
   const orbit_gl::GlA11yControlInterface* info_ = nullptr;
 
-  static absl::flat_hash_map<const orbit_gl::GlA11yControlInterface*, A11yAdapter*>
-      s_iface_to_adapter_;
-  static absl::flat_hash_set<A11yAdapter*> s_valid_adapters_;
+  static absl::flat_hash_map<const orbit_gl::GlA11yControlInterface*, QAccessibleInterface*>
+      s_adapter_map_;
+  static absl::flat_hash_set<A11yAdapter*> s_owned_adapters_;
 };
 
 class OrbitGlWidgetAccessible : public QAccessibleWidget {
  public:
   OrbitGlWidgetAccessible(OrbitGLWidget* widget);
 
-  virtual QAccessibleInterface* childAt(int x, int y) const override;
-  virtual QAccessibleInterface* child(int index) const;
-  virtual int childCount() const;
-  virtual int indexOfChild(const QAccessibleInterface* child);
-
- private:
-  OrbitGLWidget* widget_ = nullptr;
+  QAccessibleInterface* childAt(int x, int y) const override;
+  QAccessibleInterface* child(int index) const;
+  int childCount() const override;
+  int indexOfChild(const QAccessibleInterface* child) const override;
 };
 
-QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* object);
+void InstallAccessibilityFactories();
 
 }  // namespace orbit_qt
 

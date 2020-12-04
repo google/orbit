@@ -168,7 +168,7 @@ static outcome::result<void> RunUiInstance(
   std::optional<std::error_code> error;
 
   GOrbitApp = OrbitApp::Create(std::move(options), CreateMainThreadExecutor());
-  QAccessible::installFactory(orbit_qt::GlAccessibilityFactory);
+  orbit_qt::InstallAccessibilityFactories();
 
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;

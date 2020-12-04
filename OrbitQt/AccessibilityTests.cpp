@@ -4,9 +4,11 @@
 
 #include <gtest/gtest.h>
 
+#include <QApplication>
 #include <list>
 
 #include "AccessibilityAdapter.h"
+#include "orbitglwidget.h"
 
 namespace orbit_qt_tests {
 
@@ -56,17 +58,14 @@ class TestA11yImpl : public GlA11yControlInterface {
 
 TEST(Accessibility, CreationAndManagement) {
   TestA11yImpl obj(nullptr);
-  A11yAdapter* a1 = A11yAdapter::GetOrCreateAdapter(&obj);
+  QAccessibleInterface* a1 = A11yAdapter::GetOrCreateAdapter(&obj);
   EXPECT_TRUE(a1->isValid());
 
-  A11yAdapter* a2 = A11yAdapter::GetOrCreateAdapter(&obj);
+  QAccessibleInterface* a2 = A11yAdapter::GetOrCreateAdapter(&obj);
   EXPECT_TRUE(a2->isValid());
   EXPECT_EQ(a1, a2);
 
   // TODO: Clearing of existing adapters is missing
-  A11yAdapter::ClearAdapterCache();
-  a2 = A11yAdapter::GetOrCreateAdapter(&obj);
-  EXPECT_TRUE(a2->isValid());
 }
 
 TEST(Accessibility, Hierarchy) {
@@ -74,7 +73,7 @@ TEST(Accessibility, Hierarchy) {
   root.Children().push_back(std::make_unique<TestA11yImpl>(&root));
   root.Children().push_back(std::make_unique<TestA11yImpl>(&root));
 
-  A11yAdapter* root_adapter = A11yAdapter::GetOrCreateAdapter(&root);
+  QAccessibleInterface* root_adapter = A11yAdapter::GetOrCreateAdapter(&root);
   EXPECT_EQ(root_adapter->text(QAccessible::Text::Name),
             QString::fromStdString(root.AccessibleName()));
   EXPECT_EQ(root_adapter->role(), static_cast<QAccessible::Role>(root.AccessibleRole()));
@@ -92,6 +91,11 @@ TEST(Accessibility, Hierarchy) {
   EXPECT_EQ(root_adapter->child(1)->parent(), root_adapter);
   EXPECT_EQ(root_adapter->indexOfChild(root_adapter->child(0)), 0);
   EXPECT_EQ(root_adapter->indexOfChild(root_adapter->child(1)), 1);
+}
+
+TEST(Accessibility, QTInteraction) {
+  const int argc = 0;
+  QApplication app(argc, nullptr);
 }
 
 }  // namespace orbit_qt_tests

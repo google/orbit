@@ -4,37 +4,27 @@
 
 namespace orbit_qt {
 
-absl::flat_hash_map<const orbit_gl::GlA11yControlInterface*, A11yAdapter*>
-    A11yAdapter::s_iface_to_adapter_;
-absl::flat_hash_set<A11yAdapter*> A11yAdapter::s_valid_adapters_;
+absl::flat_hash_map<const orbit_gl::GlA11yControlInterface*, QAccessibleInterface*>
+    A11yAdapter::s_adapter_map_;
+absl::flat_hash_set<A11yAdapter*> A11yAdapter::s_owned_adapters_;
 
 //================ A11yAdapter ==================
 
-A11yAdapter* A11yAdapter::GetOrCreateAdapter(const orbit_gl::GlA11yControlInterface* iface) {
-  auto it = s_iface_to_adapter_.find(iface);
-  if (it != s_iface_to_adapter_.end()) {
-    CHECK(s_valid_adapters_.contains(it->second));
+QAccessibleInterface* A11yAdapter::GetOrCreateAdapter(
+    const orbit_gl::GlA11yControlInterface* iface) {
+  if (iface == nullptr) {
+    return nullptr;
+  }
+
+  auto it = s_adapter_map_.find(iface);
+  if (it != s_adapter_map_.end()) {
     return it->second;
   } else {
-    s_iface_to_adapter_.insert(std::make_pair(iface, new A11yAdapter(iface)));
-    auto result = s_iface_to_adapter_[iface];
-    s_valid_adapters_.insert(result);
-    return result;
+    A11yAdapter* adapter = new A11yAdapter(iface);
+    s_adapter_map_.insert(std::make_pair(iface, adapter));
+    s_owned_adapters_.insert(adapter);
+    return adapter;
   }
-}
-
-void A11yAdapter::ClearAdapterCache() {
-  for (auto adapter : s_valid_adapters_) {
-    delete adapter;
-  }
-
-  s_iface_to_adapter_.clear();
-  s_valid_adapters_.clear();
-}
-
-void A11yAdapter::ReleaseAdapter(A11yAdapter* adapter) {
-  s_valid_adapters_.erase(adapter);
-  delete adapter;
 }
 
 int A11yAdapter::indexOfChild(const QAccessibleInterface* child) const {
@@ -50,6 +40,8 @@ int A11yAdapter::indexOfChild(const QAccessibleInterface* child) const {
 }
 
 QRect A11yAdapter::rect() const {
+  return QRect();
+
   using orbit_gl::A11yRect;
   using orbit_gl::GlA11yControlInterface;
 
@@ -72,10 +64,10 @@ OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
     : QAccessibleWidget(widget, QAccessible::Role::Chart) {}
 
 int OrbitGlWidgetAccessible::childCount() const {
-  return widget_->GetCanvas()->AccessibleChildCount();
+  return static_cast<OrbitGLWidget*>(widget())->GetCanvas()->AccessibleChildCount();
 }
 
-int OrbitGlWidgetAccessible::indexOfChild(const QAccessibleInterface* child) {
+int OrbitGlWidgetAccessible::indexOfChild(const QAccessibleInterface* child) const {
   for (int i = 0; i < childCount(); ++i) {
     if (this->child(i) == child) {
       return i;
@@ -88,7 +80,8 @@ int OrbitGlWidgetAccessible::indexOfChild(const QAccessibleInterface* child) {
 QAccessibleInterface* OrbitGlWidgetAccessible::childAt(int x, int y) const { return nullptr; }
 
 QAccessibleInterface* OrbitGlWidgetAccessible::child(int index) const {
-  return A11yAdapter::GetOrCreateAdapter(widget_->GetCanvas()->AccessibleChild(index));
+  return A11yAdapter::GetOrCreateAdapter(
+      static_cast<OrbitGLWidget*>(widget())->GetCanvas()->AccessibleChild(index));
 }
 
 //================ Free functions ==================
@@ -98,9 +91,14 @@ QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* 
   if (classname == QLatin1String("OrbitGLWidget") && object && object->isWidgetType()) {
     iface = static_cast<QAccessibleInterface*>(
         new OrbitGlWidgetAccessible(static_cast<OrbitGLWidget*>(object)));
+    A11yAdapter::AddBridge(static_cast<OrbitGLWidget*>(object)->GetCanvas(), iface);
   }
 
   return iface;
+}
+
+void InstallAccessibilityFactories() {
+  QAccessible::installFactory(orbit_qt::GlAccessibilityFactory);
 }
 
 }  // namespace orbit_qt
