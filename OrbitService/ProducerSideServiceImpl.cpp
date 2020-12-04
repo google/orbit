@@ -275,43 +275,53 @@ void ProducerSideServiceImpl::SendCommandsThread(
     // curr_capture_status now holds the new service_state_.capture_status. Send commands
     // to the producer based on its value and also based on the value of prev_capture_status,
     // in case this thread missed an intermediate change of service_state_.capture_status.
-    if (curr_capture_status == CaptureStatus::kCaptureStarted &&
-        prev_capture_status == CaptureStatus::kCaptureFinished) {
-      if (!SendStartCaptureCommand(context, stream)) {
-        return;
-      }
-    } else if (curr_capture_status == CaptureStatus::kCaptureStarted &&
-               prev_capture_status == CaptureStatus::kCaptureStopping) {
-      if (!SendCaptureFinishedCommand(context, stream) ||
-          !SendStartCaptureCommand(context, stream)) {
-        return;
-      }
+    switch (curr_capture_status) {
+      case CaptureStatus::kCaptureStarted: {
+        if (prev_capture_status == CaptureStatus::kCaptureFinished) {
+          if (!SendStartCaptureCommand(context, stream)) {
+            return;
+          }
+        } else if (prev_capture_status == CaptureStatus::kCaptureStopping) {
+          if (!SendCaptureFinishedCommand(context, stream) ||
+              !SendStartCaptureCommand(context, stream)) {
+            return;
+          }
+        } else {
+          UNREACHABLE();
+        }
+      } break;
 
-    } else if (curr_capture_status == CaptureStatus::kCaptureStopping &&
-               prev_capture_status == CaptureStatus::kCaptureStarted) {
-      if (!SendStopCaptureCommand(context, stream)) {
-        return;
-      }
-    } else if (curr_capture_status == CaptureStatus::kCaptureStopping &&
-               prev_capture_status == CaptureStatus::kCaptureFinished) {
-      if (!SendStartCaptureCommand(context, stream) || !SendStopCaptureCommand(context, stream)) {
-        return;
-      }
+      case CaptureStatus::kCaptureStopping: {
+        if (prev_capture_status == CaptureStatus::kCaptureStarted) {
+          if (!SendStopCaptureCommand(context, stream)) {
+            return;
+          }
+        } else if (prev_capture_status == CaptureStatus::kCaptureFinished) {
+          if (!SendStartCaptureCommand(context, stream) ||
+              !SendStopCaptureCommand(context, stream)) {
+            return;
+          }
+        } else {
+          UNREACHABLE();
+        }
+      } break;
 
-    } else if (curr_capture_status == CaptureStatus::kCaptureFinished &&
-               prev_capture_status == CaptureStatus::kCaptureStopping) {
-      if (!SendCaptureFinishedCommand(context, stream)) {
-        return;
-      }
-    } else if (curr_capture_status == CaptureStatus::kCaptureFinished &&
-               prev_capture_status == CaptureStatus::kCaptureStarted) {
-      if (!SendStopCaptureCommand(context, stream) ||
-          !SendCaptureFinishedCommand(context, stream)) {
-        return;
-      }
-    } else {
-      UNREACHABLE();
+      case CaptureStatus::kCaptureFinished:
+        if (prev_capture_status == CaptureStatus::kCaptureStopping) {
+          if (!SendCaptureFinishedCommand(context, stream)) {
+            return;
+          }
+        } else if (prev_capture_status == CaptureStatus::kCaptureStarted) {
+          if (!SendStopCaptureCommand(context, stream) ||
+              !SendCaptureFinishedCommand(context, stream)) {
+            return;
+          }
+        } else {
+          UNREACHABLE();
+        }
+        break;
     }
+
     prev_capture_status = curr_capture_status;
   }
 }
