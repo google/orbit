@@ -56,7 +56,7 @@ class ProcessManager {
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.
-  virtual void Shutdown() = 0;
+  virtual void ShutdownAndWait() = 0;
 
   // Create ProcessManager with specified duration
   static std::unique_ptr<ProcessManager> Create(const std::shared_ptr<grpc::Channel>& channel,

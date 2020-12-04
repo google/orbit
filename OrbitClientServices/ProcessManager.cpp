@@ -26,7 +26,7 @@ class ProcessManagerImpl final : public ProcessManager {
                               absl::Duration refresh_timeout);
   ProcessManagerImpl(ProcessManagerImpl&&) = default;
   ProcessManagerImpl& operator=(ProcessManagerImpl&&) = default;
-  ~ProcessManagerImpl() override { Shutdown(); }
+  ~ProcessManagerImpl() override { ShutdownAndWait(); }
 
   void SetProcessListUpdateListener(const std::function<void(ProcessManager*)>& listener) override;
 
@@ -41,7 +41,7 @@ class ProcessManagerImpl final : public ProcessManager {
   ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path) override;
 
   void Start();
-  void Shutdown() override;
+  void ShutdownAndWait() noexcept override;
 
  private:
   void WorkerFunction();
@@ -89,7 +89,7 @@ void ProcessManagerImpl::Start() {
   worker_thread_ = std::thread([this] { WorkerFunction(); });
 }
 
-void ProcessManagerImpl::Shutdown() {
+void ProcessManagerImpl::ShutdownAndWait() noexcept {
   shutdown_mutex_.Lock();
   shutdown_initiated_ = true;
   shutdown_mutex_.Unlock();

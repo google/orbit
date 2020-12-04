@@ -516,7 +516,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 void OrbitApp::OnExit() {
   AbortCapture();
 
-  process_manager_->Shutdown();
+  process_manager_->ShutdownAndWait();
   thread_pool_->ShutdownAndWait();
 
   GOrbitApp = nullptr;
