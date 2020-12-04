@@ -32,10 +32,6 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
       if (!gl_canvas_->GetNeedsRedraw()) {
         return true;
       }
-      if (gl_canvas_->GetNeedsCheckHighlightChange()) {
-        checkFunctionHighlightChange();
-        gl_canvas_->ResetNeedsCheckHighlightChange();
-      }
     }
   }
 

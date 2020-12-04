@@ -208,8 +208,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
 
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
-  connect(ui->CaptureGLWidget, &OrbitGLWidget::checkFunctionHighlightChange, this,
-          &OrbitMainWindow::CheckAndChangeFunctionHighlight);
+
+  GOrbitApp->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
+    OnTimerSelectionChanged(timer_info);
+  });
 
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
@@ -759,18 +761,14 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
   UpdateCaptureStateDependentWidgets();
 }
 
-void OrbitMainWindow::CheckAndChangeFunctionHighlight() {
-  uint64_t function = GOrbitApp->selected_text_box()->GetTimerInfo().function_address();
-
-  if (GOrbitApp->highlighted_function() != function) {
-    LiveFunctionsDataView& live_functions_data_view =
-        ui->liveFunctions->GetLiveFunctionsController().GetDataView();
-    int selected_row = live_functions_data_view.GetRowFromFunctionAddress(function);
-
-    if (selected_row != -1) {
-      ui->liveFunctions->onRowSelected(selected_row);
-      GOrbitApp->set_highlighted_function(function);
-    }
+void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
+  if (!timer_info) return;
+  uint64_t function_address = timer_info->function_address();
+  LiveFunctionsDataView& live_functions_data_view =
+      ui->liveFunctions->GetLiveFunctionsController().GetDataView();
+  int selected_row = live_functions_data_view.GetRowFromFunctionAddress(function_address);
+  if (selected_row != -1) {
+    ui->liveFunctions->onRowSelected(selected_row);
   }
 }
 

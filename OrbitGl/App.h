@@ -252,6 +252,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectionBottomUpViewCallback(CallTreeViewCallback callback) {
     selection_bottom_up_view_callback_ = std::move(callback);
   }
+  using TimerSelectedCallback = std::function<void(const orbit_client_protos::TimerInfo*)>;
+  void SetTimerSelectedCallback(TimerSelectedCallback callback) {
+    timer_selected_callback_ = callback;
+  }
 
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
   void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
@@ -336,6 +340,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] const TextBox* selected_text_box() const;
   void SelectTextBox(const TextBox* text_box);
+  void DeselectTextBox();
+
+  [[nodiscard]] uint64_t GetFunctionAddressToHighlight() const;
 
   void SelectCallstackEvents(
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
@@ -422,6 +429,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;
   ShowEmptyFrameTrackWarningCallback empty_frame_track_warning_callback_;
+  TimerSelectedCallback timer_selected_callback_;
 
   std::vector<DataView*> panels_;
 

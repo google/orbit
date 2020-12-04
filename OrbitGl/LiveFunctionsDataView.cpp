@@ -78,7 +78,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 }
 
 void LiveFunctionsDataView::OnSelect(int row) {
-  GOrbitApp->SelectTextBox(nullptr);
+  GOrbitApp->DeselectTextBox();
   const CaptureData& capture_data = GOrbitApp->GetCaptureData();
   GOrbitApp->set_highlighted_function(capture_data.GetAbsoluteAddress(*GetSelectedFunction(row)));
 }

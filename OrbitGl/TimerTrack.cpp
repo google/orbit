@@ -66,6 +66,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   bool is_collapsed = collapse_toggle_->IsCollapsed();
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
+  const TextBox* selected_textbox = GOrbitApp->selected_text_box();
+  uint64_t highlighted_address = GOrbitApp->GetFunctionAddressToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
   // events that would just draw over an already drawn line. When zoomed in
@@ -94,6 +96,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
         if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
         if (!TimerFilter(timer_info)) continue;
+        uint64_t function_address = timer_info.function_address();
 
         UpdateDepth(timer_info.depth() + 1);
         double start_us = time_graph_->GetUsFromTick(timer_info.start());
@@ -106,22 +109,14 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         float world_timer_y = GetYFromDepth(timer_info.depth());
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
-        bool is_selected = &text_box == GOrbitApp->selected_text_box();
-        bool need_highlight =
-            (GOrbitApp->selected_text_box() && /*if picking from the capture window*/
-             GOrbitApp->selected_text_box()->GetTimerInfo().function_address() > 0 &&
-             timer_info.function_address() ==
-                 GOrbitApp->selected_text_box()->GetTimerInfo().function_address()) ||
-            (!GOrbitApp->selected_text_box() && /*if picking from the live functions panel*/
-             GOrbitApp->highlighted_function() != DataManager::kUnusedHighlightedFunctionAddress &&
-             GOrbitApp->highlighted_function() == timer_info.function_address());
+        bool is_selected = &text_box == selected_textbox;
+        bool is_highlighted = !is_selected && function_address == highlighted_address;
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
         float z = GlCanvas::kZValueBox + z_offset;
-        const Color kHighlight(100, 181, 246, 255);
-        Color color =
-            need_highlight && !is_selected ? kHighlight : GetTimerColor(timer_info, is_selected);
+        const Color kHighlightColor(100, 181, 246, 255);
+        Color color = is_highlighted ? kHighlightColor : GetTimerColor(timer_info, is_selected);
         text_box.SetPos(pos);
         text_box.SetSize(size);
 

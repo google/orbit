@@ -70,7 +70,7 @@ class DataManager final {
   [[nodiscard]] UserDefinedCaptureData& mutable_user_defined_capture_data() {
     return user_defined_capture_data_;
   }
-  static const uint64_t kUnusedHighlightedFunctionAddress;
+  static const uint64_t kInvalidFunctionAddress;
 
  private:
   const std::thread::id main_thread_id_;
@@ -78,7 +78,7 @@ class DataManager final {
   absl::node_hash_map<int32_t, ProcessData> process_map_;
   FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_functions_;
-  uint64_t highlighted_function_ = kUnusedHighlightedFunctionAddress;
+  uint64_t highlighted_function_ = kInvalidFunctionAddress;
 
   TracepointInfoSet selected_tracepoints_;
 

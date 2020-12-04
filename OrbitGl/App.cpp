@@ -1412,9 +1412,33 @@ void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
 }
 
 const TextBox* OrbitApp::selected_text_box() const { return data_manager_->selected_text_box(); }
+
 void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_selected_text_box(text_box);
-  data_manager_->set_highlighted_function(DataManager::kUnusedHighlightedFunctionAddress);
+  const TimerInfo* timer_info = text_box ? &text_box->GetTimerInfo() : nullptr;
+  uint64_t function_address =
+      timer_info ? timer_info->function_address() : DataManager::kInvalidFunctionAddress;
+  data_manager_->set_highlighted_function(function_address);
+  CHECK(timer_selected_callback_);
+  timer_selected_callback_(timer_info);
+}
+
+void OrbitApp::DeselectTextBox() { data_manager_->set_selected_text_box(nullptr); }
+
+uint64_t OrbitApp::GetFunctionAddressToHighlight() const {
+  const TextBox* selected_textbox = selected_text_box();
+  const TimerInfo* selected_timer_info =
+      selected_textbox ? &selected_textbox->GetTimerInfo() : nullptr;
+  uint64_t selected_address =
+      selected_timer_info ? selected_timer_info->function_address() : highlighted_function();
+
+  // Highlighting of manually instrumented scopes is not yet supported.
+  const FunctionInfo* function_info = GetSelectedFunction(selected_address);
+  if (function_info == nullptr || FunctionUtils::IsOrbitFunc(*function_info)) {
+    return DataManager::kInvalidFunctionAddress;
+  }
+
+  return selected_address;
 }
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
