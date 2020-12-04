@@ -24,6 +24,6 @@
 }
 
 [[nodiscard]] std::string GetThreadName(pid_t tid);
-void SetThreadName(const std::string& thread_name);
+void SetCurrentThreadName(const std::string& thread_name);
 
 #endif  // ORBIT_BASE_PLATFORM_LINUX_PROFILING_H_

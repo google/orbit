@@ -31,14 +31,14 @@ TEST(Profiling, ThreadId) {
 
 TEST(Profiling, GetSetThreadNames) {
   const std::string kThreadName = "ProfilingTest";
-  SetThreadName(kThreadName);
+  SetCurrentThreadName(kThreadName);
   std::string thread_name = GetThreadName(GetCurrentThreadId());
   EXPECT_EQ(kThreadName, thread_name);
 
   // On Linux, the maximum length for a thread name is 16 characters including '\0'.
   const size_t kMaxNonZeroCharactersLinux = 15;
   const std::string kLongThreadName = "ProfilingTestVeryLongName";
-  SetThreadName(kLongThreadName);
+  SetCurrentThreadName(kLongThreadName);
   std::string long_thread_name = GetThreadName(GetCurrentThreadId());
   EXPECT_GE(long_thread_name.size(), kMaxNonZeroCharactersLinux);
   EXPECT_THAT(kLongThreadName, testing::HasSubstr(long_thread_name.c_str()));

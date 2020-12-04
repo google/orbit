@@ -52,7 +52,7 @@ std::string GetThreadName(pid_t tid) {
   return kEmptyString;
 }
 
-void SetThreadName(const std::string& name) {
+void SetCurrentThreadName(const std::string& name) {
   static auto set_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PCWSTR)>("kernel32.dll", "SetThreadDescription");
   std::wstring wide_name(name.begin(), name.end());

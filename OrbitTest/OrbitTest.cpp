@@ -27,7 +27,7 @@ uint64_t GetThreadID() {
   return std::stoull(ss.str());
 }
 
-void SetThreadName(const std::string& a_Name) {
+void SetCurrentThreadName(const std::string& a_Name) {
 #if __linux__
   pthread_setname_np(pthread_self(), a_Name.c_str());
 #endif
@@ -67,7 +67,7 @@ void OrbitTest::Start() {
 }
 
 void OrbitTest::Loop() {
-  SetThreadName(std::string("OrbitThread_") + std::to_string(GetThreadID()));
+  SetCurrentThreadName(std::string("OrbitThread_") + std::to_string(GetThreadID()));
   uint32_t count = 0;
   while (!m_ExitRequested) {
     ((++count) & 1) == 0 ? TestFunc() : TestFunc2();

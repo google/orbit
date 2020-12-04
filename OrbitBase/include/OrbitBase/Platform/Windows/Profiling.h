@@ -19,6 +19,6 @@ using pid_t = uint32_t;
 
 [[nodiscard]] std::string GetThreadName(uint32_t tid);
 
-void SetThreadName(const std::string& thread_name);
+void SetCurrentThreadName(const std::string& thread_name);
 
 #endif  // ORBIT_BASE_PLATFORM_WINDOWS_PROFILING_H_

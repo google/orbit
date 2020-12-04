@@ -38,7 +38,7 @@ std::string GetThreadName(pid_t tid) {
   return comm_content.value();
 }
 
-void SetThreadName(const std::string& thread_name) {
+void SetCurrentThreadName(const std::string& thread_name) {
   // On Linux, "the thread name is a meaningful C language
   // string, whose length is restricted to 16 characters,
   // including the terminating null byte ('\0')".
