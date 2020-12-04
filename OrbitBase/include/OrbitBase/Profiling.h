@@ -8,7 +8,6 @@
 #include <string>
 
 [[nodiscard]] inline uint64_t MonotonicTimestampNs();
-[[nodiscard]] inline uint32_t GetCurrentThreadId();
 [[nodiscard]] inline std::string GetThreadName(uint32_t tid);
 inline void SetCurrentThreadName(const std::string& thread_name);
 
