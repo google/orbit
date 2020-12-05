@@ -15,7 +15,6 @@
 #include <unistd.h>
 
 #include <charconv>
-#include <cstdlib>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -27,7 +26,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/strip.h"
 
 namespace orbit_service::utils {
 
