@@ -18,14 +18,3 @@ TEST(ExecutablePathLinux, GetExecutablePathWithInvalidPid) {
   EXPECT_EQ(result.error().message(),
             "Unable to get executable path of process with pid 0: No such file or directory");
 }
-
-TEST(ExecutablePathLinux, GetExecutablePathWithPidPermissionDenied) {
-  if (getuid() == 0) {
-    GTEST_SKIP() << "This test is disabled for root user";
-  }
-
-  const auto result = orbit_base::GetExecutablePath(1);
-  ASSERT_FALSE(result);
-  EXPECT_EQ(result.error().message(),
-            "Unable to get executable path of process with pid 1: Permission denied");
-}
