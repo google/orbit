@@ -64,6 +64,11 @@ target_sources(OrbitBaseTests PRIVATE
         UniqueResourceTest.cpp
 )
 
+if (NOT WIN32)
+target_sources(OrbitBaseTests PRIVATE
+        ExecutablePathLinuxTest.cpp)
+endif()
+
 # Threadpool test contains some sleeps we couldn't work around - disable them on the CI
 # since they are flaky there (but they work fine on local workstations).
 if (NOT (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen"))

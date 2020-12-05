@@ -291,18 +291,6 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   return TotalCpuTime{jiffies, cpus};
 }
 
-ErrorMessageOr<Path> GetExecutablePath(int32_t pid) {
-  char buffer[PATH_MAX];
-
-  ssize_t length = readlink(absl::StrFormat("/proc/%d/exe", pid).c_str(), buffer, sizeof(buffer));
-  if (length == -1) {
-    return ErrorMessage(absl::StrFormat("Unable to get executable path of process with pid %d: %s",
-                                        pid, SafeStrerror(errno)));
-  }
-
-  return Path{std::string(buffer, length)};
-}
-
 ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) {
   std::ifstream file_stream(file_name);
   if (file_stream.fail()) {
