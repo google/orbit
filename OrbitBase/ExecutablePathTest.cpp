@@ -6,7 +6,7 @@
 
 #include "OrbitBase/ExecutablePath.h"
 
-TEST(Path, GetExecutablePath) {
+TEST(ExecutablePath, GetExecutablePath) {
   std::filesystem::path path = orbit_base::GetExecutablePath();
 #ifdef _WIN32
   const std::string executable_name = "OrbitBaseTests.exe";
@@ -17,4 +17,6 @@ TEST(Path, GetExecutablePath) {
   EXPECT_EQ(path.parent_path().filename(), "bin");
 }
 
-TEST(Path, GetExecutableDir) { EXPECT_EQ(orbit_base::GetExecutableDir().filename(), "bin"); }
+TEST(ExecutablePath, GetExecutableDir) {
+  EXPECT_EQ(orbit_base::GetExecutableDir().filename(), "bin");
+}

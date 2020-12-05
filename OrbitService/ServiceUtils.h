@@ -43,7 +43,6 @@ struct TotalCpuTime {
 std::optional<TotalCpuTime> GetCumulativeTotalCpuTime();
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
 
-ErrorMessageOr<Path> GetExecutablePath(int32_t pid);
 ErrorMessageOr<std::string> ReadFileToString(const Path& file_name);
 ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
                                          const std::vector<Path>& search_directories = {

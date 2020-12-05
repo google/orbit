@@ -9,10 +9,10 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <filesystem>
 
 #include "ElfUtils/ElfFile.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
@@ -87,7 +87,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
   process.set_command_line(cmdline);
 
-  auto file_path_result = utils::GetExecutablePath(pid);
+  auto file_path_result = orbit_base::GetExecutablePath(pid);
   if (file_path_result) {
     process.set_full_path(std::move(file_path_result.value()));
 

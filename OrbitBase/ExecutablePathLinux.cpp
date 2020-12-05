@@ -23,4 +23,16 @@ std::filesystem::path GetExecutablePath() {
   return std::filesystem::path(std::string(buffer, length));
 }
 
+ErrorMessageOr<std::filesystem::path> GetExecutablePath(int32_t pid) {
+  char buffer[PATH_MAX];
+
+  ssize_t length = readlink(absl::StrFormat("/proc/%d/exe", pid).c_str(), buffer, sizeof(buffer));
+  if (length == -1) {
+    return ErrorMessage(absl::StrFormat("Unable to get executable path of process with pid %d: %s",
+                                        pid, SafeStrerror(errno)));
+  }
+
+  return std::filesystem::path{std::string(buffer, length)};
+}
+
 }  // namespace orbit_base

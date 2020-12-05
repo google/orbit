@@ -6,7 +6,7 @@
 
 #include <deque>
 
-#include "OrbitBase/Logging.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "ServiceUtils.h"
 #include "absl/strings/str_format.h"
 #include "gmock/gmock-matchers.h"
@@ -31,9 +31,7 @@ TEST(ServiceUtils, ParseMaps) {
     EXPECT_TRUE(result.value().empty());
   }
 
-  const auto existing_elf_file_path = GetExecutablePath(getpid());
-  ASSERT_TRUE(existing_elf_file_path) << existing_elf_file_path.error().message();
-  const Path test_path = existing_elf_file_path.value().parent_path() / "testdata";
+  const Path test_path = orbit_base::GetExecutableDir() / "testdata";
   const Path hello_world_path = test_path / "hello_world_elf";
   const Path text_file = test_path / "textfile.txt";
 
@@ -132,12 +130,6 @@ TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
   ASSERT_TRUE(jiffies2->value <= total_cpu_time->jiffies.value);
 }
 
-TEST(ServiceUtils, GetExecutablePath) {
-  const auto result = GetExecutablePath(getpid());
-  ASSERT_TRUE(result) << result.error().message();
-  EXPECT_EQ(result.value().filename(), "OrbitServiceTests");
-}
-
 TEST(ServiceUtils, ReadFileToString) {
   {
     const auto result = ReadFileToString("non/existing/filename");
@@ -145,9 +137,8 @@ TEST(ServiceUtils, ReadFileToString) {
   }
 
   {
-    const auto executable_path = GetExecutablePath(getpid());
-    ASSERT_TRUE(executable_path) << executable_path.error().message();
-    const Path text_file = executable_path.value().parent_path() / "testdata/textfile.txt";
+    const auto executable_path = orbit_base::GetExecutableDir();
+    const Path text_file = executable_path / "testdata" / "textfile.txt";
     const auto result = ReadFileToString(text_file);
     ASSERT_TRUE(result) << result.error().message();
     EXPECT_EQ(result.value(), "content\nnew line");
@@ -155,9 +146,8 @@ TEST(ServiceUtils, ReadFileToString) {
 }
 
 TEST(ServiceUtils, FindSymbolsFilePath) {
-  const auto executable_path = GetExecutablePath(getpid());
-  ASSERT_TRUE(executable_path) << executable_path.error().message();
-  const Path test_path = executable_path.value().parent_path() / "testdata";
+  const auto executable_path = orbit_base::GetExecutableDir();
+  const Path test_path = executable_path / "testdata";
 
   {
     // same file
