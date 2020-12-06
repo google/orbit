@@ -41,6 +41,7 @@ target_sources(
           resource.h
           RingBuffer.h
           servicedeploymanager.h
+          TargetConfiguration.h
           TutorialContent.h
           TutorialOverlay.h)
 
