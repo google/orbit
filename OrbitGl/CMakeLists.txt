@@ -14,6 +14,7 @@ target_sources(
   PUBLIC App.h
          AsyncTrack.h
          Batcher.h
+         BlockChain.h
          CallStackDataView.h
          CallTreeView.h
          CaptureWindow.h
@@ -144,6 +145,7 @@ target_sources(OrbitGlTests PRIVATE
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
+               BlockChainTest.cpp
                GlUtilsTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
