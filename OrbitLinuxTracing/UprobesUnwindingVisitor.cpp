@@ -10,14 +10,11 @@
 #include <unwindstack/Unwinder.h>
 
 #include <algorithm>
-#include <array>
 #include <optional>
 #include <utility>
 
 #include "Function.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitLinuxTracing/TracerListener.h"
-#include "PerfEventRecords.h"
 #include "capture.pb.h"
 
 namespace LinuxTracing {

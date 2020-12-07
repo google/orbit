@@ -20,10 +20,7 @@
 
 namespace orbit_service::utils {
 using Path = std::filesystem::path;
-ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t pid);
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints();
-ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
-    std::string_view proc_maps_data);
 
 // In the linux world, Jiffies is a global counter which increments on tick (caused by a CPU timer
 // interrupt). This struct is a poor man's strong type to ensure that this measure is not mistakenly
@@ -43,7 +40,6 @@ struct TotalCpuTime {
 std::optional<TotalCpuTime> GetCumulativeTotalCpuTime();
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
 
-ErrorMessageOr<std::string> ReadFileToString(const Path& file_name);
 ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
                                          const std::vector<Path>& search_directories = {
                                              "/home/cloudcast/", "/home/cloudcast/debug_symbols/",

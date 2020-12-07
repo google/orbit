@@ -22,6 +22,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/DebugUtils.h
         include/OrbitBase/ExecutablePath.h
+        include/OrbitBase/ReadFileToString.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/Profiling.h
@@ -33,6 +34,7 @@ target_sources(OrbitBase PRIVATE
 
 target_sources(OrbitBase PRIVATE
         ExecutablePath.cpp
+        ReadFileToString.cpp
         Logging.cpp
         SafeStrerror.cpp
         ThreadPool.cpp
@@ -58,6 +60,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitBaseTests PRIVATE
         ExecutablePathTest.cpp
+        ReadFileToStringTest.cpp
         OrbitApiTest.cpp
         ProfilingTest.cpp
         TracingTest.cpp
@@ -82,5 +85,11 @@ target_link_libraries(OrbitBaseTests PRIVATE
         GTest::GTest
         GTest::Main)
 
+add_custom_command(TARGET OrbitBaseTests POST_BUILD COMMAND ${CMAKE_COMMAND}
+                   -E remove_directory $<TARGET_FILE_DIR:OrbitBaseTests>/testdata/OrbitBase)
+
+add_custom_command(TARGET OrbitBaseTests POST_BUILD COMMAND ${CMAKE_COMMAND}
+                   -E copy_directory ${CMAKE_SOURCE_DIR}/OrbitBase/testdata/
+                   $<TARGET_FILE_DIR:OrbitBaseTests>/testdata/OrbitBase)
 
 register_test(OrbitBaseTests)
