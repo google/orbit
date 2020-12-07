@@ -11,8 +11,7 @@ target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitCore
-  PUBLIC BlockChain.h
-         CoreUtils.h
+  PUBLIC CoreUtils.h
          Path.h
          RingBuffer.h
          StringManager.h
@@ -61,7 +60,6 @@ add_executable(OrbitCoreTests)
 target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCoreTests PRIVATE
-    BlockChainTest.cpp
     CoreUtilsTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
