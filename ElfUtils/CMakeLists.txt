@@ -11,11 +11,16 @@ target_compile_options(ElfUtils PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   ElfUtils
-  PUBLIC include/ElfUtils/ElfFile.h)
+  PUBLIC include/ElfUtils/ElfFile.h
+         include/ElfUtils/LinuxMap.h)
 
 target_sources(
   ElfUtils
   PRIVATE ElfFile.cpp)
+
+if (NOT WIN32)
+target_sources(ElfUtils PRIVATE LinuxMap.cpp)
+endif()
 
 target_include_directories(ElfUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -33,6 +38,10 @@ add_executable(ElfUtilsTests)
 target_sources(ElfUtilsTests PRIVATE
     ElfFileTest.cpp
 )
+
+if (NOT WIN32)
+target_sources(ElfUtilsTests PRIVATE LinuxMapTest.cpp)
+endif()
 
 target_link_libraries(
   ElfUtilsTests

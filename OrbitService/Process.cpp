@@ -14,6 +14,7 @@
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
 
@@ -49,7 +50,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   }
 
   const std::filesystem::path name_file_path = path / "comm";
-  auto name_file_result = utils::ReadFileToString(name_file_path);
+  auto name_file_result = orbit_base::ReadFileToString(name_file_path);
   if (!name_file_result) {
     return ErrorMessage{absl::StrFormat("Failed to read %s: %s", name_file_path.string(),
                                         name_file_result.error().message())};
@@ -77,7 +78,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   // "The command-line arguments appear [...] as a set of strings
   // separated by null bytes ('\0')".
   const std::filesystem::path cmdline_file_path = path / "cmdline";
-  auto cmdline_file_result = utils::ReadFileToString(cmdline_file_path);
+  auto cmdline_file_result = orbit_base::ReadFileToString(cmdline_file_path);
   if (!cmdline_file_result) {
     return ErrorMessage{absl::StrFormat("Failed to read %s: %s", cmdline_file_path.string(),
                                         cmdline_file_result.error().message())};
