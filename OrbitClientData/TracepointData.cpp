@@ -13,7 +13,7 @@ void TracepointData::EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_h
                                             int32_t process_id, int32_t thread_id, int32_t cpu,
                                             bool is_same_pid_as_target) {
   absl::MutexLock lock(&mutex_);
-  num_total_tracepoints_++;
+  num_total_tracepoint_events_++;
 
   orbit_client_protos::TracepointEventInfo event;
   event.set_time(time);
@@ -85,18 +85,18 @@ void TracepointData::ForEachTracepointEventOfThreadInTimeRange(
   }
 }
 
-uint32_t TracepointData::GetNumTracepointsForThreadId(int32_t thread_id) const {
+uint32_t TracepointData::GetNumTracepointEventsForThreadId(int32_t thread_id) const {
   absl::MutexLock lock(&mutex_);
   if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
-    return num_total_tracepoints_;
+    return num_total_tracepoint_events_;
   }
   if (thread_id == orbit_base::kAllProcessThreadsTid) {
     const auto not_target_process_tracepoints_it =
         thread_id_to_time_to_tracepoint_.find(orbit_base::kNotTargetProcessTid);
     if (not_target_process_tracepoints_it == thread_id_to_time_to_tracepoint_.end()) {
-      return num_total_tracepoints_;
+      return num_total_tracepoint_events_;
     }
-    return num_total_tracepoints_ - not_target_process_tracepoints_it->second.size();
+    return num_total_tracepoint_events_ - not_target_process_tracepoints_it->second.size();
   }
 
   const auto& it = thread_id_to_time_to_tracepoint_.find(thread_id);
@@ -109,7 +109,7 @@ uint32_t TracepointData::GetNumTracepointsForThreadId(int32_t thread_id) const {
 bool TracepointData::AddUniqueTracepointInfo(uint64_t key,
                                              orbit_grpc_protos::TracepointInfo tracepoint) {
   absl::MutexLock lock{&unique_tracepoints_mutex_};
-  auto [unused_it, inserted] = unique_tracepoints_.try_emplace(key, tracepoint);
+  auto [unused_it, inserted] = unique_tracepoints_.try_emplace(key, std::move(tracepoint));
   return inserted;
 }
 
