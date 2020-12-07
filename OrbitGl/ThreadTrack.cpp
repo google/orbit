@@ -88,7 +88,7 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
 }
 
 bool ThreadTrack::IsTrackSelected() const {
-  return thread_id_ != orbit_base::kAllProcessThreadsFakeTid &&
+  return thread_id_ != orbit_base::kAllProcessThreadsTid &&
          GOrbitApp->selected_thread_id() == thread_id_;
 }
 

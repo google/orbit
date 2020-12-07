@@ -73,7 +73,7 @@ PostProcessedSamplingData::GetSortedCallstackReportFromAddress(uint64_t address,
 }
 
 const ThreadSampleData* PostProcessedSamplingData::GetSummary() const {
-  auto summary_it = thread_id_to_sample_data_.find(orbit_base::kAllProcessThreadsFakeTid);
+  auto summary_it = thread_id_to_sample_data_.find(orbit_base::kAllProcessThreadsTid);
   if (summary_it == thread_id_to_sample_data_.end()) {
     return nullptr;
   }

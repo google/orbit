@@ -24,7 +24,7 @@ void TracepointData::EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_h
   event.set_cpu(cpu);
 
   int32_t insertion_thread_id =
-      (is_same_pid_as_target) ? thread_id : orbit_base::kNotTargetProcessThreadId;
+      (is_same_pid_as_target) ? thread_id : orbit_base::kNotTargetProcessTid;
 
   auto [event_map_iterator, unused_inserted] =
       thread_id_to_time_to_tracepoint_.try_emplace(insertion_thread_id);
@@ -76,13 +76,13 @@ void TracepointData::ForEachTracepointEventOfThreadInTimeRange(
     int32_t thread_id, uint64_t min_tick, uint64_t max_tick_exclusive,
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
   absl::MutexLock lock(&mutex_);
-  if (thread_id == orbit_base::kAllThreadsOfAllProcessesFakeTid) {
+  if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
     for (const auto& [unused_thread_id, time_to_tracepoint] : thread_id_to_time_to_tracepoint_) {
       ForEachTracepointEventInRange(min_tick, max_tick_exclusive, time_to_tracepoint, action);
     }
-  } else if (thread_id == orbit_base::kAllProcessThreadsFakeTid) {
+  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
     for (const auto& [thread_id, time_to_tracepoint] : thread_id_to_time_to_tracepoint_) {
-      if (thread_id == orbit_base::kNotTargetProcessThreadId) {
+      if (thread_id == orbit_base::kNotTargetProcessTid) {
         continue;
       }
       ForEachTracepointEventInRange(min_tick, max_tick_exclusive, time_to_tracepoint, action);
@@ -98,12 +98,12 @@ void TracepointData::ForEachTracepointEventOfThreadInTimeRange(
 
 uint32_t TracepointData::GetNumTracepointsForThreadId(int32_t thread_id) const {
   absl::MutexLock lock(&mutex_);
-  if (thread_id == orbit_base::kAllThreadsOfAllProcessesFakeTid) {
+  if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
     return num_total_tracepoints_;
   }
-  if (thread_id == orbit_base::kAllProcessThreadsFakeTid) {
+  if (thread_id == orbit_base::kAllProcessThreadsTid) {
     const auto not_target_process_tracepoints_it =
-        thread_id_to_time_to_tracepoint_.find(orbit_base::kNotTargetProcessThreadId);
+        thread_id_to_time_to_tracepoint_.find(orbit_base::kNotTargetProcessTid);
     if (not_target_process_tracepoints_it == thread_id_to_time_to_tracepoint_.end()) {
       return num_total_tracepoints_;
     }

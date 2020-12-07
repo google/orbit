@@ -132,7 +132,7 @@ void CaptureWindow::LeftUp() {
 
   if (!click_was_drag_ && background_clicked_) {
     GOrbitApp->SelectTextBox(nullptr);
-    GOrbitApp->set_selected_thread_id(orbit_base::kAllProcessThreadsFakeTid);
+    GOrbitApp->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
     NeedsUpdate();
   }
 }

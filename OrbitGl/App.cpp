@@ -845,7 +845,7 @@ void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
   capture_window_->GetTimeGraph()->SetCaptureData(nullptr);
   capture_data_.reset();
-  set_selected_thread_id(orbit_base::kAllProcessThreadsFakeTid);
+  set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
   SelectTextBox(nullptr);
 
   UpdateAfterCaptureCleared();
@@ -1417,7 +1417,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.
-  bool generate_summary = thread_id == orbit_base::kAllProcessThreadsFakeTid;
+  bool generate_summary = thread_id == orbit_base::kAllProcessThreadsTid;
   PostProcessedSamplingData processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(
           *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), generate_summary);
