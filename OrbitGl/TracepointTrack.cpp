@@ -5,6 +5,7 @@
 #include "TracepointTrack.h"
 
 #include "App.h"
+#include "OrbitBase/ThreadConstants.h"
 
 TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
     : EventTrack(time_graph) {
@@ -80,7 +81,7 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           uint64_t time = tracepoint.time();
           float radius = track_height / 4;
           Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-          if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+          if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
             const Color color = tracepoint.pid() == capture_data->process_id() ? kGrey : kWhite;
             batcher->AddVerticalLine(pos, -track_height, z, color);
           } else {
@@ -136,7 +137,7 @@ std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
 
   TracepointInfo tracepoint_info = capture_data->GetTracepointInfo(tracepoint_info_key);
 
-  if (thread_id_ == TracepointEventBuffer::kAllTracepointsFakeTid) {
+  if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
     return absl::StrFormat(
         "<b>%s : %s</b><br/>"
         "<i>Tracepoint event</i><br/>"

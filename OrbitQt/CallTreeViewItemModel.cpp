@@ -18,7 +18,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        if (thread_item->thread_id() == orbit_base::kAllProcessThreadsFakeTid) {
+        if (thread_item->thread_id() == orbit_base::kAllProcessThreadsTid) {
           return QString::fromStdString(
               thread_item->thread_name().empty()
                   ? "(all threads)"

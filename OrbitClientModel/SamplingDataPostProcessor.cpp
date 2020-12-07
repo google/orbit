@@ -83,7 +83,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
 
         if (generate_summary) {
           ThreadSampleData* all_thread_sample_data =
-              &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsFakeTid];
+              &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
           all_thread_sample_data->samples_count++;
           all_thread_sample_data->callstack_count[event.callstack_hash()]++;
           callstack_data.ForEachFrameInCallstack(

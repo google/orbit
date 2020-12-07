@@ -9,7 +9,14 @@
 namespace orbit_base {
 
 // Represents a fake thread id to specify the set of all thread ids of the current process.
-static constexpr int32_t kAllProcessThreadsFakeTid = -1;
+static constexpr int32_t kAllProcessThreadsTid = -1;
+
+// Represents a fake thread id to specify the set of all thread ids of all processes on the system.
+static constexpr int32_t kAllThreadsOfAllProcessesTid = -2;
+
+// Represents a fake thread id to specify the set of all thread ids of all processes on the system
+// that are NOT in the current process.
+static constexpr int32_t kNotTargetProcessTid = -3;
 
 }  // namespace orbit_base
 #endif  // ORBIT_BASE_THREAD_CONSTANTS_H

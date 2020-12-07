@@ -149,7 +149,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   callstack_event.set_callstack_hash(callstack.GetHash());
   capture_data.AddCallstackEvent(callstack_event);
 
-  capture_data.AddUniqueTracepointEventInfo(0, selected_tracepoint_info);
+  capture_data.AddUniqueTracepointEventInfo(1, selected_tracepoint_info);
 
   TracepointEventInfo tracepoint_event;
   tracepoint_event.set_tracepoint_info_key(1);
@@ -219,7 +219,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
       capture_info.tracepoint_infos(0);
   ASSERT_EQ(actual_tracepoint_info.category(), selected_tracepoint_info.category());
   ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
-  ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 0);
+  ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 1);
 
   ASSERT_EQ(1, capture_info.tracepoint_event_infos_size());
   const orbit_client_protos::TracepointEventInfo& actual_tracepoint_event =
