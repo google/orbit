@@ -2,54 +2,67 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_QT_RING_BUFFER_H_
+#define ORBIT_QT_RING_BUFFER_H_
 
+#include <array>
 #include <cstddef>
 
 template <class T, size_t BUFFER_SIZE>
 class RingBuffer {
  public:
-  RingBuffer() : m_CurrentSize(0), m_CurrentIndex(0) {}
-
-  inline void Clear() { m_CurrentSize = m_CurrentIndex = 0; }
-
-  inline void Add(const T& a_Item) {
-    m_Data[m_CurrentIndex++] = a_Item;
-    m_CurrentIndex %= BUFFER_SIZE;
-    ++m_CurrentSize;
+  void Clear() {
+    current_size_ = 0;
+    current_index_ = 0;
   }
 
-  inline void Fill(const T& a_Item) {
+  void Add(const T& item) {
+    data_[current_index_++] = item;
+    current_index_ %= BUFFER_SIZE;
+    ++current_size_;
+  }
+
+  void Fill(const T& item) {
     for (size_t i = 0; i < BUFFER_SIZE; ++i) {
-      Add(a_Item);
+      Add(item);
     }
   }
 
-  inline bool Contains(const T& a_Item) const {
+  [[nodiscard]] bool Contains(const T& item) const {
     for (size_t i = 0; i < Size(); ++i) {
-      if (m_Data[i] == a_Item) return true;
+      if (data_[i] == item) return true;
     }
-
     return false;
   }
 
-  inline size_t Size() const { return m_CurrentSize > BUFFER_SIZE ? BUFFER_SIZE : m_CurrentSize; }
-
-  inline size_t GetCurrentIndex() const { return m_CurrentIndex; }
-
-  inline T* Data() { return m_Data; }
-
-  inline size_t IndexOfOldest() const { return m_CurrentSize > BUFFER_SIZE ? m_CurrentIndex : 0; }
-
-  T& operator[](size_t a_Index) {
-    size_t index = (IndexOfOldest() + a_Index) % BUFFER_SIZE;
-    return m_Data[index];
+  [[nodiscard]] size_t Size() const {
+    return current_size_ > BUFFER_SIZE ? BUFFER_SIZE : current_size_;
   }
 
-  inline const T& Latest() { return (*this)[Size() - 1]; }
+  [[nodiscard]] size_t GetCurrentIndex() const { return current_index_; }
 
- protected:
-  T m_Data[BUFFER_SIZE];
-  size_t m_CurrentSize;
-  size_t m_CurrentIndex;
+  [[nodiscard]] T* Data() { return data_.data(); }
+
+  [[nodiscard]] size_t IndexOfOldest() const {
+    return current_size_ > BUFFER_SIZE ? current_index_ : 0;
+  }
+
+  [[nodiscard]] T& operator[](size_t index) {
+    size_t internal_index = (IndexOfOldest() + index) % BUFFER_SIZE;
+    return data_[internal_index];
+  }
+
+  [[nodiscard]] const T& operator[](size_t index) const {
+    size_t internal_index = (IndexOfOldest() + index) % BUFFER_SIZE;
+    return data_[internal_index];
+  }
+
+  [[nodiscard]] const T& Latest() const { return (*this)[Size() - 1]; }
+
+ private:
+  std::array<T, BUFFER_SIZE> data_;
+  size_t current_size_ = 0;
+  size_t current_index_ = 0;
 };
+
+#endif  // ORBIT_QT_RING_BUFFER_H_
