@@ -32,7 +32,7 @@ class A11yAdapter : public QAccessibleInterface {
     CHECK(!result || s_adapter_map_.find(info_)->second == this);
     return result;
   }
-  QObject* object() const override { return nullptr; }
+  QObject* object() const override { return &dummy_; }
 
   // relations & interactions - currently not supported
   QVector<QPair<QAccessibleInterface*, QAccessible::Relation>> relations(
@@ -70,6 +70,7 @@ class A11yAdapter : public QAccessibleInterface {
   }
 
  private:
+  mutable QObject dummy_;
   A11yAdapter(const orbit_gl::GlA11yControlInterface* info) : info_(info){};
 
   const orbit_gl::GlA11yControlInterface* info_ = nullptr;

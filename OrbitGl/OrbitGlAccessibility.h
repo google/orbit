@@ -12,6 +12,10 @@ namespace orbit_gl {
 struct A11yRect {
   int left = 0, top = 0, width = 0, height = 0;
 
+  A11yRect() = default;
+  A11yRect(int left, int top, int width, int height)
+      : left(left), top(top), width(width), height(height) {}
+
   void offset_by(int left, int top) {
     this->left += left;
     this->top += top;
@@ -29,8 +33,8 @@ enum class A11yRole {
 class GlA11yControlInterface {
  public:
   [[nodiscard]] virtual int AccessibleChildCount() const = 0;
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChild(int) const = 0;
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChildAt(int, int) const = 0;
+  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChild(int index) const = 0;
+  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChildAt(int x, int y) const = 0;
   [[nodiscard]] virtual const GlA11yControlInterface* AccessibleParent() const = 0;
 
   [[nodiscard]] virtual std::string AccessibleName() const = 0;

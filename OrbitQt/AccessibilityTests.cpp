@@ -93,9 +93,4 @@ TEST(Accessibility, Hierarchy) {
   EXPECT_EQ(root_adapter->indexOfChild(root_adapter->child(1)), 1);
 }
 
-TEST(Accessibility, QTInteraction) {
-  const int argc = 0;
-  QApplication app(argc, nullptr);
-}
-
 }  // namespace orbit_qt_tests
