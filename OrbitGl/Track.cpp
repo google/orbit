@@ -62,6 +62,8 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   return result;
 }
 
+const orbit_gl::GlA11yControlInterface* Track::AccessibleParent() const { return time_graph_; }
+
 void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                             const Color& color, float rotation, float z) {
   if (points.size() < 3) {

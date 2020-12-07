@@ -45,8 +45,7 @@ unsigned GlCanvas::kMaxNumberRealZLayers = 16 + 4 + 4 + 4;
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas(uint32_t font_size)
-    : ui_batcher_(BatcherId::kUi, &picking_manager_), test_aif_(this) {
+GlCanvas::GlCanvas(uint32_t font_size) : ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
   screen_width_ = 0;
@@ -135,6 +134,16 @@ void GlCanvas::EnableImGui() {
   if (imgui_context_ == nullptr) {
     imgui_context_ = ImGui::CreateContext();
   }
+}
+
+int GlCanvas::AccessibleChildCount() const { return 0; }
+
+const orbit_gl::GlA11yControlInterface* GlCanvas::AccessibleChild(int index) const {
+  return nullptr;
+}
+
+const orbit_gl::GlA11yControlInterface* GlCanvas::AccessibleChildAt(int x, int y) const {
+  return nullptr;
 }
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {

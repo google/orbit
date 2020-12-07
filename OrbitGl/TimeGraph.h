@@ -21,6 +21,7 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientModel/CaptureData.h"
+#include "OrbitGlAccessibility.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
@@ -32,9 +33,9 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
-class TimeGraph {
+class TimeGraph : public orbit_gl::GlA11yControlInterface {
  public:
-  explicit TimeGraph(uint32_t font_size);
+  explicit TimeGraph(GlCanvas* canvas, uint32_t font_size);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -116,7 +117,6 @@ class TimeGraph {
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
   [[nodiscard]] StringManager* GetStringManager() { return string_manager_.get(); }
-  void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
     return lround((font_size_)*layout_.GetScale());
@@ -177,6 +177,18 @@ class TimeGraph {
 
   [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+
+  // Accessibility
+  [[nodiscard]] int AccessibleChildCount() const override;
+  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override;
+  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int, int) const override;
+  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
+
+  [[nodiscard]] std::string AccessibleName() const override { return "TimeGraph"; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
+    return orbit_gl::A11yRole::Chart;
+  }
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();

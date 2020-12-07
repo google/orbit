@@ -763,8 +763,6 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   }
 }
 
-orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const { return orbit_gl::A11yRect(); }
-
 std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
@@ -1269,10 +1267,25 @@ void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& functi
   NeedsUpdate();
 }
 
-int TimeGraph::AccessibleChildCount() const { return 0; }
+orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const { return orbit_gl::A11yRect(); }
 
-const GlA11yControlInterface* TimeGraph::AccessibleChild(int) const { return nullptr; }
+int TimeGraph::AccessibleChildCount() const { return sorted_filtered_tracks_.size(); }
 
-const GlA11yControlInterface* TimeGraph::AccessibleChildAt(int, int) const { return nullptr; }
+const GlA11yControlInterface* TimeGraph::AccessibleChild(int index) const {
+  // return nullptr;
+  return sorted_filtered_tracks_[index].get();
+}
 
-const GlA11yControlInterface* TimeGraph::AccessibleParent() const { return nullptr; }
+const GlA11yControlInterface* TimeGraph::AccessibleChildAt(int x, int y) const {
+  // return nullptr;
+  for (auto& track : sorted_filtered_tracks_) {
+    // TODO: This is probably flipped along y
+    if (y >= track->GetPos()[1] && y <= track->GetPos()[1] + track->GetHeight()) {
+      return track.get();
+    }
+  }
+
+  return nullptr;
+}
+
+const GlA11yControlInterface* TimeGraph::AccessibleParent() const { return canvas_; }

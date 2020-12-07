@@ -12,6 +12,7 @@
 #include "BlockChain.h"
 #include "CoreMath.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitGlAccessibility.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -22,7 +23,9 @@
 class GlCanvas;
 class TimeGraph;
 
-class Track : public Pickable, public std::enable_shared_from_this<Track> {
+class Track : public Pickable,
+              public orbit_gl::GlA11yControlInterface,
+              public std::enable_shared_from_this<Track> {
  public:
   enum Type {
     kTimerTrack,
@@ -98,6 +101,24 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] int32_t GetProcessId() const { return process_id_; }
   void SetProcessId(uint32_t pid) { process_id_ = pid; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;
+
+  // Accessibility
+  [[nodiscard]] virtual int AccessibleChildCount() const override { return 0; }
+  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChild(int) const override {
+    return nullptr;
+  }
+  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChildAt(int, int) const override {
+    return nullptr;
+  }
+  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleParent() const override;
+
+  [[nodiscard]] virtual std::string AccessibleName() const { return "Track"; }
+  [[nodiscard]] virtual orbit_gl::A11yRole AccessibleRole() const {
+    return orbit_gl::A11yRole::Chart;
+  }
+  [[nodiscard]] virtual orbit_gl::A11yRect AccessibleLocalRect() const {
+    return orbit_gl::A11yRect(pos_[0], pos_[1], size_[0], size_[1]);
+  }
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
