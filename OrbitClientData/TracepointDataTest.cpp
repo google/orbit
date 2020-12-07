@@ -24,15 +24,17 @@ TEST(TracepointData, AddAndGetTracepointEvents) {
   tracepoint_data.EmplaceTracepointEvent(0, 1, 2, 6, 3, false);
   tracepoint_data.EmplaceTracepointEvent(10, 1, 2, 1, 3, false);
 
-  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(1), 3);
-  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(0), 1);
+  EXPECT_EQ(tracepoint_data.GetNumTracepointEventsForThreadId(1), 3);
+  EXPECT_EQ(tracepoint_data.GetNumTracepointEventsForThreadId(0), 1);
 
   /*The number of tracepoints for thread id 6 is 0 because this tracepoint does not belong in the
    * target process*/
-  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(6), 0);
-  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(orbit_base::kAllProcessThreadsTid), 4);
-  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(orbit_base::kAllThreadsOfAllProcessesTid),
-            6);
+  EXPECT_EQ(tracepoint_data.GetNumTracepointEventsForThreadId(6), 0);
+  EXPECT_EQ(tracepoint_data.GetNumTracepointEventsForThreadId(orbit_base::kAllProcessThreadsTid),
+            4);
+  EXPECT_EQ(
+      tracepoint_data.GetNumTracepointEventsForThreadId(orbit_base::kAllThreadsOfAllProcessesTid),
+      6);
 
   std::vector<uint64_t> tracepoints_of_thread_1;
   tracepoint_data.ForEachTracepointEventOfThreadInTimeRange(

@@ -18,14 +18,22 @@
 #include "tracepoint.pb.h"
 
 /*
- * Stores `TracepointEventInfos` and a mapping from tracepoint key to unique `TracepointInfo`s.
- * It provides methods to add, access and iterate over those.
+ * TracepointData stores all tracepoint related information on the Client/Ui side.
+ * Single events in which a tracepoint got hit are represented by a 'TracepointEventInfo'.
+ * These events are stored ordered by the time stamp of the event such that one can iterate over
+ * the events in a time interval in an efficient manner.
+ * The class offers methods to add events and iterate over over them.
+ *
+ * Other than the events themselves the class stores a description of each system trace point used
+ * (`TracepointInfo`). This is stored in a map from integer to a `TracepointInfo`) and is used
+ * to compress the wire format of events. The events contain an identifier rather than the full
+ * description of the tracepoint they correspond to.
  *
  * Thread-Safety: This class is thread-safe.
  */
 class TracepointData {
  public:
-  // Assume that the corrspnding tracepoint of tracepoint_hash is already in unique_tracepoints_
+  // Assume that the corresponding tracepoint of tracepoint_hash is already in unique_tracepoints_
   void EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t process_id,
                               int32_t thread_id, int32_t cpu, bool is_same_pid_as_target);
 
@@ -36,7 +44,7 @@ class TracepointData {
   void ForEachTracepointEvent(
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const;
 
-  uint32_t GetNumTracepointsForThreadId(int32_t thread_id) const;
+  uint32_t GetNumTracepointEventsForThreadId(int32_t thread_id) const;
 
   bool AddUniqueTracepointInfo(uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint);
 
@@ -47,7 +55,7 @@ class TracepointData {
       const std::function<void(const orbit_client_protos::TracepointInfo&)>& action) const;
 
  private:
-  int32_t num_total_tracepoints_ = 0;
+  int32_t num_total_tracepoint_events_ = 0;
 
   mutable absl::Mutex mutex_;
   mutable absl::Mutex unique_tracepoints_mutex_;
