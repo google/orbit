@@ -6,8 +6,13 @@
 #define ORBIT_QT_OVERLAY_WIDGET_H_
 
 #include <QEvent>
+#include <QLabel>
 #include <QObject>
+#include <QPaintEvent>
 #include <QPainter>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QString>
 #include <QWidget>
 #include <memory>
 

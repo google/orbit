@@ -5,6 +5,7 @@
 #ifndef ORBIT_CLIENT_DATA_MODULE_MANAGER_H_
 #define ORBIT_CLIENT_DATA_MODULE_MANAGER_H_
 
+#include <string>
 #include <vector>
 
 #include "OrbitClientData/ModuleData.h"

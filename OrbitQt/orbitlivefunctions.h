@@ -5,7 +5,11 @@
 #ifndef ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 #define ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 
+#include <stdint.h>
+
 #include <QLineEdit>
+#include <QObject>
+#include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -14,6 +18,7 @@
 #include "capture_data.pb.h"
 #include "orbiteventiterator.h"
 #include "types.h"
+#include "ui_orbitlivefunctions.h"
 
 namespace Ui {
 class OrbitLiveFunctions;

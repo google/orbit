@@ -5,10 +5,13 @@
 #ifndef ORBIT_TRACEPOINTSERVICEIMPL_H
 #define ORBIT_TRACEPOINTSERVICEIMPL_H
 
+#include <grpcpp/grpcpp.h>
+
 #include <memory>
 #include <string>
 
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 namespace orbit_service {
 

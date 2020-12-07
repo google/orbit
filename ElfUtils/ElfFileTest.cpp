@@ -2,13 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <fstream>
+#include <iterator>
+#include <memory>
+#include <outcome.hpp>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "ElfUtils/ElfFile.h"
+#include "OrbitBase/Result.h"
 #include "Path.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"

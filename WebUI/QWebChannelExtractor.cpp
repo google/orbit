@@ -2,10 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <QtCore/qglobal.h>
+
+#include <QByteArray>
 #include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QIODevice>
+#include <QTextStream>
 #include <QWebChannel>
 #include <cstdio>
 

@@ -4,8 +4,12 @@
 
 #include "orbitdataviewpanel.h"
 
+#include <QLabel>
+#include <QPushButton>
+#include <new>
 #include <string>
 
+#include "orbittablemodel.h"
 #include "ui_orbitdataviewpanel.h"
 
 OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)

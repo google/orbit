@@ -4,15 +4,14 @@
 
 #include "OrbitGgp/Instance.h"
 
-#include <qjsonvalue.h>
-
 #include <QByteArray>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <Qt>
+#include <utility>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 
 namespace OrbitGgp {

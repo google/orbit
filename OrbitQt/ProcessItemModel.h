@@ -6,7 +6,12 @@
 #define ORBIT_QT_PROCESS_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
+#include <QModelIndex>
+#include <QObject>
+#include <QString>
 #include <QVariant>
+#include <QtCore>
+#include <vector>
 
 #include "process.pb.h"
 

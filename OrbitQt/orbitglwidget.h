@@ -9,8 +9,19 @@
 #include "OpenGl.h"
 // clang-format on
 
+#include <stdint.h>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QObject>
+#include <QOpenGLDebugLogger>
+#include <QOpenGLDebugMessage>
+#include <QString>
+#include <QWheelEvent>
+#include <QWidget>
+#include <memory>
 
 #include "GlCanvas.h"
 

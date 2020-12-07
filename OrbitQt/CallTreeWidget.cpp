@@ -4,15 +4,42 @@
 
 #include "CallTreeWidget.h"
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/strings/match.h>
+#include <math.h>
+#include <stdint.h>
+
+#include <QAbstractItemModel>
+#include <QAction>
 #include <QColor>
+#include <QFlags>
+#include <QHeaderView>
+#include <QItemSelectionModel>
+#include <QLineEdit>
 #include <QMenu>
+#include <QModelIndexList>
 #include <QPainter>
 #include <QPalette>
-#include <QStyleOption>
+#include <QRect>
+#include <QStaticStringData>
+#include <QStringLiteral>
+#include <QStyle>
+#include <QStyleOptionProgressBar>
+#include <QTreeView>
+#include <algorithm>
+#include <new>
+#include <optional>
+#include <set>
+#include <utility>
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
+#include "CopyKeySequenceEnabledTreeView.h"
 #include "FunctionsDataView.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 

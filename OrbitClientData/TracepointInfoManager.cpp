@@ -4,6 +4,10 @@
 
 #include "OrbitClientData/TracepointInfoManager.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
+#include <stdint.h>
+
 bool TracepointInfoManager::AddUniqueTracepointEventInfo(
     uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint) {
   absl::MutexLock lock{&unique_tracepoints_mutex_};

@@ -5,9 +5,12 @@
 #ifndef ORBIT_BASE_LOGGING_H_
 #define ORBIT_BASE_LOGGING_H_
 
+#include <stdlib.h>
+
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 #ifdef _WIN32
 #include <Windows.h>

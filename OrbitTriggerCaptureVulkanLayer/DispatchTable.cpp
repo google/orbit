@@ -4,16 +4,11 @@
 
 #include "DispatchTable.h"
 
-#include <string.h>
+#include <absl/container/flat_hash_map.h>
 
-#include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
-#include "vulkan/vk_layer.h"
 #include "vulkan/vk_layer_dispatch_table.h"
-#include "vulkan/vulkan.h"
 
 namespace {
 // All dispatchable objects have a pointer to the dispatch table. The loader's dispatch

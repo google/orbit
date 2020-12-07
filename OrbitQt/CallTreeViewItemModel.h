@@ -7,7 +7,10 @@
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
+#include <QObject>
+#include <QString>
 #include <QVariant>
+#include <Qt>
 #include <memory>
 
 #include "CallTreeView.h"

@@ -4,7 +4,18 @@
 
 #include "TracepointsDataView.h"
 
+#include <absl/strings/str_split.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <ext/alloc_traits.h>
+#include <functional>
+#include <memory>
+
 #include "App.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
 
 namespace {
 static const std::string kMenuActionSelect = "Hook";

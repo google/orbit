@@ -2,15 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <outcome.hpp>
+#include <string>
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "Path.h"
+#include "code_block.pb.h"
 #include "include/OrbitFramePointerValidator/FramePointerValidator.h"
+#include "symbol.pb.h"
 
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::SymbolInfo;

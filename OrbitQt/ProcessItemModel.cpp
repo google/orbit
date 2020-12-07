@@ -4,6 +4,11 @@
 
 #include "ProcessItemModel.h"
 
+#include <QFlags>
+#include <Qt>
+#include <algorithm>
+#include <iterator>
+
 #include "OrbitBase/Logging.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "process.pb.h"

@@ -5,12 +5,18 @@
 #ifndef ORBIT_GL_SAMPLING_REPORT_H_
 #define ORBIT_GL_SAMPLING_REPORT_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <stddef.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "CallStackDataView.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"

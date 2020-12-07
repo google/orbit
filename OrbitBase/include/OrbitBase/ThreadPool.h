@@ -5,7 +5,10 @@
 #ifndef ORBIT_BASE_THREAD_POOL_H_
 #define ORBIT_BASE_THREAD_POOL_H_
 
+#include <stddef.h>
+
 #include <memory>
+#include <utility>
 
 #include "OrbitBase/Action.h"
 #include "absl/time/time.h"

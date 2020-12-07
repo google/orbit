@@ -5,7 +5,11 @@
 #ifndef ORBIT_QT_ORBIT_GL_WIDGET_WITH_HEADER_H_
 #define ORBIT_QT_ORBIT_GL_WIDGET_WITH_HEADER_H_
 
+#include <QObject>
+#include <QString>
 #include <QWidget>
+
+#include "ui_orbitglwidgetwithheader.h"
 
 namespace Ui {
 class OrbitGlWidgetWithHeader;

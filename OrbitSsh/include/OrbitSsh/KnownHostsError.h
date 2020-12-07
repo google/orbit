@@ -8,6 +8,7 @@
 #include <libssh2.h>
 
 #include <outcome.hpp>
+#include <string>
 #include <system_error>
 
 namespace OrbitSsh {

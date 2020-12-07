@@ -5,7 +5,10 @@
 #ifndef ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
 #define ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
 
+#include <grpcpp/grpcpp.h>
+
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 namespace orbit_service {
 

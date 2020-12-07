@@ -4,7 +4,16 @@
 
 #include "GraphTrack.h"
 
+#include <GteVector.h>
+
+#include <algorithm>
+#include <cstdint>
+
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "TextRenderer.h"
+#include "TimeGraph.h"
+#include "TimeGraphLayout.h"
 
 GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name)
     : Track(time_graph), name_(std::move(name)) {}

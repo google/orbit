@@ -6,6 +6,7 @@
 
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
+#include <QSurfaceFormat>
 
 namespace orbit_qt {
 

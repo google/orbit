@@ -5,7 +5,9 @@
 #ifndef ORBIT_GL_DATA_MANAGER_H_
 #define ORBIT_GL_DATA_MANAGER_H_
 
+#include <cstdint>
 #include <thread>
+#include <vector>
 
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleData.h"
@@ -16,7 +18,10 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/container/node_hash_map.h"
+#include "capture_data.pb.h"
 #include "module.pb.h"
+#include "process.pb.h"
+#include "tracepoint.pb.h"
 
 // This class is responsible for storing and
 // navigating data on the client side. Note that

@@ -4,18 +4,19 @@
 
 #include "LayerLogic.h"
 
-#include <math.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
+#include <ratio>
 #include <string>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "layer_config.pb.h"
 
 namespace {
 constexpr const int kCaptureClientResultSuccess = 1;

@@ -5,7 +5,9 @@
 #ifndef WEB_ENGINE_TRANSPORT_H_
 #define WEB_ENGINE_TRANSPORT_H_
 
+#include <QJsonObject>
 #include <QObject>
+#include <QString>
 #include <QWebChannelAbstractTransport>
 #include <QWebSocket>
 #include <memory>

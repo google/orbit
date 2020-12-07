@@ -5,6 +5,13 @@
 #include "include/OrbitFramePointerValidator/FramePointerValidator.h"
 
 #include <capstone/capstone.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <istream>
+#include <iterator>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"

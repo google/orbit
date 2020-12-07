@@ -2,7 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <map>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "OrbitClientData/TracepointEventBuffer.h"
+#include "capture_data.pb.h"
 #include "gtest/gtest.h"
 
 TEST(TracepointEventBuffer, AddAndGetTracepointEvents) {

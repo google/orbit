@@ -5,6 +5,14 @@
 #ifndef ORBIT_GL_CALL_TREE_VIEW_H_
 #define ORBIT_GL_CALL_TREE_VIEW_H_
 
+#include <absl/container/flat_hash_map.h>
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "Path.h"

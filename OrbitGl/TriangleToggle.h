@@ -6,7 +6,9 @@
 #define ORBIT_GL_TRIANGLE_TOGGLE_H_
 
 #include <functional>
+#include <memory>
 
+#include "CoreMath.h"
 #include "PickingManager.h"
 
 class TimeGraph;

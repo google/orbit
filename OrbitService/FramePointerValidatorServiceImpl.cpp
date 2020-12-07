@@ -6,10 +6,16 @@
 
 #include <absl/strings/str_format.h>
 
+#include <memory>
+#include <optional>
+#include <outcome.hpp>
+#include <string>
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
+#include "OrbitBase/Result.h"
 #include "OrbitFramePointerValidator/FramePointerValidator.h"
+#include "code_block.pb.h"
 
 namespace orbit_service {
 

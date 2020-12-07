@@ -4,8 +4,13 @@
 
 #pragma once
 
+#include <GteVector.h>
+#include <stdint.h>
+
+#include <algorithm>
 #include <atomic>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "Batcher.h"

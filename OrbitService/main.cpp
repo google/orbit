@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stdint.h>
+
+#include <atomic>
 #include <csignal>
 #include <filesystem>
-#include <iostream>
+#include <string>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitService.h"

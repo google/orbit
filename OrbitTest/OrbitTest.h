@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #pragma once
+#include <stdint.h>
+
 #include <memory>
 #include <thread>
 #include <vector>

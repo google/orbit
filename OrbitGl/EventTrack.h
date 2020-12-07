@@ -4,7 +4,15 @@
 
 #pragma once
 
+#include <GteVector.h>
+#include <stdint.h>
+
+#include <string>
+
+#include "CoreMath.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
+#include "PickingManager.h"
 #include "Track.h"
 
 class CallStack;

@@ -5,15 +5,19 @@
 #ifndef ORBIT_SSH_QT_SESSION_H_
 #define ORBIT_SSH_QT_SESSION_H_
 
+#include <QNonConstOverload>
 #include <QObject>
 #include <QSocketNotifier>
+#include <QString>
 #include <optional>
 #include <outcome.hpp>
 #include <system_error>
 #include <utility>
 
+#include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/Session.h"
+#include "OrbitSsh/Socket.h"
 #include "OrbitSshQt/StateMachineHelper.h"
 
 namespace OrbitSshQt {

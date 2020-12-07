@@ -6,6 +6,8 @@
 
 #include <QColor>
 #include <memory>
+#include <string>
+#include <vector>
 
 OrbitTableModel::OrbitTableModel(DataView* data_view, QObject* parent,
                                  QFlags<Qt::AlignmentFlag> text_alignment)

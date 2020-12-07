@@ -1,12 +1,26 @@
 // Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+#include <absl/container/flat_hash_map.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <string>
+#include <vector>
+
+#include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/ProcessData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
-#include "gmock/gmock-actions.h"
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "tracepoint.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;

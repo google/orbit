@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "CoreUtils.h"
 
 TEST(CoreUtils, TestEllipsis) {

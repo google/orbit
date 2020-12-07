@@ -5,10 +5,20 @@
 #ifndef ORBIT_GL_BATCHER_H_
 #define ORBIT_GL_BATCHER_H_
 
+#include <math.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <array>
+#include <functional>
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "BlockChain.h"
+#include "CoreMath.h"
 #include "Geometry.h"
 #include "PickingManager.h"
 #include "TextBox.h"

@@ -6,22 +6,38 @@
 #define ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 
 #include <DisassemblyReport.h>
+#include <stdint.h>
 
 #include <QApplication>
+#include <QCloseEvent>
+#include <QEvent>
+#include <QIcon>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
+#include <QObject>
+#include <QPoint>
 #include <QString>
+#include <QTabWidget>
 #include <QTimer>
+#include <QWidget>
+#include <algorithm>
+#include <map>
 #include <memory>
 #include <outcome.hpp>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
+#include "DataView.h"
+#include "DataViewTypes.h"
 #include "StatusListener.h"
+#include "orbitglwidget.h"
 #include "servicedeploymanager.h"
+#include "ui_orbitmainwindow.h"
 
 namespace Ui {
 class OrbitMainWindow;

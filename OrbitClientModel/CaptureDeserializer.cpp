@@ -4,19 +4,32 @@
 
 #include "OrbitClientModel/CaptureDeserializer.h"
 
-#include <fstream>
-#include <memory>
+#include <absl/container/flat_hash_map.h>
+#include <google/protobuf/stubs/port.h>
 
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitBase/Result.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
+#include "OrbitClientData/ProcessData.h"
+#include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/message.h"
+#include "module.pb.h"
 #include "process.pb.h"
+#include "tracepoint.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;

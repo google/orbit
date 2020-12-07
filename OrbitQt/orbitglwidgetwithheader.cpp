@@ -4,11 +4,12 @@
 
 #include "orbitglwidgetwithheader.h"
 
-// This needs to be first because if it is not GL/glew.h
-// complains about being included after gl.h
-// clang-format off
-#include "OpenGl.h"
+#include <QGridLayout>
+#include <new>
+
 // clang-format on
+#include "orbitglwidget.h"
+#include "orbittreeview.h"
 #include "ui_orbitglwidgetwithheader.h"
 
 OrbitGlWidgetWithHeader::OrbitGlWidgetWithHeader(QWidget* parent)

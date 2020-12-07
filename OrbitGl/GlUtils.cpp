@@ -4,10 +4,9 @@
 
 #include "GlUtils.h"
 
-#include "OpenGl.h"
+#include <GL/glew.h>
+
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_format.h"
-#include "freetype-gl/freetype-gl.h"
 
 static const char kErrorInvalidEnum[] =
     "An unacceptable value is specified for an enumerated argument";

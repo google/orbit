@@ -10,16 +10,10 @@
 #include <combaseapi.h>
 // clang-format on
 #else
-#include <sys/uio.h>
 #endif
 
 #include <time.h>
-#include <algorithm>
-#include <mutex>
-#include <thread>
-
-#include "absl/base/attributes.h"
-#include "absl/base/casts.h"
+#include <memory>
 
 #ifdef _WIN32
 std::string GetLastErrorAsString() {

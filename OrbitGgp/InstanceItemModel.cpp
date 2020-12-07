@@ -4,6 +4,16 @@
 
 #include "OrbitGgp/InstanceItemModel.h"
 
+#include <QDateTime>
+#include <QLatin1String>
+#include <QString>
+#include <algorithm>
+#include <iterator>
+#include <utility>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitGgp/Instance.h"
+
 namespace {
 enum class Columns { DisplayName, ID, IPAddress, LastUpdated, Owner, Pool, NumberOfColumns };
 }  // namespace

@@ -10,6 +10,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QVector>
+#include <Qt>
 
 #include "Instance.h"
 #include "OrbitBase/Logging.h"

@@ -5,17 +5,33 @@
 #include "App.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/strings/str_split.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+#include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/port.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/support/channel_arguments.h>
+#include <imgui.h>
+#include <inttypes.h>
+#include <stddef.h>
 
-#include <chrono>
-#include <cmath>
+#include <algorithm>
+#include <cstdint>
+#include <ext/alloc_traits.h>
 #include <fstream>
 #include <memory>
 #include <outcome.hpp>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <utility>
 
 #include "CallStackDataView.h"
@@ -33,6 +49,8 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
@@ -46,14 +64,19 @@
 #include "SamplingReport.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "TimeGraph.h"
 #include "Timer.h"
+#include "TimerChain.h"
 #include "TimerInfosIterator.h"
 #include "capture_data.pb.h"
+#include "module.pb.h"
 #include "preset.pb.h"
+#include "process.pb.h"
 #include "symbol.pb.h"
 
 #ifdef _WIN32
 #include "oqpi.hpp"
+
 #define OQPI_USE_DEFAULT
 #endif
 

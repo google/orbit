@@ -5,9 +5,11 @@
 #include "OrbitSsh/Session.h"
 
 #include <libssh2.h>
+#include <stddef.h>
 
 #include <filesystem>
-#include <optional>
+#include <istream>
+#include <iterator>
 
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"

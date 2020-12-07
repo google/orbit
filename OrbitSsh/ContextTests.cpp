@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <outcome.hpp>
 #include <utility>
 
 #include "OrbitSsh/Context.h"

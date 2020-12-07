@@ -6,6 +6,8 @@
 #define ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_
 
 #include <capstone/capstone.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // Provide utilities to check whether a function was compiled with
 // "-fno-omit-frame-pointer (-momit-leaf-frame-pointer)". The latter one is

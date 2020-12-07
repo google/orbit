@@ -2,13 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_format.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
+#include "OrbitClientData/ProcessData.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
+#include "process.pb.h"
 #include "symbol.pb.h"
 
 namespace OrbitClientData {

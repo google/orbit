@@ -4,12 +4,13 @@
 
 #include "OrbitClientData/ProcessData.h"
 
-#include <memory>
+#include <cstdint>
 #include <vector>
 
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
 #include "process.pb.h"
+#include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::ProcessInfo;

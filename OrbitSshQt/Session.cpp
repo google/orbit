@@ -4,13 +4,15 @@
 
 #include "OrbitSshQt/Session.h"
 
+#include <absl/base/macros.h>
+#include <libssh2.h>
+
 #include <optional>
 #include <system_error>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
-#include "OrbitSshQt/Error.h"
 
 namespace OrbitSshQt {
 

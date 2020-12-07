@@ -5,7 +5,14 @@
 #ifndef ORBIT_GL_SCHEDULER_TRACK_H_
 #define ORBIT_GL_SCHEDULER_TRACK_H_
 
+#include <stdint.h>
+
+#include <string>
+
+#include "CoreMath.h"
+#include "PickingManager.h"
 #include "TimerTrack.h"
+#include "Track.h"
 #include "capture_data.pb.h"
 
 class SchedulerTrack : public TimerTrack {

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <freetype-gl/mat4.h>
+#include <stdint.h>
 
 #include <iostream>
 

@@ -3,10 +3,16 @@
 // found in the LICENSE file.
 //
 
+#include <gtest/gtest.h>
 #include <unistd.h>
 
-#include "OrbitBase/Logging.h"
+#include <optional>
+#include <outcome.hpp>
+#include <string>
+
+#include "OrbitBase/Result.h"
 #include "ProcessList.h"
+#include "ServiceUtils.h"
 #include "gtest/gtest.h"
 
 namespace orbit_service {

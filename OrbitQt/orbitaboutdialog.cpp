@@ -4,6 +4,9 @@
 
 #include "orbitaboutdialog.h"
 
+#include <QLabel>
+#include <QPlainTextEdit>
+
 namespace orbit_qt {
 
 OrbitAboutDialog::OrbitAboutDialog(QWidget* parent)

@@ -4,6 +4,12 @@
 
 #include "StringManager.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/strings/string_view.h>
+#include <absl/synchronization/mutex.h>
+
+#include <utility>
+
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
   if (key_to_string_.contains(key)) {

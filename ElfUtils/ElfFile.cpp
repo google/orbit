@@ -4,10 +4,25 @@
 
 #include "ElfUtils/ElfFile.h"
 
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/Twine.h>
+#include <llvm/ADT/iterator_range.h>
+#include <llvm/BinaryFormat/ELF.h>
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ELF.h>
+#include <llvm/Object/ELFTypes.h>
+#include <llvm/Object/SymbolicFile.h>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/Error.h>
+#include <llvm/Support/MemoryBuffer.h>
+
 #include <string_view>
-#include <vector>
+#include <type_traits>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "llvm/DebugInfo/Symbolize/Symbolize.h"

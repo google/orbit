@@ -2,11 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <gtest/gtest.h>
 
-#include <chrono>
+#include <algorithm>
+#include <ctime>
 #include <memory>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Tracing.h"

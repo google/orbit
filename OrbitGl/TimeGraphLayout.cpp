@@ -4,7 +4,7 @@
 
 #include "TimeGraphLayout.h"
 
-#include "ImGuiOrbit.h"
+#include <imgui.h>
 
 TimeGraphLayout::TimeGraphLayout() {
   num_cores_ = 0;

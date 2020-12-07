@@ -6,6 +6,7 @@
 #define ORBIT_CORE_FRAME_POINTER_VALIDATOR_H_
 
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "code_block.pb.h"

@@ -2,8 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
+
 #include <QApplication>
 #include <QMetaObject>
+#include <Qt>
+#include <memory>
+#include <outcome.hpp>
 #include <system_error>
 
 #include "EventLoop.h"

@@ -6,6 +6,7 @@
 #define ORBIT_TRACEPOINTSERVICECLIENT_H
 
 #include <memory>
+#include <outcome.hpp>
 #include <vector>
 
 #include "OrbitBase/Result.h"

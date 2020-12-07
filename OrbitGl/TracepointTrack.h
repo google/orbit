@@ -5,7 +5,12 @@
 #ifndef ORBIT_GL_TRACEPOINT_TRACK_H_
 #define ORBIT_GL_TRACEPOINT_TRACK_H_
 
+#include <stdint.h>
+
+#include <string>
+
 #include "EventTrack.h"
+#include "PickingManager.h"
 
 class TracepointTrack : public EventTrack {
  public:

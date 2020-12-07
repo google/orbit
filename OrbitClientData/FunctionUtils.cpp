@@ -4,7 +4,10 @@
 
 #include "OrbitClientData/FunctionUtils.h"
 
-#include <map>
+#include <absl/strings/str_cat.h>
+
+#include <filesystem>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "absl/container/flat_hash_map.h"

@@ -3,10 +3,16 @@
 // found in the LICENSE file.
 
 #include <libfuzzer/libfuzzer_macro.h>
+#include <stdint.h>
+
+#include <string>
+#include <vector>
 
 #include "DataManager.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/ModuleManager.h"
+#include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 #include "module.pb.h"
 #include "process.pb.h"

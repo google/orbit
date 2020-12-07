@@ -5,11 +5,17 @@
 #ifndef ORBIT_QT_ORBIT_SAMPLING_REPORT_H_
 #define ORBIT_QT_ORBIT_SAMPLING_REPORT_H_
 
+#include <QObject>
+#include <QString>
 #include <QWidget>
 #include <memory>
+#include <vector>
 
 #include "CallStackDataView.h"
+#include "DataView.h"
+#include "SamplingReport.h"
 #include "orbitdataviewpanel.h"
+#include "ui_orbitsamplingreport.h"
 
 namespace Ui {
 class OrbitSamplingReport;

@@ -5,11 +5,20 @@
 #ifndef ORBIT_GL_THREAD_TRACK_H_
 #define ORBIT_GL_THREAD_TRACK_H_
 
+#include <stdint.h>
+
 #include <map>
 #include <memory>
+#include <string>
 
+#include "CoreMath.h"
+#include "EventTrack.h"
+#include "PickingManager.h"
+#include "TextBox.h"
 #include "ThreadStateTrack.h"
 #include "TimerTrack.h"
+#include "TracepointTrack.h"
+#include "Track.h"
 #include "capture_data.pb.h"
 
 class ThreadTrack : public TimerTrack {

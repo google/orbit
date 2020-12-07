@@ -14,8 +14,11 @@
 #include <QFile>
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <filesystem>
 #include <optional>
+#include <outcome.hpp>
+#include <system_error>
 
 namespace OrbitSshQt {
 namespace details {

@@ -4,11 +4,14 @@
 
 #include "DataManager.h"
 
+#include <absl/container/node_hash_map.h>
+
+#include <utility>
+
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "module.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;

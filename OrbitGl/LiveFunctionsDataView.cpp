@@ -4,10 +4,28 @@
 
 #include "LiveFunctionsDataView.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
+#include <absl/time/time.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <ext/alloc_traits.h>
+#include <functional>
+#include <limits>
+#include <memory>
+
 #include "App.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
+#include "FunctionsDataView.h"
 #include "LiveFunctionsController.h"
-#include "OrbitBase/Profiling.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"

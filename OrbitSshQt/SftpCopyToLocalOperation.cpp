@@ -4,6 +4,21 @@
 
 #include "OrbitSshQt/SftpCopyToLocalOperation.h"
 
+#include <absl/base/macros.h>
+#include <stddef.h>
+
+#include <QIODevice>
+#include <string>
+#include <utility>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitSsh/SftpFile.h"
+#include "OrbitSshQt/Error.h"
+#include "OrbitSshQt/ScopedConnection.h"
+#include "OrbitSshQt/Session.h"
+#include "OrbitSshQt/SftpChannel.h"
+#include "OrbitSshQt/StateMachineHelper.h"
+
 namespace OrbitSshQt {
 
 SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel)

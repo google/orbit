@@ -5,13 +5,23 @@
 #ifndef ORBIT_GL_APP_H_
 #define ORBIT_GL_APP_H_
 
+#include <grpc/impl/codegen/connectivity_state.h>
+#include <grpcpp/channel.h>
+#include <stdint.h>
+
+#include <atomic>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <outcome.hpp>
 #include <queue>
 #include <string>
+#include <string_view>
+#include <thread>
 #include <utility>
+#include <vector>
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
@@ -25,23 +35,29 @@
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
+#include "GlCanvas.h"
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
+#include "ManualInstrumentationManager.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/CallstackTypes.h"
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "OrbitClientServices/TracepointServiceClient.h"
@@ -54,6 +70,7 @@
 #include "StatusListener.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "TextBox.h"
 #include "TracepointsDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -64,6 +81,7 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 #include "symbol.pb.h"
+#include "tracepoint.pb.h"
 
 class Process;
 

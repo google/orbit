@@ -9,7 +9,6 @@
 #include <linux/perf_event.h>
 #include <string.h>
 #include <sys/types.h>
-
 #include <array>
 #include <cstdint>
 #include <memory>

@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <absl/time/time.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <memory>
-#include <utility>
 
 #include "OrbitBase/ThreadPool.h"
 #include "absl/synchronization/mutex.h"

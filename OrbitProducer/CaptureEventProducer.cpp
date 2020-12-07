@@ -4,6 +4,11 @@
 
 #include "OrbitProducer/CaptureEventProducer.h"
 
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+
+#include <chrono>
+
 #include "OrbitBase/Logging.h"
 
 using orbit_grpc_protos::ProducerSideService;

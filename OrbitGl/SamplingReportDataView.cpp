@@ -4,14 +4,31 @@
 
 #include "SamplingReportDataView.h"
 
-#include <set>
+#include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_split.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <ext/alloc_traits.h>
+#include <functional>
+#include <memory>
+#include <outcome.hpp>
+#include <utility>
 
 #include "App.h"
 #include "CallStackDataView.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
+#include "FunctionsDataView.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "Path.h"
+#include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;

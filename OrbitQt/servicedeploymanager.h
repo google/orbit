@@ -5,15 +5,24 @@
 #ifndef ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
 #define ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
 
+#include <stdint.h>
+
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <QThread>
 #include <QTimer>
+#include <memory>
 #include <optional>
+#include <outcome.hpp>
 #include <string>
+#include <string_view>
+#include <system_error>
 
 #include "DeploymentConfigurations.h"
 #include "OrbitBase/Result.h"
+#include "OrbitSsh/Context.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"

@@ -6,6 +6,8 @@
 #define ORBIT_CLIENT_DATA_MODULE_DATA_H_
 
 #include <cinttypes>
+#include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>

@@ -2,14 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <google/protobuf/io/coded_stream.h>
 #include <libfuzzer/libfuzzer_macro.h>
+#include <stdint.h>
 
-#include <cstdio>
-#include <filesystem>
+#include <atomic>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "App.h"
+#include "CallTreeView.h"
+#include "DataView.h"
+#include "DataViewTypes.h"
+#include "MainThreadExecutor.h"
+#include "OrbitBase/ThreadPool.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
+#include "SamplingReport.h"
+#include "StringManager.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
 #include "capture_data.pb.h"

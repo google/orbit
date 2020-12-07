@@ -2,8 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
+
 #include <QAbstractItemModelTester>
-#include <QtGlobal>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QString>
+#include <string>
 
 #include "OrbitBase/Logging.h"
 #include "ProcessItemModel.h"

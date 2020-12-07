@@ -5,9 +5,12 @@
 #ifndef ORBIT_QT_PROCESS_LAUNCHER_WIDGET_H
 #define ORBIT_QT_PROCESS_LAUNCHER_WIDGET_H
 
+#include <QObject>
+#include <QString>
 #include <QWidget>
 
 #include "DataView.h"
+#include "ui_processlauncherwidget.h"
 
 namespace Ui {
 class ProcessLauncherWidget;

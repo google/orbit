@@ -4,6 +4,8 @@
 
 #include "OrbitClientData/TracepointEventBuffer.h"
 
+#include <cstdint>
+
 using orbit_client_protos::TracepointEventInfo;
 
 const int32_t TracepointEventBuffer::kNotTargetProcessThreadId = -2;

@@ -5,12 +5,18 @@
 #ifndef ORBIT_SSH_QT_TUNNEL_H_
 #define ORBIT_SSH_QT_TUNNEL_H_
 
+#include <stdint.h>
+
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <deque>
+#include <optional>
 #include <outcome.hpp>
+#include <string>
+#include <system_error>
 
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/Error.h"

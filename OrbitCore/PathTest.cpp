@@ -5,10 +5,13 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <initializer_list>
+#include <set>
+#include <string>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "Path.h"
-#include "absl/strings/match.h"
 
 TEST(Path, FileExistsEmptyFilename) {
   std::string filename{};

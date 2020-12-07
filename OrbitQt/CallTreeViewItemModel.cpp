@@ -4,6 +4,17 @@
 
 #include "CallTreeViewItemModel.h"
 
+#include <absl/strings/str_format.h>
+#include <stddef.h>
+
+#include <QtCore>
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 
 CallTreeViewItemModel::CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_tree_view,

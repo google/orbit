@@ -4,11 +4,20 @@
 
 #include "OrbitSshQt/Tunnel.h"
 
+#include <absl/base/macros.h>
+#include <stddef.h>
+
+#include <QAbstractSocket>
+#include <QByteArray>
 #include <QHostAddress>
+#include <QIODevice>
 #include <QTimer>
+#include <string_view>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
 /**

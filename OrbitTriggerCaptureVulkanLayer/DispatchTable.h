@@ -5,6 +5,7 @@
 #ifndef ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_DISPATCH_TABLE_H_
 #define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_DISPATCH_TABLE_H_
 
+#include <stdint.h>
 #include <vulkan/vulkan_core.h>
 
 #include "absl/container/flat_hash_map.h"

@@ -4,11 +4,26 @@
 
 #include "orbitsamplingreport.h"
 
+#include <QGridLayout>
 #include <QHeaderView>
+#include <QLabel>
+#include <QList>
+#include <QPushButton>
+#include <QSplitter>
+#include <QStaticStringData>
+#include <QStringLiteral>
+#include <QTabWidget>
+#include <Qt>
+#include <algorithm>
+#include <new>
+#include <string>
 
+#include "OrbitBase/Logging.h"
 #include "SamplingReport.h"
+#include "SamplingReportDataView.h"
 #include "orbitdataviewpanel.h"
 #include "orbittreeview.h"
+#include "types.h"
 #include "ui_orbitsamplingreport.h"
 
 OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)

@@ -5,6 +5,7 @@
 #include "SamplingReport.h"
 
 #include "CallStackDataView.h"
+#include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
 
 SamplingReport::SamplingReport(

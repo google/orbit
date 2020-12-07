@@ -3,13 +3,22 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/server_impl.h>
+#include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <chrono>
+#include <memory>
+#include <optional>
+#include <string>
+#include <thread>
+#include <utility>
 
 #include "FakeProducerSideService.h"
 #include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
-#include "absl/strings/str_format.h"
-#include "grpcpp/grpcpp.h"
-#include "producer_side_services.grpc.pb.h"
+#include "capture.pb.h"
 
 namespace orbit_producer {
 

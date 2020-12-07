@@ -4,15 +4,17 @@
 
 #include "OrbitClientServices/ProcessManager.h"
 
-#include <chrono>
+#include <absl/synchronization/mutex.h>
+
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitClientServices/ProcessClient.h"
-#include "grpcpp/grpcpp.h"
 #include "outcome.hpp"
-#include "symbol.pb.h"
 
 namespace {
 

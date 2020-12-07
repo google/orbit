@@ -4,14 +4,25 @@
 
 #include "OrbitCaptureClient/CaptureClient.h"
 
+#include <absl/flags/declare.h>
+
+#include <cstdint>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
+#include "capture.pb.h"
+#include "tracepoint.pb.h"
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);

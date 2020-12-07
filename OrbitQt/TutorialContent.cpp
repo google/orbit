@@ -4,9 +4,16 @@
 
 #include "TutorialContent.h"
 
+#include <QAction>
+#include <QLayout>
 #include <QMenu>
+#include <QObject>
+#include <QTabWidget>
+#include <QToolBar>
+#include <QWidget>
+#include <memory>
+#include <string>
 
-#include "App.h"
 #include "TutorialOverlay.h"
 #include "ui_orbitmainwindow.h"
 

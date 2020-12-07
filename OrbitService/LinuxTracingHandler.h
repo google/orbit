@@ -5,6 +5,10 @@
 #ifndef ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
 #define ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
 
+#include <cstdint>
+#include <memory>
+#include <string>
+
 #include "CaptureEventBuffer.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
@@ -13,6 +17,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "capture.pb.h"
+#include "tracepoint.pb.h"
 
 namespace orbit_service {
 

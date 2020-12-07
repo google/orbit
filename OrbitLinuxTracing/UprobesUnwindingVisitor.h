@@ -10,7 +10,6 @@
 #include <absl/hash/hash.h>
 #include <sys/types.h>
 #include <unwindstack/Maps.h>
-
 #include <atomic>
 #include <cstdint>
 #include <memory>

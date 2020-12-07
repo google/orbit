@@ -2,8 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
+
+#include <string>
+
 #include "OrbitClientData/TracepointInfoManager.h"
 #include "gtest/gtest.h"
+#include "tracepoint.pb.h"
 
 TEST(TracepointInfoManager, Contains) {
   TracepointInfoManager tracepoint_info_manager;

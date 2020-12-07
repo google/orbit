@@ -4,10 +4,18 @@
 
 #include "Path.h"
 
+#include <absl/strings/match.h>
+#include <errno.h>
+#include <limits.h>
+#include <stddef.h>
+#include <unistd.h>
+
+#include <algorithm>
 #include <filesystem>
 #include <string>
 
 #include "CoreUtils.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "absl/flags/flag.h"
 
@@ -16,9 +24,6 @@
 
 #include "Shlobj.h"
 #else
-#include <dirent.h>
-#include <linux/limits.h>
-#include <sys/stat.h>
 
 #endif
 

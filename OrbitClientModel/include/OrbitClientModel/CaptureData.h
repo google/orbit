@@ -5,12 +5,26 @@
 #ifndef ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
 #define ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
+#include <google/protobuf/stubs/port.h>
+
+#include <chrono>
+#include <cstdint>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionInfoSet.h"
+#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
@@ -21,6 +35,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
+#include "tracepoint.pb.h"
 
 class CaptureData {
  public:

@@ -5,13 +5,21 @@
 #ifndef TIMER_TRACK_H_
 #define TIMER_TRACK_H_
 
+#include <stdint.h>
+
+#include <atomic>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "BlockChain.h"
+#include "CoreMath.h"
 #include "EventTrack.h"
 #include "OrbitClientData/CallstackTypes.h"
+#include "PickingManager.h"
 #include "TextBox.h"
+#include "TextRenderer.h"
 #include "TimerChain.h"
 #include "TracepointTrack.h"
 #include "Track.h"

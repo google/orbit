@@ -48,22 +48,37 @@
 **
 ****************************************************************************/
 
-// This needs to be first because if it is not GL/glew.h
-// complains about being included after gl.h
-// clang-format off
-#include "OpenGl.h"
 // clang-format on
 
 #include "orbitcodeeditor.h"
 
+#include <absl/strings/str_split.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <QFile>
+#include <QFont>
+#include <QFontDatabase>
+#include <QFontMetrics>
+#include <QLatin1Char>
+#include <QLineEdit>
+#include <QPainter>
+#include <QPalette>
 #include <QPushButton>
+#include <QRectF>
+#include <QStringList>
+#include <QTextBlock>
 #include <QTextCursor>
-#include <QtWidgets>
+#include <QTextFormat>
+#include <QTextOption>
+#include <QTextStream>
 #include <fstream>
+#include <vector>
 
 #include "App.h"
-#include "Path.h"
 #include "CoreUtils.h"
+#include "Path.h"
 #include "absl/strings/str_format.h"
 
 OrbitCodeEditor* OrbitCodeEditor::GFileMapEditor;

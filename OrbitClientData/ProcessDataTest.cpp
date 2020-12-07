@@ -2,11 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/ascii.h>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest-death-test.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <outcome.hpp>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "OrbitBase/Result.h"
 #include "OrbitClientData/ProcessData.h"
 #include "module.pb.h"
 #include "process.pb.h"

@@ -4,12 +4,21 @@
 
 #include "ProcessServiceImpl.h"
 
-#include <memory>
+#include <absl/strings/str_format.h>
+#include <stdint.h>
 
-#include "ElfUtils/ElfFile.h"
+#include <algorithm>
+#include <filesystem>
+#include <memory>
+#include <outcome.hpp>
+#include <string>
+#include <vector>
+
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
-#include "symbol.pb.h"
+#include "module.pb.h"
+#include "process.pb.h"
 
 namespace orbit_service {
 

@@ -5,8 +5,12 @@
 #pragma once
 
 #include <functional>
+#include <memory>
+#include <utility>
 
 #include "Batcher.h"
+#include "CoreMath.h"
+#include "GlCanvas.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 

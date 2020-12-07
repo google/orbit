@@ -8,8 +8,13 @@
 #include <DisassemblyReport.h>
 
 #include <QDialog>
+#include <QObject>
+#include <QString>
+#include <QWidget>
 #include <functional>
 #include <string>
+
+#include "ui_orbitdisassemblydialog.h"
 
 namespace Ui {
 class OrbitDisassemblyDialog;

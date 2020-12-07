@@ -5,8 +5,11 @@
 #ifndef ORBIT_CORE_TRACEPOINT_INFO_MANAGER_H_
 #define ORBIT_CORE_TRACEPOINT_INFO_MANAGER_H_
 
+#include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"

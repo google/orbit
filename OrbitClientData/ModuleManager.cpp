@@ -4,6 +4,11 @@
 
 #include "OrbitClientData/ModuleManager.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/node_hash_map.h>
+
+#include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"

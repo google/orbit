@@ -5,6 +5,12 @@
 #ifndef ORBIT_GL_PROCESSES_DATA_VIEW
 #define ORBIT_GL_PROCESSES_DATA_VIEW
 
+#include <stdint.h>
+
+#include <functional>
+#include <string>
+#include <vector>
+
 #include "DataView.h"
 #include "process.pb.h"
 

@@ -5,6 +5,13 @@
 #ifndef ORBIT_GL_THREAD_STATE_TRACK_H_
 #define ORBIT_GL_THREAD_STATE_TRACK_H_
 
+#include <GteVector.h>
+#include <stdint.h>
+
+#include <string>
+
+#include "CoreMath.h"
+#include "PickingManager.h"
 #include "Track.h"
 
 // This is a track dedicated to displaying thread states in different colors

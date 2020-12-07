@@ -6,6 +6,8 @@
 #define ORBIT_GGP_CLIENT_H_
 
 #include <QObject>
+#include <QPointer>
+#include <QString>
 #include <QVector>
 #include <functional>
 #include <outcome.hpp>

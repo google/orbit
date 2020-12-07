@@ -51,11 +51,28 @@
 #ifndef CODEEDITOR_H
 #define CODEEDITOR_H
 
+#include <QColor>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QList>
 #include <QObject>
+#include <QPaintEvent>
 #include <QPlainTextEdit>
+#include <QRect>
+#include <QRegExp>
+#include <QResizeEvent>
+#include <QSize>
+#include <QString>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
+#include <QTextDocument>
+#include <QTextEdit>
+#include <QVector>
+#include <QWidget>
+#include <QtCore>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "../OrbitCore/RingBuffer.h"
 #include "CodeReport.h"
@@ -66,6 +83,7 @@ class QResizeEvent;
 class QSize;
 class QWidget;
 class QTextDocument;
+
 QT_END_NAMESPACE
 
 class LineNumberArea;

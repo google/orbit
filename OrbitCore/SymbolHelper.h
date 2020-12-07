@@ -5,8 +5,11 @@
 #ifndef SYMBOL_HELPER_H_
 #define SYMBOL_HELPER_H_
 
+#include <chrono>
 #include <filesystem>
+#include <outcome.hpp>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Result.h"

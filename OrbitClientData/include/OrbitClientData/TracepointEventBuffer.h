@@ -5,11 +5,15 @@
 #ifndef ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
 #define ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
 
+#include <stdint.h>
+
 #include <atomic>
 #include <functional>
 #include <limits>
 #include <map>
+#include <mutex>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "capture_data.pb.h"

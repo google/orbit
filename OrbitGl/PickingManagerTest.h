@@ -5,6 +5,12 @@
 #ifndef ORBIT_GL_TESTS_PICKING_MANAGER_TEST_H_
 #define ORBIT_GL_TESTS_PICKING_MANAGER_TEST_H_
 
+#include <GteVector.h>
+#include <stdint.h>
+
+#include <array>
+
+#include "CoreMath.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
 #include "absl/base/casts.h"

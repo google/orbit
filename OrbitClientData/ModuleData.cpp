@@ -4,6 +4,10 @@
 
 #include "OrbitClientData/ModuleData.h"
 
+#include <absl/container/flat_hash_map.h>
+
+#include <algorithm>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "absl/synchronization/mutex.h"

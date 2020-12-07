@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 #define ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 
+#include <string>
+#include <vector>
+
 #include "DataView.h"
 #include "capture_data.pb.h"
 

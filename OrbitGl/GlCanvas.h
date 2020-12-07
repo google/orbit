@@ -5,6 +5,18 @@
 #ifndef ORBIT_GL_GL_CANVAS_H_
 #define ORBIT_GL_GL_CANVAS_H_
 
+#include <imgui_internal.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "Batcher.h"
+#include "CoreMath.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "PickingManager.h"

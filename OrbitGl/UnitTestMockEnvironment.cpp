@@ -3,6 +3,9 @@
 // found in the LICENSE file.
 
 #include <absl/flags/flag.h>
+#include <stdint.h>
+
+#include <string>
 
 // Flag declarations
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");

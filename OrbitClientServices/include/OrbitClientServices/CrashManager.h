@@ -5,6 +5,8 @@
 #ifndef ORBIT_CLIENT_SERVICES_CRASH_MANAGER_H_
 #define ORBIT_CLIENT_SERVICES_CRASH_MANAGER_H_
 
+#include <grpcpp/channel.h>
+
 #include <memory>
 
 #include "grpcpp/grpcpp.h"

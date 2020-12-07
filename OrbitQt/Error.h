@@ -5,6 +5,7 @@
 #ifndef ORBIT_QT_ERROR_H_
 #define ORBIT_QT_ERROR_H_
 
+#include <string>
 #include <system_error>
 
 namespace orbit_qt {

@@ -5,7 +5,14 @@
 #ifndef ORBIT_SERVICE_PROCESS_LIST_
 #define ORBIT_SERVICE_PROCESS_LIST_
 
+#include <absl/container/flat_hash_map.h>
+#include <sys/types.h>
+
+#include <algorithm>
+#include <iterator>
+#include <optional>
 #include <outcome.hpp>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Result.h"

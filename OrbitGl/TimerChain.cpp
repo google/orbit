@@ -5,8 +5,10 @@
 #include "TimerChain.h"
 
 #include <algorithm>
+#include <new>
 
 #include "OrbitBase/Logging.h"
+#include "capture_data.pb.h"
 
 void TimerBlock::Add(const TextBox& item) {
   if (size_ == kBlockSize) {

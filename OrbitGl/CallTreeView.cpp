@@ -4,7 +4,13 @@
 
 #include "CallTreeView.h"
 
+#include <absl/container/node_hash_map.h>
+#include <absl/strings/str_format.h>
+
+#include <algorithm>
+
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitClientData/Callstack.h"
 
 std::vector<const CallTreeNode*> CallTreeNode::children() const {
   std::vector<const CallTreeNode*> ret;

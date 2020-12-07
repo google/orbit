@@ -4,10 +4,21 @@
 
 #include "FrameTrack.h"
 
-#include "App.h"
+#include <GteVector.h>
+#include <absl/strings/str_format.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
+
+#include "Batcher.h"
+#include "CoreUtils.h"
+#include "GlCanvas.h"
+#include "GlUtils.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "TriangleToggle.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;

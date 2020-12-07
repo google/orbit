@@ -5,9 +5,13 @@
 #ifndef ORBIT_CLIENT_DATA_FUNCTION_UTILS_H_
 #define ORBIT_CLIENT_DATA_FUNCTION_UTILS_H_
 
+#include <absl/container/flat_hash_map.h>
+
 #include <cstdint>
+#include <memory>
 #include <string>
 
+#include "OrbitClientData/ModuleData.h"
 #include "ProcessData.h"
 #include "capture_data.pb.h"
 #include "symbol.pb.h"

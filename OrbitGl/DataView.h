@@ -5,6 +5,8 @@
 #pragma once
 
 #include <OrbitBase/Logging.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <functional>
 #include <memory>

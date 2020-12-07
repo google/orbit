@@ -12,16 +12,16 @@
 
 #include "ImGuiOrbit.h"
 
+#include <GL/glew.h>
 #include <imgui.h>
+#include <imgui_internal.h>
+#include <stddef.h>
 
 #include "GlCanvas.h"
 #include "Images.h"
-#include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 #include "absl/base/casts.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/strip.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>

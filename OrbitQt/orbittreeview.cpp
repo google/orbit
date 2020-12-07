@@ -2,27 +2,33 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This needs to be first because if it is not GL/glew.h
-// complains about being included after gl.h
-// clang-format off
-#include "OpenGl.h"
 // clang-format on
 
 #include "orbittreeview.h"
 
+#include <stddef.h>
+
+#include <QAbstractItemView>
+#include <QAction>
 #include <QApplication>
+#include <QFont>
 #include <QFontDatabase>
 #include <QHeaderView>
+#include <QItemSelectionModel>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QMenu>
+#include <QModelIndexList>
 #include <QPainter>
 #include <QScrollBar>
-#include <QSignalMapper>
+#include <QSize>
+#include <algorithm>
+#include <new>
 #include <set>
 #include <utility>
 
-#include "App.h"
 #include "DataView.h"
+#include "DataViewTypes.h"
 #include "orbitglwidget.h"
 
 OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(true) {

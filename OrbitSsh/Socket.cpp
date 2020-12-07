@@ -4,6 +4,12 @@
 
 #include "OrbitSsh/Socket.h"
 
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <sys/time.h>
+
+#include <type_traits>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 

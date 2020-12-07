@@ -4,7 +4,13 @@
 
 #include "OrbitSshQt/SftpChannel.h"
 
+#include <QtCore/qglobal.h>
+#include <absl/base/macros.h>
+
+#include <utility>
+
 #include "OrbitBase/Logging.h"
+#include "OrbitSshQt/Error.h"
 
 namespace OrbitSshQt {
 

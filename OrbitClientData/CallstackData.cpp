@@ -4,9 +4,16 @@
 
 #include "OrbitClientData/CallstackData.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <google/protobuf/stubs/port.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/Callstack.h"
-#include "absl/container/flat_hash_set.h"
+#include "OrbitClientData/CallstackTypes.h"
 
 using orbit_client_protos::CallstackEvent;
 

@@ -5,6 +5,7 @@
 #ifndef ORBIT_GGP_ERROR_H_
 #define ORBIT_GGP_ERROR_H_
 
+#include <string>
 #include <system_error>
 
 namespace OrbitGgp {

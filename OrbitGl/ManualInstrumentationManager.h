@@ -5,6 +5,12 @@
 #ifndef ORBIT_GL_MANUAL_INSTRUMENTATION_MANAGER_H_
 #define ORBIT_GL_MANUAL_INSTRUMENTATION_MANAGER_H_
 
+#include <stdint.h>
+
+#include <functional>
+#include <optional>
+#include <string>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 #include "StringManager.h"

@@ -4,10 +4,16 @@
 
 #include "LiveFunctionsController.h"
 
+#include <absl/container/flat_hash_map.h>
+
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "App.h"
-#include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "TimeGraph.h"
 
 using orbit_client_protos::FunctionInfo;

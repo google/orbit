@@ -4,11 +4,25 @@
 
 #include "GpuTrack.h"
 
+#include <GteVector.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
+#include <optional>
+
 #include "App.h"
+#include "Batcher.h"
+#include "CoreUtils.h"
 #include "GlCanvas.h"
-#include "OrbitBase/Profiling.h"
+#include "GlUtils.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "TextRenderer.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "TimerChain.h"
+#include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;

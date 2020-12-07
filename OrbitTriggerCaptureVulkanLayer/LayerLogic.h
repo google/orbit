@@ -6,6 +6,7 @@
 #define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_LOGIC_H_
 
 #include <chrono>
+#include <memory>
 #include <string>
 
 #include "LayerOptions.h"

@@ -5,13 +5,13 @@
 #include "ProcessList.h"
 
 #include <absl/strings/numbers.h>
-#include <absl/strings/str_format.h>
+#include <stdint.h>
 
 #include <filesystem>
-#include <unordered_map>
+#include <string>
 
-#include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
 
 namespace orbit_service {

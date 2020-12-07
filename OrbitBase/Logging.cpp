@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #include <OrbitBase/Logging.h>
+#include <absl/base/const_init.h>
+#include <absl/synchronization/mutex.h>
 
 static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;

@@ -5,6 +5,7 @@
 #ifndef LIVE_FUNCTIONS_H_
 #define LIVE_FUNCTIONS_H_
 
+#include <cstdint>
 #include <functional>
 
 #include "LiveFunctionsDataView.h"

@@ -4,7 +4,11 @@
 
 #include <gtest/gtest.h>
 
-#include <optional>
+#include <QByteArray>
+#include <QString>
+#include <memory>
+#include <outcome.hpp>
+#include <utility>
 
 #include "OrbitGgp/SshInfo.h"
 

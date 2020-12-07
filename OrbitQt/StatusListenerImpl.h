@@ -8,7 +8,9 @@
 #include <QStatusBar>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "StatusListener.h"
 #include "absl/container/flat_hash_map.h"
