@@ -52,7 +52,7 @@ QRect A11yAdapter::rect() const {
 //================ OrbitGlWidgetAccessible ==================
 
 OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
-    : QAccessibleWidget(widget, QAccessible::Role::Chart) {}
+    : QAccessibleWidget(widget, QAccessible::Role::Graphic, "CaptureWindow") {}
 
 int OrbitGlWidgetAccessible::childCount() const {
   return static_cast<OrbitGLWidget*>(widget())->GetCanvas()->AccessibleChildCount();
