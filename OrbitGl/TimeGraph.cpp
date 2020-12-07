@@ -1271,6 +1271,12 @@ orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const {
   return orbit_gl::A11yRect(0, 0, canvas_->GetWidth(), canvas_->GetHeight());
 }
 
+orbit_gl::A11yState TimeGraph::AccessibleState() const {
+  orbit_gl::A11yState result;
+  result.active = result.focusable = result.readOnly = 1;
+  return result;
+}
+
 int TimeGraph::AccessibleChildCount() const { return sorted_filtered_tracks_.size(); }
 
 const GlA11yControlInterface* TimeGraph::AccessibleChild(int index) const {

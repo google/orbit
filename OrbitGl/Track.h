@@ -112,9 +112,12 @@ class Track : public Pickable,
   }
   [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
 
-  [[nodiscard]] std::string AccessibleName() const { return "Track"; }
-  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const { return orbit_gl::A11yRole::Chart; }
-  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const;
+  [[nodiscard]] std::string AccessibleName() const override { return name_; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
+    return orbit_gl::A11yRole::Chart;
+  }
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
+  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override;
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,

@@ -60,9 +60,14 @@ class A11yAdapter : public QAccessibleInterface {
   void setText(QAccessible::Text t, const QString& text) override{};
   QRect rect() const override;
   QAccessible::Role role() const override {
-    return static_cast<QAccessible::Role>(info_->AccessibleRole());
+    auto role = info_->AccessibleRole();
+    return *reinterpret_cast<QAccessible::Role*>(&role);
   }
-  virtual QAccessible::State state() const override { return QAccessible::State(); }
+
+  virtual QAccessible::State state() const override {
+    static_assert(sizeof(QAccessible::State) == sizeof(orbit_gl::A11yState));
+    return *reinterpret_cast<QAccessible::State*>(&info_->AccessibleState());
+  }
 
   static void AddBridge(const orbit_gl::GlA11yControlInterface* gl_control,
                         QAccessibleInterface* qt_control) {

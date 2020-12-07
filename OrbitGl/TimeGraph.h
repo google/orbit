@@ -189,6 +189,7 @@ class TimeGraph : public orbit_gl::GlA11yControlInterface {
     return orbit_gl::A11yRole::Chart;
   }
   [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
+  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override;
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();

@@ -65,7 +65,23 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
 const orbit_gl::GlA11yControlInterface* Track::AccessibleParent() const { return time_graph_; }
 
 orbit_gl::A11yRect Track::AccessibleLocalRect() const {
-  return orbit_gl::A11yRect(-pos_[0], -pos_[1] + canvas_->GetWorldTopLeftY(), size_[0], size_[1]);
+  int top = static_cast<int>(std::max(-pos_[1] + canvas_->GetWorldTopLeftY(), 0.0f));
+  int left = static_cast<int>(pos_[0]);
+  int width = static_cast<int>(size_[0]);
+  int height = static_cast<int>(std::max(-pos_[1] + size_[1] - top, 0.0f));
+  return orbit_gl::A11yRect(left, top, width, height);
+}
+
+orbit_gl::A11yState Track::AccessibleState() const {
+  orbit_gl::A11yState result;
+  result.active = result.focusable = result.selectable = result.movable = 1;
+  result.focused = IsTrackSelected();
+  result.selected = IsTrackSelected();
+  result.expandable = !IsCollapsable();
+  result.expanded = collapse_toggle_->IsExpanded();
+  result.collapsed = collapse_toggle_->IsCollapsed();
+  result.offscreen = AccessibleLocalRect().height == 0;
+  return result;
 }
 
 void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
