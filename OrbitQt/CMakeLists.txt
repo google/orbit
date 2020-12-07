@@ -36,6 +36,7 @@ target_sources(
           OverlayWidget.h
           processlauncherwidget.h
           resource.h
+          RingBuffer.h
           servicedeploymanager.h
           TutorialContent.h
           TutorialOverlay.h)
@@ -151,6 +152,7 @@ target_sources(OrbitQtTests
         PRIVATE EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
+                RingBufferTest.cpp
                 StatusListenerImplTest.cpp
                 StatusListenerImpl.cpp
                 TutorialOverlayTest.cpp

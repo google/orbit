@@ -13,7 +13,6 @@ target_sources(
   OrbitCore
   PUBLIC CoreUtils.h
          Path.h
-         RingBuffer.h
          StringManager.h
          SymbolHelper.h)
 
@@ -62,7 +61,6 @@ target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitCoreTests PRIVATE
     CoreUtilsTest.cpp
     PathTest.cpp
-    RingBufferTest.cpp
     StringManagerTest.cpp
     SymbolHelperTest.cpp)
 
