@@ -30,24 +30,9 @@ TEST(TracepointData, AddAndGetTracepointEvents) {
   /*The number of tracepoints for thread id 6 is 0 because this tracepoint does not belong in the
    * target process*/
   EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(6), 0);
-  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(orbit_base::kAllProcessThreadsFakeTid), 4);
-  EXPECT_EQ(
-      tracepoint_data.GetNumTracepointsForThreadId(orbit_base::kAllThreadsOfAllProcessesFakeTid),
-      6);
-
-  /*Check the tracepoint events associated to the threads in the target process*/
-  const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& tracepoints =
-      tracepoint_data.GetTracepointsOfThread(1);
-
-  EXPECT_EQ(tracepoints.begin()->first, 0);
-  EXPECT_EQ((++tracepoints.begin())->first, 1);
-
-  auto it = tracepoints.begin();
-
-  EXPECT_EQ(it->second.time(), 0);
-  EXPECT_EQ(it->second.tracepoint_info_key(), 1);
-  EXPECT_EQ(it->second.pid(), 2);
-  EXPECT_EQ(it->second.cpu(), 3);
+  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(orbit_base::kAllProcessThreadsTid), 4);
+  EXPECT_EQ(tracepoint_data.GetNumTracepointsForThreadId(orbit_base::kAllThreadsOfAllProcessesTid),
+            6);
 
   std::vector<uint64_t> tracepoints_of_thread_1;
   tracepoint_data.ForEachTracepointEventOfThreadInTimeRange(
@@ -63,7 +48,7 @@ TEST(TracepointData, AddAndGetTracepointEvents) {
    * in the timestamp between 0 and 3*/
   std::vector<uint64_t> all_tracepoint_events_target_process;
   tracepoint_data.ForEachTracepointEventOfThreadInTimeRange(
-      orbit_base::kAllProcessThreadsFakeTid, 0, 3,
+      orbit_base::kAllProcessThreadsTid, 0, 3,
       [&all_tracepoint_events_target_process](
           const orbit_client_protos::TracepointEventInfo& tracepoint_event_info) {
         all_tracepoint_events_target_process.emplace_back(

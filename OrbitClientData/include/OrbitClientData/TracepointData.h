@@ -29,9 +29,6 @@ class TracepointData {
   void EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t process_id,
                               int32_t thread_id, int32_t cpu, bool is_same_pid_as_target);
 
-  [[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
-  GetTracepointsOfThread(int32_t thread_id) const;
-
   void ForEachTracepointEventOfThreadInTimeRange(
       int32_t thread_id, uint64_t min_tick, uint64_t max_tick_exclusive,
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const;
@@ -43,20 +40,11 @@ class TracepointData {
 
   bool AddUniqueTracepointInfo(uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint);
 
-  [[nodiscard]] orbit_grpc_protos::TracepointInfo GetTracepointInfo(uint64_t key) const;
+  [[nodiscard]] orbit_grpc_protos::TracepointInfo GetTracepointInfo(uint64_t hash) const;
   [[nodiscard]] bool HasTracepointKey(uint64_t key) const;
 
   void ForEachUniqueTracepointInfo(
-      const std::function<void(const orbit_client_protos::TracepointInfo&)>& action) const {
-    absl::MutexLock lock(&unique_tracepoints_mutex_);
-    for (const auto& it : unique_tracepoints_) {
-      orbit_client_protos::TracepointInfo tracepoint_info;
-      tracepoint_info.set_category(it.second.category());
-      tracepoint_info.set_name(it.second.name());
-      tracepoint_info.set_tracepoint_info_key(it.first);
-      action(tracepoint_info);
-    }
-  }
+      const std::function<void(const orbit_client_protos::TracepointInfo&)>& action) const;
 
  private:
   int32_t num_total_tracepoints_ = 0;

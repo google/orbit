@@ -37,17 +37,6 @@ void TracepointData::EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_h
   }
 }
 
-[[nodiscard]] const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>&
-TracepointData::GetTracepointsOfThread(int32_t thread_id) const {
-  absl::MutexLock lock(&mutex_);
-  static std::map<uint64_t, orbit_client_protos::TracepointEventInfo> empty;
-  const auto& it = thread_id_to_time_to_tracepoint_.find(thread_id);
-  if (it == thread_id_to_time_to_tracepoint_.end()) {
-    return empty;
-  }
-  return it->second;
-}
-
 void TracepointData::ForEachTracepointEvent(
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
   absl::MutexLock lock(&mutex_);
@@ -124,9 +113,9 @@ bool TracepointData::AddUniqueTracepointInfo(uint64_t key,
   return inserted;
 }
 
-orbit_grpc_protos::TracepointInfo TracepointData::GetTracepointInfo(uint64_t key) const {
+orbit_grpc_protos::TracepointInfo TracepointData::GetTracepointInfo(uint64_t hash) const {
   absl::MutexLock lock{&unique_tracepoints_mutex_};
-  auto it = unique_tracepoints_.find(key);
+  auto it = unique_tracepoints_.find(hash);
   if (it != unique_tracepoints_.end()) {
     return it->second;
   }
@@ -136,4 +125,16 @@ orbit_grpc_protos::TracepointInfo TracepointData::GetTracepointInfo(uint64_t key
 bool TracepointData::HasTracepointKey(uint64_t key) const {
   absl::MutexLock lock{&unique_tracepoints_mutex_};
   return unique_tracepoints_.contains(key);
+}
+
+void TracepointData::ForEachUniqueTracepointInfo(
+    const std::function<void(const orbit_client_protos::TracepointInfo&)>& action) const {
+  absl::MutexLock lock(&unique_tracepoints_mutex_);
+  for (const auto& it : unique_tracepoints_) {
+    orbit_client_protos::TracepointInfo tracepoint_info;
+    tracepoint_info.set_category(it.second.category());
+    tracepoint_info.set_name(it.second.name());
+    tracepoint_info.set_tracepoint_info_key(it.first);
+    action(tracepoint_info);
+  }
 }

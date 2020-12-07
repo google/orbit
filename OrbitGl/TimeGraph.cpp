@@ -37,7 +37,7 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 TimeGraph::TimeGraph(uint32_t font_size) : font_size_(font_size), batcher_(BatcherId::kTimeGraph) {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
-  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(TracepointData::kAllTracepointsFakeTid);
+  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 
   async_timer_info_listener_ =
       std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
@@ -85,7 +85,7 @@ void TimeGraph::Clear() {
 
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
-  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(TracepointData::kAllTracepointsFakeTid);
+  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 
   SetIteratorOverlayData({}, {});
 
@@ -786,7 +786,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
     AddTrack(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(GetThreadColor(tid));
-    if (tid == TracepointData::kAllTracepointsFakeTid) {
+    if (tid == orbit_base::kAllThreadsOfAllProcessesTid) {
       track->SetName("All tracepoint events");
       track->SetLabel("All tracepoint events");
     } else if (tid == orbit_base::kAllProcessThreadsTid) {
