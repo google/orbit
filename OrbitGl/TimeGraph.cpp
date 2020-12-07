@@ -1267,7 +1267,9 @@ void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& functi
   NeedsUpdate();
 }
 
-orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const { return orbit_gl::A11yRect(); }
+orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const {
+  return orbit_gl::A11yRect(0, 0, canvas_->GetWidth(), canvas_->GetHeight());
+}
 
 int TimeGraph::AccessibleChildCount() const { return sorted_filtered_tracks_.size(); }
 
@@ -1280,7 +1282,7 @@ const GlA11yControlInterface* TimeGraph::AccessibleChildAt(int x, int y) const {
   // return nullptr;
   for (auto& track : sorted_filtered_tracks_) {
     // TODO: This is probably flipped along y
-    if (y >= track->GetPos()[1] && y <= track->GetPos()[1] + track->GetHeight()) {
+    if (y >= -track->GetPos()[1] && y <= -track->GetPos()[1] + track->GetHeight()) {
       return track.get();
     }
   }

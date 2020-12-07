@@ -67,11 +67,10 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(BatcherId batcher_id);
 
   // Accessibility
-  [[nodiscard]] virtual int AccessibleChildCount() const override;
-  [[nodiscard]] virtual const orbit_gl::GlA11yControlInterface* AccessibleChild(
-      int index) const override;
-  [[nodiscard]] virtual const orbit_gl::GlA11yControlInterface* AccessibleChildAt(
-      int x, int y) const override;
+  [[nodiscard]] int AccessibleChildCount() const override;
+  [[nodiscard]] const orbit_gl::GlA11yControlInterface* AccessibleChild(int index) const override;
+  [[nodiscard]] const orbit_gl::GlA11yControlInterface* AccessibleChildAt(int x,
+                                                                          int y) const override;
 
  protected:
   [[nodiscard]] virtual const char* GetHelpText() const;

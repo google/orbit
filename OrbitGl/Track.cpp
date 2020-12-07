@@ -64,6 +64,10 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
 
 const orbit_gl::GlA11yControlInterface* Track::AccessibleParent() const { return time_graph_; }
 
+orbit_gl::A11yRect Track::AccessibleLocalRect() const {
+  return orbit_gl::A11yRect(-pos_[0], -pos_[1] + canvas_->GetWorldTopLeftY(), size_[0], size_[1]);
+}
+
 void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                             const Color& color, float rotation, float z) {
   if (points.size() < 3) {

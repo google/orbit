@@ -103,22 +103,18 @@ class Track : public Pickable,
   [[nodiscard]] virtual bool IsEmpty() const = 0;
 
   // Accessibility
-  [[nodiscard]] virtual int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChild(int) const override {
+  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
+  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override {
     return nullptr;
   }
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChildAt(int, int) const override {
+  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int, int) const override {
     return nullptr;
   }
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleParent() const override;
+  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
 
-  [[nodiscard]] virtual std::string AccessibleName() const { return "Track"; }
-  [[nodiscard]] virtual orbit_gl::A11yRole AccessibleRole() const {
-    return orbit_gl::A11yRole::Chart;
-  }
-  [[nodiscard]] virtual orbit_gl::A11yRect AccessibleLocalRect() const {
-    return orbit_gl::A11yRect(pos_[0], pos_[1], size_[0], size_[1]);
-  }
+  [[nodiscard]] std::string AccessibleName() const { return "Track"; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const { return orbit_gl::A11yRole::Chart; }
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const;
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
