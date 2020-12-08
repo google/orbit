@@ -11,7 +11,7 @@
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 
 /*
   StateMachineHelper is a helper class to implement a monotonic state machine
@@ -154,7 +154,7 @@ class StateMachineHelper : public QObject {
       if (result) {
         self()->started();
       } else {
-        if (OrbitSsh::ShouldITryAgain(result)) {
+        if (orbit_ssh::ShouldITryAgain(result)) {
           self()->HandleEagain();
         } else {
           self()->SetError(result.error());
@@ -167,7 +167,7 @@ class StateMachineHelper : public QObject {
       const auto result = self()->run();
 
       if (!result) {
-        if (OrbitSsh::ShouldITryAgain(result)) {
+        if (orbit_ssh::ShouldITryAgain(result)) {
           self()->HandleEagain();
         } else {
           self()->SetError(result.error());
@@ -182,7 +182,7 @@ class StateMachineHelper : public QObject {
       if (result) {
         self()->stopped();
       } else {
-        if (OrbitSsh::ShouldITryAgain(result)) {
+        if (orbit_ssh::ShouldITryAgain(result)) {
           self()->HandleEagain();
         } else {
           self()->SetError(result.error());
@@ -218,6 +218,6 @@ class StateMachineHelper : public QObject {
   void SetError(Error e) { self()->SetError(make_error_code(e)); }
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 #endif  // ORBIT_SSH_QT_BASE_H_

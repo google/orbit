@@ -8,7 +8,7 @@
 #include <QMetaObject>
 #include <QObject>
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 
 /*
   Disconnects a Qt-signal-slot-connection when this object gets out-of-scope.
@@ -35,6 +35,6 @@ class ScopedConnection {
   ~ScopedConnection() { QObject::disconnect(connection_); }
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 #endif  // ORBIT_SSH_QT_SCOPED_CONNECTION_H_

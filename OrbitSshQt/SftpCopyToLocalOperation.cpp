@@ -4,7 +4,7 @@
 
 #include "OrbitSshQt/SftpCopyToLocalOperation.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 
 SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel)
     : session_(session), channel_(channel) {
@@ -39,8 +39,8 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
     case State::kInitial:
     case State::kNoOperation: {
       OUTCOME_TRY(sftp_file,
-                  OrbitSsh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
-                                           source_.string(), OrbitSsh::FxfFlags::kRead,
+                  orbit_ssh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
+                                           source_.string(), orbit_ssh::FxfFlags::kRead,
                                            0 /* mode - not applicable for kRead */));
       sftp_file_ = std::move(sftp_file);
       SetState(State::kRemoteFileOpened);
@@ -110,4 +110,4 @@ void SftpCopyToLocalOperation::HandleEagain() {
   }
 }
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt

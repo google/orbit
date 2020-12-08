@@ -7,7 +7,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSshQt/Error.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 
 Task::Task(Session* session, std::string command) : session_(session), command_(command) {
   about_to_shutdown_connection_.emplace(
@@ -52,7 +52,7 @@ outcome::result<void> Task::run() {
     const size_t kChunkSize = 8192;
     auto result = channel_->ReadStdOut(kChunkSize);
 
-    if (!result && !OrbitSsh::ShouldITryAgain(result)) {
+    if (!result && !orbit_ssh::ShouldITryAgain(result)) {
       if (added_new_data_to_read_buffer) {
         emit readyReadStdOut();
       }
@@ -82,7 +82,7 @@ outcome::result<void> Task::run() {
     const size_t kChunkSize = 8192;
     auto result = channel_->ReadStdErr(kChunkSize);
 
-    if (!result && !OrbitSsh::ShouldITryAgain(result)) {
+    if (!result && !orbit_ssh::ShouldITryAgain(result)) {
       if (added_new_data_to_read_buffer) {
         emit readyReadStdErr();
       }
@@ -127,10 +127,10 @@ outcome::result<void> Task::startup() {
     case State::kNoChannel: {
       auto session = session_->GetRawSession();
       if (!session) {
-        return OrbitSsh::Error::kEagain;
+        return orbit_ssh::Error::kEagain;
       }
 
-      OUTCOME_TRY(channel, OrbitSsh::Channel::OpenChannel(session_->GetRawSession()));
+      OUTCOME_TRY(channel, orbit_ssh::Channel::OpenChannel(session_->GetRawSession()));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;
@@ -205,4 +205,4 @@ void Task::HandleEagain() {
   }
 }
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt

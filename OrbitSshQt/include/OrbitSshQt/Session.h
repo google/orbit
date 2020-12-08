@@ -16,7 +16,7 @@
 #include "OrbitSsh/Session.h"
 #include "OrbitSshQt/StateMachineHelper.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 namespace details {
 enum class SessionState {
   kInitial,
@@ -50,13 +50,13 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   using State = details::SessionState;
 
  public:
-  explicit Session(const OrbitSsh::Context* context, QObject* parent = nullptr)
+  explicit Session(const orbit_ssh::Context* context, QObject* parent = nullptr)
       : StateMachineHelper(parent), context_(context) {}
 
-  void ConnectToServer(OrbitSsh::Credentials creds);
+  void ConnectToServer(orbit_ssh::Credentials creds);
   void Disconnect();
 
-  OrbitSsh::Session* GetRawSession() { return session_ ? &session_.value() : nullptr; }
+  orbit_ssh::Session* GetRawSession() { return session_ ? &session_.value() : nullptr; }
 
   void HandleEagain();
 
@@ -69,11 +69,11 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   void dataEvent();
 
  private:
-  const OrbitSsh::Context* context_;
-  OrbitSsh::Credentials credentials_;
+  const orbit_ssh::Context* context_;
+  orbit_ssh::Credentials credentials_;
 
-  std::optional<OrbitSsh::Socket> socket_;
-  std::optional<OrbitSsh::Session> session_;
+  std::optional<orbit_ssh::Socket> socket_;
+  std::optional<orbit_ssh::Session> session_;
 
   struct NotifierSet {
     QSocketNotifier read;
@@ -93,5 +93,5 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   void SetError(std::error_code);
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 #endif  // ORBIT_SSH_QT_SESSION_H_

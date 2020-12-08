@@ -7,7 +7,7 @@
 
 #include <system_error>
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 
 enum class Error {
   kNotConnected,
@@ -35,10 +35,10 @@ inline std::error_code make_error_code(Error e) {
   return std::error_code{static_cast<int>(e), GetErrorCategory()};
 }
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 namespace std {
 template <>
-struct is_error_condition_enum<OrbitSshQt::Error> : std::true_type {};
+struct is_error_condition_enum<orbit_ssh_qt::Error> : std::true_type {};
 }  // namespace std
 #endif  // ORBIT_SSH_QT_ERROR_H_

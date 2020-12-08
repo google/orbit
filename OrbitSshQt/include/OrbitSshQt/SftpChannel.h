@@ -16,7 +16,7 @@
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/StateMachineHelper.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 namespace details {
 enum class SftpChannelState {
   kInitial,
@@ -49,7 +49,7 @@ class SftpChannel : public StateMachineHelper<SftpChannel, details::SftpChannelS
   void Start();
   void Stop();
 
-  OrbitSsh::Sftp* GetRawSftp() { return sftp_ ? &sftp_.value() : nullptr; }
+  orbit_ssh::Sftp* GetRawSftp() { return sftp_ ? &sftp_.value() : nullptr; }
 
  signals:
   void aboutToShutdown();
@@ -60,7 +60,7 @@ class SftpChannel : public StateMachineHelper<SftpChannel, details::SftpChannelS
 
  private:
   QPointer<Session> session_;
-  std::optional<OrbitSsh::Sftp> sftp_;
+  std::optional<orbit_ssh::Sftp> sftp_;
 
   std::optional<ScopedConnection> data_event_connection_;
   std::optional<ScopedConnection> about_to_shutdown_connection_;
@@ -76,6 +76,6 @@ class SftpChannel : public StateMachineHelper<SftpChannel, details::SftpChannelS
   outcome::result<void> run();
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 #endif  // ORBIT_SSH_QT_SFTP_CHANNEL_H_

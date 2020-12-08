@@ -17,7 +17,7 @@
 #include <filesystem>
 #include <optional>
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 namespace details {
 enum class SftpCopyToRemoteOperationState {
   kInitial,
@@ -67,7 +67,7 @@ class SftpCopyToRemoteOperation
   std::optional<ScopedConnection> about_to_shutdown_connection_;
 
   QPointer<SftpChannel> channel_;
-  std::optional<OrbitSsh::SftpFile> sftp_file_;
+  std::optional<orbit_ssh::SftpFile> sftp_file_;
   QFile local_file_;
   QByteArray write_buffer_;
 
@@ -86,6 +86,6 @@ class SftpCopyToRemoteOperation
   void SetError(std::error_code);
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 #endif  // ORBIT_SSH_QT_SFTP_COPY_TO_REMOTE_OPERATION_H_
