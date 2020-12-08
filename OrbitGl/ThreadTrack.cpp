@@ -68,7 +68,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     function_name = api_event.name;
   } else {
-    function_name = FunctionUtils::GetDisplayName(*func);
+    function_name = function_utils::GetDisplayName(*func);
   }
 
   return absl::StrFormat(
@@ -77,7 +77,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
       "<br/><br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      function_name, is_manual ? "manual" : "dynamic", FunctionUtils::GetLoadedModuleName(*func),
+      function_name, is_manual ? "manual" : "dynamic", function_utils::GetLoadedModuleName(*func),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
@@ -255,7 +255,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
         auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
         name = api_event.name;
       } else {
-        name = FunctionUtils::GetDisplayName(*func);
+        name = function_utils::GetDisplayName(*func);
       }
 
       std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());

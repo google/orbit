@@ -30,7 +30,7 @@ ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 using orbit_grpc_protos::GetModuleListResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using OrbitClientData::ModuleManager;
+using orbit_client_data::ModuleManager;
 
 DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   const auto range = module_list.modules();

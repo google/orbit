@@ -20,13 +20,13 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-#define IMGUI_VAR_TO_TEXT(var) ImGuiOrbit::VariableToText(#var, var)
-#define IMGUI_VARN_TO_TEXT(var, name) ImGuiOrbit::VariableToText(name, var)
+#define IMGUI_VAR_TO_TEXT(var) orbit_gl::imgui::VariableToText(#var, var)
+#define IMGUI_VARN_TO_TEXT(var, name) orbit_gl::imgui::VariableToText(name, var)
 
 #define IMGUI_FLOAT_SLIDER(x) IMGUI_FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
 #define IMGUI_FLOAT_SLIDER_MIN_MAX(x, min, max) ImGui::SliderFloat(#x, &x, min, max)
 
-namespace ImGuiOrbit {
+namespace orbit_gl::imgui {
 
 template <class T>
 inline void VariableToText(std::string_view name, const T& value) {
@@ -35,7 +35,7 @@ inline void VariableToText(std::string_view name, const T& value) {
   ImGui::Text("%s", string_stream.str().c_str());
 }
 
-}  // namespace ImGuiOrbit
+}  // namespace orbit_gl::imgui
 
 class GlCanvas;
 

@@ -24,5 +24,5 @@ class IntrospectionWindow : public CaptureWindow {
   [[nodiscard]] bool ShouldAutoZoom() const override;
 
  private:
-  std::unique_ptr<orbit::tracing::Listener> introspection_listener_;
+  std::unique_ptr<orbit_tracing::Listener> introspection_listener_;
 };

@@ -113,7 +113,7 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
-  module_manager_ = std::make_unique<OrbitClientData::ModuleManager>();
+  module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 }
 
@@ -485,7 +485,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
   CHECK(module != nullptr);
   const bool is_64_bit = process->is_64_bit();
-  const uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function, *process, *module);
+  const uint64_t absolute_address = function_utils::GetAbsoluteAddress(function, *process, *module);
   thread_pool_->Schedule([this, absolute_address, is_64_bit, pid, function] {
     auto result = process_manager_->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
@@ -496,7 +496,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.AddLine(absl::StrFormat("asm: /* %s */", FunctionUtils::GetDisplayName(function)));
+    disasm.AddLine(absl::StrFormat("asm: /* %s */", function_utils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
     if (!sampling_report_) {
       DisassemblyReport empty_report(disasm);
@@ -689,14 +689,14 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
 
   for (const auto& function : data_manager_->GetSelectedFunctions()) {
     // GetSelectedFunctions should not contain orbit functions
-    CHECK(!FunctionUtils::IsOrbitFunc(function));
+    CHECK(!function_utils::IsOrbitFunc(function));
 
-    uint64_t hash = FunctionUtils::GetHash(function);
+    uint64_t hash = function_utils::GetHash(function);
     (*preset.mutable_path_to_module())[function.loaded_module_path()].add_function_hashes(hash);
   }
 
   for (const auto& function : data_manager_->user_defined_capture_data().frame_track_functions()) {
-    uint64_t hash = FunctionUtils::GetHash(function);
+    uint64_t hash = function_utils::GetHash(function);
     (*preset.mutable_path_to_module())[function.loaded_module_path()]
         .add_frame_track_function_hashes(hash);
   }
@@ -820,7 +820,7 @@ bool OrbitApp::StartCapture() {
   for (auto& function : selected_functions) {
     const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
     CHECK(module != nullptr);
-    uint64_t absolute_address = FunctionUtils::GetAbsoluteAddress(function, *process, *module);
+    uint64_t absolute_address = function_utils::GetAbsoluteAddress(function, *process, *module);
     selected_functions_map[absolute_address] = std::move(function);
   }
 
@@ -1324,7 +1324,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
           // (B) deselect when module does not have functions anymore (!is_loaded())
           data_manager_->DeselectFunction(func);
           // (C) Save function hashes, so they can be hooked again after reload
-          function_hashes_to_hook_map[module->file_path()].push_back(FunctionUtils::GetHash(func));
+          function_hashes_to_hook_map[module->file_path()].push_back(function_utils::GetHash(func));
         }
       }
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
@@ -1338,7 +1338,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         } else if (!module->is_loaded()) {
           RemoveFrameTrack(func);
           frame_track_function_hashes_map[module->file_path()].push_back(
-              FunctionUtils::GetHash(func));
+              function_utils::GetHash(func));
         }
       }
       // (D) Load Modules again (and pass on functions to hook after loading)
@@ -1449,7 +1449,7 @@ uint64_t OrbitApp::GetFunctionAddressToHighlight() const {
 
   // Highlighting of manually instrumented scopes is not yet supported.
   const FunctionInfo* function_info = GetSelectedFunction(selected_address);
-  if (function_info == nullptr || FunctionUtils::IsOrbitFunc(*function_info)) {
+  if (function_info == nullptr || function_utils::IsOrbitFunc(*function_info)) {
     return DataManager::kInvalidFunctionAddress;
   }
 

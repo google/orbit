@@ -63,17 +63,17 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
 
 #define ORBIT_PROC_SORT(Member)                                                      \
   [&](int a, int b) {                                                                \
-    return OrbitUtils::Compare(functions[a].Member, functions[b].Member, ascending); \
+    return orbit_utils::Compare(functions[a].Member, functions[b].Member, ascending); \
   }
 
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
   [&](int a, int b) {                                                              \
-    return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), ascending); \
+    return orbit_utils::Compare(Func(functions[a]), Func(functions[b]), ascending); \
   }
 
 #define ORBIT_MODULE_NAME_FUNC_SORT                                                        \
   [&](int a, int b) {                                                                      \
-    return OrbitUtils::Compare(std::filesystem::path(functions[a].module_path).filename(), \
+    return orbit_utils::Compare(std::filesystem::path(functions[a].module_path).filename(), \
                                std::filesystem::path(functions[b].module_path).filename(), \
                                ascending);                                                 \
   }
