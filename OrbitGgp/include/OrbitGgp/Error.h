@@ -7,7 +7,7 @@
 
 #include <system_error>
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 enum class Error {
   kCouldNotUseGgpCli,
@@ -32,11 +32,11 @@ inline std::error_code make_error_code(Error e) {
   return std::error_code{static_cast<int>(e), GetErrorCategory()};
 }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp
 
 namespace std {
 template <>
-struct is_error_condition_enum<OrbitGgp::Error> : std::true_type {};
+struct is_error_condition_enum<orbit_ggp::Error> : std::true_type {};
 }  // namespace std
 
 #endif  // ORBIT_GGP_ERROR_H_

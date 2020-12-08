@@ -11,7 +11,7 @@
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/InstanceItemModel.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 TEST(InstanceItemModelTests, columnCount) {
   InstanceItemModel model{};
@@ -224,4 +224,4 @@ TEST(InstanceItemModelTests, SetInstances) {
   EXPECT_EQ(data_changed_counter, 0);
 }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp

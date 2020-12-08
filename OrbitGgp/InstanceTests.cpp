@@ -11,7 +11,7 @@
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 TEST(InstanceTests, GetListFromJson) {
   {
@@ -60,7 +60,7 @@ TEST(InstanceTests, GetListFromJson) {
                           .toUtf8();
     const auto result = Instance::GetListFromJson(json);
     ASSERT_FALSE(result);
-    EXPECT_EQ(result.error().value(), static_cast<int>(OrbitGgp::Error::kUnableToParseJson));
+    EXPECT_EQ(result.error().value(), static_cast<int>(orbit_ggp::Error::kUnableToParseJson));
   }
 
   {
@@ -179,4 +179,4 @@ TEST(InstanceTests, QMetaTypeId) {
   EXPECT_STREQ("OrbitGgp::Instance", QMetaType::typeName(qMetaTypeId<Instance>()));
 }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp

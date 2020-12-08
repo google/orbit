@@ -8,7 +8,7 @@
 
 #include "OrbitGgp/SshInfo.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 TEST(SshInfoTest, CreateFromJson) {
   QByteArray json;
@@ -67,4 +67,4 @@ TEST(SshInfoTest, CreateFromJson) {
   EXPECT_FALSE(SshInfo::CreateFromJson(json));
 }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp
