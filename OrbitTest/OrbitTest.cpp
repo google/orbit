@@ -95,6 +95,7 @@ void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
   }
 }
 
+#if ORBIT_API_ENABLED
 static void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
 
 static void NO_INLINE SleepFor2Ms() {
@@ -119,7 +120,6 @@ static void ExecuteTask(uint32_t id) {
 }
 
 void OrbitTest::ManualInstrumentationApiTest() {
-#if ORBIT_API_ENABLED
   while (!m_ExitRequested) {
     ORBIT_SCOPE("ORBIT_SCOPE_TEST");
     ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit::Color(0xff0000ff));
@@ -172,5 +172,7 @@ void OrbitTest::ManualInstrumentationApiTest() {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
-#endif
 }
+#else
+void OrbitTest::ManualInstrumentationApiTest() {}
+#endif  // ORBIT_API_ENABLED
