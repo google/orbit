@@ -23,7 +23,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     ERROR("Unable to open capstone.");
     return {};
   }
-  OrbitBase::unique_resource handle{std::move(temp_handle), [](csh handle) { cs_close(&handle); }};
+  orbit_base::unique_resource handle{std::move(temp_handle), [](csh handle) { cs_close(&handle); }};
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 

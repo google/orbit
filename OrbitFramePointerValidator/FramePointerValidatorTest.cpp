@@ -19,7 +19,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   const std::filesystem::path executable_dir = orbit_base::GetExecutableDir();
   const std::filesystem::path test_elf_file = executable_dir / "testdata" / "hello_world_elf";
 
-  auto elf_file = ElfUtils::ElfFile::Create(test_elf_file);
+  auto elf_file = orbit_elf_utils::ElfFile::Create(test_elf_file);
   ASSERT_TRUE(elf_file) << elf_file.error().message();
 
   const auto symbols_result = elf_file.value()->LoadSymbols();
