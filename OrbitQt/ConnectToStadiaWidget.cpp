@@ -47,8 +47,8 @@ const QString kRememberChosenInstance{"RememberChosenInstance"};
 
 namespace orbit_qt {
 
-using OrbitGgp::Instance;
-using OrbitSshQt::ScopedConnection;
+using orbit_ggp::Instance;
+using orbit_ssh_qt::ScopedConnection;
 
 ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
     : QWidget(parent),
@@ -93,7 +93,7 @@ void ConnectToStadiaWidget::Start(SshConnectionArtifacts* ssh_connection_artifac
   CHECK(ssh_connection_artifacts != nullptr);
   ssh_connection_artifacts_ = ssh_connection_artifacts;
 
-  auto client_result = OrbitGgp::Client::Create(this);
+  auto client_result = orbit_ggp::Client::Create(this);
   if (!client_result) {
     ui_->radioButton->setToolTip(QString::fromStdString(client_result.error().message()));
     setEnabled(false);
@@ -252,7 +252,7 @@ void ConnectToStadiaWidget::DeployOrbitService() {
   CHECK(instance_credentials_.contains(instance_id));
   CHECK(instance_credentials_.at(instance_id).has_value());
 
-  const OrbitSsh::Credentials& credentials{instance_credentials_.at(instance_id).value()};
+  const orbit_ssh::Credentials& credentials{instance_credentials_.at(instance_id).value()};
 
   CHECK(ssh_connection_artifacts_ != nullptr);
   service_deploy_manager_ = std::make_unique<ServiceDeployManager>(
@@ -350,7 +350,7 @@ void ConnectToStadiaWidget::OnRememberCheckBoxToggled(bool checked) {
 }
 
 void ConnectToStadiaWidget::OnInstancesLoaded(
-    outcome::result<QVector<OrbitGgp::Instance>> instances) {
+    outcome::result<QVector<orbit_ggp::Instance>> instances) {
   if (!instances) {
     emit ErrorOccurred(QString("Orbit was unable to retrieve the list of available Stadia "
                                "instances. The error message was: %1")
@@ -372,13 +372,13 @@ void ConnectToStadiaWidget::OnInstancesLoaded(
     }
 
     ggp_client_->GetSshInfoAsync(instance, [this, instance_id = std::move(instance_id)](
-                                               outcome::result<OrbitGgp::SshInfo> ssh_info_result) {
+                                     outcome::result<orbit_ggp::SshInfo> ssh_info_result) {
       OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
     });
   }
 }
 
-void ConnectToStadiaWidget::OnSshInfoLoaded(outcome::result<OrbitGgp::SshInfo> ssh_info_result,
+void ConnectToStadiaWidget::OnSshInfoLoaded(outcome::result<orbit_ggp::SshInfo> ssh_info_result,
                                             std::string instance_id) {
   if (!ssh_info_result) {
     std::string error_message =
@@ -389,8 +389,8 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(outcome::result<OrbitGgp::SshInfo> s
   } else {
     LOG("Received ssh info for instance with id: %s", instance_id);
 
-    OrbitGgp::SshInfo& ssh_info{ssh_info_result.value()};
-    OrbitSsh::Credentials credentials;
+    orbit_ggp::SshInfo& ssh_info{ssh_info_result.value()};
+    orbit_ssh::Credentials credentials;
     credentials.addr_and_port = {ssh_info.host.toStdString(), ssh_info.port};
     credentials.key_path = ssh_info.key_path.toStdString();
     credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
@@ -406,7 +406,7 @@ void ConnectToStadiaWidget::TrySelectRememberedInstance() {
   if (remembered_instance_id_ == std::nullopt) return;
 
   QModelIndexList matches = instance_model_.match(
-      instance_model_.index(0, static_cast<int>(OrbitGgp::InstanceItemModel::Columns::kId)),
+      instance_model_.index(0, static_cast<int>(orbit_ggp::InstanceItemModel::Columns::kId)),
       Qt::DisplayRole, QVariant::fromValue(remembered_instance_id_.value()));
 
   if (!matches.isEmpty()) {

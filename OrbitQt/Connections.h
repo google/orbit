@@ -30,7 +30,7 @@ namespace orbit_qt {
  */
 class SshConnectionArtifacts {
  public:
-  explicit SshConnectionArtifacts(const OrbitSsh::Context* ssh_context,
+  explicit SshConnectionArtifacts(const orbit_ssh::Context* ssh_context,
                                   ServiceDeployManager::GrpcPort grpc_port,
                                   const DeploymentConfiguration* deployment_configuration)
       : ssh_context_(ssh_context),
@@ -40,14 +40,14 @@ class SshConnectionArtifacts {
     CHECK(deployment_configuration != nullptr);
   }
 
-  [[nodiscard]] const OrbitSsh::Context* GetSshContext() const { return ssh_context_; }
+  [[nodiscard]] const orbit_ssh::Context* GetSshContext() const { return ssh_context_; }
   [[nodiscard]] const ServiceDeployManager::GrpcPort& GetGrpcPort() const { return grpc_port_; }
   [[nodiscard]] const DeploymentConfiguration* GetDeploymentConfiguration() const {
     return deployment_configuration_;
   }
 
  private:
-  const OrbitSsh::Context* ssh_context_;
+  const orbit_ssh::Context* ssh_context_;
   const ServiceDeployManager::GrpcPort grpc_port_;
   const DeploymentConfiguration* deployment_configuration_;
 };
@@ -63,7 +63,7 @@ class StadiaConnection {
   friend class ConnectToStadiaWidget;
 
  public:
-  explicit StadiaConnection(OrbitGgp::Instance&& instance,
+  explicit StadiaConnection(orbit_ggp::Instance&& instance,
                             std::unique_ptr<ServiceDeployManager> service_deploy_manager,
                             std::shared_ptr<grpc::Channel>&& grpc_channel)
       : instance_(std::move(instance)),
@@ -72,14 +72,14 @@ class StadiaConnection {
     CHECK(service_deploy_manager_ != nullptr);
     CHECK(grpc_channel_ != nullptr);
   }
-  [[nodiscard]] const OrbitGgp::Instance& GetInstance() const { return instance_; }
+  [[nodiscard]] const orbit_ggp::Instance& GetInstance() const { return instance_; }
   [[nodiscard]] ServiceDeployManager* GetServiceDeployManager() const {
     return service_deploy_manager_.get();
   }
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() { return grpc_channel_; }
 
  private:
-  OrbitGgp::Instance instance_;
+  orbit_ggp::Instance instance_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 };

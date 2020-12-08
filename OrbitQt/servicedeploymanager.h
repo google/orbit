@@ -31,7 +31,7 @@ class ServiceDeployManager : public QObject {
   };
 
   explicit ServiceDeployManager(const DeploymentConfiguration* deployment_configuration,
-                                const OrbitSsh::Context* context, OrbitSsh::Credentials creds,
+                                const orbit_ssh::Context* context, orbit_ssh::Credentials creds,
                                 const GrpcPort& grpc_port, QObject* parent = nullptr);
 
   ~ServiceDeployManager() noexcept;
@@ -51,13 +51,13 @@ class ServiceDeployManager : public QObject {
 
  private:
   const DeploymentConfiguration* deployment_configuration_;
-  const OrbitSsh::Context* context_;
-  OrbitSsh::Credentials credentials_;
+  const orbit_ssh::Context* context_;
+  orbit_ssh::Credentials credentials_;
   GrpcPort grpc_port_;
-  std::optional<OrbitSshQt::Session> session_;
-  std::optional<OrbitSshQt::Task> orbit_service_task_;
-  std::optional<OrbitSshQt::Tunnel> grpc_tunnel_;
-  std::unique_ptr<OrbitSshQt::SftpChannel> sftp_channel_;
+  std::optional<orbit_ssh_qt::Session> session_;
+  std::optional<orbit_ssh_qt::Task> orbit_service_task_;
+  std::optional<orbit_ssh_qt::Tunnel> grpc_tunnel_;
+  std::unique_ptr<orbit_ssh_qt::SftpChannel> sftp_channel_;
   QTimer ssh_watchdog_timer_;
 
   QThread background_thread_;
@@ -69,11 +69,11 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> InstallOrbitServicePackage();
   outcome::result<void> StartOrbitService();
   outcome::result<void> StartOrbitServicePrivileged();
-  outcome::result<uint16_t> StartTunnel(std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port);
-  outcome::result<std::unique_ptr<OrbitSshQt::SftpChannel>> StartSftpChannel();
-  outcome::result<void> StopSftpChannel(OrbitSshQt::SftpChannel* sftp_channel);
+  outcome::result<uint16_t> StartTunnel(std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port);
+  outcome::result<std::unique_ptr<orbit_ssh_qt::SftpChannel>> StartSftpChannel();
+  outcome::result<void> StopSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel);
   outcome::result<void> CopyFileToRemote(const std::string& source, const std::string& dest,
-                                         OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode);
+                                         orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode);
 
   ErrorMessageOr<void> CopyFileToLocalImpl(std::string_view source, std::string_view destination);
   outcome::result<GrpcPort> ExecImpl();
@@ -82,7 +82,7 @@ class ServiceDeployManager : public QObject {
   void StopSftpChannel();
   void ShutdownSession();
   void ShutdownOrbitService();
-  void ShutdownTunnel(std::optional<OrbitSshQt::Tunnel>*);
+  void ShutdownTunnel(std::optional<orbit_ssh_qt::Tunnel>*);
 
   void handleSocketError(std::error_code);
 };

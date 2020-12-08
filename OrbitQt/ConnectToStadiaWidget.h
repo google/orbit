@@ -71,12 +71,12 @@ class ConnectToStadiaWidget : public QWidget {
 
  private:
   std::unique_ptr<Ui::ConnectToStadiaWidget> ui_;
-  OrbitGgp::InstanceItemModel instance_model_;
+  orbit_ggp::InstanceItemModel instance_model_;
   SshConnectionArtifacts* ssh_connection_artifacts_ = nullptr;
-  std::optional<OrbitGgp::Instance> selected_instance_;
+  std::optional<orbit_ggp::Instance> selected_instance_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  QPointer<OrbitGgp::Client> ggp_client_ = nullptr;
+  QPointer<orbit_ggp::Client> ggp_client_ = nullptr;
   std::optional<QString> remembered_instance_id_;
 
   // State Machine & States
@@ -88,12 +88,12 @@ class ConnectToStadiaWidget : public QWidget {
   QState s_deploying_;
   QState s_connected_;
 
-  absl::flat_hash_map<std::string, ErrorMessageOr<OrbitSsh::Credentials>> instance_credentials_;
+  absl::flat_hash_map<std::string, ErrorMessageOr<orbit_ssh::Credentials>> instance_credentials_;
 
   void DetachRadioButton();
   void SetupStateMachine();
-  void OnInstancesLoaded(outcome::result<QVector<OrbitGgp::Instance>> instances);
-  void OnSshInfoLoaded(outcome::result<OrbitGgp::SshInfo> ssh_info_result, std::string instance_id);
+  void OnInstancesLoaded(outcome::result<QVector<orbit_ggp::Instance>> instances);
+  void OnSshInfoLoaded(outcome::result<orbit_ggp::SshInfo> ssh_info_result, std::string instance_id);
   void TrySelectRememberedInstance();
 };
 
