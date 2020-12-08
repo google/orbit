@@ -1281,7 +1281,7 @@ int TimeGraph::AccessibleChildCount() const { return sorted_filtered_tracks_.siz
 
 const GlA11yControlInterface* TimeGraph::AccessibleChild(int index) const {
   // return nullptr;
-  return sorted_filtered_tracks_[index].get();
+  return sorted_filtered_tracks_[index]->AccessibilityInterface();
 }
 
 const GlA11yControlInterface* TimeGraph::AccessibleChildAt(int x, int y) const {
@@ -1289,7 +1289,7 @@ const GlA11yControlInterface* TimeGraph::AccessibleChildAt(int x, int y) const {
   for (auto& track : sorted_filtered_tracks_) {
     // TODO: This is probably flipped along y
     if (y >= -track->GetPos()[1] && y <= -track->GetPos()[1] + track->GetHeight()) {
-      return track.get();
+      return track->AccessibilityInterface();
     }
   }
 

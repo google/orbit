@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TRACK_H_
+#define ORBIT_GL_TRACK_H_
 
 #include <atomic>
 #include <memory>
@@ -12,20 +13,18 @@
 #include "BlockChain.h"
 #include "CoreMath.h"
 #include "OrbitBase/Profiling.h"
-#include "OrbitGlAccessibility.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
+#include "TrackAccessibility.h"
 #include "TriangleToggle.h"
 
 class GlCanvas;
 class TimeGraph;
 
-class Track : public Pickable,
-              public orbit_gl::GlA11yControlInterface,
-              public std::enable_shared_from_this<Track> {
+class Track : public Pickable, public std::enable_shared_from_this<Track> {
  public:
   enum Type {
     kTimerTrack,
@@ -88,10 +87,13 @@ class Track : public Pickable,
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
   void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
+  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
+
   void SetPos(float a_X, float a_Y);
   void SetY(float y);
   [[nodiscard]] Vec2 GetPos() const { return pos_; }
   void SetSize(float a_SizeX, float a_SizeY);
+  [[nodiscard]] Vec2 GetSize() const { return size_; }
   void SetColor(Color a_Color) { color_ = a_Color; }
   [[nodiscard]] Color GetBackgroundColor() const;
 
@@ -102,28 +104,18 @@ class Track : public Pickable,
   void SetProcessId(uint32_t pid) { process_id_ = pid; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;
 
-  // Accessibility
-  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override {
-    return nullptr;
-  }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int, int) const override {
-    return nullptr;
-  }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
+  [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
-  [[nodiscard]] std::string AccessibleName() const override { return name_; }
-  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
-    return orbit_gl::A11yRole::Chart;
+  [[nodiscard]] bool IsCollapsed() { return collapse_toggle_->IsCollapsed(); }
+
+  // Accessibility
+  [[nodiscard]] const orbit_gl::TrackAccessibility* AccessibilityInterface() const {
+    return &accessibility_;
   }
-  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
-  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override;
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
-
-  [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
   GlCanvas* canvas_;
   TimeGraph* time_graph_;
@@ -148,4 +140,8 @@ class Track : public Pickable,
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
+
+  orbit_gl::TrackAccessibility accessibility_;
 };
+
+#endif

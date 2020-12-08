@@ -16,7 +16,8 @@ Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)) {
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)),
+      accessibility_(this) {
   mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
   pos_ = Vec2(0, 0);
   size_ = Vec2(0, 0);
@@ -59,28 +60,6 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
     float y_rotated = sin_r * point[0] + cos_r * point[1];
     result.push_back(Vec2(x_rotated, y_rotated));
   }
-  return result;
-}
-
-const orbit_gl::GlA11yControlInterface* Track::AccessibleParent() const { return time_graph_; }
-
-orbit_gl::A11yRect Track::AccessibleLocalRect() const {
-  int top = static_cast<int>(std::max(-pos_[1] + canvas_->GetWorldTopLeftY(), 0.0f));
-  int left = static_cast<int>(pos_[0]);
-  int width = static_cast<int>(size_[0]);
-  int height = static_cast<int>(std::max(-pos_[1] + size_[1] - top, 0.0f));
-  return orbit_gl::A11yRect(left, top, width, height);
-}
-
-orbit_gl::A11yState Track::AccessibleState() const {
-  orbit_gl::A11yState result;
-  result.active = result.focusable = result.selectable = result.movable = 1;
-  result.focused = IsTrackSelected();
-  result.selected = IsTrackSelected();
-  result.expandable = !IsCollapsable();
-  result.expanded = collapse_toggle_->IsExpanded();
-  result.collapsed = collapse_toggle_->IsCollapsed();
-  result.offscreen = AccessibleLocalRect().height == 0;
   return result;
 }
 
