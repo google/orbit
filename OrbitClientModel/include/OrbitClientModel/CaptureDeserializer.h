@@ -21,10 +21,10 @@
 namespace capture_deserializer {
 
 void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
-          OrbitClientData::ModuleManager* module_manager,
+          orbit_client_data::ModuleManager* module_manager,
           std::atomic<bool>* cancellation_requested);
 void Load(const std::string& file_name, CaptureListener* capture_listener,
-          OrbitClientData::ModuleManager* module_manager,
+          orbit_client_data::ModuleManager* module_manager,
           std::atomic<bool>* cancellation_requested);
 
 namespace internal {
@@ -33,7 +33,7 @@ bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::Coded
 
 void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
                      CaptureListener* capture_listener,
-                     OrbitClientData::ModuleManager* module_manager,
+                     orbit_client_data::ModuleManager* module_manager,
                      google::protobuf::io::CodedInputStream* coded_input,
                      std::atomic<bool>* cancellation_requested);
 

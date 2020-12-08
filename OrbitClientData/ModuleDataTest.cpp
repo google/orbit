@@ -168,7 +168,7 @@ TEST(ModuleData, FindFunctionFromHash) {
   ASSERT_FALSE(module.GetFunctions().empty());
 
   const FunctionInfo* function = module.GetFunctions()[0];
-  uint64_t hash = FunctionUtils::GetHash(*function);
+  uint64_t hash = function_utils::GetHash(*function);
 
   {
     const FunctionInfo* result = module.FindFunctionFromHash(hash);

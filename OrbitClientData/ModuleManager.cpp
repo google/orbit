@@ -13,7 +13,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-namespace OrbitClientData {
+namespace orbit_client_data {
 
 std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
     const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
@@ -76,4 +76,4 @@ std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(
   return result;
 }
 
-}  // namespace OrbitClientData
+}  // namespace orbit_client_data

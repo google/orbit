@@ -28,7 +28,7 @@ using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::TracepointInfo;
-using OrbitClientData::ModuleManager;
+using orbit_client_data::ModuleManager;
 
 using ::testing::_;
 using ::testing::Assign;

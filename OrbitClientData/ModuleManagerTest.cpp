@@ -11,7 +11,7 @@
 #include "module.pb.h"
 #include "symbol.pb.h"
 
-namespace OrbitClientData {
+namespace orbit_client_data {
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
@@ -192,7 +192,7 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     symbol_info->set_demangled_name("not an orbit function");
   }
 
-  const auto& orbit_name_to_orbit_type_map = FunctionUtils::GetFunctionNameToOrbitTypeMap();
+  const auto& orbit_name_to_orbit_type_map = function_utils::GetFunctionNameToOrbitTypeMap();
   const std::string kOrbitName = orbit_name_to_orbit_type_map.begin()->first;
   const std::string kOrbitNameMangled = absl::StrFormat("mangled_%s", kOrbitName);
 
@@ -219,4 +219,4 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
   }
 }
 
-}  // namespace OrbitClientData
+}  // namespace orbit_client_data
