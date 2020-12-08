@@ -54,30 +54,30 @@ if [ -n "$1" ]; then
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       # In the presubmit case we only spare the testresults (under build/) and this script.
       echo "Cleanup for presubmit."
-	  find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
-	    grep -v 'orbitprofiler/kokoro' | \
-	    grep -v 'orbitprofiler/build' | \
-		while read file; do
-		  rm -rf "$file"
-		done
-	  find "$MOUNT_POINT" -depth -maxdepth 4 -mindepth 4 | \
-	    grep -v 'build/testresults' | \
-		while read file; do
-		  rm -rf "$file"
-		done
+      find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
+        grep -v 'orbitprofiler/kokoro' | \
+        grep -v 'orbitprofiler/build' | \
+        while read file; do
+          rm -rf "$file"
+        done
+      find "$MOUNT_POINT" -depth -maxdepth 4 -mindepth 4 | \
+        grep -v 'build/testresults' | \
+        while read file; do
+          rm -rf "$file"
+        done
       echo "Cleanup for presubmit done."
     else
       # In the non-presubmit case we spare the whole build dir and this script.
       echo "Cleanup for non-presubmit."
-	  # Delete all unneeded directories and top level files under github/orbitprofiler ...
-	  find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
+      # Delete all unneeded directories and top level files under github/orbitprofiler ...
+      find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'orbitprofiler/build' | \
-		while read file; do
-		  rm -rf "$file"
-		done
-      #	... and everything from keystore.
-	  rm -rf "$KEYSTORE_PATH"
+        while read file; do
+          rm -rf "$file"
+        done
+      # ... and everything from keystore.
+      rm -rf "$KEYSTORE_PATH"
       echo "Cleanup for non-presubmit done."
     fi
   }
