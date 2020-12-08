@@ -212,6 +212,14 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     OnTimerSelectionChanged(timer_info);
   });
 
+  GOrbitApp->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
+    OnTimerSelectionChanged(timer_info);
+  });
+
+  GOrbitApp->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
+    OnTimerSelectionChanged(timer_info);
+  });
+
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
     GOrbitApp->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
@@ -594,7 +602,7 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   orbit_qt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle("About");
   dialog.SetVersionString(QCoreApplication::applicationVersion());
-  dialog.SetBuildInformation(QString::fromStdString(OrbitCore::GetBuildReport()));
+  dialog.SetBuildInformation(QString::fromStdString(orbit_core::GetBuildReport()));
 
   QFile licenseFile{QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};
   if (licenseFile.open(QIODevice::ReadOnly)) {

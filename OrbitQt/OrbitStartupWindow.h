@@ -25,10 +25,10 @@
 namespace orbit_qt {
 
 class OrbitStartupWindow : public QDialog {
-  using Client = OrbitGgp::Client;
-  using Instance = OrbitGgp::Instance;
-  using InstanceItemModel = OrbitGgp::InstanceItemModel;
-  using SshInfo = OrbitGgp::SshInfo;
+  using Client = orbit_ggp::Client;
+  using Instance = orbit_ggp::Instance;
+  using InstanceItemModel = orbit_ggp::InstanceItemModel;
+  using SshInfo = orbit_ggp::SshInfo;
 
  public:
   explicit OrbitStartupWindow(QWidget* parent = nullptr);

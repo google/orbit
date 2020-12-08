@@ -103,10 +103,10 @@ using ServiceDeployManager = orbit_qt::ServiceDeployManager;
 using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
 using OrbitStartupWindow = orbit_qt::OrbitStartupWindow;
 using Error = orbit_qt::Error;
-using ScopedConnection = OrbitSshQt::ScopedConnection;
+using ScopedConnection = orbit_ssh_qt::ScopedConnection;
 using GrpcPort = ServiceDeployManager::GrpcPort;
-using SshCredentials = OrbitSsh::Credentials;
-using Context = OrbitSsh::Context;
+using SshCredentials = orbit_ssh::Credentials;
+using Context = orbit_ssh::Context;
 
 static outcome::result<GrpcPort> DeployOrbitService(
     std::optional<ServiceDeployManager>& service_deploy_manager,
@@ -139,9 +139,9 @@ static outcome::result<void> RunUiInstance(
     }
 
     OrbitStartupWindow sw{};
-    OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
+    OUTCOME_TRY(result, sw.Run<orbit_ssh::Credentials>());
 
-    if (!std::holds_alternative<OrbitSsh::Credentials>(result)) {
+    if (!std::holds_alternative<orbit_ssh::Credentials>(result)) {
       // The user chose to open a capture.
       return std::make_tuple(remote_ports, std::get<QString>(result));
     }
@@ -181,7 +181,7 @@ static outcome::result<void> RunUiInstance(
         return ScopedConnection();
       }
 
-      return OrbitSshQt::ScopedConnection{QObject::connect(
+      return orbit_ssh_qt::ScopedConnection{QObject::connect(
           &service_deploy_manager.value(), &ServiceDeployManager::socketErrorOccurred,
           &service_deploy_manager.value(), [&](std::error_code e) {
             error = e;
@@ -322,11 +322,11 @@ int main(int argc, char* argv[]) {
 
   {
     absl::SetProgramUsageMessage("CPU Profiler");
-    absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
+    absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
 
     InitLogFile(Path::GetLogFilePathAndCreateDir());
-    LOG("You are running Orbit Profiler version %s", OrbitCore::GetVersion());
+    LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
 
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
@@ -342,7 +342,7 @@ int main(int argc, char* argv[]) {
 
     // The application display name is automatically appended to all window titles when shown in the
     // title bar: <specific window title> - <application display name>
-    const auto version_string = QString::fromStdString(OrbitCore::GetVersion());
+    const auto version_string = QString::fromStdString(orbit_core::GetVersion());
     auto display_name = QString{"Orbit Profiler %1 [BETA]"}.arg(version_string);
 
     if (absl::GetFlag(FLAGS_devmode)) {
@@ -408,7 +408,7 @@ int main(int argc, char* argv[]) {
         // It was either a clean shutdown or the deliberately closed the
         // dialog, or we started with the --local flag.
         return 0;
-      } else if (result.error() == make_error_code(OrbitGgp::Error::kCouldNotUseGgpCli)) {
+      } else if (result.error() == make_error_code(orbit_ggp::Error::kCouldNotUseGgpCli)) {
         DisplayErrorToUser(QString::fromStdString(result.error().message()));
         return 1;
       } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
