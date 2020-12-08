@@ -54,7 +54,6 @@ if [ -n "$1" ]; then
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       # In the presubmit case we only spare the testresults (under build/) and this script.
       echo "Cleanup for presubmit."
-	  sleep 10000;
       find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'orbitprofiler/build' | \
@@ -62,6 +61,7 @@ if [ -n "$1" ]; then
           rm -rf "$file"
         done
       find "$MOUNT_POINT" -depth -maxdepth 4 -mindepth 4 | \
+	    grep -v 'orbitprofiler/kokoro' | \
         grep -v 'build/testresults' | \
         while read file; do
           rm -rf "$file"
