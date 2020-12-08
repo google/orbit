@@ -15,7 +15,7 @@
 #include "llvm/Object/ObjectFile.h"
 #include "symbol.pb.h"
 
-namespace ElfUtils {
+namespace orbit_elf_utils {
 
 class ElfFile {
  public:
@@ -55,6 +55,6 @@ class ElfFile {
       const std::filesystem::path& file_path, const void* buf, size_t len);
 };
 
-}  // namespace ElfUtils
+}  // namespace orbit_elf_utils
 
 #endif  // ELF_UTILS_ELF_FILE_H_
