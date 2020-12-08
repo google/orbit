@@ -5,6 +5,8 @@
 #ifndef ORBIT_QT_ERROR_H_
 #define ORBIT_QT_ERROR_H_
 
+#include <QMetaType>
+#include <string>
 #include <system_error>
 
 namespace orbit_qt {
@@ -41,5 +43,7 @@ namespace std {
 template <>
 struct is_error_condition_enum<orbit_qt::Error> : std::true_type {};
 }  // namespace std
+
+Q_DECLARE_METATYPE(std::error_code);
 
 #endif  // ORBIT_QT_ERROR_H_

@@ -13,6 +13,7 @@ target_sources(
   PRIVATE CallTreeViewItemModel.h
           CallTreeWidget.h
           Connections.h
+          ConnectToStadiaWidget.h
           CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
           DeploymentConfigurations.h
@@ -47,6 +48,8 @@ target_sources(
   PRIVATE CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
+          ConnectToStadiaWidget.cpp
+          ConnectToStadiaWidget.ui
           Error.cpp
           ElidedLabel.cpp
           MainThreadExecutorImpl.cpp
