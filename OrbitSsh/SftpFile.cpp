@@ -7,7 +7,7 @@
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp, std::string_view filepath,
                                          FxfFlags flags, int64_t mode) {
   auto* const result =
@@ -74,4 +74,4 @@ outcome::result<size_t> SftpFile::Write(std::string_view data) {
   return outcome::success(result);
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

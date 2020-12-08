@@ -15,7 +15,7 @@
 #include "Error.h"
 #include "Session.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 class Channel {
  public:
@@ -45,6 +45,6 @@ class Channel {
   std::unique_ptr<LIBSSH2_CHANNEL, decltype(&libssh2_channel_free)> raw_channel_ptr_;
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 #endif  // ORBIT_SSH_CHANNEL_H_

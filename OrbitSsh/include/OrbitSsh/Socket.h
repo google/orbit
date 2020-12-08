@@ -24,7 +24,7 @@
 
 #include "OrbitSsh/AddrAndPort.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 // Socket is a wrapper for linux sockets and winsock. It abstracts and supports
 // the functionality needed for ssh.
@@ -69,6 +69,6 @@ class Socket {
   static std::error_code GetLastError();
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 #endif  // ORBIT_SSH_SOCKET_H_

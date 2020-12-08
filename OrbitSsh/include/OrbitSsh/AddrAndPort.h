@@ -9,7 +9,7 @@
 #include <string>
 #include <tuple>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 struct AddrAndPort {
   std::string addr;
@@ -22,6 +22,6 @@ struct AddrAndPort {
   friend bool operator!=(const AddrAndPort& lhs, const AddrAndPort& rhs) { return !(lhs == rhs); }
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 #endif  // ORBIT_SSH_ADDR_AND_PORT_H_

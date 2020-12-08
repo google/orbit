@@ -4,7 +4,7 @@
 
 #include <OrbitSsh/KnownHostsError.h>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 std::string KnownHostsErrorCategory::message(int condition) const {
   switch (static_cast<KnownHostsError>(condition)) {
@@ -18,4 +18,4 @@ std::string KnownHostsErrorCategory::message(int condition) const {
 
   return "Unknown error code.";
 }
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

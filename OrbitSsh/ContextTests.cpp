@@ -8,7 +8,7 @@
 
 #include "OrbitSsh/Context.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 TEST(Context, Create) {
   auto context = Context::Create();
@@ -19,4 +19,4 @@ TEST(Context, Create) {
   ASSERT_FALSE(context.value().active());
   ASSERT_TRUE(context2.active());
 }
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

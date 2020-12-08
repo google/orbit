@@ -10,7 +10,7 @@
 #include <outcome.hpp>
 #include <system_error>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 enum class Error {
   kBannerRecv = LIBSSH2_ERROR_BANNER_RECV,
@@ -95,10 +95,10 @@ bool ShouldITryAgain(const outcome::result<T>& result) {
   return result.has_error() && result.error() == std::errc::resource_unavailable_try_again;
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 namespace std {
 template <>
-struct is_error_condition_enum<OrbitSsh::Error> : std::true_type {};
+struct is_error_condition_enum<orbit_ssh::Error> : std::true_type {};
 }  // namespace std
 #endif  // ORBIT_SSH_ERROR_H_

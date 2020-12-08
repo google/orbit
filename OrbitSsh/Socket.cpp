@@ -7,7 +7,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 Socket::Socket(Descriptor file_descriptor) : descriptor_(file_descriptor) {}
 
@@ -137,4 +137,4 @@ outcome::result<void> Socket::WaitDisconnect() {
   return GetLastError();
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

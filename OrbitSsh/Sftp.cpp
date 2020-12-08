@@ -9,7 +9,7 @@
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 outcome::result<Sftp> Sftp::Init(Session* session) {
   CHECK(session);
@@ -38,4 +38,4 @@ outcome::result<void> Sftp::Shutdown() {
   return outcome::success();
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

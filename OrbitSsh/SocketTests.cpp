@@ -13,7 +13,7 @@
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 TEST(Socket, Create) {
   auto socket = Socket::Create();
@@ -142,18 +142,18 @@ TEST(Socket, SendAndReceive) {
   ASSERT_TRUE(server_socket);
 
   // listen no longer needed
-  listen_socket = OrbitSsh::Error::kUnknown;
+  listen_socket = orbit_ssh::Error::kUnknown;
 
   // no data available -> receive would block (aka kAgain)
-  EXPECT_TRUE(OrbitSsh::ShouldITryAgain(server_socket.value().Receive()));
-  EXPECT_TRUE(OrbitSsh::ShouldITryAgain(client_socket.value().Receive()));
+  EXPECT_TRUE(orbit_ssh::ShouldITryAgain(server_socket.value().Receive()));
+  EXPECT_TRUE(orbit_ssh::ShouldITryAgain(client_socket.value().Receive()));
 
   // Send client -> server
   const std::string_view send_text = "test text";
   EXPECT_TRUE(client_socket.value().SendBlocking(send_text));
 
   // Even though this is only a local connection, it might take a split second.
-  while (OrbitSsh::ShouldITryAgain(server_socket.value().CanBeRead())) {
+  while (orbit_ssh::ShouldITryAgain(server_socket.value().CanBeRead())) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
@@ -163,15 +163,15 @@ TEST(Socket, SendAndReceive) {
   EXPECT_EQ(result.value(), send_text);
 
   // no data available -> receive would block (aka kAgain)
-  EXPECT_TRUE(OrbitSsh::ShouldITryAgain(server_socket.value().Receive()));
-  EXPECT_TRUE(OrbitSsh::ShouldITryAgain(client_socket.value().Receive()));
+  EXPECT_TRUE(orbit_ssh::ShouldITryAgain(server_socket.value().Receive()));
+  EXPECT_TRUE(orbit_ssh::ShouldITryAgain(client_socket.value().Receive()));
 
   // Send server -> client
   const std::string_view send_text2 = "test text 2";
   ASSERT_TRUE(server_socket.value().SendBlocking(send_text2));
 
   // Even though this is only a local connection, it might take a split second.
-  while (OrbitSsh::ShouldITryAgain(client_socket.value().CanBeRead())) {
+  while (orbit_ssh::ShouldITryAgain(client_socket.value().CanBeRead())) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
@@ -200,14 +200,14 @@ TEST(Socket, Shutdown) {
   ASSERT_TRUE(server_socket);
 
   // no data available -> receive would block (aka kAgain)
-  EXPECT_TRUE(OrbitSsh::ShouldITryAgain(server_socket.value().Receive()));
-  EXPECT_TRUE(OrbitSsh::ShouldITryAgain(client_socket.value().Receive()));
+  EXPECT_TRUE(orbit_ssh::ShouldITryAgain(server_socket.value().Receive()));
+  EXPECT_TRUE(orbit_ssh::ShouldITryAgain(client_socket.value().Receive()));
 
   // send shutdown client
   ASSERT_TRUE(client_socket.value().Shutdown());
 
   // Even though this is only a local connection, it might take a split second.
-  while (OrbitSsh::ShouldITryAgain(server_socket.value().CanBeRead())) {
+  while (orbit_ssh::ShouldITryAgain(server_socket.value().CanBeRead())) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
@@ -215,4 +215,4 @@ TEST(Socket, Shutdown) {
   ASSERT_TRUE(server_socket.value().WaitDisconnect());
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

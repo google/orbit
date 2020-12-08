@@ -6,7 +6,7 @@
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   WSADATA wsadata;
@@ -67,4 +67,4 @@ std::error_code Socket::GetLastError() {
   return std::error_code{::WSAGetLastError(), std::system_category()};
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

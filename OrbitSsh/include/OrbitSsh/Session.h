@@ -16,7 +16,7 @@
 
 #include "OrbitSsh/AddrAndPort.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 class Session {
  public:
@@ -39,6 +39,6 @@ class Session {
   std::unique_ptr<LIBSSH2_SESSION, decltype(&libssh2_session_free)> raw_session_ptr_;
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 #endif  // ORBIT_SSH_SESSION_H_
