@@ -142,10 +142,6 @@ const orbit_gl::GlA11yControlInterface* GlCanvas::AccessibleChild(int index) con
   return nullptr;
 }
 
-const orbit_gl::GlA11yControlInterface* GlCanvas::AccessibleChildAt(int x, int y) const {
-  return nullptr;
-}
-
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
   int mouse_x = x;
   int mouse_y = y;

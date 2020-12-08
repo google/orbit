@@ -55,17 +55,6 @@ A11yState TrackTabAccessibility::AccessibleState() const {
   return result;
 }
 
-const GlA11yControlInterface* TrackAccessibility::AccessibleChildAt(int x, int y) const {
-  auto tab_rect = tab_.AccessibleLocalRect();
-  if (y > tab_rect.height) {
-    return &content_;
-  } else if (x <= tab_rect.width) {
-    return &tab_;
-  } else {
-    return nullptr;
-  }
-}
-
 const GlA11yControlInterface* TrackAccessibility::AccessibleParent() const {
   CHECK(track_ != nullptr);
   return track_->GetTimeGraph();

@@ -19,9 +19,6 @@ class TrackContentAccessibility : public GlA11yControlInterface {
   [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override {
     return nullptr;
   }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int, int) const override {
-    return nullptr;
-  }
   [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
@@ -41,9 +38,6 @@ class TrackTabAccessibility : public GlA11yControlInterface {
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; }
   [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override {
-    return nullptr;
-  }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int, int) const override {
     return nullptr;
   }
   [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
@@ -71,7 +65,6 @@ class TrackAccessibility : public GlA11yControlInterface {
       return &content_;
     }
   }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int x, int y) const override;
   [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;

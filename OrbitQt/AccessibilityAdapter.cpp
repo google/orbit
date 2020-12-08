@@ -39,11 +39,28 @@ int A11yAdapter::indexOfChild(const QAccessibleInterface* child) const {
   return -1;
 }
 
+QAccessibleInterface* A11yAdapter::childAt(int x, int y) const {
+  for (int i = 0; i < childCount(); ++i) {
+    auto c = child(i);
+    auto rect = c->rect();
+    if (x >= rect.x() && x < rect.x() + rect.width() && y >= rect.y() &&
+        y < rect.y() + rect.height()) {
+      return c;
+    }
+  }
+
+  return nullptr;
+}
+
 QRect A11yAdapter::rect() const {
   using orbit_gl::A11yRect;
   using orbit_gl::GlA11yControlInterface;
 
   A11yRect rect = info_->AccessibleLocalRect();
+  if (parent() == nullptr) {
+    return QRect(rect.left, rect.top, rect.width, rect.height);
+  }
+
   QRect parent_rect = parent()->rect();
   return QRect(rect.left + parent_rect.left(), rect.top + parent_rect.top(), rect.width,
                rect.height);
@@ -67,8 +84,6 @@ int OrbitGlWidgetAccessible::indexOfChild(const QAccessibleInterface* child) con
 
   return -1;
 }
-
-QAccessibleInterface* OrbitGlWidgetAccessible::childAt(int x, int y) const { return nullptr; }
 
 QAccessibleInterface* OrbitGlWidgetAccessible::child(int index) const {
   return A11yAdapter::GetOrCreateAdapter(

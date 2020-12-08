@@ -181,12 +181,11 @@ class TimeGraph : public orbit_gl::GlA11yControlInterface {
   // Accessibility
   [[nodiscard]] int AccessibleChildCount() const override;
   [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override;
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChildAt(int, int) const override;
   [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override { return "TimeGraph"; }
   [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
-    return orbit_gl::A11yRole::Chart;
+    return orbit_gl::A11yRole::Graphic;
   }
   [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
   [[nodiscard]] orbit_gl::A11yState AccessibleState() const override;

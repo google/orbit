@@ -200,7 +200,6 @@ class GlA11yControlInterface {
  public:
   [[nodiscard]] virtual int AccessibleChildCount() const = 0;
   [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChild(int index) const = 0;
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChildAt(int x, int y) const = 0;
   [[nodiscard]] virtual const GlA11yControlInterface* AccessibleParent() const = 0;
 
   [[nodiscard]] virtual std::string AccessibleName() const = 0;

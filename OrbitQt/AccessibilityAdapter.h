@@ -33,17 +33,7 @@ class A11yAdapter : public QAccessibleInterface {
     return result;
   }
   QObject* object() const override { return &dummy_; }
-
-  // relations & interactions - currently not supported
-  QVector<QPair<QAccessibleInterface*, QAccessible::Relation>> relations(
-      QAccessible::Relation match = QAccessible::AllRelations) const override {
-    return {};
-  }
   QAccessibleInterface* focusChild() const override { return nullptr; }
-
-  QAccessibleInterface* childAt(int x, int y) const override {
-    return GetOrCreateAdapter(info_->AccessibleChildAt(x, y));
-  }
 
   // navigation, hierarchy
   QAccessibleInterface* parent() const override {
@@ -54,6 +44,7 @@ class A11yAdapter : public QAccessibleInterface {
   }
   int childCount() const override { return info_->AccessibleChildCount(); }
   int indexOfChild(const QAccessibleInterface* child) const override;
+  [[nodiscard]] QAccessibleInterface* childAt(int x, int y) const override;
 
   // properties and state
   QString text(QAccessible::Text t) const override { return info_->AccessibleName().c_str(); }
@@ -89,7 +80,6 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
  public:
   OrbitGlWidgetAccessible(OrbitGLWidget* widget);
 
-  QAccessibleInterface* childAt(int x, int y) const override;
   QAccessibleInterface* child(int index) const;
   int childCount() const override;
   int indexOfChild(const QAccessibleInterface* child) const override;

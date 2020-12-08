@@ -12,7 +12,7 @@
 
 namespace orbit_qt_tests {
 
-using orbit_gl::GlA11yControlInterface, orbit_gl::A11yRole, orbit_gl::A11yRect;
+using orbit_gl::GlA11yControlInterface, orbit_gl::A11yRole, orbit_gl::A11yRect, orbit_gl::A11yState;
 using orbit_qt::A11yAdapter;
 
 class TestA11yImpl : public GlA11yControlInterface {
@@ -22,15 +22,16 @@ class TestA11yImpl : public GlA11yControlInterface {
   [[nodiscard]] GlA11yControlInterface* AccessibleChild(int index) const override {
     return children_[index].get();
   }
-  [[nodiscard]] GlA11yControlInterface* AccessibleChildAt(int x, int y) const override {
-    return y >= 0 && y < children_.size() ? children_[y].get() : nullptr;
-  }
 
   [[nodiscard]] GlA11yControlInterface* AccessibleParent() const { return parent_; }
   [[nodiscard]] A11yRole AccessibleRole() const { return A11yRole::Grouping; }
+  [[nodiscard]] A11yState AccessibleState() const { return A11yState(); }
 
   [[nodiscard]] A11yRect AccessibleLocalRect() const {
     orbit_gl::A11yRect result;
+    if (parent_ == nullptr) {
+      return result;
+    }
 
     int parent_idx = -1;
     for (int i = 0; i < parent_->children_.size(); ++i) {
@@ -82,10 +83,8 @@ TEST(Accessibility, Hierarchy) {
   EXPECT_TRUE(root_adapter->child(1)->isValid());
   EXPECT_EQ(root_adapter->child(0), A11yAdapter::GetOrCreateAdapter(root.AccessibleChild(0)));
   EXPECT_EQ(root_adapter->child(1), A11yAdapter::GetOrCreateAdapter(root.AccessibleChild(1)));
-  EXPECT_EQ(root_adapter->childAt(0, 0),
-            A11yAdapter::GetOrCreateAdapter(root.AccessibleChildAt(0, 0)));
-  EXPECT_EQ(root_adapter->childAt(0, 1),
-            A11yAdapter::GetOrCreateAdapter(root.AccessibleChildAt(0, 1)));
+  EXPECT_EQ(root_adapter->childAt(0, 0), A11yAdapter::GetOrCreateAdapter(root.Children()[0].get()));
+  EXPECT_EQ(root_adapter->childAt(0, 1), A11yAdapter::GetOrCreateAdapter(root.Children()[1].get()));
 
   EXPECT_EQ(root_adapter->child(0)->parent(), root_adapter);
   EXPECT_EQ(root_adapter->child(1)->parent(), root_adapter);

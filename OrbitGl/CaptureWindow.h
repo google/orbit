@@ -69,8 +69,6 @@ class CaptureWindow : public GlCanvas {
   // Accessibility
   [[nodiscard]] int AccessibleChildCount() const override;
   [[nodiscard]] const orbit_gl::GlA11yControlInterface* AccessibleChild(int index) const override;
-  [[nodiscard]] const orbit_gl::GlA11yControlInterface* AccessibleChildAt(int x,
-                                                                          int y) const override;
 
  protected:
   [[nodiscard]] virtual const char* GetHelpText() const;

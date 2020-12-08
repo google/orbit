@@ -649,10 +649,6 @@ const orbit_gl::GlA11yControlInterface* CaptureWindow::AccessibleChild(int index
   return &time_graph_;
 }
 
-const orbit_gl::GlA11yControlInterface* CaptureWindow::AccessibleChildAt(int x, int y) const {
-  return &time_graph_;
-}
-
 void CaptureWindow::NeedsUpdate() {
   time_graph_.NeedsUpdate();
   m_NeedsRedraw = true;
