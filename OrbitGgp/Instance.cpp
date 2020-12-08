@@ -15,7 +15,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 namespace {
 
@@ -75,4 +75,4 @@ outcome::result<QVector<Instance>> Instance::GetListFromJson(const QByteArray& j
 
 bool Instance::CmpById(const Instance& lhs, const Instance& rhs) { return lhs.id < rhs.id; }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp

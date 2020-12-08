@@ -14,7 +14,7 @@
 #include "Instance.h"
 #include "SshInfo.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 class Client : public QObject {
   Q_OBJECT
@@ -30,6 +30,6 @@ class Client : public QObject {
   explicit Client(QObject* parent) : QObject(parent) {}
 };
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp
 
 #endif  // ORBIT_GGP_CLIENT_H_

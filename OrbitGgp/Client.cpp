@@ -15,7 +15,7 @@
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 namespace {
 
@@ -131,4 +131,4 @@ void Client::GetSshInfoAsync(const Instance& ggp_instance,
   });
 }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp

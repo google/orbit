@@ -14,7 +14,7 @@
 
 #include "Instance.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 class InstanceItemModel : public QAbstractItemModel {
  public:
@@ -36,6 +36,6 @@ class InstanceItemModel : public QAbstractItemModel {
   QVector<Instance> instances_;
 };
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp
 
 #endif  // ORBIT_GGP_INSTANCE_ITEM_MODEL_H_

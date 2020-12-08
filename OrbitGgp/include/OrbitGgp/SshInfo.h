@@ -9,7 +9,7 @@
 #include <QString>
 #include <outcome.hpp>
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 struct SshInfo {
   QString host;
@@ -21,6 +21,6 @@ struct SshInfo {
   static outcome::result<SshInfo> CreateFromJson(const QByteArray& json);
 };
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp
 
 #endif  // ORBIT_GGP_SSH_INFO_H_

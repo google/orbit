@@ -14,7 +14,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Instance.h"
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 InstanceItemModel::InstanceItemModel(QVector<Instance> instances, QObject* parent)
     : QAbstractItemModel(parent), instances_(std::move(instances)) {
@@ -146,4 +146,4 @@ void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
   }
 }
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp

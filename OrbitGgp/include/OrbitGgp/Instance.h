@@ -10,7 +10,7 @@
 #include <QVector>
 #include <outcome.hpp>
 
-namespace OrbitGgp {
+namespace orbit_ggp {
 
 struct Instance {
   QString display_name;
@@ -32,8 +32,8 @@ struct Instance {
   friend bool operator!=(const Instance& lhs, const Instance& rhs) { return !(lhs == rhs); }
 };
 
-}  // namespace OrbitGgp
+}  // namespace orbit_ggp
 
-Q_DECLARE_METATYPE(OrbitGgp::Instance)
+Q_DECLARE_METATYPE(orbit_ggp::Instance)
 
 #endif  // ORBIT_GPP_INSTANCE_H_
