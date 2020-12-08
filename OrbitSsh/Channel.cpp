@@ -14,7 +14,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 Channel::Channel(LIBSSH2_CHANNEL* raw_channel_ptr)
     : raw_channel_ptr_(raw_channel_ptr, &libssh2_channel_free) {}
@@ -134,4 +134,4 @@ int Channel::GetExitStatus() { return libssh2_channel_get_exit_status(raw_channe
 
 bool Channel::GetRemoteEOF() { return libssh2_channel_eof(raw_channel_ptr_.get()) == 1; }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

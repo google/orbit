@@ -9,10 +9,10 @@
 
 #include <string>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 std::pair<int, std::string> LibSsh2SessionLastError(LIBSSH2_SESSION* session);
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 #endif  // ORBIT_SSH_LIBSSH2_UTILS_H_

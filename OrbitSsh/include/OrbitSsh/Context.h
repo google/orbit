@@ -7,7 +7,7 @@
 
 #include <outcome.hpp>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 class Context {
  public:
@@ -28,5 +28,5 @@ class Context {
   bool active_ = true;
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 #endif  // ORBIT_SSH_CONTEXT_H_

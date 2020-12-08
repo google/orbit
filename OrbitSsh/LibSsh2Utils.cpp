@@ -6,7 +6,7 @@
 
 #include "absl/strings/str_format.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 std::pair<int, std::string> LibSsh2SessionLastError(LIBSSH2_SESSION* session) {
   // If the buffer is not thread-local this is unsafe - but if it isn't
@@ -24,4 +24,4 @@ std::pair<int, std::string> LibSsh2SessionLastError(LIBSSH2_SESSION* session) {
       absl::StrFormat("%s (errno: %d)", std::string(error_msg, error_msg_len), last_errno));
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

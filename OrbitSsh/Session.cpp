@@ -37,7 +37,7 @@ void LogFileContents(const std::filesystem::path& file_path) {
 
 }  // namespace
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 Session::Session(LIBSSH2_SESSION* raw_session_ptr)
     : raw_session_ptr_(raw_session_ptr, &libssh2_session_free) {}
@@ -147,4 +147,4 @@ void Session::SetBlocking(bool value) {
   libssh2_session_set_blocking(raw_session_ptr_.get(), static_cast<int>(value));
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

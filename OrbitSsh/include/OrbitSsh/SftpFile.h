@@ -10,7 +10,7 @@
 
 #include <memory>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 enum class FxfFlags {
   kRead = LIBSSH2_FXF_READ,
@@ -45,5 +45,5 @@ class SftpFile {
   Session* session_;
   std::string filepath_;
 };
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 #endif  // ORBIT_SSH_SFTP_FILE_H_

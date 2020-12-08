@@ -4,7 +4,7 @@
 
 #include <OrbitSsh/Error.h>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 std::string ErrorCategory::message(int condition) const {
   switch (static_cast<Error>(condition)) {
@@ -118,4 +118,4 @@ std::string ErrorCategory::message(int condition) const {
 
   return "Unknown error code.";
 }
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

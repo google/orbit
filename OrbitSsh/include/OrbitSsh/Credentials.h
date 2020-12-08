@@ -10,7 +10,7 @@
 
 #include "OrbitSsh/AddrAndPort.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 struct Credentials {
   AddrAndPort addr_and_port;
@@ -19,6 +19,6 @@ struct Credentials {
   std::filesystem::path key_path;
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 
 #endif  // ORBIT_SSH_SSH_CREDENTIALS_H_

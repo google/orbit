@@ -6,7 +6,7 @@
 #include <OrbitSsh/Error.h>
 #include <libssh2.h>
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 outcome::result<Context> Context::Create() {
   const auto result = libssh2_init(0);
@@ -35,4 +35,4 @@ Context::~Context() noexcept {
   }
 }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

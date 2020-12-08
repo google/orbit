@@ -14,7 +14,7 @@
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 class Sftp {
  public:
@@ -33,5 +33,5 @@ class Sftp {
   Session* session_ = nullptr;
 };
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh
 #endif  // ORBIT_SSH_SFTP_H
