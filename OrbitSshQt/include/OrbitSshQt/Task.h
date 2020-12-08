@@ -14,7 +14,7 @@
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/StateMachineHelper.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 namespace details {
 enum class TaskState {
   kInitial,
@@ -87,12 +87,12 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   std::optional<ScopedConnection> about_to_shutdown_connection_;
 
   std::string command_;
-  std::optional<OrbitSsh::Channel> channel_;
+  std::optional<orbit_ssh::Channel> channel_;
   std::string read_std_out_buffer_;
   std::string read_std_err_buffer_;
   std::string write_buffer_;
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 #endif  // ORBIT_SSH_QT_TASK_H_

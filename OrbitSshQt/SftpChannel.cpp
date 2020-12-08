@@ -6,7 +6,7 @@
 
 #include "OrbitBase/Logging.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 
 SftpChannel::SftpChannel(Session* session) : session_(session) {
   about_to_shutdown_connection_.emplace(QObject::connect(session_, &Session::aboutToShutdown, this,
@@ -36,7 +36,7 @@ outcome::result<void> SftpChannel::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoChannel: {
-      OUTCOME_TRY(sftp, OrbitSsh::Sftp::Init(session_->GetRawSession()));
+      OUTCOME_TRY(sftp, orbit_ssh::Sftp::Init(session_->GetRawSession()));
       sftp_ = std::move(sftp);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;
@@ -104,4 +104,4 @@ void SftpChannel::HandleEagain() {
   }
 }
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt

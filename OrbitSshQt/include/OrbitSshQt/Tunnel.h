@@ -18,7 +18,7 @@
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/StateMachineHelper.h"
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 namespace details {
 enum class TunnelState {
   kInitial,
@@ -84,7 +84,7 @@ class Tunnel : public StateMachineHelper<Tunnel, details::TunnelState> {
   using StateMachineHelper::SetError;
   void SetError(std::error_code);
 
-  std::optional<OrbitSsh::Channel> channel_;
+  std::optional<orbit_ssh::Channel> channel_;
   std::optional<QTcpServer> local_server_;
   QPointer<QTcpSocket> local_socket_;
   std::string write_buffer_;
@@ -94,6 +94,6 @@ class Tunnel : public StateMachineHelper<Tunnel, details::TunnelState> {
   std::optional<ScopedConnection> about_to_shutdown_connection_;
 };
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
 
 #endif  // ORBIT_SSH_QT_TUNNEL_H_

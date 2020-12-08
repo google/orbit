@@ -30,7 +30,7 @@ static void deleteByEventLoop(P* parent, std::optional<T>* opt) {
   }
 }
 
-namespace OrbitSshQt {
+namespace orbit_ssh_qt {
 Tunnel::Tunnel(Session* session, std::string remote_host, uint16_t remote_port, QObject* parent)
     : StateMachineHelper(parent),
       session_(session),
@@ -73,7 +73,7 @@ outcome::result<void> Tunnel::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoChannel: {
-      OUTCOME_TRY(channel, OrbitSsh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
+      OUTCOME_TRY(channel, orbit_ssh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
                                                               remote_host_, remote_port_));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
@@ -165,7 +165,7 @@ outcome::result<void> Tunnel::readFromChannel() {
     const size_t kChunkSize = 1024 * 1024;
     const auto result = channel_->ReadStdOut(kChunkSize);
 
-    if (!result && !OrbitSsh::ShouldITryAgain(result)) {
+    if (!result && !orbit_ssh::ShouldITryAgain(result)) {
       return outcome::failure(result.error());
     } else if (!result) {
       // That's the EAGAIN case
@@ -230,7 +230,7 @@ void Tunnel::HandleIncomingDataLocalSocket() {
 
   const auto result = writeToChannel();
 
-  if (!result && !OrbitSsh::ShouldITryAgain(result)) {
+  if (!result && !orbit_ssh::ShouldITryAgain(result)) {
     SetError(result.error());
     return;
   } else if (!result) {
@@ -250,4 +250,4 @@ void Tunnel::HandleEagain() {
   }
 }
 
-}  // namespace OrbitSshQt
+}  // namespace orbit_ssh_qt
