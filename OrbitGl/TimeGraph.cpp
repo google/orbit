@@ -602,8 +602,8 @@ namespace {
 
 [[nodiscard]] std::string GetLabelBetweenIterators(const FunctionInfo& function_a,
                                                    const FunctionInfo& function_b) {
-  const std::string& function_from = FunctionUtils::GetDisplayName(function_a);
-  const std::string& function_to = FunctionUtils::GetDisplayName(function_b);
+  const std::string& function_from = function_utils::GetDisplayName(function_a);
+  const std::string& function_to = function_utils::GetDisplayName(function_b);
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
@@ -815,7 +815,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
   if (track == nullptr) {
     track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
     std::string timeline = string_manager_->Get(timeline_hash).value_or("");
-    std::string label = OrbitGl::MapGpuTimelineToTrackLabel(timeline);
+    std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);
     track->SetLabel(label);
     // This min combine two cases, label == timeline and when label includes timeline
@@ -875,7 +875,7 @@ std::vector<int32_t>
 TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions first
   std::vector<int32_t> sorted_thread_ids;
   std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
-      OrbitUtils::ReverseValueSort(thread_count_map_);
+      orbit_utils::ReverseValueSort(thread_count_map_);
 
   for (auto& pair : sorted_threads) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
@@ -887,7 +887,7 @@ TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions f
 
   // Then show threads sorted by number of events
   std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
-      OrbitUtils::ReverseValueSort(event_count_);
+      orbit_utils::ReverseValueSort(event_count_);
   for (auto& pair : sorted_by_events) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
     // separately.

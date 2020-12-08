@@ -57,7 +57,7 @@ float FrameTrack::GetAverageBoxHeight() const {
 FrameTrack::FrameTrack(TimeGraph* time_graph, const FunctionInfo& function)
     : TimerTrack(time_graph), function_(function) {
   // TODO(b/169554463): Support manual instrumentation.
-  std::string function_name = FunctionUtils::GetDisplayName(function_);
+  std::string function_name = function_utils::GetDisplayName(function_);
   std::string name = absl::StrFormat("Frame track based on %s", function_name);
   SetName(name);
   SetLabel(name);
@@ -161,7 +161,7 @@ void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
 }
 
 std::string FrameTrack::GetTooltip() const {
-  std::string function_name = FunctionUtils::GetDisplayName(function_);
+  std::string function_name = function_utils::GetDisplayName(function_);
   return absl::StrFormat(
       "<b>Frame track</b><br/>"
       "<i>Shows frame timings based on subsequent callst to %s. "
@@ -180,7 +180,7 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Minimum frame time:</b> %s<br/>"
       "<b>Average frame time:</b> %s<br/>",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      FunctionUtils::GetLoadedModuleName(function_), stats_.count(),
+      function_utils::GetLoadedModuleName(function_), stats_.count(),
       GetPrettyTime(absl::Nanoseconds(stats_.max_ns())),
       GetPrettyTime(absl::Nanoseconds(stats_.min_ns())),
       GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns())));
@@ -192,7 +192,7 @@ std::string FrameTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
   // TODO(b/169554463): Support manual instrumentation.
-  std::string function_name = FunctionUtils::GetDisplayName(function_);
+  std::string function_name = function_utils::GetDisplayName(function_);
 
   return absl::StrFormat(
       "<b>Frame time</b><br/>"
@@ -205,7 +205,7 @@ std::string FrameTrack::GetBoxTooltip(PickingId id) const {
       "<b>Frame:</b> #%u<br/>"
       "<b>Frame time:</b> %s",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      FunctionUtils::GetLoadedModuleName(function_), text_box->GetTimerInfo().user_data_key(),
+      function_utils::GetLoadedModuleName(function_), text_box->GetTimerInfo().user_data_key(),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }

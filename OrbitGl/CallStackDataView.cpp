@@ -48,7 +48,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
                  ? FunctionsDataView::kSelectedFunctionString
                  : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
-      return function != nullptr ? FunctionUtils::GetDisplayName(*function) : frame.fallback_name;
+      return function != nullptr ? function_utils::GetDisplayName(*function) : frame.fallback_name;
     case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
     case kColumnFile:
@@ -56,8 +56,8 @@ std::string CallStackDataView::GetValue(int row, int column) {
     case kColumnLine:
       return function != nullptr ? absl::StrFormat("%d", function->line()) : "";
     case kColumnModule: {
-      if (function != nullptr && !FunctionUtils::GetLoadedModuleName(*function).empty()) {
-        return FunctionUtils::GetLoadedModuleName(*function);
+      if (function != nullptr && !function_utils::GetLoadedModuleName(*function).empty()) {
+        return function_utils::GetLoadedModuleName(*function);
       }
       if (module != nullptr) {
         return module->name();
@@ -158,7 +158,7 @@ void CallStackDataView::DoFilter() {
   for (size_t i = 0; i < callstack_.GetFramesCount(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     const FunctionInfo* function = frame.function;
-    std::string name = ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
+    std::string name = ToLower(function != nullptr ? function_utils::GetDisplayName(*function)
                                                    : frame.fallback_name);
     bool match = true;
 

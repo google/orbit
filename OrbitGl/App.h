@@ -460,7 +460,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
-  std::unique_ptr<OrbitClientData::ModuleManager> module_manager_;
+  std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;

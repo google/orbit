@@ -93,13 +93,13 @@ void PresetsDataView::DoSort() {
   switch (sorting_column_) {
     case kColumnLoadState:
       sorter = [&](int a, int b) {
-        return OrbitUtils::Compare(GOrbitApp->GetPresetLoadState(presets_[a]).state,
+        return orbit_utils::Compare(GOrbitApp->GetPresetLoadState(presets_[a]).state,
                                    GOrbitApp->GetPresetLoadState(presets_[b]).state, ascending);
       };
       break;
     case kColumnSessionName:
       sorter = [&](int a, int b) {
-        return OrbitUtils::Compare(presets_[a]->file_name(), presets_[b]->file_name(), ascending);
+        return orbit_utils::Compare(presets_[a]->file_name(), presets_[b]->file_name(), ascending);
       };
       break;
     default:

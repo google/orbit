@@ -14,13 +14,13 @@
 
 class TextRenderer;
 
-namespace OrbitGl {
+namespace orbit_gl {
 
 // Maps the Linux kernel timeline names (like "gfx", "sdma0") to a more
 // descriptive human readable form that is used for the track label.
 std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
 
-}  // namespace OrbitGl
+}  // namespace orbit_gl
 
 class GpuTrack : public TimerTrack {
  public:

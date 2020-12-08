@@ -17,7 +17,7 @@ constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
 
-namespace OrbitGl {
+namespace orbit_gl {
 
 std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
   std::string label;
@@ -36,7 +36,7 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
   }
 }
 
-}  // namespace OrbitGl
+}  // namespace orbit_gl
 
 GpuTrack::GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
                    uint64_t timeline_hash)

@@ -82,7 +82,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnSelected:
       return BuildSelectedColumnsString(function);
     case kColumnName:
-      return FunctionUtils::GetDisplayName(function);
+      return function_utils::GetDisplayName(function);
     case kColumnSize:
       return absl::StrFormat("%lu", function.size());
     case kColumnFile:
@@ -90,7 +90,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnLine:
       return absl::StrFormat("%i", function.line());
     case kColumnModule:
-      return FunctionUtils::GetLoadedModuleName(function);
+      return function_utils::GetLoadedModuleName(function);
     case kColumnAddress: {
       const ProcessData* process = GOrbitApp->GetSelectedProcess();
       // If no process is selected, that means Orbit is in a disconnected state aka displaying a
@@ -104,7 +104,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       const ModuleData* module = GOrbitApp->GetModuleByPath(function.loaded_module_path());
       CHECK(module != nullptr);
       return absl::StrFormat("0x%llx",
-                             FunctionUtils::GetAbsoluteAddress(function, *process, *module));
+                             function_utils::GetAbsoluteAddress(function, *process, *module));
     }
     default:
       return "";
@@ -113,12 +113,12 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
 #define ORBIT_FUNC_SORT(Member)                                                          \
   [&](int a, int b) {                                                                    \
-    return OrbitUtils::Compare(functions_[a]->Member, functions_[b]->Member, ascending); \
+    return orbit_utils::Compare(functions_[a]->Member, functions_[b]->Member, ascending); \
   }
 
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                                   \
   [&](int a, int b) {                                                                  \
-    return OrbitUtils::Compare(Func(*functions_[a]), Func(*functions_[b]), ascending); \
+    return orbit_utils::Compare(Func(*functions_[a]), Func(*functions_[b]), ascending); \
   }
 
 void FunctionsDataView::DoSort() {
@@ -137,7 +137,7 @@ void FunctionsDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(GOrbitApp->IsFunctionSelected);
       break;
     case kColumnName:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetDisplayName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetDisplayName);
       break;
     case kColumnSize:
       sorter = ORBIT_FUNC_SORT(size());
@@ -149,7 +149,7 @@ void FunctionsDataView::DoSort() {
       sorter = ORBIT_FUNC_SORT(line());
       break;
     case kColumnModule:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetLoadedModuleName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetLoadedModuleName);
       break;
     case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
@@ -245,8 +245,8 @@ void FunctionsDataView::DoFilter() {
   const std::vector<const FunctionInfo*>& functions(functions_);
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
-    std::string name = ToLower(FunctionUtils::GetDisplayName(*function)) +
-                       FunctionUtils::GetLoadedModuleName(*function);
+    std::string name = ToLower(function_utils::GetDisplayName(*function)) +
+                       function_utils::GetLoadedModuleName(*function);
 
     bool match = true;
 
@@ -280,8 +280,8 @@ void FunctionsDataView::ParallelFilter() {
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
         const std::string& name =
-            ToLower(FunctionUtils::GetDisplayName(*functions[a_ElementIndex]));
-        const std::string& module = FunctionUtils::GetLoadedModuleName(*functions[a_ElementIndex]);
+            ToLower(function_utils::GetDisplayName(*functions[a_ElementIndex]));
+        const std::string& module = function_utils::GetLoadedModuleName(*functions[a_ElementIndex]);
 
         for (std::string& filterToken : m_FilterTokens) {
           if (name.find(filterToken) == std::string::npos &&
