@@ -98,7 +98,7 @@ const std::string CaptureData::kUnknownFunctionOrModuleName{"???"};
 const std::string& CaptureData::GetFunctionNameByAddress(uint64_t absolute_address) const {
   const FunctionInfo* function = FindFunctionByAddress(absolute_address, false);
   if (function != nullptr) {
-    return FunctionUtils::GetDisplayName(*function);
+    return function_utils::GetDisplayName(*function);
   }
   const auto address_info_it = address_infos_.find(absolute_address);
   if (address_info_it == address_infos_.end()) {
@@ -152,7 +152,7 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 uint64_t CaptureData::GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& function) const {
   const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
   CHECK(module != nullptr);
-  return FunctionUtils::GetAbsoluteAddress(function, process_, *module);
+  return function_utils::GetAbsoluteAddress(function, process_, *module);
 }
 
 int32_t CaptureData::process_id() const { return process_.pid(); }

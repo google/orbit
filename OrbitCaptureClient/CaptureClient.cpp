@@ -38,7 +38,7 @@ static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTyp
 
 ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, const ProcessData& process,
-    const OrbitClientData::ModuleManager& module_manager,
+    const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data,
     bool enable_introspection) {
@@ -70,7 +70,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 }
 
 void CaptureClient::Capture(ProcessData&& process,
-                            const OrbitClientData::ModuleManager& module_manager,
+                            const orbit_client_data::ModuleManager& module_manager,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints,
                             UserDefinedCaptureData user_defined_capture_data,
@@ -108,7 +108,7 @@ void CaptureClient::Capture(ProcessData&& process,
     instrumented_function->set_file_path(function.loaded_module_path());
     const ModuleData* module = module_manager.GetModuleByPath(function.loaded_module_path());
     CHECK(module != nullptr);
-    instrumented_function->set_file_offset(FunctionUtils::Offset(function, *module));
+    instrumented_function->set_file_offset(function_utils::Offset(function, *module));
     instrumented_function->set_absolute_address(absolute_address);
     instrumented_function->set_function_type(
         IntrumentedFunctionTypeFromOrbitType(function.orbit_type()));

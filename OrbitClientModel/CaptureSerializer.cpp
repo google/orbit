@@ -39,7 +39,7 @@ std::string GetCaptureFileName(const CaptureData& capture_data) {
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
   std::string result =
       absl::StrCat(std::filesystem::path(capture_data.process_name()).stem().string(), "_",
-                   OrbitUtils::FormatTime(timestamp));
+                   orbit_utils::FormatTime(timestamp));
   IncludeOrbitExtensionInFile(result);
   return result;
 }
@@ -107,7 +107,7 @@ CaptureInfo GenerateCaptureInfo(
       continue;
     }
     // Fix names/offset/module in address infos (some might only be in process):
-    added_address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
+    added_address_info->set_function_name(function_utils::GetDisplayName(*function));
     uint64_t absolute_function_address = capture_data.GetAbsoluteAddress(*function);
     const uint64_t offset = absolute_address - absolute_function_address;
     added_address_info->set_offset_in_function(offset);

@@ -17,7 +17,7 @@ uint64_t StringHash(const std::string& string) {
 }
 }  // namespace
 
-namespace FunctionUtils {
+namespace function_utils {
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::SymbolInfo;
@@ -78,4 +78,4 @@ bool SetOrbitTypeFromName(FunctionInfo* func) {
   return false;
 }
 
-}  // namespace FunctionUtils
+}  // namespace function_utils

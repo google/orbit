@@ -24,7 +24,7 @@
 class CaptureData {
  public:
   explicit CaptureData(
-      ProcessData&& process, OrbitClientData::ModuleManager* module_manager,
+      ProcessData&& process, orbit_client_data::ModuleManager* module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data)
       : process_(std::move(process)),
@@ -199,7 +199,7 @@ class CaptureData {
 
  private:
   ProcessData process_;
-  OrbitClientData::ModuleManager* module_manager_;
+  orbit_client_data::ModuleManager* module_manager_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
 
   TracepointInfoSet selected_tracepoints_;

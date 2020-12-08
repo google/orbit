@@ -14,7 +14,7 @@
 #include "capture_data.pb.h"
 #include "module.pb.h"
 
-namespace OrbitClientData {
+namespace orbit_client_data {
 
 class ModuleManager final {
  public:
@@ -37,6 +37,6 @@ class ModuleManager final {
   absl::node_hash_map<std::string, ModuleData> module_map_;
 };
 
-}  // namespace OrbitClientData
+}  // namespace orbit_client_data
 
 #endif

@@ -82,7 +82,7 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   uint32_t name_reuse_counter = 0;
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     auto [inserted_it, success_functions] = functions_.try_emplace(
-        symbol_info.address(), FunctionUtils::CreateFunctionInfo(symbol_info, file_path()));
+        symbol_info.address(), function_utils::CreateFunctionInfo(symbol_info, file_path()));
     FunctionInfo* function = inserted_it->second.get();
     // It happens that the same address has multiple symbol names associated
     // with it. For example: (all the same address)
@@ -93,7 +93,7 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     // __cxxabiv1::__pbase_type_info::~__pbase_type_info()
     if (success_functions) {
       const bool success_func_hashes =
-          hash_to_function_map_.try_emplace(FunctionUtils::GetHash(*function), function).second;
+          hash_to_function_map_.try_emplace(function_utils::GetHash(*function), function).second;
       if (!success_func_hashes) {
         name_reuse_counter++;
       }
@@ -134,7 +134,7 @@ std::vector<FunctionInfo> ModuleData::GetOrbitFunctions() const {
   CHECK(is_loaded_);
   std::vector<FunctionInfo> result;
   for (const auto& [_, function] : functions_) {
-    if (FunctionUtils::IsOrbitFunc(*function)) {
+    if (function_utils::IsOrbitFunc(*function)) {
       result.emplace_back(*function);
     }
   }
