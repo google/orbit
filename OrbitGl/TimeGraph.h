@@ -179,6 +179,7 @@ class TimeGraph {
 
   [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
@@ -201,7 +202,6 @@ class TimeGraph {
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
   void SetNumCores(uint32_t num_cores) { num_cores_ = num_cores; }
-  [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
  private:
   uint32_t font_size_;
