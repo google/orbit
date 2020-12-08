@@ -16,7 +16,7 @@
 
 #define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 
-namespace orbit::tracing {
+namespace orbit_tracing {
 
 struct Scope {
   Scope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
@@ -44,6 +44,6 @@ class Listener {
   inline static bool active_ = false;
 };
 
-}  // namespace orbit::tracing
+}  // namespace orbit_tracing
 
 #endif  // ORBIT_BASE_TRACING_H_

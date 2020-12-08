@@ -9,12 +9,12 @@
 void my_delete(size_t) {}
 
 TEST(UniqueResource, Construct) {
-  OrbitBase::unique_resource<size_t, void (*)(size_t)> ur1(123, my_delete);
-  OrbitBase::unique_resource ur2(123, my_delete);
+  orbit_base::unique_resource<size_t, void (*)(size_t)> ur1(123, my_delete);
+  orbit_base::unique_resource ur2(123, my_delete);
 
   size_t was_deleted = 0;
   {
-    OrbitBase::unique_resource ur{123, [&was_deleted](size_t) { was_deleted++; }};
+    orbit_base::unique_resource ur{123, [&was_deleted](size_t) { was_deleted++; }};
     ASSERT_TRUE(static_cast<bool>(ur));
     ASSERT_TRUE(static_cast<size_t>(ur) == 123);
   }
@@ -24,7 +24,7 @@ TEST(UniqueResource, Construct) {
 TEST(UniqueResource, Move) {
   size_t was_deleted = 0;
   {
-    OrbitBase::unique_resource ur1{123, [&was_deleted](size_t) { was_deleted++; }};
+    orbit_base::unique_resource ur1{123, [&was_deleted](size_t) { was_deleted++; }};
     ASSERT_TRUE(static_cast<bool>(ur1));
 
     {
@@ -41,7 +41,7 @@ TEST(UniqueResource, Move) {
 TEST(UniqueResource, Release) {
   size_t was_deleted = 0;
   {
-    OrbitBase::unique_resource ur1{123, [&was_deleted](size_t) { was_deleted++; }};
+    orbit_base::unique_resource ur1{123, [&was_deleted](size_t) { was_deleted++; }};
     ur1.release();
   }
   ASSERT_EQ(was_deleted, 0);
@@ -50,7 +50,7 @@ TEST(UniqueResource, Release) {
 TEST(UniqueResource, Reset) {
   size_t last_deleted_resource = 0;
   {
-    OrbitBase::unique_resource ur1{
+    orbit_base::unique_resource ur1{
         123, [&last_deleted_resource](size_t r) { last_deleted_resource = r; }};
     ur1.reset(456);
     ASSERT_EQ(last_deleted_resource, 123);

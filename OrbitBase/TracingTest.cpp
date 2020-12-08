@@ -12,9 +12,9 @@
 #include "OrbitBase/Tracing.h"
 #include "absl/container/flat_hash_map.h"
 
-using orbit::tracing::Listener;
-using orbit::tracing::Scope;
-using orbit::tracing::TimerCallback;
+using orbit_tracing::Listener;
+using orbit_tracing::Scope;
+using orbit_tracing::TimerCallback;
 
 void TestScopes() {
   ORBIT_SCOPE("TEST_ORBIT_SCOPE_1");
