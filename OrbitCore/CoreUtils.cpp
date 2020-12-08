@@ -262,7 +262,7 @@ std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bSho
 std::string GetLastErrorAsString() { return ""; }
 #endif
 
-std::string OrbitUtils::FormatTime(const time_t& rawtime) {
+std::string orbit_utils::FormatTime(const time_t& rawtime) {
   struct tm* time_info = nullptr;
   char buffer[80];
 #ifdef _WIN32

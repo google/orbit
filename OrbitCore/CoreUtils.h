@@ -231,7 +231,7 @@ inline void fopen_s(FILE** fp, const char* fileName, const char* mode) {
 }
 #endif
 
-namespace OrbitUtils {
+namespace orbit_utils {
 
 template <class T>
 inline bool Compare(const T& a, const T& b, bool asc) {
@@ -315,6 +315,6 @@ std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
 }
 
 std::string FormatTime(const time_t& rawtime);
-}  // namespace OrbitUtils
+}  // namespace orbit_utils
 
 #endif  // ORBIT_CORE_CORE_UTILS_H_
