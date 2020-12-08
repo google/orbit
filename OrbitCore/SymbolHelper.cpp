@@ -20,7 +20,7 @@
 using orbit_grpc_protos::ModuleSymbols;
 
 namespace fs = std::filesystem;
-using ::ElfUtils::ElfFile;
+using ::orbit_elf_utils::ElfFile;
 
 namespace {
 
