@@ -14,7 +14,7 @@
 #include "absl/strings/str_format.h"
 #include "symbol.pb.h"
 
-using ElfUtils::ElfFile;
+using orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::SymbolInfo;
 
 TEST(ElfFile, LoadSymbols) {
