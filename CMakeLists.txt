@@ -26,6 +26,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
+                           -Werror=defaulted-function-deleted
                            -Werror=float-conversion
                            -Werror=format=2
                            -Werror=ignored-attributes
