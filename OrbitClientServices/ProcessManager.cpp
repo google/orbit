@@ -24,8 +24,12 @@ class ProcessManagerImpl final : public ProcessManager {
  public:
   explicit ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& channel,
                               absl::Duration refresh_timeout);
-  ProcessManagerImpl(ProcessManagerImpl&&) = default;
-  ProcessManagerImpl& operator=(ProcessManagerImpl&&) = default;
+
+  ProcessManagerImpl(ProcessManagerImpl&&) = delete;
+  ProcessManagerImpl(const ProcessManagerImpl&) = delete;
+  ProcessManagerImpl& operator=(ProcessManagerImpl&&) = delete;
+  ProcessManagerImpl& operator=(const ProcessManagerImpl&) = delete;
+
   ~ProcessManagerImpl() override { ShutdownAndWait(); }
 
   void SetProcessListUpdateListener(const std::function<void(ProcessManager*)>& listener) override;
