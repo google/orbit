@@ -33,7 +33,7 @@ class Fragment:
 
     def expect_true(self, cond, description):
         if not cond:
-            raise OrbitE2EError('Error executing test case %s, fragment %s. Condition did not hold: "%s"' %
+            raise OrbitE2EError('Error executing test case %s, fragment %s. Condition expected to be True: "%s"' %
                                 (self.e2e_test.name, self.__class__.__name__, description))
 
     def expect_eq(self, left, right, description):
