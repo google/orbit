@@ -19,6 +19,7 @@ target_sources(OrbitVulkanLayer PRIVATE
         DispatchTable.h
         QueueManager.cpp
         QueueManager.h
+        SubmissionTracker.h
         TimerQueryPool.h
         VulkanLayerProducer.h)
 
@@ -33,6 +34,7 @@ target_compile_options(OrbitVulkanLayerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitVulkanLayerTests PRIVATE
         DeviceManagerTest.cpp
         DispatchTableTest.cpp
+        SubmissionTrackerTest.cpp
         TimerQueryPoolTest.cpp
         QueueManagerTest.cpp)
 

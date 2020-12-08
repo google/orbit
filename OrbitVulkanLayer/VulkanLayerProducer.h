@@ -6,6 +6,7 @@
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_H_
 
 #include "capture.pb.h"
+#include "grpcpp/grpcpp.h"
 
 namespace orbit_vulkan_layer {
 
@@ -18,7 +19,7 @@ class VulkanLayerProducer {
 
   // This method tries to establish a gRPC connection with OrbitService over Unix domain socket
   // and gets the class ready to send CaptureEvents.
-  [[nodiscard]] virtual bool BringUp(std::string_view unix_domain_socket_path) = 0;
+  virtual void BringUp(const std::shared_ptr<grpc::Channel>& channel) = 0;
 
   // This method causes the class to stop sending any remaining queued CaptureEvent
   // and closes the connection with OrbitService.
@@ -28,11 +29,22 @@ class VulkanLayerProducer {
   [[nodiscard]] virtual bool IsCapturing() = 0;
 
   // Use this method to enqueue a CaptureEvent to be sent to OrbitService.
-  virtual void EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent&& capture_event) = 0;
+  virtual bool EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent&& capture_event) = 0;
 
   // This method enqueues an InternedString to be sent to OrbitService the first time the string
   // passed as argument is seen. In all cases, it returns the key corresponding to the string.
   [[nodiscard]] virtual uint64_t InternStringIfNecessaryAndGetKey(std::string str) = 0;
+
+  class CaptureStatusListener {
+   public:
+    virtual ~CaptureStatusListener() = default;
+    virtual void OnCaptureStart() = 0;
+    virtual void OnCaptureStop() = 0;
+    virtual void OnCaptureFinished() = 0;
+  };
+
+  // Use this method to set a listener and be notified on capture start, stopped, completed.
+  virtual void SetCaptureStatusListener(CaptureStatusListener* listener) = 0;
 };
 
 }  // namespace orbit_vulkan_layer
