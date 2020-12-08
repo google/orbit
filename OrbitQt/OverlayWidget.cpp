@@ -4,6 +4,12 @@
 
 #include "OverlayWidget.h"
 
+#include <QAbstractButton>
+#include <QColor>
+#include <QPainter>
+
+#include "OrbitBase/Logging.h"
+
 namespace {
 
 // This color is used as a "background" for the overlay. The alpha value of 128 makes it

@@ -6,12 +6,15 @@
 #define ORBIT_QT_OVERLAY_WIDGET_H_
 
 #include <QEvent>
+#include <QLabel>
 #include <QObject>
-#include <QPainter>
+#include <QPaintEvent>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QString>
 #include <QWidget>
 #include <memory>
 
-#include "OrbitBase/Logging.h"
 #include "ui_OverlayWidget.h"
 
 namespace orbit_qt {
@@ -30,7 +33,7 @@ class OverlayWidget : public QWidget {
   void paintEvent(QPaintEvent* /*event*/) override;
   bool eventFilter(QObject* obj, QEvent* event) override;
 
- private slots:
+ public slots:
   void SetSpinning(bool value) { ui_->progressBar->setVisible(value); }
   void SetCancelable(bool value) { ui_->cancelButton->setVisible(value); }
   void SetStatusMessage(const QString& message) { ui_->messageLabel->setText(message); }
