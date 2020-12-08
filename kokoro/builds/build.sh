@@ -54,6 +54,7 @@ if [ -n "$1" ]; then
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
       # In the presubmit case we only spare the testresults (under build/) and this script.
       echo "Cleanup for presubmit."
+	  sleep 10000;
       find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
         grep -v 'orbitprofiler/kokoro' | \
         grep -v 'orbitprofiler/build' | \
