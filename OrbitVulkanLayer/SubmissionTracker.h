@@ -777,10 +777,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
   }
 
-  // We use std::numeric_limits<uint32_t>::max() to disable filtering of markers and 0 to discard
-  // all debug markers.
-  uint32_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint32_t>::max();
-
   absl::Mutex mutex_;
   absl::flat_hash_map<VkCommandPool, absl::flat_hash_set<VkCommandBuffer>> pool_to_command_buffers_;
   absl::flat_hash_map<VkCommandBuffer, VkDevice> command_buffer_to_device_;
@@ -792,6 +788,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   DispatchTable* dispatch_table_;
   TimerQueryPool* timer_query_pool_;
   DeviceManager* device_manager_;
+
+  // We use std::numeric_limits<uint32_t>::max() to disable filtering of markers and 0 to discard
+  // all debug markers.
+  uint32_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint32_t>::max();
 
   [[nodiscard]] bool IsCapturing() {
     return vulkan_layer_producer_ != nullptr && vulkan_layer_producer_->IsCapturing();
