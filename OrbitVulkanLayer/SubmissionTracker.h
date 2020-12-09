@@ -17,6 +17,14 @@
 
 namespace orbit_vulkan_layer {
 
+// On a submission (vkQueueSubmit), all pointers to command buffers become invalid/can be reused for
+// the next submission. The struct `QueueSubmission` gathers information (like timestamps and timer
+// slots) about a concrete submission and their corresponding command buffers and debug markers.
+// This way the information is "persistent" across submissions. We will create this struct at
+// `vkQueuePresent` (right before the call into the driver -- and only if we are capturing) and
+// add some information (in particular markers and a timestamp) right after the the driver call.
+// So, we will use `QueueSubmission` as a return value, and therefore these structs can't be
+// internal to the `SubmissionTracker`.
 namespace internal {
 
 // Stores meta information about a submit (VkQueueSubmit), e.g. to allow to identify the matching
@@ -28,24 +36,29 @@ struct SubmissionMetaInformation {
 };
 
 // A persistent version of a command buffer that was submitted and its begin/end slot in the
-// `TimerQueryPoool`. Note that the begin is optional, as it might not be part of the capture.
-// This struct is created if we capture the submission, so if we would not have captured the end
-// we also not have captured the begin, and don't need to store info about that command buffer at
-// all.
+// `TimerQueryPool`. Note that the begin is optional, as it might not be part of the capture.
+// This struct is created if we capture the submission, so if we haven't captured the end,
+// we also haven't captured the begin, and don't need to store info about that command buffer at
+// all. The list of all `SubmittedCommandBuffer`s is stored in a `QueueSubmission`, and can be so
+// associated to the `SubmissionMetaInformation`.
 struct SubmittedCommandBuffer {
   std::optional<uint32_t> command_buffer_begin_slot_index;
   uint32_t command_buffer_end_slot_index;
 };
 
 // A persistent version of a debug marker (either begin or end) that was submitted and its slot
-// in the `TimerQueryPool`. Note that we also store the `SubmissionMetaInformation` as begin markers
-// can originate in different submissions then the matching end markers.
+// in the `TimerQueryPool`. `SubmittedMarkers` are used in `MarkerState` to identify the begin or
+// end marker. All markers (`MarkerState`s) that gets *completed* within a certain submission are
+// stored in the `QueueSubmission`.
+// Note that we also store the `SubmissionMetaInformation` as begin markers
+// can originate in different submissions then the matching end markers. This allows us e.g. to
+// match the markers to a specific submission tracepoint. So even though the submitted markers a
 struct SubmittedMarker {
   SubmissionMetaInformation meta_information;
   uint32_t slot_index;
 };
 
-// Represents a color to be used to in debug markers. The values are all in range [0.f, 1.f.].
+// Represents a color to be used to in debug markers. The values are all in range [0.f, 1.f].
 struct Color {
   float red;
   float green;
@@ -53,26 +66,31 @@ struct Color {
   float alpha;
 };
 
-// Identifies a particular debug marker region. We have a stack of all markers of a queue, that gets
-// updated upon a submission (VkQueueSubmit). If at that time we have a value for the end_info, we
-// use that structure to persist the marker description. So once it is submitted, the
-// end_info will always set.
+// Identifies a particular debug marker region and has two purposes.
+// 1. We have a stack of all markers of a queue, that gets updated upon a submission
+// (VkQueueSubmit). So on a submitted "begin" marker, we create that struct and push it to the
+// stack. On a end, we pop from that stack and if we are capturing complete the information and move
+// it the completed markers of a `QueueSubmission`.
+// 2. Is the list of completed markers in `QueueSubmission` that makes the marker information
+// persistent, so that we can try to read the timestamps on a present.
+// Note that we only store the state into `QueueSubmission`, if at that time we have a value for the
+// end_info. So once it is submitted, the end_info will always be set.
 // Beside the information about the begin/end, it also stores the text, color and the depth of the
-// marker. If a debug marker begin was limited because of its depth, cut_off is set to true.
-// This allows end markers on a different submission to also through the end marker away.
+// marker. If a debug marker begin was discarded because of its depth, cut_off is set to true.
+// This allows end markers on a different submission to also throw the end marker away.
 // Example: Max Depth = 1
-// Submission 1: Begin("Foo"), Begin("Bar) -- "Bar" will be cut-off
-// Submission 2: End("Bar"), End("Foo") -- We now know, that the first end needs to be cut-off.
+// Submission 1: Begin("Foo"), Begin("Bar) -- For "Bar" we set cut-off to true.
+// Submission 2: End("Bar"), End("Foo") -- We now know, that the first end needs to be thrown away.
 struct MarkerState {
   std::optional<SubmittedMarker> begin_info;
   std::optional<SubmittedMarker> end_info;
-  std::string text;
+  std::string label_name;
   Color color;
   size_t depth;
   bool cut_off;
 };
 
-// A single submission (VkQueueSubmit) can contain multiple `SubmitInfo
+// A single submission (VkQueueSubmit) can contain multiple `SubmitInfo`s. We keep this structure.
 struct SubmitInfo {
   std::vector<SubmittedCommandBuffer> command_buffers;
 };
@@ -90,7 +108,7 @@ struct QueueSubmission {
 }  // namespace internal
 
 /*
- * This class ultimately is responsible to track command buffer and debug marker timings.
+ * This class is responsible to track command buffer and debug marker timings.
  * To do so, it keeps tracks of command-buffer allocations, destruction, begins, ends as well as
  * submissions.
  * On `VkBeginCommandBuffer` and `VkEndCommandBuffer` it can (if capturing) insert write timestamp
@@ -372,7 +390,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
               }
               CHECK(marker.text.has_value());
               CHECK(marker.color.has_value());
-              internal::MarkerState marker_state{.text = marker.text.value(),
+              internal::MarkerState marker_state{.label_name = marker.text.value(),
                                                  .color = marker.color.value(),
                                                  .begin_info = submitted_marker,
                                                  .depth = markers.marker_stack.size(),
@@ -701,7 +719,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       orbit_grpc_protos::GpuDebugMarker* marker_proto = submission_proto->add_completed_markers();
       if (vulkan_layer_producer_ != nullptr) {
         marker_proto->set_text_key(
-            vulkan_layer_producer_->InternStringIfNecessaryAndGetKey(marker_state.text));
+            vulkan_layer_producer_->InternStringIfNecessaryAndGetKey(marker_state.label_name));
       }
       if (marker_state.color.red != 0.0f || marker_state.color.green != 0.0f ||
           marker_state.color.blue != 0.0f || marker_state.color.alpha != 0.0f) {
