@@ -17,8 +17,8 @@ class VulkanLayerProducer {
  public:
   virtual ~VulkanLayerProducer() = default;
 
-  // This method tries to establish a gRPC connection with OrbitService over Unix domain socket
-  // and gets the class ready to send CaptureEvents.
+  // This method tries to establish a gRPC connection with OrbitService over the specified gRPC
+  // channel and gets the class ready to send CaptureEvents.
   virtual void BringUp(const std::shared_ptr<grpc::Channel>& channel) = 0;
 
   // This method causes the class to stop sending any remaining queued CaptureEvent
@@ -29,6 +29,7 @@ class VulkanLayerProducer {
   [[nodiscard]] virtual bool IsCapturing() = 0;
 
   // Use this method to enqueue a CaptureEvent to be sent to OrbitService.
+  // Returns true if the event was enqueued as the capture is in progress, false otherwise.
   virtual bool EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent&& capture_event) = 0;
 
   // This method enqueues an InternedString to be sent to OrbitService the first time the string

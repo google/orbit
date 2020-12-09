@@ -160,13 +160,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   void TrackCommandBuffers(VkDevice device, VkCommandPool pool,
                            const VkCommandBuffer* command_buffers, uint32_t count) {
     absl::WriterMutexLock lock(&mutex_);
-    if (!pool_to_command_buffers_.contains(pool)) {
-      pool_to_command_buffers_[pool] = {};
+    auto associated_cbs_it = pool_to_command_buffers_.find(pool);
+    if (associated_cbs_it == pool_to_command_buffers_.end()) {
+      associated_cbs_it = pool_to_command_buffers_.try_emplace(pool).first;
     }
-    absl::flat_hash_set<VkCommandBuffer>& associated_cbs = pool_to_command_buffers_.at(pool);
     for (uint32_t i = 0; i < count; ++i) {
       VkCommandBuffer cb = command_buffers[i];
-      associated_cbs.insert(cb);
+      associated_cbs_it->second.insert(cb);
       command_buffer_to_device_[cb] = device;
     }
   }
@@ -191,7 +191,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   void MarkCommandBufferBegin(VkCommandBuffer command_buffer) {
     // Even when we are not capturing we create state for this command buffer to allow the
-    // debug marker tracking.
+    // debug marker tracking. In order to compute the the correct depth of debug marker and being
+    // able to match a "end" marker with the corresponding "begin" marker, we maintain a stack
+    // of all debug markers of a queue. The order of the markers is determined upon submission based
+    // on the order within the submitted command buffers. Thus, even when not capturing, we create
+    // an empty state here that allows us to store the debug markers into it and maintain that stack
+    // on submission. We will not write timestamps in this case and thus don't store any
+    // information other then the debug markers then.
     {
       absl::WriterMutexLock lock(&mutex_);
       CHECK(!command_buffer_to_state_.contains(command_buffer));
@@ -219,6 +225,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
     {
       absl::ReaderMutexLock lock(&mutex_);
+      // MarkCommandBufferBegin/End are called from within the same submit, and as the
+      // `MarkCommandBufferBegin` will always insert the state, we can assume that it is there.
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& command_buffer_state = command_buffer_to_state_.at(command_buffer);
       // Writing to this field is safe, as there can't be any operation on this command buffer
@@ -229,24 +237,25 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   void MarkDebugMarkerBegin(VkCommandBuffer command_buffer, const char* text,
                             internal::Color color) {
+    // It is ensured by the Vulkan spec. that `text` must not be nullptr.
     CHECK(text != nullptr);
-    bool too_many_markers;
+    bool marker_depth_exceeds_maximum;
     {
       absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       ++state.local_marker_stack_size;
-      too_many_markers =
+      marker_depth_exceeds_maximum =
           max_local_marker_depth_per_command_buffer_ < std::numeric_limits<uint32_t>::max() &&
           state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
       Marker marker{.type = MarkerType::kDebugMarkerBegin,
-                    .text = std::string(text),
+                    .label_name = std::string(text),
                     .color = color,
-                    .cut_off = too_many_markers};
+                    .cut_off = marker_depth_exceeds_maximum};
       state.markers.emplace_back(std::move(marker));
     }
 
-    if (!IsCapturing() || too_many_markers) {
+    if (!IsCapturing() || marker_depth_exceeds_maximum) {
       return;
     }
 
@@ -261,24 +270,24 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   void MarkDebugMarkerEnd(VkCommandBuffer command_buffer) {
-    bool too_many_markers;
+    bool marker_depth_exceeds_maximum;
     {
       absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-      too_many_markers =
+      marker_depth_exceeds_maximum =
           max_local_marker_depth_per_command_buffer_ < std::numeric_limits<uint32_t>::max() &&
           state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
-      Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = too_many_markers};
+      Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = marker_depth_exceeds_maximum};
       state.markers.emplace_back(std::move(marker));
-      // We might see more "ends" then "begins", as the "begins" can be on a different command
+      // We might see more "ends" than "begins", as the "begins" can be on a different command
       // buffer
       if (state.local_marker_stack_size != 0) {
         --state.local_marker_stack_size;
       }
     }
 
-    if (!IsCapturing() || too_many_markers) {
+    if (!IsCapturing() || marker_depth_exceeds_maximum) {
       return;
     }
 
@@ -322,10 +331,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         CHECK(command_buffer_to_state_.contains(command_buffer));
         CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
 
-        // If we neither recorded the end nor the begin of a command buffer, we have no information
-        // to send.
+        // If we haven't recoreded neither the end nor the begin of a command buffer, we have no
+        // information to send.
         if (!state.command_buffer_end_slot_index.has_value()) {
-          CHECK(!state.command_buffer_end_slot_index.has_value());
           continue;
         }
 
@@ -334,7 +342,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
             .command_buffer_end_slot_index = state.command_buffer_end_slot_index.value()};
         submitted_submit_info.command_buffers.emplace_back(submitted_command_buffer);
 
-        // Remove the slots from the state now, such that `OnCaptureFinished` wont reset the slots
+        // Remove the slots from the state now, such that `OnCaptureFinished` won't reset the slots
         // twice. Note, that they will be reset in `CompleteSubmits`.
         state.command_buffer_begin_slot_index.reset();
         state.command_buffer_end_slot_index.reset();
@@ -344,10 +352,17 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     return queue_submission;
   }
 
+  // This method is supposed to be called right after the driver call of `vkQueuePresent`.
+  // At that point in time we can complete the submission meta information (Add the timestamp) and
+  // know the order of the debug markers across command buffers. We will maintain the debug marker
+  // stack in `queue_to_markers_` and if capturing also write the information about completed debug
+  // markers into the `QueueSubmission`, to make it persistent across submissions and such that it
+  // can be picked up on a present to retrieve the timer results and send the data to the client.
+  //
   // We assume to be capturing if `queue_submission_optional` has content, i.e. we were capturing
   // on this VkQueueSubmit before calling into the driver.
-  // It also takes a timestamp after the execution of the driver code for the submission.
-  // This allows us to map submissions from the Vulkan layer to the driver submissions.
+  // The meta information allows allows us to map submissions from the Vulkan layer to the driver
+  // submissions.
   void PersistDebugMarkersOnSubmit(
       VkQueue queue, uint32_t submit_count, const VkSubmitInfo* submits,
       std::optional<internal::QueueSubmission> queue_submission_optional) {
@@ -358,9 +373,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     CHECK(queue_to_markers_.contains(queue));
     QueueMarkerState& markers = queue_to_markers_.at(queue);
 
-    // If we consider this to still capturing, take a cpu timestamp as "post submission" such that
-    // the submission "meta information" is complete. We can then attach that also to each debug
-    // marker, as they may be spanned across different submissions.
+    // If we consider that we are still capturing, take a cpu timestamp as "post submission" such
+    // that the submission "meta information" is complete. We can then attach that also to each
+    // debug marker, as they may be spanned across different submissions.
     if (queue_submission_optional.has_value()) {
       queue_submission_optional->meta_information.post_submission_cpu_timestamp =
           MonotonicTimestampNs();
@@ -392,9 +407,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
               if (queue_submission_optional.has_value() && marker.slot_index.has_value()) {
                 ++queue_submission_optional->num_begin_markers;
               }
-              CHECK(marker.text.has_value());
+              CHECK(marker.label_name.has_value());
               CHECK(marker.color.has_value());
-              internal::MarkerState marker_state{.label_name = marker.text.value(),
+              internal::MarkerState marker_state{.label_name = marker.label_name.value(),
                                                  .color = marker.color.value(),
                                                  .begin_info = submitted_marker,
                                                  .depth = markers.marker_stack.size(),
@@ -566,7 +581,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   struct Marker {
     MarkerType type;
     std::optional<uint32_t> slot_index;
-    std::optional<std::string> text;
+    std::optional<std::string> label_name;
     std::optional<internal::Color> color;
     bool cut_off;
   };
@@ -619,7 +634,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         bool erase_submission = true;
         // Let's find the last command buffer in this submission, so first find the last
         // submit info that has at least one command buffer.
-        // We test if for this command buffer, we already have a query result for its last slot
+        // We test if for this command buffer we already have a query result for its last slot
         // and if so (or if the submission does not contain any command buffer) erase this
         // submission.
         auto submit_info_reverse_it = submission.submit_infos.rbegin();
@@ -753,7 +768,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
   }
 
-  // We use 0 to disable filtering of markers.
+  // We use std::numeric_limits<uint32_t>::max() to disable filtering of markers and 0 to discard
+  // all debug markers.
   uint32_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint32_t>::max();
 
   absl::Mutex mutex_;
