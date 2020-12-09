@@ -14,13 +14,14 @@
 #include "SchedulerTrack.h"
 #include "ThreadTrack.h"
 
+class OrbitApp;
 class Timegraph;
 
 // TrackManager is in charge of the active Tracks in Timegraph (their creation, searching, erasing
 // and sorting).
 class TrackManager {
  public:
-  explicit TrackManager(TimeGraph* time_graph);
+  explicit TrackManager(TimeGraph* time_graph, OrbitApp* app);
 
   void Clear();
 
@@ -41,14 +42,14 @@ class TrackManager {
     return tracepoints_system_wide_track_;
   }
 
-  void SetStringManager(std::shared_ptr<StringManager> str_manager);
-  [[nodiscard]] std::shared_ptr<StringManager> GetStringManager() { return string_manager_; }
+  void SetStringManager(StringManager* str_manager);
+  [[nodiscard]] const StringManager* GetStringManager() const { return string_manager_; }
 
   void SortTracks();
   void SetFilter(const std::string& filter);
 
   void UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
-  [[nodiscard]] float GetTracksHeight() const { return tracks_height_; }
+  [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
 
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
@@ -77,6 +78,7 @@ class TrackManager {
   // Mapping from timeline hash to GPU tracks.
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
   // Mapping from function address to frame tracks.
+  // TODO (b/175865913): Use Function info instead of their address as key to FrameTracks
   std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> tracepoints_system_wide_track_;
@@ -91,6 +93,8 @@ class TrackManager {
 
   std::string filter_;
   std::vector<std::shared_ptr<Track>> sorted_filtered_tracks_;
-  float tracks_height_;
-  std::shared_ptr<StringManager> string_manager_;
+  float tracks_total_height_;
+  StringManager* string_manager_;
+
+  OrbitApp* app_ = nullptr;
 };

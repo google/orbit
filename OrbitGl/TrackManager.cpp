@@ -10,7 +10,8 @@
 
 using orbit_client_protos::FunctionInfo;
 
-TrackManager::TrackManager(TimeGraph* time_graph) : time_graph_(time_graph) {
+TrackManager::TrackManager(TimeGraph* time_graph, OrbitApp* app)
+    : time_graph_(time_graph), app_{app} {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
@@ -32,9 +33,7 @@ void TrackManager::Clear() {
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
 
-void TrackManager::SetStringManager(std::shared_ptr<StringManager> str_manager) {
-  string_manager_ = std::move(str_manager);
-}
+void TrackManager::SetStringManager(StringManager* str_manager) { string_manager_ = str_manager; }
 
 std::vector<std::shared_ptr<Track>> TrackManager::GetTracks() const { return tracks_; }
 
@@ -79,6 +78,8 @@ std::vector<std::shared_ptr<GpuTrack>> TrackManager::GetGpuTracks() const {
 }
 
 void TrackManager::SortTracks() {
+  if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_) return;
+
   std::shared_ptr<ThreadTrack> process_track = nullptr;
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
@@ -100,7 +101,7 @@ void TrackManager::SortTracks() {
   }
 
   // Reorder threads once every second when capturing
-  if (!GOrbitApp->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
+  if (!app_->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
     std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
 
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -175,6 +176,7 @@ void TrackManager::SortTracks() {
 
     UpdateFilteredTrackList();
   }
+  sorting_invalidated_ = false;
 }
 
 void TrackManager::SetFilter(const std::string& filter) {
@@ -205,7 +207,7 @@ std::vector<int32_t>
 TrackManager::GetSortedThreadIds() {  // Show threads with instrumented functions first
   std::vector<int32_t> sorted_thread_ids;
   std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
-      OrbitUtils::ReverseValueSort(thread_count_map_);
+      orbit_core::ReverseValueSort(thread_count_map_);
 
   for (auto& [tid, unused_value] : sorted_threads) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
@@ -217,7 +219,7 @@ TrackManager::GetSortedThreadIds() {  // Show threads with instrumented function
 
   // Then show threads sorted by number of events
   std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
-      OrbitUtils::ReverseValueSort(event_count_);
+      orbit_core::ReverseValueSort(event_count_);
   for (auto& [tid, unused_value] : sorted_by_events) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
     // separately.
@@ -330,7 +332,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
   }
 
   // Tracks are drawn from 0 (top) to negative y-coordinates.
-  tracks_height_ = std::abs(current_y);
+  tracks_total_height_ = std::abs(current_y);
 }
 
 void TrackManager::AddTrack(std::shared_ptr<Track> track) {
@@ -347,7 +349,7 @@ std::shared_ptr<SchedulerTrack> TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
-    track = std::make_shared<SchedulerTrack>(time_graph_);
+    track = std::make_shared<SchedulerTrack>(time_graph_, app_);
     AddTrack(track);
     scheduler_track_ = track;
     uint32_t num_cores = time_graph_->GetNumCores();
@@ -361,7 +363,7 @@ std::shared_ptr<ThreadTrack> TrackManager::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(time_graph_, tid);
+    track = std::make_shared<ThreadTrack>(time_graph_, tid, app_);
     AddTrack(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(TimeGraph::GetThreadColor(tid));
@@ -370,7 +372,7 @@ std::shared_ptr<ThreadTrack> TrackManager::GetOrCreateThreadTrack(int32_t tid) {
       track->SetLabel("All tracepoint events");
     } else if (tid == orbit_base::kAllProcessThreadsTid) {
       // This is the process track.
-      const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+      const CaptureData& capture_data = app_->GetCaptureData();
       std::string process_name = capture_data.process_name();
       track->SetName(process_name);
       const std::string_view all_threads = " (all_threads)";
@@ -392,9 +394,9 @@ std::shared_ptr<GpuTrack> TrackManager::GetOrCreateGpuTrack(uint64_t timeline_ha
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(time_graph_, string_manager_, timeline_hash);
+    track = std::make_shared<GpuTrack>(time_graph_, string_manager_, timeline_hash, app_);
     std::string timeline = string_manager_->Get(timeline_hash).value_or("");
-    std::string label = OrbitGl::MapGpuTimelineToTrackLabel(timeline);
+    std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);
     track->SetLabel(label);
     // This min combine two cases, label == timeline and when label includes timeline
@@ -424,7 +426,7 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<AsyncTrack>(time_graph_, name);
+    track = std::make_shared<AsyncTrack>(time_graph_, name, app_);
     AddTrack(track);
     async_tracks_[name] = track;
   }
@@ -432,11 +434,11 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
-std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo& function) {
+std::shared_ptr<FrameTrack> TrackManager::GetOrCreateFrameTrack(const FunctionInfo& function) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
-    track = std::make_shared<FrameTrack>(this, function);
+    track = std::make_shared<FrameTrack>(time_graph_, function, app_);
     // Normally we would call AddTrack(track) here, but frame tracks are removable by users
     // and therefore cannot be simply thrown into the flat vector of tracks.
     sorting_invalidated_ = true;

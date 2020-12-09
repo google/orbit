@@ -90,7 +90,8 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
 
     world_top_left_x_ = clamp(world_top_left_x_, world_min, world_max - world_width_);
     world_top_left_y_ =
-        clamp(world_top_left_y_, world_height_ - time_graph_.GetThreadTotalHeight(), world_max_y_);
+        clamp(world_top_left_y_,
+              world_height_ - time_graph_.GetTrackManager()->GetTracksTotalHeight(), world_max_y_);
 
     time_graph_.PanTime(screen_click_x_, x, GetWidth(), ref_time_click_);
     NeedsUpdate();
@@ -564,7 +565,7 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   float min = world_max_y_;
-  float max = world_height_ - time_graph_.GetThreadTotalHeight();
+  float max = world_height_ - time_graph_.GetTrackManager()->GetTracksTotalHeight();
   float range = max - min;
   float new_top_left_y = min + ratio * range;
   if (new_top_left_y != world_top_left_y_) {
@@ -594,9 +595,9 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
 
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   float min = world_max_y_;
-  float max = world_height_ - time_graph_.GetThreadTotalHeight();
+  float max = world_height_ - time_graph_.GetTrackManager()->GetTracksTotalHeight();
   float ratio = (world_top_left_y_ - min) / (max - min);
-  float vertical_ratio = world_height_ / time_graph_.GetThreadTotalHeight();
+  float vertical_ratio = world_height_ / time_graph_.GetTrackManager()->GetTracksTotalHeight();
   int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(ratio);
@@ -605,7 +606,8 @@ void CaptureWindow::UpdateVerticalSliderFromWorld() {
 }
 
 void CaptureWindow::UpdateWorldTopLeftY(float val) {
-  float min_world_top_left = GetWorldHeight() - time_graph_.GetThreadTotalHeight();
+  float min_world_top_left =
+      GetWorldHeight() - time_graph_.GetTrackManager()->GetTracksTotalHeight();
   GlCanvas::UpdateWorldTopLeftY(clamp(val, min_world_top_left, GetWorldMaxY()));
   NeedsUpdate();
 }
@@ -682,7 +684,7 @@ void CaptureWindow::RenderImGui() {
       IMGUI_VAR_TO_TEXT(mouse_world_y_);
       IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
       IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetThreadTotalHeight());
+      IMGUI_VAR_TO_TEXT(time_graph_.GetTrackManager()->GetTracksTotalHeight());
       IMGUI_VAR_TO_TEXT(time_graph_.GetMinTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_.GetMaxTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_.GetCaptureMin());

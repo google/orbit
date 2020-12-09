@@ -185,7 +185,7 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() const {
   std::vector<std::shared_ptr<TimerChain>> timers;
   absl::MutexLock lock(&mutex_);
   for (auto& pair : timers_) {
@@ -247,7 +247,7 @@ const TextBox* TimerTrack::GetDown(const TextBox* text_box) const {
   return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& pair : timers_) {
     chains.push_back(pair.second);
@@ -255,7 +255,7 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
   return chains;
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() {
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() const {
   return GetAllChains();
 }
 

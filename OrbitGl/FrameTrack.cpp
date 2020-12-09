@@ -246,7 +246,7 @@ void FrameTrack::UpdateBoxHeight() {
   box_height_ = kBoxHeightMultiplier * time_graph_->GetLayout().GetTextBoxHeight();
 }
 
-std::vector<std::shared_ptr<TimerChain>> FrameTrack::GetAllSerializableChains() {
+std::vector<std::shared_ptr<TimerChain>> FrameTrack::GetAllSerializableChains() const {
   // Frametracks are just displaying existing data in a different way.
   // We don't want to write out all the timers of that track.
   // TODO(b/171026228): However, we should serialize them in some form.
