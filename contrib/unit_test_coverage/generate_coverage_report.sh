@@ -7,12 +7,14 @@
 # --- generate_coverage_report.sh ---
 #
 # This script generates a coverage report for the Orbit repository. It uses 
-# llvm-cov and requires a build with build arguments -fprofile-instr-generate 
+# llvm-cov and requires a build with build arguments -fprofile-instr-generate="%m.profraw"
 # and -fcoverage-mapping. 
 #
 # usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR
 
 # Settings:
+# grep inverted matching list for directories in BUILD_DIR that are not used
+BUILD_SUB_DIR_FILTER="bin\|CMakeFiles\|licenses\|lib\|Testing\|testresults\|third_party"
 # grep inverted matching list for files in BUILD_DIR/bin/ that are not used
 BIN_FILE_FILTER="\.debug\|crashpad_handler"
 # grep inverted matching list for source files that are not used
@@ -79,15 +81,20 @@ SUM_LINES_COVERED=0
 SUM_REGIONS_COUNT=0
 SUM_REGIONS_COVERED=0
 
-# ctest --show-only=json-v1 outputs structured (json) information about the tests in the current
-# directory. This json output is transformed by jq to be only the name of the test, which in Orbits
-# case corresponds to the components (targets) like OrbitBase, OrbitSsh, etc.
-for COMPONENT in $(cd "$BUILD_DIR"; ctest --show-only=json-v1 | jq -r '.tests | .[] | .name')
+for BUILD_SUB_DIR in $(ls -d $BUILD_DIR/*/ | grep -v "$BUILD_SUB_DIR_FILTER")
 do
-  echo "$COMPONENT: preprocessing"
+  COMPONENT=$(basename $BUILD_SUB_DIR)
+  if ls $BUILD_DIR/$COMPONENT/*.profraw 1> /dev/null 2>&1; then
+    echo "$COMPONENT: preprocessing"
+  else 
+    echo "$COMPONENT: skipping (No Unit Tests)"
+    HTML_TABLE+="<tr class='light-row'><td><pre>$COMPONENT</pre></td><td colspan='3'><pre>No Unit Tests</pre></td></tr>"
+    continue
+  fi
+
   llvm-profdata-9 merge -sparse \
     -o $BUILD_DIR/$COMPONENT.profdata \
-    $BUILD_DIR/$COMPONENT/default.profraw 
+    $BUILD_DIR/$COMPONENT/*.profraw 
 
   SOURCE_FILES=$(find $SOURCE_DIR/$COMPONENT -regex ".*\.\(h\|cpp\)" | grep -v "$SOURCE_FILE_FILTER")
 
