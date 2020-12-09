@@ -92,7 +92,7 @@ class SubmissionTrackerTest : public ::testing::Test {
     EXPECT_CALL(*producer_, SetCaptureStatusListener)
         .Times(1)
         .WillOnce(Invoke(set_capture_status_listener_function));
-    tracker.SetVulkanLayerProducer(producer_.get());
+    tracker_.SetVulkanLayerProducer(producer_.get());
     auto is_capturing_function = [this]() -> bool { return producer_->is_capturing_; };
     EXPECT_CALL(*producer_, IsCapturing).WillRepeatedly(Invoke(is_capturing_function));
     EXPECT_CALL(timer_query_pool_, GetQueryPool).WillRepeatedly(Return(query_pool_));
