@@ -208,16 +208,6 @@ class GlAccessibleInterface {
   [[nodiscard]] virtual A11yState AccessibleState() const = 0;
 };
 
-class GlA11yWidgetBridge : public GlAccessibleInterface {
- public:
-  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override { return nullptr; }
-
-  [[nodiscard]] std::string AccessibleName() const override { return ""; }
-  [[nodiscard]] A11yRole AccessibleRole() const override { return A11yRole::Grouping; }
-  [[nodiscard]] A11yRect AccessibleLocalRect() const override { return A11yRect(); }
-  [[nodiscard]] A11yState AccessibleState() const { return A11yState(); }
-};
-
 }  // namespace orbit_gl
 
 #endif

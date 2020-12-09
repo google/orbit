@@ -13,7 +13,7 @@
 #include "TimeGraph.h"
 #include "Timer.h"
 
-class GlCanvas : public orbit_gl::GlA11yWidgetBridge {
+class GlCanvas : public orbit_gl::GlAccessibleInterface {
  public:
   explicit GlCanvas(uint32_t font_size);
   virtual ~GlCanvas();
@@ -120,6 +120,17 @@ class GlCanvas : public orbit_gl::GlA11yWidgetBridge {
   // Accessibility - providing default implementations, overridden in CaptureWindow
   [[nodiscard]] int AccessibleChildCount() const override;
   [[nodiscard]] const orbit_gl::GlAccessibleInterface* AccessibleChild(int index) const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override { return nullptr; }
+
+  // These will be handled by the AccessibilityAdapter, no need to implement them.
+  [[nodiscard]] std::string AccessibleName() const override { return ""; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
+    return orbit_gl::A11yRole::Grouping;
+  }
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override {
+    return orbit_gl::A11yRect();
+  }
+  [[nodiscard]] orbit_gl::A11yState AccessibleState() const { return orbit_gl::A11yState(); }
 
   static float kZValueSlider;
   static float kZValueSliderBg;

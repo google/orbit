@@ -646,7 +646,7 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
 int CaptureWindow::AccessibleChildCount() const { return 1; }
 
 const orbit_gl::GlAccessibleInterface* CaptureWindow::AccessibleChild(int index) const {
-  return &time_graph_;
+  return time_graph_.Accessibility();
 }
 
 void CaptureWindow::NeedsUpdate() {

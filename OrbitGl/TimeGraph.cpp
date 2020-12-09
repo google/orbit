@@ -37,7 +37,10 @@ using orbit_gl::GlAccessibleInterface;
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 TimeGraph::TimeGraph(GlCanvas* canvas, uint32_t font_size)
-    : font_size_(font_size), batcher_(BatcherId::kTimeGraph), canvas_(canvas) {
+    : font_size_(font_size),
+      batcher_(BatcherId::kTimeGraph),
+      canvas_(canvas),
+      accessibility_(this) {
   text_renderer_static_.SetCanvas(canvas_);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
 
@@ -1267,20 +1270,25 @@ void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& functi
   NeedsUpdate();
 }
 
-orbit_gl::A11yRect TimeGraph::AccessibleLocalRect() const {
-  return orbit_gl::A11yRect(0, 0, canvas_->GetWidth(), canvas_->GetHeight());
+orbit_gl::A11yRect TimeGraphAccessibility::AccessibleLocalRect() const {
+  auto canvas = time_graph_->GetCanvas();
+  return orbit_gl::A11yRect(0, 0, canvas->GetWidth(), canvas->GetHeight());
 }
 
-orbit_gl::A11yState TimeGraph::AccessibleState() const {
+orbit_gl::A11yState TimeGraphAccessibility::AccessibleState() const {
   orbit_gl::A11yState result;
   result.active = result.focusable = result.readOnly = 1;
   return result;
 }
 
-int TimeGraph::AccessibleChildCount() const { return sorted_filtered_tracks_.size(); }
-
-const GlAccessibleInterface* TimeGraph::AccessibleChild(int index) const {
-  return sorted_filtered_tracks_[index]->AccessibilityInterface();
+int TimeGraphAccessibility::AccessibleChildCount() const {
+  return time_graph_->GetVisibleTracks().size();
 }
 
-const GlAccessibleInterface* TimeGraph::AccessibleParent() const { return canvas_; }
+const GlAccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) const {
+  return time_graph_->GetVisibleTracks()[index]->AccessibilityInterface();
+}
+
+const GlAccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {
+  return time_graph_->GetCanvas();
+}

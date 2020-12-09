@@ -57,7 +57,7 @@ A11yState TrackTabAccessibility::AccessibleState() const {
 
 const GlAccessibleInterface* TrackAccessibility::AccessibleParent() const {
   CHECK(track_ != nullptr);
-  return track_->GetTimeGraph();
+  return track_->GetTimeGraph()->Accessibility();
 }
 
 std::string TrackAccessibility::AccessibleName() const {

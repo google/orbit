@@ -33,7 +33,29 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
-class TimeGraph : public orbit_gl::GlAccessibleInterface {
+class TimeGraph;
+
+class TimeGraphAccessibility : public orbit_gl::GlAccessibleInterface {
+ public:
+  TimeGraphAccessibility(TimeGraph* time_graph) : time_graph_(time_graph) {
+    CHECK(time_graph != nullptr);
+  }
+  [[nodiscard]] int AccessibleChildCount() const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleChild(int) const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override;
+
+  [[nodiscard]] std::string AccessibleName() const override { return "TimeGraph"; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
+    return orbit_gl::A11yRole::Graphic;
+  }
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
+  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override;
+
+ private:
+  TimeGraph* time_graph_;
+};
+
+class TimeGraph {
  public:
   explicit TimeGraph(GlCanvas* canvas, uint32_t font_size);
   ~TimeGraph();
@@ -178,17 +200,10 @@ class TimeGraph : public orbit_gl::GlAccessibleInterface {
   [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
 
-  // Accessibility
-  [[nodiscard]] int AccessibleChildCount() const override;
-  [[nodiscard]] const GlAccessibleInterface* AccessibleChild(int) const override;
-  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override;
-
-  [[nodiscard]] std::string AccessibleName() const override { return "TimeGraph"; }
-  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
-    return orbit_gl::A11yRole::Graphic;
+  [[nodiscard]] const std::vector<std::shared_ptr<Track>>& GetVisibleTracks() const {
+    return sorted_filtered_tracks_;
   }
-  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override;
-  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override;
+  [[nodiscard]] const TimeGraphAccessibility* Accessibility() const { return &accessibility_; }
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
@@ -239,6 +254,8 @@ class TimeGraph : public orbit_gl::GlAccessibleInterface {
   float right_margin_ = 0;
 
   TimeGraphLayout layout_;
+
+  TimeGraphAccessibility accessibility_;
 
   std::map<int32_t, uint32_t> thread_count_map_;
   uint32_t num_cores_;
