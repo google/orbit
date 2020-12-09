@@ -18,15 +18,16 @@
 namespace orbit_vulkan_layer {
 
 /*
- * This class is responsible to track command buffer and debug marker timings.
+ * This class is responsible for tracking command buffer and debug marker timings.
  * To do so, it keeps track of command-buffer allocations, destructions, begins, ends as well as
  * submissions.
- * I we are capturing on `VkBeginCommandBuffer` and `VkEndCommandBuffer` it will insert write
+ * If we are capturing on `VkBeginCommandBuffer` and `VkEndCommandBuffer` it will insert write
  * timestamp commands (`VkCmdWriteTimestamp`). The same is done for debug marker begins and ends.
  * All that data will be gathered together at a queue submission (`VkQueueSubmit`).
  *
- * Upon every `VkQueuePresentKHR` it will check if the timestamps of a certain submission are
- * already available, and if so, it will send the results over to the `VulkanLayerProducer`.
+ * Upon every `VkQueuePresentKHR` it will check if the last timestamp of a certain submission is
+ * already available, and if so, it will assume that all timestamps are available and it will send
+ * the results over to the `VulkanLayerProducer`.
  *
  * See also `DispatchTable` (for vulkan dispatch), `TimerQueryPool` (to manage the timestamp slots),
  * and `DeviceManager` (to retrieve device properties).
@@ -126,13 +127,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     uint32_t num_begin_markers = 0;
   };
 
-  explicit SubmissionTracker(uint32_t max_local_marker_depth_per_command_buffer,
-                             DispatchTable* dispatch_table, TimerQueryPool* timer_query_pool,
-                             DeviceManager* device_manager)
-      : max_local_marker_depth_per_command_buffer_(max_local_marker_depth_per_command_buffer),
-        dispatch_table_(dispatch_table),
+  explicit SubmissionTracker(DispatchTable* dispatch_table, TimerQueryPool* timer_query_pool,
+                             DeviceManager* device_manager,
+                             uint32_t max_local_marker_depth_per_command_buffer)
+      : dispatch_table_(dispatch_table),
         timer_query_pool_(timer_query_pool),
-        device_manager_(device_manager) {
+        device_manager_(device_manager),
+        max_local_marker_depth_per_command_buffer_(max_local_marker_depth_per_command_buffer) {
     CHECK(dispatch_table_ != nullptr);
     CHECK(timer_query_pool_ != nullptr);
     CHECK(device_manager_ != nullptr);
@@ -460,6 +461,17 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     queue_to_submissions_.at(queue).emplace_back(std::move(queue_submission_optional.value()));
   }
 
+  // This method is responsible to retrieve all the timestamps for the "completed" submissions and
+  // transform the information of those submissions (in particlular about the command buffers and
+  // debug markers) to the `GpuQueueSubmission` proto and send it to the producer.
+  // We consider a submission to be "completed" iff its last command buffer timestamp is ready (see
+  // `PullCompletedSubmissions`).
+  // Beside the timestamps of command buffers and the meta information of the submission, the proto
+  // also contains the debug markers, *"begin"* (even if submitted in a different submission) and
+  // "end", that got completed in this submission.
+  // See also `WriteMetaInfo`, `WriteCommandBufferTimings` and `WriteDebugMarkers`.
+  // This method also resets all the timer slots that have been read.
+  // It is assumed to be called periodically, e.g. on `vkQueuePresentKHR`.
   void CompleteSubmits(VkDevice device) {
     VkQueryPool query_pool = timer_query_pool_->GetQueryPool(device);
     std::vector<QueueSubmission> completed_submissions =
@@ -633,6 +645,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         // We test if for this command buffer we already have a query result for its last slot
         // and if so (or if the submission does not contain any command buffer) erase this
         // submission.
+        // We expect that each `QueueSubmission` that made it into the `queue_to_submissions_`
+        // contains at least one command buffer.
         auto submit_info_reverse_it = submission.submit_infos.rbegin();
         while (submit_info_reverse_it != submission.submit_infos.rend()) {
           const SubmitInfo& submit_info = submission.submit_infos.back();

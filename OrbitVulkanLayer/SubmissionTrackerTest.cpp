@@ -575,7 +575,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsWhenNotCapturing
                                         pid, kTimestamp1, kTimestamp2);
 }
 
-TEST_F(SubmissionTrackerTest, StopCaptureWhileSubmissionWillStillYieldResults) {
+TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) {
   ExpectTwoNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
@@ -623,7 +623,7 @@ TEST_F(SubmissionTrackerTest, StartCaptureJustBeforeSubmissionWontWriteData) {
   tracker.CompleteSubmits(device);
 }
 
-TEST_F(SubmissionTrackerTest, StartCaptureWhileSubmissionWontWriteData) {
+TEST_F(SubmissionTrackerTest, StartCaptureDuringSubmissionWontWriteData) {
   EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
   EXPECT_CALL(dispatch_table, GetQueryPoolResults).Times(0);
   EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(0);
@@ -936,7 +936,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNextedDebugMarkerTimestampsForAComplete
                          expected_color, 1);
   ExpectDebugMarkerBeginEq(actual_debug_marker_inner, kTimestamp3, pre_submit_time,
                            post_submit_time, tid);
-}  // namespace orbit_vulkan_layer
+}
 
 TEST_F(SubmissionTrackerTest,
        CanRetrieveNextedDebugMarkerTimestampsForASubmissionMissingFirstBegin) {
@@ -1008,7 +1008,7 @@ TEST_F(SubmissionTrackerTest,
                          expected_color, 1);
   ExpectDebugMarkerBeginEq(actual_debug_marker_inner, kTimestamp1, pre_submit_time,
                            post_submit_time, tid);
-}  // namespace orbit_vulkan_layer
+}
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
   ExpectSixNextReadyQuerySlotCalls();
@@ -1304,8 +1304,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBuffer) {
                          expected_color, 0);
   ExpectDebugMarkerBeginEq(actual_debug_marker_outer, kTimestamp2, pre_submit_time,
                            post_submit_time, tid);
-
-}  // namespace orbit_vulkan_layer
+}
 
 TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBufferAcrossSubmissions) {
   tracker.SetMaxLocalMarkerDepthPerCommandBuffer(1);
