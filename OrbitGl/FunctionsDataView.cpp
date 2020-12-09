@@ -113,12 +113,12 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
 #define ORBIT_FUNC_SORT(Member)                                                          \
   [&](int a, int b) {                                                                    \
-    return orbit_utils::Compare(functions_[a]->Member, functions_[b]->Member, ascending); \
+    return orbit_core::Compare(functions_[a]->Member, functions_[b]->Member, ascending); \
   }
 
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                                   \
   [&](int a, int b) {                                                                  \
-    return orbit_utils::Compare(Func(*functions_[a]), Func(*functions_[b]), ascending); \
+    return orbit_core::Compare(Func(*functions_[a]), Func(*functions_[b]), ascending); \
   }
 
 void FunctionsDataView::DoSort() {

@@ -42,7 +42,7 @@ std::string TracepointsDataView::GetValue(int row, int col) {
 
 #define ORBIT_PROC_SORT(Member)                                                            \
   [&](int a, int b) {                                                                      \
-    return orbit_utils::Compare(tracepoints_[a].Member, tracepoints_[b].Member, ascending); \
+    return orbit_core::Compare(tracepoints_[a].Member, tracepoints_[b].Member, ascending); \
   }
 
 void TracepointsDataView::DoSort() {

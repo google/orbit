@@ -74,7 +74,7 @@ outcome::result<void> Tunnel::startup() {
     case State::kInitial:
     case State::kNoChannel: {
       OUTCOME_TRY(channel, orbit_ssh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
-                                                              remote_host_, remote_port_));
+                                                               remote_host_, remote_port_));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;

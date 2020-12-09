@@ -40,8 +40,8 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
     case State::kNoOperation: {
       OUTCOME_TRY(sftp_file,
                   orbit_ssh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
-                                           source_.string(), orbit_ssh::FxfFlags::kRead,
-                                           0 /* mode - not applicable for kRead */));
+                                            source_.string(), orbit_ssh::FxfFlags::kRead,
+                                            0 /* mode - not applicable for kRead */));
       sftp_file_ = std::move(sftp_file);
       SetState(State::kRemoteFileOpened);
       ABSL_FALLTHROUGH_INTENDED;

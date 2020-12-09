@@ -212,14 +212,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     OnTimerSelectionChanged(timer_info);
   });
 
-  GOrbitApp->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
-    OnTimerSelectionChanged(timer_info);
-  });
-
-  GOrbitApp->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
-    OnTimerSelectionChanged(timer_info);
-  });
-
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
     GOrbitApp->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());

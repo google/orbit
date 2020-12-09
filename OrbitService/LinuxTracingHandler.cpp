@@ -36,7 +36,7 @@ void LinuxTracingHandler::Start(CaptureOptions capture_options) {
 
 void LinuxTracingHandler::SetupIntrospection() {
   orbit_tracing_listener_ =
-      std::make_unique<orbit::tracing::Listener>([this](const orbit::tracing::Scope& scope) {
+      std::make_unique<orbit_base::TracingListener>([this](const orbit_base::TracingScope& scope) {
         IntrospectionScope introspection_scope;
         introspection_scope.set_pid(getpid());
         introspection_scope.set_tid(scope.tid);

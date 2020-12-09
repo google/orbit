@@ -7,7 +7,7 @@
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
-namespace OrbitSsh {
+namespace orbit_ssh {
 
 outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   Descriptor descriptor = socket(domain, type, protocol);
@@ -55,4 +55,4 @@ outcome::result<void> Socket::Shutdown() const {
 
 std::error_code Socket::GetLastError() { return std::error_code{errno, std::system_category()}; }
 
-}  // namespace OrbitSsh
+}  // namespace orbit_ssh

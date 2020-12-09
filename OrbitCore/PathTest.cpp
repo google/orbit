@@ -32,7 +32,6 @@ TEST(Path, FileExistsDevNull) {
 }
 #endif
 
-
 TEST(Path, AllAutoCreatedDirsExist) {
   auto test_fns = {Path::CreateOrGetOrbitAppDataDir, Path::CreateOrGetDumpDir,
                    Path::CreateOrGetPresetDir, Path::CreateOrGetCacheDir,

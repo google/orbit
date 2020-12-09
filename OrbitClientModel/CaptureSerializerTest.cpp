@@ -20,6 +20,7 @@
 #include "gtest/gtest.h"
 #include "process.pb.h"
 
+using orbit_client_data::ModuleManager;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
@@ -28,7 +29,6 @@ using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::TracepointInfo;
-using orbit_client_data::ModuleManager;
 using ::testing::ElementsAreArray;
 
 TEST(CaptureSerializer, GetCaptureFileName) {
@@ -54,7 +54,7 @@ TEST(CaptureSerializer, GetCaptureFileName) {
   CaptureData capture_data{std::move(process), &module_manager, {}, {}, UserDefinedCaptureData{}};
 
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string expected_file_name = absl::StrCat("p_", orbit_utils::FormatTime(timestamp), ".orbit");
+  std::string expected_file_name = absl::StrCat("p_", orbit_core::FormatTime(timestamp), ".orbit");
   EXPECT_EQ(expected_file_name, capture_serializer::GetCaptureFileName(capture_data));
 }
 

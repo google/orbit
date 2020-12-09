@@ -46,7 +46,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
-  std::unique_ptr<orbit::tracing::Listener> orbit_tracing_listener_;
+  std::unique_ptr<orbit_base::TracingListener> orbit_tracing_listener_;
 
   [[nodiscard]] static uint64_t ComputeCallstackKey(const orbit_grpc_protos::Callstack& callstack);
   [[nodiscard]] uint64_t InternCallstackIfNecessaryAndGetKey(
