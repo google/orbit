@@ -53,13 +53,13 @@ class MockVulkanLayerProducer : public VulkanLayerProducer {
   MOCK_METHOD(void, SetCaptureStatusListener, (CaptureStatusListener*), (override));
 
   void StartCapture() {
-    is_capturing = true;
+    is_capturing_ = true;
     ASSERT_NE(listener_, nullptr);
     listener_->OnCaptureStart();
   }
 
   void StopCapture() {
-    is_capturing = false;
+    is_capturing_ = false;
     ASSERT_NE(listener_, nullptr);
     listener_->OnCaptureStop();
     listener_->OnCaptureFinished();
@@ -69,10 +69,10 @@ class MockVulkanLayerProducer : public VulkanLayerProducer {
     listener_ = listener;
   }
 
-  bool is_capturing = false;
+  bool is_capturing_ = false;
 
  private:
-  VulkanLayerProducer::CaptureStatusListener* listener_;
+  VulkanLayerProducer::CaptureStatusListener* listener_ = nullptr;
 };
 
 using Color = SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool>::Color;
@@ -84,47 +84,47 @@ using QueueSubmission =
 class SubmissionTrackerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    producer = std::make_unique<MockVulkanLayerProducer>();
+    producer_ = std::make_unique<MockVulkanLayerProducer>();
     auto set_capture_status_listener_function =
         [this](VulkanLayerProducer::CaptureStatusListener* listener) {
-          producer->FakeSetCaptureStatusListener(listener);
+          producer_->FakeSetCaptureStatusListener(listener);
         };
-    EXPECT_CALL(*producer, SetCaptureStatusListener)
+    EXPECT_CALL(*producer_, SetCaptureStatusListener)
         .Times(1)
         .WillOnce(Invoke(set_capture_status_listener_function));
-    tracker.SetVulkanLayerProducer(producer.get());
-    auto is_capturing_function = [this]() -> bool { return producer->is_capturing; };
-    EXPECT_CALL(*producer, IsCapturing).WillRepeatedly(Invoke(is_capturing_function));
-    EXPECT_CALL(timer_query_pool, GetQueryPool).WillRepeatedly(Return(query_pool));
-    EXPECT_CALL(device_manager, GetPhysicalDeviceOfLogicalDevice)
-        .WillRepeatedly(Return(physical_device));
-    EXPECT_CALL(device_manager, GetPhysicalDeviceProperties)
-        .WillRepeatedly(Return(physical_device_properties));
+    tracker.SetVulkanLayerProducer(producer_.get());
+    auto is_capturing_function = [this]() -> bool { return producer_->is_capturing_; };
+    EXPECT_CALL(*producer_, IsCapturing).WillRepeatedly(Invoke(is_capturing_function));
+    EXPECT_CALL(timer_query_pool_, GetQueryPool).WillRepeatedly(Return(query_pool_));
+    EXPECT_CALL(device_manager_, GetPhysicalDeviceOfLogicalDevice)
+        .WillRepeatedly(Return(physical_device_));
+    EXPECT_CALL(device_manager_, GetPhysicalDeviceProperties)
+        .WillRepeatedly(Return(physical_device_properties_));
 
-    EXPECT_CALL(dispatch_table, CmdWriteTimestamp)
+    EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
         .WillRepeatedly(Return(dummy_write_timestamp_function));
   }
 
-  MockDispatchTable dispatch_table;
-  MockTimerQueryPool timer_query_pool;
-  MockDeviceManager device_manager;
-  std::unique_ptr<MockVulkanLayerProducer> producer;
-  SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool> tracker =
+  MockDispatchTable dispatch_table_;
+  MockTimerQueryPool timer_query_pool_;
+  MockDeviceManager device_manager_;
+  std::unique_ptr<MockVulkanLayerProducer> producer_;
+  SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool> tracker_ =
       SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool>(
-          &dispatch_table, &timer_query_pool, &device_manager,
+          &dispatch_table_, &timer_query_pool_, &device_manager_,
           std::numeric_limits<uint32_t>::max());
 
-  VkDevice device = {};
-  VkCommandPool command_pool = {};
-  VkCommandBuffer command_buffer = {};
-  VkQueryPool query_pool = {};
-  VkPhysicalDevice physical_device = {};
-  VkPhysicalDeviceProperties physical_device_properties = {.limits = {.timestampPeriod = 1.f}};
-  VkQueue queue = {};
-  VkSubmitInfo submit_info = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-                              .pNext = nullptr,
-                              .pCommandBuffers = &command_buffer,
-                              .commandBufferCount = 1};
+  VkDevice device_ = {};
+  VkCommandPool command_pool_ = {};
+  VkCommandBuffer command_buffer_ = {};
+  VkQueryPool query_pool_ = {};
+  VkPhysicalDevice physical_device_ = {};
+  VkPhysicalDeviceProperties physical_device_properties_ = {.limits = {.timestampPeriod = 1.f}};
+  VkQueue queue_ = {};
+  VkSubmitInfo submit_info_ = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                               .pNext = nullptr,
+                               .pCommandBuffers = &command_buffer_,
+                               .commandBufferCount = 1};
 
   static constexpr uint32_t kSlotIndex1 = 32;
   static constexpr uint32_t kSlotIndex2 = 33;
@@ -177,7 +177,7 @@ class SubmissionTrackerTest : public ::testing::Test {
   static constexpr uint64_t kTimestamp6 = 16;
   static constexpr uint64_t kTimestamp7 = 17;
 
-  const PFN_vkGetQueryPoolResults mock_get_query_pool_results_function_all_ready =
+  const PFN_vkGetQueryPoolResults mock_get_query_pool_results_function_all_ready_ =
       +[](VkDevice /*device*/, VkQueryPool /*queryPool*/, uint32_t first_query,
           uint32_t query_count, size_t /*dataSize*/, void* data, VkDeviceSize /*stride*/,
           VkQueryResultFlags flags) -> VkResult {
@@ -211,7 +211,7 @@ class SubmissionTrackerTest : public ::testing::Test {
     return VK_SUCCESS;
   };
 
-  const PFN_vkGetQueryPoolResults mock_get_query_pool_results_function_not_ready =
+  const PFN_vkGetQueryPoolResults mock_get_query_pool_results_function_not_ready_ =
       +[](VkDevice /*device*/, VkQueryPool /*queryPool*/, uint32_t /*first_query*/,
           uint32_t /*query_count*/, size_t /*dataSize*/, void* /*data*/, VkDeviceSize /*stride*/,
           VkQueryResultFlags /*flags*/) -> VkResult { return VK_NOT_READY; };
@@ -275,14 +275,14 @@ class SubmissionTrackerTest : public ::testing::Test {
   }
 
   void ExpectTwoNextReadyQuerySlotCalls() {
-    EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+    EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
         .Times(2)
         .WillOnce(Invoke(MockNextReadyQuerySlot1))
         .WillOnce(Invoke(MockNextReadyQuerySlot2));
   }
 
   void ExpectThreeNextReadyQuerySlotCalls() {
-    EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+    EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
         .Times(3)
         .WillOnce(Invoke(MockNextReadyQuerySlot1))
         .WillOnce(Invoke(MockNextReadyQuerySlot2))
@@ -290,7 +290,7 @@ class SubmissionTrackerTest : public ::testing::Test {
   }
 
   void ExpectFourNextReadyQuerySlotCalls() {
-    EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+    EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
         .Times(4)
         .WillOnce(Invoke(MockNextReadyQuerySlot1))
         .WillOnce(Invoke(MockNextReadyQuerySlot2))
@@ -299,7 +299,7 @@ class SubmissionTrackerTest : public ::testing::Test {
   }
 
   void ExpectSixNextReadyQuerySlotCalls() {
-    EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+    EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
         .Times(6)
         .WillOnce(Invoke(MockNextReadyQuerySlot1))
         .WillOnce(Invoke(MockNextReadyQuerySlot2))
@@ -310,7 +310,7 @@ class SubmissionTrackerTest : public ::testing::Test {
   }
 
   void ExpectSevenNextReadyQuerySlotCalls() {
-    EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+    EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
         .Times(7)
         .WillOnce(Invoke(MockNextReadyQuerySlot1))
         .WillOnce(Invoke(MockNextReadyQuerySlot2))
@@ -346,20 +346,21 @@ TEST(SubmissionTracker, SetVulkanLayerProducerWillCallSetListener) {
 }
 
 TEST_F(SubmissionTrackerTest, CannotUntrackAnUntrackedCommandBuffer) {
-  EXPECT_DEATH({ tracker.UntrackCommandBuffers(device, command_pool, &command_buffer, 1); }, "");
+  EXPECT_DEATH({ tracker_.UntrackCommandBuffers(device_, command_pool_, &command_buffer_, 1); },
+               "");
 }
 
 TEST_F(SubmissionTrackerTest, CanTrackCommandBufferAgainAfterUntrack) {
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.UntrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.UntrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
 }
 
 TEST_F(SubmissionTrackerTest, MarkCommandBufferBeginWontWriteTimestampsWhenNotCapturing) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
 }
 
 TEST_F(SubmissionTrackerTest, MarkCommandBufferBeginWillWriteTimestampWhenCapturing) {
@@ -373,62 +374,62 @@ TEST_F(SubmissionTrackerTest, MarkCommandBufferBeginWillWriteTimestampWhenCaptur
         was_called = true;
       };
 
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
       .Times(1)
       .WillOnce(Invoke(MockNextReadyQuerySlot1));
-  EXPECT_CALL(dispatch_table, CmdWriteTimestamp)
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
       .Times(1)
       .WillOnce(Return(mock_write_timestamp_function));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
 
   EXPECT_TRUE(was_called);
   was_called = false;
 }
 
 TEST_F(SubmissionTrackerTest, ResetCommandBufferShouldRollbackUnsubmittedSlots) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
       .Times(1)
       .WillOnce(Invoke(MockNextReadyQuerySlot1));
   std::vector<uint32_t> actual_slots_to_rollback;
-  EXPECT_CALL(timer_query_pool, RollbackPendingQuerySlots)
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.ResetCommandBuffer(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.ResetCommandBuffer(command_buffer_);
 
   EXPECT_THAT(actual_slots_to_rollback, ElementsAre(kSlotIndex1));
 }
 
 TEST_F(SubmissionTrackerTest, ResetCommandPoolShouldRollbackUnsubmittedSlots) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
       .Times(1)
       .WillOnce(Invoke(MockNextReadyQuerySlot1));
   std::vector<uint32_t> actual_slots_to_rollback;
-  EXPECT_CALL(timer_query_pool, RollbackPendingQuerySlots)
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.ResetCommandPool(command_pool);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.ResetCommandPool(command_pool_);
 
   EXPECT_THAT(actual_slots_to_rollback, ElementsAre(kSlotIndex1));
 }
 
 TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWontWriteTimestampsWhenNotCapturing) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
-  EXPECT_CALL(dispatch_table, CmdWriteTimestamp).Times(0);
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
 }
 
 TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWillWriteTimestampsWhenNotCapturedBegin) {
@@ -441,17 +442,17 @@ TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWillWriteTimestampsWhenNotCapt
         was_called = true;
       };
 
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
       .Times(1)
       .WillOnce(Invoke(MockNextReadyQuerySlot1));
-  EXPECT_CALL(dispatch_table, CmdWriteTimestamp)
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
       .Times(1)
       .WillOnce(Return(mock_write_timestamp_function));
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  producer->StartCapture();
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  producer_->StartCapture();
+  tracker_.MarkCommandBufferEnd(command_buffer_);
 
   EXPECT_TRUE(was_called);
   was_called = false;
@@ -459,29 +460,33 @@ TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWillWriteTimestampsWhenNotCapt
 
 TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubmission) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
@@ -491,31 +496,35 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
 TEST_F(SubmissionTrackerTest,
        CanRetrieveCommandBufferTimestampsForACompleteSubmissionAtSecondPresent) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillOnce(Return(mock_get_query_pool_results_function_not_ready))
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillOnce(Return(mock_get_query_pool_results_function_not_ready_))
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
@@ -524,21 +533,23 @@ TEST_F(SubmissionTrackerTest,
 
 TEST_F(SubmissionTrackerTest, StopCaptureBeforeSubmissionWillResetTheSlots) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults).Times(0);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults).Times(0);
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
 
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(0);
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(0);
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
-  producer->StopCapture();
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  producer_->StopCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
 }
@@ -546,30 +557,34 @@ TEST_F(SubmissionTrackerTest, StopCaptureBeforeSubmissionWillResetTheSlots) {
 TEST_F(SubmissionTrackerTest,
        CommandBufferTimestampsRecordedWhenCapturingCanBeRetrievedWhenNotCapturing) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  producer->StopCapture();
-  tracker.CompleteSubmits(device);
+  producer_->StopCapture();
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
@@ -578,30 +593,34 @@ TEST_F(SubmissionTrackerTest,
 
 TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  producer->StopCapture();
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  producer_->StopCapture();
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
@@ -609,96 +628,98 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
 }
 
 TEST_F(SubmissionTrackerTest, StartCaptureJustBeforeSubmissionWontWriteData) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults).Times(0);
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(0);
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(0);
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults).Times(0);
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).Times(0);
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
-  producer->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  producer_->StartCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 }
 
 TEST_F(SubmissionTrackerTest, StartCaptureDuringSubmissionWontWriteData) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults).Times(0);
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(0);
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(0);
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults).Times(0);
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).Times(0);
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  producer->StartCapture();
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  producer_->StartCapture();
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 }
 
 TEST_F(SubmissionTrackerTest, WillResetProperlyWhenStartStopAndStartACaptureWithinASubmission) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot)
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
       .Times(1)
       .WillOnce(Invoke(MockNextReadyQuerySlot1));
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults).Times(0);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults).Times(0);
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(0);
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  producer->StartCapture();
-  tracker.MarkCommandBufferBegin(command_buffer);
-  producer->StopCapture();
-  tracker.MarkCommandBufferEnd(command_buffer);
-  producer->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  producer_->StartCapture();
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  producer_->StopCapture();
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  producer_->StartCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1));
 }
 
 TEST_F(SubmissionTrackerTest, CannotReuseCommandBufferWithoutReset) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1);
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).Times(1);
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(1);
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 
-  EXPECT_DEATH({ tracker.MarkCommandBufferBegin(command_buffer); }, "");
+  EXPECT_DEATH({ tracker_.MarkCommandBufferBegin(command_buffer_); }, "");
 }
 
 TEST_F(SubmissionTrackerTest, CanReuseCommandBufferAfterReset) {
   ExpectThreeNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1);
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).Times(1);
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(1);
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
-  tracker.ResetCommandBuffer(command_buffer);
-  tracker.MarkCommandBufferBegin(command_buffer);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
 }
 
 TEST_F(SubmissionTrackerTest, DebugMarkerBeginWillWriteTimestampWhenCapturing) {
@@ -713,15 +734,15 @@ TEST_F(SubmissionTrackerTest, DebugMarkerBeginWillWriteTimestampWhenCapturing) {
       };
 
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, CmdWriteTimestamp)
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
       .Times(2)
       .WillOnce(Return(dummy_write_timestamp_function))
       .WillOnce(Return(mock_write_timestamp_function));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, "Marker", {});
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, "Marker", {});
 
   EXPECT_TRUE(was_called);
   was_called = false;
@@ -730,44 +751,46 @@ TEST_F(SubmissionTrackerTest, DebugMarkerBeginWillWriteTimestampWhenCapturing) {
 TEST_F(SubmissionTrackerTest, ResetCommandBufferShouldRollbackUnsubmittedMarkerSlots) {
   ExpectTwoNextReadyQuerySlotCalls();
   std::vector<uint32_t> actual_slots_to_rollback;
-  EXPECT_CALL(timer_query_pool, RollbackPendingQuerySlots)
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, "Marker", {});
-  tracker.ResetCommandBuffer(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, "Marker", {});
+  tracker_.ResetCommandBuffer(command_buffer_);
 
   EXPECT_THAT(actual_slots_to_rollback, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
 }
 
 TEST_F(SubmissionTrackerTest, DebugMarkerBeginWontWriteTimestampsWhenNotCapturing) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
-  EXPECT_CALL(dispatch_table, CmdWriteTimestamp).Times(0);
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, "Marker", {});
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, "Marker", {});
 }
 
 TEST_F(SubmissionTrackerTest, DebugMarkerEndWontWriteTimestampsWhenNotCapturing) {
-  EXPECT_CALL(timer_query_pool, NextReadyQuerySlot).Times(0);
-  EXPECT_CALL(dispatch_table, CmdWriteTimestamp).Times(0);
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp).Times(0);
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, "Marker", {});
-  tracker.MarkDebugMarkerEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, "Marker", {});
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
 }
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmission) {
   ExpectFourNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
@@ -781,26 +804,28 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)
       .WillOnce(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text, expected_color);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
               UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4));
@@ -819,10 +844,12 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenNotCapturedBegin) {
   ExpectTwoNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
@@ -836,23 +863,25 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenNotCapturedBegin)
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)
       .WillOnce(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text, expected_color);
-  producer->StartCapture();
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
+  producer_->StartCapture();
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   EXPECT_TRUE(actual_capture_event.has_gpu_queue_submission());
@@ -869,10 +898,12 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenNotCapturedBegin)
 
 TEST_F(SubmissionTrackerTest, CanRetrieveNextedDebugMarkerTimestampsForACompleteSubmission) {
   ExpectSixNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
@@ -893,28 +924,30 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNextedDebugMarkerTimestampsForAComplete
     }
     UNREACHABLE();
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(2)
       .WillRepeatedly(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text_outer.c_str(), expected_color);
-  tracker.MarkDebugMarkerBegin(command_buffer, text_inner.c_str(), expected_color);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_outer.c_str(), expected_color);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_inner.c_str(), expected_color);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3,
                                                        kSlotIndex4, kSlotIndex5, kSlotIndex6));
@@ -942,10 +975,12 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNextedDebugMarkerTimestampsForAComplete
 TEST_F(SubmissionTrackerTest,
        CanRetrieveNextedDebugMarkerTimestampsForASubmissionMissingFirstBegin) {
   ExpectFourNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
@@ -966,28 +1001,30 @@ TEST_F(SubmissionTrackerTest,
     }
     UNREACHABLE();
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(2)
       .WillRepeatedly(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text_outer.c_str(), expected_color);
-  producer->StartCapture();
-  tracker.MarkDebugMarkerBegin(command_buffer, text_inner.c_str(), expected_color);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_outer.c_str(), expected_color);
+  producer_->StartCapture();
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_inner.c_str(), expected_color);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
               UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4));
@@ -1013,11 +1050,11 @@ TEST_F(SubmissionTrackerTest,
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
   ExpectSixNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots_1;
   std::vector<uint32_t> actual_reset_slots_2;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots)
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(2)
       .WillOnce(SaveArg<1>(&actual_reset_slots_1))
       .WillOnce(SaveArg<1>(&actual_reset_slots_2));
@@ -1034,10 +1071,10 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)
       .WillOnce(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent)
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
       .Times(2)
       .WillRepeatedly(Invoke(mock_enqueue_capture_event));
 
@@ -1045,25 +1082,25 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
 
   pid_t tid = GetCurrentThreadId();
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text, expected_color);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   uint64_t pre_submit_time_1 = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_1);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   uint64_t post_submit_time_1 = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
-  tracker.ResetCommandBuffer(command_buffer);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.CompleteSubmits(device_);
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_2);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots_1, UnorderedElementsAre(kSlotIndex1, kSlotIndex3));
   EXPECT_THAT(actual_reset_slots_2,
@@ -1093,11 +1130,11 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhenNotCapturingBegin) {
   ExpectFourNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots_1;
   std::vector<uint32_t> actual_reset_slots_2;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots)
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(2)
       .WillOnce(SaveArg<1>(&actual_reset_slots_1))
       .WillOnce(SaveArg<1>(&actual_reset_slots_2));
@@ -1114,32 +1151,32 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)
       .WillOnce(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent)
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
       .Times(2)
       .WillRepeatedly(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text, expected_color);
-  producer->StartCapture();
-  tracker.MarkCommandBufferEnd(command_buffer);
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
+  producer_->StartCapture();
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_1);
-  tracker.CompleteSubmits(device);
-  tracker.ResetCommandBuffer(command_buffer);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
+  tracker_.CompleteSubmits(device_);
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_2);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots_1, UnorderedElementsAre(kSlotIndex1));
   EXPECT_THAT(actual_reset_slots_2, UnorderedElementsAre(kSlotIndex2, kSlotIndex3, kSlotIndex4));
@@ -1167,11 +1204,11 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
 
 TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenNotCapturingEnd) {
   ExpectThreeNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots_1;
   std::vector<uint32_t> actual_reset_slots_2;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots)
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(2)
       .WillOnce(SaveArg<1>(&actual_reset_slots_1))
       .WillOnce(SaveArg<1>(&actual_reset_slots_2));
@@ -1183,30 +1220,32 @@ TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenNot
       };
 
   const char* text = "Text";
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey).Times(0);
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey).Times(0);
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text, expected_color);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_1);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
+  tracker_.CompleteSubmits(device_);
 
-  producer->StopCapture();
-  tracker.ResetCommandBuffer(command_buffer);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StopCapture();
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_2);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots_1, UnorderedElementsAre(kSlotIndex1, kSlotIndex3));
   EXPECT_THAT(actual_reset_slots_2, UnorderedElementsAre(kSlotIndex2));
@@ -1220,38 +1259,42 @@ TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenNot
 
 TEST_F(SubmissionTrackerTest, ResetDebugMarkerSlotsWhenStopBeforeASubmission) {
   ExpectFourNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults).Times(0);
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults).Times(0);
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(0);
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent).Times(0);
   const char* text = "Text";
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text, expected_color);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
-  producer->StopCapture();
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  producer_->StopCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
               UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4));
 }
 
 TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBuffer) {
-  tracker.SetMaxLocalMarkerDepthPerCommandBuffer(1);
+  tracker_.SetMaxLocalMarkerDepthPerCommandBuffer(1);
 
   ExpectFourNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
   std::vector<uint32_t> actual_reset_slots;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).Times(1).WillOnce(SaveArg<1>(&actual_reset_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_reset_slots));
   orbit_grpc_protos::CaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
       [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
@@ -1268,28 +1311,30 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBuffer) {
     }
     UNREACHABLE();
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)
       .WillOnce(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent).Times(1).WillOnce(Invoke(mock_enqueue_capture_event));
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(1)
+      .WillOnce(Invoke(mock_enqueue_capture_event));
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);
-  tracker.MarkDebugMarkerBegin(command_buffer, text_outer.c_str(), expected_color);
-  tracker.MarkDebugMarkerBegin(command_buffer, text_inner.c_str(), expected_color);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkDebugMarkerEnd(command_buffer);
-  tracker.MarkCommandBufferEnd(command_buffer);
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_outer.c_str(), expected_color);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_inner.c_str(), expected_color);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
               UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4));
@@ -1308,10 +1353,10 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBuffer) {
 }
 
 TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBufferAcrossSubmissions) {
-  tracker.SetMaxLocalMarkerDepthPerCommandBuffer(1);
+  tracker_.SetMaxLocalMarkerDepthPerCommandBuffer(1);
   ExpectSevenNextReadyQuerySlotCalls();
-  EXPECT_CALL(dispatch_table, GetQueryPoolResults)
-      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
 
   std::vector<uint32_t> actual_reset_slots;
   auto mock_reset_query_slots = [&actual_reset_slots](VkDevice /*device*/,
@@ -1320,7 +1365,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBufferAcro
                               slots_to_reset.end());
   };
   std::vector<uint32_t> actual_reset_slots_2;
-  EXPECT_CALL(timer_query_pool, ResetQuerySlots).WillRepeatedly(Invoke(mock_reset_query_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(mock_reset_query_slots));
 
   std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
   auto mock_enqueue_capture_event =
@@ -1336,10 +1381,10 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBufferAcro
     EXPECT_EQ(text_outer, str);
     return expected_outer_text_key;
   };
-  EXPECT_CALL(*producer, InternStringIfNecessaryAndGetKey)
+  EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)
       .WillOnce(Invoke(mock_intern_string_if_necessary_and_get_key));
-  EXPECT_CALL(*producer, EnqueueCaptureEvent)
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
       .Times(2)
       .WillRepeatedly(Invoke(mock_enqueue_capture_event));
 
@@ -1347,28 +1392,29 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBufferAcro
 
   pid_t tid = GetCurrentThreadId();
 
-  producer->StartCapture();
-  tracker.TrackCommandBuffers(device, command_pool, &command_buffer, 1);
-  tracker.MarkCommandBufferBegin(command_buffer);                                    // timestamp 1
-  tracker.MarkDebugMarkerBegin(command_buffer, text_outer.c_str(), expected_color);  // timestamp 2
-  tracker.MarkDebugMarkerBegin(command_buffer, text_inner.c_str(), expected_color);  // cut-off
-  tracker.MarkCommandBufferEnd(command_buffer);                                      // timestamp 3
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);  // timestamp 1
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_outer.c_str(),
+                                expected_color);  // timestamp 2
+  tracker_.MarkDebugMarkerBegin(command_buffer_, text_inner.c_str(), expected_color);  // cut-off
+  tracker_.MarkCommandBufferEnd(command_buffer_);  // timestamp 3
   uint64_t pre_submit_time_1 = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_1);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   uint64_t post_submit_time_1 = MonotonicTimestampNs();
-  tracker.CompleteSubmits(device);
+  tracker_.CompleteSubmits(device_);
 
-  tracker.ResetCommandBuffer(command_buffer);
-  tracker.MarkCommandBufferBegin(command_buffer);  // timestamp 4
-  tracker.MarkDebugMarkerEnd(command_buffer);      // timestamp 5 - we can't know now to cut-off
-  tracker.MarkDebugMarkerEnd(command_buffer);      // timestamp 6
-  tracker.MarkCommandBufferEnd(command_buffer);    // timestamp 7
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferBegin(command_buffer_);  // timestamp 4
+  tracker_.MarkDebugMarkerEnd(command_buffer_);      // timestamp 5 - we can't know now to cut-off
+  tracker_.MarkDebugMarkerEnd(command_buffer_);      // timestamp 6
+  tracker_.MarkCommandBufferEnd(command_buffer_);    // timestamp 7
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker.PersistCommandBuffersOnSubmit(1, &submit_info);
-  tracker.PersistDebugMarkersOnSubmit(queue, 1, &submit_info, queue_submission_optional_2);
-  tracker.CompleteSubmits(device);
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
+  tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
               UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4, kSlotIndex5,
