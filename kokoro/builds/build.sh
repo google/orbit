@@ -52,7 +52,8 @@ if [ -n "$1" ]; then
     
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
-      # In the presubmit case we only spare the testresults (under build/) and this script (well, everything under kokoro).
+      # In the presubmit case we only spare the testresults (under build/) and this
+	  # script (well, everything under kokoro).
       echo "Cleanup for presubmit."
 	  find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
 	                        ! -path "${MOUNT_POINT}/github" \
@@ -63,7 +64,8 @@ if [ -n "$1" ]; then
 							-delete
       echo "Cleanup for presubmit done."
     else
-      # In the non-presubmit case we spare the whole build dir and this script (well, everything under kokoro).
+      # In the non-presubmit case we spare the whole build dir and this 
+	  # script (well, everything under kokoro).
       echo "Cleanup for non-presubmit."
 	  find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
 	                        ! -path "${MOUNT_POINT}/github" \
