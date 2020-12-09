@@ -5,6 +5,7 @@
 #include "TracerThread.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/ThreadUtils.h>
 #include <OrbitBase/Tracing.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -1061,7 +1062,7 @@ void TracerThread::ProcessDeferredEvents() {
 void TracerThread::RetrieveThreadNamesSystemWide() {
   uint64_t timestamp_ns = MonotonicTimestampNs();
   for (pid_t tid : GetAllTids()) {
-    std::string name = GetThreadName(tid);
+    std::string name = orbit_base::GetThreadName(tid);
     if (name.empty()) {
       continue;
     }

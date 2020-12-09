@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/Tracing.h"
 #include "absl/container/flat_hash_map.h"
 
@@ -32,8 +33,8 @@ TEST(Tracing, Scopes) {
   {
     TracingListener tracing_listener([&scopes_by_thread_id](const TracingScope& scope) {
       // Check that callback is called from a single thread.
-      static pid_t callback_thread_id = GetCurrentThreadId();
-      EXPECT_EQ(GetCurrentThreadId(), callback_thread_id);
+      static pid_t callback_thread_id = orbit_base::GetCurrentThreadId();
+      EXPECT_EQ(orbit_base::GetCurrentThreadId(), callback_thread_id);
       scopes_by_thread_id[scope.tid].emplace_back(scope);
     });
 

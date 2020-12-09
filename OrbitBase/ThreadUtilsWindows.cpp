@@ -8,23 +8,25 @@
 
 #include <string>
 
-[[nodiscard]] inline uint64_t MonotonicTimestampNs() {
-  __int64 time;
-  GetSystemTimeAsFileTime((FILETIME*)&time);
-  return static_cast<uint64_t>(time) * 100;
-}
+#include "OrbitBase/ThreadUtils.h"
+
+namespace orbit_base {
 
 template <typename FunctionPrototypeT>
-inline FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
+static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
   HMODULE module_handle = LoadLibraryA(library.c_str());
   if (module_handle == nullptr) {
     ERROR("Could not find procedure %s in %s", procedure, library);
     return nullptr;
   }
-  return reinterpret_cast<FunctionPrototypeT>(GetProcAddress(module_handle, procedure.c_str()));
+  return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
 }
 
-inline std::string GetThreadName(uint32_t tid) {
+[[nodiscard]] uint32_t GetCurrentThreadId() {
+  return static_cast<uint32_t>(::GetCurrentThreadId());
+}
+
+std::string GetThreadName(uint32_t tid) {
   static const std::string kEmptyString;
 
   // Find "GetThreadDescription" procedure.
@@ -55,7 +57,7 @@ inline std::string GetThreadName(uint32_t tid) {
   return kEmptyString;
 }
 
-inline void SetCurrentThreadName(const std::string& name) {
+void SetCurrentThreadName(const std::string& name) {
   static auto set_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PCWSTR)>("kernel32.dll", "SetThreadDescription");
   std::wstring wide_name(name.begin(), name.end());
@@ -64,3 +66,5 @@ inline void SetCurrentThreadName(const std::string& name) {
     ERROR("Setting thread name %s with proc[%llx]", name, set_thread_description);
   }
 }
+
+}  // namespace orbit_base

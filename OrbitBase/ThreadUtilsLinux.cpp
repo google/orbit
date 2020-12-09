@@ -3,23 +3,20 @@
 // found in the LICENSE file.
 
 #include <OrbitBase/Logging.h>
-#include <stdint.h>
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
 
-[[nodiscard]] inline uint64_t MonotonicTimestampNs() {
-  timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return 1'000'000'000LL * ts.tv_sec + ts.tv_nsec;
-}
+#include "OrbitBase/ThreadUtils.h"
 
-[[nodiscard]] inline uint32_t GetCurrentThreadId() {
+namespace orbit_base {
+
+[[nodiscard]] uint32_t GetCurrentThreadId() {
   thread_local pid_t current_tid = syscall(__NR_gettid);
   return static_cast<uint32_t>(current_tid);
 }
 
-inline std::string GetThreadName(uint32_t tid) {
+std::string GetThreadName(uint32_t tid) {
   constexpr size_t kMaxStringSize = 16;
   char thread_name[kMaxStringSize];
   int result = pthread_getname_np(pthread_self(), thread_name, kMaxStringSize);
@@ -30,7 +27,7 @@ inline std::string GetThreadName(uint32_t tid) {
   return thread_name;
 }
 
-inline void SetCurrentThreadName(const std::string& thread_name) {
+void SetCurrentThreadName(const std::string& thread_name) {
   // On Linux, "the thread name is a meaningful C language
   // string, whose length is restricted to 16 characters,
   // including the terminating null byte ('\0')".
@@ -44,3 +41,5 @@ inline void SetCurrentThreadName(const std::string& thread_name) {
     ERROR("Setting thread name for tid %u. Error %d", GetCurrentThreadId(), result);
   }
 }
+
+}  // namespace orbit_base
