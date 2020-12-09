@@ -52,33 +52,25 @@ if [ -n "$1" ]; then
     
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
-      # In the presubmit case we only spare the testresults (under build/) and this script.
+      # In the presubmit case we only spare the testresults (under build/) and this script (well, everything under kokoro).
       echo "Cleanup for presubmit."
-      find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
-        grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'orbitprofiler/build' | \
-        while read file; do
-          rm -rf "$file"
-        done
-      find "$MOUNT_POINT" -depth -maxdepth 4 -mindepth 4 | \
-	    grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'build/testresults' | \
-        while read file; do
-          rm -rf "$file"
-        done
+	  find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
+	                        ! -path "${MOUNT_POINT}/github" \
+							! -path "${REPO_ROOT}" \
+							! -path "${REPO_ROOT}/kokoro*" \
+							! -path "${REPO_ROOT}/build" \
+							! -path "${REPO_ROOT}/build/testresults*"\
+							-delete
       echo "Cleanup for presubmit done."
     else
-      # In the non-presubmit case we spare the whole build dir and this script.
+      # In the non-presubmit case we spare the whole build dir and this script (well, everything under kokoro).
       echo "Cleanup for non-presubmit."
-      # Delete all unneeded directories and top level files under github/orbitprofiler ...
-      find "$MOUNT_POINT" -depth -maxdepth 3 -mindepth 3 | \
-        grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'orbitprofiler/build' | \
-        while read file; do
-          rm -rf "$file"
-        done
-      # ... and everything from keystore.
-      rm -rf "$KEYSTORE_PATH"
+	  find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
+	                        ! -path "${MOUNT_POINT}/github" \
+							! -path "${REPO_ROOT}" \
+							! -path "${REPO_ROOT}/kokoro*" \
+							! -path "${REPO_ROOT}/build*"
+							-delete
       echo "Cleanup for non-presubmit done."
     fi
   }
