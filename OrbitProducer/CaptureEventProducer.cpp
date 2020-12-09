@@ -116,7 +116,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
     // Attempt to connect to ProducerSideService. Note that getting a stream_ != nullptr doesn't
     // mean that the service is listening nor that the connection is actually established.
     {
-      absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+      absl::WriterMutexLock lock{&context_and_stream_mutex_};
       context_ = std::make_unique<grpc::ClientContext>();
       stream_ = producer_side_service_stub_->ReceiveCommandsAndSendEvents(context_.get());
     }
