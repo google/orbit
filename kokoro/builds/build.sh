@@ -52,36 +52,27 @@ if [ -n "$1" ]; then
     
     set +e # This is allowed to fail when deleting
     if [ "${BUILD_TYPE}" == "presubmit" ]; then
-      # In the presubmit case we only spare the test-results and this script.
+      # In the presubmit case we only spare the testresults (under build/) and this
+      # script (well, everything under kokoro).
       echo "Cleanup for presubmit."
-      find "$MOUNT_POINT" -depth -mindepth 1 | \
-        grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'testresults/' | \
-        while read file; do
-          if [[ -d $file ]]; then
-            # That might give an error message when the directory is not empty.
-            # That's okay.
-            rmdir --ignore-fail-on-non-empty "$file"
-          elif [[ -e $file ]]; then
-            rm "$file"
-          fi
-        done
+      find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
+                            ! -path "${MOUNT_POINT}/github" \
+                            ! -path "${REPO_ROOT}" \
+                            ! -path "${REPO_ROOT}/kokoro*" \
+                            ! -path "${REPO_ROOT}/build" \
+                            ! -path "${REPO_ROOT}/build/testresults*"\
+                            -delete
       echo "Cleanup for presubmit done."
     else
-      # In the non-presubmit case we spare the whole build dir and this script.
+      # In the non-presubmit case we spare the whole build dir and this
+      # script (well, everything under kokoro).
       echo "Cleanup for non-presubmit."
-      find "$MOUNT_POINT" -depth -mindepth 1 | \
-        grep -v 'orbitprofiler/kokoro' | \
-        grep -v 'orbitprofiler/build' | \
-        while read file; do
-          if [[ -d $file ]]; then
-            # That might give an error message when the directory is not empty.
-            # That's okay.
-            rmdir --ignore-fail-on-non-empty "$file"
-          elif [[ -e $file ]]; then
-            rm "$file"
-          fi
-        done
+      find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
+                            ! -path "${MOUNT_POINT}/github" \
+                            ! -path "${REPO_ROOT}" \
+                            ! -path "${REPO_ROOT}/kokoro*" \
+                            ! -path "${REPO_ROOT}/build*"
+                            -delete
       echo "Cleanup for non-presubmit done."
     fi
   }
