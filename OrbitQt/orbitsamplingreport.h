@@ -31,6 +31,7 @@ class OrbitSamplingReport : public QWidget {
  private slots:
   void on_NextCallstackButton_clicked();
   void on_PreviousCallstackButton_clicked();
+  void OnCurrentThreadTabChanged(int current_tab_index);
 
  private:
   Ui::OrbitSamplingReport* ui;

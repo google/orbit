@@ -14,7 +14,7 @@ SamplingReport::SamplingReport(
     : post_processed_sampling_data_{std::move(post_processed_sampling_data)},
       unique_callstacks_{std::move(unique_callstacks)},
       has_summary_{has_summary} {
-  selected_address_ = 0;
+  selected_address_ = kInvalidFunctionAddress;
   selected_thread_id_ = 0;
   callstack_data_view_ = nullptr;
   selected_sorted_callstack_report_ = nullptr;
@@ -43,6 +43,11 @@ void SamplingReport::FillReport() {
 }
 
 void SamplingReport::UpdateDisplayedCallstack() {
+  if (selected_address_ == SamplingReport::kInvalidFunctionAddress) {
+    ClearReport();
+    return;
+  }
+
   selected_sorted_callstack_report_ =
       post_processed_sampling_data_.GetSortedCallstackReportFromAddress(selected_address_,
                                                                         selected_thread_id_);

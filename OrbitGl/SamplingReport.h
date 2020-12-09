@@ -35,6 +35,7 @@ class SamplingReport {
   [[nodiscard]] bool HasSamples() const { return !unique_callstacks_.empty(); }
   [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
+  static const uint64_t kInvalidFunctionAddress = std::numeric_limits<uint64_t>::max();
 
  protected:
   void FillReport();
