@@ -599,7 +599,7 @@ def _ReadFile(filename, fileinfo):
       # FileInfo.
       return content.decode(fileinfo.encoding).splitlines(True)
   except (IOError, OSError) as why:
-    print("Skipping '%s': %s" % (filename, why))
+    print("Skipping '%s': %s" % (filename, why), file=sys.stderr)
   return None
 
 
@@ -612,19 +612,15 @@ def _WriteFile(filename, fileinfo, file_lines):
       content = content.encode(fileinfo.encoding)
       f.write(content)
   except (IOError, OSError) as why:
-    print("Error writing '%s': %s" % (filename, why))
+    print("Error writing '%s': %s" % (filename, why), file=sys.stderr)
 
 
-def PrintFileDiff(old_file_contents, new_file_contents):
+def PrintFileDiff(old_file_contents, new_file_contents, filename):
   """Print a unified diff between files, specified as lists of lines."""
-  diff = difflib.unified_diff(old_file_contents, new_file_contents)
-  # skip the '--- <filename>/+++ <filename>' lines at the start
-  try:
-    next(diff)
-    next(diff)
-    print('\n'.join(l.rstrip() for l in diff))
-  except StopIteration:
-    pass
+  diff = difflib.unified_diff(old_file_contents, new_file_contents,
+                              fromfile=os.path.join('a', filename),
+                              tofile=os.path.join('b', filename))
+  sys.stdout.writelines(diff)
 
 
 def _MarkHeaderGuardIfPresent(file_lines):
@@ -2231,23 +2227,26 @@ def FixManyFiles(iwyu_records, flags):
       if not file_contents:
         continue
 
-      print(">>> Fixing #includes in '%s'" % iwyu_record.filename)
+      print(">>> Fixing #includes in '%s'" % iwyu_record.filename, file=sys.stderr)
       old_lines, fixed_lines = FixOneFile(iwyu_record, file_contents, flags, fileinfo)
       if old_lines == fixed_lines:
-        print("No changes in file %s" % iwyu_record.filename)
+        print("No changes in file %s" % iwyu_record.filename, file=sys.stderr)
         continue
 
       if flags.dry_run:
-        PrintFileDiff(old_lines, fixed_lines)
+        PrintFileDiff(old_lines, fixed_lines, os.path.relpath(iwyu_record.filename, start=flags.basedir if flags.basedir else os.curdir))
       else:
         _WriteFile(iwyu_record.filename, fileinfo, fixed_lines)
 
       files_fixed += 1
     except FixIncludesError as why:
-      print('ERROR: %s - skipping file %s' % (why, iwyu_record.filename))
+      print('ERROR: %s - skipping file %s' % (why, iwyu_record.filename), file=sys.stderr)
 
-  print('IWYU edited %d files on your behalf.\n' % files_fixed)
-  return files_fixed
+  print('IWYU edited %d files on your behalf.\n' % files_fixed, file=sys.stderr)
+
+  # In case of a dry_run we return 0 to indicate success, otherwise we
+  # return the number of modified files as our return code.
+  return files_fixed if not flags.dry_run else 0
 
 
 def ProcessIWYUOutput(f, files_to_process, flags, cwd):
@@ -2285,19 +2284,19 @@ def ProcessIWYUOutput(f, files_to_process, flags, cwd):
       if not iwyu_record:
         break
     except FixIncludesError as why:
-      print('ERROR: %s' % why)
+      print('ERROR: %s' % why, file=sys.stderr)
       continue
     filename = NormalizeFilePath(flags.basedir, iwyu_record.filename)
     if files_to_process is not None and filename not in files_to_process:
-      print('(skipping %s: not listed on commandline)' % filename)
+      print('(skipping %s: not listed on commandline)' % filename, file=sys.stderr)
       continue
     if flags.ignore_re and re.search(flags.ignore_re, filename):
       print('(skipping %s: it matches --ignore_re, which is %s)' % (
-          filename, flags.ignore_re))
+          filename, flags.ignore_re), file=sys.stderr)
       continue
     if flags.only_re and not re.search(flags.only_re, filename):
       print('(skipping %s: it does not match --only_re, which is %s)' % (
-          filename, flags.only_re))
+          filename, flags.only_re), file=sys.stderr)
       continue
 
     if filename in iwyu_output_records:
@@ -2311,7 +2310,7 @@ def ProcessIWYUOutput(f, files_to_process, flags, cwd):
   # file, but not another, and we need to have merged them above.)
   for filename in iwyu_output_records:
     if not iwyu_output_records[filename].HasContentfulChanges():
-      print('(skipping %s: iwyu reports no contentful changes)' % filename)
+      print('(skipping %s: iwyu reports no contentful changes)' % filename, file=sys.stderr)
       # Mark that we're skipping this file by setting the record to None
       iwyu_output_records[filename] = None
 
