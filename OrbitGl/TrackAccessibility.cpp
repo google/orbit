@@ -10,7 +10,7 @@
 
 namespace orbit_gl {
 
-const GlA11yControlInterface* TrackContentAccessibility::AccessibleParent() const {
+const GlAccessibleInterface* TrackContentAccessibility::AccessibleParent() const {
   return track_->AccessibilityInterface();
 }
 
@@ -32,7 +32,7 @@ A11yState TrackContentAccessibility::AccessibleState() const {
   return result;
 }
 
-const GlA11yControlInterface* TrackTabAccessibility::AccessibleParent() const {
+const GlAccessibleInterface* TrackTabAccessibility::AccessibleParent() const {
   return track_->AccessibilityInterface();
 }
 
@@ -55,7 +55,7 @@ A11yState TrackTabAccessibility::AccessibleState() const {
   return result;
 }
 
-const GlA11yControlInterface* TrackAccessibility::AccessibleParent() const {
+const GlAccessibleInterface* TrackAccessibility::AccessibleParent() const {
   CHECK(track_ != nullptr);
   return track_->GetTimeGraph();
 }

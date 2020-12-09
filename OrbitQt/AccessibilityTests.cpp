@@ -12,18 +12,18 @@
 
 namespace orbit_qt_tests {
 
-using orbit_gl::GlA11yControlInterface, orbit_gl::A11yRole, orbit_gl::A11yRect, orbit_gl::A11yState;
+using orbit_gl::GlAccessibleInterface, orbit_gl::A11yRole, orbit_gl::A11yRect, orbit_gl::A11yState;
 using orbit_qt::A11yAdapter;
 
-class TestA11yImpl : public GlA11yControlInterface {
+class TestA11yImpl : public GlAccessibleInterface {
  public:
   TestA11yImpl(TestA11yImpl* parent) : parent_(parent) {}
   [[nodiscard]] int AccessibleChildCount() const override { return children_.size(); }
-  [[nodiscard]] GlA11yControlInterface* AccessibleChild(int index) const override {
+  [[nodiscard]] GlAccessibleInterface* AccessibleChild(int index) const override {
     return children_[index].get();
   }
 
-  [[nodiscard]] GlA11yControlInterface* AccessibleParent() const { return parent_; }
+  [[nodiscard]] GlAccessibleInterface* AccessibleParent() const { return parent_; }
   [[nodiscard]] A11yRole AccessibleRole() const { return A11yRole::Grouping; }
   [[nodiscard]] A11yState AccessibleState() const { return A11yState(); }
 

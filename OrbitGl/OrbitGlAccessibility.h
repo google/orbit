@@ -196,11 +196,11 @@ struct A11yState {
   A11yState() { memset(this, 0, sizeof(A11yState)); }
 };
 
-class GlA11yControlInterface {
+class GlAccessibleInterface {
  public:
   [[nodiscard]] virtual int AccessibleChildCount() const = 0;
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleChild(int index) const = 0;
-  [[nodiscard]] virtual const GlA11yControlInterface* AccessibleParent() const = 0;
+  [[nodiscard]] virtual const GlAccessibleInterface* AccessibleChild(int index) const = 0;
+  [[nodiscard]] virtual const GlAccessibleInterface* AccessibleParent() const = 0;
 
   [[nodiscard]] virtual std::string AccessibleName() const = 0;
   [[nodiscard]] virtual A11yRole AccessibleRole() const = 0;
@@ -208,9 +208,9 @@ class GlA11yControlInterface {
   [[nodiscard]] virtual A11yState AccessibleState() const = 0;
 };
 
-class GlA11yWidgetBridge : public GlA11yControlInterface {
+class GlA11yWidgetBridge : public GlAccessibleInterface {
  public:
-  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override { return nullptr; }
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override { return nullptr; }
 
   [[nodiscard]] std::string AccessibleName() const override { return ""; }
   [[nodiscard]] A11yRole AccessibleRole() const override { return A11yRole::Grouping; }

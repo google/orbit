@@ -33,7 +33,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
-class TimeGraph : public orbit_gl::GlA11yControlInterface {
+class TimeGraph : public orbit_gl::GlAccessibleInterface {
  public:
   explicit TimeGraph(GlCanvas* canvas, uint32_t font_size);
   ~TimeGraph();
@@ -180,8 +180,8 @@ class TimeGraph : public orbit_gl::GlA11yControlInterface {
 
   // Accessibility
   [[nodiscard]] int AccessibleChildCount() const override;
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override;
-  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleChild(int) const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override { return "TimeGraph"; }
   [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {

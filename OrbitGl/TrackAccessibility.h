@@ -11,15 +11,13 @@ class Track;
 
 namespace orbit_gl {
 
-class TrackContentAccessibility : public GlA11yControlInterface {
+class TrackContentAccessibility : public GlAccessibleInterface {
  public:
   TrackContentAccessibility(Track* track) : track_(track){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override {
-    return nullptr;
-  }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleChild(int) const override { return nullptr; }
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
   [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
@@ -32,15 +30,13 @@ class TrackContentAccessibility : public GlA11yControlInterface {
   Track* track_;
 };
 
-class TrackTabAccessibility : public GlA11yControlInterface {
+class TrackTabAccessibility : public GlAccessibleInterface {
  public:
   TrackTabAccessibility(Track* track) : track_(track){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int) const override {
-    return nullptr;
-  }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleChild(int) const override { return nullptr; }
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
   [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
@@ -53,19 +49,19 @@ class TrackTabAccessibility : public GlA11yControlInterface {
   Track* track_;
 };
 
-class TrackAccessibility : public GlA11yControlInterface {
+class TrackAccessibility : public GlAccessibleInterface {
  public:
   TrackAccessibility(Track* track) : track_(track), content_(track_), tab_(track_){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 2; }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleChild(int index) const override {
+  [[nodiscard]] const GlAccessibleInterface* AccessibleChild(int index) const override {
     if (index == 0) {
       return &tab_;
     } else {
       return &content_;
     }
   }
-  [[nodiscard]] const GlA11yControlInterface* AccessibleParent() const override;
+  [[nodiscard]] const GlAccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
   [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {

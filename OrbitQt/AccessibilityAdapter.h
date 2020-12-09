@@ -24,7 +24,7 @@ class A11yAdapter : public QAccessibleInterface {
   A11yAdapter(A11yAdapter& rhs) = delete;
   A11yAdapter(A11yAdapter&& rhs) = delete;
 
-  static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlA11yControlInterface* iface);
+  static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlAccessibleInterface* iface);
 
   // check for valid pointers
   bool isValid() const override {
@@ -60,18 +60,18 @@ class A11yAdapter : public QAccessibleInterface {
     return *reinterpret_cast<QAccessible::State*>(&info_->AccessibleState());
   }
 
-  static void AddBridge(const orbit_gl::GlA11yControlInterface* gl_control,
+  static void AddBridge(const orbit_gl::GlAccessibleInterface* gl_control,
                         QAccessibleInterface* qt_control) {
     s_adapter_map_.insert(std::make_pair(gl_control, qt_control));
   }
 
  private:
   mutable QObject dummy_;
-  A11yAdapter(const orbit_gl::GlA11yControlInterface* info) : info_(info){};
+  A11yAdapter(const orbit_gl::GlAccessibleInterface* info) : info_(info){};
 
-  const orbit_gl::GlA11yControlInterface* info_ = nullptr;
+  const orbit_gl::GlAccessibleInterface* info_ = nullptr;
 
-  static absl::flat_hash_map<const orbit_gl::GlA11yControlInterface*, QAccessibleInterface*>
+  static absl::flat_hash_map<const orbit_gl::GlAccessibleInterface*, QAccessibleInterface*>
       s_adapter_map_;
   static absl::flat_hash_set<A11yAdapter*> s_owned_adapters_;
 };

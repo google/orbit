@@ -4,14 +4,14 @@
 
 namespace orbit_qt {
 
-absl::flat_hash_map<const orbit_gl::GlA11yControlInterface*, QAccessibleInterface*>
+absl::flat_hash_map<const orbit_gl::GlAccessibleInterface*, QAccessibleInterface*>
     A11yAdapter::s_adapter_map_;
 absl::flat_hash_set<A11yAdapter*> A11yAdapter::s_owned_adapters_;
 
 //================ A11yAdapter ==================
 
 QAccessibleInterface* A11yAdapter::GetOrCreateAdapter(
-    const orbit_gl::GlA11yControlInterface* iface) {
+    const orbit_gl::GlAccessibleInterface* iface) {
   if (iface == nullptr) {
     return nullptr;
   }
@@ -54,7 +54,7 @@ QAccessibleInterface* A11yAdapter::childAt(int x, int y) const {
 
 QRect A11yAdapter::rect() const {
   using orbit_gl::A11yRect;
-  using orbit_gl::GlA11yControlInterface;
+  using orbit_gl::GlAccessibleInterface;
 
   A11yRect rect = info_->AccessibleLocalRect();
   if (parent() == nullptr) {

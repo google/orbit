@@ -32,7 +32,7 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-using orbit_gl::GlA11yControlInterface;
+using orbit_gl::GlAccessibleInterface;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
@@ -1279,8 +1279,8 @@ orbit_gl::A11yState TimeGraph::AccessibleState() const {
 
 int TimeGraph::AccessibleChildCount() const { return sorted_filtered_tracks_.size(); }
 
-const GlA11yControlInterface* TimeGraph::AccessibleChild(int index) const {
+const GlAccessibleInterface* TimeGraph::AccessibleChild(int index) const {
   return sorted_filtered_tracks_[index]->AccessibilityInterface();
 }
 
-const GlA11yControlInterface* TimeGraph::AccessibleParent() const { return canvas_; }
+const GlAccessibleInterface* TimeGraph::AccessibleParent() const { return canvas_; }

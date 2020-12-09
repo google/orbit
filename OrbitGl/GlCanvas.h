@@ -119,7 +119,7 @@ class GlCanvas : public orbit_gl::GlA11yWidgetBridge {
 
   // Accessibility - providing default implementations, overridden in CaptureWindow
   [[nodiscard]] int AccessibleChildCount() const override;
-  [[nodiscard]] const orbit_gl::GlA11yControlInterface* AccessibleChild(int index) const override;
+  [[nodiscard]] const orbit_gl::GlAccessibleInterface* AccessibleChild(int index) const override;
 
   static float kZValueSlider;
   static float kZValueSliderBg;
