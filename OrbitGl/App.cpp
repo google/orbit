@@ -541,7 +541,8 @@ void OrbitApp::MainTick() {
   GMainTimer.Restart();
 
   if (DoZoom && HasCaptureData()) {
-    GCurrentTimeGraph->SortTracks();
+    // TODO (b/176077097): TrackManager has to manage sorting by their own.
+    GCurrentTimeGraph->GetTrackManager()->SortTracks();
     capture_window_->ZoomAll();
     NeedsRedraw();
     DoZoom = false;
@@ -768,7 +769,8 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
-  const auto& key_to_string_map = GCurrentTimeGraph->GetStringManager()->GetKeyToStringMap();
+  const auto& key_to_string_map =
+      GCurrentTimeGraph->GetTrackManager()->GetStringManager()->GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllSerializableTimerChains();

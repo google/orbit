@@ -18,7 +18,7 @@ class AsyncTrack final : public TimerTrack {
 
   [[nodiscard]] Type GetType() const override { return kAsyncTrack; };
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void UpdateBoxHeight() override;
 

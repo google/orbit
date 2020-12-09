@@ -25,8 +25,8 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
 
 class GpuTrack : public TimerTrack {
  public:
-  explicit GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
-                    uint64_t timeline_hash, OrbitApp* app);
+  explicit GpuTrack(TimeGraph* time_graph, StringManager* string_manager, uint64_t timeline_hash,
+                    OrbitApp* app);
   ~GpuTrack() override = default;
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] Type GetType() const override { return kGpuTrack; }
@@ -48,7 +48,7 @@ class GpuTrack : public TimerTrack {
 
  private:
   uint64_t timeline_hash_;
-  std::shared_ptr<StringManager> string_manager_;
+  StringManager* string_manager_;
   [[nodiscard]] std::string GetSwQueueTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetHwQueueTooltip(

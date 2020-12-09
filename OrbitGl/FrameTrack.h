@@ -14,6 +14,7 @@ class FrameTrack : public TimerTrack {
   explicit FrameTrack(TimeGraph* time_graph, const orbit_client_protos::FunctionInfo& function,
                       OrbitApp* app);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }
+  [[nodiscard]] uint64_t GetFunctionAddress() const { return function_.address(); }
   [[nodiscard]] bool IsCollapsable() const override { return GetMaximumScaleFactor() > 0.f; }
 
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
@@ -32,7 +33,7 @@ class FrameTrack : public TimerTrack {
 
   void UpdateBoxHeight() override;
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
 
  protected:
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,

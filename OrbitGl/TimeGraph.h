@@ -29,6 +29,7 @@
 #include "TimeGraphLayout.h"
 #include "Timer.h"
 #include "TimerChain.h"
+#include "TrackManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -46,10 +47,6 @@ class TimeGraph {
 
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
-  void SortTracks();
-  void UpdateFilteredTrackList();
-  void UpdateMovingTrackSorting();
-  void UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void SelectEvents(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
@@ -57,8 +54,10 @@ class TimeGraph {
                     const orbit_client_protos::FunctionInfo* function);
   void UpdateMaxTimeStamp(uint64_t time);
 
+  // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
   void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
+  [[nodiscard]] TrackManager* const GetTrackManager() const { return track_manager_.get(); }
 
   [[nodiscard]] float GetThreadTotalHeight() const;
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
@@ -117,7 +116,6 @@ class TimeGraph {
   void SetTextRenderer(TextRenderer* text_renderer) { text_renderer_ = text_renderer; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
-  [[nodiscard]] StringManager* GetStringManager() { return string_manager_.get(); }
   void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
@@ -182,19 +180,6 @@ class TimeGraph {
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
  protected:
-  std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
-  std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
-  std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
-  GraphTrack* GetOrCreateGraphTrack(const std::string& name);
-  AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
-  std::shared_ptr<FrameTrack> GetOrCreateFrameTrack(
-      const orbit_client_protos::FunctionInfo& function);
-
-  void AddTrack(std::shared_ptr<Track> track);
-  int FindMovingTrackIndex();
-
-  [[nodiscard]] std::vector<int32_t> GetSortedThreadIds();
-
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
                                  const orbit_client_protos::TimerInfo& timer_info);
   void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);
@@ -221,11 +206,9 @@ class TimeGraph {
   uint64_t capture_min_timestamp_ = 0;
   uint64_t capture_max_timestamp_ = 0;
   uint64_t current_mouse_time_ns_ = 0;
-  std::map<int32_t, uint32_t> event_count_;
   double time_window_us_ = 0;
   float world_start_x_ = 0;
   float world_width_ = 0;
-  float min_y_ = 0;
   float right_margin_ = 0;
 
   TimeGraphLayout layout_;
@@ -245,31 +228,15 @@ class TimeGraph {
   bool draw_text_ = true;
 
   Batcher batcher_;
-  Timer last_thread_reorder_;
 
   // TODO(b/174655559): Use absl's mutex here.
   mutable std::recursive_mutex mutex_;
 
-  std::vector<std::shared_ptr<Track>> tracks_;
-  std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
-  std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
-  std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
-  // Mapping from timeline hash to GPU tracks.
-  std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
-  // Mapping from function address to frame tracks.
-  std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
-
-  std::vector<std::shared_ptr<Track>> sorted_tracks_;
-  std::vector<std::shared_ptr<Track>> sorted_filtered_tracks_;
-  std::string thread_filter_;
-
-  std::shared_ptr<SchedulerTrack> scheduler_track_;
-  std::shared_ptr<ThreadTrack> tracepoints_system_wide_track_;
+  std::unique_ptr<TrackManager> track_manager_;
 
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;
 
-  std::shared_ptr<StringManager> string_manager_;
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
   CaptureData* capture_data_ = nullptr;

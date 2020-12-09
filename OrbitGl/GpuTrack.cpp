@@ -38,8 +38,8 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
-                   uint64_t timeline_hash, OrbitApp* app)
+GpuTrack::GpuTrack(TimeGraph* time_graph, StringManager* string_manager, uint64_t timeline_hash,
+                   OrbitApp* app)
     : TimerTrack(time_graph, app) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
@@ -129,8 +129,7 @@ void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, 
     CHECK(timer_info.type() == TimerInfo::kGpuActivity);
 
     std::string text = absl::StrFormat(
-        "%s  %s", time_graph_->GetStringManager()->Get(timer_info.user_data_key()).value_or(""),
-        time.c_str());
+        "%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""), time.c_str());
     text_box->SetText(text);
   }
 
