@@ -49,7 +49,7 @@ std::string ProcessesDataView::GetToolTip(int row, int /*column*/) {
 
 #define ORBIT_PROC_SORT(Member)                                                      \
   [&](int a, int b) {                                                                \
-    return orbit_utils::Compare(processes[a].Member, processes[b].Member, ascending); \
+    return orbit_core::Compare(processes[a].Member, processes[b].Member, ascending); \
   }
 
 void ProcessesDataView::DoSort() {

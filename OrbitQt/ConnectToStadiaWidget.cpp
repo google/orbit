@@ -371,10 +371,11 @@ void ConnectToStadiaWidget::OnInstancesLoaded(
       continue;
     }
 
-    ggp_client_->GetSshInfoAsync(instance, [this, instance_id = std::move(instance_id)](
+    ggp_client_->GetSshInfoAsync(instance,
+                                 [this, instance_id = std::move(instance_id)](
                                      outcome::result<orbit_ggp::SshInfo> ssh_info_result) {
-      OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
-    });
+                                   OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
+                                 });
   }
 }
 

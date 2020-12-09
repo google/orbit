@@ -14,7 +14,7 @@
   "(@BUILD_OS_PLATFORM@)"
 #define OrbitCommitHashStr "@COMMIT_HASH@"
 
-namespace OrbitCore {
+namespace orbit_core {
 std::string GetVersion() { return OrbitVersionStr; }
 std::string GetCompiler() { return OrbitCompilerStr; }
 std::string GetBuildTimestamp() { return OrbitBuildTimestampStr; }
@@ -34,4 +34,4 @@ std::string GetBuildReport() {
 
   return result;
 }
-}  // namespace OrbitCore
+}  // namespace orbit_core

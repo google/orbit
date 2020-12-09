@@ -18,7 +18,7 @@
 
 namespace orbit_elf_utils {
 
-using ElfUtils::ElfFile;
+using orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 
 static ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {

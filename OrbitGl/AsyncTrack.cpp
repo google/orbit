@@ -33,7 +33,8 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
       capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
                    : nullptr;
   CHECK(func || timer_info.type() == TimerInfo::kIntrospection);
-  std::string module_name = func != nullptr ? function_utils::GetLoadedModuleName(*func) : "unknown";
+  std::string module_name =
+      func != nullptr ? function_utils::GetLoadedModuleName(*func) : "unknown";
   const uint64_t event_id = event.data;
   std::string function_name = manual_inst_manager->GetString(event_id);
 

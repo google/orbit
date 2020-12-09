@@ -875,7 +875,7 @@ std::vector<int32_t>
 TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions first
   std::vector<int32_t> sorted_thread_ids;
   std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
-      orbit_utils::ReverseValueSort(thread_count_map_);
+      orbit_core::ReverseValueSort(thread_count_map_);
 
   for (auto& pair : sorted_threads) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
@@ -887,7 +887,7 @@ TimeGraph::GetSortedThreadIds() {  // Show threads with instrumented functions f
 
   // Then show threads sorted by number of events
   std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
-      orbit_utils::ReverseValueSort(event_count_);
+      orbit_core::ReverseValueSort(event_count_);
   for (auto& pair : sorted_by_events) {
     // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
     // separately.

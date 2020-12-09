@@ -18,6 +18,7 @@
 #include "google/protobuf/message.h"
 #include "process.pb.h"
 
+using orbit_client_data::ModuleManager;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureHeader;
@@ -25,7 +26,6 @@ using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_client_data::ModuleManager;
 
 namespace capture_deserializer {
 

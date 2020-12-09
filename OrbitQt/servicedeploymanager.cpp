@@ -48,7 +48,7 @@ template <typename Func>
 }
 
 [[nodiscard]] orbit_ssh_qt::ScopedConnection ConnectCancelHandler(EventLoop* loop,
-                                                                ServiceDeployManager* sdm) {
+                                                                  ServiceDeployManager* sdm) {
   return orbit_ssh_qt::ScopedConnection{QObject::connect(
       sdm, &ServiceDeployManager::cancelRequested, loop,
       [loop]() { loop->error(make_error_code(Error::kUserCanceledServiceDeployment)); })};
@@ -146,7 +146,8 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   orbit_ssh_qt::Task check_if_installed_task{&session_.value(), command};
 
   EventLoop loop{};
-  QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::finished, &loop, &EventLoop::exit);
+  QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::finished, &loop,
+                   &EventLoop::exit);
 
   auto error_handler =
       ConnectErrorHandler(&loop, &check_if_installed_task, &orbit_ssh_qt::Task::errorOccurred);
@@ -189,7 +190,8 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
   return outcome::success(tunnel->value().GetListenPort());
 }
 
-outcome::result<std::unique_ptr<orbit_ssh_qt::SftpChannel>> ServiceDeployManager::StartSftpChannel() {
+outcome::result<std::unique_ptr<orbit_ssh_qt::SftpChannel>>
+ServiceDeployManager::StartSftpChannel() {
   CHECK(QThread::currentThread() == thread());
   auto sftp_channel = std::make_unique<orbit_ssh_qt::SftpChannel>(&session_.value());
 
@@ -218,8 +220,8 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
   auto quit_handler =
       ConnectQuitHandler(&loop, &operation, &orbit_ssh_qt::SftpCopyToRemoteOperation::stopped);
 
-  auto error_handler =
-      ConnectErrorHandler(&loop, &operation, &orbit_ssh_qt::SftpCopyToRemoteOperation::errorOccurred);
+  auto error_handler = ConnectErrorHandler(&loop, &operation,
+                                           &orbit_ssh_qt::SftpCopyToRemoteOperation::errorOccurred);
 
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
@@ -230,7 +232,8 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::StopSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel) {
+outcome::result<void> ServiceDeployManager::StopSftpChannel(
+    orbit_ssh_qt::SftpChannel* sftp_channel) {
   CHECK(QThread::currentThread() == thread());
 
   EventLoop loop{};
@@ -295,8 +298,8 @@ ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocalImpl(std::string_view 
   EventLoop loop{};
   auto quit_handler =
       ConnectQuitHandler(&loop, &operation, &orbit_ssh_qt::SftpCopyToLocalOperation::stopped);
-  auto error_handler =
-      ConnectErrorHandler(&loop, &operation, &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred);
+  auto error_handler = ConnectErrorHandler(&loop, &operation,
+                                           &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
   operation.CopyFileToLocal(source, destination);

@@ -29,7 +29,7 @@ void IntrospectionWindow::StartIntrospection() {
   draw_help_ = false;
   time_graph_.Clear();
   introspection_listener_ =
-      std::make_unique<orbit_tracing::Listener>([this](const orbit_tracing::Scope& scope) {
+      std::make_unique<orbit_base::TracingListener>([this](const orbit_base::TracingScope& scope) {
         TimerInfo timer_info;
         timer_info.set_thread_id(scope.tid);
         timer_info.set_start(scope.begin);

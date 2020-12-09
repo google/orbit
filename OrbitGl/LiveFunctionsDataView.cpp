@@ -85,7 +85,7 @@ void LiveFunctionsDataView::OnSelect(int row) {
 
 #define ORBIT_FUNC_SORT(Member)                                                      \
   [&](int a, int b) {                                                                \
-    return orbit_utils::Compare(functions[a].Member, functions[b].Member, ascending); \
+    return orbit_core::Compare(functions[a].Member, functions[b].Member, ascending); \
   }
 #define ORBIT_STAT_SORT(Member)                                              \
   [&](int a, int b) {                                                        \
@@ -93,11 +93,11 @@ void LiveFunctionsDataView::OnSelect(int row) {
         GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(functions[a]); \
     const FunctionStats& stats_b =                                           \
         GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(functions[b]); \
-    return orbit_utils::Compare(stats_a.Member, stats_b.Member, ascending);   \
+    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending);   \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
   [&](int a, int b) {                                                              \
-    return orbit_utils::Compare(Func(functions[a]), Func(functions[b]), ascending); \
+    return orbit_core::Compare(Func(functions[a]), Func(functions[b]), ascending); \
   }
 
 void LiveFunctionsDataView::DoSort() {

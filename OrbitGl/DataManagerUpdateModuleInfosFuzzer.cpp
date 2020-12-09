@@ -27,10 +27,10 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 
+using orbit_client_data::ModuleManager;
 using orbit_grpc_protos::GetModuleListResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_client_data::ModuleManager;
 
 DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   const auto range = module_list.modules();

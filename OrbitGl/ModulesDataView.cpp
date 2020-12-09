@@ -48,12 +48,12 @@ std::string ModulesDataView::GetValue(int row, int col) {
 
 #define ORBIT_PROC_SORT(Member)                                                      \
   [&](int a, int b) {                                                                \
-    return orbit_utils::Compare(modules_[a]->Member, modules_[b]->Member, ascending); \
+    return orbit_core::Compare(modules_[a]->Member, modules_[b]->Member, ascending); \
   }
 
 #define ORBIT_MODULE_SPACE_SORT(Member)                                            \
   [&](int a, int b) {                                                              \
-    return orbit_utils::Compare(module_memory_.at(modules_[a])->Member,             \
+    return orbit_core::Compare(module_memory_.at(modules_[a])->Member,             \
                                module_memory_.at(modules_[b])->Member, ascending); \
   }
 

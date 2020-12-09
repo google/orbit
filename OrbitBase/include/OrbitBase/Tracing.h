@@ -16,11 +16,11 @@
 
 #define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 
-namespace orbit_tracing {
+namespace orbit_base {
 
-struct Scope {
-  Scope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
-        orbit::Color color = orbit::Color::kAuto);
+struct TracingScope {
+  TracingScope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
+               orbit::Color color = orbit::Color::kAuto);
   uint64_t begin = 0;
   uint64_t end = 0;
   uint32_t depth = 0;
@@ -28,22 +28,22 @@ struct Scope {
   orbit_api::EncodedEvent encoded_event;
 };
 
-using TimerCallback = std::function<void(const Scope& scope)>;
+using TracingTimerCallback = std::function<void(const TracingScope& scope)>;
 
-class Listener {
+class TracingListener {
  public:
-  explicit Listener(TimerCallback callback);
-  ~Listener();
+  explicit TracingListener(TracingTimerCallback callback);
+  ~TracingListener();
 
-  static void DeferScopeProcessing(const Scope& scope);
+  static void DeferScopeProcessing(const TracingScope& scope);
   [[nodiscard]] inline static bool IsActive() { return active_; }
 
  private:
-  TimerCallback user_callback_ = nullptr;
+  TracingTimerCallback user_callback_ = nullptr;
   std::unique_ptr<ThreadPool> thread_pool_ = {};
   inline static bool active_ = false;
 };
 
-}  // namespace orbit_tracing
+}  // namespace orbit_base
 
 #endif  // ORBIT_BASE_TRACING_H_

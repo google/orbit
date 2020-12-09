@@ -12,9 +12,9 @@
 #include "OrbitBase/Tracing.h"
 #include "absl/container/flat_hash_map.h"
 
-using orbit_tracing::Listener;
-using orbit_tracing::Scope;
-using orbit_tracing::TimerCallback;
+using orbit_base::TracingListener;
+using orbit_base::TracingScope;
+using orbit_base::TracingTimerCallback;
 
 void TestScopes() {
   ORBIT_SCOPE("TEST_ORBIT_SCOPE_1");
@@ -28,9 +28,9 @@ TEST(Tracing, Scopes) {
   constexpr size_t kNumThreads = 10;
   constexpr size_t kNumExpectedScopesPerThread = 4;
 
-  absl::flat_hash_map<pid_t, std::vector<Scope>> scopes_by_thread_id;
+  absl::flat_hash_map<pid_t, std::vector<TracingScope>> scopes_by_thread_id;
   {
-    Listener tracing_listener([&scopes_by_thread_id](const Scope& scope) {
+    TracingListener tracing_listener([&scopes_by_thread_id](const TracingScope& scope) {
       // Check that callback is called from a single thread.
       static pid_t callback_thread_id = GetCurrentThreadId();
       EXPECT_EQ(GetCurrentThreadId(), callback_thread_id);
