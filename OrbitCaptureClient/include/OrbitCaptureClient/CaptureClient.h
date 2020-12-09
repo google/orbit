@@ -54,7 +54,7 @@ class CaptureClient {
     return state_ != State::kStopped;
   }
 
-  bool TryAbortCapture();
+  bool AbortCaptureAndWait(int64_t max_wait_ms);
 
  private:
   void Capture(ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
@@ -69,6 +69,7 @@ class CaptureClient {
   std::unique_ptr<grpc::ClientReaderWriter<orbit_grpc_protos::CaptureRequest,
                                            orbit_grpc_protos::CaptureResponse>>
       reader_writer_;
+  absl::Mutex context_and_stream_mutex_;
 
   CaptureListener* capture_listener_ = nullptr;
 
