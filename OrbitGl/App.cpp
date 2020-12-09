@@ -850,7 +850,8 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::AbortCapture() {
-  if (!capture_client_->TryAbortCapture()) {
+  static constexpr int64_t kMaxWaitForAbortCaptureMs = 2000;
+  if (!capture_client_->AbortCaptureAndWait(kMaxWaitForAbortCaptureMs)) {
     return;
   }
 

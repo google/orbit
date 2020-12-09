@@ -24,7 +24,7 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::TracepointInfo;
 
-static CaptureOptions::InstrumentedFunction::FunctionType IntrumentedFunctionTypeFromOrbitType(
+static CaptureOptions::InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
     FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
     case FunctionInfo::kOrbitTimerStart:
@@ -76,13 +76,15 @@ void CaptureClient::Capture(ProcessData&& process,
                             UserDefinedCaptureData user_defined_capture_data,
                             bool enable_introspection) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(client_context_ == nullptr);
-  CHECK(reader_writer_ == nullptr);
-
   writes_done_failed_ = false;
   try_abort_ = false;
-  client_context_ = std::make_unique<grpc::ClientContext>();
-  reader_writer_ = capture_service_->Capture(client_context_.get());
+  {
+    absl::WriterMutexLock lock{&context_and_stream_mutex_};
+    CHECK(client_context_ == nullptr);
+    CHECK(reader_writer_ == nullptr);
+    client_context_ = std::make_unique<grpc::ClientContext>();
+    reader_writer_ = capture_service_->Capture(client_context_.get());
+  }
 
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
@@ -111,7 +113,7 @@ void CaptureClient::Capture(ProcessData&& process,
     instrumented_function->set_file_offset(function_utils::Offset(function, *module));
     instrumented_function->set_absolute_address(absolute_address);
     instrumented_function->set_function_type(
-        IntrumentedFunctionTypeFromOrbitType(function.orbit_type()));
+        InstrumentedFunctionTypeFromOrbitType(function.orbit_type()));
   }
 
   for (const auto& tracepoint : selected_tracepoints) {
@@ -122,9 +124,16 @@ void CaptureClient::Capture(ProcessData&& process,
 
   capture_options->set_enable_introspection(enable_introspection);
 
-  if (!reader_writer_->Write(request)) {
+  bool request_write_succeeded;
+  {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+    request_write_succeeded = reader_writer_->Write(request);
+    if (!request_write_succeeded) {
+      reader_writer_->WritesDone();
+    }
+  }
+  if (!request_write_succeeded) {
     ERROR("Sending CaptureRequest on Capture's gRPC stream");
-    reader_writer_->WritesDone();
     ErrorMessageOr<void> finish_result = FinishCapture();
     std::string error_string =
         absl::StrFormat("Error sending capture request.%s",
@@ -134,9 +143,10 @@ void CaptureClient::Capture(ProcessData&& process,
   }
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
 
-  state_mutex_.Lock();
-  state_ = State::kStarted;
-  state_mutex_.Unlock();
+  {
+    absl::MutexLock lock{&state_mutex_};
+    state_ = State::kStarted;
+  }
 
   CaptureEventProcessor event_processor(capture_listener_);
 
@@ -144,9 +154,18 @@ void CaptureClient::Capture(ProcessData&& process,
                                       std::move(selected_tracepoints),
                                       std::move(user_defined_capture_data));
 
-  CaptureResponse response;
-  while (!writes_done_failed_ && !try_abort_ && reader_writer_->Read(&response)) {
-    event_processor.ProcessEvents(response.capture_events());
+  while (!writes_done_failed_ && !try_abort_) {
+    CaptureResponse response;
+    bool read_succeeded;
+    {
+      absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+      read_succeeded = reader_writer_->Read(&response);
+    }
+    if (read_succeeded) {
+      event_processor.ProcessEvents(response.capture_events());
+    } else {
+      break;
+    }
   }
 
   ErrorMessageOr<void> finish_result = FinishCapture();
@@ -170,21 +189,28 @@ void CaptureClient::Capture(ProcessData&& process,
 }
 
 bool CaptureClient::StopCapture() {
-  absl::MutexLock lock(&state_mutex_);
-  if (state_ == State::kStarting) {
-    // Block and wait until the state is not kStarting
-    bool (*is_not_starting)(State*) = [](State* state) { return *state != State::kStarting; };
-    state_mutex_.Await(absl::Condition(is_not_starting, &state_));
+  {
+    absl::MutexLock lock(&state_mutex_);
+    if (state_ == State::kStarting) {
+      // Block and wait until the state is not kStarting
+      bool (*is_not_starting)(State*) = [](State* state) { return *state != State::kStarting; };
+      state_mutex_.Await(absl::Condition(is_not_starting, &state_));
+    }
+
+    if (state_ != State::kStarted) {
+      LOG("StopCapture ignored, because it is already stopping or stopped");
+      return false;
+    }
+    state_ = State::kStopping;
   }
 
-  if (state_ != State::kStarted) {
-    LOG("StopCapture ignored, because it is already stopping or stopped");
-    return false;
+  bool writes_done_succeeded;
+  {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+    CHECK(reader_writer_ != nullptr);
+    writes_done_succeeded = reader_writer_->WritesDone();
   }
-
-  CHECK(reader_writer_ != nullptr);
-
-  if (!reader_writer_->WritesDone()) {
+  if (!writes_done_succeeded) {
     // Normally the capture thread waits until service stops sending messages,
     // but in this case since we failed to notify the service we pull emergency
     // stop plug. Setting this flag forces capture thread to exit as soon
@@ -197,34 +223,45 @@ bool CaptureClient::StopCapture() {
     LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
   }
 
-  state_ = State::kStopping;
   return true;
 }
 
-bool CaptureClient::TryAbortCapture() {
-  absl::MutexLock lock(&state_mutex_);
-  if (state_ != State::kStarted && state_ != State::kStopping) {
-    LOG("TryAbortCapture ignored, because the capture is not started nor stopping");
-    return false;
+bool CaptureClient::AbortCaptureAndWait(int64_t max_wait_ms) {
+  {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+    if (client_context_ == nullptr) {
+      LOG("AbortCaptureAndWait ignored: no ClientContext to TryCancel");
+      return false;
+    }
+    LOG("Calling TryCancel on Capture's gRPC context: aborting the capture");
+    try_abort_ = true;
+    client_context_->TryCancel();  // reader_writer_->Read in Capture should then fail
   }
 
-  CHECK(client_context_ != nullptr);
-
-  LOG("Calling TryCancel on Capture's gRPC context: trying to abort the capture");
-  try_abort_ = true;
-  client_context_->TryCancel();  // reader_writer_->Read in Capture should then fail
+  // With this wait we want to leave at least some time for FinishCapture to be called, so that
+  // reader_writer_ and in particular client_context_ are destroyed before returning to the caller.
+  {
+    absl::MutexLock lock(&state_mutex_);
+    state_mutex_.AwaitWithTimeout(
+        absl::Condition(
+            +[](State* state) { return *state == State::kStopped; }, &state_),
+        absl::Milliseconds(max_wait_ms));
+  }
   return true;
 }
 
 ErrorMessageOr<void> CaptureClient::FinishCapture() {
   ORBIT_SCOPE_FUNCTION;
-  if (reader_writer_ == nullptr) {
-    return outcome::success();
-  }
 
-  grpc::Status status = reader_writer_->Finish();
-  reader_writer_.reset();
-  client_context_.reset();
+  grpc::Status status;
+  {
+    absl::WriterMutexLock lock{&context_and_stream_mutex_};
+    CHECK(reader_writer_ != nullptr);
+    status = reader_writer_->Finish();
+    reader_writer_.reset();
+    CHECK(client_context_ != nullptr);
+    client_context_.reset();
+  }
 
   {
     absl::MutexLock lock(&state_mutex_);
