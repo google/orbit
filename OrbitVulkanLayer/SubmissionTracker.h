@@ -73,7 +73,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // end marker. All markers (`MarkerState`s) that gets *completed* within a certain submission are
   // stored in the `QueueSubmission`.
   // Note that we also store the `SubmissionMetaInformation` as begin markers
-  // can originate in different submissions then the matching end markers. This allows us e.g. to
+  // can originate from different submissions than the matching end markers. This allows us e.g. to
   // match the markers to a specific submission tracepoint. So even though the submitted markers a
   struct SubmittedMarker {
     SubmissionMetaInformation meta_information;
@@ -88,28 +88,16 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     float alpha;
   };
 
-  // Identifies a particular debug marker region and has two purposes.
-  // 1. We have a stack of all markers of a queue, that gets updated upon a submission
-  // (VkQueueSubmit). So on a submitted "begin" marker, we create that struct and push it to the
-  // stack. On a end, we pop from that stack and if we are capturing complete the information and
-  // move it the completed markers of a `QueueSubmission`.
-  // 2. Is the list of completed markers in `QueueSubmission` that makes the marker information
-  // persistent, so that we can try to read the timestamps on a present.
+  // Identifies a particular debug marker region that has been submitted via `vkQueueSubmit`.
   // Note that we only store the state into `QueueSubmission`, if at that time we have a value for
-  // the end_info. So once it is submitted, the end_info will always be set. Beside the information
-  // about the begin/end, it also stores the text, color and the depth of the marker. If a debug
-  // marker begin was discarded because of its depth, cut_off is set to true. This allows end
-  // markers on a different submission to also throw the end marker away. Example: Max Depth = 1
-  // Submission 1: Begin("Foo"), Begin("Bar) -- For "Bar" we set cut-off to true.
-  // Submission 2: End("Bar"), End("Foo") -- We now know, that the first end needs to be thrown
-  // away.
-  struct MarkerState {
+  // the end_info. Beside the information about the begin/end, it also stores the text, color and
+  // the depth of the marker.
+  struct SubmittedMarkerSlice {
     std::optional<SubmittedMarker> begin_info;
-    std::optional<SubmittedMarker> end_info;
+    SubmittedMarker end_info;
     std::string label_name;
     Color color;
     size_t depth;
-    bool cut_off;
   };
 
   // A single submission (VkQueueSubmit) can contain multiple `SubmitInfo`s. We keep this structure.
@@ -118,12 +106,12 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   };
 
   // Wraps up all the data that needs to be persistent upon a submission (VkQueueSubmit).
-  // `completed_markers` are all the debug markers, that got completed (via "End") within this
+  // `completed_markers` are all the debug markers that got completed (via "End") within this
   // submission. Their "Begin" might still be in a different submission.
   struct QueueSubmission {
     SubmissionMetaInformation meta_information;
     std::vector<SubmitInfo> submit_infos;
-    std::vector<MarkerState> completed_markers;
+    std::vector<SubmittedMarkerSlice> completed_markers;
     uint32_t num_begin_markers = 0;
   };
 
@@ -411,7 +399,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
                                        .color = marker.color.value(),
                                        .begin_info = submitted_marker,
                                        .depth = markers.marker_stack.size(),
-                                       .cut_off = marker.cut_off};
+                                       .depth_exceeds_maximum = marker.cut_off};
               markers.marker_stack.push(std::move(marker_state));
               break;
             }
@@ -428,14 +416,19 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
               // If the begin marker was cut off, but the end marker was not (as it is in a
               // different submission), we reset the slot
-              if (marker_state.cut_off && marker.slot_index.has_value()) {
+              if (marker_state.depth_exceeds_maximum && marker.slot_index.has_value()) {
                 marker_slots_to_reset.push_back(marker.slot_index.value());
               }
 
               if (queue_submission_optional.has_value() && marker.slot_index.has_value() &&
-                  !marker_state.cut_off) {
-                marker_state.end_info = submitted_marker;
-                queue_submission_optional->completed_markers.emplace_back(std::move(marker_state));
+                  !marker_state.depth_exceeds_maximum) {
+                CHECK(submitted_marker.has_value());
+                queue_submission_optional->completed_markers.emplace_back(
+                    SubmittedMarkerSlice{.begin_info = marker_state.begin_info,
+                                         .end_info = submitted_marker.value(),
+                                         .depth = marker_state.depth,
+                                         .color = marker_state.color,
+                                         .label_name = std::move(marker_state.label_name)});
               }
 
               break;
@@ -595,6 +588,25 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     bool cut_off;
   };
 
+  // We have a stack of all markers of a queue, that gets updated upon a submission
+  // (VkQueueSubmit). So on a submitted "begin" marker, we create that struct and push it to the
+  // stack. On a end, we pop from that stack, and if we are capturing we complete the information
+  // and move it the completed markers of a `QueueSubmission`.
+  // If a debug marker begin was discarded because of its depth, `depth_exceeds_maximum` is set to
+  // true. This allows end markers on a different submission to also throw the end marker away.
+  //
+  // Example: Max Depth = 1
+  // Submission 1: Begin("Foo"), Begin("Bar) -- For "Bar" we set `depth_exceeds_maximum` to true.
+  // Submission 2: End("Bar"), End("Foo") -- We now know, that the first end needs to be thrown
+  // away.
+  struct MarkerState {
+    std::optional<SubmittedMarker> begin_info;
+    std::string label_name;
+    Color color;
+    size_t depth;
+    bool depth_exceeds_maximum;
+  };
+
   struct QueueMarkerState {
     std::stack<MarkerState> marker_stack;
   };
@@ -741,8 +753,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     submission_proto->set_num_begin_markers(completed_submission.num_begin_markers);
     for (const auto& marker_state : completed_submission.completed_markers) {
       uint64_t end_timestamp = QueryGpuTimestampNs(
-          device, query_pool, marker_state.end_info->slot_index, timestamp_period);
-      query_slots_to_reset.push_back(marker_state.end_info->slot_index);
+          device, query_pool, marker_state.end_info.slot_index, timestamp_period);
+      query_slots_to_reset.push_back(marker_state.end_info.slot_index);
 
       orbit_grpc_protos::GpuDebugMarker* marker_proto = submission_proto->add_completed_markers();
       if (vulkan_layer_producer_ != nullptr) {
