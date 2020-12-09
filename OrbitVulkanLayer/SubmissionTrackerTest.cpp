@@ -543,7 +543,8 @@ TEST_F(SubmissionTrackerTest, StopCaptureBeforeSubmissionWillResetTheSlots) {
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
 }
 
-TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsWhenNotCapturingAtPresent) {
+TEST_F(SubmissionTrackerTest,
+       CommandBufferTimestampsRecordedWhenCapturingCanBeRetrievedWhenNotCapturing) {
   ExpectTwoNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready));
