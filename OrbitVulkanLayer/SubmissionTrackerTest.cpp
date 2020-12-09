@@ -107,7 +107,8 @@ class SubmissionTrackerTest : public ::testing::Test {
   std::unique_ptr<MockVulkanLayerProducer> producer;
   SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool> tracker =
       SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool>(
-          0, &dispatch_table, &timer_query_pool, &device_manager);
+          std::numeric_limits<uint32_t>::max(), &dispatch_table, &timer_query_pool,
+          &device_manager);
 
   VkDevice device = {};
   VkCommandPool command_pool = {};
@@ -329,7 +330,7 @@ TEST(SubmissionTracker, CanBeInitialized) {
   MockTimerQueryPool timer_query_pool;
   MockDeviceManager device_manager;
   SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool> tracker(
-      0, &dispatch_table, &timer_query_pool, &device_manager);
+      std::numeric_limits<uint32_t>::max(), &dispatch_table, &timer_query_pool, &device_manager);
 }
 
 TEST(SubmissionTracker, SetVulkanLayerProducerWillCallSetListener) {
@@ -339,7 +340,7 @@ TEST(SubmissionTracker, SetVulkanLayerProducerWillCallSetListener) {
   std::unique_ptr<MockVulkanLayerProducer> producer = std::make_unique<MockVulkanLayerProducer>();
 
   SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool> tracker(
-      0, &dispatch_table, &timer_query_pool, &device_manager);
+      std::numeric_limits<uint32_t>::max(), &dispatch_table, &timer_query_pool, &device_manager);
 
   VulkanLayerProducer::CaptureStatusListener* actual_listener;
   EXPECT_CALL(*producer, SetCaptureStatusListener).Times(1).WillOnce(SaveArg<0>(&actual_listener));

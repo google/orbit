@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_VULKAN_LAYER_COMMAND_BUFFER_MANAGER_H_
-#define ORBIT_VULKAN_LAYER_COMMAND_BUFFER_MANAGER_H_
+#ifndef ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
+#define ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
 
 #include <stack>
 
@@ -109,11 +109,11 @@ struct QueueSubmission {
 
 /*
  * This class is responsible to track command buffer and debug marker timings.
- * To do so, it keeps tracks of command-buffer allocations, destruction, begins, ends as well as
+ * To do so, it keeps track of command-buffer allocations, destructions, begins, ends as well as
  * submissions.
- * On `VkBeginCommandBuffer` and `VkEndCommandBuffer` it can (if capturing) insert write timestamp
- * commands (`VkCmdWriteTimestamp`). The same is done for debug marker begins and ends. All that
- * data will be gathered together at a queue submission (`VkQueueSubmit`).
+ * I we are capturing on `VkBeginCommandBuffer` and `VkEndCommandBuffer` it will insert write
+ * timestamp commands (`VkCmdWriteTimestamp`). The same is done for debug marker begins and ends.
+ * All that data will be gathered together at a queue submission (`VkQueueSubmit`).
  *
  * Upon every `VkQueuePresentKHR` it will check if the timestamps of a certain submission are
  * already available, and if so, it will send the results over to the `VulkanLayerProducer`.
@@ -122,7 +122,8 @@ struct QueueSubmission {
  * and `DeviceManager` (to retrieve device properties).
  *
  * Thread-Safety: This class is internally synchronized (using read/write locks), and can be
- * safely accessed from different threads.
+ * safely accessed from different threads. This is needed, as in Vulkan submits and command buffer
+ * modifications can happen from multiple threads.
  */
 template <class DispatchTable, class DeviceManager, class TimerQueryPool>
 class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
@@ -139,9 +140,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     CHECK(device_manager_ != nullptr);
   }
 
-  // Sets a producer to be used to enqueue capture events and ask if we are capturing.
-  // We will also register our self as CaptureStatusListener, in order to get nofified on
-  // capture finish (OnCaptureFinished). Will reset the open query slots then.
+  // Sets a producer to be used to enqueue capture events and asks if we are capturing.
+  // We will also register ourselves as CaptureStatusListener, in order to get notified on
+  // capture finish (OnCaptureFinished). That's when we will reset the open query slots.
   void SetVulkanLayerProducer(VulkanLayerProducer* vulkan_layer_producer) {
     vulkan_layer_producer_ = vulkan_layer_producer;
     if (vulkan_layer_producer_ != nullptr) {
@@ -149,8 +150,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
   }
 
-  // Sets the maximal depth of debug markers within one command buffer. If set to 0, command buffers
-  // won't be limited by depth.
+  // Sets the maximum depth of debug markers within one command buffer. If set to 0, all debug
+  // markers will be discarded. If set to to std::numeric_limits<uint32_t>::max(), no debug marker
+  // will be discarded.
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint32_t max_local_marker_depth_per_command_buffer) {
     max_local_marker_depth_per_command_buffer_ = max_local_marker_depth_per_command_buffer;
   }
@@ -234,8 +236,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       ++state.local_marker_stack_size;
-      too_many_markers = max_local_marker_depth_per_command_buffer_ > 0 &&
-                         state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
+      too_many_markers =
+          max_local_marker_depth_per_command_buffer_ < std::numeric_limits<uint32_t>::max() &&
+          state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
       Marker marker{.type = MarkerType::kDebugMarkerBegin,
                     .text = std::string(text),
                     .color = color,
@@ -263,8 +266,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-      too_many_markers = max_local_marker_depth_per_command_buffer_ > 0 &&
-                         state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
+      too_many_markers =
+          max_local_marker_depth_per_command_buffer_ < std::numeric_limits<uint32_t>::max() &&
+          state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
       Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = too_many_markers};
       state.markers.emplace_back(std::move(marker));
       // We might see more "ends" then "begins", as the "begins" can be on a different command
@@ -750,7 +754,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   // We use 0 to disable filtering of markers.
-  uint32_t max_local_marker_depth_per_command_buffer_ = 0;
+  uint32_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint32_t>::max();
 
   absl::Mutex mutex_;
   absl::flat_hash_map<VkCommandPool, absl::flat_hash_set<VkCommandBuffer>> pool_to_command_buffers_;
@@ -772,4 +776,4 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
 }  // namespace orbit_vulkan_layer
 
-#endif  // ORBIT_VULKAN_LAYER_COMMAND_BUFFER_MANAGER_H_
+#endif  // ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
