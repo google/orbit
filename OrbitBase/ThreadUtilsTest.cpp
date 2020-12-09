@@ -12,9 +12,9 @@
 
 #ifdef __linux__
 TEST(ThreadUtils, ThreadId) {
-  pid_t current_tid = orbit_base::GetCurrentThreadId();
+  uint32_t current_tid = orbit_base::GetCurrentThreadId();
   EXPECT_TRUE(current_tid >= 0);
-  pid_t worker_tid = 0;
+  uint32_t worker_tid = 0;
   std::thread t([&worker_tid]() { worker_tid = orbit_base::GetCurrentThreadId(); });
   t.join();
   EXPECT_TRUE(worker_tid != 0);
