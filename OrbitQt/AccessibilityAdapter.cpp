@@ -69,7 +69,13 @@ QRect A11yAdapter::rect() const {
 //================ OrbitGlWidgetAccessible ==================
 
 OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
-    : QAccessibleWidget(widget, QAccessible::Role::Graphic, "CaptureWindow") {}
+    : QAccessibleWidget(widget, QAccessible::Role::Graphic, "CaptureWindow") {
+  // TODO (freichl@) For some reason setting an accessible name for the Canvas results in a memory
+  // access exception during runtime when accessibility is queried
+  // This also happens when the accessibleName is explicitely set to "" in Qt Designer, which this
+  // check can't catch...
+  CHECK(widget->accessibleName() == "");
+}
 
 int OrbitGlWidgetAccessible::childCount() const {
   return static_cast<OrbitGLWidget*>(widget())->GetCanvas()->AccessibleChildCount();
