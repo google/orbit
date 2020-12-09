@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_CAPTURE_WINDOW_ACCESSIBILITY_H_
 #define ORBIT_GL_CAPTURE_WINDOW_ACCESSIBILITY_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -196,8 +198,40 @@ struct A11yState {
   A11yState() { memset(this, 0, sizeof(A11yState)); }
 };
 
+class GlAccessibleInterface;
+
+class GlAccessibleInterfaceRegistry {
+ public:
+  typedef std::function<void(GlAccessibleInterface*)> Callback;
+
+  void Register(GlAccessibleInterface* iface);
+  void Unregister(GlAccessibleInterface* iface);
+
+  void OnRegistered(Callback callback);
+  void OnUnregistered(Callback callback);
+
+  [[nodiscard]] bool Exists(GlAccessibleInterface* iface) { return interfaces_.contains(iface); }
+
+  static GlAccessibleInterfaceRegistry& Get();
+
+ private:
+  GlAccessibleInterfaceRegistry(){};
+  ~GlAccessibleInterfaceRegistry();
+
+  absl::flat_hash_set<GlAccessibleInterface*> interfaces_;
+  Callback on_registered_ = nullptr;
+  Callback on_unregistered_ = nullptr;
+};
+
 class GlAccessibleInterface {
  public:
+  GlAccessibleInterface(GlAccessibleInterface& rhs) = delete;
+  GlAccessibleInterface(GlAccessibleInterface&& rhs) = delete;
+  GlAccessibleInterface& operator=(GlAccessibleInterface& rhs) = delete;
+  GlAccessibleInterface& operator=(GlAccessibleInterface&& rhs) = delete;
+  GlAccessibleInterface() { GlAccessibleInterfaceRegistry::Get().Register(this); }
+  virtual ~GlAccessibleInterface() { GlAccessibleInterfaceRegistry::Get().Unregister(this); }
+
   [[nodiscard]] virtual int AccessibleChildCount() const = 0;
   [[nodiscard]] virtual const GlAccessibleInterface* AccessibleChild(int index) const = 0;
   [[nodiscard]] virtual const GlAccessibleInterface* AccessibleParent() const = 0;

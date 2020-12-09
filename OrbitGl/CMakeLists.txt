@@ -96,6 +96,7 @@ target_sources(
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
           ModulesDataView.cpp
+          OrbitGlAccessibility.cpp
           PickingManager.cpp
           PresetsDataView.cpp
           ProcessesDataView.cpp
@@ -150,6 +151,8 @@ target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                BlockChainTest.cpp
                GlUtilsTest.cpp
+               OrbitGlAccessibility.cpp
+               OrbitGlAccessibilityTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
                SliderTest.cpp

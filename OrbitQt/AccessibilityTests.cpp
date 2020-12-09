@@ -7,55 +7,15 @@
 #include <QApplication>
 #include <list>
 
+#include "../OrbitGl/AccessibilityInterfaceMock.h"
 #include "AccessibilityAdapter.h"
 #include "orbitglwidget.h"
 
 namespace orbit_qt_tests {
 
 using orbit_gl::GlAccessibleInterface, orbit_gl::A11yRole, orbit_gl::A11yRect, orbit_gl::A11yState;
+using orbit_gl_tests::TestA11yImpl;
 using orbit_qt::A11yAdapter;
-
-class TestA11yImpl : public GlAccessibleInterface {
- public:
-  TestA11yImpl(TestA11yImpl* parent) : parent_(parent) {}
-  [[nodiscard]] int AccessibleChildCount() const override { return children_.size(); }
-  [[nodiscard]] GlAccessibleInterface* AccessibleChild(int index) const override {
-    return children_[index].get();
-  }
-
-  [[nodiscard]] GlAccessibleInterface* AccessibleParent() const { return parent_; }
-  [[nodiscard]] A11yRole AccessibleRole() const { return A11yRole::Grouping; }
-  [[nodiscard]] A11yState AccessibleState() const { return A11yState(); }
-
-  [[nodiscard]] A11yRect AccessibleLocalRect() const {
-    orbit_gl::A11yRect result;
-    if (parent_ == nullptr) {
-      return result;
-    }
-
-    int parent_idx = -1;
-    for (int i = 0; i < parent_->children_.size(); ++i) {
-      if (parent_->children_[i].get() == this) {
-        parent_idx = i;
-        break;
-      }
-    }
-
-    result.left = 0;
-    result.top = parent_idx;
-    result.width = 1000;
-    result.height = 1;
-    return result;
-  }
-
-  [[nodiscard]] std::string AccessibleName() const { return "Test"; }
-
-  [[nodiscard]] std::vector<std::unique_ptr<TestA11yImpl>>& Children() { return children_; }
-
- private:
-  std::vector<std::unique_ptr<TestA11yImpl>> children_;
-  TestA11yImpl* parent_ = nullptr;
-};
 
 TEST(Accessibility, CreationAndManagement) {
   TestA11yImpl obj(nullptr);
