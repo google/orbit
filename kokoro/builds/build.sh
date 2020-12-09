@@ -64,7 +64,7 @@ if [ -n "$1" ]; then
                             -delete
       echo "Cleanup for presubmit done."
     else
-      # In the non-presubmit case we spare the whole build dir and this 
+      # In the non-presubmit case we spare the whole build dir and this
       # script (well, everything under kokoro).
       echo "Cleanup for non-presubmit."
       find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
