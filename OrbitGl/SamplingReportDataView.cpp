@@ -250,8 +250,9 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
 }
 
 void SamplingReportDataView::OnSelect(int index) {
-  SampledFunction& func = GetSampledFunction(index);
-  sampling_report_->OnSelectAddress(func.absolute_address, tid_);
+  uint64_t function_address = (index == -1) ? SamplingReport::kInvalidFunctionAddress
+                                            : GetSampledFunction(index).absolute_address;
+  sampling_report_->OnSelectAddress(function_address, tid_);
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {

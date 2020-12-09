@@ -72,6 +72,9 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
     QString threadName = QString::fromStdString(report_data_view.GetName());
     ui->tabWidget->addTab(tab, threadName);
   }
+
+  connect(ui->tabWidget, &QTabWidget::currentChanged, this,
+          &OrbitSamplingReport::OnCurrentThreadTabChanged);
 }
 
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
@@ -83,6 +86,14 @@ void OrbitSamplingReport::on_NextCallstackButton_clicked() {
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
   CHECK(m_SamplingReport != nullptr);
   m_SamplingReport->DecrementCallstackIndex();
+  RefreshCallstackView();
+}
+
+void OrbitSamplingReport::OnCurrentThreadTabChanged(int current_tab_index) {
+  auto treeView = m_OrbitDataViews[current_tab_index];
+  QModelIndexList index_list = treeView->GetTreeView()->selectionModel()->selectedIndexes();
+  int row = (!index_list.isEmpty() && index_list.front().isValid()) ? index_list.front().row() : -1;
+  treeView->GetTreeView()->GetModel()->OnRowSelected(row);
   RefreshCallstackView();
 }
 
