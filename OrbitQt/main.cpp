@@ -96,6 +96,9 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
 
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 
+// TODO(170468590): [ui beta] Remove this flag when the new UI is finished
+ABSL_FLAG(bool, enable_ui_beta, false, "Enable the new user interface");
+
 using ServiceDeployManager = orbit_qt::ServiceDeployManager;
 using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
 using OrbitStartupWindow = orbit_qt::OrbitStartupWindow;
@@ -261,7 +264,7 @@ static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& pr
 }
 
 static std::optional<orbit_qt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
-  if (absl::GetFlag(FLAGS_local)) {
+  if (absl::GetFlag(FLAGS_local) && !absl::GetFlag(FLAGS_enable_ui_beta)) {
     return std::nullopt;
   } else if (absl::GetFlag(FLAGS_nodeploy)) {
     return orbit_qt::NoDeployment{};
