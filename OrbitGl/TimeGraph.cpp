@@ -4,28 +4,31 @@
 
 #include "TimeGraph.h"
 
+#include <GteVector.h>
 #include <OrbitBase/Logging.h>
-#include <OrbitBase/Profiling.h>
 #include <OrbitBase/Tracing.h>
+#include <absl/time/time.h>
+#include <google/protobuf/stubs/port.h>
+#include <stddef.h>
 
 #include <algorithm>
+#include <limits>
 #include <utility>
 
 #include "App.h"
+#include "AsyncTrack.h"
 #include "CoreUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "GpuTrack.h"
+#include "GlUtils.h"
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "PickingManager.h"
-#include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
-#include "ThreadTrack.h"
-#include "absl/flags/flag.h"
+#include "TrackManager.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::CallstackEvent;

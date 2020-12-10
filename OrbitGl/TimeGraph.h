@@ -5,30 +5,29 @@
 #ifndef ORBIT_GL_TIME_GRAPH_H_
 #define ORBIT_GL_TIME_GRAPH_H_
 
-#include <thread>
-#include <unordered_map>
-#include <utility>
+#include <absl/container/flat_hash_map.h>
+#include <math.h>
 
-#include "AsyncTrack.h"
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <string>
+#include <vector>
+
 #include "Batcher.h"
-#include "BlockChain.h"
+#include "CoreMath.h"
 #include "CoreUtils.h"
-#include "FrameTrack.h"
-#include "Geometry.h"
-#include "GpuTrack.h"
-#include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
-#include "OrbitBase/Profiling.h"
-#include "OrbitBase/Tracing.h"
 #include "OrbitClientModel/CaptureData.h"
-#include "SchedulerTrack.h"
+#include "PickingManager.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
-#include "ThreadTrack.h"
 #include "TimeGraphLayout.h"
-#include "Timer.h"
 #include "TimerChain.h"
+#include "Track.h"
 #include "TrackManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"

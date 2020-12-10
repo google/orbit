@@ -5,7 +5,19 @@
 #ifndef ORBIT_GL_FRAME_TRACK_H_
 #define ORBIT_GL_FRAME_TRACK_H_
 
+#include <stdint.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "CoreMath.h"
+#include "PickingManager.h"
+#include "TextBox.h"
+#include "TimerChain.h"
 #include "TimerTrack.h"
+#include "Track.h"
+#include "capture_data.pb.h"
 
 class OrbitApp;
 

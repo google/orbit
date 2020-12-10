@@ -4,9 +4,28 @@
 
 #include "TrackManager.h"
 
+#include <GteVector.h>
+#include <absl/strings/ascii.h>
+#include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <optional>
+#include <string_view>
+#include <utility>
+
 #include "App.h"
+#include "CoreMath.h"
 #include "CoreUtils.h"
+#include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "TimeGraph.h"
+#include "TimeGraphLayout.h"
 
 using orbit_client_protos::FunctionInfo;
 

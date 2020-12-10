@@ -4,15 +4,27 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <unordered_map>
-#include <utility>
+#include <vector>
 
 #include "AsyncTrack.h"
 #include "FrameTrack.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
+#include "PickingManager.h"
 #include "SchedulerTrack.h"
+#include "StringManager.h"
 #include "ThreadTrack.h"
+#include "Timer.h"
+#include "Track.h"
+#include "capture_data.pb.h"
 
 class OrbitApp;
 class Timegraph;
