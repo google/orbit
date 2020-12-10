@@ -111,8 +111,13 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 extern QMenu* GContextMenu;
 
 namespace {
+const QString kLightGrayColor = "rgb(117, 117, 117)";
 const QString kMediumGrayColor = "rgb(68, 68, 68)";
 const QString kGreenColor = "rgb(41, 218, 130)";
+constexpr int kHintFramePosX = 21;
+constexpr int kHintFramePosY = 47;
+constexpr int kHintFrameWidth = 140;
+constexpr int kHintFrameHeight = 45;
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
@@ -125,6 +130,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   SetupMainWindow(font_size);
 
   SetupTargetLabel();
+  SetupHintFrame();
+
   ui->RightTabWidget->setTabText(ui->RightTabWidget->indexOf(ui->FunctionsTab), "Symbols");
   ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->HomeTab));
 
@@ -461,6 +468,32 @@ void OrbitMainWindow::SetupCodeView() {
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
 }
 
+void OrbitMainWindow::SetupHintFrame() {
+  hint_frame_ = new QFrame();
+  hint_frame_->setStyleSheet("background: transparent");
+  auto* hint_layout = new QVBoxLayout();
+  hint_layout->setSpacing(0);
+  hint_layout->setMargin(0);
+  hint_frame_->setLayout(hint_layout);
+  auto* hint_arrow = new QLabel();
+  hint_arrow->setPixmap(QPixmap(":/images/tutorial/grey_arrow_up.png").scaledToHeight(12));
+  hint_layout->addWidget(hint_arrow);
+  auto* hint_message = new QLabel("Start a capture here");
+  hint_message->setAlignment(Qt::AlignCenter);
+  hint_layout->addWidget(hint_message);
+  hint_message->setStyleSheet(QString("background-color: %1;"
+                                      "border-top-left-radius: 1px;"
+                                      "border-top-right-radius: 4px;"
+                                      "border-bottom-right-radius: 4px;"
+                                      "border-bottom-left-radius: 4px;")
+                                  .arg(kLightGrayColor));
+  hint_layout->setStretchFactor(hint_message, 1);
+  hint_frame_->setParent(ui->CaptureTab);
+
+  hint_frame_->move(kHintFramePosX, kHintFramePosY);
+  hint_frame_->resize(kHintFrameWidth, kHintFrameHeight);
+}
+
 void OrbitMainWindow::SetupTargetLabel() {
   auto* target_widget = new QWidget();
   target_widget->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
@@ -570,6 +603,12 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionSave_Capture->setEnabled(!is_capturing);
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
+
+  // TODO (170468590): [ui beta] Remove this "if", it will not be necessary anymore when ui is out
+  // of beta
+  if (hint_frame_ != nullptr) {
+    hint_frame_->setVisible(!has_data);
+  }
 }
 
 void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
