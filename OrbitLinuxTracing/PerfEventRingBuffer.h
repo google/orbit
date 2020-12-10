@@ -6,9 +6,10 @@
 #define ORBIT_LINUX_TRACING_PERF_RING_BUFFER_H_
 
 #include <linux/perf_event.h>
-#include <stdint.h>
 
 #include <string>
+
+#include "OrbitBase/Logging.h"
 
 namespace LinuxTracing {
 
@@ -30,7 +31,12 @@ class PerfEventRingBuffer {
   bool HasNewData();
   void ReadHeader(perf_event_header* header);
   void SkipRecord(const perf_event_header& header);
-  void ConsumeRecord(const perf_event_header& header, void* record);
+
+  template <typename T>
+  void ConsumeRecord(const perf_event_header& header, T* record) {
+    CHECK(header.size == sizeof(T));
+    ConsumeRawRecord(header, record);
+  }
 
   template <typename T>
   void ReadValueAtOffset(T* value, uint64_t offset) {
@@ -52,8 +58,9 @@ class PerfEventRingBuffer {
   int file_descriptor_ = -1;
   std::string name_;
 
+  // ConsumeRawRecord reads header.size bytes into record buffer and then skips the record.
+  void ConsumeRawRecord(const perf_event_header& header, void* record);
   void ReadAtTail(void* dest, uint64_t count) { return ReadAtOffsetFromTail(dest, 0, count); }
-
   void ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail, uint64_t count);
 };
 
