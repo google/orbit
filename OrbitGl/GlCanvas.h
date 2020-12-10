@@ -130,7 +130,9 @@ class GlCanvas : public orbit_gl::GlAccessibleInterface {
   [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override {
     return orbit_gl::A11yRect();
   }
-  [[nodiscard]] orbit_gl::A11yState AccessibleState() const { return orbit_gl::A11yState(); }
+  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override {
+    return orbit_gl::A11yState();
+  }
 
   static float kZValueSlider;
   static float kZValueSliderBg;
