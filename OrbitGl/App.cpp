@@ -1275,9 +1275,12 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
-  CHECK(processes_data_view_->GetSelectedProcessId() == pid);
+  // TODO(170468590): [ui beta] When out of ui beta and processes_data_view is gone, remove this
+  if (processes_data_view_ != nullptr) {
+    CHECK(processes_data_view_->GetSelectedProcessId() == pid);
+  }
   thread_pool_->Schedule([pid, this] {
-    ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
+    ErrorMessageOr<std::vector<ModuleInfo>> result = GetProcessManager()->LoadModuleList(pid);
 
     if (result.has_error()) {
       ERROR("Error retrieving modules: %s", result.error().message());
@@ -1286,10 +1289,13 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
     }
 
     main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
-      // Make sure that pid is actually what user has selected at
-      // the moment we arrive here. If not - ignore the result.
-      if (pid != processes_data_view_->GetSelectedProcessId()) {
-        return;
+      // TODO(170468590): [ui beta] When out of ui beta and processes_data_view is gone, remove this
+      if (processes_data_view_ != nullptr) {
+        // Make sure that pid is actually what user has selected at
+        // the moment we arrive here. If not - ignore the result.
+        if (pid != processes_data_view_->GetSelectedProcessId()) {
+          return;
+        }
       }
 
       ProcessData* process = data_manager_->GetMutableProcessByPid(pid);

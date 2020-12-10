@@ -288,6 +288,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::vector<ModuleData*>& modules,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {},
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map = {});
+  // TODO(170468590): [ui beta] when out of ui beta, clean this up (it should be necessary to have
+  // an argument here, since OrbitApp will always only have one process associated)
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
@@ -306,6 +308,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
+  [[nodiscard]] ProcessData* GetMutableSelectedProcess() const {
+    return data_manager_->mutable_selected_process();
+  }
   [[nodiscard]] const ProcessData* GetSelectedProcess() const {
     return data_manager_->selected_process();
   }
