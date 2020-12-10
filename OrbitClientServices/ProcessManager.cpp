@@ -32,9 +32,9 @@ class ProcessManagerImpl final : public ProcessManager {
 
   ~ProcessManagerImpl() override { ShutdownAndWait(); }
 
-  void SetProcessListUpdateListener(const std::function<void(ProcessManager*)>& listener) override;
+  void SetProcessListUpdateListener(
+      const std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>& listener) override;
 
-  std::vector<ProcessInfo> GetProcessList() const override;
   ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(int32_t pid) override;
 
   ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
@@ -56,9 +56,8 @@ class ProcessManagerImpl final : public ProcessManager {
   absl::Mutex shutdown_mutex_;
   bool shutdown_initiated_;
 
-  mutable absl::Mutex mutex_;
-  std::vector<ProcessInfo> process_list_;
-  std::function<void(ProcessManager*)> process_list_update_listener_;
+  absl::Mutex process_list_update_listener_mutex_;
+  std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)> process_list_update_listener_;
 
   std::thread worker_thread_;
 };
@@ -70,18 +69,13 @@ ProcessManagerImpl::ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& cha
 }
 
 void ProcessManagerImpl::SetProcessListUpdateListener(
-    const std::function<void(ProcessManager*)>& listener) {
-  absl::MutexLock lock(&mutex_);
+    const std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>& listener) {
+  absl::MutexLock lock(&process_list_update_listener_mutex_);
   process_list_update_listener_ = listener;
 }
 
 ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(int32_t pid) {
   return process_client_->LoadModuleList(pid);
-}
-
-std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
-  absl::MutexLock lock(&mutex_);
-  return process_list_;
 }
 
 ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(const std::string& module_path) {
@@ -124,11 +118,9 @@ void ProcessManagerImpl::WorkerFunction() {
       continue;
     }
 
-    absl::MutexLock callback_lock(&mutex_);
-    const auto& processes = result.value();
-    process_list_.assign(processes.begin(), processes.end());
+    absl::MutexLock callback_lock(&process_list_update_listener_mutex_);
     if (process_list_update_listener_) {
-      process_list_update_listener_(this);
+      process_list_update_listener_(std::move(result.value()));
     }
   }
 }
