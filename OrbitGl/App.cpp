@@ -802,7 +802,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  const ProcessData* process = data_manager_->selected_process();
+  const ProcessData* process = GetSelectedProcess();
   if (process == nullptr) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please select a target process for the capture.");
@@ -1306,7 +1306,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       if (GetSelectedProcess() == nullptr || pid != GetSelectedProcess()->pid()) {
         data_manager_->ClearSelectedFunctions();
         data_manager_->ClearUserDefinedCaptureData();
-        data_manager_->set_selected_process(pid);
+        SetProcess(process);
       }
 
       // Updating the list of loaded modules (in memory) of a process, can mean that a process has
@@ -1391,7 +1391,7 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(uint64_t absolute_address) const {
-  const ProcessData* process = data_manager_->selected_process();
+  const ProcessData* process = GetSelectedProcess();
   if (process == nullptr) return false;
 
   const auto result = process->FindModuleByAddress(absolute_address);
