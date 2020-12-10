@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
   InitLogFile(GetLogFilePath());
 
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
-  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
+  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
   InstallSigintHandler();

@@ -27,7 +27,7 @@ namespace orbit_service::utils {
 
 namespace fs = std::filesystem;
 
-using ::ElfUtils::ElfFile;
+using ::orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 

@@ -42,7 +42,7 @@ static bool IsSshConnectionAlive(
 namespace orbit_service {
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
-  LOG("Running Orbit Service version %s", OrbitCore::GetVersion());
+  LOG("Running Orbit Service version %s", orbit_core::GetVersion());
 #ifndef NDEBUG
   LOG("**********************************");
   LOG("Orbit Service is running in DEBUG!");
