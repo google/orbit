@@ -749,13 +749,18 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
 
 void TracerThread::ProcessExitEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
-  ExitPerfEvent event;
-  ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  if (event.GetTimestamp() < effective_capture_start_timestamp_ns_) {
+  auto event = make_unique_for_overwrite<ExitPerfEvent>();
+  ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+  if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
     return;
   }
 
-  // Nothing to do for now.
+  if (trace_context_switches_ || trace_thread_state_) {
+    // PERF_RECORD_EXIT is also used by ContextSwitchAndThreadStateVisitor
+    // to keep the association between tid and pid.
+    event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
+    DeferEvent(std::move(event));
+  }
 }
 
 void TracerThread::ProcessMmapEvent(const perf_event_header& header,

@@ -28,7 +28,7 @@ namespace LinuxTracing {
 // As for some of these events the process id is not available, but only the thread id, this class
 // also keeps the association between tids and pids system wide. The initial association extracted
 // from the proc filesystem is passed by calling ProcessInitialTidToPidAssociation for each thread,
-// and is updated with ForkPerfEvents.
+// and is updated with ForkPerfEvents (and also ExitPerfEvents, see visit(ExitPerfEvent*)).
 // For thread states, we are able to collect partial slices at the beginning and at the end of the
 // capture, hence the ProcessInitialState and ProcessRemainingOpenStates methods.
 // Also, we only process thread states of the process with pid specified with
@@ -41,6 +41,7 @@ class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
   void visit(ForkPerfEvent* event) override;
+  void visit(ExitPerfEvent* event) override;
 
   void ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char);
   void visit(TaskNewtaskPerfEvent* event) override;

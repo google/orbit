@@ -33,6 +33,21 @@ void ContextSwitchAndThreadStateVisitor::visit(ForkPerfEvent* event) {
   }
 }
 
+// We also use PERF_RECORD_EXIT to add associations between tids and pids. It might seem
+// counter-intuitive but here is the rationale.
+// At the beginning of the capture we might have sched:sched_switch events related to a thread that
+// then exits before we have had the chance the retrieve the pid of the process that thread belongs
+// to from /proc. Also, as explained below and elsewhere, for the context switches out of a cpu on
+// thread exit the pid field of the PERF_RECORD_SAMPLE has value -1. In such special cases we can
+// still use the pid from PERF_RECORD_EXIT and update the association just in time, as
+// PERF_RECORD_EXIT events precede context switches with pid -1.
+void ContextSwitchAndThreadStateVisitor::visit(ExitPerfEvent* event) {
+  pid_t pid = event->GetPid();
+  pid_t tid = event->GetTid();
+  tid_to_pid_association_.insert_or_assign(tid, pid);
+  // Don't log an error on overwrite, as it's expected that the pid was already known.
+}
+
 bool ContextSwitchAndThreadStateVisitor::TidMatchesPidFilter(pid_t tid) {
   if (thread_state_pid_filter_ == kPidFilterNoThreadState) {
     return false;
