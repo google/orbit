@@ -69,11 +69,11 @@ class Process;
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  OrbitApp(ApplicationOptions&& options, std::unique_ptr<MainThreadExecutor> main_thread_executor);
+  OrbitApp(ApplicationOptions&& options, MainThreadExecutor* main_thread_executor);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(ApplicationOptions&& options,
-                                          std::unique_ptr<MainThreadExecutor> main_thread_executor);
+                                          MainThreadExecutor* main_thread_executor);
 
   void PostInit();
   void MainTick();
@@ -311,7 +311,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
-  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
+  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
   [[nodiscard]] ProcessData* GetMutableSelectedProcess() const { return process_; }
   [[nodiscard]] const ProcessData* GetSelectedProcess() const { return process_; }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
@@ -459,7 +459,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::shared_ptr<StringManager> string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
-  std::unique_ptr<MainThreadExecutor> main_thread_executor_;
+  MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;

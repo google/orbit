@@ -106,9 +106,8 @@ PresetLoadState GetPresetLoadStateForProcess(
 
 bool DoZoom = false;
 
-OrbitApp::OrbitApp(ApplicationOptions&& options,
-                   std::unique_ptr<MainThreadExecutor> main_thread_executor)
-    : options_(std::move(options)), main_thread_executor_(std::move(main_thread_executor)) {
+OrbitApp::OrbitApp(ApplicationOptions&& options, MainThreadExecutor* main_thread_executor)
+    : options_(std::move(options)), main_thread_executor_(main_thread_executor) {
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
@@ -296,9 +295,9 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
   });
 }
 
-std::unique_ptr<OrbitApp> OrbitApp::Create(
-    ApplicationOptions&& options, std::unique_ptr<MainThreadExecutor> main_thread_executor) {
-  auto app = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
+std::unique_ptr<OrbitApp> OrbitApp::Create(ApplicationOptions&& options,
+                                           MainThreadExecutor* main_thread_executor) {
+  auto app = std::make_unique<OrbitApp>(std::move(options), main_thread_executor);
 
 #ifdef _WIN32
   oqpi::default_helpers::start_default_scheduler();
@@ -1629,7 +1628,7 @@ bool OrbitApp::IsCapturing() const {
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(status_listener_ != nullptr);
-  return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
+  return ScopedStatus{GetMainThreadExecutor(), status_listener_, initial_message};
 }
 
 void OrbitApp::SelectTracepoint(const TracepointInfo& tracepoint) {
