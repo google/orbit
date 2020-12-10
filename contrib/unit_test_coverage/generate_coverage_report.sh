@@ -130,7 +130,7 @@ do
   ((SUM_REGIONS_COVERED+=REGIONS_COVERED))
   REGIONS_TD=$(generate_html_td $REGIONS_COUNT $REGIONS_COVERED)
 
-  HTML_TABLE+="<tr class='light-row'><td><pre><a href='$OUTPUT_DIR/coverage_$COMPONENT/index.html'>$COMPONENT</a></pre></td>$FUNCTIONS_TD$LINES_TD$REGIONS_TD</tr>"
+  HTML_TABLE+="<tr class='light-row'><td><pre><a href='coverage_$COMPONENT/index.html'>$COMPONENT</a></pre></td>$FUNCTIONS_TD$LINES_TD$REGIONS_TD</tr>"
 done
 
 echo "Generating html summary"
