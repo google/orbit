@@ -5,13 +5,24 @@
 #ifndef ORBIT_GL_APP_H_
 #define ORBIT_GL_APP_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <grpc/impl/codegen/connectivity_state.h>
+#include <grpcpp/channel.h>
+
+#include <atomic>
+#include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <outcome.hpp>
-#include <queue>
 #include <string>
+#include <string_view>
+#include <thread>
 #include <utility>
+#include <vector>
 
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
@@ -24,23 +35,25 @@
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
-#include "ImGuiOrbit.h"
+#include "GlCanvas.h"
 #include "IntrospectionWindow.h"
-#include "LiveFunctionsDataView.h"
 #include "MainThreadExecutor.h"
+#include "ManualInstrumentationManager.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/CallstackData.h"
-#include "OrbitClientData/FunctionInfoSet.h"
+#include "OrbitClientData/CallstackTypes.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientServices/CrashManager.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "OrbitClientServices/TracepointServiceClient.h"
@@ -48,23 +61,16 @@
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
 #include "SamplingReport.h"
-#include "SamplingReportDataView.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "TextBox.h"
 #include "TracepointsDataView.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/flags/flag.h"
 #include "capture_data.pb.h"
-#include "grpcpp/grpcpp.h"
 #include "preset.pb.h"
-#include "services.grpc.pb.h"
 #include "services.pb.h"
-#include "symbol.pb.h"
-
-class Process;
+#include "tracepoint.pb.h"
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
@@ -305,6 +311,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     CHECK(grpc_channel != nullptr);
     grpc_channel_ = std::move(grpc_channel);
   }
+  void SetProcessManager(ProcessManager* process_manager) {
+    CHECK(process_manager_ == nullptr);
+    CHECK(process_manager != nullptr);
+    process_manager_ = process_manager;
+  }
   void SetProcess(ProcessData* process) {
     CHECK(process != nullptr);
     process_ = process;
@@ -312,7 +323,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
-  [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
+  [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_; }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
   [[nodiscard]] ProcessData* GetMutableSelectedProcess() const { return process_; }
@@ -464,7 +475,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<CaptureClient> capture_client_;
-  std::unique_ptr<ProcessManager> process_manager_;
+  ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;
