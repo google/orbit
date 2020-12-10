@@ -92,7 +92,10 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
 void OrbitSamplingReport::OnCurrentThreadTabChanged(int current_tab_index) {
   auto treeView = m_OrbitDataViews[current_tab_index];
   QModelIndexList index_list = treeView->GetTreeView()->selectionModel()->selectedIndexes();
-  int row = (!index_list.isEmpty() && index_list.front().isValid()) ? index_list.front().row() : -1;
+  std::optional<int> row = std::nullopt;
+  if (!index_list.isEmpty() && index_list.front().isValid()) {
+    row = index_list.front().row();
+  }
   treeView->GetTreeView()->GetModel()->OnRowSelected(row);
   RefreshCallstackView();
 }

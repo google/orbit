@@ -81,8 +81,11 @@ void ProcessesDataView::DoSort() {
 
 #undef ORBIT_PROC_SORT
 
-void ProcessesDataView::OnSelect(int index) {
-  const ProcessInfo& selected_process = GetProcess(index);
+void ProcessesDataView::OnSelect(std::optional<int> index) {
+  if (!index.has_value()) {
+    return;
+  }
+  const ProcessInfo& selected_process = GetProcess(index.value());
   selected_process_id_ = selected_process.pid();
 
   SetSelectedItem();

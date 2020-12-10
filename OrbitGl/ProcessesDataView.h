@@ -19,7 +19,7 @@ class ProcessesDataView final : public DataView {
   std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Processes"; }
 
-  void OnSelect(int index) override;
+  void OnSelect(std::optional<int> index) override;
   bool SelectProcess(const std::string& process_name);
   bool SelectProcess(int32_t process_id);
   void SetProcessList(const std::vector<orbit_grpc_protos::ProcessInfo>& process_list);
