@@ -213,34 +213,6 @@
 #define ORBIT_FLOAT_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackFloat, name, val, col)
 #define ORBIT_DOUBLE_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackDouble, name, val, col)
 
-namespace orbit {
-
-// Material Design Colors #500
-enum class Color : uint32_t {
-  kAuto = 0x00000000,
-  kRed = 0xf44336ff,
-  kPink = 0xe91e63ff,
-  kPurple = 0x9c27b0ff,
-  kDeepPurple = 0x673ab7ff,
-  kIndigo = 0x3f51b5ff,
-  kBlue = 0x2196f3ff,
-  kLightBlue = 0x03a9f4ff,
-  kCyan = 0x00bcd4ff,
-  kTeal = 0x009688ff,
-  kGreen = 0x4caf50ff,
-  kLightGreen = 0x8bc34aff,
-  kLime = 0xcddc39ff,
-  kYellow = 0xffeb3bff,
-  kAmber = 0xffc107ff,
-  kOrange = 0xff9800ff,
-  kDeepOrange = 0xff5722ff,
-  kBrown = 0x795548ff,
-  kGrey = 0x9e9e9eff,
-  kBlueGrey = 0x607d8bff
-};
-
-}  // namespace orbit
-
 #else
 
 #define ORBIT_SCOPE(name)
@@ -270,24 +242,35 @@ enum class Color : uint32_t {
 #endif
 
 // NOTE: Do not use any of the code below directly.
-#if ORBIT_API_ENABLED
+namespace orbit {
 
-// Internal macros.
-#define ORBIT_CONCAT_IND(x, y) (x##y)
-#define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
-#define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
-#define ORBIT_VAR ORBIT_UNIQUE(ORB)
-#define ORBIT_TRACK(type, name, val, col) \
-  orbit_api::TrackValue(type, name, orbit_api::Encode<uint64_t>(val), col)
+// Material Design Colors #500
+enum class Color : uint32_t {
+  kAuto = 0x00000000,
+  kRed = 0xf44336ff,
+  kPink = 0xe91e63ff,
+  kPurple = 0x9c27b0ff,
+  kDeepPurple = 0x673ab7ff,
+  kIndigo = 0x3f51b5ff,
+  kBlue = 0x2196f3ff,
+  kLightBlue = 0x03a9f4ff,
+  kCyan = 0x00bcd4ff,
+  kTeal = 0x009688ff,
+  kGreen = 0x4caf50ff,
+  kLightGreen = 0x8bc34aff,
+  kLime = 0xcddc39ff,
+  kYellow = 0xffeb3bff,
+  kAmber = 0xffc107ff,
+  kOrange = 0xff9800ff,
+  kDeepOrange = 0xff5722ff,
+  kBrown = 0x795548ff,
+  kGrey = 0x9e9e9eff,
+  kBlueGrey = 0x607d8bff
+};
 
-#if defined(_WIN32)
-#define ORBIT_STUB inline __declspec(noinline)
-#else
-#define ORBIT_STUB inline __attribute__((noinline))
-#endif
+}  // namespace orbit
 
 namespace orbit_api {
-
 constexpr uint8_t kVersion = 1;
 
 enum EventType : uint8_t {
@@ -357,6 +340,26 @@ inline Dest Decode(const Source& source) {
   std::memcpy(&dest, &source, sizeof(Dest));
   return dest;
 }
+
+}  // namespace orbit_api
+
+#if ORBIT_API_ENABLED
+
+// Internal macros.
+#define ORBIT_CONCAT_IND(x, y) (x##y)
+#define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
+#define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
+#define ORBIT_VAR ORBIT_UNIQUE(ORB)
+#define ORBIT_TRACK(type, name, val, col) \
+  orbit_api::TrackValue(type, name, orbit_api::Encode<uint64_t>(val), col)
+
+#if defined(_WIN32)
+#define ORBIT_STUB inline __declspec(noinline)
+#else
+#define ORBIT_STUB inline __attribute__((noinline))
+#endif  // defined(_WIN32)
+
+namespace orbit_api {
 
 // Used to prevent compiler from stripping out empty function.
 #define ORB_NOOP           \
