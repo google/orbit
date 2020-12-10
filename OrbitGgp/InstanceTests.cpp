@@ -176,7 +176,7 @@ TEST(InstanceTests, NotEqualToOperator) {
 }
 
 TEST(InstanceTests, QMetaTypeId) {
-  EXPECT_STREQ("OrbitGgp::Instance", QMetaType::typeName(qMetaTypeId<Instance>()));
+  EXPECT_STREQ("orbit_ggp::Instance", QMetaType::typeName(qMetaTypeId<Instance>()));
 }
 
 }  // namespace orbit_ggp
