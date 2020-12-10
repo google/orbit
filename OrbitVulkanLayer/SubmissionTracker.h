@@ -40,11 +40,11 @@ template <class DispatchTable, class DeviceManager, class TimerQueryPool>
 class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
  public:
   // On a submission (vkQueueSubmit), all pointers to command buffers become invalid/can be reused
-  // for0a the next submission. The struct `QueueSubmission` gathers information (like timestamps
+  // for a the next submission. The struct `QueueSubmission` gathers information (like timestamps
   // and timer slots) about a concrete submission and their corresponding command buffers and debug
   // markers. This way the information is "persistent" across submissions. We will create this
   // struct at `vkQueuePresent` (right before the call into the driver -- and only if we are
-  // capturing) and add some information (in particular markers and a timestamp) right after the the
+  // capturing) and add some information (in particular markers and a timestamp) right after the
   // driver call. So, we will use `QueueSubmission` as a return value, and therefore these structs
   // need to be public in the `SubmissionTracker`.
 
@@ -60,7 +60,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // `TimerQueryPool`. Note that the begin is optional, as it might not be part of the capture.
   // This struct is created if we capture the submission, so if we haven't captured the end,
   // we also haven't captured the begin, and don't need to store info about that command buffer at
-  // all. The list of all `SubmittedCommandBuffer`s is stored in a `QueueSubmission`, and can be so
+  // all. The list of all `SubmittedCommandBuffer`s is stored in a `QueueSubmission`, and can so be
   // associated to the `SubmissionMetaInformation`.
   struct SubmittedCommandBuffer {
     std::optional<uint32_t> command_buffer_begin_slot_index;
@@ -68,12 +68,12 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   };
 
   // A persistent version of a debug marker (either begin or end) that was submitted and its slot
-  // in the `TimerQueryPool`. `SubmittedMarkers` are used in `MarkerState` to identify the begin or
-  // end marker. All markers (`MarkerState`s) that gets *completed* within a certain submission are
-  // stored in the `QueueSubmission`.
-  // Note that we also store the `SubmissionMetaInformation` as begin markers
-  // can originate from different submissions than the matching end markers. This allows us e.g. to
-  // match the markers to a specific submission tracepoint. So even though the submitted markers a
+  // in the `TimerQueryPool`. `SubmittedMarkers` are used in `MarkerState` to identify the "begin"
+  // or "end" marker. All markers (`MarkerState`s) that gets *completed* within a certain submission
+  // are stored in the `QueueSubmission`.
+  // Note that we also store the `SubmissionMetaInformation` as "begin" markers can originate from
+  // different submissions than the matching end markers. This allows us e.g. to match the markers
+  // to a specific submission tracepoint.
   struct SubmittedMarker {
     SubmissionMetaInformation meta_information;
     uint32_t slot_index;
@@ -89,8 +89,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   // Identifies a particular debug marker region that has been submitted via `vkQueueSubmit`.
   // Note that we only store the state into `QueueSubmission`, if at that time we have a value for
-  // the end_info. Beside the information about the begin/end, it also stores the text, color and
-  // the depth of the marker.
+  // the end_info. Beside the information about the begin/end, it also stores the label name, color
+  // and the depth of the marker.
   struct SubmittedMarkerSlice {
     std::optional<SubmittedMarker> begin_info;
     SubmittedMarker end_info;
@@ -179,13 +179,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   void MarkCommandBufferBegin(VkCommandBuffer command_buffer) {
     // Even when we are not capturing we create state for this command buffer to allow the
-    // debug marker tracking. In order to compute the correct depth of debug marker and being able
+    // debug marker tracking. In order to compute the correct depth of a debug marker and being able
     // to match an "end" marker with the corresponding "begin" marker, we maintain a stack of all
     // debug markers of a queue. The order of the markers is determined upon submission based on the
     // order within the submitted command buffers. Thus, even when not capturing, we create an empty
     // state here that allows us to store the debug markers into it and maintain that stack on
     // submission. We will not write timestamps in this case and thus don't store any information
-    // other then the debug markers then.
+    // other than the debug markers then.
     {
       absl::WriterMutexLock lock(&mutex_);
       CHECK(!command_buffer_to_state_.contains(command_buffer));
@@ -266,7 +266,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = marker_depth_exceeds_maximum};
       state.markers.emplace_back(std::move(marker));
       // We might see more "ends" than "begins", as the "begins" can be on a different command
-      // buffer
+      // buffer.
       if (state.local_marker_stack_size != 0) {
         --state.local_marker_stack_size;
       }
@@ -316,7 +316,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         CHECK(command_buffer_to_state_.contains(command_buffer));
         CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
 
-        // If we haven't recoreded neither the end nor the begin of a command buffer, we have no
+        // If we haven't recorded neither the end nor the begin of a command buffer, we have no
         // information to send.
         if (!state.command_buffer_end_slot_index.has_value()) {
           continue;
@@ -327,7 +327,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
             .command_buffer_end_slot_index = state.command_buffer_end_slot_index.value()};
         submitted_submit_info.command_buffers.emplace_back(submitted_command_buffer);
 
-        // Remove the slots from the state now, such that `OnCaptureFinished` won't reset the slots
+        // Remove the slots from the state now such that `OnCaptureFinished` won't reset the slots
         // twice. Note that they will be reset in `CompleteSubmits`.
         state.command_buffer_begin_slot_index.reset();
         state.command_buffer_end_slot_index.reset();
@@ -347,7 +347,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   //
   // We assume to be capturing if `queue_submission_optional` has content, i.e. we were capturing
   // on this VkQueueSubmit before calling into the driver.
-  // The meta information allows allows us to map submissions from the Vulkan layer to the driver
+  // The meta information allows us to map submissions from the Vulkan layer to the driver
   // submissions.
   void PersistDebugMarkersOnSubmit(VkQueue queue, uint32_t submit_count,
                                    const VkSubmitInfo* submits,
@@ -361,7 +361,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
     // If we consider that we are still capturing, take a cpu timestamp as "post submission" such
     // that the submission "meta information" is complete. We can then attach that also to each
-    // debug marker, as they may be spanned across different submissions.
+    // debug marker, as they may span across different submissions.
     if (queue_submission_optional.has_value()) {
       queue_submission_optional->meta_information.post_submission_cpu_timestamp =
           MonotonicTimestampNs();
@@ -414,8 +414,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
                 marker_slots_to_reset.push_back(marker_state.begin_info.value().slot_index);
               }
 
-              // If the begin marker was cut off, but the end marker was not (as it is in a
-              // different submission), we reset the slot
+              // If the begin marker was discarded for exceeding the maximum depth, but the end
+              // marker was not (as it is in a different submission), we reset the slot.
               if (marker_state.depth_exceeds_maximum && marker.slot_index.has_value()) {
                 marker_slots_to_reset.push_back(marker.slot_index.value());
               }
@@ -454,13 +454,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     queue_to_submissions_.at(queue).emplace_back(std::move(queue_submission_optional.value()));
   }
 
-  // This method is responsible to retrieve all the timestamps for the "completed" submissions,
+  // This method is responsible for retrieving all the timestamps for the "completed" submissions,
   // for transforming the information of those submissions (in particlular about the command buffers
   // and debug markers) into the `GpuQueueSubmission` proto, and for sending it to the
-  // `VulkanLayerProducer`. We consider a submission to be "completed" iff its last command buffer
+  // `VulkanLayerProducer`. We consider a submission to be "completed" if its last command buffer
   // timestamp is ready (see `PullCompletedSubmissions`).
   // Beside the timestamps of command buffers and the meta information of the submission, the proto
-  // also contains the debug markers, *"begin"* (even if submitted in a different submission) and
+  // also contains the debug markers, "begin" (even if submitted in a different submission) and
   // "end", that got completed in this submission.
   // See also `WriteMetaInfo`, `WriteCommandBufferTimings` and `WriteDebugMarkers`.
   // This method also resets all the timer slots that have been read.
@@ -588,17 +588,16 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     bool cut_off;
   };
 
-  // We have a stack of all markers of a queue, that gets updated upon a submission
-  // (VkQueueSubmit). So on a submitted "begin" marker, we create that struct and push it to the
-  // stack. On an "end", we pop from that stack, and if we are capturing we complete the information
-  // and move it the completed markers of a `QueueSubmission`.
+  // We have a stack of all markers of a queue that gets updated upon a submission (VkQueueSubmit).
+  // So on a submitted "begin" marker, we create that struct and push it to the stack. On an "end",
+  // we pop from that stack, and if we are capturing we complete the information and move it to the
+  // completed markers of a `QueueSubmission`.
   // If a debug marker begin was discarded because of its depth, `depth_exceeds_maximum` is set to
   // true. This allows end markers on a different submission to also throw the end marker away.
   //
   // Example: Max Depth = 1
   // Submission 1: Begin("Foo"), Begin("Bar) -- For "Bar" we set `depth_exceeds_maximum` to true.
-  // Submission 2: End("Bar"), End("Foo") -- We now know, that the first end needs to be thrown
-  // away.
+  // Submission 2: End("Bar"), End("Foo") -- We now know that the first end needs to be thrown away.
   struct MarkerState {
     std::optional<SubmittedMarker> begin_info;
     std::string label_name;
