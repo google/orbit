@@ -309,9 +309,8 @@ void OrbitApp::PostInit() {
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
     process_manager_ = ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
-    auto callback = [this](ProcessManager* process_manager) {
-      main_thread_executor_->Schedule([this, process_manager]() {
-        const std::vector<ProcessInfo>& process_infos = process_manager->GetProcessList();
+    auto callback = [this](std::vector<ProcessInfo> process_infos) {
+      main_thread_executor_->Schedule([this, process_infos = std::move(process_infos)]() {
         data_manager_->UpdateProcessInfos(process_infos);
         processes_data_view_->SetProcessList(process_infos);
 
