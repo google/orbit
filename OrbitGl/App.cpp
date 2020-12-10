@@ -119,12 +119,6 @@ OrbitApp::~OrbitApp() {
   AbortCapture();
 
   try {
-    process_manager_->ShutdownAndWait();
-  } catch (const std::exception& e) {
-    FATAL("Exception occured in ProcessManager::ShutdownAndWait(): %s", e.what());
-  }
-
-  try {
     thread_pool_->ShutdownAndWait();
   } catch (const std::exception& e) {
     FATAL("Exception occured in ThreadPool::ShutdownAndWait(): %s", e.what());
@@ -309,10 +303,9 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(MainThreadExecutor* main_thread_execu
 
 void OrbitApp::PostInit() {
   if (IsConnectedToInstance()) {
-    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
+    CHECK(process_manager_ != nullptr);
 
-    // TODO: Replace refresh_timeout with config option. Let users to modify it.
-    process_manager_ = ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
+    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
     auto callback = [this](std::vector<ProcessInfo> process_infos) {
       main_thread_executor_->Schedule([this, process_infos = std::move(process_infos)]() {
@@ -491,7 +484,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   const bool is_64_bit = process->is_64_bit();
   const uint64_t absolute_address = function_utils::GetAbsoluteAddress(function, *process, *module);
   thread_pool_->Schedule([this, absolute_address, is_64_bit, pid, function] {
-    auto result = process_manager_->LoadProcessMemory(pid, absolute_address, function.size());
+    auto result = GetProcessManager()->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
                                                             result.error().message()));
@@ -964,7 +957,7 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
        frame_track_function_hashes = std::move(frame_track_function_hashes),
        scoped_status = std::move(scoped_status),
        error_message_from_local = std::move(error_message_from_local)]() mutable {
-        const auto result = process_manager_->FindDebugInfoFile(module_data->file_path());
+        const auto result = GetProcessManager()->FindDebugInfoFile(module_data->file_path());
 
         if (!result) {
           SendErrorToUi(
@@ -1039,7 +1032,9 @@ void OrbitApp::LoadModules(
       continue;
     }
 
-    if (!absl::GetFlag(FLAGS_local)) {
+    // TODO(170468590): [ui beta] maybe come up with a better indicator whether orbit is connected
+    // than process_manager != nullptr
+    if (!absl::GetFlag(FLAGS_local) && GetProcessManager() != nullptr) {
       LoadModuleOnRemote(module, std::move(function_hashes_to_hook),
                          std::move(frame_track_function_hashes), symbols_path.error().message());
       continue;

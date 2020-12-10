@@ -291,7 +291,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
     ui->actionIntrospection->setVisible(false);
   }
 
-  SetupGrpcChannel(std::move(grpc_server_address));
+  SetupGrpcAndProcessManager(std::move(grpc_server_address));
 
   app_->PostInit();
 
@@ -943,7 +943,7 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
   }
 }
 
-void OrbitMainWindow::SetupGrpcChannel(std::string grpc_server_address) {
+void OrbitMainWindow::SetupGrpcAndProcessManager(std::string grpc_server_address) {
   std::shared_ptr<grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
       grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
   if (!grpc_channel) {
@@ -958,4 +958,5 @@ void OrbitMainWindow::SetupGrpcChannel(std::string grpc_server_address) {
   process_manager_ = ProcessManager::Create(grpc_channel, absl::Milliseconds(1000));
 
   app_->SetGrpcChannel(std::move(grpc_channel));
+  app_->SetProcessManager(process_manager_.get());
 }

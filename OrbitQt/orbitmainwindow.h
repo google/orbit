@@ -21,6 +21,7 @@
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
 #include "MainThreadExecutor.h"
+#include "OrbitClientServices/ProcessManager.h"
 #include "StatusListener.h"
 #include "orbitglwidget.h"
 #include "servicedeploymanager.h"
@@ -122,7 +123,7 @@ class OrbitMainWindow : public QMainWindow {
 
   // TODO(170468590): [ui beta] When out of ui beta, this is not needed anymore (is done by
   // ProfilingTargetDialog)
-  void SetupGrpcChannel(std::string grpc_server_address);
+  void SetupGrpcAndProcessManager(std::string grpc_server_address);
 
  private:
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
@@ -147,6 +148,10 @@ class OrbitMainWindow : public QMainWindow {
     int current_index;
   };
   std::map<QTabWidget*, TabWidgetLayout> default_tab_layout_;
+
+  // TODO(170468590): [ui beta] When out of ui beta, this process_manager_ is not needed anymore,
+  // since the one from the Target is used;
+  std::unique_ptr<ProcessManager> process_manager_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_
