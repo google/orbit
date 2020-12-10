@@ -32,7 +32,7 @@ class ProcessManagerImpl final : public ProcessManager {
 
   ~ProcessManagerImpl() override { ShutdownAndWait(); }
 
-  void SetProcessListUpdateListener(const std::function<void(ProcessManager*)>& listener) override;
+  void SetProcessListUpdateListener(const std::function<void(const ProcessList)> listener) override;
 
   std::vector<ProcessInfo> GetProcessList() const override;
   ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(int32_t pid) override;
@@ -60,7 +60,7 @@ class ProcessManagerImpl final : public ProcessManager {
   std::vector<ProcessInfo> process_list_;
 
   mutable absl::Mutex process_list_update_listener_mutex_;
-  std::function<void(ProcessManager*)> process_list_update_listener_;
+  std::function<void(const ProcessList)> process_list_update_listener_;
 
   std::thread worker_thread_;
 };
@@ -72,7 +72,7 @@ ProcessManagerImpl::ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& cha
 }
 
 void ProcessManagerImpl::SetProcessListUpdateListener(
-    const std::function<void(ProcessManager*)>& listener) {
+    const std::function<void(const ProcessList)> listener) {
   absl::MutexLock lock(&process_list_update_listener_mutex_);
   process_list_update_listener_ = listener;
 }
@@ -134,7 +134,7 @@ void ProcessManagerImpl::WorkerFunction() {
     {
       absl::MutexLock callback_lock(&process_list_update_listener_mutex_);
       if (process_list_update_listener_) {
-        process_list_update_listener_(this);
+        process_list_update_listener_(std::move(result.value()));
       }
     }
   }
