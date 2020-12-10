@@ -22,7 +22,9 @@ target_sources(OrbitTriggerCaptureVulkanLayer PRIVATE
 target_link_libraries(OrbitTriggerCaptureVulkanLayer PUBLIC
         OrbitBase
         OrbitCaptureGgpClientLib
-        OrbitTriggerCaptureVulkanLayerProtos)
+        OrbitTriggerCaptureVulkanLayerProtos
+        Vulkan::Vulkan
+        Vulkan::ValidationLayers)
 
 project(OrbitTriggerCaptureVulkanLayerProtos)
 add_library(OrbitTriggerCaptureVulkanLayerProtos STATIC)
