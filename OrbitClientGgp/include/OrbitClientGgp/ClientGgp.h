@@ -66,7 +66,7 @@ class ClientGgp final : public CaptureListener {
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
   ProcessData target_process_;
-  OrbitClientData::ModuleManager module_manager_;
+  orbit_client_data::ModuleManager module_manager_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
   ModuleData* main_module_;
   std::shared_ptr<StringManager> string_manager_;

@@ -41,7 +41,7 @@ std::string GetLogFilePath(const std::string& log_directory) {
 
 int main(int argc, char** argv) {
   absl::SetProgramUsageMessage("Orbit CPU Profiler Ggp Client");
-  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
+  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
   const std::string log_directory = absl::GetFlag(FLAGS_log_directory);
