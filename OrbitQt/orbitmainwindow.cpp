@@ -110,6 +110,11 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
+namespace {
+const QString kMediumGrayColor = "rgb(68, 68, 68)";
+const QString kGreenColor = "rgb(41, 218, 130)";
+}  // namespace
+
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
                                  uint32_t font_size)
     : QMainWindow(nullptr),
@@ -119,6 +124,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
       target_configuration_(std::move(target_configuration)) {
   SetupMainWindow(font_size);
 
+  SetupTargetLabel();
   ui->RightTabWidget->setTabText(ui->RightTabWidget->indexOf(ui->FunctionsTab), "Symbols");
   ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->HomeTab));
 
@@ -453,6 +459,31 @@ void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
   ui->FileMappingWidget->hide();
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
+}
+
+void OrbitMainWindow::SetupTargetLabel() {
+  auto* target_widget = new QWidget();
+  target_widget->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
+  target_label_ = new QLabel();
+  target_label_->setContentsMargins(6, 0, 0, 0);
+  auto* disconnect_target_button = new QPushButton("End Session");
+  auto* target_layout = new QHBoxLayout();
+  target_layout->addWidget(target_label_);
+  target_layout->addWidget(disconnect_target_button);
+  target_layout->setMargin(0);
+  target_widget->setLayout(target_layout);
+
+  ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
+
+  QObject::connect(disconnect_target_button, &QPushButton::clicked, this, [this]() {
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, QApplication::applicationName(),
+        "This discards any unsaved progress. Are you sure you want to continue?");
+
+    if (reply == QMessageBox::Yes) {
+      QApplication::exit(kEndSessionReturnCode);
+    }
+  });
 }
 
 void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {
@@ -1094,7 +1125,10 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
   app_->SetTargetProcess(target.GetProcess());
 }
 
-void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& /*target*/) {}
+void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
+  target_label_->setStyleSheet("");
+  target_label_->setText(QString::fromStdString(target.GetCaptureFilePath().filename().string()));
+}
 
 void OrbitMainWindow::SetupGrpcAndProcessManager(std::string grpc_server_address) {
   std::shared_ptr<grpc::Channel> grpc_channel = grpc::CreateCustomChannel(

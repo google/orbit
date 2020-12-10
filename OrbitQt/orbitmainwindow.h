@@ -142,6 +142,7 @@ class OrbitMainWindow : public QMainWindow {
   void SetupCaptureToolbar();
   void SetupCodeView();
   void SetupMainWindow(uint32_t font_size);
+  void SetupTargetLabel();
 
   void SaveCurrentTabLayoutAsDefaultInMemory();
 
