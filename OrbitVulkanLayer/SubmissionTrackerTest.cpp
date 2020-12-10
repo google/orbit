@@ -432,7 +432,7 @@ TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWontWriteTimestampsWhenNotCapt
   tracker_.MarkCommandBufferEnd(command_buffer_);
 }
 
-TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWillWriteTimestampsWhenNotCapturedBegin) {
+TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWillWriteTimestampsWhenBeginNotCaptured) {
   static bool was_called = false;
 
   PFN_vkCmdWriteTimestamp mock_write_timestamp_function =
@@ -494,7 +494,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
 }
 
 TEST_F(SubmissionTrackerTest,
-       CanRetrieveCommandBufferTimestampsForACompleteSubmissionAtSecondPresent) {
+       CanRetrieveCommandBufferTimestampsForACompleteSubmissionAtALaterTime) {
   ExpectTwoNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillOnce(Return(mock_get_query_pool_results_function_not_ready_))
@@ -842,7 +842,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
                            tid);
 }
 
-TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenNotCapturedBegin) {
+TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenBeginNotCaptured) {
   ExpectTwoNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
@@ -896,7 +896,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenNotCapturedBegin)
   EXPECT_FALSE(actual_debug_marker.has_begin_marker());
 }
 
-TEST_F(SubmissionTrackerTest, CanRetrieveNextedDebugMarkerTimestampsForACompleteSubmission) {
+TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForACompleteSubmission) {
   ExpectSixNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
@@ -1128,7 +1128,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
                            tid);
 }
 
-TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhenNotCapturingBegin) {
+TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhenBeginNotCaptured) {
   ExpectFourNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
@@ -1202,7 +1202,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
   EXPECT_FALSE(actual_debug_marker.has_begin_marker());
 }
 
-TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenNotCapturingEnd) {
+TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenEndNotCaptured) {
   ExpectThreeNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
@@ -1285,7 +1285,7 @@ TEST_F(SubmissionTrackerTest, ResetDebugMarkerSlotsWhenStopBeforeASubmission) {
               UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4));
 }
 
-TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBuffer) {
+TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   tracker_.SetMaxLocalMarkerDepthPerCommandBuffer(1);
 
   ExpectFourNextReadyQuerySlotCalls();
@@ -1352,7 +1352,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBuffer) {
                            post_submit_time, tid);
 }
 
-TEST_F(SubmissionTrackerTest, CanLimitNextedDebugMarkerDepthPerCommandBufferAcrossSubmissions) {
+TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcrossSubmissions) {
   tracker_.SetMaxLocalMarkerDepthPerCommandBuffer(1);
   ExpectSevenNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)

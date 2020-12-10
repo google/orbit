@@ -40,14 +40,13 @@ template <class DispatchTable, class DeviceManager, class TimerQueryPool>
 class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
  public:
   // On a submission (vkQueueSubmit), all pointers to command buffers become invalid/can be reused
-  // for
-  // the next submission. The struct `QueueSubmission` gathers information (like timestamps and
-  // timer slots) about a concrete submission and their corresponding command buffers and debug
+  // for0a the next submission. The struct `QueueSubmission` gathers information (like timestamps
+  // and timer slots) about a concrete submission and their corresponding command buffers and debug
   // markers. This way the information is "persistent" across submissions. We will create this
   // struct at `vkQueuePresent` (right before the call into the driver -- and only if we are
   // capturing) and add some information (in particular markers and a timestamp) right after the the
   // driver call. So, we will use `QueueSubmission` as a return value, and therefore these structs
-  // can't be internal to the `SubmissionTracker`.
+  // need to be public in the `SubmissionTracker`.
 
   // Stores meta information about a submit (VkQueueSubmit), e.g. to allow to identify the matching
   // Gpu tracepoint.
@@ -134,6 +133,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     vulkan_layer_producer_ = vulkan_layer_producer;
     if (vulkan_layer_producer_ != nullptr) {
       vulkan_layer_producer_->SetCaptureStatusListener(this);
+    } else {
+      vulkan_layer_producer->SetCaptureStatusListener(nullptr);
     }
   }
 
@@ -178,13 +179,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   void MarkCommandBufferBegin(VkCommandBuffer command_buffer) {
     // Even when we are not capturing we create state for this command buffer to allow the
-    // debug marker tracking. In order to compute the the correct depth of debug marker and being
-    // able to match a "end" marker with the corresponding "begin" marker, we maintain a stack
-    // of all debug markers of a queue. The order of the markers is determined upon submission based
-    // on the order within the submitted command buffers. Thus, even when not capturing, we create
-    // an empty state here that allows us to store the debug markers into it and maintain that stack
-    // on submission. We will not write timestamps in this case and thus don't store any
-    // information other then the debug markers then.
+    // debug marker tracking. In order to compute the correct depth of debug marker and being able
+    // to match an "end" marker with the corresponding "begin" marker, we maintain a stack of all
+    // debug markers of a queue. The order of the markers is determined upon submission based on the
+    // order within the submitted command buffers. Thus, even when not capturing, we create an empty
+    // state here that allows us to store the debug markers into it and maintain that stack on
+    // submission. We will not write timestamps in this case and thus don't store any information
+    // other then the debug markers then.
     {
       absl::WriterMutexLock lock(&mutex_);
       CHECK(!command_buffer_to_state_.contains(command_buffer));
@@ -232,7 +233,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       ++state.local_marker_stack_size;
       marker_depth_exceeds_maximum =
-          max_local_marker_depth_per_command_buffer_ < std::numeric_limits<uint32_t>::max() &&
           state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
       Marker marker{.type = MarkerType::kDebugMarkerBegin,
                     .label_name = std::string(text),
@@ -262,7 +262,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       marker_depth_exceeds_maximum =
-          max_local_marker_depth_per_command_buffer_ < std::numeric_limits<uint32_t>::max() &&
           state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
       Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = marker_depth_exceeds_maximum};
       state.markers.emplace_back(std::move(marker));
@@ -287,7 +286,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   // After command buffers are submitted into a queue, they can be reused for further operations.
-  // Thus, our identification via the pointers become invalid. We will use the vkQueueSubmit
+  // Thus, our identification via the pointers becomes invalid. We will use the vkQueueSubmit
   // to make our data persistent until we have processed the results of the execution of these
   // command buffers (which will be done in the vkQueuePresentKHR).
   // If we are not capturing, that method will do nothing and return `nullopt`.
@@ -329,7 +328,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         submitted_submit_info.command_buffers.emplace_back(submitted_command_buffer);
 
         // Remove the slots from the state now, such that `OnCaptureFinished` won't reset the slots
-        // twice. Note, that they will be reset in `CompleteSubmits`.
+        // twice. Note that they will be reset in `CompleteSubmits`.
         state.command_buffer_begin_slot_index.reset();
         state.command_buffer_end_slot_index.reset();
       }
@@ -339,11 +338,12 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   // This method is supposed to be called right after the driver call of `vkQueuePresent`.
-  // At that point in time we can complete the submission meta information (Add the timestamp) and
+  // At that point in time we can complete the submission meta information (add the timestamp) and
   // know the order of the debug markers across command buffers. We will maintain the debug marker
   // stack in `queue_to_markers_` and if capturing also write the information about completed debug
   // markers into the `QueueSubmission`, to make it persistent across submissions and such that it
-  // can be picked up on a present to retrieve the timer results and send the data to the client.
+  // can be picked up later (on a vkQueuePresentKHR) to retrieve the timer results and send the data
+  // to the client.
   //
   // We assume to be capturing if `queue_submission_optional` has content, i.e. we were capturing
   // on this VkQueueSubmit before calling into the driver.
@@ -454,11 +454,11 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     queue_to_submissions_.at(queue).emplace_back(std::move(queue_submission_optional.value()));
   }
 
-  // This method is responsible to retrieve all the timestamps for the "completed" submissions and
-  // transform the information of those submissions (in particlular about the command buffers and
-  // debug markers) to the `GpuQueueSubmission` proto and send it to the producer.
-  // We consider a submission to be "completed" iff its last command buffer timestamp is ready (see
-  // `PullCompletedSubmissions`).
+  // This method is responsible to retrieve all the timestamps for the "completed" submissions,
+  // for transforming the information of those submissions (in particlular about the command buffers
+  // and debug markers) into the `GpuQueueSubmission` proto, and for sending it to the
+  // `VulkanLayerProducer`. We consider a submission to be "completed" iff its last command buffer
+  // timestamp is ready (see `PullCompletedSubmissions`).
   // Beside the timestamps of command buffers and the meta information of the submission, the proto
   // also contains the debug markers, *"begin"* (even if submitted in a different submission) and
   // "end", that got completed in this submission.
@@ -485,10 +485,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
           capture_event.mutable_gpu_queue_submission();
       WriteMetaInfo(completed_submission.meta_information, submission_proto->mutable_meta_info());
 
-      WriteCommandBufferTimings(completed_submission, submission_proto, query_slots_to_reset,
+      WriteCommandBufferTimings(completed_submission, submission_proto, &query_slots_to_reset,
                                 device, query_pool, timestamp_period);
 
-      WriteDebugMarkers(completed_submission, submission_proto, query_slots_to_reset, device,
+      WriteDebugMarkers(completed_submission, submission_proto, &query_slots_to_reset, device,
                         query_pool, timestamp_period);
 
       if (vulkan_layer_producer_ != nullptr) {
@@ -590,7 +590,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   // We have a stack of all markers of a queue, that gets updated upon a submission
   // (VkQueueSubmit). So on a submitted "begin" marker, we create that struct and push it to the
-  // stack. On a end, we pop from that stack, and if we are capturing we complete the information
+  // stack. On an "end", we pop from that stack, and if we are capturing we complete the information
   // and move it the completed markers of a `QueueSubmission`.
   // If a debug marker begin was discarded because of its depth, `depth_exceeds_maximum` is set to
   // true. This allows end markers on a different submission to also throw the end marker away.
@@ -719,7 +719,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   void WriteCommandBufferTimings(const QueueSubmission& completed_submission,
                                  orbit_grpc_protos::GpuQueueSubmission* submission_proto,
-                                 std::vector<uint32_t>& query_slots_to_reset, VkDevice device,
+                                 std::vector<uint32_t>* query_slots_to_reset, VkDevice device,
                                  VkQueryPool query_pool, float timestamp_period) {
     for (const auto& completed_submit : completed_submission.submit_infos) {
       orbit_grpc_protos::GpuSubmitInfo* submit_info_proto = submission_proto->add_submit_infos();
@@ -733,7 +733,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
               QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
           command_buffer_proto->set_begin_gpu_timestamp_ns(begin_timestamp);
 
-          query_slots_to_reset.push_back(slot_index);
+          query_slots_to_reset->push_back(slot_index);
         }
 
         uint32_t slot_index = completed_command_buffer.command_buffer_end_slot_index;
@@ -741,20 +741,20 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
             QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
 
         command_buffer_proto->set_end_gpu_timestamp_ns(end_timestamp);
-        query_slots_to_reset.push_back(slot_index);
+        query_slots_to_reset->push_back(slot_index);
       }
     }
   }
 
   void WriteDebugMarkers(const QueueSubmission& completed_submission,
                          orbit_grpc_protos::GpuQueueSubmission* submission_proto,
-                         std::vector<uint32_t>& query_slots_to_reset, VkDevice device,
+                         std::vector<uint32_t>* query_slots_to_reset, VkDevice device,
                          VkQueryPool query_pool, const float timestamp_period) {
     submission_proto->set_num_begin_markers(completed_submission.num_begin_markers);
     for (const auto& marker_state : completed_submission.completed_markers) {
       uint64_t end_timestamp = QueryGpuTimestampNs(
           device, query_pool, marker_state.end_info.slot_index, timestamp_period);
-      query_slots_to_reset.push_back(marker_state.end_info.slot_index);
+      query_slots_to_reset->push_back(marker_state.end_info.slot_index);
 
       orbit_grpc_protos::GpuDebugMarker* marker_proto = submission_proto->add_completed_markers();
       if (vulkan_layer_producer_ != nullptr) {
@@ -783,7 +783,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
       uint64_t begin_timestamp = QueryGpuTimestampNs(
           device, query_pool, marker_state.begin_info->slot_index, timestamp_period);
-      query_slots_to_reset.push_back(marker_state.begin_info->slot_index);
+      query_slots_to_reset->push_back(marker_state.begin_info->slot_index);
 
       begin_debug_marker_proto->set_gpu_timestamp_ns(begin_timestamp);
     }
