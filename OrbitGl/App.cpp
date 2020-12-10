@@ -841,6 +841,7 @@ bool OrbitApp::StartCapture() {
   UserDefinedCaptureData user_defined_capture_data =
       data_manager_->mutable_user_defined_capture_data();
 
+  CHECK(capture_client_ != nullptr);
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), std::move(user_defined_capture_data), enable_introspection);
@@ -863,6 +864,8 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::AbortCapture() {
+  if (capture_client_ == nullptr) return;
+
   static constexpr int64_t kMaxWaitForAbortCaptureMs = 2000;
   if (!capture_client_->AbortCaptureAndWait(kMaxWaitForAbortCaptureMs)) {
     return;
