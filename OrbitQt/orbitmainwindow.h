@@ -20,6 +20,7 @@
 #include "App.h"
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
+#include "MainThreadExecutor.h"
 #include "StatusListener.h"
 #include "orbitglwidget.h"
 #include "servicedeploymanager.h"
@@ -32,9 +33,8 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  explicit OrbitMainWindow(ApplicationOptions options,
-                           orbit_qt::ServiceDeployManager* service_deploy_manager,
-                           uint32_t font_size);
+  explicit OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
+                           std::string grpc_server_address, uint32_t font_size);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }
@@ -120,7 +120,12 @@ class OrbitMainWindow : public QMainWindow {
 
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
+  // TODO(170468590): [ui beta] When out of ui beta, this is not needed anymore (is done by
+  // ProfilingTargetDialog)
+  void SetupGrpcChannel(std::string grpc_server_address);
+
  private:
+  std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer = nullptr;

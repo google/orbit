@@ -4,7 +4,12 @@
 
 #include "orbitmainwindow.h"
 
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/time/time.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/support/channel_arguments.h>
 
 #include <QApplication>
 #include <QBuffer>
@@ -22,7 +27,6 @@
 #include <utility>
 
 #include "App.h"
-#include "ApplicationOptions.h"
 #include "CallTreeViewItemModel.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -55,11 +59,11 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
-OrbitMainWindow::OrbitMainWindow(ApplicationOptions options,
-                                 orbit_qt::ServiceDeployManager* service_deploy_manager,
-                                 uint32_t font_size)
+OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
+                                 std::string grpc_server_address, uint32_t font_size)
     : QMainWindow(nullptr),
-      app_{OrbitApp::Create(std::move(options), CreateMainThreadExecutor())},
+      main_thread_executor_{CreateMainThreadExecutor()},
+      app_{OrbitApp::Create(main_thread_executor_.get())},
       ui(new Ui::OrbitMainWindow) {
   DataViewFactory* data_view_factory = app_.get();
 
@@ -286,6 +290,8 @@ OrbitMainWindow::OrbitMainWindow(ApplicationOptions options,
   if (!absl::GetFlag(FLAGS_devmode)) {
     ui->actionIntrospection->setVisible(false);
   }
+
+  SetupGrpcChannel(std::move(grpc_server_address));
 
   app_->PostInit();
 
@@ -935,4 +941,21 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
   } else {
     QMainWindow::closeEvent(event);
   }
+}
+
+void OrbitMainWindow::SetupGrpcChannel(std::string grpc_server_address) {
+  std::shared_ptr<grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
+      grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
+  if (!grpc_channel) {
+    ERROR("Unable to create GRPC channel to %s", grpc_server_address);
+  }
+
+  if (!grpc_channel->WaitForConnected(
+          gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(5, GPR_TIMESPAN)))) {
+    ERROR("Unable to connect via GRPC channel to %s", grpc_server_address);
+  }
+
+  process_manager_ = ProcessManager::Create(grpc_channel, absl::Milliseconds(1000));
+
+  app_->SetGrpcChannel(std::move(grpc_channel));
 }
