@@ -53,8 +53,8 @@ void ForEachTracepointEventInRange(
     const std::map<uint64_t, orbit_client_protos::TracepointEventInfo>& time_to_tracepoint_events,
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) {
   for (auto time_to_tracepoint_event = time_to_tracepoint_events.lower_bound(min_tick);
-       time_to_tracepoint_event->first < max_tick_exclusive &&
-       (time_to_tracepoint_event != time_to_tracepoint_events.end());
+       time_to_tracepoint_event != time_to_tracepoint_events.end() &&
+       time_to_tracepoint_event->first < max_tick_exclusive;
        ++time_to_tracepoint_event) {
     action(time_to_tracepoint_event->second);
   }
