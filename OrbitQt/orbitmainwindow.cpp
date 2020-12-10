@@ -199,6 +199,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
                               /*is_main_instance=*/true, /*uniform_row_height=*/false,
                               /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
 
+  ui->actionEnd_Session->setVisible(false);
+
   SetupGrpcAndProcessManager(grpc_server_address);
 
   app_->PostInit();
@@ -813,6 +815,11 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
     }
     break;
   }
+}
+
+void OrbitMainWindow::on_actionEnd_Session_triggered() {
+  close();
+  QApplication::exit(kEndSessionReturnCode);
 }
 
 void OrbitMainWindow::on_actionQuit_triggered() {
