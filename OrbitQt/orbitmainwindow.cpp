@@ -942,7 +942,7 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
 }
 
 void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
-  QSettings settings("The Orbit Authors", "Orbit Profiler");
+  QSettings settings;
   const QString skip_capture_warning("SkipCaptureVersionWarning");
   if (!settings.value(skip_capture_warning, false).toBool()) {
     QMessageBox message_box;
@@ -964,7 +964,7 @@ void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
 }
 
 void OrbitMainWindow::ShowEmptyFrameTrackWarningIfNeeded(std::string_view function) {
-  QSettings settings("The Orbit Authors", "Orbit Profiler");
+  QSettings settings;
   const QString empty_frame_track_warning("EmptyFrameTrackWarning");
   std::string message = absl::StrFormat(
       "Frame track enabled for function %s, but since the function "
