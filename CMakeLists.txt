@@ -117,6 +117,11 @@ endif()
 
 find_package(Filesystem REQUIRED)
 
+if(NOT WIN32)
+  find_package(Vulkan REQUIRED)
+  find_package(VulkanValidationLayers REQUIRED)
+endif()
+
 # Set preprocessor defines These are only necessary for windows, but we will
 # define them on all platforms, to keep the builds similar as possible.
 add_definitions(-DNOMINMAX)

@@ -10,9 +10,11 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vk_layer_dispatch_table.h"
+
+// clang-format off
 #include "vulkan/vulkan.h"
+#include "vk_layer_dispatch_table.h"
+// clang-format on
 
 namespace orbit_vulkan_layer {
 
