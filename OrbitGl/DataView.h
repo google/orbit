@@ -56,7 +56,7 @@ class DataView {
   void OnSort(int column, std::optional<SortingOrder> new_order);
   virtual void OnContextMenu(const std::string& action, int menu_index,
                              const std::vector<int>& item_indices);
-  virtual void OnSelect(int /*index*/) {}
+  virtual void OnSelect(std::optional<int> /*index*/) {}
   virtual int GetSelectedIndex() { return selected_index_; }
   virtual void OnDataChanged();
   virtual void OnTimer() {}

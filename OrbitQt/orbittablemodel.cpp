@@ -97,8 +97,8 @@ void OrbitTableModel::OnFilter(const QString& filter) {
   data_view_->OnFilter(filter.toStdString());
 }
 
-void OrbitTableModel::OnRowSelected(int row) {
-  if (static_cast<int>(data_view_->GetNumElements()) > row) {
+void OrbitTableModel::OnRowSelected(std::optional<int> row) {
+  if (!row.has_value() || static_cast<int>(data_view_->GetNumElements()) > row.value()) {
     data_view_->OnSelect(row);
   }
 }
