@@ -5,18 +5,21 @@
 #ifndef ORBIT_GL_DATA_MANAGER_H_
 #define ORBIT_GL_DATA_MANAGER_H_
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/node_hash_map.h>
+
+#include <cstdint>
 #include <thread>
+#include <vector>
 
 #include "OrbitClientData/FunctionInfoSet.h"
-#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "TextBox.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/container/node_hash_map.h"
-#include "module.pb.h"
+#include "capture_data.pb.h"
+#include "process.pb.h"
+#include "tracepoint.pb.h"
 
 // This class is responsible for storing and
 // navigating data on the client side. Note that
@@ -48,6 +51,7 @@ class DataManager final {
   [[nodiscard]] int32_t selected_thread_id() const;
   [[nodiscard]] const TextBox* selected_text_box() const;
   [[nodiscard]] const ProcessData* selected_process() const;
+  [[nodiscard]] ProcessData* mutable_selected_process() const;
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
@@ -85,7 +89,7 @@ class DataManager final {
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
 
-  const ProcessData* selected_process_ = nullptr;
+  ProcessData* selected_process_ = nullptr;
 
   // DataManager needs a copy of this so that we can persist user choices like frame tracks between
   // captures.
