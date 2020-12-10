@@ -121,7 +121,7 @@ void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
   WriteRingBufferTail(metadata_page_, new_tail);
 }
 
-void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header, void* record) {
+void PerfEventRingBuffer::ConsumeRawRecord(const perf_event_header& header, void* record) {
   ReadAtTail(static_cast<uint8_t*>(record), header.size);
   SkipRecord(header);
 }
