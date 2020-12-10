@@ -106,8 +106,8 @@ PresetLoadState GetPresetLoadStateForProcess(
 
 bool DoZoom = false;
 
-OrbitApp::OrbitApp(ApplicationOptions&& options, MainThreadExecutor* main_thread_executor)
-    : options_(std::move(options)), main_thread_executor_(main_thread_executor) {
+OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor)
+    : main_thread_executor_(main_thread_executor) {
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
@@ -295,9 +295,8 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
   });
 }
 
-std::unique_ptr<OrbitApp> OrbitApp::Create(ApplicationOptions&& options,
-                                           MainThreadExecutor* main_thread_executor) {
-  auto app = std::make_unique<OrbitApp>(std::move(options), main_thread_executor);
+std::unique_ptr<OrbitApp> OrbitApp::Create(MainThreadExecutor* main_thread_executor) {
+  auto app = std::make_unique<OrbitApp>(main_thread_executor);
 
 #ifdef _WIN32
   oqpi::default_helpers::start_default_scheduler();
@@ -309,13 +308,7 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(ApplicationOptions&& options,
 }
 
 void OrbitApp::PostInit() {
-  if (!options_.grpc_server_address.empty()) {
-    grpc_channel_ = grpc::CreateCustomChannel(
-        options_.grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
-    if (!grpc_channel_) {
-      ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
-    }
-
+  if (IsConnectedToInstance()) {
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
     // TODO: Replace refresh_timeout with config option. Let users to modify it.

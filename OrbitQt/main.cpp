@@ -41,7 +41,6 @@
 #include <unistd.h>
 #endif
 
-#include "ApplicationOptions.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "ImGuiOrbit.h"
@@ -151,8 +150,7 @@ static outcome::result<void> RunUiInstance(
   }());
   const auto& [ports, capture_path] = result;
 
-  ApplicationOptions options;
-  options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
+  std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
   ServiceDeployManager* service_deploy_manager_ptr = nullptr;
 
@@ -165,7 +163,7 @@ static outcome::result<void> RunUiInstance(
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
-    OrbitMainWindow w(std::move(options), service_deploy_manager_ptr, kDefaultFontSize);
+    OrbitMainWindow w(service_deploy_manager_ptr, grpc_server_address, kDefaultFontSize);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);

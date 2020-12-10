@@ -13,7 +13,6 @@
 #include <string>
 #include <utility>
 
-#include "ApplicationOptions.h"
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
 #include "CaptureWindow.h"
@@ -69,11 +68,10 @@ class Process;
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  OrbitApp(ApplicationOptions&& options, MainThreadExecutor* main_thread_executor);
+  OrbitApp(MainThreadExecutor* main_thread_executor);
   ~OrbitApp() override;
 
-  static std::unique_ptr<OrbitApp> Create(ApplicationOptions&& options,
-                                          MainThreadExecutor* main_thread_executor);
+  static std::unique_ptr<OrbitApp> Create(MainThreadExecutor* main_thread_executor);
 
   void PostInit();
   void MainTick();
@@ -302,6 +300,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
+  void SetGrpcChannel(std::shared_ptr<grpc::Channel> grpc_channel) {
+    CHECK(grpc_channel_ == nullptr);
+    CHECK(grpc_channel != nullptr);
+    grpc_channel_ = std::move(grpc_channel);
+  }
   void SetProcess(ProcessData* process) {
     CHECK(process != nullptr);
     process_ = process;
@@ -404,8 +407,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                                                    const std::vector<uint64_t> function_hashes);
   void AddFrameTrackTimers(const orbit_client_protos::FunctionInfo& function);
   void RefreshFrameTracks();
-
-  ApplicationOptions options_;
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
 

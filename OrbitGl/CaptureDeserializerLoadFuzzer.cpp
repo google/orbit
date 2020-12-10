@@ -45,7 +45,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     }
   }
 
-  std::unique_ptr<OrbitApp> app = OrbitApp::Create({}, nullptr);
+  std::unique_ptr<OrbitApp> app = OrbitApp::Create(nullptr);
 
   app->SetCaptureStartedCallback([]() {});
   app->SetCaptureStoppedCallback([]() {});
