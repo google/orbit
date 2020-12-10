@@ -419,6 +419,7 @@ QPushButton:disabled {
     <addaction name="actionOpen_Preset"/>
     <addaction name="actionSave_Preset_As"/>
     <addaction name="separator"/>
+    <addaction name="actionEnd_Session"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -563,6 +564,15 @@ QPushButton:disabled {
    </property>
    <property name="toolTip">
     <string>Introspection</string>
+   </property>
+  </action>
+  <action name="actionEnd_Session">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/arrow_back</normaloff>:/actions/arrow_back</iconset>
+   </property>
+   <property name="text">
+    <string>End Session</string>
    </property>
   </action>
   <action name="actionQuit">
