@@ -13,6 +13,7 @@
 //       OrbitApi project in a subsequent PR.
 #include "../../../Orbit.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitBase/ThreadUtils.h"
 
 #define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 
@@ -24,7 +25,7 @@ struct TracingScope {
   uint64_t begin = 0;
   uint64_t end = 0;
   uint32_t depth = 0;
-  uint32_t tid = 0;
+  orbit_base::thread_id_t tid = 0;
   orbit_api::EncodedEvent encoded_event;
 };
 

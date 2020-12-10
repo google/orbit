@@ -10,8 +10,16 @@
 
 namespace orbit_base {
 
-[[nodiscard]] uint32_t GetCurrentThreadId();
-[[nodiscard]] std::string GetThreadName(uint32_t tid);
+#ifdef _WIN32
+#include <Windows.h>
+using thread_id_t = DWORD;
+#else
+#include <sys/types.h>
+using thread_id_t = pid_t;
+#endif
+
+[[nodiscard]] thread_id_t GetCurrentThreadId();
+[[nodiscard]] std::string GetThreadName(thread_id_t tid);
 void SetCurrentThreadName(const std::string& thread_name);
 
 }  // namespace orbit_base

@@ -22,11 +22,12 @@ static FunctionPrototypeT GetProcAddress(const std::string& library, const std::
   return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
 }
 
-[[nodiscard]] uint32_t GetCurrentThreadId() {
-  return static_cast<uint32_t>(::GetCurrentThreadId());
+[[nodiscard]] thread_id_t GetCurrentThreadId() {
+  thread_local thread_id_t current_tid = ::GetCurrentThreadId();
+  return thread_id_t;
 }
 
-std::string GetThreadName(uint32_t tid) {
+std::string GetThreadName(thread_id_t tid) {
   static const std::string kEmptyString;
 
   // Find "GetThreadDescription" procedure.

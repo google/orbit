@@ -11,17 +11,17 @@
 
 namespace orbit_base {
 
-[[nodiscard]] uint32_t GetCurrentThreadId() {
-  thread_local pid_t current_tid = syscall(__NR_gettid);
-  return static_cast<uint32_t>(current_tid);
+[[nodiscard]] thread_id_t GetCurrentThreadId() {
+  thread_local thread_id_t current_tid = syscall(__NR_gettid);
+  return current_tid;
 }
 
-std::string GetThreadName(uint32_t tid) {
+std::string GetThreadName(thread_id_t tid) {
   constexpr size_t kMaxStringSize = 16;
   char thread_name[kMaxStringSize];
   int result = pthread_getname_np(pthread_self(), thread_name, kMaxStringSize);
   if (result != 0) {
-    ERROR("Getting thread name for tid %u. Error %d", tid, result);
+    ERROR("Getting thread name for tid %d. Error %d", tid, result);
     return {};
   }
   return thread_name;
@@ -34,11 +34,11 @@ void SetCurrentThreadName(const std::string& thread_name) {
   constexpr size_t kMaxStringSize = 16;
   std::string name = thread_name;
   if (name.length() >= kMaxStringSize) {
-    name[kMaxStringSize - 1] = 0;
+    name[kMaxStringSize - 1] = '\0';
   }
   int result = pthread_setname_np(pthread_self(), name.data());
   if (result != 0) {
-    ERROR("Setting thread name for tid %u. Error %d", GetCurrentThreadId(), result);
+    ERROR("Setting thread name for tid %d. Error %d", GetCurrentThreadId(), result);
   }
 }
 
