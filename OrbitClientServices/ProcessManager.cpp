@@ -56,8 +56,10 @@ class ProcessManagerImpl final : public ProcessManager {
   absl::Mutex shutdown_mutex_;
   bool shutdown_initiated_;
 
-  mutable absl::Mutex mutex_;
+  mutable absl::Mutex process_list_mutex_;
   std::vector<ProcessInfo> process_list_;
+
+  mutable absl::Mutex process_list_update_listener_mutex_;
   std::function<void(ProcessManager*)> process_list_update_listener_;
 
   std::thread worker_thread_;
@@ -71,7 +73,7 @@ ProcessManagerImpl::ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& cha
 
 void ProcessManagerImpl::SetProcessListUpdateListener(
     const std::function<void(ProcessManager*)>& listener) {
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(&process_list_update_listener_mutex_);
   process_list_update_listener_ = listener;
 }
 
@@ -80,7 +82,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(int32
 }
 
 std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(&process_list_mutex_);
   return process_list_;
 }
 
@@ -124,11 +126,16 @@ void ProcessManagerImpl::WorkerFunction() {
       continue;
     }
 
-    absl::MutexLock callback_lock(&mutex_);
-    const auto& processes = result.value();
-    process_list_.assign(processes.begin(), processes.end());
-    if (process_list_update_listener_) {
-      process_list_update_listener_(this);
+    {
+      absl::MutexLock process_lock(&process_list_mutex_);
+      const auto& processes = result.value();
+      process_list_.assign(processes.begin(), processes.end());
+    }
+    {
+      absl::MutexLock callback_lock(&process_list_update_listener_mutex_);
+      if (process_list_update_listener_) {
+        process_list_update_listener_(this);
+      }
     }
   }
 }
