@@ -552,6 +552,7 @@ void OrbitApp::SetCaptureWindow(CaptureWindow* capture) {
   CHECK(capture_window_ == nullptr);
   GCurrentTimeGraph = capture->GetTimeGraph();
   capture_window_ = capture;
+  capture_window_->set_draw_help(false);
 }
 
 void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {

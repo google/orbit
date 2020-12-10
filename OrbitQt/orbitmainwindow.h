@@ -142,6 +142,7 @@ class OrbitMainWindow : public QMainWindow {
   void SetupCaptureToolbar();
   void SetupCodeView();
   void SetupMainWindow(uint32_t font_size);
+  void SetupHintFrame();
   void SetupTargetLabel();
 
   void SaveCurrentTabLayoutAsDefaultInMemory();
@@ -168,6 +169,7 @@ class OrbitMainWindow : public QMainWindow {
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> gl_widgets_;
   OrbitGLWidget* introspection_widget_ = nullptr;
+  QFrame* hint_frame_ = nullptr;
   QLabel* target_label_ = nullptr;
 
   // Capture toolbar.
