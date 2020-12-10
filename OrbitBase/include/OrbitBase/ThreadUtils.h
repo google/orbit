@@ -10,8 +10,7 @@
 namespace orbit_base {
 
 #ifdef _WIN32
-#include <Windows.h>
-using thread_id_t = DWORD;
+using thread_id_t = uint32_t;
 #else
 #include <sys/types.h>
 using thread_id_t = pid_t;
