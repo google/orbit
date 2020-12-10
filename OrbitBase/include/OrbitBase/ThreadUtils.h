@@ -5,7 +5,6 @@
 #ifndef ORBIT_BASE_THREAD_UTILS_H_
 #define ORBIT_BASE_THREAD_UTILS_H_
 
-#include <cstdint>
 #include <string>
 
 namespace orbit_base {
