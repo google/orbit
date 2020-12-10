@@ -302,18 +302,18 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
+  void SetProcess(ProcessData* process) {
+    CHECK(process != nullptr);
+    process_ = process;
+  }
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_.get(); }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_.get(); }
-  [[nodiscard]] ProcessData* GetMutableSelectedProcess() const {
-    return data_manager_->mutable_selected_process();
-  }
-  [[nodiscard]] const ProcessData* GetSelectedProcess() const {
-    return data_manager_->selected_process();
-  }
+  [[nodiscard]] ProcessData* GetMutableSelectedProcess() const { return process_; }
+  [[nodiscard]] const ProcessData* GetSelectedProcess() const { return process_; }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
   }
@@ -472,6 +472,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   const SymbolHelper symbol_helper_;
 
   StatusListener* status_listener_ = nullptr;
+
+  ProcessData* process_ = nullptr;
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
