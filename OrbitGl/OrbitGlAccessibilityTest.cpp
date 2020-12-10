@@ -8,11 +8,9 @@
 
 #include "AccessibilityInterfaceMock.h"
 
-namespace orbit_gl_tests {
+namespace orbit_gl {
 
 TEST(AccessibilityRegistry, Management) {
-  using orbit_gl::GlAccessibleInterfaceRegistry;
-
   TestA11yImpl* impl = new TestA11yImpl(nullptr);
   EXPECT_TRUE(GlAccessibleInterfaceRegistry::Get().Exists(impl));
   delete impl;
@@ -20,7 +18,6 @@ TEST(AccessibilityRegistry, Management) {
 }
 
 TEST(AccessibilityRegistry, Callback) {
-  using orbit_gl::GlAccessibleInterfaceRegistry, orbit_gl::GlAccessibleInterface;
   bool registered = false;
 
   auto registered_callback = [&registered](GlAccessibleInterface* iface) { registered = true; };
@@ -36,4 +33,4 @@ TEST(AccessibilityRegistry, Callback) {
   EXPECT_FALSE(registered);
 }
 
-}  // namespace orbit_gl_tests
+}  // namespace orbit_gl

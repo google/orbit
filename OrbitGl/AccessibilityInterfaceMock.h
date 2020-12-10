@@ -7,7 +7,7 @@
 
 #include "OrbitGlAccessibility.h"
 
-namespace orbit_gl_tests {
+namespace orbit_gl {
 
 class TestA11yImpl : public orbit_gl::GlAccessibleInterface {
  public:
@@ -51,6 +51,6 @@ class TestA11yImpl : public orbit_gl::GlAccessibleInterface {
   TestA11yImpl* parent_ = nullptr;
 };
 
-}  // namespace orbit_gl_tests
+}  // namespace orbit_gl
 
 #endif

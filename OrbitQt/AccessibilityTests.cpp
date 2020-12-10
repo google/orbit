@@ -4,29 +4,45 @@
 
 #include <gtest/gtest.h>
 
+#include <QAccessibleWidget>
 #include <QApplication>
 #include <list>
 
-#include "../OrbitGl/AccessibilityInterfaceMock.h"
 #include "AccessibilityAdapter.h"
+#include "AccessibilityInterfaceMock.h"
 #include "orbitglwidget.h"
 
-namespace orbit_qt_tests {
+namespace orbit_qt {
 
 using orbit_gl::GlAccessibleInterface, orbit_gl::A11yRole, orbit_gl::A11yRect, orbit_gl::A11yState;
-using orbit_gl_tests::TestA11yImpl;
-using orbit_qt::A11yAdapter;
+using orbit_gl::TestA11yImpl;
 
 TEST(Accessibility, CreationAndManagement) {
-  TestA11yImpl obj(nullptr);
-  QAccessibleInterface* a1 = A11yAdapter::GetOrCreateAdapter(&obj);
+  TestA11yImpl* obj = new TestA11yImpl(nullptr);
+  QAccessibleInterface* a1 = A11yAdapter::GetOrCreateAdapter(obj);
   EXPECT_TRUE(a1->isValid());
 
-  QAccessibleInterface* a2 = A11yAdapter::GetOrCreateAdapter(&obj);
+  QAccessibleInterface* a2 = A11yAdapter::GetOrCreateAdapter(obj);
   EXPECT_TRUE(a2->isValid());
   EXPECT_EQ(a1, a2);
 
-  // TODO: Clearing of existing adapters is missing
+  delete obj;
+  EXPECT_EQ(A11yAdapter::RegisteredAdapterCount(), 0);
+}
+
+TEST(Accessibility, ExternalWidget) {
+  QObject object;
+
+  // This should usually happen automatically - OrbitGlWidgetAccessible will register
+  // and unregister on construction and deletion. This can currently not be tested though because we
+  // cannot create a OrbitGlWidgetAccessible without an OrbitGlWidget, and this has too many
+  // dependencies to be instantiated in a unit test at this point
+  TestA11yImpl* obj = new TestA11yImpl(nullptr);
+  A11yAdapter::RegisterAdapter(obj, QAccessible::queryAccessibleInterface(&object));
+  EXPECT_EQ(A11yAdapter::RegisteredAdapterCount(), 1);
+  A11yAdapter::QAccessibleDeleted(QAccessible::queryAccessibleInterface(&object));
+  EXPECT_EQ(A11yAdapter::RegisteredAdapterCount(), 0);
+  delete obj;
 }
 
 TEST(Accessibility, Hierarchy) {
@@ -52,4 +68,4 @@ TEST(Accessibility, Hierarchy) {
   EXPECT_EQ(root_adapter->indexOfChild(root_adapter->child(1)), 1);
 }
 
-}  // namespace orbit_qt_tests
+}  // namespace orbit_qt

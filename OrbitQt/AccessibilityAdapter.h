@@ -24,12 +24,10 @@ class A11yAdapter : public QAccessibleInterface {
   A11yAdapter(A11yAdapter& rhs) = delete;
   A11yAdapter(A11yAdapter&& rhs) = delete;
 
-  static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlAccessibleInterface* iface);
-
   // check for valid pointers
   bool isValid() const override {
-    bool result = info_ != nullptr && s_owned_adapters_.contains(this);
-    CHECK(!result || s_adapter_map_.find(info_)->second == this);
+    bool result = info_ != nullptr;
+    CHECK(!result || interface_map_.find(info_)->second == this);
     return result;
   }
   QObject* object() const override { return &dummy_; }
@@ -50,20 +48,23 @@ class A11yAdapter : public QAccessibleInterface {
   QString text(QAccessible::Text t) const override { return info_->AccessibleName().c_str(); }
   void setText(QAccessible::Text t, const QString& text) override{};
   QRect rect() const override;
-  QAccessible::Role role() const override {
-    auto role = info_->AccessibleRole();
-    return *reinterpret_cast<QAccessible::Role*>(&role);
-  }
+  QAccessible::Role role() const override;
 
   virtual QAccessible::State state() const override {
     static_assert(sizeof(QAccessible::State) == sizeof(orbit_gl::A11yState));
     return *reinterpret_cast<QAccessible::State*>(&info_->AccessibleState());
   }
 
-  static void AddBridge(const orbit_gl::GlAccessibleInterface* gl_control,
-                        QAccessibleInterface* qt_control) {
-    s_adapter_map_.insert(std::make_pair(gl_control, qt_control));
+  static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlAccessibleInterface* iface);
+  static void RegisterAdapter(const orbit_gl::GlAccessibleInterface* gl_control,
+                              QAccessibleInterface* qt_control) {
+    interface_map_.insert(std::make_pair(gl_control, qt_control));
   }
+  // Called when a QAccessibleInterface which has been registered through "RegisterAdapter",
+  // but not created by this class, is deleted. Should only be needed for OrbitGlWidgets.
+  static void QAccessibleDeleted(QAccessibleInterface* iface);
+
+  static int RegisteredAdapterCount() { return interface_map_.size(); }
 
  private:
   mutable QObject dummy_;
@@ -72,8 +73,10 @@ class A11yAdapter : public QAccessibleInterface {
   const orbit_gl::GlAccessibleInterface* info_ = nullptr;
 
   static absl::flat_hash_map<const orbit_gl::GlAccessibleInterface*, QAccessibleInterface*>
-      s_adapter_map_;
-  static absl::flat_hash_set<A11yAdapter*> s_owned_adapters_;
+      interface_map_;
+  static bool initialized_;
+
+  static void Init();
 };
 
 class OrbitGlWidgetAccessible : public QAccessibleWidget {
