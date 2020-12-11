@@ -37,20 +37,12 @@ class TrackManager {
 
   void Clear();
 
-  [[nodiscard]] std::vector<std::shared_ptr<Track>> GetTracks() const;
-  [[nodiscard]] std::vector<std::shared_ptr<Track>> GetFilteredTracks() const {
-    return sorted_filtered_tracks_;
-  }
-  [[nodiscard]] std::vector<std::shared_ptr<ThreadTrack>> GetThreadTracks() const;
-  [[nodiscard]] std::vector<std::shared_ptr<FrameTrack>> GetFrameTracks() const;
-  [[nodiscard]] std::vector<std::shared_ptr<AsyncTrack>> GetAsyncTracks() const;
-  [[nodiscard]] std::vector<std::shared_ptr<GraphTrack>> GetGraphTracks() const;
-  [[nodiscard]] std::vector<std::shared_ptr<GpuTrack>> GetGpuTracks() const;
+  [[nodiscard]] std::vector<Track*> GetAllTracks() const;
+  [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
+  [[nodiscard]] std::vector<ThreadTrack*> GetThreadTracks() const;
+  [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
-  [[nodiscard]] std::shared_ptr<SchedulerTrack> GetSchedulerTrack() const {
-    return scheduler_track_;
-  };
-  [[nodiscard]] std::shared_ptr<ThreadTrack> GetTracepointsSystemWideTrack() const {
+  [[nodiscard]] ThreadTrack* GetTracepointsSystemWideTrack() const {
     return tracepoints_system_wide_track_;
   }
 
@@ -63,13 +55,12 @@ class TrackManager {
   void UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
 
-  std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
-  std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
-  std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
+  SchedulerTrack* GetOrCreateSchedulerTrack();
+  ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
+  GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
-  std::shared_ptr<FrameTrack> GetOrCreateFrameTrack(
-      const orbit_client_protos::FunctionInfo& function);
+  FrameTrack* GetOrCreateFrameTrack(const orbit_client_protos::FunctionInfo& function);
 
   void AddTrack(std::shared_ptr<Track> track);
   void RemoveFrameTrack(uint64_t function_address);
@@ -83,7 +74,7 @@ class TrackManager {
 
   mutable std::recursive_mutex mutex_;
 
-  std::vector<std::shared_ptr<Track>> tracks_;
+  std::vector<std::shared_ptr<Track>> all_tracks_;
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
@@ -93,18 +84,19 @@ class TrackManager {
   // TODO (b/175865913): Use Function info instead of their address as key to FrameTracks
   std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
-  std::shared_ptr<ThreadTrack> tracepoints_system_wide_track_;
+  ThreadTrack* tracepoints_system_wide_track_;
 
   TimeGraph* time_graph_;
 
-  std::vector<std::shared_ptr<Track>> sorted_tracks_;
+  std::vector<Track*> sorted_tracks_;
   bool sorting_invalidated_;
   Timer last_thread_reorder_;
   std::map<int32_t, uint32_t> thread_count_map_;
   std::map<int32_t, uint32_t> event_count_;
 
   std::string filter_;
-  std::vector<std::shared_ptr<Track>> sorted_filtered_tracks_;
+  std::vector<Track*> visible_tracks_;
+
   float tracks_total_height_;
   StringManager* string_manager_;
 

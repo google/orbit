@@ -31,13 +31,13 @@ using orbit_client_protos::FunctionInfo;
 
 TrackManager::TrackManager(TimeGraph* time_graph, OrbitApp* app)
     : time_graph_(time_graph), app_{app} {
-  scheduler_track_ = GetOrCreateSchedulerTrack();
+  GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
 
 void TrackManager::Clear() {
-  tracks_.clear();
+  all_tracks_.clear();
   scheduler_track_ = nullptr;
   thread_tracks_.clear();
   gpu_tracks_.clear();
@@ -46,52 +46,34 @@ void TrackManager::Clear() {
   frame_tracks_.clear();
 
   sorted_tracks_.clear();
-  sorted_filtered_tracks_.clear();
+  visible_tracks_.clear();
 
-  scheduler_track_ = GetOrCreateSchedulerTrack();
+  GetOrCreateSchedulerTrack();
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
 
 void TrackManager::SetStringManager(StringManager* str_manager) { string_manager_ = str_manager; }
 
-std::vector<std::shared_ptr<Track>> TrackManager::GetTracks() const { return tracks_; }
-
-std::vector<std::shared_ptr<ThreadTrack>> TrackManager::GetThreadTracks() const {
-  std::vector<std::shared_ptr<ThreadTrack>> tracks;
-  for (auto& [unused_key, thread_track] : thread_tracks_) {
-    tracks.emplace_back(thread_track);
+std::vector<Track*> TrackManager::GetAllTracks() const {
+  std::vector<Track*> tracks;
+  for (auto track : all_tracks_) {
+    tracks.emplace_back(track.get());
   }
   return tracks;
 }
 
-std::vector<std::shared_ptr<FrameTrack>> TrackManager::GetFrameTracks() const {
-  std::vector<std::shared_ptr<FrameTrack>> tracks;
+std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
+  std::vector<ThreadTrack*> tracks;
+  for (auto& [unused_key, track] : thread_tracks_) {
+    tracks.emplace_back(track.get());
+  }
+  return tracks;
+}
+
+std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
+  std::vector<FrameTrack*> tracks;
   for (auto& [unused_key, track] : frame_tracks_) {
-    tracks.emplace_back(track);
-  }
-  return tracks;
-}
-
-std::vector<std::shared_ptr<AsyncTrack>> TrackManager::GetAsyncTracks() const {
-  std::vector<std::shared_ptr<AsyncTrack>> tracks;
-  for (auto& [unused_key, track] : async_tracks_) {
-    tracks.emplace_back(track);
-  }
-  return tracks;
-}
-
-std::vector<std::shared_ptr<GraphTrack>> TrackManager::GetGraphTracks() const {
-  std::vector<std::shared_ptr<GraphTrack>> tracks;
-  for (auto& [unused_key, track] : graph_tracks_) {
-    tracks.emplace_back(track);
-  }
-  return tracks;
-}
-
-std::vector<std::shared_ptr<GpuTrack>> TrackManager::GetGpuTracks() const {
-  std::vector<std::shared_ptr<GpuTrack>> tracks;
-  for (auto& [unused_key, track] : gpu_tracks_) {
-    tracks.emplace_back(track);
+    tracks.emplace_back(track.get());
   }
   return tracks;
 }
@@ -99,7 +81,7 @@ std::vector<std::shared_ptr<GpuTrack>> TrackManager::GetGpuTracks() const {
 void TrackManager::SortTracks() {
   if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_) return;
 
-  std::shared_ptr<ThreadTrack> process_track = nullptr;
+  ThreadTrack* process_track = nullptr;
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
   if (capture_data != nullptr) {
@@ -125,26 +107,26 @@ void TrackManager::SortTracks() {
 
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     // Gather all tracks regardless of the process in sorted order
-    std::vector<std::shared_ptr<Track>> all_processes_sorted_tracks;
+    std::vector<Track*> all_processes_sorted_tracks;
 
     // Gpu tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
-      all_processes_sorted_tracks.emplace_back(timeline_and_track.second);
+      all_processes_sorted_tracks.emplace_back(timeline_and_track.second.get());
     }
 
     // Frame tracks.
     for (const auto& name_and_track : frame_tracks_) {
-      all_processes_sorted_tracks.emplace_back(name_and_track.second);
+      all_processes_sorted_tracks.emplace_back(name_and_track.second.get());
     }
 
     // Graph tracks.
     for (const auto& graph_track : graph_tracks_) {
-      all_processes_sorted_tracks.emplace_back(graph_track.second);
+      all_processes_sorted_tracks.emplace_back(graph_track.second.get());
     }
 
     // Async tracks.
     for (const auto& async_track : async_tracks_) {
-      all_processes_sorted_tracks.emplace_back(async_track.second);
+      all_processes_sorted_tracks.emplace_back(async_track.second.get());
     }
 
     // Tracepoint tracks.
@@ -159,7 +141,7 @@ void TrackManager::SortTracks() {
 
     // Thread tracks.
     for (auto thread_id : sorted_thread_ids) {
-      std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(thread_id);
+      auto track = GetOrCreateThreadTrack(thread_id);
       if (!track->IsEmpty()) {
         all_processes_sorted_tracks.emplace_back(track);
       }
@@ -167,8 +149,8 @@ void TrackManager::SortTracks() {
 
     // Separate "capture_pid" tracks from tracks that originate from other processes.
     int32_t capture_pid = capture_data ? capture_data->process_id() : 0;
-    std::vector<std::shared_ptr<Track>> capture_pid_tracks;
-    std::vector<std::shared_ptr<Track>> external_pid_tracks;
+    std::vector<Track*> capture_pid_tracks;
+    std::vector<Track*> external_pid_tracks;
     for (auto& track : all_processes_sorted_tracks) {
       int32_t pid = track->GetProcessId();
       if (pid != -1 && pid != capture_pid) {
@@ -183,7 +165,7 @@ void TrackManager::SortTracks() {
 
     // Scheduler track.
     if (!scheduler_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(scheduler_track_);
+      sorted_tracks_.emplace_back(scheduler_track_.get());
     }
 
     // For now, "external_pid_tracks" should only contain
@@ -205,17 +187,17 @@ void TrackManager::SetFilter(const std::string& filter) {
 
 void TrackManager::UpdateFilteredTrackList() {
   if (filter_.empty()) {
-    sorted_filtered_tracks_ = sorted_tracks_;
+    visible_tracks_ = sorted_tracks_;
     return;
   }
 
-  sorted_filtered_tracks_.clear();
+  visible_tracks_.clear();
   std::vector<std::string> filters = absl::StrSplit(filter_, ' ', absl::SkipWhitespace());
   for (const auto& track : sorted_tracks_) {
     std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
     for (auto& filter : filters) {
       if (absl::StrContains(lower_case_label, filter)) {
-        sorted_filtered_tracks_.emplace_back(track);
+        visible_tracks_.emplace_back(track);
         break;
       }
     }
@@ -253,7 +235,7 @@ TrackManager::GetSortedThreadIds() {  // Show threads with instrumented function
 
 void TrackManager::UpdateMovingTrackSorting() {
   // This updates the position of the currently moving track in both the sorted_tracks_
-  // and the sorted_filtered_tracks_ array. The moving track is inserted after the first track
+  // and the visible_tracks_ array. The moving track is inserted after the first track
   // with a value of top + height smaller than the current mouse position.
   // Only drawn (i.e. not filtered out) tracks are taken into account to determine the
   // insertion position, but both arrays are updated accordingly.
@@ -264,22 +246,21 @@ void TrackManager::UpdateMovingTrackSorting() {
   int moving_track_previous_position = FindMovingTrackIndex();
 
   if (moving_track_previous_position != -1) {
-    std::shared_ptr<Track> moving_track = sorted_filtered_tracks_[moving_track_previous_position];
-    sorted_filtered_tracks_.erase(sorted_filtered_tracks_.begin() + moving_track_previous_position);
+    Track* moving_track = visible_tracks_[moving_track_previous_position];
+    visible_tracks_.erase(visible_tracks_.begin() + moving_track_previous_position);
 
     int moving_track_current_position = -1;
-    for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
-         ++track_it) {
+    for (auto track_it = visible_tracks_.begin(); track_it != visible_tracks_.end(); ++track_it) {
       if (moving_track->GetPos()[1] >= (*track_it)->GetPos()[1]) {
-        sorted_filtered_tracks_.insert(track_it, moving_track);
-        moving_track_current_position = track_it - sorted_filtered_tracks_.begin();
+        visible_tracks_.insert(track_it, moving_track);
+        moving_track_current_position = track_it - visible_tracks_.begin();
         break;
       }
     }
 
     if (moving_track_current_position == -1) {
-      sorted_filtered_tracks_.push_back(moving_track);
-      moving_track_current_position = static_cast<int>(sorted_filtered_tracks_.size()) - 1;
+      visible_tracks_.push_back(moving_track);
+      moving_track_current_position = static_cast<int>(visible_tracks_.size()) - 1;
     }
 
     // Now we have to change the position of the moving_track in the non-filtered array
@@ -290,14 +271,14 @@ void TrackManager::UpdateMovingTrackSorting() {
     if (moving_track_current_position > moving_track_previous_position) {
       // In this case we will insert the moving_track right after the one who is before in the
       // filtered array
-      auto previous_filtered_track = sorted_filtered_tracks_[moving_track_current_position - 1];
+      Track* previous_filtered_track = visible_tracks_[moving_track_current_position - 1];
       sorted_tracks_.insert(
           ++std::find(sorted_tracks_.begin(), sorted_tracks_.end(), previous_filtered_track),
           moving_track);
     } else {
       // In this case we will insert the moving_track right before the one who is after in the
       // filtered array
-      auto next_filtered_track = sorted_filtered_tracks_[moving_track_current_position + 1];
+      Track* next_filtered_track = visible_tracks_[moving_track_current_position + 1];
       sorted_tracks_.insert(
           std::find(sorted_tracks_.begin(), sorted_tracks_.end(), next_filtered_track),
           moving_track);
@@ -307,10 +288,9 @@ void TrackManager::UpdateMovingTrackSorting() {
 
 int TrackManager::FindMovingTrackIndex() {
   // Returns the position of the moving track, or -1 if there is none.
-  for (auto track_it = sorted_filtered_tracks_.begin(); track_it != sorted_filtered_tracks_.end();
-       ++track_it) {
+  for (auto track_it = visible_tracks_.begin(); track_it != visible_tracks_.end(); ++track_it) {
     if ((*track_it)->IsMoving()) {
-      return track_it - sorted_filtered_tracks_.begin();
+      return track_it - visible_tracks_.begin();
     }
   }
   return -1;
@@ -324,7 +304,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
   float pinned_tracks_height = 0.f;
 
   // Draw pinned tracks
-  for (auto& track : sorted_filtered_tracks_) {
+  for (auto& track : visible_tracks_) {
     if (!track->IsPinned()) {
       continue;
     }
@@ -339,7 +319,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
   }
 
   // Draw unpinned tracks
-  for (auto& track : sorted_filtered_tracks_) {
+  for (auto& track : visible_tracks_) {
     if (track->IsPinned()) {
       continue;
     }
@@ -355,7 +335,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
 }
 
 void TrackManager::AddTrack(std::shared_ptr<Track> track) {
-  tracks_.emplace_back(track);
+  all_tracks_.emplace_back(track);
   sorting_invalidated_ = true;
 }
 
@@ -364,7 +344,7 @@ void TrackManager::RemoveFrameTrack(uint64_t function_address) {
   sorting_invalidated_ = true;
 }
 
-std::shared_ptr<SchedulerTrack> TrackManager::GetOrCreateSchedulerTrack() {
+SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
@@ -375,10 +355,10 @@ std::shared_ptr<SchedulerTrack> TrackManager::GetOrCreateSchedulerTrack() {
     time_graph_->GetLayout().SetNumCores(num_cores);
     scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
   }
-  return track;
+  return track.get();
 }
 
-std::shared_ptr<ThreadTrack> TrackManager::GetOrCreateThreadTrack(int32_t tid) {
+ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
@@ -406,10 +386,10 @@ std::shared_ptr<ThreadTrack> TrackManager::GetOrCreateThreadTrack(int32_t tid) {
       track->SetLabel(track_label);
     }
   }
-  return track;
+  return track.get();
 }
 
-std::shared_ptr<GpuTrack> TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
+GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
@@ -423,8 +403,7 @@ std::shared_ptr<GpuTrack> TrackManager::GetOrCreateGpuTrack(uint64_t timeline_ha
     AddTrack(track);
     gpu_tracks_[timeline_hash] = track;
   }
-
-  return track;
+  return track.get();
 }
 
 GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
@@ -437,7 +416,6 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
     AddTrack(track);
     graph_tracks_[name] = track;
   }
-
   return track.get();
 }
 
@@ -453,7 +431,7 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
-std::shared_ptr<FrameTrack> TrackManager::GetOrCreateFrameTrack(const FunctionInfo& function) {
+FrameTrack* TrackManager::GetOrCreateFrameTrack(const FunctionInfo& function) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
@@ -463,5 +441,5 @@ std::shared_ptr<FrameTrack> TrackManager::GetOrCreateFrameTrack(const FunctionIn
     sorting_invalidated_ = true;
     frame_tracks_[function.address()] = track;
   }
-  return track;
+  return track.get();
 }
