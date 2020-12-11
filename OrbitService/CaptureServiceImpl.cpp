@@ -91,30 +91,49 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
     CHECK(reader_writer_ != nullptr);
   }
 
+  ~GrpcCaptureEventSender() override {
+    LOG("Total number of events sent: %lu", total_number_of_events_sent_);
+    LOG("Total number of bytes sent: %lu", total_number_of_bytes_sent_);
+    float average_bytes =
+        static_cast<float>(total_number_of_bytes_sent_) / total_number_of_events_sent_;
+    LOG("Average number of bytes per event: %.2f", average_bytes);
+  }
+
   void SendEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& events) override {
     ORBIT_SCOPE_FUNCTION;
-    ORBIT_UINT64("Number of sent buffered events", events.size());
+    ORBIT_UINT64("Number of buffered events sent", events.size());
     if (events.empty()) {
       return;
     }
 
     constexpr uint64_t kMaxEventsPerResponse = 10'000;
+    uint64_t number_of_bytes_sent = 0;
     CaptureResponse response;
     for (CaptureEvent& event : events) {
       // We buffer to avoid sending countless tiny messages, but we also want to
       // avoid huge messages, which would cause the capture on the client to jump
       // forward in time in few big steps and not look live anymore.
       if (response.capture_events_size() == kMaxEventsPerResponse) {
+        number_of_bytes_sent += response.ByteSizeLong();
         reader_writer_->Write(response);
         response.clear_capture_events();
       }
       response.mutable_capture_events()->Add(std::move(event));
     }
+    number_of_bytes_sent += response.ByteSizeLong();
     reader_writer_->Write(response);
+
+    float average_bytes = static_cast<float>(number_of_bytes_sent) / events.size();
+    ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
+    total_number_of_events_sent_ += events.size();
+    total_number_of_bytes_sent_ += number_of_bytes_sent;
   }
 
  private:
   grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer_;
+
+  uint64_t total_number_of_events_sent_ = 0;
+  uint64_t total_number_of_bytes_sent_ = 0;
 };
 
 }  // namespace
