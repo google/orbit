@@ -19,7 +19,6 @@ namespace orbit_base {
 [[nodiscard]] std::string GetThreadName(pid_t tid);
 #endif
 
-
 void SetCurrentThreadName(const std::string& thread_name);
 
 }  // namespace orbit_base
