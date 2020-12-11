@@ -9,6 +9,7 @@ target_compile_options(OrbitProducer PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitProducer PUBLIC
         include/OrbitProducer/CaptureEventProducer.h
+        include/OrbitProducer/FakeProducerSideService.h
         include/OrbitProducer/LockFreeBufferCaptureEventProducer.h)
 
 target_sources(OrbitProducer PRIVATE
@@ -31,7 +32,6 @@ target_compile_options(OrbitProducerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitProducerTests PRIVATE
         CaptureEventProducerTest.cpp
-        FakeProducerSideService.h
         LockFreeBufferCaptureEventProducerTest.cpp)
 
 target_link_libraries(OrbitProducerTests PRIVATE

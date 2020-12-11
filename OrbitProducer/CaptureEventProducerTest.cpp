@@ -7,8 +7,8 @@
 
 #include <thread>
 
-#include "FakeProducerSideService.h"
 #include "OrbitProducer/CaptureEventProducer.h"
+#include "OrbitProducer/FakeProducerSideService.h"
 #include "absl/strings/str_format.h"
 #include "grpcpp/grpcpp.h"
 #include "producer_side_services.grpc.pb.h"
