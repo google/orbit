@@ -85,7 +85,7 @@ double GNumHistorySeconds = 2.f;
 
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (auto& track : track_manager_->GetTracks()) {
+  for (auto& track : track_manager_->GetAllTracks()) {
     if (!track->IsEmpty()) {
       capture_min_timestamp_ = std::min(capture_min_timestamp_, track->GetMinTime());
       capture_max_timestamp_ = std::max(capture_max_timestamp_, track->GetMaxTime());
@@ -254,16 +254,15 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   // TrackManager.
   if (timer_info.type() == TimerInfo::kGpuActivity) {
     uint64_t timeline_hash = timer_info.timeline_hash();
-    std::shared_ptr<GpuTrack> track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
+    GpuTrack* track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
     track->OnTimer(timer_info);
   } else if (timer_info.type() == TimerInfo::kFrame) {
-    std::shared_ptr<FrameTrack> track = track_manager_->GetOrCreateFrameTrack(*function);
+    FrameTrack* track = track_manager_->GetOrCreateFrameTrack(*function);
     track->OnTimer(timer_info);
   } else if (timer_info.type() == TimerInfo::kIntrospection) {
     ProcessIntrospectionTimer(timer_info);
   } else {
-    std::shared_ptr<ThreadTrack> track =
-        track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+    ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
     if (timer_info.type() != TimerInfo::kCoreActivity) {
       track->OnTimer(timer_info);
       ++thread_count_map_[timer_info.thread_id()];
@@ -302,8 +301,7 @@ void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {
 
   switch (event.type) {
     case orbit_api::kScopeStart: {
-      std::shared_ptr<ThreadTrack> track =
-          track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
       track->OnTimer(timer_info);
       ++thread_count_map_[timer_info.thread_id()];
     } break;
@@ -373,7 +371,7 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
 uint32_t TimeGraph::GetNumTimers() const {
   uint32_t num_timers = 0;
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (const auto& track : track_manager_->GetTracks()) {
+  for (const auto& track : track_manager_->GetAllTracks()) {
     num_timers += track->GetNumTimers();
   }
   // Frame tracks are removable by users and cannot simply be thrown into the
@@ -386,7 +384,7 @@ uint32_t TimeGraph::GetNumTimers() const {
 
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
-  for (const auto& track : track_manager_->GetTracks()) {
+  for (const auto& track : track_manager_->GetAllTracks()) {
     Append(chains, track->GetAllChains());
   }
   // Frame tracks are removable by users and cannot simply be thrown into the
@@ -407,7 +405,7 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains
 
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllSerializableTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
-  for (const auto& track : track_manager_->GetTracks()) {
+  for (const auto& track : track_manager_->GetAllTracks()) {
     Append(chains, track->GetAllSerializableChains());
   }
   return chains;
@@ -741,7 +739,7 @@ std::string TimeGraph::GetThreadNameFromTid(uint32_t tid) {
 }
 
 void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
-  for (auto& track : track_manager_->GetFilteredTracks()) {
+  for (auto& track : track_manager_->GetVisibleTracks()) {
     float z_offset = 0;
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;
