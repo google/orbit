@@ -45,14 +45,15 @@ class A11yAdapter : public QAccessibleInterface {
   [[nodiscard]] QAccessibleInterface* childAt(int x, int y) const override;
 
   // properties and state
-  QString text(QAccessible::Text t) const override { return info_->AccessibleName().c_str(); }
-  void setText(QAccessible::Text t, const QString& text) override{};
+  QString text(QAccessible::Text /*t*/) const override { return info_->AccessibleName().c_str(); }
+  void setText(QAccessible::Text t, const QString& /*text*/) override{};
   QRect rect() const override;
   QAccessible::Role role() const override;
 
   virtual QAccessible::State state() const override {
     static_assert(sizeof(QAccessible::State) == sizeof(orbit_gl::A11yState));
-    return *reinterpret_cast<QAccessible::State*>(&info_->AccessibleState());
+    auto state = info_->AccessibleState();
+    return *reinterpret_cast<QAccessible::State*>(&state);
   }
 
   static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlAccessibleInterface* iface);
@@ -83,7 +84,7 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
  public:
   OrbitGlWidgetAccessible(OrbitGLWidget* widget);
 
-  QAccessibleInterface* child(int index) const;
+  QAccessibleInterface* child(int index) const override;
   int childCount() const override;
   int indexOfChild(const QAccessibleInterface* child) const override;
 };
