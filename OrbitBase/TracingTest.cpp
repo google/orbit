@@ -33,7 +33,7 @@ TEST(Tracing, Scopes) {
   {
     TracingListener tracing_listener([&scopes_by_thread_id](const TracingScope& scope) {
       // Check that callback is called from a single thread.
-      static uint32_t callback_thread_id = orbit_base::GetCurrentThreadId();
+      static auto callback_thread_id = orbit_base::GetCurrentThreadId();
       EXPECT_EQ(orbit_base::GetCurrentThreadId(), callback_thread_id);
       scopes_by_thread_id[scope.tid].emplace_back(scope);
     });
