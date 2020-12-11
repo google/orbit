@@ -11,8 +11,14 @@
 #include "OrbitBase/ThreadUtils.h"
 
 TEST(ThreadUtils, GetCurrentThreadId) {
-  orbit_base::thread_id_t current_tid = orbit_base::GetCurrentThreadId();
-  orbit_base::thread_id_t worker_tid = 0;
+#if _WIN32
+  uint32_t current_tid = orbit_base::GetCurrentThreadId();
+  uint32_t worker_tid = 0;
+#else
+  pid_t current_tid = orbit_base::GetCurrentThreadId();
+  pid_t worker_tid = 0;
+#endif
+
   std::thread t([&worker_tid]() { worker_tid = orbit_base::GetCurrentThreadId(); });
   t.join();
   EXPECT_TRUE(worker_tid != 0);

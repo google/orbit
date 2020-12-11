@@ -16,12 +16,12 @@ namespace orbit_base {
 // including the terminating null byte ('\0')".
 static constexpr size_t kMaxThreadNameLength = 16;
 
-thread_id_t GetCurrentThreadId() {
-  thread_local thread_id_t current_tid = syscall(__NR_gettid);
+pid_t GetCurrentThreadId() {
+  thread_local pid_t current_tid = syscall(__NR_gettid);
   return current_tid;
 }
 
-std::string GetThreadName(thread_id_t tid) {
+std::string GetThreadName(pid_t tid) {
   char thread_name[kMaxThreadNameLength];
   int result = pthread_getname_np(pthread_self(), thread_name, kMaxThreadNameLength);
   if (result != 0) {
