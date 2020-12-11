@@ -17,20 +17,24 @@ class TestA11yImpl : public orbit_gl::GlAccessibleInterface {
     return children_[index].get();
   }
 
-  [[nodiscard]] GlAccessibleInterface* AccessibleParent() const { return parent_; }
-  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const { return orbit_gl::A11yRole::Grouping; }
-  [[nodiscard]] orbit_gl::A11yState AccessibleState() const { return orbit_gl::A11yState(); }
+  [[nodiscard]] GlAccessibleInterface* AccessibleParent() const override { return parent_; }
+  [[nodiscard]] orbit_gl::A11yRole AccessibleRole() const override {
+    return orbit_gl::A11yRole::Grouping;
+  }
+  [[nodiscard]] orbit_gl::A11yState AccessibleState() const override {
+    return orbit_gl::A11yState();
+  }
 
-  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const {
+  [[nodiscard]] orbit_gl::A11yRect AccessibleLocalRect() const override {
     orbit_gl::A11yRect result;
     if (parent_ == nullptr) {
       return result;
     }
 
     int parent_idx = -1;
-    for (int i = 0; i < parent_->children_.size(); ++i) {
+    for (size_t i = 0; i < parent_->children_.size(); ++i) {
       if (parent_->children_[i].get() == this) {
-        parent_idx = i;
+        parent_idx = static_cast<int>(i);
         break;
       }
     }
@@ -42,7 +46,7 @@ class TestA11yImpl : public orbit_gl::GlAccessibleInterface {
     return result;
   }
 
-  [[nodiscard]] std::string AccessibleName() const { return "Test"; }
+  [[nodiscard]] std::string AccessibleName() const override { return "Test"; }
 
   [[nodiscard]] std::vector<std::unique_ptr<TestA11yImpl>>& Children() { return children_; }
 

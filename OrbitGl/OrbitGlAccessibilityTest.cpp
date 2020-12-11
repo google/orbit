@@ -20,9 +20,11 @@ TEST(AccessibilityRegistry, Management) {
 TEST(AccessibilityRegistry, Callback) {
   bool registered = false;
 
-  auto registered_callback = [&registered](GlAccessibleInterface* iface) { registered = true; };
+  auto registered_callback = [&registered](GlAccessibleInterface* /*iface*/) { registered = true; };
 
-  auto unregistered_callback = [&registered](GlAccessibleInterface* iface) { registered = false; };
+  auto unregistered_callback = [&registered](GlAccessibleInterface* /*iface*/) {
+    registered = false;
+  };
 
   GlAccessibleInterfaceRegistry::Get().OnRegistered(registered_callback);
   GlAccessibleInterfaceRegistry::Get().OnUnregistered(unregistered_callback);
