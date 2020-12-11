@@ -38,9 +38,9 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 
 TimeGraph::TimeGraph(GlCanvas* canvas, uint32_t font_size)
     : font_size_(font_size),
-      batcher_(BatcherId::kTimeGraph),
       canvas_(canvas),
-      accessibility_(this) {
+      accessibility_(this),
+      batcher_(BatcherId::kTimeGraph) {
   text_renderer_static_.SetCanvas(canvas_);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
 
