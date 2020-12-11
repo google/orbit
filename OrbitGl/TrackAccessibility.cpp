@@ -24,7 +24,8 @@ A11yRect TrackContentAccessibility::AccessibleLocalRect() const {
   CHECK(track_->GetTimeGraph() != nullptr);
 
   auto& layout = track_->GetTimeGraph()->GetLayout();
-  return A11yRect(0, layout.GetTrackTabHeight(), track_->GetSize()[0], track_->GetSize()[1]);
+  return A11yRect(0, static_cast<int>(layout.GetTrackTabHeight()),
+                  static_cast<int>(track_->GetSize()[0]), static_cast<int>(track_->GetSize()[1]));
 }
 
 A11yState TrackContentAccessibility::AccessibleState() const {
@@ -46,8 +47,9 @@ A11yRect TrackTabAccessibility::AccessibleLocalRect() const {
   CHECK(track_->GetTimeGraph() != nullptr);
 
   auto& layout = track_->GetTimeGraph()->GetLayout();
-  return A11yRect(layout.GetTrackTabOffset(), 0, layout.GetTrackTabWidth(),
-                  layout.GetTrackTabHeight());
+  return A11yRect(static_cast<int>(layout.GetTrackTabOffset()), 0,
+                  static_cast<int>(layout.GetTrackTabWidth()),
+                  static_cast<int>(layout.GetTrackTabHeight()));
 }
 
 A11yState TrackTabAccessibility::AccessibleState() const {
