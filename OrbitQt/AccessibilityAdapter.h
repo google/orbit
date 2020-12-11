@@ -46,7 +46,7 @@ class A11yAdapter : public QAccessibleInterface {
 
   // properties and state
   QString text(QAccessible::Text /*t*/) const override { return info_->AccessibleName().c_str(); }
-  void setText(QAccessible::Text t, const QString& /*text*/) override{};
+  void setText(QAccessible::Text /*t*/, const QString& /*text*/) override{};
   QRect rect() const override;
   QAccessible::Role role() const override;
 
