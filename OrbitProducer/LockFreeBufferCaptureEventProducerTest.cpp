@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "FakeProducerSideService.h"
+#include "OrbitProducer/FakeProducerSideService.h"
 #include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
 #include "absl/strings/str_format.h"
 #include "grpcpp/grpcpp.h"
