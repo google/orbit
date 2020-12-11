@@ -138,7 +138,7 @@ void GlCanvas::EnableImGui() {
 
 int GlCanvas::AccessibleChildCount() const { return 0; }
 
-const orbit_gl::GlAccessibleInterface* GlCanvas::AccessibleChild(int index) const {
+const orbit_gl::GlAccessibleInterface* GlCanvas::AccessibleChild(int /*index*/) const {
   return nullptr;
 }
 
