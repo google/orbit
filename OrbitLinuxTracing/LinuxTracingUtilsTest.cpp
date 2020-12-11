@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/ThreadUtils.h>
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
@@ -21,6 +20,7 @@
 #include <vector>
 
 #include "LinuxTracingUtils.h"
+#include "OrbitBase/ThreadUtils.h"
 
 namespace LinuxTracing {
 
