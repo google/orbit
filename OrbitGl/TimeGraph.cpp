@@ -41,8 +41,10 @@ TimeGraph::TimeGraph(GlCanvas* canvas, uint32_t font_size)
       canvas_(canvas),
       accessibility_(this),
       batcher_(BatcherId::kTimeGraph) {
-  text_renderer_static_.SetCanvas(canvas_);
-  batcher_.SetPickingManager(&canvas->GetPickingManager());
+  if (canvas_ != nullptr) {
+    text_renderer_static_.SetCanvas(canvas_);
+    batcher_.SetPickingManager(&canvas->GetPickingManager());
+  }
 
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
