@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "OrbitBase/ThreadUtils.h"
 #include "SubmissionTracker.h"
 #include "VulkanLayerProducer.h"
 #include "absl/base/casts.h"
@@ -480,7 +481,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -517,7 +518,7 @@ TEST_F(SubmissionTrackerTest,
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -577,7 +578,7 @@ TEST_F(SubmissionTrackerTest,
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -613,7 +614,7 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -819,7 +820,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
   tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t tid = GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -941,7 +942,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t tid = GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -1018,7 +1019,7 @@ TEST_F(SubmissionTrackerTest,
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t tid = GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -1080,7 +1081,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  pid_t tid = GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
 
   producer_->StartCapture();
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
@@ -1328,7 +1329,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t tid = GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = MonotonicTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
@@ -1390,7 +1391,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  pid_t tid = GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
 
   producer_->StartCapture();
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);

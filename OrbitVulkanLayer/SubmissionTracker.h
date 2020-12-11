@@ -9,6 +9,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "VulkanLayerProducer.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -304,7 +305,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
     QueueSubmission queue_submission;
     queue_submission.meta_information.pre_submission_cpu_timestamp = MonotonicTimestampNs();
-    queue_submission.meta_information.thread_id = GetCurrentThreadId();
+    queue_submission.meta_information.thread_id = orbit_base::GetCurrentThreadId();
 
     for (uint32_t submit_index = 0; submit_index < submit_count; ++submit_index) {
       VkSubmitInfo submit_info = submits[submit_index];
