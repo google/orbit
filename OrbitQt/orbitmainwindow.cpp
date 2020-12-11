@@ -4,6 +4,8 @@
 
 #include "orbitmainwindow.h"
 
+#include <absl/flags/flag.h>
+
 #include <QBuffer>
 #include <QCheckBox>
 #include <QClipboard>
@@ -275,6 +277,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   setWindowTitle({});
   std::filesystem::path icon_file_name = (orbit_base::GetExecutableDir() / "orbit.ico");
   this->setWindowIcon(QIcon(QString::fromStdString(icon_file_name.string())));
+
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    ui->actionIntrospection->setVisible(false);
+  }
 
   GOrbitApp->PostInit();
 
