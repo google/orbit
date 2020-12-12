@@ -29,7 +29,7 @@ TEST(Tracing, Scopes) {
   constexpr size_t kNumThreads = 10;
   constexpr size_t kNumExpectedScopesPerThread = 4;
 
-  absl::flat_hash_map<pid_t, std::vector<TracingScope>> scopes_by_thread_id;
+  absl::flat_hash_map<uint32_t, std::vector<TracingScope>> scopes_by_thread_id;
   {
     TracingListener tracing_listener([&scopes_by_thread_id](const TracingScope& scope) {
       // Check that callback is called from a single thread.
