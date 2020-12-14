@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR
-#define ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR
+#ifndef ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR_H_
+#define ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
@@ -70,4 +70,4 @@ class GpuTracepointEventProcessor {
 
 }  // namespace LinuxTracing
 
-#endif
+#endif  // ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR_H_
