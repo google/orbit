@@ -73,6 +73,7 @@ target_compile_options(OrbitLinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             ContextSwitchManagerTest.cpp
+            GpuTracepointEventProcessorTest.cpp
             LinuxTracingUtilsTest.cpp
             PerfEventProcessorTest.cpp
             PerfEventQueueTest.cpp
