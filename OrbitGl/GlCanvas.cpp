@@ -410,3 +410,7 @@ PickingMode GlCanvas::GetPickingMode() {
 
   return PickingMode::kNone;
 }
+
+void GlCanvas::CreateAccessibilityInterface() {
+  accessibility_ = std::make_unique<orbit_gl::GlAccessibilityBridge>();
+}
