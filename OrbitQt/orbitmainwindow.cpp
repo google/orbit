@@ -596,6 +596,13 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
   }
 }
 
+void OrbitMainWindow::on_actionOpen_User_Data_Directory_triggered() {
+  if (!QDesktopServices::openUrl(
+          QUrl(Path::CreateOrGetOrbitAppDataDir().string().c_str(), QUrl::StrictMode))) {
+    QMessageBox::critical(this, "Error opening URL", "Could not open Orbit directory");
+  }
+}
+
 void OrbitMainWindow::on_actionAbout_triggered() {
   orbit_qt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle("About");
