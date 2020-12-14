@@ -10,7 +10,8 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE CallTreeViewItemModel.h
+  PRIVATE AccessibilityAdapter.h
+          CallTreeViewItemModel.h
           CallTreeWidget.h
           Connections.h
           ConnectToStadiaWidget.h
@@ -45,7 +46,8 @@ target_sources(
 
 target_sources(
   OrbitQt
-  PRIVATE CallTreeViewItemModel.cpp
+  PRIVATE AccessibilityAdapter.cpp
+          CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
           ConnectToStadiaWidget.cpp
@@ -153,7 +155,9 @@ target_sources(OrbitQtTests
                 EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE EventLoopTest.cpp
+        PRIVATE AccessibilityAdapter.cpp
+                AccessibilityTests.cpp
+                EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 RingBufferTest.cpp
