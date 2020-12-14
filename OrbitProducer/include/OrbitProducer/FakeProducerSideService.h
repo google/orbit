@@ -31,9 +31,12 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
       EXPECT_NE(request.event_case(),
                 orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::EVENT_NOT_SET);
       switch (request.event_case()) {
-        case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents:
-          OnCaptureEventsReceived(request.buffered_capture_events().capture_events_size());
-          break;
+        case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents: {
+          std::vector<orbit_grpc_protos::CaptureEvent> capture_events_received{
+              request.buffered_capture_events().capture_events().begin(),
+              request.buffered_capture_events().capture_events().end()};
+          OnCaptureEventsReceived(capture_events_received);
+        } break;
         case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kAllEventsSent:
           OnAllEventsSentReceived();
           break;
@@ -83,7 +86,8 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
 
   void ReAllowRpc() { rpc_allowed_ = true; }
 
-  MOCK_METHOD(void, OnCaptureEventsReceived, (int32_t count), ());
+  MOCK_METHOD(void, OnCaptureEventsReceived,
+              (const std::vector<orbit_grpc_protos::CaptureEvent>& events), ());
   MOCK_METHOD(void, OnAllEventsSentReceived, (), ());
 
  private:

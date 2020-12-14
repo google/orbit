@@ -83,8 +83,9 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEventIfCapturi
 
   int32_t capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
-      .WillByDefault([&capture_events_received_count](int32_t count) {
-        capture_events_received_count += count;
+      .WillByDefault([&capture_events_received_count](
+                         const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+        capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -134,8 +135,9 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEvent) {
 
   int32_t capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
-      .WillByDefault([&capture_events_received_count](int32_t count) {
-        capture_events_received_count += count;
+      .WillByDefault([&capture_events_received_count](
+                         const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+        capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -189,8 +191,9 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DuplicatedCommands) {
 
   int32_t capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
-      .WillByDefault([&capture_events_received_count](int32_t count) {
-        capture_events_received_count += count;
+      .WillByDefault([&capture_events_received_count](
+                         const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+        capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -289,8 +292,9 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, ServiceDisconnects) {
 
   int32_t capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
-      .WillByDefault([&capture_events_received_count](int32_t count) {
-        capture_events_received_count += count;
+      .WillByDefault([&capture_events_received_count](
+                         const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+        capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -328,8 +332,9 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DisconnectAndReconnect) {
 
   int32_t capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
-      .WillByDefault([&capture_events_received_count](int32_t count) {
-        capture_events_received_count += count;
+      .WillByDefault([&capture_events_received_count](
+                         const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+        capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
