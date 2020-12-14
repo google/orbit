@@ -75,12 +75,7 @@ def main(argv):
 
     logging.info('Re-listing items of the top-down view...')
     tree_items = main_wnd.TreeView.children(control_type='TreeItem')
-    row_count_after_expansion = len(tree_items) / TOP_DOWN_ROW_CELL_COUNT
 
-    if row_count_after_expansion != row_count_before_expansion + 2:
-        raise RuntimeError(
-            'First item of the top-down view doesn\'t have exactly two children'
-        )
     if (not (
         (tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().endswith('clone') and
          tree_items[2 * TOP_DOWN_ROW_CELL_COUNT].window_text() == '_start') or
