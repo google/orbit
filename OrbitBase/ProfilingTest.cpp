@@ -15,15 +15,3 @@ TEST(Profiling, MonotonicClock) {
   uint64_t t1 = MonotonicTimestampNs();
   EXPECT_TRUE(t1 > t0);
 }
-
-#ifdef __linux__
-TEST(Profiling, ThreadId) {
-  pid_t current_tid = GetCurrentThreadId();
-  EXPECT_TRUE(current_tid >= 0);
-  pid_t worker_tid = 0;
-  std::thread t([&worker_tid]() { worker_tid = GetCurrentThreadId(); });
-  t.join();
-  EXPECT_TRUE(worker_tid != 0);
-  EXPECT_TRUE(worker_tid != current_tid);
-}
-#endif

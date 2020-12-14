@@ -13,6 +13,7 @@
 #include <thread>
 
 #include "../Orbit.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "absl/strings/str_format.h"
 
 #if __linux__
@@ -20,18 +21,6 @@
 #else
 #define NO_INLINE __declspec(noinline)
 #endif
-
-uint64_t GetThreadID() {
-  std::stringstream ss;
-  ss << std::this_thread::get_id();
-  return std::stoull(ss.str());
-}
-
-void SetThreadName(const std::string& a_Name) {
-#if __linux__
-  pthread_setname_np(pthread_self(), a_Name.c_str());
-#endif
-}
 
 OrbitTest::OrbitTest() { Init(); }
 
@@ -67,7 +56,8 @@ void OrbitTest::Start() {
 }
 
 void OrbitTest::Loop() {
-  SetThreadName(std::string("OrbitThread_") + std::to_string(GetThreadID()));
+  auto tid = orbit_base::GetCurrentThreadId();
+  orbit_base::SetCurrentThreadName(absl::StrFormat("OrbitThread_%s", std::to_string(tid)));
   uint32_t count = 0;
   while (!m_ExitRequested) {
     ((++count) & 1) == 0 ? TestFunc() : TestFunc2();

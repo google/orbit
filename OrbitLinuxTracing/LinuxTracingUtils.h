@@ -6,18 +6,13 @@
 #define ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/Profiling.h>
 #include <unistd.h>
 
 #include <ctime>
 #include <optional>
 
 namespace LinuxTracing {
-
-inline uint64_t MonotonicTimestampNs() {
-  timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return 1'000'000'000llu * ts.tv_sec + ts.tv_nsec;
-}
 
 std::optional<std::string> ReadFile(std::string_view filename);
 
@@ -28,8 +23,6 @@ std::vector<pid_t> GetAllPids();
 std::vector<pid_t> GetTidsOfProcess(pid_t pid);
 
 std::vector<pid_t> GetAllTids();
-
-std::string GetThreadName(pid_t tid);
 
 // The association between a character and a thread state is documented at
 // https://man7.org/linux/man-pages/man5/proc.5.html in the "/proc/[pid]/stat" section,

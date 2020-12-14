@@ -108,18 +108,6 @@ std::vector<pid_t> GetAllTids() {
   return all_tids;
 }
 
-std::string GetThreadName(pid_t tid) {
-  std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);
-  std::optional<std::string> comm_content = ReadFile(comm_filename);
-  if (!comm_content.has_value()) {
-    return "";
-  }
-  if (comm_content.value().back() == '\n') {
-    comm_content.value().pop_back();
-  }
-  return comm_content.value();
-}
-
 std::optional<char> GetThreadState(pid_t tid) {
   fs::path stat{fs::path{"/proc"} / std::to_string(tid) / "stat"};
   if (!fs::exists(stat)) {

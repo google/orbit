@@ -10,6 +10,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitBase/ThreadUtils.h"
 
 using orbit_base::TracingListener;
 using orbit_base::TracingScope;
@@ -84,7 +85,7 @@ void Stop() {
   auto& scope = GetThreadLocalScopes().back();
   scope.end = MonotonicTimestampNs();
   scope.depth = GetThreadLocalScopes().size() - 1;
-  scope.tid = GetCurrentThreadId();
+  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
   TracingListener::DeferScopeProcessing(scope);
   GetThreadLocalScopes().pop_back();
 }
@@ -93,7 +94,7 @@ void StartAsync(const char* name, uint64_t id, orbit::Color color) {
   TracingScope scope(orbit_api::kScopeStartAsync, name, id, color);
   scope.begin = MonotonicTimestampNs();
   scope.end = scope.begin;
-  scope.tid = GetCurrentThreadId();
+  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
   TracingListener::DeferScopeProcessing(scope);
 }
 
@@ -101,7 +102,7 @@ void StopAsync(uint64_t id) {
   TracingScope scope(orbit_api::kScopeStopAsync, /*name*/ nullptr, id);
   scope.begin = MonotonicTimestampNs();
   scope.end = scope.begin;
-  scope.tid = GetCurrentThreadId();
+  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
   TracingListener::DeferScopeProcessing(scope);
 }
 
@@ -122,7 +123,7 @@ void AsyncString(const char* str, uint64_t id, orbit::Color color) {
 void TrackValue(orbit_api::EventType type, const char* name, uint64_t value, orbit::Color color) {
   TracingScope scope(type, name, value, color);
   scope.begin = MonotonicTimestampNs();
-  scope.tid = GetCurrentThreadId();
+  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
   TracingListener::DeferScopeProcessing(scope);
 }
 

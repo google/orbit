@@ -13,6 +13,7 @@
 //       OrbitApi project in a subsequent PR.
 #include "../../../Orbit.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitBase/ThreadUtils.h"
 
 #define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 

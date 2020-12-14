@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "LinuxTracingUtils.h"
+#include "OrbitBase/ThreadUtils.h"
 
 namespace LinuxTracing {
 
@@ -105,7 +106,7 @@ TEST(GetAllTids, OrbitLinuxTracingTestsMainAndAnotherAndSystemd) {
 TEST(GetThreadName, OrbitLinuxTracingTests) {
   // Thread names have a length limit of 15 characters.
   std::string expected_name = std::string{"OrbitLinuxTracingTests"}.substr(0, 15);
-  std::string returned_name = GetThreadName(getpid());
+  std::string returned_name = orbit_base::GetThreadName(getpid());
   EXPECT_EQ(returned_name, expected_name);
 }
 

@@ -28,6 +28,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
+        include/OrbitBase/ThreadUtils.h
         include/OrbitBase/Tracing.h
         include/OrbitBase/SafeStrerror.h)
 
@@ -41,10 +42,12 @@ target_sources(OrbitBase PRIVATE
 
 if (WIN32)
 target_sources(OrbitBase PRIVATE
-        ExecutablePathWindows.cpp)
+        ExecutablePathWindows.cpp
+        ThreadUtilsWindows.cpp)
 else()
 target_sources(OrbitBase PRIVATE
-        ExecutablePathLinux.cpp)
+        ExecutablePathLinux.cpp
+        ThreadUtilsLinux.cpp)
 endif()
 
 target_link_libraries(OrbitBase PUBLIC
@@ -62,6 +65,7 @@ target_sources(OrbitBaseTests PRIVATE
         ReadFileToStringTest.cpp
         OrbitApiTest.cpp
         ProfilingTest.cpp
+        ThreadUtilsTest.cpp
         TracingTest.cpp
         UniqueResourceTest.cpp
 )
