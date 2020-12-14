@@ -200,6 +200,12 @@ struct A11yState {
 
 class GlAccessibleInterface;
 
+/*Singleton class, keeps track of created and destroyed GlAccessibleInterface instances.
+  This is required to respond to the destruction of interfaces outside of OrbitGl.
+
+  orbit_qt::A11yAdapter will register itself for the "OnUnregistered" callback. See
+  OrbitQt/AccessibilityAdapter.h for more documentation.
+*/
 class GlAccessibleInterfaceRegistry {
  public:
   typedef std::function<void(GlAccessibleInterface*)> Callback;
@@ -223,6 +229,11 @@ class GlAccessibleInterfaceRegistry {
   Callback on_unregistered_ = nullptr;
 };
 
+/*Interface for methods required by the Microsoft Automation API. This is a simplified equivalent to
+QAccessibleInterface. See the documentation in OrbitQt/AccessibilityAdapter.h on how this is used
+and how it works together with QAccessibleInterface.
+
+Used to add accessibility to visible elements inside the OpenGl capture window.*/
 class GlAccessibleInterface {
  public:
   GlAccessibleInterface(GlAccessibleInterface& rhs) = delete;
