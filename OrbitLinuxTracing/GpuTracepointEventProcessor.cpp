@@ -69,7 +69,11 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(const Key& k
   // at the timestamp of scheduling the current job, we push the start
   // time for starting on the hardware back.
   if (!timeline_to_latest_dma_signal_.contains(timeline)) {
-    timeline_to_latest_dma_signal_.emplace(timeline, dma_it->second.timestamp_ns);
+    // When there is not yet an entry in timeline_to_latest_dma_signal_ for the current timeline,
+    // this means that no previous GPU job has been executed on this timeline during our capture.
+    // We just have to set a timestamp here that precedes any event on the timeline to make sure
+    // that hw_start_time below is set correctly, hence why we use "0".
+    timeline_to_latest_dma_signal_.emplace(timeline, 0);
   }
   auto latest_dma_it = timeline_to_latest_dma_signal_.find(timeline);
   // We do not have an explicit event for the following timestamp. We
