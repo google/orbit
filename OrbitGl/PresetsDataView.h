@@ -10,9 +10,11 @@
 #include "DataView.h"
 #include "preset.pb.h"
 
+class OrbitApp;
+
 class PresetsDataView : public DataView {
  public:
-  PresetsDataView();
+  explicit PresetsDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnSessionName; }
@@ -60,6 +62,9 @@ class PresetsDataView : public DataView {
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;
+
+ private:
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_PRESET_DATA_VIEW_H_
