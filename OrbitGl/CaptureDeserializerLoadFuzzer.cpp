@@ -73,8 +73,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   std::atomic<bool> cancellation_requested = false;
 
   orbit_client_data::ModuleManager module_manager;
-  capture_deserializer::Load(input_stream, "", GOrbitApp.get(), &module_manager,
-                             &cancellation_requested);
+  capture_deserializer::Load(input_stream, "", app.get(), &module_manager, &cancellation_requested);
 
   app->GetThreadPool()->ShutdownAndWait();
 }
