@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/SafeStrerror.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -24,6 +22,9 @@
 #include <system_error>
 #include <thread>
 #include <vector>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 
 namespace LinuxTracing {
 

@@ -5,11 +5,11 @@
 #ifndef ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_
 #define ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_
 
-#include <OrbitBase/Logging.h>
 #include <absl/container/flat_hash_map.h>
 
 #include <stack>
 
+#include "OrbitBase/Logging.h"
 #include "PerfEventRecords.h"
 #include "capture.pb.h"
 

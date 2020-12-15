@@ -5,8 +5,6 @@
 #ifndef ORBIT_LINUX_TRACING_TRACER_THREAD_H_
 #define ORBIT_LINUX_TRACING_TRACER_THREAD_H_
 
-#include <Function.h>
-#include <OrbitLinuxTracing/TracerListener.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <linux/perf_event.h>
@@ -23,9 +21,11 @@
 
 #include "ContextSwitchAndThreadStateVisitor.h"
 #include "ContextSwitchManager.h"
+#include "Function.h"
 #include "GpuTracepointEventProcessor.h"
 #include "LinuxTracingUtils.h"
 #include "ManualInstrumentationConfig.h"
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
