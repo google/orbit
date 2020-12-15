@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/Logging.h>
+#include <absl/strings/strip.h>
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
 
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_base {
@@ -22,13 +24,16 @@ pid_t GetCurrentThreadId() {
 }
 
 std::string GetThreadName(pid_t tid) {
-  char thread_name[kMaxThreadNameLength];
-  int result = pthread_getname_np(pthread_self(), thread_name, kMaxThreadNameLength);
-  if (result != 0) {
-    ERROR("Getting thread name for tid %d. Error %d", tid, result);
-    return {};
+  std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);
+  ErrorMessageOr<std::string> comm_content = ReadFileToString(comm_filename);
+  if (!comm_content.has_value()) {
+    ERROR("Getting thread name for tid %d: %s", tid, comm_content.error().message());
+    return "";
   }
-  return thread_name;
+  if (!comm_content.value().empty() && comm_content.value().back() == '\n') {
+    comm_content.value().pop_back();
+  }
+  return comm_content.value();
 }
 
 void SetCurrentThreadName(const std::string& thread_name) {
