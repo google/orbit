@@ -4,12 +4,13 @@
 
 #include "orbitlivefunctions.h"
 
+#include "App.h"
 #include "ui_orbitlivefunctions.h"
 
 using orbit_client_protos::FunctionInfo;
 
 OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
-    : QWidget(parent), ui(new Ui::OrbitLiveFunctions) {
+    : QWidget(parent), ui(new Ui::OrbitLiveFunctions), live_functions_{GOrbitApp.get()} {
   ui->setupUi(this);
 
   live_functions_.SetAddIteratorCallback(
