@@ -782,7 +782,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(this, tid);
+    track = std::make_shared<ThreadTrack>(this, tid, GOrbitApp.get());
     AddTrack(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(GetThreadColor(tid));

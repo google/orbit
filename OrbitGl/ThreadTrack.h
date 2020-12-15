@@ -12,9 +12,11 @@
 #include "TimerTrack.h"
 #include "capture_data.pb.h"
 
-class ThreadTrack : public TimerTrack {
+class OrbitApp;
+
+class ThreadTrack final : public TimerTrack {
  public:
-  ThreadTrack(TimeGraph* time_graph, int32_t thread_id);
+  explicit ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app);
 
   [[nodiscard]] int32_t GetThreadId() const { return thread_id_; }
 
@@ -54,6 +56,9 @@ class ThreadTrack : public TimerTrack {
   std::shared_ptr<ThreadStateTrack> thread_state_track_;
   std::shared_ptr<EventTrack> event_track_;
   std::shared_ptr<TracepointTrack> tracepoint_track_;
+
+ private:
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_
