@@ -26,13 +26,15 @@ TEST(ThreadUtils, GetCurrentThreadId) {
   EXPECT_TRUE(worker_tid != current_tid);
 }
 
-TEST(ThreadUtils, GetSetCurrentThreadNames) {
+TEST(ThreadUtils, GetSetCurrentThreadShortName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
   static const std::string kThreadName = "123456789012345";
   orbit_base::SetCurrentThreadName(kThreadName);
   std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
   EXPECT_EQ(kThreadName, thread_name);
+}
 
+TEST(ThreadUtils, GetSetCurrentThreadLongName) {
   // On Linux, the maximum length for a thread name is 16 characters including '\0'.
   static constexpr size_t kMaxNonZeroCharactersLinux = 15;
 
@@ -51,6 +53,14 @@ TEST(ThreadUtils, GetSetCurrentThreadNames) {
   // to allow for longer thread names.
   EXPECT_NE(pthread_setname_np(pthread_self(), kLongThreadName.data()), 0);
 #endif
+}
+
+TEST(ThreadUtils, GetSetCurrentThreadEmptyName) {
+  // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
+  static const std::string kEmptyThreadName{};
+  orbit_base::SetCurrentThreadName(kEmptyThreadName);
+  std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
+  EXPECT_EQ(kEmptyThreadName, thread_name);
 }
 
 TEST(ThreadUtils, GetThreadName) {
