@@ -1544,7 +1544,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = std::make_unique<CallStackDataView>();
+        callstack_data_view_ = std::make_unique<CallStackDataView>(this);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
@@ -1597,7 +1597,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
+    selection_callstack_data_view_ = std::make_unique<CallStackDataView>(this);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
