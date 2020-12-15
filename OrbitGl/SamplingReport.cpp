@@ -4,6 +4,7 @@
 
 #include "SamplingReport.h"
 
+#include "App.h"
 #include "CallStackDataView.h"
 #include "absl/strings/str_format.h"
 
@@ -34,7 +35,7 @@ void SamplingReport::FillReport() {
   const auto& sample_data = post_processed_sampling_data_.GetThreadSampleData();
 
   for (const ThreadSampleData& thread_sample_data : sample_data) {
-    SamplingReportDataView thread_report;
+    SamplingReportDataView thread_report{GOrbitApp.get()};
     thread_report.SetSampledFunctions(thread_sample_data.sampled_function);
     thread_report.SetThreadID(thread_sample_data.thread_id);
     thread_report.SetSamplingReport(this);
