@@ -1296,6 +1296,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       // If no process was selected before, or the process changed
       if (GetSelectedProcess() == nullptr || pid != GetSelectedProcess()->pid()) {
         data_manager_->ClearSelectedFunctions();
+        data_manager_->ClearUserDefinedCaptureData();
         data_manager_->set_selected_process(pid);
       }
 
