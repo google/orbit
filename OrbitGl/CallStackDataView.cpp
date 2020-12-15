@@ -13,8 +13,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-CallStackDataView::CallStackDataView(OrbitApp* app)
-    : DataView(DataViewType::kCallstack), app_{app} {}
+CallStackDataView::CallStackDataView(OrbitApp* app) : DataView(DataViewType::kCallstack, app) {}
 
 void CallStackDataView::SetAsMainInstance() {}
 

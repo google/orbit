@@ -16,7 +16,7 @@
 using orbit_client_protos::FunctionInfo;
 
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
-    : DataView(DataViewType::kSampling), callstack_data_view_(nullptr), app_{app} {}
+    : DataView(DataViewType::kSampling, app), callstack_data_view_(nullptr) {}
 
 const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

@@ -1558,7 +1558,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kProcesses:
       if (!processes_data_view_) {
-        processes_data_view_ = std::make_unique<ProcessesDataView>();
+        processes_data_view_ = std::make_unique<ProcessesDataView>(this);
         processes_data_view_->SetSelectionListener(
             [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
         panels_.push_back(processes_data_view_.get());

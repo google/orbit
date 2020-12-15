@@ -67,6 +67,4 @@ class SamplingReportDataView : public DataView {
   static const std::string kMenuActionUnselect;
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionDisassembly;
-
-  OrbitApp* app_ = nullptr;
 };

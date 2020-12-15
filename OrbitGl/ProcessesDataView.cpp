@@ -13,8 +13,8 @@
 
 using orbit_grpc_protos::ProcessInfo;
 
-ProcessesDataView::ProcessesDataView()
-    : DataView(DataViewType::kProcesses), selected_process_id_(-1) {}
+ProcessesDataView::ProcessesDataView(OrbitApp* app)
+    : DataView(DataViewType::kProcesses, app), selected_process_id_(-1) {}
 
 const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

@@ -16,8 +16,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-FunctionsDataView::FunctionsDataView(OrbitApp* app)
-    : DataView(DataViewType::kFunctions), app_{app} {}
+FunctionsDataView::FunctionsDataView(OrbitApp* app) : DataView(DataViewType::kFunctions, app) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
