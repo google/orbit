@@ -32,9 +32,11 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
+
 class TimeGraph {
  public:
-  explicit TimeGraph(uint32_t font_size);
+  explicit TimeGraph(uint32_t font_size, OrbitApp* app);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -271,6 +273,8 @@ class TimeGraph {
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
   CaptureData* capture_data_ = nullptr;
+
+  OrbitApp* app_ = nullptr;
 };
 
 extern TimeGraph* GCurrentTimeGraph;
