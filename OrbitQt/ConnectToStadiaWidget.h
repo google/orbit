@@ -68,6 +68,7 @@ class ConnectToStadiaWidget : public QWidget {
   void Activated();
   void Connected();
   void Disconnected();
+  void InstanceReloadRequested();
 
  private:
   std::unique_ptr<Ui::ConnectToStadiaWidget> ui_;
