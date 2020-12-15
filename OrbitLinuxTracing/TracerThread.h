@@ -32,7 +32,7 @@
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class TracerThread {
  public:
@@ -59,18 +59,19 @@ class TracerThread {
 
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
-  bool OpenUprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
+  bool OpenUprobes(const orbit_linux_tracing::Function& function, const std::vector<int32_t>& cpus,
                    absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenUretprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
+  bool OpenUretprobes(const orbit_linux_tracing::Function& function,
+                      const std::vector<int32_t>& cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
   void AddUprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-                                 const LinuxTracing::Function& function);
+                                 const orbit_linux_tracing::Function& function);
 
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-                                    const LinuxTracing::Function& function);
+                                    const orbit_linux_tracing::Function& function);
   void OpenUserSpaceProbesRingBuffers(
       const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu);
 
@@ -191,6 +192,6 @@ class TracerThread {
   static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_TRACER_THREAD_H_

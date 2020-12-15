@@ -12,7 +12,7 @@
 #include "ContextSwitchManager.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::SchedulingSlice;
 
@@ -253,4 +253,4 @@ TEST(ContextSwitchManager, OneCoreOutOfOrder) {
                "timestamp_ns >= open_timestamp_ns");
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

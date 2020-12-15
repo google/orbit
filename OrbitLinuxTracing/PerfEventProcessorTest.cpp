@@ -17,7 +17,7 @@
 #include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 namespace {
 
@@ -128,4 +128,4 @@ TEST_F(PerfEventProcessorTest, ProcessAllEventsNeedsVisitor) {
   EXPECT_DEATH(processor_.ProcessAllEvents(), "!visitors_.empty()");
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

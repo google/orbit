@@ -26,7 +26,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 namespace fs = std::filesystem;
 
@@ -287,4 +287,4 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
   return true;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

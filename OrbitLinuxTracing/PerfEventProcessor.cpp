@@ -11,7 +11,7 @@
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 void PerfEventProcessor::AddEvent(std::unique_ptr<PerfEvent> event) {
   if (last_processed_timestamp_ns_ > 0 && event->GetTimestamp() < last_processed_timestamp_ns_) {
@@ -60,4 +60,4 @@ void PerfEventProcessor::ProcessOldEvents() {
   }
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

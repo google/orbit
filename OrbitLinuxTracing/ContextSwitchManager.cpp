@@ -8,7 +8,7 @@
 
 #include "OrbitBase/Logging.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::SchedulingSlice;
 
@@ -64,4 +64,4 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
   return scheduling_slice;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

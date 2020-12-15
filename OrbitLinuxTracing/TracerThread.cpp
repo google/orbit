@@ -30,7 +30,7 @@
 #include "PerfEventRecords.h"
 #include "tracepoint.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
@@ -102,7 +102,7 @@ void TracerThread::InitUprobesEventVisitor() {
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
-bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
+bool TracerThread::OpenUprobes(const orbit_linux_tracing::Function& function,
                                const std::vector<int32_t>& cpus,
                                absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
@@ -119,7 +119,7 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
   return true;
 }
 
-bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
+bool TracerThread::OpenUretprobes(const orbit_linux_tracing::Function& function,
                                   const std::vector<int32_t>& cpus,
                                   absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
@@ -138,7 +138,7 @@ bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
 
 void TracerThread::AddUprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-    const LinuxTracing::Function& function) {
+    const orbit_linux_tracing::Function& function) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
@@ -150,7 +150,7 @@ void TracerThread::AddUprobesFileDescriptors(
 
 void TracerThread::AddUretprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-    const LinuxTracing::Function& function) {
+    const orbit_linux_tracing::Function& function) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uretprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
@@ -948,7 +948,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
@@ -1106,4 +1106,4 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   }
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

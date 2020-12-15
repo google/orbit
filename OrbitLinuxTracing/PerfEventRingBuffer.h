@@ -11,7 +11,7 @@
 
 #include "OrbitBase/Logging.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class PerfEventRingBuffer {
  public:
@@ -64,6 +64,6 @@ class PerfEventRingBuffer {
   void ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail, uint64_t count);
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_RING_BUFFER_H_

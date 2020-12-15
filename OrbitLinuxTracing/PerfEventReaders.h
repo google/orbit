@@ -17,7 +17,7 @@
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // Helper functions for reads from a perf_event_open ring buffer that require
 // more complex operations than simply copying an entire perf_event_open record.
@@ -52,6 +52,6 @@ std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
   return event;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_READERS_H_

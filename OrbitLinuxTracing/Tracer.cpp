@@ -13,7 +13,7 @@
 #include "TracerThread.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::CaptureOptions;
 
@@ -25,4 +25,4 @@ void Tracer::Run(const CaptureOptions& capture_options, TracerListener* listener
   session.Run(exit_requested);
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

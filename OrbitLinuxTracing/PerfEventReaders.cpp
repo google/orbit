@@ -9,7 +9,7 @@
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 pid_t ReadMmapRecordPid(PerfEventRingBuffer* ring_buffer) {
   // Mmap records have the following layout:
@@ -106,4 +106,4 @@ std::unique_ptr<GenericTracepointPerfEvent> ConsumeGenericTracepointPerfEvent(
   return event;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

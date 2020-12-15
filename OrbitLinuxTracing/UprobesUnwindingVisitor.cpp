@@ -18,7 +18,7 @@
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
@@ -203,4 +203,4 @@ void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
   listener_->OnModulesUpdate(std::move(modules_update_event));
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

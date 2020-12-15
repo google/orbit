@@ -12,7 +12,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitLinuxTracing/TracerListener.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -226,4 +226,4 @@ ThreadStateSlice::ThreadState ContextSwitchAndThreadStateVisitor::GetThreadState
   return ThreadStateSlice::kRunnable;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

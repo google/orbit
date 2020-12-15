@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class LibunwindstackUnwinder {
  public:
@@ -41,6 +41,6 @@ class LibunwindstackUnwinder {
     return ERROR_NAMES[error_code];
   }
 };
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_

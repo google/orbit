@@ -16,7 +16,7 @@
 #include "LibunwindstackUnwinder.h"
 #include "UprobesReturnAddressManager.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 namespace {
 
@@ -643,4 +643,4 @@ TEST(UprobesReturnAddressManager, CallchainOfTailcall) {
 }
 }  // namespace
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

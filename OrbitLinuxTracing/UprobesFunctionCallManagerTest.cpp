@@ -12,7 +12,7 @@
 #include "UprobesFunctionCallManager.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::FunctionCall;
 
@@ -129,4 +129,4 @@ TEST(UprobesFunctionCallManager, OnlyUretprobe) {
   ASSERT_FALSE(processed_function_call.has_value());
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
