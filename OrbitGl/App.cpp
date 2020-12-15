@@ -1567,7 +1567,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {
-        presets_data_view_ = std::make_unique<PresetsDataView>();
+        presets_data_view_ = std::make_unique<PresetsDataView>(this);
         panels_.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();

@@ -29,13 +29,14 @@ constexpr const float kModulesColumnWidth = 0.34f;
 constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 
 namespace {
-std::string GetLoadStateString(const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
-  PresetLoadState load_state = GOrbitApp->GetPresetLoadState(preset);
+std::string GetLoadStateString(OrbitApp* app,
+                               const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
+  PresetLoadState load_state = app->GetPresetLoadState(preset);
   return load_state.GetName();
 }
 }  // namespace
 
-PresetsDataView::PresetsDataView() : DataView(DataViewType::kPresets) {}
+PresetsDataView::PresetsDataView(OrbitApp* app) : DataView(DataViewType::kPresets), app_{app} {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) const {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -69,7 +70,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnLoadState:
-      return GetLoadStateString(preset);
+      return GetLoadStateString(app_, preset);
     case kColumnSessionName:
       return std::filesystem::path(preset->file_name()).filename().string();
     case kColumnModules:
@@ -93,8 +94,8 @@ void PresetsDataView::DoSort() {
   switch (sorting_column_) {
     case kColumnLoadState:
       sorter = [&](int a, int b) {
-        return orbit_core::Compare(GOrbitApp->GetPresetLoadState(presets_[a]).state,
-                                   GOrbitApp->GetPresetLoadState(presets_[b]).state, ascending);
+        return orbit_core::Compare(app_->GetPresetLoadState(presets_[a]).state,
+                                   app_->GetPresetLoadState(presets_[b]).state, ascending);
       };
       break;
     case kColumnSessionName:
@@ -132,7 +133,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       return;
     }
     const std::shared_ptr<PresetFile>& preset = GetPreset(item_indices[0]);
-    GOrbitApp->LoadPreset(preset);
+    app_->LoadPreset(preset);
 
   } else if (action == kMenuActionDelete) {
     if (item_indices.size() != 1) {
@@ -147,8 +148,8 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       OnDataChanged();
     } else {
       ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
-      GOrbitApp->SendErrorToUi("Error deleting preset",
-                               absl::StrFormat("Could not delete preset \"%s\".", filename));
+      app_->SendErrorToUi("Error deleting preset",
+                          absl::StrFormat("Could not delete preset \"%s\".", filename));
     }
 
   } else {
@@ -201,7 +202,7 @@ void PresetsDataView::OnDataChanged() {
 bool PresetsDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
   const std::shared_ptr<PresetFile> preset = GetPreset(row);
-  PresetLoadState load_state = GOrbitApp->GetPresetLoadState(preset);
+  PresetLoadState load_state = app_->GetPresetLoadState(preset);
   load_state.GetDisplayColor(red, green, blue);
   return true;
 }
