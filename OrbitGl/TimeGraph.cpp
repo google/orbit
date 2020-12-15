@@ -768,7 +768,7 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
-    track = std::make_shared<SchedulerTrack>(this);
+    track = std::make_shared<SchedulerTrack>(this, GOrbitApp.get());
     AddTrack(track);
     scheduler_track_ = track;
     uint32_t num_cores = GetNumCores();
