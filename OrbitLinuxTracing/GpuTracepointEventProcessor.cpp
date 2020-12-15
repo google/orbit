@@ -15,7 +15,7 @@
 
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::GpuJob;
 
@@ -151,4 +151,4 @@ void GpuTracepointEventProcessor::PushEvent(const DmaFenceSignaledPerfEvent& sam
 
 void GpuTracepointEventProcessor::SetListener(TracerListener* listener) { listener_ = listener; }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

@@ -4,7 +4,7 @@
 
 #include "ThreadStateManager.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::ThreadStateSlice;
 
@@ -166,4 +166,4 @@ std::vector<ThreadStateSlice> ThreadStateManager::OnCaptureFinished(uint64_t tim
   return slices;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

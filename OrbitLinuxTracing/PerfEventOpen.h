@@ -22,7 +22,7 @@ inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu, int
   return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);
 }
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 inline void perf_event_reset(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
@@ -134,6 +134,6 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
 int tracepoint_event_open(const char* tracepoint_category, const char* tracepoint_name, pid_t pid,
                           int32_t cpu);
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_

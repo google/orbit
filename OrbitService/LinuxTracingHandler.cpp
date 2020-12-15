@@ -25,7 +25,7 @@ void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   bool enable_introspection = capture_options.enable_introspection();
 
-  tracer_ = std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
+  tracer_ = std::make_unique<orbit_linux_tracing::Tracer>(std::move(capture_options));
   tracer_->SetListener(this);
   tracer_->Start();
 

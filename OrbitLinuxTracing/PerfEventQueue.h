@@ -14,7 +14,7 @@
 
 #include "PerfEvent.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // This class implements a data structure that holds a large number of different perf_event_open
 // records coming from multiple ring buffers, and allows reading them in order (oldest first).
@@ -47,6 +47,6 @@ class PerfEventQueue {
   std::vector<std::queue<std::unique_ptr<PerfEvent>>*> queues_heap_;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_QUEUE_H_

@@ -22,7 +22,7 @@
 #include "LinuxTracingUtils.h"
 #include "OrbitBase/ThreadUtils.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 TEST(ReadFile, ProcPidCommOfOrbitLinuxTracingTests) {
   std::string filename = absl::StrFormat("/proc/%d/comm", getpid());
@@ -217,4 +217,4 @@ TEST(ParseCpusetCpus, SingleValuesAndRanges) {
   EXPECT_THAT(returned_cpus, ::testing::ElementsAre(0, 1, 2, 4, 7, 12, 13, 14));
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

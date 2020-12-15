@@ -20,7 +20,7 @@
 #include "ThreadStateManager.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // This PerfEventVisitor visits PerfEvents associated with scheduling slices and thread states,
 // processes them using ContextSwitchManager and ThreadStateManager, and passes the results to the
@@ -66,6 +66,6 @@ class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
   ThreadStateManager state_manager_;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_THREAD_STATE_VISITOR_H_

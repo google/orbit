@@ -15,7 +15,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 namespace {
 perf_event_attr generic_event_attr() {
   perf_event_attr pe{};
@@ -151,4 +151,4 @@ int tracepoint_event_open(const char* tracepoint_category, const char* tracepoin
   return generic_event_open(&pe, pid, cpu);
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

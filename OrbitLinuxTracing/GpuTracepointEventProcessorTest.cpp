@@ -10,7 +10,7 @@
 #include "OrbitLinuxTracing/TracerListener.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 namespace {
 
@@ -599,4 +599,4 @@ TEST_F(GpuTracepointEventProcessorTest,
   EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

@@ -17,7 +17,7 @@
 #include "OrbitBase/SafeStrerror.h"
 #include "PerfEventOpen.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // Use memory barriers when accessing data_tail and data_head.
 // The kernel, as the producer, writes to "data_head" and reads from
@@ -167,4 +167,4 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_
   }
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

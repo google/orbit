@@ -24,7 +24,7 @@
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // UprobesUnwindingVisitor processes stack samples and uprobes/uretprobes
 // records (as well as memory maps changes, to keep necessary unwinding
@@ -83,6 +83,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
       uprobe_sps_ips_cpus_per_thread_{};
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_

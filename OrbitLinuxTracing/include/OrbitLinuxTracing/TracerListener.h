@@ -7,7 +7,7 @@
 
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class TracerListener {
  public:
@@ -24,6 +24,6 @@ class TracerListener {
   virtual void OnModulesUpdate(orbit_grpc_protos::ModulesUpdateEvent modules_update_event) = 0;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_TRACER_LISTENER_H_
