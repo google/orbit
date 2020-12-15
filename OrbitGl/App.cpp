@@ -462,7 +462,7 @@ void OrbitApp::ListPresets() {
 void OrbitApp::RefreshCaptureView() {
   ORBIT_SCOPE_FUNCTION;
   NeedsRedraw();
-  GOrbitApp->FireRefreshCallbacks();
+  FireRefreshCallbacks();
   DoZoom = true;  // TODO: remove global, review logic
 }
 
@@ -528,15 +528,14 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 
 Timer GMainTimer;
 
-// TODO: make it non-static
 void OrbitApp::MainTick() {
   ORBIT_SCOPE("OrbitApp::MainTick");
   GMainTimer.Restart();
 
-  if (DoZoom && GOrbitApp->HasCaptureData()) {
+  if (DoZoom && HasCaptureData()) {
     GCurrentTimeGraph->SortTracks();
-    GOrbitApp->capture_window_->ZoomAll();
-    GOrbitApp->NeedsRedraw();
+    capture_window_->ZoomAll();
+    NeedsRedraw();
     DoZoom = false;
   }
 }
@@ -1162,7 +1161,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
       }
 
       UpdateAfterSymbolLoading();
-      GOrbitApp->FireRefreshCallbacks();
+      FireRefreshCallbacks();
     });
   });
 }
