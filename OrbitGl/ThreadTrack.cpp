@@ -23,10 +23,10 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app
 
   thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_);
 
-  event_track_ = std::make_shared<EventTrack>(time_graph);
+  event_track_ = std::make_shared<EventTrack>(time_graph, app_);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id);
+  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id, app_);
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
