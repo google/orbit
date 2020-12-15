@@ -65,7 +65,7 @@
              </property>
              <property name="minimumSize">
               <size>
-               <width>222</width>
+               <width>280</width>
                <height>23</height>
               </size>
              </property>
@@ -159,6 +159,15 @@
               <widget class="QTableView" name="instancesTableView">
                <property name="enabled">
                 <bool>true</bool>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="showGrid">
+                <bool>false</bool>
+               </property>
+               <property name="wordWrap">
+                <bool>false</bool>
                </property>
                <property name="focusPolicy">
                 <enum>Qt::NoFocus</enum>
