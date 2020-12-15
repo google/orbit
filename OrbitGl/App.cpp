@@ -1584,7 +1584,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
-        tracepoints_data_view_ = std::make_unique<TracepointsDataView>();
+        tracepoints_data_view_ = std::make_unique<TracepointsDataView>(this);
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();
