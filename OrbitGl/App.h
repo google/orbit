@@ -292,8 +292,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::vector<ModuleData*>& modules,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {},
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map = {});
-  // TODO(170468590): [ui beta] when out of ui beta, clean this up (it should be necessary to have
-  // an argument here, since OrbitApp will always only have one process associated)
+  // TODO(170468590): [ui beta] when out of ui beta, clean this up (it should not be necessary to
+  // have an argument here, since OrbitApp will always only have one process associated)
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
@@ -316,18 +316,15 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     CHECK(process_manager != nullptr);
     process_manager_ = process_manager;
   }
-  void SetProcess(ProcessData* process) {
-    CHECK(process != nullptr);
-    process_ = process;
-  }
+  void SetTargetProcess(ProcessData* process);
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_; }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
-  [[nodiscard]] ProcessData* GetMutableSelectedProcess() const { return process_; }
-  [[nodiscard]] const ProcessData* GetSelectedProcess() const { return process_; }
+  [[nodiscard]] ProcessData* GetMutableTargetProcess() const { return process_; }
+  [[nodiscard]] const ProcessData* GetTargetProcess() const { return process_; }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
   }

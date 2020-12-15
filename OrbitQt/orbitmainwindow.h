@@ -5,26 +5,42 @@
 #ifndef ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 #define ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 
-#include <DisassemblyReport.h>
-
+#include <QApplication>
+#include <QCloseEvent>
+#include <QEvent>
+#include <QFrame>
+#include <QIcon>
 #include <QLabel>
-#include <QLineEdit>
 #include <QMainWindow>
+#include <QObject>
+#include <QPoint>
 #include <QString>
+#include <QTabWidget>
 #include <QTimer>
+#include <QWidget>
+#include <algorithm>
+#include <cstdint>
+#include <map>
 #include <memory>
-#include <outcome.hpp>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "App.h"
-#include "CallStackDataView.h"
 #include "CallTreeView.h"
+#include "DataView.h"
+#include "DataViewTypes.h"
+#include "DisassemblyReport.h"
 #include "MainThreadExecutor.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "StatusListener.h"
+#include "TargetConfiguration.h"
+#include "capture_data.pb.h"
 #include "orbitglwidget.h"
 #include "servicedeploymanager.h"
+#include "ui_orbitmainwindow.h"
 
 namespace Ui {
 class OrbitMainWindow;
@@ -34,8 +50,13 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
+  static constexpr int kEndSessionReturnCode = 1;
+
+  // TODO (170468590) remove when not needed anymore
   explicit OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
                            std::string grpc_server_address, uint32_t font_size);
+
+  explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration, uint32_t font_size);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }
@@ -70,6 +91,14 @@ class OrbitMainWindow : public QMainWindow {
   bool eventFilter(QObject* watched, QEvent* event) override;
 
   void RestoreDefaultTabLayout();
+
+  // TODO(170468590): [ui beta] When out of ui beta, this can return TargetConfiguration (without
+  // std::optional)
+  std::optional<orbit_qt::TargetConfiguration> ClearTargetConfiguration() {
+    std::optional<orbit_qt::TargetConfiguration> result = std::move(target_configuration_);
+    target_configuration_ = std::nullopt;
+    return result;
+  }
 
  protected:
   void closeEvent(QCloseEvent* event) override;
@@ -111,6 +140,7 @@ class OrbitMainWindow : public QMainWindow {
   void StartMainTimer();
   void SetupCaptureToolbar();
   void SetupCodeView();
+  void SetupMainWindow(uint32_t font_size);
 
   void SaveCurrentTabLayoutAsDefaultInMemory();
 
@@ -120,6 +150,10 @@ class OrbitMainWindow : public QMainWindow {
   void UpdateActiveTabsAfterSelection(bool selection_has_samples);
 
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
+
+  void SetTarget(const orbit_qt::StadiaTarget& target);
+  void SetTarget(const orbit_qt::LocalTarget& target);
+  void SetTarget(const orbit_qt::FileTarget& target);
 
   // TODO(170468590): [ui beta] When out of ui beta, this is not needed anymore (is done by
   // ProfilingTargetDialog)
@@ -132,6 +166,7 @@ class OrbitMainWindow : public QMainWindow {
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> gl_widgets_;
   OrbitGLWidget* introspection_widget_ = nullptr;
+  QLabel* target_label_ = nullptr;
 
   // Capture toolbar.
   QIcon icon_start_capture_;
@@ -152,6 +187,9 @@ class OrbitMainWindow : public QMainWindow {
   // TODO(170468590): [ui beta] When out of ui beta, this process_manager_ is not needed anymore,
   // since the one from the Target is used;
   std::unique_ptr<ProcessManager> process_manager_;
+
+  // TODO(170468590): [ui beta] When out of ui beta, this does not need to be an optional anymore
+  std::optional<orbit_qt::TargetConfiguration> target_configuration_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QMessageBox>
+#include <QMetaType>
 #include <QObject>
 #include <QPalette>
 #include <QProcessEnvironment>
@@ -41,6 +42,7 @@
 #include <unistd.h>
 #endif
 
+#include "Connections.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "ImGuiOrbit.h"
@@ -52,6 +54,8 @@
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
+#include "ProfilingTargetDialog.h"
+#include "TargetConfiguration.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
 #include "servicedeploymanager.h"
@@ -199,6 +203,88 @@ static outcome::result<void> RunUiInstance(
     return outcome::failure(error.value());
   } else {
     return outcome::success();
+  }
+}
+
+void RunBetaUiInstance(std::optional<DeploymentConfiguration> deployment_configuration,
+                       const Context* ssh_context) {
+  qRegisterMetaType<std::error_code>();
+
+  // TODO(170468590): [ui beta] when out of ui beta, remove optional from deployment_configuration
+  CHECK(deployment_configuration.has_value());
+
+  const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
+
+  orbit_qt::SshConnectionArtifacts ssh_connection_artifacts{ssh_context, grpc_port,
+                                                            &(deployment_configuration.value())};
+
+  std::optional<orbit_qt::TargetConfiguration> target_config;
+
+  while (true) {
+    {
+      orbit_qt::ProfilingTargetDialog target_dialog{&ssh_connection_artifacts,
+                                                    std::move(target_config)};
+      target_config = target_dialog.Exec();
+
+      if (!target_config.has_value()) {
+        // User closed dialog
+        break;
+      }
+    }
+
+    int application_return_code = 0;
+
+    {  // Scoping of QT UI Resources
+
+      ServiceDeployManager* service_deploy_manager_ptr = nullptr;
+      if (std::holds_alternative<orbit_qt::StadiaTarget>(target_config.value())) {
+        service_deploy_manager_ptr = std::get<orbit_qt::StadiaTarget>(target_config.value())
+                                         .GetConnection()
+                                         ->GetServiceDeployManager();
+      }
+
+      constexpr uint32_t kDefaultFontSize = 14;
+
+      OrbitMainWindow w(std::move(target_config.value()), kDefaultFontSize);
+
+      // "resize" is required to make "showMaximized" work properly.
+      w.resize(1280, 720);
+      w.showMaximized();
+
+      QMessageBox box(QMessageBox::Critical, QApplication::applicationName(), "", QMessageBox::Ok);
+      auto error_handler = [&]() -> ScopedConnection {
+        if (service_deploy_manager_ptr == nullptr) {
+          return ScopedConnection();
+        }
+
+        return orbit_ssh_qt::ScopedConnection{QObject::connect(
+            service_deploy_manager_ptr, &ServiceDeployManager::socketErrorOccurred, &box,
+            [&](std::error_code error) {
+              box.setText(
+                  QString("Connection error: %1").arg(QString::fromStdString(error.message())));
+              box.exec();
+              w.close();
+              w.ClearTargetConfiguration();
+              QApplication::exit(OrbitMainWindow::kEndSessionReturnCode);
+            })};
+      }();
+
+      application_return_code = QApplication::exec();
+
+      target_config = w.ClearTargetConfiguration();
+    }
+
+    Orbit_ImGui_Shutdown();
+
+    if (application_return_code == 0) {
+      // User closed window
+      break;
+    } else if (application_return_code == OrbitMainWindow::kEndSessionReturnCode) {
+      // User clicked end session, or socket error occurred.
+      continue;
+    } else {
+      UNREACHABLE();
+    }
   }
 }
 
@@ -395,20 +481,25 @@ int main(int argc, char* argv[]) {
       return -1;
     }
 
-    while (true) {
-      const auto result = RunUiInstance(deployment_configuration, &(context.value()));
-      if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
-          !deployment_configuration) {
-        // It was either a clean shutdown or the deliberately closed the
-        // dialog, or we started with the --local flag.
-        return 0;
-      } else if (result.error() == make_error_code(orbit_ggp::Error::kCouldNotUseGgpCli)) {
-        DisplayErrorToUser(QString::fromStdString(result.error().message()));
-        return 1;
-      } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
-        DisplayErrorToUser(
-            QString("An error occurred: %1").arg(QString::fromStdString(result.error().message())));
-        break;
+    if (absl::GetFlag(FLAGS_enable_ui_beta)) {
+      RunBetaUiInstance(deployment_configuration, &context.value());
+      return 0;
+    } else {
+      while (true) {
+        const auto result = RunUiInstance(deployment_configuration, &(context.value()));
+        if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
+            !deployment_configuration) {
+          // It was either a clean shutdown or the deliberately closed the
+          // dialog, or we started with the --local flag.
+          return 0;
+        } else if (result.error() == make_error_code(orbit_ggp::Error::kCouldNotUseGgpCli)) {
+          DisplayErrorToUser(QString::fromStdString(result.error().message()));
+          return 1;
+        } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
+          DisplayErrorToUser(QString("An error occurred: %1")
+                                 .arg(QString::fromStdString(result.error().message())));
+          break;
+        }
       }
     }
   }
