@@ -5,13 +5,12 @@
 #ifndef ORBIT_LINUX_TRACING_TRACER_H_
 #define ORBIT_LINUX_TRACING_TRACER_H_
 
-#include <OrbitLinuxTracing/TracerListener.h>
-
 #include <atomic>
 #include <memory>
 #include <thread>
 #include <utility>
 
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "capture.pb.h"
 
 namespace LinuxTracing {

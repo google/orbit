@@ -4,9 +4,6 @@
 
 #include "TracerThread.h"
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/ThreadUtils.h>
-#include <OrbitBase/Tracing.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
@@ -23,7 +20,10 @@
 #include <utility>
 
 #include "Function.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"

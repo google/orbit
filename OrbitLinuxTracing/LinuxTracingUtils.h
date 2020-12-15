@@ -5,12 +5,13 @@
 #ifndef ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
 #define ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/Profiling.h>
 #include <unistd.h>
 
 #include <ctime>
 #include <optional>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 
 namespace LinuxTracing {
 

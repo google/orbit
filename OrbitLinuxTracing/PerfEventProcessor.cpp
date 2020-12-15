@@ -4,12 +4,11 @@
 
 #include "PerfEventProcessor.h"
 
-#include <OrbitBase/Logging.h>
-
 #include <memory>
 #include <utility>
 
 #include "LinuxTracingUtils.h"
+#include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 
 namespace LinuxTracing {

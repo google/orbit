@@ -5,8 +5,6 @@
 #ifndef ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
 #define ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/SafeStrerror.h>
 #include <asm/perf_regs.h>
 #include <linux/perf_event.h>
 #include <sys/ioctl.h>
@@ -15,6 +13,9 @@
 
 #include <cerrno>
 #include <cstdint>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 
 inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu, int group_fd,
                            unsigned long flags) {
