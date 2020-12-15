@@ -78,13 +78,15 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 }
 
 void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
-  if (!row.has_value()) {
-    return;
-  }
   app_->DeselectTextBox();
-  const CaptureData& capture_data = app_->GetCaptureData();
-  app_->set_highlighted_function(
-      capture_data.GetAbsoluteAddress(*GetSelectedFunction(row.value())));
+
+  if (!row.has_value()) {
+    app_->set_highlighted_function(DataManager::kInvalidFunctionAddress);
+  } else {
+    const CaptureData& capture_data = app_->GetCaptureData();
+    app_->set_highlighted_function(
+        capture_data.GetAbsoluteAddress(*GetSelectedFunction(row.value())));
+  }
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                      \
@@ -400,11 +402,11 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInf
   return std::make_pair(min_box, max_box);
 }
 
-int LiveFunctionsDataView::GetRowFromFunctionAddress(uint64_t function_address) {
+std::optional<int> LiveFunctionsDataView::GetRowFromFunctionAddress(uint64_t function_address) {
   for (int function_row = 0; function_row < static_cast<int>(GetNumElements()); function_row++) {
     if (absl::StrFormat("0x%llx", function_address) == GetValue(function_row, kColumnAddress)) {
       return function_row;
     }
   }
-  return -1;
+  return std::nullopt;
 }

@@ -778,16 +778,16 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
 }
 
 void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
-  if (!timer_info) return;
-  uint64_t function_address = timer_info->function_address();
-  const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
-  CHECK(live_functions_controller.has_value());
-  LiveFunctionsDataView& live_functions_data_view =
-      live_functions_controller.value()->GetDataView();
-  int selected_row = live_functions_data_view.GetRowFromFunctionAddress(function_address);
-  if (selected_row != -1) {
-    ui->liveFunctions->onRowSelected(selected_row);
+  std::optional<int> selected_row(std::nullopt);
+  if (timer_info) {
+    uint64_t function_address = timer_info->function_address();
+    const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
+    CHECK(live_functions_controller.has_value());
+    LiveFunctionsDataView& live_functions_data_view =
+        live_functions_controller.value()->GetDataView();
+    selected_row = live_functions_data_view.GetRowFromFunctionAddress(function_address);
   }
+  ui->liveFunctions->OnRowSelected(selected_row);
 }
 
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
