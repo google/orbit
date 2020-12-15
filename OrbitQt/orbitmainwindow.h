@@ -31,8 +31,9 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(OrbitApp* app, orbit_qt::ServiceDeployManager* service_deploy_manager,
-                  uint32_t font_size);
+  explicit OrbitMainWindow(ApplicationOptions options,
+                           orbit_qt::ServiceDeployManager* service_deploy_manager,
+                           uint32_t font_size);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) { m_GlWidgets.push_back(a_GlWidget); }
@@ -113,7 +114,7 @@ class OrbitMainWindow : public QMainWindow {
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
  private:
-  OrbitApp* app_ = nullptr;
+  std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> m_GlWidgets;
