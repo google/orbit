@@ -93,7 +93,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnModule:
       return function_utils::GetLoadedModuleName(function);
     case kColumnAddress: {
-      const ProcessData* process = app_->GetSelectedProcess();
+      const ProcessData* process = app_->GetTargetProcess();
       // If no process is selected, that means Orbit is in a disconnected state aka displaying a
       // capture that has been loaded from file. CaptureData then holds the process
       if (process == nullptr) {
@@ -228,7 +228,7 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
     }
   } else if (action == kMenuActionDisassembly) {
     for (int i : item_indices) {
-      app_->Disassemble(app_->GetSelectedProcess()->pid(), *GetFunction(i));
+      app_->Disassemble(app_->GetTargetProcess()->pid(), *GetFunction(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

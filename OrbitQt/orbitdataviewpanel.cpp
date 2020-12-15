@@ -4,8 +4,13 @@
 
 #include "orbitdataviewpanel.h"
 
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <new>
 #include <string>
 
+#include "orbittablemodel.h"
 #include "ui_orbitdataviewpanel.h"
 
 OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
@@ -35,6 +40,7 @@ void OrbitDataViewPanel::Initialize(DataView* data_view, SelectionType selection
 
   if (ui->treeView->HasRefreshButton()) {
     ui->refreshButton->show();
+    ui->horizontalLayout->setContentsMargins(0, 0, 6, 0);
   } else {
     ui->refreshButton->hide();
   }

@@ -11,46 +11,97 @@
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
 
+#include <QAbstractButton>
+#include <QAction>
 #include <QApplication>
-#include <QBuffer>
 #include <QCheckBox>
 #include <QClipboard>
 #include <QCoreApplication>
+#include <QCursor>
 #include <QDesktopServices>
+#include <QDir>
+#include <QFile>
 #include <QFileDialog>
+#include <QFlags>
+#include <QFontMetrics>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QIODevice>
+#include <QLabel>
+#include <QLineEdit>
+#include <QList>
+#include <QMenu>
+#include <QMenuBar>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QPixmap>
+#include <QPointer>
 #include <QProgressDialog>
+#include <QPushButton>
 #include <QSettings>
+#include <QSplitter>
+#include <QStringList>
+#include <QTabBar>
 #include <QTimer>
+#include <QToolBar>
 #include <QToolTip>
+#include <QUrl>
+#include <QVBoxLayout>
+#include <QVariant>
+#include <QWidget>
+#include <Qt>
+#include <array>
+#include <filesystem>
+#include <memory>
+#include <new>
+#include <outcome.hpp>
 #include <utility>
+#include <variant>
 
 #include "App.h"
-#include "CallTreeViewItemModel.h"
+#include "CallTreeWidget.h"
+#include "Connections.h"
+#include "DataViewFactory.h"
+#include "GlCanvas.h"
+#include "LiveFunctionsController.h"
+#include "LiveFunctionsDataView.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/Tracing.h"
+#include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitClientData/ProcessData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
+#include "OrbitGgp/Instance.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
+#include "TargetConfiguration.h"
 #include "TutorialContent.h"
-#include "TutorialOverlay.h"
+#include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
 #include "orbitcodeeditor.h"
+#include "orbitdataviewpanel.h"
 #include "orbitdisassemblydialog.h"
+#include "orbitglwidget.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
+#include "processlauncherwidget.h"
+#include "servicedeploymanager.h"
 #include "services.pb.h"
+#include "types.h"
 #include "ui_orbitmainwindow.h"
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
+ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
@@ -59,17 +110,107 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
+OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
+                                 uint32_t font_size)
+    : QMainWindow(nullptr),
+      main_thread_executor_{CreateMainThreadExecutor()},
+      app_{OrbitApp::Create(main_thread_executor_.get())},
+      ui(new Ui::OrbitMainWindow),
+      target_configuration_(std::move(target_configuration)) {
+  SetupMainWindow(font_size);
+
+  ui->RightTabWidget->setTabText(ui->RightTabWidget->indexOf(ui->FunctionsTab), "Symbols");
+  ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->HomeTab));
+
+  // remove Functions list from position 0,0
+  ui->functionsTabLayout->removeItem(ui->functionsTabLayout->itemAtPosition(0, 0));
+
+  auto* symbols_vertical_splitter = new QSplitter(Qt::Vertical);
+  auto* symbols_horizontal_splitter = new QSplitter(Qt::Horizontal);
+
+  ui->functionsTabLayout->addWidget(symbols_vertical_splitter, 0, 0);
+
+  symbols_vertical_splitter->addWidget(symbols_horizontal_splitter);
+  symbols_vertical_splitter->addWidget(ui->FunctionsList);
+
+  symbols_horizontal_splitter->addWidget(ui->SessionList);
+  symbols_horizontal_splitter->addWidget(ui->ModulesList);
+
+  // Make the splitters take 50% of the space.
+  symbols_vertical_splitter->setSizes({5000, 5000});
+  symbols_horizontal_splitter->setSizes({5000, 5000});
+
+  DataViewFactory* data_view_factory = app_.get();
+  ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
+                              SelectionType::kExtended, FontType::kDefault);
+  ui->FunctionsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
+                                SelectionType::kExtended, FontType::kDefault);
+  ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
+                              SelectionType::kDefault, FontType::kDefault,
+                              /*is_main_instance=*/true, /*uniform_row_height=*/false,
+                              /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
+
+  // TODO(170468590): [ui beta] When out of ui beta, target_configuration_ should not be an optional
+  // anymore, and this CHECK and convenience local variable are not needed anymore.
+  CHECK(target_configuration_.has_value());
+  const orbit_qt::TargetConfiguration& target = target_configuration_.value();
+
+  std::visit([this](const auto& target) { SetTarget(target); }, target);
+
+  app_->PostInit();
+
+  SaveCurrentTabLayoutAsDefaultInMemory();
+
+  // TODO(170468590): [ui beta] Currently a call to OpenCapture() needs to happen after
+  // OrbitApp::PostInit(). As soon as PostInit() is cleaned up (see todo comments
+  // in PostInit), it should be called before std::visit and then OpenCapture can be called
+  // inside SetTarget(FileTarget).
+  std::string file_path_to_open;
+  if (std::holds_alternative<orbit_qt::FileTarget>(target)) {
+    OpenCapture(std::get<orbit_qt::FileTarget>(target).GetCaptureFilePath().string());
+  }
+
+  UpdateCaptureStateDependentWidgets();
+}
+
 OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
                                  std::string grpc_server_address, uint32_t font_size)
     : QMainWindow(nullptr),
       main_thread_executor_{CreateMainThreadExecutor()},
       app_{OrbitApp::Create(main_thread_executor_.get())},
       ui(new Ui::OrbitMainWindow) {
+  SetupMainWindow(font_size);
+
+  app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
+                                                       std::string_view destination) {
+    CHECK(service_deploy_manager != nullptr);
+    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
+  });
+
+  DataViewFactory* data_view_factory = app_.get();
+  ui->ProcessesList->SetDataView(data_view_factory->GetOrCreateDataView(DataViewType::kProcesses));
+
+  ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
+                              SelectionType::kExtended, FontType::kDefault);
+  ui->FunctionsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
+                                SelectionType::kExtended, FontType::kDefault);
+  ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
+                              SelectionType::kDefault, FontType::kDefault,
+                              /*is_main_instance=*/true, /*uniform_row_height=*/false,
+                              /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
+
+  SetupGrpcAndProcessManager(grpc_server_address);
+
+  app_->PostInit();
+
+  SaveCurrentTabLayoutAsDefaultInMemory();
+  UpdateCaptureStateDependentWidgets();
+}
+
+void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
   DataViewFactory* data_view_factory = app_.get();
 
   ui->setupUi(this);
-
-  ui->ProcessesList->SetDataView(data_view_factory->GetOrCreateDataView(DataViewType::kProcesses));
 
   QList<int> sizes;
   sizes.append(5000);
@@ -207,12 +348,6 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
   app_->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
 
-  app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
-                                                       std::string_view destination) {
-    CHECK(service_deploy_manager != nullptr);
-    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
-  });
-
   app_->SetShowEmptyFrameTrackWarningCallback(
       [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
 
@@ -230,16 +365,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
   }
 
-  ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
-                              SelectionType::kExtended, FontType::kDefault);
-  ui->FunctionsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
-                                SelectionType::kExtended, FontType::kDefault);
   ui->CallStackView->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kCallstack),
                                 SelectionType::kExtended, FontType::kDefault);
-  ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
-                              SelectionType::kDefault, FontType::kDefault,
-                              /*is_main_instance=*/true, /*uniform_row_height=*/false,
-                              /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
   ui->TracepointsList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::kTracepoints), SelectionType::kExtended,
       FontType::kDefault);
@@ -290,13 +417,6 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
   if (!absl::GetFlag(FLAGS_devmode)) {
     ui->actionIntrospection->setVisible(false);
   }
-
-  SetupGrpcAndProcessManager(std::move(grpc_server_address));
-
-  app_->PostInit();
-
-  SaveCurrentTabLayoutAsDefaultInMemory();
-  UpdateCaptureStateDependentWidgets();
 }
 
 static QWidget* CreateSpacer(QWidget* parent) {
@@ -395,8 +515,10 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   CaptureClient::State capture_state = app_->GetCaptureState();
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
 
-  set_tab_enabled(ui->HomeTab, true);
-  ui->HomeTab->setEnabled(!is_capturing);
+  if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
+    set_tab_enabled(ui->HomeTab, true);
+    ui->HomeTab->setEnabled(!is_capturing);
+  }
   set_tab_enabled(ui->FunctionsTab, true);
   set_tab_enabled(ui->CaptureTab, true);
   set_tab_enabled(ui->liveTab, has_data);
@@ -525,7 +647,9 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       ui->ModulesList->Refresh();
       break;
     case DataViewType::kProcesses:
-      ui->ProcessesList->Refresh();
+      if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
+        ui->ProcessesList->Refresh();
+      }
       break;
     case DataViewType::kPresets:
       ui->SessionList->Refresh();
@@ -942,6 +1066,28 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
     QMainWindow::closeEvent(event);
   }
 }
+
+void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
+  const orbit_qt::StadiaConnection* connection = target.GetConnection();
+  orbit_qt::ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
+  app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
+                                                       std::string_view destination) {
+    CHECK(service_deploy_manager != nullptr);
+    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
+  });
+  app_->SetGrpcChannel(connection->GetGrpcChannel());
+  app_->SetProcessManager(target.GetProcessManager());
+  app_->SetTargetProcess(target.GetProcess());
+}
+
+void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
+  const orbit_qt::LocalConnection* connection = target.GetConnection();
+  app_->SetGrpcChannel(connection->GetGrpcChannel());
+  app_->SetProcessManager(target.GetProcessManager());
+  app_->SetTargetProcess(target.GetProcess());
+}
+
+void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& /*target*/) {}
 
 void OrbitMainWindow::SetupGrpcAndProcessManager(std::string grpc_server_address) {
   std::shared_ptr<grpc::Channel> grpc_channel = grpc::CreateCustomChannel(

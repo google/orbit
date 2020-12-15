@@ -5,10 +5,18 @@
 #ifndef ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 #define ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 
+#include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
+
+#include <string>
+#include <vector>
+
 #include "DataView.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
+
+ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 class FunctionsDataView : public DataView {
  public:
@@ -25,6 +33,12 @@ class FunctionsDataView : public DataView {
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
+  std::string GetLabel() override {
+    if (absl::GetFlag(FLAGS_enable_ui_beta)) {
+      return "Functions";
+    }
+    return "";
+  }
 
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;

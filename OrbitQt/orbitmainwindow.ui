@@ -240,7 +240,7 @@ QPushButton:disabled {
         <attribute name="title">
          <string>Functions</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
+        <layout class="QGridLayout" name="functionsTabLayout">
          <item row="0" column="0">
           <widget class="OrbitDataViewPanel" name="FunctionsList" native="true"/>
          </item>
