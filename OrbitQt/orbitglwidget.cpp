@@ -10,6 +10,7 @@
 #include <QOpenGLDebugLogger>
 #include <QSignalMapper>
 
+#include "App.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "orbitmainwindow.h"
@@ -40,7 +41,7 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
 
 void OrbitGLWidget::Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* a_MainWindow,
                                uint32_t font_size) {
-  gl_canvas_ = GlCanvas::Create(canvas_type, font_size);
+  gl_canvas_ = GlCanvas::Create(canvas_type, font_size, GOrbitApp.get());
 
   if (a_MainWindow) {
     a_MainWindow->RegisterGlWidget(this);
