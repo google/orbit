@@ -34,7 +34,8 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-TimeGraph::TimeGraph(uint32_t font_size) : font_size_(font_size), batcher_(BatcherId::kTimeGraph) {
+TimeGraph::TimeGraph(uint32_t font_size, OrbitApp* app)
+    : font_size_(font_size), batcher_(BatcherId::kTimeGraph), app_{app} {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
@@ -45,7 +46,7 @@ TimeGraph::TimeGraph(uint32_t font_size) : font_size_(font_size), batcher_(Batch
             ProcessAsyncTimer(name, timer_info);
           });
   num_cores_ = 0;
-  manual_instrumentation_manager_ = GOrbitApp->GetManualInstrumentationManager();
+  manual_instrumentation_manager_ = app_->GetManualInstrumentationManager();
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
 }
 
@@ -465,7 +466,7 @@ void TimeGraph::GetWorldMinMax(float& min, float& max) const {
 
 void TimeGraph::Select(const TextBox* text_box) {
   CHECK(text_box != nullptr);
-  GOrbitApp->SelectTextBox(text_box);
+  app_->SelectTextBox(text_box);
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, timer_info);
   VerticallyMoveIntoView(timer_info);
@@ -542,7 +543,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  if (GOrbitApp->IsCapturing() || sorted_tracks_.empty() || sorting_invalidated_) {
+  if (app_->IsCapturing() || sorted_tracks_.empty() || sorting_invalidated_) {
     SortTracks();
     sorting_invalidated_ = false;
   }
@@ -574,7 +575,7 @@ void TimeGraph::SelectEvents(float world_start, float world_end, int32_t thread_
     selected_callstack_events_per_thread_[orbit_base::kAllProcessThreadsTid].emplace_back(event);
   }
 
-  GOrbitApp->SelectCallstackEvents(selected_callstack_events, thread_id);
+  app_->SelectCallstackEvents(selected_callstack_events, thread_id);
 
   NeedsUpdate();
 }
@@ -768,7 +769,7 @@ std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
-    track = std::make_shared<SchedulerTrack>(this, GOrbitApp.get());
+    track = std::make_shared<SchedulerTrack>(this, app_);
     AddTrack(track);
     scheduler_track_ = track;
     uint32_t num_cores = GetNumCores();
@@ -782,7 +783,7 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(this, tid, GOrbitApp.get());
+    track = std::make_shared<ThreadTrack>(this, tid, app_);
     AddTrack(track);
     thread_tracks_[tid] = track;
     track->SetTrackColor(GetThreadColor(tid));
@@ -813,7 +814,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash, GOrbitApp.get());
+    track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash, app_);
     std::string timeline = string_manager_->Get(timeline_hash).value_or("");
     std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);
@@ -845,7 +846,7 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<AsyncTrack>(this, name, GOrbitApp.get());
+    track = std::make_shared<AsyncTrack>(this, name, app_);
     AddTrack(track);
     async_tracks_[name] = track;
   }
@@ -857,7 +858,7 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
-    track = std::make_shared<FrameTrack>(this, function, GOrbitApp.get());
+    track = std::make_shared<FrameTrack>(this, function, app_);
     // Normally we would call AddTrack(track) here, but frame tracks are removable by users
     // and therefore cannot be simply thrown into the flat vector of tracks.
     sorting_invalidated_ = true;
@@ -927,7 +928,7 @@ void TimeGraph::SortTracks() {
   }
 
   // Reorder threads once every second when capturing
-  if (!GOrbitApp->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
+  if (!app_->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
     std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
 
     std::lock_guard<std::recursive_mutex> lock(mutex_);
