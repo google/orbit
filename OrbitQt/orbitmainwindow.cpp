@@ -22,7 +22,9 @@
 #include <utility>
 
 #include "App.h"
+#include "ApplicationOptions.h"
 #include "CallTreeViewItemModel.h"
+#include "MainThreadExecutorImpl.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -53,11 +55,13 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
-OrbitMainWindow::OrbitMainWindow(OrbitApp* app,
+OrbitMainWindow::OrbitMainWindow(ApplicationOptions options,
                                  orbit_qt::ServiceDeployManager* service_deploy_manager,
                                  uint32_t font_size)
-    : QMainWindow(nullptr), app_{app}, ui(new Ui::OrbitMainWindow) {
-  DataViewFactory* data_view_factory = app_;
+    : QMainWindow(nullptr),
+      app_{OrbitApp::Create(std::move(options), CreateMainThreadExecutor())},
+      ui(new Ui::OrbitMainWindow) {
+  DataViewFactory* data_view_factory = app_.get();
 
   ui->setupUi(this);
 
@@ -208,14 +212,15 @@ OrbitMainWindow::OrbitMainWindow(OrbitApp* app,
   app_->SetShowEmptyFrameTrackWarningCallback(
       [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
 
-  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size, app_);
+  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size,
+                                  app_.get());
 
   app_->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
     OnTimerSelectionChanged(timer_info);
   });
 
   if (absl::GetFlag(FLAGS_devmode)) {
-    ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size, app_);
+    ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size, app_.get());
     app_->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
   } else {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
@@ -261,15 +266,15 @@ OrbitMainWindow::OrbitMainWindow(OrbitApp* app,
 
   StartMainTimer();
 
-  ui->liveFunctions->Initialize(app_, SelectionType::kExtended, FontType::kDefault);
+  ui->liveFunctions->Initialize(app_.get(), SelectionType::kExtended, FontType::kDefault);
 
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
-  ui->topDownWidget->Initialize(app_);
-  ui->selectionTopDownWidget->Initialize(app_);
-  ui->bottomUpWidget->Initialize(app_);
-  ui->selectionBottomUpWidget->Initialize(app_);
+  ui->topDownWidget->Initialize(app_.get());
+  ui->selectionTopDownWidget->Initialize(app_.get());
+  ui->bottomUpWidget->Initialize(app_.get());
+  ui->selectionBottomUpWidget->Initialize(app_.get());
 
   ui->MainTabWidget->tabBar()->installEventFilter(this);
   ui->RightTabWidget->tabBar()->installEventFilter(this);
@@ -702,7 +707,8 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {
     introspection_widget_ = new OrbitGLWidget();
     introspection_widget_->setWindowFlags(Qt::WindowStaysOnTopHint);
-    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, 14, app_);
+    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, 14,
+                                      app_.get());
     introspection_widget_->installEventFilter(this);
   }
 

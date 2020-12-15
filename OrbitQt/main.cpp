@@ -41,12 +41,10 @@
 #include <unistd.h>
 #endif
 
-#include "App.h"
 #include "ApplicationOptions.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "ImGuiOrbit.h"
-#include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
@@ -164,12 +162,10 @@ static outcome::result<void> RunUiInstance(
 
   std::optional<std::error_code> error;
 
-  GOrbitApp = OrbitApp::Create(std::move(options), CreateMainThreadExecutor());
-
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
-    OrbitMainWindow w(GOrbitApp.get(), service_deploy_manager_ptr, kDefaultFontSize);
+    OrbitMainWindow w(std::move(options), service_deploy_manager_ptr, kDefaultFontSize);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);
@@ -197,8 +193,6 @@ static outcome::result<void> RunUiInstance(
 
     Orbit_ImGui_Shutdown();
   }
-
-  GOrbitApp.reset();
 
   if (error) {
     return outcome::failure(error.value());
