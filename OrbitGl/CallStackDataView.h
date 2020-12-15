@@ -11,9 +11,11 @@
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ModuleData.h"
 
+class OrbitApp;
+
 class CallStackDataView : public DataView {
  public:
-  CallStackDataView();
+  explicit CallStackDataView(OrbitApp* app);
 
   void SetAsMainInstance() override;
   const std::vector<Column>& GetColumns() override;
@@ -72,6 +74,9 @@ class CallStackDataView : public DataView {
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
   static const std::string kMenuActionDisassembly;
+
+ private:
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_
