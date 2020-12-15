@@ -33,7 +33,7 @@ class OrbitLiveFunctions : public QWidget {
                   bool is_main_instance = true);
   void Refresh();
   void OnDataChanged();
-  void onRowSelected(int row);
+  void OnRowSelected(std::optional<int> row);
   void Reset();
   void SetFilter(const QString& a_Filter);
   void AddIterator(uint64_t id, orbit_client_protos::FunctionInfo* function);
