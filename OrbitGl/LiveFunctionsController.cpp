@@ -103,7 +103,7 @@ bool LiveFunctionsController::OnAllNextButton() {
   absl::flat_hash_map<uint64_t, const TextBox*> next_boxes;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   for (auto it : function_iterators_) {
     const FunctionInfo* function = it.second;
     auto function_address = capture_data.GetAbsoluteAddress(*function);
@@ -131,7 +131,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   absl::flat_hash_map<uint64_t, const TextBox*> next_boxes;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   for (auto it : function_iterators_) {
     const FunctionInfo* function = it.second;
     auto function_address = capture_data.GetAbsoluteAddress(*function);
@@ -156,7 +156,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   auto function_address = capture_data.GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
       function_address, current_textboxes_[id]->GetTimerInfo().end());
@@ -168,7 +168,7 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   auto function_address = capture_data.GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
       function_address, current_textboxes_[id]->GetTimerInfo().end());
@@ -198,9 +198,9 @@ void LiveFunctionsController::AddIterator(FunctionInfo* function) {
   uint64_t id = next_iterator_id_;
   ++next_iterator_id_;
 
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   auto function_address = capture_data.GetAbsoluteAddress(*function);
-  const TextBox* box = GOrbitApp->selected_text_box();
+  const TextBox* box = app_->selected_text_box();
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
   // screen.

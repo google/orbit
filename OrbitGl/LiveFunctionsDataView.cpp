@@ -16,8 +16,8 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
-LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions)
-    : DataView(DataViewType::kLiveFunctions), live_functions_(live_functions) {
+LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app)
+    : DataView(DataViewType::kLiveFunctions), live_functions_(live_functions), app_{app} {
   update_period_ms_ = 300;
   OnDataChanged();
 }
@@ -41,7 +41,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
 }
 
 std::string LiveFunctionsDataView::GetValue(int row, int column) {
-  if (!GOrbitApp->HasCaptureData()) {
+  if (!app_->HasCaptureData()) {
     return "";
   }
   if (row >= static_cast<int>(GetNumElements())) {
@@ -49,11 +49,11 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 
   const FunctionInfo& function = *GetSelectedFunction(row);
-  const FunctionStats& stats = GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(function);
+  const FunctionStats& stats = app_->GetCaptureData().GetFunctionStatsOrDefault(function);
 
   switch (column) {
     case kColumnSelected:
-      return FunctionsDataView::BuildSelectedColumnsString(GOrbitApp.get(), function);
+      return FunctionsDataView::BuildSelectedColumnsString(app_, function);
     case kColumnName:
       return function_utils::GetDisplayName(function);
     case kColumnCount:
@@ -69,7 +69,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnModule:
       return function.loaded_module_path();
     case kColumnAddress: {
-      const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+      const CaptureData& capture_data = app_->GetCaptureData();
       return absl::StrFormat("0x%llx", capture_data.GetAbsoluteAddress(function));
     }
     default:
@@ -81,9 +81,9 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
   if (!row.has_value()) {
     return;
   }
-  GOrbitApp->DeselectTextBox();
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
-  GOrbitApp->set_highlighted_function(
+  app_->DeselectTextBox();
+  const CaptureData& capture_data = app_->GetCaptureData();
+  app_->set_highlighted_function(
       capture_data.GetAbsoluteAddress(*GetSelectedFunction(row.value())));
 }
 
@@ -91,13 +91,11 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
   [&](int a, int b) {                                                                \
     return orbit_core::Compare(functions[a].Member, functions[b].Member, ascending); \
   }
-#define ORBIT_STAT_SORT(Member)                                              \
-  [&](int a, int b) {                                                        \
-    const FunctionStats& stats_a =                                           \
-        GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(functions[a]); \
-    const FunctionStats& stats_b =                                           \
-        GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(functions[b]); \
-    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending);   \
+#define ORBIT_STAT_SORT(Member)                                                                    \
+  [&](int a, int b) {                                                                              \
+    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(functions[a]); \
+    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(functions[b]); \
+    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending);                         \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
   [&](int a, int b) {                                                              \
@@ -105,7 +103,7 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
   }
 
 void LiveFunctionsDataView::DoSort() {
-  if (!GOrbitApp->HasCaptureData()) {
+  if (!app_->HasCaptureData()) {
     CHECK(functions_.size() == 0);
     return;
   }
@@ -116,7 +114,7 @@ void LiveFunctionsDataView::DoSort() {
 
   switch (sorting_column_) {
     case kColumnSelected:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(GOrbitApp->IsFunctionSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(app_->IsFunctionSelected);
       break;
     case kColumnName:
       sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetDisplayName);
@@ -171,13 +169,13 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_enable_frame_track = false;
   bool enable_disable_frame_track = false;
 
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   for (int index : selected_indices) {
     const FunctionInfo& selected_function = *GetSelectedFunction(index);
 
-    if (GOrbitApp->IsCaptureConnected(capture_data)) {
-      enable_select |= !GOrbitApp->IsFunctionSelected(selected_function);
-      enable_unselect |= GOrbitApp->IsFunctionSelected(selected_function);
+    if (app_->IsCaptureConnected(capture_data)) {
+      enable_select |= !app_->IsFunctionSelected(selected_function);
+      enable_unselect |= app_->IsFunctionSelected(selected_function);
       enable_disassembly = true;
     }
 
@@ -185,12 +183,12 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     // We need at least one function call to a function so that adding iterators makes sense.
     enable_iterator |= stats.count() > 0;
 
-    if (GOrbitApp->IsCaptureConnected(capture_data)) {
-      enable_enable_frame_track |= !GOrbitApp->IsFrameTrackEnabled(selected_function);
-      enable_disable_frame_track |= GOrbitApp->IsFrameTrackEnabled(selected_function);
+    if (app_->IsCaptureConnected(capture_data)) {
+      enable_enable_frame_track |= !app_->IsFrameTrackEnabled(selected_function);
+      enable_disable_frame_track |= app_->IsFrameTrackEnabled(selected_function);
     } else {
-      enable_enable_frame_track |= !GOrbitApp->HasFrameTrackInCaptureData(selected_function);
-      enable_disable_frame_track |= GOrbitApp->HasFrameTrackInCaptureData(selected_function);
+      enable_enable_frame_track |= !app_->HasFrameTrackInCaptureData(selected_function);
+      enable_disable_frame_track |= app_->HasFrameTrackInCaptureData(selected_function);
     }
   }
 
@@ -225,20 +223,20 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
 
 void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                           const std::vector<int>& item_indices) {
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   if (action == kMenuActionSelect || action == kMenuActionUnselect ||
       action == kMenuActionDisassembly) {
     for (int i : item_indices) {
       FunctionInfo* selected_function = GetSelectedFunction(i);
       if (action == kMenuActionSelect) {
-        GOrbitApp->SelectFunction(*selected_function);
+        app_->SelectFunction(*selected_function);
       } else if (action == kMenuActionUnselect) {
-        GOrbitApp->DeselectFunction(*selected_function);
+        app_->DeselectFunction(*selected_function);
         // We disable the frame track, but do not remove it from current capture data.
-        GOrbitApp->DisableFrameTrack(*selected_function);
+        app_->DisableFrameTrack(*selected_function);
       } else if (action == kMenuActionDisassembly) {
         int32_t pid = capture_data.process_id();
-        GOrbitApp->Disassemble(pid, *selected_function);
+        app_->Disassemble(pid, *selected_function);
       }
     }
   } else if (action == kMenuActionJumpToFirst) {
@@ -275,7 +273,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     for (int i : item_indices) {
       FunctionInfo* selected_function = GetSelectedFunction(i);
       const FunctionStats& stats =
-          GOrbitApp->GetCaptureData().GetFunctionStatsOrDefault(*selected_function);
+          app_->GetCaptureData().GetFunctionStatsOrDefault(*selected_function);
       if (stats.count() > 0) {
         live_functions_->AddIterator(selected_function);
       }
@@ -283,17 +281,17 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      if (GOrbitApp->IsCaptureConnected(capture_data)) {
-        GOrbitApp->SelectFunction(*function);
+      if (app_->IsCaptureConnected(capture_data)) {
+        app_->SelectFunction(*function);
       }
-      GOrbitApp->EnableFrameTrack(*function);
-      GOrbitApp->AddFrameTrack(*function);
+      app_->EnableFrameTrack(*function);
+      app_->AddFrameTrack(*function);
     }
   } else if (action == kMenuActionDisableFrameTrack) {
     for (int i : item_indices) {
       FunctionInfo* function = GetSelectedFunction(i);
-      GOrbitApp->DisableFrameTrack(*function);
-      GOrbitApp->RemoveFrameTrack(*function);
+      app_->DisableFrameTrack(*function);
+      app_->RemoveFrameTrack(*function);
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
@@ -301,7 +299,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
 }
 
 void LiveFunctionsDataView::DoFilter() {
-  if (!GOrbitApp->HasCaptureData()) {
+  if (!app_->HasCaptureData()) {
     CHECK(functions_.size() == 0);
     return;
   }
@@ -331,25 +329,25 @@ void LiveFunctionsDataView::DoFilter() {
 
   // Filter drawn textboxes
   absl::flat_hash_set<uint64_t> visible_functions;
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   for (size_t i = 0; i < indices_.size(); ++i) {
     FunctionInfo* func = GetSelectedFunction(i);
     visible_functions.insert(capture_data.GetAbsoluteAddress(*func));
   }
-  GOrbitApp->SetVisibleFunctions(std::move(visible_functions));
+  app_->SetVisibleFunctions(std::move(visible_functions));
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   indices_.clear();
 
-  if (!GOrbitApp->HasCaptureData()) {
+  if (!app_->HasCaptureData()) {
     DataView::OnDataChanged();
     return;
   }
 
   const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
-      GOrbitApp->GetCaptureData().selected_functions();
+      app_->GetCaptureData().selected_functions();
   size_t functions_count = selected_functions.size();
   indices_.resize(functions_count);
   size_t i = 0;
@@ -363,7 +361,7 @@ void LiveFunctionsDataView::OnDataChanged() {
 }
 
 void LiveFunctionsDataView::OnTimer() {
-  if (GOrbitApp->IsCapturing()) {
+  if (app_->IsCapturing()) {
     OnSort(sorting_column_, {});
   }
 }
@@ -374,7 +372,7 @@ FunctionInfo* LiveFunctionsDataView::GetSelectedFunction(unsigned int row) {
 }
 
 std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInfo& function) const {
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   auto function_address = capture_data.GetAbsoluteAddress(function);
   TextBox* min_box = nullptr;
   TextBox* max_box = nullptr;
