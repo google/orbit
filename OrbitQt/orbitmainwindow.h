@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "App.h"
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
 #include "StatusListener.h"
@@ -30,7 +31,7 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
+  OrbitMainWindow(OrbitApp* app, orbit_qt::ServiceDeployManager* service_deploy_manager,
                   uint32_t font_size);
   ~OrbitMainWindow() override;
 
@@ -112,6 +113,7 @@ class OrbitMainWindow : public QMainWindow {
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
  private:
+  OrbitApp* app_ = nullptr;
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> m_GlWidgets;

@@ -169,7 +169,7 @@ static outcome::result<void> RunUiInstance(
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
-    OrbitMainWindow w(service_deploy_manager_ptr, kDefaultFontSize);
+    OrbitMainWindow w(GOrbitApp.get(), service_deploy_manager_ptr, kDefaultFontSize);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);

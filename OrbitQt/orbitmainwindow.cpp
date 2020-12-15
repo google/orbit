@@ -53,10 +53,11 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
-OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
+OrbitMainWindow::OrbitMainWindow(OrbitApp* app,
+                                 orbit_qt::ServiceDeployManager* service_deploy_manager,
                                  uint32_t font_size)
-    : QMainWindow(nullptr), ui(new Ui::OrbitMainWindow) {
-  DataViewFactory* data_view_factory = GOrbitApp.get();
+    : QMainWindow(nullptr), app_{app}, ui(new Ui::OrbitMainWindow) {
+  DataViewFactory* data_view_factory = app_;
 
   ui->setupUi(this);
 
@@ -71,9 +72,9 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
 
   status_listener_ = StatusListenerImpl::Create(statusBar());
 
-  GOrbitApp->SetStatusListener(status_listener_.get());
+  app_->SetStatusListener(status_listener_.get());
 
-  GOrbitApp->SetCaptureStartedCallback([this] {
+  app_->SetCaptureStartedCallback([this] {
     UpdateCaptureStateDependentWidgets();
     setWindowTitle({});
   });
@@ -97,7 +98,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
   finalizing_capture_dialog->setFixedSize(finalizing_capture_dialog->size());
   finalizing_capture_dialog->close();
 
-  GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
+  app_->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->show();
     UpdateCaptureStateDependentWidgets();
   });
@@ -105,9 +106,9 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
     finalizing_capture_dialog->close();
     UpdateCaptureStateDependentWidgets();
   };
-  GOrbitApp->SetCaptureStoppedCallback(capture_finished_callback);
-  GOrbitApp->SetCaptureFailedCallback(capture_finished_callback);
-  GOrbitApp->SetCaptureClearedCallback([this] { OnCaptureCleared(); });
+  app_->SetCaptureStoppedCallback(capture_finished_callback);
+  app_->SetCaptureFailedCallback(capture_finished_callback);
+  app_->SetCaptureClearedCallback([this] { OnCaptureCleared(); });
 
   auto loading_capture_dialog =
       new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
@@ -121,102 +122,101 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
   auto loading_capture_cancel_button = QPointer{new QPushButton{this}};
   loading_capture_cancel_button->setText("Cancel");
   QObject::connect(loading_capture_cancel_button, &QPushButton::clicked, this,
-                   [loading_capture_dialog]() {
-                     GOrbitApp->OnLoadCaptureCancelRequested();
+                   [this, loading_capture_dialog]() {
+                     app_->OnLoadCaptureCancelRequested();
                      loading_capture_dialog->close();
                    });
   loading_capture_dialog->setCancelButton(loading_capture_cancel_button);
 
   loading_capture_dialog->close();
 
-  GOrbitApp->SetOpenCaptureCallback([this, loading_capture_dialog] {
+  app_->SetOpenCaptureCallback([this, loading_capture_dialog] {
     setWindowTitle({});
     loading_capture_dialog->show();
   });
-  GOrbitApp->SetOpenCaptureFailedCallback([this, loading_capture_dialog] {
+  app_->SetOpenCaptureFailedCallback([this, loading_capture_dialog] {
     setWindowTitle({});
     loading_capture_dialog->close();
     UpdateCaptureStateDependentWidgets();
   });
-  GOrbitApp->SetOpenCaptureFinishedCallback([this, loading_capture_dialog] {
+  app_->SetOpenCaptureFinishedCallback([this, loading_capture_dialog] {
     loading_capture_dialog->close();
     UpdateCaptureStateDependentWidgets();
   });
 
-  GOrbitApp->SetRefreshCallback([this](DataViewType type) {
+  app_->SetRefreshCallback([this](DataViewType type) {
     if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
       this->ui->liveFunctions->OnDataChanged();
     }
     this->OnRefreshDataViewPanels(type);
   });
 
-  GOrbitApp->SetSamplingReportCallback(
+  app_->SetSamplingReportCallback(
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
       });
 
-  GOrbitApp->SetSelectionReportCallback(
+  app_->SetSelectionReportCallback(
       [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
 
-  GOrbitApp->SetTopDownViewCallback([this](std::unique_ptr<CallTreeView> top_down_view) {
+  app_->SetTopDownViewCallback([this](std::unique_ptr<CallTreeView> top_down_view) {
     this->OnNewTopDownView(std::move(top_down_view));
   });
 
-  GOrbitApp->SetSelectionTopDownViewCallback(
+  app_->SetSelectionTopDownViewCallback(
       [this](std::unique_ptr<CallTreeView> selection_top_down_view) {
         this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
       });
 
-  GOrbitApp->SetBottomUpViewCallback([this](std::unique_ptr<CallTreeView> bottom_up_view) {
+  app_->SetBottomUpViewCallback([this](std::unique_ptr<CallTreeView> bottom_up_view) {
     this->OnNewBottomUpView(std::move(bottom_up_view));
   });
 
-  GOrbitApp->SetSelectionBottomUpViewCallback(
+  app_->SetSelectionBottomUpViewCallback(
       [this](std::unique_ptr<CallTreeView> selection_bottom_up_view) {
         this->OnNewSelectionBottomUpView(std::move(selection_bottom_up_view));
       });
 
-  GOrbitApp->SetSelectLiveTabCallback(
-      [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  GOrbitApp->SetDisassemblyCallback([this](std::string disassembly, DisassemblyReport report) {
+  app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
+  app_->SetDisassemblyCallback([this](std::string disassembly, DisassemblyReport report) {
     OpenDisassembly(std::move(disassembly), std::move(report));
   });
-  GOrbitApp->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
+  app_->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
   });
-  GOrbitApp->SetWarningMessageCallback([this](const std::string& title, const std::string& text) {
+  app_->SetWarningMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::warning(this, QString::fromStdString(title), QString::fromStdString(text));
   });
-  GOrbitApp->SetInfoMessageCallback([this](const std::string& title, const std::string& text) {
+  app_->SetInfoMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(text));
   });
-  GOrbitApp->SetTooltipCallback([this](const std::string& tooltip) {
+  app_->SetTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
-  GOrbitApp->SetSaveFileCallback(
+  app_->SetSaveFileCallback(
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
-  GOrbitApp->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
+  app_->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
 
-  GOrbitApp->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
-                                                            std::string_view destination) {
+  app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
+                                                       std::string_view destination) {
     CHECK(service_deploy_manager != nullptr);
     return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
   });
 
-  GOrbitApp->SetShowEmptyFrameTrackWarningCallback(
+  app_->SetShowEmptyFrameTrackWarningCallback(
       [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
 
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
 
-  GOrbitApp->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
+  app_->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
     OnTimerSelectionChanged(timer_info);
   });
 
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
-    GOrbitApp->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
+    app_->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
   } else {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
   }
@@ -266,10 +266,10 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
-  ui->topDownWidget->Initialize(GOrbitApp.get());
-  ui->selectionTopDownWidget->Initialize(GOrbitApp.get());
-  ui->bottomUpWidget->Initialize(GOrbitApp.get());
-  ui->selectionBottomUpWidget->Initialize(GOrbitApp.get());
+  ui->topDownWidget->Initialize(app_);
+  ui->selectionTopDownWidget->Initialize(app_);
+  ui->bottomUpWidget->Initialize(app_);
+  ui->selectionBottomUpWidget->Initialize(app_);
 
   ui->MainTabWidget->tabBar()->installEventFilter(this);
   ui->RightTabWidget->tabBar()->installEventFilter(this);
@@ -282,7 +282,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
     ui->actionIntrospection->setVisible(false);
   }
 
-  GOrbitApp->PostInit();
+  app_->PostInit();
 
   SaveCurrentTabLayoutAsDefaultInMemory();
   UpdateCaptureStateDependentWidgets();
@@ -378,10 +378,10 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
     tab_widget->setTabEnabled(tab_widget->indexOf(widget), enabled);
   };
 
-  const bool has_data = GOrbitApp->HasCaptureData();
-  const bool has_selection = has_data && GOrbitApp->HasSampleSelection();
-  const bool is_connected = GOrbitApp->IsConnectedToInstance();
-  CaptureClient::State capture_state = GOrbitApp->GetCaptureState();
+  const bool has_data = app_->HasCaptureData();
+  const bool has_selection = has_data && app_->HasSampleSelection();
+  const bool is_connected = app_->IsConnectedToInstance();
+  CaptureClient::State capture_state = app_->GetCaptureState();
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
 
   set_tab_enabled(ui->HomeTab, true);
@@ -620,13 +620,13 @@ void OrbitMainWindow::StartMainTimer() {
 
 void OrbitMainWindow::OnTimer() {
   ORBIT_SCOPE("OrbitMainWindow::OnTimer");
-  GOrbitApp->MainTick();
+  app_->MainTick();
 
   for (OrbitGLWidget* glWidget : m_GlWidgets) {
     glWidget->update();
   }
 
-  ui->timerLabel->setText(QString::fromStdString(GOrbitApp->GetCaptureTime()));
+  ui->timerLabel->setText(QString::fromStdString(app_->GetCaptureTime()));
 }
 
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
@@ -642,7 +642,7 @@ void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
 }
 
 void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
-  GOrbitApp->FilterTracks(text.toStdString());
+  app_->FilterTracks(text.toStdString());
 }
 
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
@@ -650,7 +650,7 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
       this, "Select a file to open...",
       QString::fromStdString(Path::CreateOrGetPresetDir().string()), "*.opr");
   for (const auto& file : list) {
-    ErrorMessageOr<void> result = GOrbitApp->OnLoadPreset(file.toStdString());
+    ErrorMessageOr<void> result = app_->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
       QMessageBox::critical(this, "Error loading session",
                             absl::StrFormat("Could not load session from \"%s\":\n%s.",
@@ -683,7 +683,7 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
     return;
   }
 
-  ErrorMessageOr<void> result = GOrbitApp->OnSavePreset(file.toStdString());
+  ErrorMessageOr<void> result = app_->OnSavePreset(file.toStdString());
   if (result.has_error()) {
     QMessageBox::critical(this, "Error saving session",
                           absl::StrFormat("Could not save session in \"%s\":\n%s.",
@@ -692,11 +692,11 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   }
 }
 
-void OrbitMainWindow::on_actionToggle_Capture_triggered() { GOrbitApp->ToggleCapture(); }
+void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(); }
 
-void OrbitMainWindow::on_actionClear_Capture_triggered() { GOrbitApp->ClearCapture(); }
+void OrbitMainWindow::on_actionClear_Capture_triggered() { app_->ClearCapture(); }
 
-void OrbitMainWindow::on_actionHelp_triggered() { GOrbitApp->ToggleDrawHelp(); }
+void OrbitMainWindow::on_actionHelp_triggered() { app_->ToggleDrawHelp(); }
 
 void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {
@@ -782,12 +782,12 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
   ShowCaptureOnSaveWarningIfNeeded();
 
-  if (!GOrbitApp->HasCaptureData()) {
+  if (!app_->HasCaptureData()) {
     QMessageBox::information(this, "Save capture", "Looks like there is no capture to save.");
     return;
   }
 
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
       QString::fromStdString(
@@ -798,7 +798,7 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
     return;
   }
 
-  ErrorMessageOr<void> result = GOrbitApp->OnSaveCapture(file.toStdString());
+  ErrorMessageOr<void> result = app_->OnSaveCapture(file.toStdString());
   if (result.has_error()) {
     QMessageBox::critical(this, "Error saving capture",
                           absl::StrFormat("Could not save capture in \"%s\":\n%s.",
@@ -819,7 +819,7 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 }
 
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {
-  GOrbitApp->OnLoadCapture(filepath);
+  app_->OnLoadCapture(filepath);
   setWindowTitle(QString::fromStdString(filepath));
   UpdateCaptureStateDependentWidgets();
   FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);
@@ -854,15 +854,15 @@ void InfiniteRecursion(int num) {
 void OrbitMainWindow::on_actionStackOverflow_triggered() { InfiniteRecursion(0); }
 
 void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
-  GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_CHECK_FALSE);
+  app_->CrashOrbitService(CrashOrbitServiceRequest_CrashType_CHECK_FALSE);
 }
 
 void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
-  GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE);
+  app_->CrashOrbitService(CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE);
 }
 
 void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
-  GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
+  app_->CrashOrbitService(CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
 }
 
 void OrbitMainWindow::OnCaptureCleared() {
@@ -887,7 +887,7 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
     }
   } else if (watched == introspection_widget_) {
     if (event->type() == QEvent::Close) {
-      GOrbitApp->StopIntrospection();
+      app_->StopIntrospection();
     }
   }
 
@@ -895,15 +895,15 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
 }
 
 void OrbitMainWindow::closeEvent(QCloseEvent* event) {
-  if (GOrbitApp->IsCapturing()) {
+  if (app_->IsCapturing()) {
     event->ignore();
 
     if (QMessageBox::question(this, "Capture in progress",
                               "A capture is currently in progress. Do you want to abort the "
                               "capture and exit Orbit?") == QMessageBox::Yes) {
       // We need for the capture to clean up - close as soon as this is done
-      GOrbitApp->SetCaptureFailedCallback([&] { close(); });
-      GOrbitApp->AbortCapture();
+      app_->SetCaptureFailedCallback([&] { close(); });
+      app_->AbortCapture();
     }
   } else {
     QMainWindow::closeEvent(event);
