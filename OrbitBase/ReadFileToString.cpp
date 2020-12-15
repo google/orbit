@@ -16,7 +16,7 @@ ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_n
   std::ifstream file_stream(file_name);
   if (file_stream.fail()) {
     return ErrorMessage(
-        absl::StrFormat("Unable to read file %s: %s", file_name.string(), SafeStrerror(errno)));
+        absl::StrFormat("Unable to read file \"%s\": %s", file_name.string(), SafeStrerror(errno)));
   }
 
   return std::string{std::istreambuf_iterator<char>{file_stream}, std::istreambuf_iterator<char>{}};
