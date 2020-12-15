@@ -14,6 +14,7 @@
 
 #include "GlCanvas.h"
 
+class OrbitApp;
 class QOpenGLDebugMessage;
 class QOpenGLDebugLogger;
 
@@ -23,7 +24,7 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
   void Initialize(GlCanvas::CanvasType canvas_type, class OrbitMainWindow* a_MainWindow,
-                  uint32_t font_size);
+                  uint32_t font_size, OrbitApp* app);
   void initializeGL() override;
   void resizeGL(int w, int h) override;
   void paintGL() override;
