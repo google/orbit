@@ -580,7 +580,7 @@ void OrbitApp::SetSamplingReport(
     sampling_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(std::move(post_processed_sampling_data),
+  auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks));
   CHECK(sampling_reports_callback_);
   DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
@@ -599,7 +599,7 @@ void OrbitApp::SetSelectionReport(
     selection_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(std::move(post_processed_sampling_data),
+  auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks), has_summary);
   DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
