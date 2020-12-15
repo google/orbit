@@ -53,7 +53,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return FunctionsDataView::BuildSelectedColumnsString(function);
+      return FunctionsDataView::BuildSelectedColumnsString(GOrbitApp.get(), function);
     case kColumnName:
       return function_utils::GetDisplayName(function);
     case kColumnCount:

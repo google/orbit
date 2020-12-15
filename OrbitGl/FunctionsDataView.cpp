@@ -16,7 +16,8 @@
 
 using orbit_client_protos::FunctionInfo;
 
-FunctionsDataView::FunctionsDataView() : DataView(DataViewType::kFunctions) {}
+FunctionsDataView::FunctionsDataView(OrbitApp* app)
+    : DataView(DataViewType::kFunctions), app_{app} {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
@@ -38,18 +39,18 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   return columns;
 }
 
-bool FunctionsDataView::ShouldShowSelectedFunctionIcon(const FunctionInfo& function) {
-  return GOrbitApp->IsFunctionSelected(function);
+bool FunctionsDataView::ShouldShowSelectedFunctionIcon(OrbitApp* app,
+                                                       const FunctionInfo& function) {
+  return app->IsFunctionSelected(function);
 }
 
-bool FunctionsDataView::ShouldShowFrameTrackIcon(const FunctionInfo& function) {
-  if (GOrbitApp->IsFrameTrackEnabled(function)) {
+bool FunctionsDataView::ShouldShowFrameTrackIcon(OrbitApp* app, const FunctionInfo& function) {
+  if (app->IsFrameTrackEnabled(function)) {
     return true;
   }
-  if (GOrbitApp->HasCaptureData()) {
-    const CaptureData& capture_data = GOrbitApp->GetCaptureData();
-    if (!GOrbitApp->IsCaptureConnected(capture_data) &&
-        GOrbitApp->HasFrameTrackInCaptureData(function)) {
+  if (app->HasCaptureData()) {
+    const CaptureData& capture_data = app->GetCaptureData();
+    if (!app->IsCaptureConnected(capture_data) && app->HasFrameTrackInCaptureData(function)) {
       // This case occurs when loading a capture. We still want to show the indicator that a frame
       // track is enabled for the function.
       return true;
@@ -58,14 +59,15 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(const FunctionInfo& function) {
   return false;
 }
 
-std::string FunctionsDataView::BuildSelectedColumnsString(const FunctionInfo& function) {
+std::string FunctionsDataView::BuildSelectedColumnsString(OrbitApp* app,
+                                                          const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
-  if (ShouldShowSelectedFunctionIcon(function)) {
+  if (ShouldShowSelectedFunctionIcon(app, function)) {
     absl::StrAppend(&result, kSelectedFunctionString);
-    if (ShouldShowFrameTrackIcon(function)) {
+    if (ShouldShowFrameTrackIcon(app, function)) {
       absl::StrAppend(&result, " ", kFrameTrackString);
     }
-  } else if (ShouldShowFrameTrackIcon(function)) {
+  } else if (ShouldShowFrameTrackIcon(app, function)) {
     absl::StrAppend(&result, kFrameTrackString);
   }
   return result;
@@ -80,7 +82,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return BuildSelectedColumnsString(function);
+      return BuildSelectedColumnsString(app_, function);
     case kColumnName:
       return function_utils::GetDisplayName(function);
     case kColumnSize:
@@ -92,16 +94,16 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnModule:
       return function_utils::GetLoadedModuleName(function);
     case kColumnAddress: {
-      const ProcessData* process = GOrbitApp->GetSelectedProcess();
+      const ProcessData* process = app_->GetSelectedProcess();
       // If no process is selected, that means Orbit is in a disconnected state aka displaying a
       // capture that has been loaded from file. CaptureData then holds the process
       if (process == nullptr) {
-        const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+        const CaptureData& capture_data = app_->GetCaptureData();
         process = capture_data.process();
-        CHECK(!GOrbitApp->IsCaptureConnected(capture_data));
+        CHECK(!app_->IsCaptureConnected(capture_data));
       }
       CHECK(process != nullptr);
-      const ModuleData* module = GOrbitApp->GetModuleByPath(function.loaded_module_path());
+      const ModuleData* module = app_->GetModuleByPath(function.loaded_module_path());
       CHECK(module != nullptr);
       return absl::StrFormat("0x%llx",
                              function_utils::GetAbsoluteAddress(function, *process, *module));
@@ -134,7 +136,7 @@ void FunctionsDataView::DoSort() {
 
   switch (sorting_column_) {
     case kColumnSelected:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(GOrbitApp->IsFunctionSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(app_->IsFunctionSelected);
       break;
     case kColumnName:
       sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetDisplayName);
@@ -178,10 +180,10 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
 
   for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunction(index);
-    enable_select |= !GOrbitApp->IsFunctionSelected(function);
-    enable_unselect |= GOrbitApp->IsFunctionSelected(function);
-    enable_enable_frame_track |= !GOrbitApp->IsFrameTrackEnabled(function);
-    enable_disable_frame_track |= GOrbitApp->IsFrameTrackEnabled(function);
+    enable_select |= !app_->IsFunctionSelected(function);
+    enable_unselect |= app_->IsFunctionSelected(function);
+    enable_enable_frame_track |= !app_->IsFrameTrackEnabled(function);
+    enable_disable_frame_track |= app_->IsFrameTrackEnabled(function);
   }
 
   std::vector<std::string> menu;
@@ -198,36 +200,36 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (int i : item_indices) {
-      GOrbitApp->SelectFunction(*GetFunction(i));
+      app_->SelectFunction(*GetFunction(i));
     }
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
-      GOrbitApp->DeselectFunction(*GetFunction(i));
+      app_->DeselectFunction(*GetFunction(i));
       // If a function is deselected, we have to make sure that the frame track is
       // not created for this function on the next capture. However, we do not
       // want to remove the frame track from the capture data.
-      GOrbitApp->DisableFrameTrack(*GetFunction(i));
+      app_->DisableFrameTrack(*GetFunction(i));
     }
   } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
       const FunctionInfo& function = *GetFunction(i);
       // Functions used as frame tracks must be hooked (selected), otherwise the
       // data to produce the frame track will not be captured.
-      GOrbitApp->SelectFunction(function);
-      GOrbitApp->EnableFrameTrack(function);
-      GOrbitApp->AddFrameTrack(function);
+      app_->SelectFunction(function);
+      app_->EnableFrameTrack(function);
+      app_->AddFrameTrack(function);
     }
   } else if (action == kMenuActionDisableFrameTrack) {
     for (int i : item_indices) {
       // When we remove a frame track, we do not unhook (deselect) the function as
       // it may have been selected manually (not as part of adding a frame track).
       // However, disable the frame track, so it is not recreated on the next capture.
-      GOrbitApp->DisableFrameTrack(*GetFunction(i));
-      GOrbitApp->RemoveFrameTrack(*GetFunction(i));
+      app_->DisableFrameTrack(*GetFunction(i));
+      app_->RemoveFrameTrack(*GetFunction(i));
     }
   } else if (action == kMenuActionDisassembly) {
     for (int i : item_indices) {
-      GOrbitApp->Disassemble(GOrbitApp->GetSelectedProcess()->pid(), *GetFunction(i));
+      app_->Disassemble(app_->GetSelectedProcess()->pid(), *GetFunction(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
