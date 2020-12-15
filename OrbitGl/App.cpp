@@ -1537,7 +1537,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = std::make_unique<FunctionsDataView>();
+        functions_data_view_ = std::make_unique<FunctionsDataView>(this);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();

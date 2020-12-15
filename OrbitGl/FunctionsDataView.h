@@ -8,14 +8,17 @@
 #include "DataView.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
+
 class FunctionsDataView : public DataView {
  public:
-  FunctionsDataView();
+  explicit FunctionsDataView(OrbitApp* app);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static std::string BuildSelectedColumnsString(const orbit_client_protos::FunctionInfo& function);
+  static std::string BuildSelectedColumnsString(OrbitApp* app,
+                                                const orbit_client_protos::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }
@@ -56,9 +59,13 @@ class FunctionsDataView : public DataView {
   static const std::string kMenuActionDisassembly;
 
  private:
-  static bool ShouldShowSelectedFunctionIcon(const orbit_client_protos::FunctionInfo& function);
-  static bool ShouldShowFrameTrackIcon(const orbit_client_protos::FunctionInfo& function);
+  static bool ShouldShowSelectedFunctionIcon(OrbitApp* app,
+                                             const orbit_client_protos::FunctionInfo& function);
+  static bool ShouldShowFrameTrackIcon(OrbitApp* app,
+                                       const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
