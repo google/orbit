@@ -208,14 +208,14 @@ OrbitMainWindow::OrbitMainWindow(OrbitApp* app,
   app_->SetShowEmptyFrameTrackWarningCallback(
       [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
 
-  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size);
+  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, font_size, app_);
 
   app_->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
     OnTimerSelectionChanged(timer_info);
   });
 
   if (absl::GetFlag(FLAGS_devmode)) {
-    ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size);
+    ui->debugOpenGLWidget->Initialize(GlCanvas::CanvasType::kDebug, this, font_size, app_);
     app_->SetDebugCanvas(ui->debugOpenGLWidget->GetCanvas());
   } else {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
@@ -702,7 +702,7 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {
     introspection_widget_ = new OrbitGLWidget();
     introspection_widget_->setWindowFlags(Qt::WindowStaysOnTopHint);
-    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, 14);
+    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, 14, app_);
     introspection_widget_->installEventFilter(this);
   }
 
