@@ -7,6 +7,8 @@
 
 #include "Track.h"
 
+class OrbitApp;
+
 // This is a track dedicated to displaying thread states in different colors
 // and with the corresponding tooltips.
 // It is a thin sub-track of ThreadTrack, added above the callstack track (EventTrack).
@@ -14,7 +16,7 @@
 
 class ThreadStateTrack final : public Track {
  public:
-  ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id);
+  explicit ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app);
   Type GetType() const override { return kThreadStateTrack; }
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
@@ -30,6 +32,8 @@ class ThreadStateTrack final : public Track {
 
  private:
   std::string GetThreadStateSliceTooltip(PickingId id) const;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_THREAD_STATE_TRACK_H_
