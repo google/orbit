@@ -36,7 +36,7 @@ std::string GetLoadStateString(OrbitApp* app,
 }
 }  // namespace
 
-PresetsDataView::PresetsDataView(OrbitApp* app) : DataView(DataViewType::kPresets), app_{app} {}
+PresetsDataView::PresetsDataView(OrbitApp* app) : DataView(DataViewType::kPresets, app) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) const {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {

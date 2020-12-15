@@ -64,8 +64,6 @@ class FunctionsDataView : public DataView {
   static bool ShouldShowFrameTrackIcon(OrbitApp* app,
                                        const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
-
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_FUNCTIONS_DATA_VIEW_H_

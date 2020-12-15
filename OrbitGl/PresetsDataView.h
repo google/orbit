@@ -62,9 +62,6 @@ class PresetsDataView : public DataView {
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;
-
- private:
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_PRESET_DATA_VIEW_H_

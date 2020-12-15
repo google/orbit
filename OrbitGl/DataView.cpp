@@ -67,7 +67,7 @@ std::vector<std::string> DataView::GetContextMenu(int /*clicked_index*/,
 void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionExportToCsv) {
-    std::string save_file = GOrbitApp->GetSaveFile(".csv");
+    std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {
       ExportCSV(save_file);
     }
@@ -119,5 +119,5 @@ void DataView::CopySelection(const std::vector<int>& selection) {
     }
   }
 
-  GOrbitApp->SetClipboard(clipboard);
+  app_->SetClipboard(clipboard);
 }

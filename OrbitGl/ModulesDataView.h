@@ -52,8 +52,6 @@ class ModulesDataView : public DataView {
 
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionVerifyFramePointers;
-
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_MODULES_DATA_VIEW_H_

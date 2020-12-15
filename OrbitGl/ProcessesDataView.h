@@ -10,7 +10,7 @@
 
 class ProcessesDataView final : public DataView {
  public:
-  ProcessesDataView();
+  explicit ProcessesDataView(OrbitApp* app);
 
   void SetSelectionListener(const std::function<void(int32_t)>& selection_listener);
   const std::vector<Column>& GetColumns() override;

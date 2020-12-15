@@ -17,7 +17,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
 LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app)
-    : DataView(DataViewType::kLiveFunctions), live_functions_(live_functions), app_{app} {
+    : DataView(DataViewType::kLiveFunctions, app), live_functions_(live_functions) {
   update_period_ms_ = 300;
   OnDataChanged();
 }

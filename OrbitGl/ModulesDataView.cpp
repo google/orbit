@@ -10,7 +10,7 @@
 
 ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
-ModulesDataView::ModulesDataView(OrbitApp* app) : DataView(DataViewType::kModules), app_{app} {}
+ModulesDataView::ModulesDataView(OrbitApp* app) : DataView(DataViewType::kModules, app) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
