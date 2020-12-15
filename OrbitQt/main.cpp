@@ -199,7 +199,7 @@ static outcome::result<void> RunUiInstance(
     Orbit_ImGui_Shutdown();
   }
 
-  GOrbitApp->OnExit();
+  GOrbitApp.reset();
 
   if (error) {
     return outcome::failure(error.value());
