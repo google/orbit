@@ -293,7 +293,7 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   bool enable_select = false;
   bool enable_deselect = false;
   bool enable_disassembly = false;
-  if (GOrbitApp->IsCaptureConnected(GOrbitApp->GetCaptureData())) {
+  if (app_->IsCaptureConnected(app_->GetCaptureData())) {
     for (const FunctionInfo* function : functions) {
       enable_select |= !app_->IsFunctionSelected(*function);
       enable_deselect |= app_->IsFunctionSelected(*function);
