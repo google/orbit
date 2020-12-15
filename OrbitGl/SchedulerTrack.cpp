@@ -18,8 +18,7 @@ using orbit_client_protos::TimerInfo;
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app)
-    : TimerTrack(time_graph), app_{app} {
+SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app) : TimerTrack(time_graph, app) {
   SetPinned(false);
 }
 

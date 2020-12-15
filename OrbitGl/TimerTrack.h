@@ -18,11 +18,12 @@
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
 class TextRenderer;
 
 class TimerTrack : public Track {
  public:
-  explicit TimerTrack(TimeGraph* time_graph);
+  explicit TimerTrack(TimeGraph* time_graph, OrbitApp* app);
   ~TimerTrack() override = default;
 
   // Pickable
@@ -92,6 +93,8 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual std::string GetBoxTooltip(PickingId id) const;
   float GetHeight() const override;
   float box_height_;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_TIMER_TRACK_H_

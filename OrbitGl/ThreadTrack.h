@@ -56,9 +56,6 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<ThreadStateTrack> thread_state_track_;
   std::shared_ptr<EventTrack> event_track_;
   std::shared_ptr<TracepointTrack> tracepoint_track_;
-
- private:
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_
