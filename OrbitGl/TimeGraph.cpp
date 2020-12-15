@@ -813,7 +813,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash)
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
+    track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash, GOrbitApp.get());
     std::string timeline = string_manager_->Get(timeline_hash).value_or("");
     std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);

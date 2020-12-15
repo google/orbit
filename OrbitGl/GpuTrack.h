@@ -12,6 +12,7 @@
 #include "TimerTrack.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
 class TextRenderer;
 
 namespace orbit_gl {
@@ -24,8 +25,8 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
 
 class GpuTrack : public TimerTrack {
  public:
-  GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
-           uint64_t timeline_hash);
+  explicit GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
+                    uint64_t timeline_hash, OrbitApp* app);
   ~GpuTrack() override = default;
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] Type GetType() const override { return kGpuTrack; }
@@ -54,6 +55,8 @@ class GpuTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetHwExecutionTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_GPU_TRACK_H_

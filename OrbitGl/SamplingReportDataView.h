@@ -9,9 +9,11 @@
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "absl/container/flat_hash_set.h"
 
+class OrbitApp;
+
 class SamplingReportDataView : public DataView {
  public:
-  SamplingReportDataView();
+  explicit SamplingReportDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }
@@ -65,4 +67,6 @@ class SamplingReportDataView : public DataView {
   static const std::string kMenuActionUnselect;
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionDisassembly;
+
+  OrbitApp* app_ = nullptr;
 };
