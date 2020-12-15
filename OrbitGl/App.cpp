@@ -104,7 +104,6 @@ PresetLoadState GetPresetLoadStateForProcess(
 }
 }  // namespace
 
-std::unique_ptr<OrbitApp> GOrbitApp;
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(ApplicationOptions&& options,
