@@ -126,8 +126,7 @@ static outcome::result<GrpcPort> DeployOrbitService(
 }
 
 static outcome::result<void> RunUiInstance(
-    QApplication* app, std::optional<DeploymentConfiguration> deployment_configuration,
-    Context* context) {
+    std::optional<DeploymentConfiguration> deployment_configuration, Context* context) {
   std::optional<orbit_qt::ServiceDeployManager> service_deploy_manager;
 
   OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
@@ -170,7 +169,7 @@ static outcome::result<void> RunUiInstance(
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
-    OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize);
+    OrbitMainWindow w(service_deploy_manager_ptr, kDefaultFontSize);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);
@@ -402,7 +401,7 @@ int main(int argc, char* argv[]) {
     }
 
     while (true) {
-      const auto result = RunUiInstance(&app, deployment_configuration, &(context.value()));
+      const auto result = RunUiInstance(deployment_configuration, &(context.value()));
       if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
           !deployment_configuration) {
         // It was either a clean shutdown or the deliberately closed the

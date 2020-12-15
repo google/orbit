@@ -6,6 +6,7 @@
 
 #include <absl/flags/flag.h>
 
+#include <QApplication>
 #include <QBuffer>
 #include <QCheckBox>
 #include <QClipboard>
@@ -52,10 +53,9 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 extern QMenu* GContextMenu;
 
-OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
-                                 orbit_qt::ServiceDeployManager* service_deploy_manager,
+OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
                                  uint32_t font_size)
-    : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
+    : QMainWindow(nullptr), ui(new Ui::OrbitMainWindow) {
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
   ui->setupUi(this);

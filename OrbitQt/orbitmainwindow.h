@@ -7,7 +7,6 @@
 
 #include <DisassemblyReport.h>
 
-#include <QApplication>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
@@ -31,7 +30,7 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(QApplication* a_App, orbit_qt::ServiceDeployManager* service_deploy_manager,
+  OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
                   uint32_t font_size);
   ~OrbitMainWindow() override;
 
@@ -113,7 +112,6 @@ class OrbitMainWindow : public QMainWindow {
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
  private:
-  QApplication* m_App;
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> m_GlWidgets;
