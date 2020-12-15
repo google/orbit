@@ -12,13 +12,16 @@
 #include "TimeGraph.h"
 #include "Timer.h"
 
+class OrbitApp;
+
 class GlCanvas {
  public:
   explicit GlCanvas(uint32_t font_size);
   virtual ~GlCanvas();
 
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
-  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size);
+  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size,
+                                          OrbitApp* app);
 
   virtual void Initialize();
   virtual void Resize(int width, int height);
