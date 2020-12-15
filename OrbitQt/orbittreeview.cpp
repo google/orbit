@@ -15,6 +15,7 @@
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMenu>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QScrollBar>
 #include <QSignalMapper>
@@ -223,6 +224,16 @@ void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
   }
 }
 
+void OrbitTreeView::mousePressEvent(QMouseEvent* event) {
+  QModelIndex index = indexAt(event->pos());
+  // Deselect previous selections if clicking the empty area of the OrbitTreeView.
+  if (!index.isValid()) {
+    setCurrentIndex(QModelIndex());
+  } else {
+    QTreeView::mousePressEvent(event);
+  }
+}
+
 void OrbitTreeView::selectionChanged(const QItemSelection& selected,
                                      const QItemSelection& deselected) {
   QTreeView::selectionChanged(selected, deselected);
@@ -232,12 +243,14 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
 
   // Row selection callback.
   QModelIndex index = selectionModel()->currentIndex();
+  std::optional<int> row(std::nullopt);
   if (index.isValid()) {
-    OnRowSelected(index.row());
+    row = index.row();
   }
+  OnRowSelected(row);
 }
 
-void OrbitTreeView::OnRowSelected(int row) {
+void OrbitTreeView::OnRowSelected(std::optional<int> row) {
   model_->OnRowSelected(row);
   for (OrbitTreeView* tree_view : links_) {
     tree_view->Refresh();
