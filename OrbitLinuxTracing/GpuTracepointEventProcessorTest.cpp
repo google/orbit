@@ -118,17 +118,25 @@ orbit_grpc_protos::GpuJob MakeGpuJob(int32_t tid, uint32_t context, uint32_t seq
   return expected_gpu_job;
 }
 
-void ExpectGpuJobEq(const orbit_grpc_protos::GpuJob& actual,
-                    const orbit_grpc_protos::GpuJob& expected) {
-  EXPECT_EQ(actual.tid(), expected.tid());
-  EXPECT_EQ(actual.context(), expected.context());
-  EXPECT_EQ(actual.seqno(), expected.seqno());
-  EXPECT_EQ(actual.timeline(), expected.timeline());
-  EXPECT_EQ(actual.depth(), expected.depth());
-  EXPECT_EQ(actual.amdgpu_cs_ioctl_time_ns(), expected.amdgpu_cs_ioctl_time_ns());
-  EXPECT_EQ(actual.amdgpu_sched_run_job_time_ns(), expected.amdgpu_sched_run_job_time_ns());
-  EXPECT_EQ(actual.gpu_hardware_start_time_ns(), expected.gpu_hardware_start_time_ns());
-  EXPECT_EQ(actual.dma_fence_signaled_time_ns(), expected.dma_fence_signaled_time_ns());
+::testing::Matcher<orbit_grpc_protos::GpuJob> GpuJobEq(const orbit_grpc_protos::GpuJob& expected) {
+  return ::testing::AllOf(
+      ::testing::Property("tid", &orbit_grpc_protos::GpuJob::tid, expected.tid()),
+      ::testing::Property("context", &orbit_grpc_protos::GpuJob::context, expected.context()),
+      ::testing::Property("seqno", &orbit_grpc_protos::GpuJob::seqno, expected.seqno()),
+      ::testing::Property("timeline", &orbit_grpc_protos::GpuJob::timeline, expected.timeline()),
+      ::testing::Property("depth", &orbit_grpc_protos::GpuJob::depth, expected.depth()),
+      ::testing::Property("amdgpu_cs_ioctl_time_ns",
+                          &orbit_grpc_protos::GpuJob::amdgpu_cs_ioctl_time_ns,
+                          expected.amdgpu_cs_ioctl_time_ns()),
+      ::testing::Property("amdgpu_sched_run_job_time_ns",
+                          &orbit_grpc_protos::GpuJob::amdgpu_sched_run_job_time_ns,
+                          expected.amdgpu_sched_run_job_time_ns()),
+      ::testing::Property("gpu_hardware_start_time_ns",
+                          &orbit_grpc_protos::GpuJob::gpu_hardware_start_time_ns,
+                          expected.gpu_hardware_start_time_ns()),
+      ::testing::Property("dma_fence_signaled_time_ns",
+                          &orbit_grpc_protos::GpuJob::dma_fence_signaled_time_ns,
+                          expected.dma_fence_signaled_time_ns()));
 }
 
 }  // namespace
@@ -170,7 +178,7 @@ TEST_F(GpuTracepointEventProcessorTest, JobCreatedWithAllThreePerfEvents) {
   processor_.PushEvent(
       MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline));
   processor_.PushEvent(MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline));
-  ExpectGpuJobEq(actual_gpu_job, expected_gpu_job);
+  EXPECT_THAT(actual_gpu_job, GpuJobEq(expected_gpu_job));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, JobCreatedEvenWithOutOfOrderPerfEvents1) {
@@ -192,7 +200,7 @@ TEST_F(GpuTracepointEventProcessorTest, JobCreatedEvenWithOutOfOrderPerfEvents1)
       MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline));
   processor_.PushEvent(
       MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline));
-  ExpectGpuJobEq(actual_gpu_job, expected_gpu_job);
+  EXPECT_THAT(actual_gpu_job, GpuJobEq(expected_gpu_job));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, JobCreatedEvenWithOutOfOrderPerfEvents2) {
@@ -214,7 +222,7 @@ TEST_F(GpuTracepointEventProcessorTest, JobCreatedEvenWithOutOfOrderPerfEvents2)
   processor_.PushEvent(
       MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline));
   processor_.PushEvent(MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline));
-  ExpectGpuJobEq(actual_gpu_job, expected_gpu_job);
+  EXPECT_THAT(actual_gpu_job, GpuJobEq(expected_gpu_job));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, NoJobBecauseOfMismatchingContext) {
@@ -312,8 +320,8 @@ TEST_F(GpuTracepointEventProcessorTest, TwoNonOverlappingJobsWithSameDepthDiffer
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext2, kSeqno, kTimeline));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, TwoNonOverlappingJobsWithSameDepthDifferingBySeqno) {
@@ -359,8 +367,8 @@ TEST_F(GpuTracepointEventProcessorTest, TwoNonOverlappingJobsWithSameDepthDiffer
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, TwoOverlappingJobsButOnDifferentTimelines) {
@@ -399,8 +407,8 @@ TEST_F(GpuTracepointEventProcessorTest, TwoOverlappingJobsButOnDifferentTimeline
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline2));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, TwoNonOverlappingJobsWithDifferentDepthsBecauseOfSlack) {
@@ -445,8 +453,8 @@ TEST_F(GpuTracepointEventProcessorTest, TwoNonOverlappingJobsWithDifferentDepths
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, TwoOverlappingJobsWithImmediateHwExecution) {
@@ -491,8 +499,8 @@ TEST_F(GpuTracepointEventProcessorTest, TwoOverlappingJobsWithImmediateHwExecuti
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 TEST_F(GpuTracepointEventProcessorTest, TwoOverlappingJobsWithDelayedHwExecution) {
@@ -537,8 +545,8 @@ TEST_F(GpuTracepointEventProcessorTest, TwoOverlappingJobsWithDelayedHwExecution
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 TEST_F(GpuTracepointEventProcessorTest,
@@ -587,8 +595,8 @@ TEST_F(GpuTracepointEventProcessorTest,
   processor_.PushEvent(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD1, kContext, kSeqno1, kTimeline));
 
-  ExpectGpuJobEq(actual_gpu_job1, expected_gpu_job1);
-  ExpectGpuJobEq(actual_gpu_job2, expected_gpu_job2);
+  EXPECT_THAT(actual_gpu_job1, GpuJobEq(expected_gpu_job1));
+  EXPECT_THAT(actual_gpu_job2, GpuJobEq(expected_gpu_job2));
 }
 
 }  // namespace LinuxTracing
