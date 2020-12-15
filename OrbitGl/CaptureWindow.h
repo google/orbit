@@ -9,9 +9,11 @@
 #include "GlSlider.h"
 #include "TextBox.h"
 
+class OrbitApp;
+
 class CaptureWindow : public GlCanvas {
  public:
-  explicit CaptureWindow(uint32_t font_size);
+  explicit CaptureWindow(uint32_t font_size, OrbitApp* app);
   ~CaptureWindow() override;
 
   void Initialize() override;
@@ -80,4 +82,7 @@ class CaptureWindow : public GlCanvas {
 
   bool click_was_drag_ = false;
   bool background_clicked_ = false;
+
+ private:
+  OrbitApp* app_ = nullptr;
 };

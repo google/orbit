@@ -12,8 +12,8 @@
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(uint32_t font_size)
-    : GlCanvas(font_size), font_size_(font_size), time_graph_(font_size) {
+CaptureWindow::CaptureWindow(uint32_t font_size, OrbitApp* app)
+    : GlCanvas(font_size), font_size_(font_size), time_graph_(font_size), app_{app} {
   time_graph_.SetTextRenderer(&text_renderer_);
   time_graph_.SetCanvas(this);
   draw_help_ = true;
@@ -77,7 +77,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
   mouse_screen_y_ = y;
 
   // Pan
-  if (left && !im_gui_active_ && !picking_manager_.IsDragging() && !GOrbitApp->IsCapturing()) {
+  if (left && !im_gui_active_ && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
     float world_min;
     float world_max;
 
@@ -131,8 +131,8 @@ void CaptureWindow::LeftUp() {
   GlCanvas::LeftUp();
 
   if (!click_was_drag_ && background_clicked_) {
-    GOrbitApp->SelectTextBox(nullptr);
-    GOrbitApp->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
+    app_->SelectTextBox(nullptr);
+    app_->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
     NeedsUpdate();
   }
 }
@@ -181,8 +181,8 @@ void CaptureWindow::Pick(PickingId picking_id, int x, int y) {
 
 void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   if (text_box == nullptr) return;
-  GOrbitApp->SelectTextBox(text_box);
-  GOrbitApp->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
+  app_->SelectTextBox(text_box);
+  app_->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
   needs_check_highlight_change_ = true;
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
@@ -215,7 +215,7 @@ void CaptureWindow::Hover(int x, int y) {
     }
   }
 
-  GOrbitApp->SendTooltipToUi(tooltip);
+  app_->SendTooltipToUi(tooltip);
 }
 
 void CaptureWindow::PreRender() {
@@ -406,15 +406,15 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
         break;
       case 18:  // Left
         if (shift) {
-          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+          time_graph_.JumpToNeighborBox(app_->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameFunction);
         } else if (alt) {
-          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+          time_graph_.JumpToNeighborBox(app_->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
-          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
+          time_graph_.JumpToNeighborBox(app_->selected_text_box(),
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameDepth);
           needs_check_highlight_change_ = true;
@@ -422,28 +422,23 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
         break;
       case 20:  // Right
         if (shift) {
-          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
-                                        TimeGraph::JumpDirection::kNext,
+          time_graph_.JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameFunction);
         } else if (alt) {
-          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
-                                        TimeGraph::JumpDirection::kNext,
+          time_graph_.JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
-          time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
-                                        TimeGraph::JumpDirection::kNext,
+          time_graph_.JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameDepth);
           needs_check_highlight_change_ = true;
         }
         break;
       case 19:  // Up
-        time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
-                                      TimeGraph::JumpDirection::kTop,
+        time_graph_.JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kTop,
                                       TimeGraph::JumpScope::kSameThread);
         break;
       case 21:  // Down
-        time_graph_.JumpToNeighborBox(GOrbitApp->selected_text_box(),
-                                      TimeGraph::JumpDirection::kDown,
+        time_graph_.JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kDown,
                                       TimeGraph::JumpScope::kSameThread);
         break;
     }
@@ -461,7 +456,7 @@ void CaptureWindow::OnCaptureStarted() {
   NeedsRedraw();
 }
 
-bool CaptureWindow::ShouldAutoZoom() const { return GOrbitApp->IsCapturing(); }
+bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
@@ -592,7 +587,7 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   double stop = time_graph_.GetMaxTimeUs();
   double width = stop - start;
   double max_start = time_span - width;
-  double ratio = GOrbitApp->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
+  double ratio = app_->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
   int slider_width = static_cast<int>(time_graph_.GetLayout().GetSliderWidth());
   slider_->SetPixelHeight(slider_width);
   slider_->SetNormalizedPosition(static_cast<float>(ratio));
@@ -619,7 +614,7 @@ void CaptureWindow::UpdateWorldTopLeftY(float val) {
 }
 
 void CaptureWindow::ToggleRecording() {
-  GOrbitApp->ToggleCapture();
+  app_->ToggleCapture();
   draw_help_ = false;
 #ifdef __linux__
   ZoomAll();
