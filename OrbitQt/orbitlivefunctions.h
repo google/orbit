@@ -8,6 +8,7 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <optional>
 
 #include "LiveFunctionsController.h"
 #include "absl/container/flat_hash_map.h"
@@ -19,6 +20,8 @@ namespace Ui {
 class OrbitLiveFunctions;
 }
 
+class OrbitApp;
+
 class OrbitLiveFunctions : public QWidget {
   Q_OBJECT
 
@@ -26,7 +29,8 @@ class OrbitLiveFunctions : public QWidget {
   explicit OrbitLiveFunctions(QWidget* parent = nullptr);
   ~OrbitLiveFunctions() override;
 
-  void Initialize(SelectionType selection_type, FontType font_type, bool is_main_instance = true);
+  void Initialize(OrbitApp* app, SelectionType selection_type, FontType font_type,
+                  bool is_main_instance = true);
   void Refresh();
   void OnDataChanged();
   void onRowSelected(int row);
@@ -34,11 +38,13 @@ class OrbitLiveFunctions : public QWidget {
   void SetFilter(const QString& a_Filter);
   void AddIterator(uint64_t id, orbit_client_protos::FunctionInfo* function);
   QLineEdit* GetFilterLineEdit();
-  LiveFunctionsController& GetLiveFunctionsController() { return live_functions_; }
+  std::optional<LiveFunctionsController*> GetLiveFunctionsController() {
+    return live_functions_ ? &live_functions_.value() : nullptr;
+  }
 
  private:
   Ui::OrbitLiveFunctions* ui;
-  LiveFunctionsController live_functions_;
+  std::optional<LiveFunctionsController> live_functions_;
   absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis;
   OrbitEventIterator* all_events_iterator_;
 };

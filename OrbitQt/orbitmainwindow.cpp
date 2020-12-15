@@ -261,7 +261,7 @@ OrbitMainWindow::OrbitMainWindow(OrbitApp* app,
 
   StartMainTimer();
 
-  ui->liveFunctions->Initialize(SelectionType::kExtended, FontType::kDefault);
+  ui->liveFunctions->Initialize(app_, SelectionType::kExtended, FontType::kDefault);
 
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
@@ -771,8 +771,10 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
 void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
   if (!timer_info) return;
   uint64_t function_address = timer_info->function_address();
+  const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
+  CHECK(live_functions_controller.has_value());
   LiveFunctionsDataView& live_functions_data_view =
-      ui->liveFunctions->GetLiveFunctionsController().GetDataView();
+      live_functions_controller.value()->GetDataView();
   int selected_row = live_functions_data_view.GetRowFromFunctionAddress(function_address);
   if (selected_row != -1) {
     ui->liveFunctions->onRowSelected(selected_row);
