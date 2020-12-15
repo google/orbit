@@ -845,7 +845,7 @@ AsyncTrack* TimeGraph::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<AsyncTrack>(this, name);
+    track = std::make_shared<AsyncTrack>(this, name, GOrbitApp.get());
     AddTrack(track);
     async_tracks_[name] = track;
   }

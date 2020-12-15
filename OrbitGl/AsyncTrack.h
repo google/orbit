@@ -10,9 +10,11 @@
 #include "TimerTrack.h"
 #include "absl/container/flat_hash_map.h"
 
-class AsyncTrack : public TimerTrack {
+class OrbitApp;
+
+class AsyncTrack final : public TimerTrack {
  public:
-  AsyncTrack(TimeGraph* time_graph, const std::string& name);
+  explicit AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app);
 
   [[nodiscard]] Type GetType() const override { return kAsyncTrack; };
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
@@ -28,6 +30,9 @@ class AsyncTrack : public TimerTrack {
 
   // Used for determining what row can receive a new timer with no overlap.
   absl::flat_hash_map<uint32_t, uint64_t> max_span_time_by_depth_;
+
+ private:
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_ASYNC_TRACK_H_

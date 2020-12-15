@@ -14,7 +14,8 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTrack(time_graph) {
+AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app)
+    : TimerTrack(time_graph), app_{app} {
   SetName(name);
   SetLabel(name);
 }
@@ -22,7 +23,7 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name) : TimerTr
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(PickingId id) const {
   const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (text_box == nullptr) return "";
-  auto* manual_inst_manager = GOrbitApp->GetManualInstrumentationManager();
+  auto* manual_inst_manager = app_->GetManualInstrumentationManager();
   TimerInfo timer_info = text_box->GetTimerInfo();
   orbit_api::Event event = manual_inst_manager->ApiEventFromTimerInfo(timer_info);
 
@@ -83,7 +84,7 @@ void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
-  std::string name = GOrbitApp->GetManualInstrumentationManager()->GetString(event_id);
+  std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
   std::string text = absl::StrFormat("%s %s", name, time.c_str());
   text_box->SetText(text);
 
@@ -109,7 +110,7 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) c
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
-  std::string name = GOrbitApp->GetManualInstrumentationManager()->GetString(event_id);
+  std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
   Color color = time_graph_->GetColor(name);
 
   constexpr uint8_t kOddAlpha = 210;
