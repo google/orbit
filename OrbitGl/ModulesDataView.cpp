@@ -10,7 +10,7 @@
 
 ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
-ModulesDataView::ModulesDataView() : DataView(DataViewType::kModules) {}
+ModulesDataView::ModulesDataView(OrbitApp* app) : DataView(DataViewType::kModules), app_{app} {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -125,7 +125,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module_data);
       }
     }
-    GOrbitApp->LoadModules(modules_to_load);
+    app_->LoadModules(modules_to_load);
 
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<const ModuleData*> modules_to_validate;
@@ -136,7 +136,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     }
 
     if (!modules_to_validate.empty()) {
-      GOrbitApp->OnValidateFramePointers(modules_to_validate);
+      app_->OnValidateFramePointers(modules_to_validate);
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
@@ -174,7 +174,7 @@ void ModulesDataView::UpdateModules(const ProcessData* process) {
   modules_.clear();
   module_memory_.clear();
   for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {
-    ModuleData* module = GOrbitApp->GetMutableModuleByPath(module_path);
+    ModuleData* module = app_->GetMutableModuleByPath(module_path);
     modules_.push_back(module);
     module_memory_[module] = &memory_space;
   }
@@ -188,12 +188,12 @@ void ModulesDataView::UpdateModules(const ProcessData* process) {
 }
 
 void ModulesDataView::OnRefreshButtonClicked() {
-  const ProcessData* process = GOrbitApp->GetSelectedProcess();
+  const ProcessData* process = app_->GetSelectedProcess();
   if (process == nullptr) {
     LOG("Unable to refresh module list, no process selected");
     return;
   }
-  GOrbitApp->UpdateProcessAndModuleList(process->pid());
+  app_->UpdateProcessAndModuleList(process->pid());
 }
 
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,

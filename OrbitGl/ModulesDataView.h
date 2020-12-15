@@ -9,9 +9,11 @@
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
 
+class OrbitApp;
+
 class ModulesDataView : public DataView {
  public:
-  ModulesDataView();
+  explicit ModulesDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
@@ -50,6 +52,8 @@ class ModulesDataView : public DataView {
 
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionVerifyFramePointers;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_MODULES_DATA_VIEW_H_
