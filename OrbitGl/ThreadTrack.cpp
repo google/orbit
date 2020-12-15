@@ -21,7 +21,7 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app
     : TimerTrack(time_graph), app_{app} {
   thread_id_ = thread_id;
 
-  thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id);
+  thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_);
 
   event_track_ = std::make_shared<EventTrack>(time_graph);
   event_track_->SetThreadId(thread_id);

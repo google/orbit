@@ -9,7 +9,8 @@
 
 using orbit_client_protos::ThreadStateSliceInfo;
 
-ThreadStateTrack::ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id) : Track{time_graph} {
+ThreadStateTrack::ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
+    : Track{time_graph}, app_{app} {
   thread_id_ = thread_id;
   picked_ = false;
 }
@@ -168,6 +169,6 @@ void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 }
 
 void ThreadStateTrack::OnPick(int /*x*/, int /*y*/) {
-  GOrbitApp->set_selected_thread_id(thread_id_);
+  app_->set_selected_thread_id(thread_id_);
   picked_ = true;
 }
