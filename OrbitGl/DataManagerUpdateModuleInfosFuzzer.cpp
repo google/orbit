@@ -50,6 +50,6 @@ DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   CHECK(process != nullptr);
   process->UpdateModuleInfos(modules);
 
-  ModulesDataView modules_data_view{};
+  ModulesDataView modules_data_view{nullptr};
   modules_data_view.UpdateModules(process);
 }

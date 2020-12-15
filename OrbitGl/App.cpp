@@ -1551,7 +1551,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = std::make_unique<ModulesDataView>();
+        modules_data_view_ = std::make_unique<ModulesDataView>(this);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
