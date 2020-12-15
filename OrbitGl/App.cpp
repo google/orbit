@@ -118,6 +118,20 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
 }
 
 OrbitApp::~OrbitApp() {
+  AbortCapture();
+
+  try {
+    process_manager_->ShutdownAndWait();
+  } catch (const std::exception& e) {
+    FATAL("Exception occured in ProcessManager::ShutdownAndWait(): %s", e.what());
+  }
+
+  try {
+    thread_pool_->ShutdownAndWait();
+  } catch (const std::exception& e) {
+    FATAL("Exception occured in ThreadPool::ShutdownAndWait(): %s", e.what());
+  }
+
 #ifdef _WIN32
   oqpi::default_helpers::stop_scheduler();
 #endif
@@ -510,15 +524,6 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                              capture_data.GetCallstackData()->GetCallstackEventsCount());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
-}
-
-void OrbitApp::OnExit() {
-  AbortCapture();
-
-  process_manager_->ShutdownAndWait();
-  thread_pool_->ShutdownAndWait();
-
-  GOrbitApp = nullptr;
 }
 
 Timer GMainTimer;

@@ -76,7 +76,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                                           std::unique_ptr<MainThreadExecutor> main_thread_executor);
 
   void PostInit();
-  void OnExit();
   void MainTick();
 
   std::string GetCaptureTime();
