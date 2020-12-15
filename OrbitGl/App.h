@@ -478,6 +478,4 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   FrameTrackOnlineProcessor frame_track_online_processor_;
 };
 
-extern std::unique_ptr<OrbitApp> GOrbitApp;
-
 #endif  // ORBIT_GL_APP_H_
