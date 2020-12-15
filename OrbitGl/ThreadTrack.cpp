@@ -18,7 +18,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
-    : TimerTrack(time_graph), app_{app} {
+    : TimerTrack(time_graph, app) {
   thread_id_ = thread_id;
 
   thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_);

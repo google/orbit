@@ -7,9 +7,12 @@
 
 #include "TimerTrack.h"
 
+class OrbitApp;
+
 class FrameTrack : public TimerTrack {
  public:
-  explicit FrameTrack(TimeGraph* time_graph, const orbit_client_protos::FunctionInfo& function);
+  explicit FrameTrack(TimeGraph* time_graph, const orbit_client_protos::FunctionInfo& function,
+                      OrbitApp* app);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }
   [[nodiscard]] bool IsCollapsable() const override { return GetMaximumScaleFactor() > 0.f; }
 

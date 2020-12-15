@@ -857,7 +857,7 @@ std::shared_ptr<FrameTrack> TimeGraph::GetOrCreateFrameTrack(const FunctionInfo&
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
   if (track == nullptr) {
-    track = std::make_shared<FrameTrack>(this, function);
+    track = std::make_shared<FrameTrack>(this, function, GOrbitApp.get());
     // Normally we would call AddTrack(track) here, but frame tracks are removable by users
     // and therefore cannot be simply thrown into the flat vector of tracks.
     sorting_invalidated_ = true;

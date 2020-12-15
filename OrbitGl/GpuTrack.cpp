@@ -40,7 +40,7 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 GpuTrack::GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
                    uint64_t timeline_hash, OrbitApp* app)
-    : TimerTrack(time_graph), app_{app} {
+    : TimerTrack(time_graph, app) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
   string_manager_ = string_manager;
