@@ -454,7 +454,7 @@ TEST_F(VulkanLayerControllerTest, WillCleanUpOnDestroyInstance) {
   controller_.OnDestroyInstance(instance, nullptr);
 }
 
-TEST_F(VulkanLayerControllerTest, WillClearUpOnDestroyDevice) {
+TEST_F(VulkanLayerControllerTest, WillCleanUpOnDestroyDevice) {
   PFN_vkDestroyDevice fake_destroy_device =
       +[](VkDevice /*device*/, const VkAllocationCallbacks* /*allocator*/) {};
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
