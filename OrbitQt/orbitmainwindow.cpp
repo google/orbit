@@ -472,6 +472,9 @@ QTabWidget* OrbitMainWindow::FindParentTabWidget(const QWidget* widget) const {
 
 OrbitMainWindow::~OrbitMainWindow() {
   DeinitTutorials();
+
+  // CaptureGLWidget needs to be deleted ahead of time to ensure that it is deleted before OrbitApp
+  delete ui->CaptureGLWidget;
   delete ui;
 }
 
