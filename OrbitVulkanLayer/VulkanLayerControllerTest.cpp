@@ -14,6 +14,7 @@ using ::testing::Field;
 using ::testing::IsSubsetOf;
 using ::testing::Matcher;
 using ::testing::Return;
+using ::testing::SaveArg;
 using ::testing::StrEq;
 using ::testing::UnorderedElementsAreArray;
 
@@ -25,10 +26,10 @@ class MockDispatchTable {
  public:
   MOCK_METHOD(PFN_vkEnumerateDeviceExtensionProperties, EnumerateDeviceExtensionProperties,
               (VkPhysicalDevice));
-  MOCK_METHOD((void), CreateInstanceDispatchTable, (VkInstance, PFN_vkGetInstanceProcAddr));
-  MOCK_METHOD((void), CreateDeviceDispatchTable, (VkDevice, PFN_vkGetDeviceProcAddr));
-  MOCK_METHOD((void), RemoveInstanceDispatchTable, (VkInstance));
-  MOCK_METHOD((void), RemoveDeviceDispatchTable, (VkDevice));
+  MOCK_METHOD(void, CreateInstanceDispatchTable, (VkInstance, PFN_vkGetInstanceProcAddr));
+  MOCK_METHOD(void, CreateDeviceDispatchTable, (VkDevice, PFN_vkGetDeviceProcAddr));
+  MOCK_METHOD(void, RemoveInstanceDispatchTable, (VkInstance));
+  MOCK_METHOD(void, RemoveDeviceDispatchTable, (VkDevice));
   MOCK_METHOD(PFN_vkGetDeviceProcAddr, GetDeviceProcAddr, (VkDevice));
   MOCK_METHOD(PFN_vkGetInstanceProcAddr, GetInstanceProcAddr, (VkInstance));
   MOCK_METHOD(PFN_vkDestroyInstance, DestroyInstance, (VkInstance));
@@ -54,20 +55,20 @@ class MockDispatchTable {
 class MockDeviceManager {
  public:
   explicit MockDeviceManager(MockDispatchTable* /*dispatch_table*/) {}
-  MOCK_METHOD((void), TrackLogicalDevice, (VkPhysicalDevice, VkDevice));
-  MOCK_METHOD((void), UntrackLogicalDevice, (VkDevice));
+  MOCK_METHOD(void, TrackLogicalDevice, (VkPhysicalDevice, VkDevice));
+  MOCK_METHOD(void, UntrackLogicalDevice, (VkDevice));
 };
 
 class MockQueueManager {
  public:
-  MOCK_METHOD((void), TrackQueue, (VkQueue, VkDevice));
+  MOCK_METHOD(void, TrackQueue, (VkQueue, VkDevice));
   MOCK_METHOD((VkDevice), GetDeviceOfQueue, (VkQueue));
 };
 
 class MockTimerQueryPool {
  public:
   explicit MockTimerQueryPool(MockDispatchTable* /*dispatch_table*/, uint32_t /*num_slots*/) {}
-  MOCK_METHOD((void), InitializeTimerQueryPool, (VkDevice));
+  MOCK_METHOD(void, InitializeTimerQueryPool, (VkDevice));
 };
 
 struct Color {
@@ -82,21 +83,21 @@ class MockSubmissionTracker {
   explicit MockSubmissionTracker(MockDispatchTable* /*dispatch_table*/,
                                  MockTimerQueryPool* /*timer_query_pool*/,
                                  MockDeviceManager* /*device_manager*/, uint32_t /*max_depth*/) {}
-  MOCK_METHOD((void), SetVulkanLayerProducer, (VulkanLayerProducer*));
-  MOCK_METHOD((void), ResetCommandPool, (VkCommandPool));
-  MOCK_METHOD((void), TrackCommandBuffers,
+  MOCK_METHOD(void, SetVulkanLayerProducer, (VulkanLayerProducer*));
+  MOCK_METHOD(void, ResetCommandPool, (VkCommandPool));
+  MOCK_METHOD(void, TrackCommandBuffers,
               (VkDevice, VkCommandPool, const VkCommandBuffer*, uint32_t));
-  MOCK_METHOD((void), UntrackCommandBuffers,
+  MOCK_METHOD(void, UntrackCommandBuffers,
               (VkDevice, VkCommandPool, const VkCommandBuffer*, uint32_t));
-  MOCK_METHOD((void), MarkCommandBufferBegin, (VkCommandBuffer));
-  MOCK_METHOD((void), MarkCommandBufferEnd, (VkCommandBuffer));
-  MOCK_METHOD((void), ResetCommandBuffer, (VkCommandBuffer));
+  MOCK_METHOD(void, MarkCommandBufferBegin, (VkCommandBuffer));
+  MOCK_METHOD(void, MarkCommandBufferEnd, (VkCommandBuffer));
+  MOCK_METHOD(void, ResetCommandBuffer, (VkCommandBuffer));
   // Note we simplify the return type, as it is not really part of this test.
   MOCK_METHOD(bool, PersistCommandBuffersOnSubmit, (uint32_t, const VkSubmitInfo* submits));
   MOCK_METHOD(bool, PersistDebugMarkersOnSubmit, (VkQueue, uint32_t, const VkSubmitInfo*, bool));
-  MOCK_METHOD((void), CompleteSubmits, (VkDevice));
-  MOCK_METHOD((void), MarkDebugMarkerBegin, (VkCommandBuffer, const char*, Color));
-  MOCK_METHOD((void), MarkDebugMarkerEnd, (VkCommandBuffer));
+  MOCK_METHOD(void, CompleteSubmits, (VkDevice));
+  MOCK_METHOD(void, MarkDebugMarkerBegin, (VkCommandBuffer, const char*, Color));
+  MOCK_METHOD(void, MarkDebugMarkerEnd, (VkCommandBuffer));
 };
 
 using VulkanLayerControllerImpl =
@@ -113,9 +114,7 @@ Matcher<VkExtensionProperties> VkExtensionPropertiesAreEqual(
 
 class VulkanLayerControllerTest : public ::testing::Test {
  protected:
-  VulkanLayerController<MockDispatchTable, MockQueueManager, MockDeviceManager, MockTimerQueryPool,
-                        MockSubmissionTracker>
-      controller_;
+  VulkanLayerControllerImpl controller_;
   static constexpr VkExtensionProperties kDebugMarkerExtension{
       .extensionName = VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
       .specVersion = VK_EXT_DEBUG_MARKER_SPEC_VERSION};
@@ -132,7 +131,7 @@ class VulkanLayerControllerTest : public ::testing::Test {
                                                          .specVersion = 2};
 
   static constexpr PFN_vkEnumerateDeviceExtensionProperties
-      kMockEnumerateDeviceExtensionPropertiesFunction =
+      kFakeEnumerateDeviceExtensionPropertiesFunction =
           +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
               uint32_t* property_count, VkExtensionProperties* properties) {
             if (property_count != nullptr) {
@@ -228,7 +227,7 @@ TEST_F(VulkanLayerControllerTest, WillForwardCallOnEnumerateOtherLayersDeviceExt
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, EnumerateDeviceExtensionProperties)
       .Times(2)
-      .WillRepeatedly(Return(kMockEnumerateDeviceExtensionPropertiesFunction));
+      .WillRepeatedly(Return(kFakeEnumerateDeviceExtensionPropertiesFunction));
   VkPhysicalDevice physical_device = {};
   uint32_t actual_property_count;
 
@@ -250,14 +249,14 @@ TEST_F(VulkanLayerControllerTest, WillForwardCallOnEnumerateOtherLayersDeviceExt
 
 TEST_F(VulkanLayerControllerTest,
        WillReturnErrorOnEnumerateAllLayersDeviceExtensionPropertiesError) {
-  PFN_vkEnumerateDeviceExtensionProperties mock_enumerate_device_extension_properties_function =
+  PFN_vkEnumerateDeviceExtensionProperties fake_enumerate_device_extension_properties_function =
       +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
           uint32_t* /*property_count*/,
           VkExtensionProperties* /*properties*/) { return VK_INCOMPLETE; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, EnumerateDeviceExtensionProperties)
       .Times(1)
-      .WillRepeatedly(Return(mock_enumerate_device_extension_properties_function));
+      .WillRepeatedly(Return(fake_enumerate_device_extension_properties_function));
   VkPhysicalDevice physical_device = {};
   uint32_t actual_property_count;
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
@@ -269,7 +268,7 @@ TEST_F(VulkanLayerControllerTest,
        WillMergePropertiesOnEnumerateAllLayersDeviceExtensionProperties) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, EnumerateDeviceExtensionProperties)
-      .WillRepeatedly(Return(kMockEnumerateDeviceExtensionPropertiesFunction));
+      .WillRepeatedly(Return(kFakeEnumerateDeviceExtensionPropertiesFunction));
   VkPhysicalDevice physical_device = {};
   uint32_t actual_property_count;
 
@@ -295,7 +294,7 @@ TEST_F(VulkanLayerControllerTest,
        CanMergePropertiesAndEnumerateASubsetForAllLayersDeviceExtensionProperties) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, EnumerateDeviceExtensionProperties)
-      .WillRepeatedly(Return(kMockEnumerateDeviceExtensionPropertiesFunction));
+      .WillRepeatedly(Return(kFakeEnumerateDeviceExtensionPropertiesFunction));
   VkPhysicalDevice physical_device = {};
 
   std::array<VkExtensionProperties, 3> actual_properties = {};
@@ -334,7 +333,7 @@ TEST_F(VulkanLayerControllerTest,
       +[](const VkInstanceCreateInfo* /*create_info*/, const VkAllocationCallbacks* /*allocator*/,
           VkInstance* /*instance*/) { return VK_SUCCESS; };
 
-  PFN_vkGetInstanceProcAddr mock_get_instance_proc_addr =
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCreateInstance") == 0) {
       return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateInstance);
@@ -342,8 +341,8 @@ TEST_F(VulkanLayerControllerTest,
     return nullptr;
   };
 
-  VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = mock_get_instance_proc_addr};
-  VkLayerInstanceLink layer_link_2 = {.pfnNextGetInstanceProcAddr = mock_get_instance_proc_addr,
+  VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerInstanceLink layer_link_2 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
                                       .pNext = &layer_link_1};
   VkLayerInstanceCreateInfo layer_create_info{
       .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO,
@@ -357,8 +356,12 @@ TEST_F(VulkanLayerControllerTest,
   EXPECT_EQ(layer_create_info.u.pLayerInfo, &layer_link_1);
 
   ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
-  // There will be a call at the destructor.
-  EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer).Times(1);
+  // There will be a call in the destructor.
+  VulkanLayerProducer* actual_producer;
+  EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_producer));
+  EXPECT_EQ(actual_producer, nullptr);
 }
 
 TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateDeviceWithNoInfo) {
@@ -373,11 +376,11 @@ TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateDeviceWithNoInfo) {
 TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetDeviceProcAddr) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   static constexpr PFN_vkVoidFunction kExpectedFunction = +[]() {};
-  PFN_vkGetDeviceProcAddr mock_get_device_proc_addr =
+  PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
       +[](VkDevice /*device*/, const char* /*name*/) { return kExpectedFunction; };
   EXPECT_CALL(*dispatch_table, GetDeviceProcAddr)
       .Times(1)
-      .WillOnce(Return(mock_get_device_proc_addr));
+      .WillOnce(Return(fake_get_device_proc_addr));
   VkDevice device = {};
   PFN_vkVoidFunction result = controller_.OnGetDeviceProcAddr(device, "some function");
   EXPECT_EQ(result, kExpectedFunction);
@@ -397,10 +400,10 @@ TEST_F(VulkanLayerControllerTest,
           const VkAllocationCallbacks* /*allocator*/,
           VkDevice* /*instance*/) { return VK_SUCCESS; };
 
-  PFN_vkGetDeviceProcAddr mock_get_device_proc_addr =
+  PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
       +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
-  PFN_vkGetInstanceProcAddr mock_get_instance_proc_addr =
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCreateDevice") == 0) {
       return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateDevice);
@@ -408,10 +411,10 @@ TEST_F(VulkanLayerControllerTest,
     return nullptr;
   };
 
-  VkLayerDeviceLink layer_link_1 = {.pfnNextGetDeviceProcAddr = mock_get_device_proc_addr,
-                                    .pfnNextGetInstanceProcAddr = mock_get_instance_proc_addr};
-  VkLayerDeviceLink layer_link_2 = {.pfnNextGetDeviceProcAddr = mock_get_device_proc_addr,
-                                    .pfnNextGetInstanceProcAddr = mock_get_instance_proc_addr,
+  VkLayerDeviceLink layer_link_1 = {.pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
+                                    .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerDeviceLink layer_link_2 = {.pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
+                                    .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
                                     .pNext = &layer_link_1};
   VkLayerDeviceCreateInfo layer_create_info{.sType = VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO,
                                             .function = VK_LAYER_LINK_INFO,
@@ -429,21 +432,21 @@ TEST_F(VulkanLayerControllerTest,
 TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetInstanceProcAddr) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   static constexpr PFN_vkVoidFunction kExpectedFunction = +[]() {};
-  PFN_vkGetInstanceProcAddr mock_get_instance_proc_addr =
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
       +[](VkInstance /*instance*/, const char* /*name*/) { return kExpectedFunction; };
   EXPECT_CALL(*dispatch_table, GetInstanceProcAddr)
       .Times(1)
-      .WillOnce(Return(mock_get_instance_proc_addr));
+      .WillOnce(Return(fake_get_instance_proc_addr));
   VkInstance instance = {};
   PFN_vkVoidFunction result = controller_.OnGetInstanceProcAddr(instance, "some function");
   EXPECT_EQ(result, kExpectedFunction);
 }
 
-TEST_F(VulkanLayerControllerTest, WillClearUpOnDestroyInstance) {
-  PFN_vkDestroyInstance mock_destroy_instance =
+TEST_F(VulkanLayerControllerTest, WillCleanUpOnDestroyInstance) {
+  PFN_vkDestroyInstance fake_destroy_instance =
       +[](VkInstance /*instance*/, const VkAllocationCallbacks* /*allocator*/) {};
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, DestroyInstance).Times(1).WillOnce(Return(mock_destroy_instance));
+  EXPECT_CALL(*dispatch_table, DestroyInstance).Times(1).WillOnce(Return(fake_destroy_instance));
   EXPECT_CALL(*dispatch_table, RemoveInstanceDispatchTable).Times(1);
 
   VkInstance instance = {};
@@ -452,10 +455,10 @@ TEST_F(VulkanLayerControllerTest, WillClearUpOnDestroyInstance) {
 }
 
 TEST_F(VulkanLayerControllerTest, WillClearUpOnDestroyDevice) {
-  PFN_vkDestroyDevice mock_destroy_device =
+  PFN_vkDestroyDevice fake_destroy_device =
       +[](VkDevice /*device*/, const VkAllocationCallbacks* /*allocator*/) {};
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, DestroyDevice).Times(1).WillOnce(Return(mock_destroy_device));
+  EXPECT_CALL(*dispatch_table, DestroyDevice).Times(1).WillOnce(Return(fake_destroy_device));
   EXPECT_CALL(*dispatch_table, RemoveDeviceDispatchTable).Times(1);
   const MockDeviceManager* device_manager = controller_.device_manager();
   EXPECT_CALL(*device_manager, UntrackLogicalDevice).Times(1);
@@ -469,12 +472,12 @@ TEST_F(VulkanLayerControllerTest, WillClearUpOnDestroyDevice) {
 // Core layer logic
 // ----------------------------------------------------------------------------
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnResetCommandPool) {
-  PFN_vkResetCommandPool mock_reset_command_pool =
+TEST_F(VulkanLayerControllerTest, ForwardsOnResetCommandPoolToSubmissionTracker) {
+  PFN_vkResetCommandPool fake_reset_command_pool =
       +[](VkDevice /*device*/, VkCommandPool /*command_pool*/,
           VkCommandPoolResetFlags /*flags*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, ResetCommandPool).Times(1).WillOnce(Return(mock_reset_command_pool));
+  EXPECT_CALL(*dispatch_table, ResetCommandPool).Times(1).WillOnce(Return(fake_reset_command_pool));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, ResetCommandPool).Times(1);
@@ -485,15 +488,15 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnResetCommandPool) {
   EXPECT_EQ(result, VK_SUCCESS);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnAllocateCommandBuffers) {
-  PFN_vkAllocateCommandBuffers mock_allocate_command_buffers =
+TEST_F(VulkanLayerControllerTest, ForwardsOnAllocateCommandBuffersToSubmissionTracker) {
+  PFN_vkAllocateCommandBuffers fake_allocate_command_buffers =
       +[](VkDevice /*device*/, const VkCommandBufferAllocateInfo* /*allocate_info*/,
           VkCommandBuffer *
           /*command_buffers*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, AllocateCommandBuffers)
       .Times(1)
-      .WillOnce(Return(mock_allocate_command_buffers));
+      .WillOnce(Return(fake_allocate_command_buffers));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, TrackCommandBuffers).Times(1);
@@ -510,15 +513,14 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnAllocateCommandBuffers) {
   EXPECT_EQ(result, VK_SUCCESS);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnFreeCommandBuffers) {
-  PFN_vkFreeCommandBuffers mock_free_command_buffers =
+TEST_F(VulkanLayerControllerTest, ForwardsOnFreeCommandBuffersToSubmissionTracker) {
+  PFN_vkFreeCommandBuffers fake_free_command_buffers =
       +[](VkDevice /*device*/, VkCommandPool /*command_pool*/, uint32_t /*command_buffer_count*/,
-          const VkCommandBuffer*
-          /*command_buffers*/) {};
+          const VkCommandBuffer* /*command_buffers*/) {};
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, FreeCommandBuffers)
       .Times(1)
-      .WillOnce(Return(mock_free_command_buffers));
+      .WillOnce(Return(fake_free_command_buffers));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, UntrackCommandBuffers).Times(1);
@@ -529,14 +531,14 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnFreeCommandBuffers) {
   controller_.OnFreeCommandBuffers(device, command_pool, 1, &command_buffer);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnBeginCommandBuffer) {
-  PFN_vkBeginCommandBuffer mock_begin_command_buffer =
+TEST_F(VulkanLayerControllerTest, ForwardsOnBeginCommandBufferToSubmissionTracker) {
+  PFN_vkBeginCommandBuffer fake_begin_command_buffer =
       +[](VkCommandBuffer /*command_buffer*/, const VkCommandBufferBeginInfo *
           /*begin_info*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, BeginCommandBuffer)
       .Times(1)
-      .WillOnce(Return(mock_begin_command_buffer));
+      .WillOnce(Return(fake_begin_command_buffer));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkCommandBufferBegin).Times(1);
@@ -545,11 +547,11 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnBeginCommandBuffer) {
   EXPECT_EQ(result, VK_SUCCESS);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnEndCommandBuffer) {
-  PFN_vkEndCommandBuffer mock_end_command_buffer =
+TEST_F(VulkanLayerControllerTest, ForwardsOnEndCommandBufferToSubmissionTracker) {
+  PFN_vkEndCommandBuffer fake_end_command_buffer =
       +[](VkCommandBuffer /*command_buffer*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, EndCommandBuffer).Times(1).WillOnce(Return(mock_end_command_buffer));
+  EXPECT_CALL(*dispatch_table, EndCommandBuffer).Times(1).WillOnce(Return(fake_end_command_buffer));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkCommandBufferEnd).Times(1);
@@ -558,15 +560,15 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnEndCommandBuffer) {
   EXPECT_EQ(result, VK_SUCCESS);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnResetCommandBuffer) {
-  PFN_vkResetCommandBuffer mock_reset_command_buffer =
+TEST_F(VulkanLayerControllerTest, ForwardsOnResetCommandBufferToSubmissionTracker) {
+  PFN_vkResetCommandBuffer fake_reset_command_buffer =
       +[](VkCommandBuffer /*command_buffer*/, VkCommandBufferResetFlags /*flags*/) -> VkResult {
     return VK_SUCCESS;
   };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, ResetCommandBuffer)
       .Times(1)
-      .WillOnce(Return(mock_reset_command_buffer));
+      .WillOnce(Return(fake_reset_command_buffer));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, ResetCommandBuffer).Times(1);
@@ -576,12 +578,12 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnResetCommandBuffer) {
   EXPECT_EQ(result, VK_SUCCESS);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnGetDeviceQueue) {
-  PFN_vkGetDeviceQueue mock_get_device_queue =
+TEST_F(VulkanLayerControllerTest, ForwardsOnGetDeviceQueueToQueueManager) {
+  PFN_vkGetDeviceQueue fake_get_device_queue =
       +[](VkDevice /*device*/, uint32_t /*queue_family_index*/, uint32_t /*queue_index*/,
           VkQueue* /*queue*/) {};
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, GetDeviceQueue).Times(1).WillOnce(Return(mock_get_device_queue));
+  EXPECT_CALL(*dispatch_table, GetDeviceQueue).Times(1).WillOnce(Return(fake_get_device_queue));
 
   const MockQueueManager* queue_manager = controller_.queue_manager();
   EXPECT_CALL(*queue_manager, TrackQueue).Times(1);
@@ -590,11 +592,11 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnGetDeviceQueue) {
   controller_.OnGetDeviceQueue(device, 1, 2, &queue);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnGetDeviceQueue2) {
-  PFN_vkGetDeviceQueue2 mock_get_device_queue2 =
+TEST_F(VulkanLayerControllerTest, ForwardsOnGetDeviceQueue2ToQueueManager) {
+  PFN_vkGetDeviceQueue2 fake_get_device_queue2 =
       +[](VkDevice /*device*/, const VkDeviceQueueInfo2* /*queue_info*/, VkQueue* /*queue*/) {};
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, GetDeviceQueue2).Times(1).WillOnce(Return(mock_get_device_queue2));
+  EXPECT_CALL(*dispatch_table, GetDeviceQueue2).Times(1).WillOnce(Return(fake_get_device_queue2));
 
   const MockQueueManager* queue_manager = controller_.queue_manager();
   EXPECT_CALL(*queue_manager, TrackQueue).Times(1);
@@ -606,12 +608,12 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnGetDeviceQueue2) {
   controller_.OnGetDeviceQueue2(device, &queue_info, &queue);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnGetQueueSubmit) {
-  PFN_vkQueueSubmit mock_queue_submit =
+TEST_F(VulkanLayerControllerTest, ForwardsOnGetQueueSubmitToSubmissionTracker) {
+  PFN_vkQueueSubmit fake_queue_submit =
       +[](VkQueue /*queue*/, uint32_t /*submit_count*/, const VkSubmitInfo* /*submits*/,
           VkFence /*fence*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, QueueSubmit).Times(1).WillOnce(Return(mock_queue_submit));
+  EXPECT_CALL(*dispatch_table, QueueSubmit).Times(1).WillOnce(Return(fake_queue_submit));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, PersistCommandBuffersOnSubmit).Times(1);
@@ -627,13 +629,13 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnGetQueueSubmit) {
   EXPECT_EQ(result, VK_SUCCESS);
 }
 
-TEST_F(VulkanLayerControllerTest, CanDelegateOnQueuePresentKHR) {
-  PFN_vkQueuePresentKHR mock_queue_present =
+TEST_F(VulkanLayerControllerTest, ForwardsOnQueuePresentKHRToSubmissionTracker) {
+  PFN_vkQueuePresentKHR fake_queue_present =
       +[](VkQueue /*queue*/, const VkPresentInfoKHR * /*present_info*/) -> VkResult {
     return VK_SUCCESS;
   };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, QueuePresentKHR).Times(1).WillOnce(Return(mock_queue_present));
+  EXPECT_CALL(*dispatch_table, QueuePresentKHR).Times(1).WillOnce(Return(fake_queue_present));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, CompleteSubmits).Times(1);
@@ -648,7 +650,7 @@ TEST_F(VulkanLayerControllerTest, CanDelegateOnQueuePresentKHR) {
 }
 
 TEST_F(VulkanLayerControllerTest,
-       WillMarkDebugMarkerBeginButNotDelegateIfDriverDoesNotSupportDebugUtils) {
+       MarksDebugMarkerBeginButNotForwardIfDriverDoesNotSupportDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
@@ -660,15 +662,15 @@ TEST_F(VulkanLayerControllerTest,
   controller_.OnCmdBeginDebugUtilsLabelEXT(command_buffer, &debug_marker);
 }
 
-TEST_F(VulkanLayerControllerTest, WillDelegateOnBeginDebugLabelIfDriverDoesSupportDebugUtils) {
+TEST_F(VulkanLayerControllerTest, ForwardsOnBeginDebugLabelIfDriverSupportsDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(true));
 
-  PFN_vkCmdBeginDebugUtilsLabelEXT mock_cmd_begin_debug_utils_label_ext =
+  PFN_vkCmdBeginDebugUtilsLabelEXT fake_cmd_begin_debug_utils_label_ext =
       +[](VkCommandBuffer /*command_buffer*/, const VkDebugUtilsLabelEXT* /*label_info*/) {};
   EXPECT_CALL(*dispatch_table, CmdBeginDebugUtilsLabelEXT)
       .Times(1)
-      .WillOnce(Return(mock_cmd_begin_debug_utils_label_ext));
+      .WillOnce(Return(fake_cmd_begin_debug_utils_label_ext));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerBegin).Times(1);
@@ -680,7 +682,7 @@ TEST_F(VulkanLayerControllerTest, WillDelegateOnBeginDebugLabelIfDriverDoesSuppo
 }
 
 TEST_F(VulkanLayerControllerTest,
-       WillMarkDebugMarkerEndButNotDelegateIfDriverDoesNotSupportDebugUtils) {
+       MarksDebugMarkerEndButNotForwardIfDriverDoesNotSupportDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
@@ -690,15 +692,15 @@ TEST_F(VulkanLayerControllerTest,
   controller_.OnCmdEndDebugUtilsLabelEXT(command_buffer);
 }
 
-TEST_F(VulkanLayerControllerTest, WillDelegateOnEndDebugLabelIfDriverDoesSupportDebugUtils) {
+TEST_F(VulkanLayerControllerTest, ForwardsOnEndDebugLabelIfDriverSupportsDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(true));
 
-  PFN_vkCmdEndDebugUtilsLabelEXT mock_cmd_end_debug_utils_label_ext =
+  PFN_vkCmdEndDebugUtilsLabelEXT fake_cmd_end_debug_utils_label_ext =
       +[](VkCommandBuffer /*command_buffer*/) {};
   EXPECT_CALL(*dispatch_table, CmdEndDebugUtilsLabelEXT)
       .Times(1)
-      .WillOnce(Return(mock_cmd_end_debug_utils_label_ext));
+      .WillOnce(Return(fake_cmd_end_debug_utils_label_ext));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerEnd).Times(1);
@@ -708,7 +710,7 @@ TEST_F(VulkanLayerControllerTest, WillDelegateOnEndDebugLabelIfDriverDoesSupport
 }
 
 TEST_F(VulkanLayerControllerTest,
-       WillMarkDebugMarkerBeginButNotDelegateIfDriverDoesNotSupportDebugMarkers) {
+       MarksDebugMarkerBeginButNotForwardIfDriverDoesNotSupportDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
@@ -720,15 +722,15 @@ TEST_F(VulkanLayerControllerTest,
   controller_.OnCmdDebugMarkerBeginEXT(command_buffer, &debug_marker);
 }
 
-TEST_F(VulkanLayerControllerTest, WillDelegateOnBeginDebugMarkerIfDriverDoesSupportDebugMrkers) {
+TEST_F(VulkanLayerControllerTest, ForwardsBeginDebugLabelIfDriverSupportsDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(true));
 
-  PFN_vkCmdDebugMarkerBeginEXT mock_cmd_debug_marker_begin_ext =
+  PFN_vkCmdDebugMarkerBeginEXT fake_cmd_debug_marker_begin_ext =
       +[](VkCommandBuffer /*command_buffer*/, const VkDebugMarkerMarkerInfoEXT* /*label_info*/) {};
   EXPECT_CALL(*dispatch_table, CmdDebugMarkerBeginEXT)
       .Times(1)
-      .WillOnce(Return(mock_cmd_debug_marker_begin_ext));
+      .WillOnce(Return(fake_cmd_debug_marker_begin_ext));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerBegin).Times(1);
@@ -740,7 +742,7 @@ TEST_F(VulkanLayerControllerTest, WillDelegateOnBeginDebugMarkerIfDriverDoesSupp
 }
 
 TEST_F(VulkanLayerControllerTest,
-       WillMarkDebugMarkerEndButNotDelegateIfDriverDoesNotSupportDebugMarkers) {
+       MarksDebugMarkerEndButNotForwardIfDriverDoesNotSupportDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
@@ -750,15 +752,15 @@ TEST_F(VulkanLayerControllerTest,
   controller_.OnCmdDebugMarkerEndEXT(command_buffer);
 }
 
-TEST_F(VulkanLayerControllerTest, WillDelegateOnEndDebugMarkerIfDriverDoesSupportDebugMarkers) {
+TEST_F(VulkanLayerControllerTest, ForwardsEndDebugLabelIfDriverSupportsDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(true));
 
-  PFN_vkCmdDebugMarkerEndEXT mock_cmd_debug_marker_end_ext =
+  PFN_vkCmdDebugMarkerEndEXT fake_cmd_debug_marker_end_ext =
       +[](VkCommandBuffer /*command_buffer*/) {};
   EXPECT_CALL(*dispatch_table, CmdDebugMarkerEndEXT)
       .Times(1)
-      .WillOnce(Return(mock_cmd_debug_marker_end_ext));
+      .WillOnce(Return(fake_cmd_debug_marker_end_ext));
 
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerEnd).Times(1);
