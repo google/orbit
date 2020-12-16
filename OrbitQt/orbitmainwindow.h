@@ -66,7 +66,7 @@ class OrbitMainWindow : public QMainWindow {
   void closeEvent(QCloseEvent* event) override;
 
  private slots:
-  void on_actionOpen_User_Data_Directory_triggered();
+  void on_actionOpenUserDataDirectory_triggered();
   void on_actionAbout_triggered();
 
   void on_actionReport_Missing_Feature_triggered();
