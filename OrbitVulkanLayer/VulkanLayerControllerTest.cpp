@@ -80,6 +80,8 @@ struct Color {
 
 class MockSubmissionTracker {
  public:
+  struct QueueSubmission {};
+
   explicit MockSubmissionTracker(MockDispatchTable* /*dispatch_table*/,
                                  MockTimerQueryPool* /*timer_query_pool*/,
                                  MockDeviceManager* /*device_manager*/, uint32_t /*max_depth*/) {}
@@ -92,9 +94,10 @@ class MockSubmissionTracker {
   MOCK_METHOD(void, MarkCommandBufferBegin, (VkCommandBuffer));
   MOCK_METHOD(void, MarkCommandBufferEnd, (VkCommandBuffer));
   MOCK_METHOD(void, ResetCommandBuffer, (VkCommandBuffer));
-  // Note we simplify the return type, as it is not really part of this test.
-  MOCK_METHOD(bool, PersistCommandBuffersOnSubmit, (uint32_t, const VkSubmitInfo* submits));
-  MOCK_METHOD(bool, PersistDebugMarkersOnSubmit, (VkQueue, uint32_t, const VkSubmitInfo*, bool));
+  MOCK_METHOD(std::optional<QueueSubmission>, PersistCommandBuffersOnSubmit,
+              (uint32_t, const VkSubmitInfo* submits));
+  MOCK_METHOD(bool, PersistDebugMarkersOnSubmit,
+              (VkQueue, uint32_t, const VkSubmitInfo*, std::optional<QueueSubmission>));
   MOCK_METHOD(void, CompleteSubmits, (VkDevice));
   MOCK_METHOD(void, MarkDebugMarkerBegin, (VkCommandBuffer, const char*, Color));
   MOCK_METHOD(void, MarkDebugMarkerEnd, (VkCommandBuffer));
