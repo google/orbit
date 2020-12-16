@@ -96,7 +96,7 @@ class MockSubmissionTracker {
   MOCK_METHOD(void, ResetCommandBuffer, (VkCommandBuffer));
   MOCK_METHOD(std::optional<QueueSubmission>, PersistCommandBuffersOnSubmit,
               (uint32_t, const VkSubmitInfo* submits));
-  MOCK_METHOD(bool, PersistDebugMarkersOnSubmit,
+  MOCK_METHOD(void, PersistDebugMarkersOnSubmit,
               (VkQueue, uint32_t, const VkSubmitInfo*, std::optional<QueueSubmission>));
   MOCK_METHOD(void, CompleteSubmits, (VkDevice));
   MOCK_METHOD(void, MarkDebugMarkerBegin, (VkCommandBuffer, const char*, Color));
