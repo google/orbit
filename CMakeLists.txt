@@ -143,6 +143,7 @@ if(WITH_VULKAN_LAYER)
   add_subdirectory(OrbitVulkanLayer)
 endif()
 
+add_subdirectory(OrbitAccessibility)
 add_subdirectory(ElfUtils)
 add_subdirectory(OrbitBase)
 add_subdirectory(OrbitCaptureClient)

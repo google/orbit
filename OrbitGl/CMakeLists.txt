@@ -43,7 +43,6 @@ target_sources(
          ManualInstrumentationManager.h
          ModulesDataView.h
          OpenGl.h
-         OrbitGlAccessibility.h
          PickingManager.h
          PresetLoadState.h
          PresetsDataView.h
@@ -95,7 +94,6 @@ target_sources(
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
           ModulesDataView.cpp
-          OrbitGlAccessibility.cpp
           PickingManager.cpp
           PresetsDataView.cpp
           ProcessesDataView.cpp
@@ -119,7 +117,8 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitGl
-  PUBLIC OrbitCore
+  PUBLIC OrbitAccessibility
+         OrbitCore
          OrbitCaptureClient
          OrbitClientData
          OrbitClientModel
@@ -143,15 +142,12 @@ add_executable(OrbitGlTests)
 target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGlTests PRIVATE
-               AccessibleObjectFake.h
                PickingManagerTest.h)
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                BlockChainTest.cpp
                GlUtilsTest.cpp
-               OrbitGlAccessibility.cpp
-               OrbitGlAccessibilityTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
                SliderTest.cpp
