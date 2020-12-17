@@ -31,6 +31,7 @@ class OrbitLiveFunctions : public QWidget {
 
   void Initialize(OrbitApp* app, SelectionType selection_type, FontType font_type,
                   bool is_main_instance = true);
+  void Deinitialize();
   void Refresh();
   void OnDataChanged();
   void OnRowSelected(std::optional<int> row);

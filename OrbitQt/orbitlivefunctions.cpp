@@ -51,6 +51,13 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app, SelectionType selection_type,
       ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
 }
 
+void OrbitLiveFunctions::Deinitialize() {
+  delete all_events_iterator_;
+  live_functions_->SetAddIteratorCallback([](size_t, FunctionInfo*) {});
+  ui->data_view_panel_->Deinitialize();
+  live_functions_.reset();
+}
+
 void OrbitLiveFunctions::SetFilter(const QString& a_Filter) {
   ui->data_view_panel_->SetFilter(a_Filter);
 }
