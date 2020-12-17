@@ -7,7 +7,7 @@
 
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
-#include "OrbitGlAccessibility.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
@@ -119,7 +119,9 @@ class GlCanvas {
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
 
-  [[nodiscard]] orbit_gl::GlAccessibleInterface* Accessibility() { return accessibility_.get(); }
+  [[nodiscard]] orbit_accessibility::AccessibleInterface* Accessibility() {
+    return accessibility_.get();
+  }
 
   static float kZValueSlider;
   static float kZValueSliderBg;
@@ -150,7 +152,7 @@ class GlCanvas {
   [[nodiscard]] PickingMode GetPickingMode();
   virtual void CreateAccessibilityInterface();
 
-  std::unique_ptr<orbit_gl::GlAccessibilityBridge> accessibility_;
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 
   int screen_width_;
   int screen_height_;

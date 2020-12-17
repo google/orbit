@@ -21,14 +21,14 @@
 #include <QAccessibleWidget>
 #include <QWidget>
 
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitGlAccessibility.h"
 #include "orbitglwidget.h"
 
 namespace orbit_qt {
 
 /*
- * Instances of this act as adapters from QAccessibleInterface to orbit_gl::GlAccessibleInterface
+ * Instances of this act as adapters from QAccessibleInterface to orbit_gl::AccessibleInterface
  * and vice versa. Static methods of AccessibilityAdapter provide factory methods and tracking of
  * adapters.
  *
@@ -44,7 +44,7 @@ class AccessibilityAdapter : public QAccessibleInterface {
 
   bool isValid() const override {
     bool result = info_ != nullptr;
-    CHECK(!result || interface_map_.find(info_)->second == this);
+    CHECK(!result || all_interfaces_map_.find(info_)->second == this);
     return result;
   }
   QObject* object() const override { return &dummy_; }
@@ -68,33 +68,39 @@ class AccessibilityAdapter : public QAccessibleInterface {
   QAccessible::Role role() const override;
 
   virtual QAccessible::State state() const override {
-    static_assert(sizeof(QAccessible::State) == sizeof(orbit_gl::AccessibilityState));
+    static_assert(sizeof(QAccessible::State) == sizeof(orbit_accessibility::AccessibilityState));
     return absl::bit_cast<QAccessible::State>(info_->AccessibleState());
   }
 
-  static QAccessibleInterface* GetOrCreateAdapter(const orbit_gl::GlAccessibleInterface* iface);
-  static void RegisterAdapter(const orbit_gl::GlAccessibleInterface* gl_control,
+  static QAccessibleInterface* GetOrCreateAdapter(
+      const orbit_accessibility::AccessibleInterface* iface);
+  static void RegisterAdapter(const orbit_accessibility::AccessibleInterface* gl_control,
                               QAccessibleInterface* qt_control) {
-    interface_map_.emplace(gl_control, qt_control);
+    all_interfaces_map_.emplace(gl_control, qt_control);
   }
   /* Called when a QAccessibleInterface which has been registered through "RegisterAdapter",
   but not created by this class, is deleted. Should only be needed for OrbitGlWidgets.*/
   static void QAccessibleDeleted(QAccessibleInterface* iface);
 
-  static int RegisteredAdapterCount() { return interface_map_.size(); }
+  static int RegisteredAdapterCount() { return all_interfaces_map_.size(); }
 
  private:
   mutable QObject dummy_;
-  explicit AccessibilityAdapter(const orbit_gl::GlAccessibleInterface* info) : info_(info){};
+  explicit AccessibilityAdapter(const orbit_accessibility::AccessibleInterface* info)
+      : info_(info){};
 
-  const orbit_gl::GlAccessibleInterface* info_;
+  const orbit_accessibility::AccessibleInterface* info_;
 
-  static absl::flat_hash_map<const orbit_gl::GlAccessibleInterface*, QAccessibleInterface*>
-      interface_map_;
-  static absl::flat_hash_set<const QAccessibleInterface*> managed_adapters_;
+  static absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*, QAccessibleInterface*>
+      all_interfaces_map_;
+  // Subset of all_interfaces_map_: Contains the adapters created by this class and their managed
+  // pointers
+  static absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*,
+                             std::unique_ptr<AccessibilityAdapter>>
+      managed_adapters_;
 
   static void Init();
-  static void OnInterfaceDeleted(orbit_gl::GlAccessibleInterface* iface);
+  static void OnInterfaceDeleted(orbit_accessibility::AccessibleInterface* iface);
 };
 
 void InstallAccessibilityFactories();

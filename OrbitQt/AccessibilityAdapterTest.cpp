@@ -9,18 +9,14 @@
 #include <list>
 
 #include "AccessibilityAdapter.h"
-#include "AccessibleObjectFake.h"
+#include "OrbitAccessibility/AccessibleObjectFake.h"
 #include "orbitglwidget.h"
 
 namespace orbit_qt {
 
-using orbit_gl::AccessibilityRect;
-using orbit_gl::AccessibilityRole;
-using orbit_gl::AccessibilityState;
-using orbit_gl::AccessibleObjectFake;
-using orbit_gl::GlAccessibleInterface;
+using orbit_accessibility::AccessibleObjectFake;
 
-TEST(Accessibility, CreationAndManagement) {
+TEST(AccessibilityAdapter, CreationAndManagement) {
   auto obj = std::make_unique<AccessibleObjectFake>(nullptr);
   QAccessibleInterface* a1 = AccessibilityAdapter::GetOrCreateAdapter(obj.get());
   EXPECT_TRUE(a1->isValid());
@@ -33,7 +29,7 @@ TEST(Accessibility, CreationAndManagement) {
   EXPECT_EQ(AccessibilityAdapter::RegisteredAdapterCount(), 0);
 }
 
-TEST(Accessibility, ExternalWidget) {
+TEST(AccessibilityAdapter, ExternalWidget) {
   QObject object;
 
   /*
@@ -49,7 +45,7 @@ TEST(Accessibility, ExternalWidget) {
   EXPECT_EQ(AccessibilityAdapter::RegisteredAdapterCount(), 0);
 }
 
-TEST(Accessibility, Hierarchy) {
+TEST(AccessibilityAdapter, Hierarchy) {
   AccessibleObjectFake root(nullptr);
   root.Children().push_back(std::make_unique<AccessibleObjectFake>(&root));
   root.Children().push_back(std::make_unique<AccessibleObjectFake>(&root));

@@ -96,7 +96,8 @@ target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQt
-  PRIVATE OrbitCore
+  PRIVATE OrbitAccessibility
+          OrbitCore
           OrbitGl
           OrbitGgp
           OrbitSshQt
@@ -156,7 +157,7 @@ target_sources(OrbitQtTests
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.cpp
-                AccessibilityTests.cpp
+                AccessibilityAdapterTest.cpp
                 EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
@@ -172,7 +173,8 @@ target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQtTests
-  PRIVATE OrbitCore
+  PRIVATE OrbitAccessibility
+          OrbitCore
           OrbitGl
           Qt5::Widgets
           Qt5::Core

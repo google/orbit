@@ -11,6 +11,7 @@
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
 #include "OpenGl.h"
+#include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "TextBox.h"
 #include "absl/strings/str_format.h"
@@ -412,5 +413,5 @@ PickingMode GlCanvas::GetPickingMode() {
 }
 
 void GlCanvas::CreateAccessibilityInterface() {
-  accessibility_ = std::make_unique<orbit_gl::GlAccessibilityBridge>();
+  accessibility_ = std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
 }

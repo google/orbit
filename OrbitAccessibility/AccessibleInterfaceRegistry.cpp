@@ -2,20 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitGlAccessibility.h"
+#include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
 
 #include "OrbitBase/Logging.h"
 
-namespace orbit_gl {
+namespace orbit_accessibility {
 
-GlAccessibleInterfaceRegistry& GlAccessibleInterfaceRegistry::Get() {
-  static GlAccessibleInterfaceRegistry registry;
+AccessibleInterfaceRegistry& AccessibleInterfaceRegistry::Get() {
+  static AccessibleInterfaceRegistry registry;
   return registry;
 }
 
-GlAccessibleInterfaceRegistry::~GlAccessibleInterfaceRegistry() { CHECK(interfaces_.size() == 0); }
+AccessibleInterfaceRegistry::~AccessibleInterfaceRegistry() { CHECK(interfaces_.size() == 0); }
 
-void GlAccessibleInterfaceRegistry::Register(GlAccessibleInterface* iface) {
+void AccessibleInterfaceRegistry::Register(AccessibleInterface* iface) {
   if (!interfaces_.contains(iface)) {
     interfaces_.insert(iface);
     if (on_registered_ != nullptr) {
@@ -24,7 +24,7 @@ void GlAccessibleInterfaceRegistry::Register(GlAccessibleInterface* iface) {
   }
 }
 
-void GlAccessibleInterfaceRegistry::Unregister(GlAccessibleInterface* iface) {
+void AccessibleInterfaceRegistry::Unregister(AccessibleInterface* iface) {
   CHECK(interfaces_.contains(iface));
   interfaces_.erase(iface);
   if (on_unregistered_ != nullptr) {
@@ -32,14 +32,14 @@ void GlAccessibleInterfaceRegistry::Unregister(GlAccessibleInterface* iface) {
   }
 }
 
-void GlAccessibleInterfaceRegistry::SetOnRegisterCallback(Callback callback) {
+void AccessibleInterfaceRegistry::SetOnRegisterCallback(Callback callback) {
   CHECK(on_registered_ == nullptr);
   on_registered_ = callback;
 }
 
-void GlAccessibleInterfaceRegistry::SetOnUnregisterCallback(Callback callback) {
+void AccessibleInterfaceRegistry::SetOnUnregisterCallback(Callback callback) {
   CHECK(on_unregistered_ == nullptr);
   on_unregistered_ = callback;
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_accessibility

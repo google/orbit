@@ -24,44 +24,45 @@
  * QObject to query all of the required information.
  *
  * As OrbitGl is compiled without QT dependencies, this file provides classes to bridge between
- * QAccessibleInterface and the elements implemented in OrbitGl.
+ * QAccessibleInterface and the elements implemented in OrbitGl. All required interfaces for
+ * accessibility are defined in the "OrbitAccessibility" module, which is required by OrbitGl.
  *
- * OrbitGl defines a GlAccessibleInterface (see "OrbitGlAccessible.h") that exposes a relevant
- * subset of accessibility information (most importantly child and parent information). Elements in
- * OrbitGl can implement this interface. OrbitQt then defines an adapter class
+ * OrbitAccessibility defines an AccessibleInterface (see "AccessibleInterface.h") that exposes a
+ * relevant subset of accessibility information (most importantly child and parent information).
+ * Elements in OrbitGl can implement this interface. OrbitQt then defines an adapter class
  * "AccessibilityAdapter" which implements the QAccessibleInterface, translating all calls from a
- * GlAccessibleInterface to the Window API:
+ * AccessibleInterface to the Window API:
  *
- *                OrbitGl                     |                OrbitQt
+ *        OrbitAccessibility                  |                OrbitQt
  *                                            |
  *                 +----------------------+   |   +-----------------------------+
- *                 |GlAccessibleInterface +<------+AccessibilityAdapter         |
+ *                 |AccessibleInterface   +<------+AccessibilityAdapter         |
  *                 +--+-------------+-----+   |   +-----------------------------+
  *                    |             ^ Parent  |
  *                    v Child(i)    |         |
  *                 +--+-------------+-----+   |   +-----------------------------+
- *                 |GlAccessibleInterface +<------+AccessibilityAdapter         |
+ *                 |AccessibleInterface   +<------+AccessibilityAdapter         |
  *                 +----------------------+   |   +-----------------------------+
  *                                            |
  *                                            +
  *
- * The static methods of AccessibilityAdapter keep track of all adapters created so far and, given a
- * GlAccessibleInterface, can find the corresponsing QAccessibleInterface (which will be implemented
- * by a AccessibilityAdapter in most cases, but we'll get there...).
+ * The static methods of AccessibilityAdapter keep track of all adapters created so far and, given
+ * an AccessibleInterface, can find the corresponsing QAccessibleInterface (which will be
+ * implemented by a AccessibilityAdapter in most cases, but we'll get there...).
  * AccessibilityAdapter::GetOrCreateAdapter will return an existing interface, or create a new
- * adapter if needed. This usually happens as the tree is traversed
- * - each AccessibilityAdapter will query the children exposed through its GlAccessibleInterface
- * pointer, and will create new adapters for each of them as we go down the tree.
+ * adapter if needed. This usually happens as the tree is traversed - each AccessibilityAdapter
+ * will query the children exposed through its AccessibleInterface pointer, and will create new
+ * adapters for each of them as we go down the tree.
  *
  * Everything above OrbitGlWidget is handled by the default implementation of Qt, and everything
  * below is handled by these adapters. To bridge the gap between OrbitGlWidget and GlCanvas, there
  * exists OrbitGlWidgetAccessible. This class inherits from QAccessibleWidget and uses its default
  * functionality to walk *up* the tree, but replaces all methods to walk *down* the tree and
- * forwards those calls to the GlAccessibleInterface of GlCanvas. It is important to note that the
- * *parent* methods of the GlAccessibleInterface associated with GlCanvas are thus never invoked.
+ * forwards those calls to the AccessibleInterface of GlCanvas. It is important to note that the
+ * *parent* methods of the AccessibleInterface associated with GlCanvas are thus never invoked.
  *
  *
- *                OrbitGl                    +                                 OrbitQt
+ *   OrbitGl           OrbitAccessibility    +                                 OrbitQt
  *                                           |
  *                                           |                          ^
  *                                           |                          | parent(): QT Default
@@ -72,12 +73,12 @@
  *                                           |                          |
  *                                           |                          |
  * +-----------+   +----------------------+  |                          |  Adapter for child()
- * | GlCanvas  +<--+GlAccessibleInterface +<----------------------------+
+ * | GlCanvas  +<--+AccessibleInterface   +<----------------------------+
  * +-----------+   +--+-------------+-----+  |
  *                    |             ^ Parent |
  *                    v Child(i)    |        |
  * +-----------+   +--+-------------+-----+  |                    +-----------------------------+
- * | TimeGraph +<--+GlAccessibleInterface +<----------------------+AccessibilityAdapter         |
+ * | TimeGraph +<--+AccessibleInterface   +<----------------------+AccessibilityAdapter         |
  * +-----------+   +----------------------+  |                    +-----------------------------+
  *                                           |
  *                                           +
@@ -86,9 +87,9 @@
  * installing a QT Accessibility Factory (InstallAccessibilityFactories()).
  *
  * To make sure adapters created by AccessibilityAdapter::GetOrCreateAdapter are deleted when the
- * corresponding GlAccessibleInterface is deleted, these interfaces register themselves in the
- * GlAccessibleInterfaceRegistry (see OrbitGlAccessibility.h), which in turn allows to register a
- * callback on interface deletion. AccessibilityAdapter registers itself for this callback and
+ * corresponding AccessibleInterface is deleted, these interfaces register themselves in the
+ * AccessibleInterfaceRegistry (see AccessibleInterfaceRegistry.h), which in turn allows to register
+ * a callback on interface deletion. AccessibilityAdapter registers itself for this callback and
  * cleans up interfaces accordingly.
  */
 
@@ -97,14 +98,20 @@
 #include <QWidget>
 #include <mutex>
 
+#include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
+
+using orbit_accessibility::AccessibleInterface;
+using orbit_accessibility::AccessibleInterfaceRegistry;
+
 namespace orbit_qt {
 
-absl::flat_hash_map<const orbit_gl::GlAccessibleInterface*, QAccessibleInterface*>
-    AccessibilityAdapter::interface_map_;
-absl::flat_hash_set<const QAccessibleInterface*> AccessibilityAdapter::managed_adapters_;
+absl::flat_hash_map<const AccessibleInterface*, QAccessibleInterface*>
+    AccessibilityAdapter::all_interfaces_map_;
+absl::flat_hash_map<const AccessibleInterface*, std::unique_ptr<AccessibilityAdapter>>
+    AccessibilityAdapter::managed_adapters_;
 
 void AccessibilityAdapter::Init() {
-  orbit_gl::GlAccessibleInterfaceRegistry::Get().SetOnUnregisterCallback(
+  AccessibleInterfaceRegistry::Get().SetOnUnregisterCallback(
       AccessibilityAdapter::OnInterfaceDeleted);
 }
 
@@ -112,21 +119,17 @@ void AccessibilityAdapter::Init() {
  * Callback fired when GlAccessibleInterfaces are deleted. This takes care of deleting only those
  * interfaces created by AccessibilityAdapter.
  */
-void AccessibilityAdapter::OnInterfaceDeleted(orbit_gl::GlAccessibleInterface* iface) {
-  if (interface_map_.contains(iface)) {
-    QAccessibleInterface* adapter = interface_map_.at(iface);
-    interface_map_.erase(iface);
-    if (managed_adapters_.contains(adapter)) {
-      managed_adapters_.erase(adapter);
-      // Cast is needed because ~QAccessibleWidget is protected, but we know that each element in
-      // managed_adapters_ is of type AccessibilityAdapter*
-      delete static_cast<AccessibilityAdapter*>(adapter);
-    }
+void AccessibilityAdapter::OnInterfaceDeleted(AccessibleInterface* iface) {
+  if (all_interfaces_map_.contains(iface)) {
+    all_interfaces_map_.erase(iface);
+  }
+
+  if (managed_adapters_.contains(iface)) {
+    managed_adapters_.erase(iface);
   }
 }
 
-QAccessibleInterface* AccessibilityAdapter::GetOrCreateAdapter(
-    const orbit_gl::GlAccessibleInterface* iface) {
+QAccessibleInterface* AccessibilityAdapter::GetOrCreateAdapter(const AccessibleInterface* iface) {
   static std::once_flag flag;
   std::call_once(flag, Init);
 
@@ -134,21 +137,22 @@ QAccessibleInterface* AccessibilityAdapter::GetOrCreateAdapter(
     return nullptr;
   }
 
-  auto it = interface_map_.find(iface);
-  if (it != interface_map_.end()) {
+  auto it = all_interfaces_map_.find(iface);
+  if (it != all_interfaces_map_.end()) {
     return it->second;
   }
 
-  AccessibilityAdapter* adapter = new AccessibilityAdapter(iface);
-  RegisterAdapter(iface, adapter);
-  managed_adapters_.insert(adapter);
-  return adapter;
+  auto adapter = std::unique_ptr<AccessibilityAdapter>(new AccessibilityAdapter(iface));
+  AccessibilityAdapter* ptr = adapter.get();
+  RegisterAdapter(iface, adapter.get());
+  managed_adapters_.emplace(iface, std::move(adapter));
+  return ptr;
 }
 
 void AccessibilityAdapter::QAccessibleDeleted(QAccessibleInterface* iface) {
-  for (auto& it : interface_map_) {
+  for (auto& it : all_interfaces_map_) {
     if (it.second == iface) {
-      interface_map_.erase(it.first);
+      all_interfaces_map_.erase(it.first);
       return;
     }
   }
@@ -182,7 +186,7 @@ QAccessibleInterface* AccessibilityAdapter::childAt(int x, int y) const {
 }
 
 QRect AccessibilityAdapter::rect() const {
-  orbit_gl::AccessibilityRect rect = info_->AccessibleLocalRect();
+  orbit_accessibility::AccessibilityRect rect = info_->AccessibleLocalRect();
   if (parent() == nullptr) {
     return QRect(rect.left, rect.top, rect.width, rect.height);
   }
