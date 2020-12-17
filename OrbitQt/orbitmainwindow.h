@@ -21,6 +21,7 @@
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
 #include "StatusListener.h"
+#include "orbitglwidget.h"
 #include "servicedeploymanager.h"
 
 namespace Ui {
@@ -36,7 +37,13 @@ class OrbitMainWindow : public QMainWindow {
                            uint32_t font_size);
   ~OrbitMainWindow() override;
 
-  void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) { m_GlWidgets.push_back(a_GlWidget); }
+  void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }
+  void UnregisterGlWidget(OrbitGLWidget* widget) {
+    const auto it = std::find(gl_widgets_.begin(), gl_widgets_.end(), widget);
+    if (it != gl_widgets_.end()) {
+      gl_widgets_.erase(it);
+    }
+  }
   void OnRefreshDataViewPanels(DataViewType a_Type);
   void UpdatePanel(DataViewType a_Type);
 
@@ -117,7 +124,7 @@ class OrbitMainWindow : public QMainWindow {
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer = nullptr;
-  std::vector<OrbitGLWidget*> m_GlWidgets;
+  std::vector<OrbitGLWidget*> gl_widgets_;
   OrbitGLWidget* introspection_widget_ = nullptr;
 
   // Capture toolbar.

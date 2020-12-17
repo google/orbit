@@ -630,8 +630,8 @@ void OrbitMainWindow::OnTimer() {
   ORBIT_SCOPE("OrbitMainWindow::OnTimer");
   app_->MainTick();
 
-  for (OrbitGLWidget* glWidget : m_GlWidgets) {
-    glWidget->update();
+  for (OrbitGLWidget* gl_widget : gl_widgets_) {
+    gl_widget->update();
   }
 
   ui->timerLabel->setText(QString::fromStdString(app_->GetCaptureTime()));
