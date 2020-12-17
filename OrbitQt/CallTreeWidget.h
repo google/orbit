@@ -26,9 +26,14 @@ class CallTreeWidget : public QWidget {
   explicit CallTreeWidget(QWidget* parent = nullptr);
 
   void Initialize(OrbitApp* app) { app_ = app; }
+  void Deinitialize() {
+    ClearCallTreeView();
+    app_ = nullptr;
+  }
 
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
+  void ClearCallTreeView();
 
  protected:
   void resizeEvent(QResizeEvent* event) override;
