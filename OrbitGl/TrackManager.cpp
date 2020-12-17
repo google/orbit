@@ -57,7 +57,7 @@ void TrackManager::SetStringManager(StringManager* str_manager) { string_manager
 std::vector<Track*> TrackManager::GetAllTracks() const {
   std::vector<Track*> tracks;
   for (auto track : all_tracks_) {
-    tracks.emplace_back(track.get());
+    tracks.push_back(track.get());
   }
   return tracks;
 }
@@ -65,7 +65,7 @@ std::vector<Track*> TrackManager::GetAllTracks() const {
 std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
   std::vector<ThreadTrack*> tracks;
   for (auto& [unused_key, track] : thread_tracks_) {
-    tracks.emplace_back(track.get());
+    tracks.push_back(track.get());
   }
   return tracks;
 }
@@ -73,7 +73,7 @@ std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
 std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
   std::vector<FrameTrack*> tracks;
   for (auto& [unused_key, track] : frame_tracks_) {
-    tracks.emplace_back(track.get());
+    tracks.push_back(track.get());
   }
   return tracks;
 }
@@ -111,39 +111,39 @@ void TrackManager::SortTracks() {
 
     // Gpu tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
-      all_processes_sorted_tracks.emplace_back(timeline_and_track.second.get());
+      all_processes_sorted_tracks.push_back(timeline_and_track.second.get());
     }
 
     // Frame tracks.
     for (const auto& name_and_track : frame_tracks_) {
-      all_processes_sorted_tracks.emplace_back(name_and_track.second.get());
+      all_processes_sorted_tracks.push_back(name_and_track.second.get());
     }
 
     // Graph tracks.
     for (const auto& graph_track : graph_tracks_) {
-      all_processes_sorted_tracks.emplace_back(graph_track.second.get());
+      all_processes_sorted_tracks.push_back(graph_track.second.get());
     }
 
     // Async tracks.
     for (const auto& async_track : async_tracks_) {
-      all_processes_sorted_tracks.emplace_back(async_track.second.get());
+      all_processes_sorted_tracks.push_back(async_track.second.get());
     }
 
     // Tracepoint tracks.
     if (!tracepoints_system_wide_track_->IsEmpty()) {
-      all_processes_sorted_tracks.emplace_back(tracepoints_system_wide_track_);
+      all_processes_sorted_tracks.push_back(tracepoints_system_wide_track_);
     }
 
     // Process track.
     if (process_track && !process_track->IsEmpty()) {
-      all_processes_sorted_tracks.emplace_back(process_track);
+      all_processes_sorted_tracks.push_back(process_track);
     }
 
     // Thread tracks.
     for (auto thread_id : sorted_thread_ids) {
       auto track = GetOrCreateThreadTrack(thread_id);
       if (!track->IsEmpty()) {
-        all_processes_sorted_tracks.emplace_back(track);
+        all_processes_sorted_tracks.push_back(track);
       }
     }
 
@@ -154,9 +154,9 @@ void TrackManager::SortTracks() {
     for (auto& track : all_processes_sorted_tracks) {
       int32_t pid = track->GetProcessId();
       if (pid != -1 && pid != capture_pid) {
-        external_pid_tracks.emplace_back(track);
+        external_pid_tracks.push_back(track);
       } else {
-        capture_pid_tracks.emplace_back(track);
+        capture_pid_tracks.push_back(track);
       }
     }
 
@@ -165,7 +165,7 @@ void TrackManager::SortTracks() {
 
     // Scheduler track.
     if (!scheduler_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(scheduler_track_.get());
+      sorted_tracks_.push_back(scheduler_track_.get());
     }
 
     // For now, "external_pid_tracks" should only contain
@@ -197,7 +197,7 @@ void TrackManager::UpdateFilteredTrackList() {
     std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
     for (auto& filter : filters) {
       if (absl::StrContains(lower_case_label, filter)) {
-        visible_tracks_.emplace_back(track);
+        visible_tracks_.push_back(track);
         break;
       }
     }
@@ -335,7 +335,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
 }
 
 void TrackManager::AddTrack(std::shared_ptr<Track> track) {
-  all_tracks_.emplace_back(track);
+  all_tracks_.push_back(track);
   sorting_invalidated_ = true;
 }
 
