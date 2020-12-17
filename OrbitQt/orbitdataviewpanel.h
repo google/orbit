@@ -26,9 +26,11 @@ class OrbitDataViewPanel : public QWidget {
   void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type,
                   bool is_main_instance = true, bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
+  void Deinitialize();
   void Link(OrbitDataViewPanel* a_Panel);
   void Refresh();
   void SetDataModel(DataView* model);
+  void ClearDataModel();
   void SetFilter(const QString& a_Filter);
   OrbitTreeView* GetTreeView();
   QLineEdit* GetFilterLineEdit();
