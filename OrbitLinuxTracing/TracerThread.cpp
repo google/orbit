@@ -1069,6 +1069,8 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
     double actual_window_s =
         static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
+    CHECK(actual_window_s > 0.0);
+
     LOG("Events per second (and total) last %.3f s:", actual_window_s);
     LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
         stats_.sched_switch_count);
@@ -1095,14 +1097,17 @@ void TracerThread::PrintStatsIfTimerElapsed() {
                                           : "DISCARDED AS OUT OF ORDER",
         discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
 
-    uint64_t unwind_error_count = stats_.unwind_error_count;
-    LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
-        unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
-    uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
-    LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
-        discarded_samples_in_uretprobes_count / actual_window_s,
-        discarded_samples_in_uretprobes_count,
-        100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+    if (stats_.sample_count > 0) {
+      uint64_t unwind_error_count = stats_.unwind_error_count;
+      LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
+          unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
+      uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
+      LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
+          discarded_samples_in_uretprobes_count / actual_window_s,
+          discarded_samples_in_uretprobes_count,
+          100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+    }
+
     uint64_t thread_state_count = stats_.thread_state_count;
     LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
         thread_state_count);
