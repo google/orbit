@@ -37,6 +37,11 @@ namespace orbit_linux_tracing {
 class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
  public:
   void SetListener(TracerListener* listener) { listener_ = listener; }
+
+  void SetThreadStateCounter(std::atomic<uint64_t>* thread_state_counter) {
+    thread_state_counter_ = thread_state_counter;
+  }
+
   void SetThreadStatePidFilter(pid_t pid) { thread_state_pid_filter_ = pid; }
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
@@ -55,6 +60,7 @@ class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
   static orbit_grpc_protos::ThreadStateSlice::ThreadState GetThreadStateFromBits(uint64_t bits);
 
   TracerListener* listener_ = nullptr;
+  std::atomic<uint64_t>* thread_state_counter_ = nullptr;
 
   bool TidMatchesPidFilter(pid_t tid);
   std::optional<pid_t> GetPidOfTid(pid_t tid);

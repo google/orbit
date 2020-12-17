@@ -426,6 +426,7 @@ void TracerThread::InitContextSwitchAndThreadStateVisitor() {
   if (trace_thread_state_) {
     context_switch_and_thread_state_visitor_->SetThreadStatePidFilter(target_pid_);
   }
+  context_switch_and_thread_state_visitor_->SetThreadStateCounter(&stats_.thread_state_count);
   event_processor_.AddVisitor(context_switch_and_thread_state_visitor_.get());
 }
 
@@ -1102,6 +1103,9 @@ void TracerThread::PrintStatsIfTimerElapsed() {
         discarded_samples_in_uretprobes_count / actual_window_s,
         discarded_samples_in_uretprobes_count,
         100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+    uint64_t thread_state_count = stats_.thread_state_count;
+    LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
+        thread_state_count);
     stats_.Reset();
   }
 }

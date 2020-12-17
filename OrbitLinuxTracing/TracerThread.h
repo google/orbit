@@ -171,6 +171,7 @@ class TracerThread {
       discarded_out_of_order_count = 0;
       unwind_error_count = 0;
       discarded_samples_in_uretprobes_count = 0;
+      thread_state_count = 0;
     }
 
     uint64_t event_count_begin_ns = 0;
@@ -183,6 +184,7 @@ class TracerThread {
     std::atomic<uint64_t> discarded_out_of_order_count = 0;
     std::atomic<uint64_t> unwind_error_count = 0;
     std::atomic<uint64_t> discarded_samples_in_uretprobes_count = 0;
+    std::atomic<uint64_t> thread_state_count = 0;
   };
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
