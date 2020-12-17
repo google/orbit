@@ -473,8 +473,24 @@ QTabWidget* OrbitMainWindow::FindParentTabWidget(const QWidget* widget) const {
 OrbitMainWindow::~OrbitMainWindow() {
   DeinitTutorials();
 
-  // CaptureGLWidget needs to be deleted ahead of time to ensure that it is deleted before OrbitApp
-  delete ui->CaptureGLWidget;
+  ui->selectionBottomUpWidget->Deinitialize();
+  ui->bottomUpWidget->Deinitialize();
+  ui->selectionTopDownWidget->Deinitialize();
+  ui->topDownWidget->Deinitialize();
+  ui->TracepointsList->Deinitialize();
+  ui->CallStackView->Deinitialize();
+  ui->liveFunctions->Deinitialize();
+
+  if (absl::GetFlag(FLAGS_devmode)) {
+    ui->debugOpenGLWidget->Deinitialize(this);
+  }
+
+  ui->CaptureGLWidget->Deinitialize(this);
+  ui->SessionList->Deinitialize();
+  ui->FunctionsList->Deinitialize();
+  ui->ModulesList->Deinitialize();
+  ui->ProcessesList->ClearDataView();
+
   delete ui;
 }
 
