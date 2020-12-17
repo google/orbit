@@ -1097,16 +1097,17 @@ void TracerThread::PrintStatsIfTimerElapsed() {
                                           : "DISCARDED AS OUT OF ORDER",
         discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
 
-    if (stats_.sample_count > 0) {
-      uint64_t unwind_error_count = stats_.unwind_error_count;
-      LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
-          unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
-      uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
-      LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
-          discarded_samples_in_uretprobes_count / actual_window_s,
-          discarded_samples_in_uretprobes_count,
-          100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
-    }
+    // Ensure we can divide by 0.0 safely in case stats_.sample_count is zero.
+    static_assert(std::numeric_limits<double>::is_iec559);
+
+    uint64_t unwind_error_count = stats_.unwind_error_count;
+    LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
+        unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
+    uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
+    LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
+        discarded_samples_in_uretprobes_count / actual_window_s,
+        discarded_samples_in_uretprobes_count,
+        100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
 
     uint64_t thread_state_count = stats_.thread_state_count;
     LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
