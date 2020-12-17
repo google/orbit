@@ -21,7 +21,9 @@ class OrbitTreeView : public QTreeView {
   void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type,
                   bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
+  void Deinitialize();
   void SetDataModel(DataView* model);
+  void ClearDataModel();
   void OnFilter(const QString& filter);
   void Refresh();
   void Link(OrbitTreeView* link);

@@ -85,10 +85,21 @@ void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type
   }
 }
 
+void OrbitTreeView::Deinitialize() {
+  timer_.reset();
+  setModel(nullptr);
+  model_.reset();
+}
+
 void OrbitTreeView::SetDataModel(DataView* data_view) {
   model_ = std::make_unique<OrbitTableModel>();
   model_->SetDataView(data_view);
   setModel(model_.get());
+}
+
+void OrbitTreeView::ClearDataModel() {
+  setModel(nullptr);
+  model_.reset();
 }
 
 void OrbitTreeView::OnSort(int section, Qt::SortOrder order) {
