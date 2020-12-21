@@ -223,7 +223,7 @@ OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
    */
   CHECK(widget->accessibleName() == "");
   AccessibilityAdapter::RegisterAdapter(
-      static_cast<OrbitGLWidget*>(widget)->GetCanvas()->Accessibility(), this);
+      static_cast<OrbitGLWidget*>(widget)->GetCanvas()->GetOrCreateAccessibleInterface(), this);
 }
 
 OrbitGlWidgetAccessible::~OrbitGlWidgetAccessible() {
@@ -233,7 +233,7 @@ OrbitGlWidgetAccessible::~OrbitGlWidgetAccessible() {
 int OrbitGlWidgetAccessible::childCount() const {
   return static_cast<OrbitGLWidget*>(widget())
       ->GetCanvas()
-      ->Accessibility()
+      ->GetOrCreateAccessibleInterface()
       ->AccessibleChildCount();
 }
 
@@ -248,8 +248,10 @@ int OrbitGlWidgetAccessible::indexOfChild(const QAccessibleInterface* child) con
 }
 
 QAccessibleInterface* OrbitGlWidgetAccessible::child(int index) const {
-  return AccessibilityAdapter::GetOrCreateAdapter(
-      static_cast<OrbitGLWidget*>(widget())->GetCanvas()->Accessibility()->AccessibleChild(index));
+  return AccessibilityAdapter::GetOrCreateAdapter(static_cast<OrbitGLWidget*>(widget())
+                                                      ->GetCanvas()
+                                                      ->GetOrCreateAccessibleInterface()
+                                                      ->AccessibleChild(index));
 }
 
 QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* object) {
