@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "AccessibleTimeGraph.h"
 #include "Batcher.h"
 #include "CoreMath.h"
 #include "CoreUtils.h"
@@ -178,6 +179,10 @@ class TimeGraph {
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
+  [[nodiscard]] const TimeGraphAccessibility* GetOrCreateAccessibleInterface() const {
+    return &accessibility_;
+  }
+
  protected:
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
                                  const orbit_client_protos::TimerInfo& timer_info);
@@ -211,6 +216,8 @@ class TimeGraph {
   float right_margin_ = 0;
 
   TimeGraphLayout layout_;
+
+  TimeGraphAccessibility accessibility_;
 
   std::map<int32_t, uint32_t> thread_count_map_;
   uint32_t num_cores_;
