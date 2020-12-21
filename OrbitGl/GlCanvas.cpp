@@ -1,12 +1,12 @@
+#include "GlCanvas.h"
 // Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GlCanvas.h"
-
 #include <string>
 
 #include "App.h"
+#include "GlCanvas.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
@@ -136,6 +136,13 @@ void GlCanvas::EnableImGui() {
   if (imgui_context_ == nullptr) {
     imgui_context_ = ImGui::CreateContext();
   }
+}
+
+orbit_accessibility::AccessibleInterface* GlCanvas::Accessibility() {
+  if (accessibility_ == nullptr) {
+    accessibility_ = CreateAccessibilityInterface();
+  }
+  return accessibility_.get();
 }
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
@@ -412,6 +419,7 @@ PickingMode GlCanvas::GetPickingMode() {
   return PickingMode::kNone;
 }
 
-void GlCanvas::CreateAccessibilityInterface() {
-  accessibility_ = std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
+std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+GlCanvas::CreateAccessibilityInterface() {
+  return std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
 }
