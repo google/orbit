@@ -22,18 +22,19 @@ class OrbitE2EError(RuntimeError):
 
 
 class Fragment:
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._e2e_test = None
+        self._args = kwargs
 
     e2e_test = property(lambda self: self._e2e_test)
 
     def execute(self, e2e_test):
         self._e2e_test = e2e_test
-        self._execute()
+        self._execute(**self._args)
 
     def expect_true(self, cond, description):
         if not cond:
-            raise OrbitE2EError('Error executing test case %s, fragment %s. Condition did not hold: "%s"' %
+            raise OrbitE2EError('Error executing test case %s, fragment %s. Condition expected to be True: "%s"' %
                                 (self.e2e_test.name, self.__class__.__name__, description))
 
     def expect_eq(self, left, right, description):
@@ -41,7 +42,7 @@ class Fragment:
 
     def _execute(self):
         """
-        Override this in your fragment
+        Provide this method in your fragment
         """
         pass
 
