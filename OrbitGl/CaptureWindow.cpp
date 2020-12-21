@@ -10,6 +10,23 @@
 #include "TimeGraph.h"
 #include "absl/base/casts.h"
 
+using orbit_accessibility::AccessibleInterface;
+using orbit_accessibility::AccessibleWidgetBridge;
+
+class AccessibleCaptureWindow : public AccessibleWidgetBridge {
+ public:
+  AccessibleCaptureWindow(CaptureWindow* window) : window_(window) {}
+
+  int AccessibleChildCount() const override { return 1; }
+
+  const AccessibleInterface* AccessibleChild(int /*index*/) const override {
+    return window_->GetTimeGraph()->GetOrCreateAccessibleInterface();
+  }
+
+ private:
+  CaptureWindow* window_;
+};
+
 using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(uint32_t font_size, OrbitApp* app)
@@ -455,6 +472,10 @@ void CaptureWindow::OnCaptureStarted() {
 }
 
 bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
+
+std::unique_ptr<AccessibleWidgetBridge> CaptureWindow::CreateAccessibilityInterface() {
+  return std::make_unique<AccessibleCaptureWindow>(this);
+}
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
