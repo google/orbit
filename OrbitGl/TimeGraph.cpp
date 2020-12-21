@@ -38,7 +38,7 @@ using orbit_client_protos::TimerInfo;
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 TimeGraph::TimeGraph(uint32_t font_size, OrbitApp* app)
-    : font_size_(font_size), batcher_(BatcherId::kTimeGraph), app_{app} {
+    : font_size_(font_size), accessibility_(this), batcher_(BatcherId::kTimeGraph), app_{app} {
   track_manager_ = std::make_unique<TrackManager>(this, app);
 
   async_timer_info_listener_ =
