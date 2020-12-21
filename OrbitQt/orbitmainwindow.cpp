@@ -74,6 +74,7 @@
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
+#include "OrbitFlags/Declarations.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
@@ -96,12 +97,6 @@
 #include "services.pb.h"
 #include "types.h"
 #include "ui_orbitmainwindow.h"
-
-ABSL_DECLARE_FLAG(bool, enable_stale_features);
-ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
-ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;

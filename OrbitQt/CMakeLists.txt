@@ -102,6 +102,7 @@ target_link_libraries(
   OrbitQt
   PRIVATE OrbitAccessibility
           OrbitCore
+          OrbitFlags
           OrbitGl
           OrbitGgp
           OrbitSshQt
@@ -179,6 +180,7 @@ target_link_libraries(
   OrbitQtTests
   PRIVATE OrbitAccessibility
           OrbitCore
+          OrbitFlags
           OrbitGl
           Qt5::Widgets
           Qt5::Core

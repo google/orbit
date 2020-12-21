@@ -46,14 +46,13 @@
 #include "Connections.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitClientServices/ProcessManager.h"
+#include "OrbitFlags/Declarations.h"
 #include "OverlayWidget.h"
 #include "Path.h"
 #include "ProcessItemModel.h"
 #include "TargetConfiguration.h"
 #include "process.pb.h"
 #include "servicedeploymanager.h"
-
-ABSL_DECLARE_FLAG(bool, local);
 
 namespace {
 constexpr int kProcessesRowHeight = 19;

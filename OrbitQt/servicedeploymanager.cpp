@@ -19,12 +19,11 @@
 #include "Error.h"
 #include "EventLoop.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitFlags/Declarations.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
-
-ABSL_DECLARE_FLAG(bool, devmode);
 
 static const std::string kLocalhost = "127.0.0.1";
 static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
