@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TRACK_H_
+#define ORBIT_GL_TRACK_H_
 
 #include <atomic>
 #include <memory>
@@ -17,6 +18,7 @@
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
+#include "TrackAccessibility.h"
 #include "TriangleToggle.h"
 
 class GlCanvas;
@@ -85,10 +87,13 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
   void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
+  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
+
   void SetPos(float a_X, float a_Y);
   void SetY(float y);
   [[nodiscard]] Vec2 GetPos() const { return pos_; }
   void SetSize(float a_SizeX, float a_SizeY);
+  [[nodiscard]] Vec2 GetSize() const { return size_; }
   void SetColor(Color a_Color) { color_ = a_Color; }
   [[nodiscard]] Color GetBackgroundColor() const;
 
@@ -99,11 +104,18 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void SetProcessId(uint32_t pid) { process_id_ = pid; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;
 
+  [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
+
+  [[nodiscard]] bool IsCollapsed() { return collapse_toggle_->IsCollapsed(); }
+
+  // Accessibility
+  [[nodiscard]] const orbit_gl::AccessibleTrack* AccessibilityInterface() const {
+    return &accessibility_;
+  }
+
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
-
-  [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
   GlCanvas* canvas_;
   TimeGraph* time_graph_;
@@ -128,4 +140,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
+
+  orbit_gl::AccessibleTrack accessibility_;
 };
+
+#endif

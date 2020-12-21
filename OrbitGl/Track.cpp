@@ -16,7 +16,8 @@ Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)) {
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)),
+      accessibility_(this) {
   mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
   pos_ = Vec2(0, 0);
   size_ = Vec2(0, 0);
