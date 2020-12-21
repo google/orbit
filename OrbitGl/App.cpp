@@ -7,7 +7,6 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
-#include <absl/flags/flag.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
@@ -55,6 +54,7 @@
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
+#include "OrbitFlags/Declarations.h"
 #include "Path.h"
 #include "PresetsDataView.h"
 #include "ProcessesDataView.h"
@@ -75,11 +75,6 @@
 #include "oqpi.hpp"
 #define OQPI_USE_DEFAULT
 #endif
-
-ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, local);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;

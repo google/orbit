@@ -10,15 +10,13 @@
 #include "EventTrack.h"
 #include "GlCanvas.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitFlags/Declarations.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
-#include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
-
-ABSL_DECLARE_FLAG(bool, show_return_values);
 
 TimerTrack::TimerTrack(TimeGraph* time_graph, OrbitApp* app) : Track(time_graph), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();

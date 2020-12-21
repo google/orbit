@@ -5,18 +5,16 @@
 #ifndef ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 #define ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 
 #include <string>
 #include <vector>
 
 #include "DataView.h"
+#include "OrbitFlags/Declarations.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
-
-ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 class FunctionsDataView : public DataView {
  public:

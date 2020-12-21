@@ -6,9 +6,8 @@
 
 #include "App.h"
 #include "OrbitClientData/ProcessData.h"
+#include "OrbitFlags/Declarations.h"
 #include "absl/flags/flag.h"
-
-ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
 ModulesDataView::ModulesDataView(OrbitApp* app) : DataView(DataViewType::kModules, app) {}
 

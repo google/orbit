@@ -123,6 +123,7 @@ target_link_libraries(
          OrbitClientData
          OrbitClientModel
          OrbitClientServices
+         OrbitFlags
          OrbitProtos
          CONAN_PKG::Outcome
          CONAN_PKG::capstone
@@ -151,8 +152,7 @@ target_sources(OrbitGlTests PRIVATE
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
                SliderTest.cpp
-               TimerInfosIteratorTest.cpp
-               UnitTestMockEnvironment.cpp)
+               TimerInfosIteratorTest.cpp)
 
 target_link_libraries(
   OrbitGlTests
