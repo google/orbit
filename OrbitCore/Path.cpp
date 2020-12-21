@@ -8,9 +8,8 @@
 #include <string>
 
 #include "CoreUtils.h"
+#include "OrbitFlags/Declarations.h"
 #include "absl/flags/flag.h"
-
-ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
 static std::filesystem::path CreateAndGetConfigPath() {
   std::filesystem::path config_dir = Path::CreateOrGetOrbitAppDataDir() / "config";

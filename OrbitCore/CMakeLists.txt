@@ -31,6 +31,7 @@ target_link_libraries(
          OrbitBase
          OrbitClientData
          OrbitClientProtos
+         OrbitFlags
          OrbitProtos
          xxHash::xxHash
          concurrentqueue::concurrentqueue
