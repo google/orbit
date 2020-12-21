@@ -7,6 +7,7 @@
 #include "Batcher.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
+#include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "TextBox.h"
 
 class OrbitApp;
@@ -85,4 +86,6 @@ class CaptureWindow : public GlCanvas {
 
  private:
   OrbitApp* app_ = nullptr;
+  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+  CreateAccessibilityInterface() override;
 };
