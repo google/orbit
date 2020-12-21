@@ -8,6 +8,7 @@
 #include <absl/flags/usage_config.h>
 #include <absl/strings/str_format.h>
 
+#include <QAccessible>
 #include <QApplication>
 #include <QByteArray>
 #include <QColor>
@@ -42,6 +43,7 @@
 #include <unistd.h>
 #endif
 
+#include "AccessibilityAdapter.h"
 #include "Connections.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
@@ -136,6 +138,7 @@ static outcome::result<void> RunUiInstance(
 
   std::optional<std::error_code> error;
 
+  orbit_qt::InstallAccessibilityFactories();
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
