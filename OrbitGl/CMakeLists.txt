@@ -62,6 +62,7 @@ target_sources(
          TimerInfosIterator.h
          TimerTrack.h
          Track.h
+         TrackAccessibility.h
          TrackManager.h
          TriangleToggle.h
          TracepointsDataView.h
@@ -110,6 +111,7 @@ target_sources(
           ThreadStateTrack.cpp
           ThreadTrack.cpp
           Track.cpp
+          TrackAccessibility.cpp
           TrackManager.cpp
           TriangleToggle.cpp
           TracepointsDataView.cpp
