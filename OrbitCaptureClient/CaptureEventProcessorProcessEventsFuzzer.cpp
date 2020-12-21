@@ -10,11 +10,9 @@
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
+#include "OrbitFlags/Declarations.h"
 #include "absl/flags/flag.h"
 #include "services.pb.h"
-
-ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
-ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 
 using orbit_grpc_protos::CaptureResponse;
 

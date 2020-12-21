@@ -10,12 +10,9 @@
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ProcessData.h"
+#include "OrbitFlags/Declarations.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
-
-ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
-ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
-ABSL_DECLARE_FLAG(bool, thread_state);
 
 using orbit_client_protos::FunctionInfo;
 

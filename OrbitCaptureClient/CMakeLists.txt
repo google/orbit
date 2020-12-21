@@ -24,6 +24,7 @@ target_sources(OrbitCaptureClient PRIVATE
 
 target_link_libraries(OrbitCaptureClient PUBLIC 
         OrbitCore
+        OrbitFlags
         OrbitProtos)
 
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
