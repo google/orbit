@@ -52,6 +52,7 @@ target_sources(
           CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
+          ClientFlags.cpp
           ConnectToStadiaWidget.cpp
           ConnectToStadiaWidget.ui
           Error.cpp
@@ -162,6 +163,7 @@ target_sources(OrbitQtTests
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.cpp
                 AccessibilityAdapterTest.cpp
+                ClientFlags.cpp
                 EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
