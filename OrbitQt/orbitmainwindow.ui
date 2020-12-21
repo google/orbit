@@ -426,6 +426,7 @@ QPushButton:disabled {
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionOpenUserDataDirectory"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuFeedback">
@@ -647,6 +648,15 @@ QPushButton:disabled {
   <action name="actionServiceStackOverflow">
    <property name="text">
     <string>[Service] Stack Overflow</string>
+   </property>
+  </action>
+  <action name="actionOpenUserDataDirectory">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/folder</normaloff>:/actions/folder</iconset>
+   </property>
+   <property name="text">
+    <string>Open User Data Directory...</string>
    </property>
   </action>
  </widget>
