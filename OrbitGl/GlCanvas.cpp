@@ -138,6 +138,13 @@ void GlCanvas::EnableImGui() {
   }
 }
 
+orbit_accessibility::AccessibleInterface* GlCanvas::GetOrCreateAccessibleInterface() {
+  if (accessibility_ == nullptr) {
+    accessibility_ = CreateAccessibilityInterface();
+  }
+  return accessibility_.get();
+}
+
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
   int mouse_x = x;
   int mouse_y = y;
@@ -412,6 +419,7 @@ PickingMode GlCanvas::GetPickingMode() {
   return PickingMode::kNone;
 }
 
-void GlCanvas::CreateAccessibilityInterface() {
-  accessibility_ = std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
+std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+GlCanvas::CreateAccessibilityInterface() {
+  return std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
 }
