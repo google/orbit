@@ -50,8 +50,8 @@ enum class AccessibilityRole {
 enum class AccessibilityState : uint64_t {
   Normal = 0,
   Disabled = 1,
-  Selected = 1 << 1,
   Focusable = 1 << 2,
+  Focused = 1 << 3,
   Expanded = 1 << 11,
   Collapsed = 1 << 12,
   Expandable = 1 << 14,

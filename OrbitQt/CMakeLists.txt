@@ -155,7 +155,7 @@ add_executable(OrbitQtTests)
 target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitQtTests
-        PRIVATE
+        PRIVATE AccessibilityAdapter.h
                 CutoutWidget.h
                 EventLoop.h
                 TutorialOverlay.h)
