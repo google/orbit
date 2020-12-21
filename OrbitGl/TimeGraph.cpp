@@ -35,7 +35,7 @@ using orbit_client_protos::TimerInfo;
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 TimeGraph::TimeGraph(uint32_t font_size, OrbitApp* app)
-    : font_size_(font_size), batcher_(BatcherId::kTimeGraph), app_{app} {
+    : font_size_(font_size), accessibility_(this), batcher_(BatcherId::kTimeGraph), app_{app} {
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);

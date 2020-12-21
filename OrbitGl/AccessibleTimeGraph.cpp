@@ -1,0 +1,26 @@
+#include "AccessibleTimeGraph.h"
+
+#include "GlCanvas.h"
+#include "TimeGraph.h"
+
+AccessibilityRect TimeGraphAccessibility::AccessibleLocalRect() const {
+  auto canvas = time_graph_->GetCanvas();
+  return AccessibilityRect(0, 0, canvas->GetWidth(), canvas->GetHeight());
+}
+
+AccessibilityState TimeGraphAccessibility::AccessibleState() const {
+  using State = orbit_gl::AccessibilityState;
+  return State::Focusable;
+}
+
+int TimeGraphAccessibility::AccessibleChildCount() const {
+  return time_graph_->GetVisibleTracks().size();
+}
+
+const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) const {
+  return time_graph_->GetVisibleTracks()[index]->AccessibilityInterface();
+}
+
+const AccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {
+  return time_graph_->GetCanvas()->Accessibility();
+}

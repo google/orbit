@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "AccessibleTimeGraph.h"
 #include "AsyncTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
@@ -180,6 +181,11 @@ class TimeGraph {
   [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
 
+  [[nodiscard]] const std::vector<std::shared_ptr<Track>>& GetVisibleTracks() const {
+    return sorted_filtered_tracks_;
+  }
+  [[nodiscard]] const TimeGraphAccessibility* Accessibility() const { return &accessibility_; }
+
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(int32_t tid);
@@ -229,6 +235,8 @@ class TimeGraph {
   float right_margin_ = 0;
 
   TimeGraphLayout layout_;
+
+  TimeGraphAccessibility accessibility_;
 
   std::map<int32_t, uint32_t> thread_count_map_;
   uint32_t num_cores_;

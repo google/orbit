@@ -11,7 +11,8 @@ target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitGl
-  PUBLIC App.h
+  PUBLIC AccessibleTimeGraph.h
+         App.h
          AsyncTrack.h
          Batcher.h
          BlockChain.h
@@ -69,7 +70,8 @@ target_sources(
 
 target_sources(
   OrbitGl
-  PRIVATE App.cpp
+  PRIVATE AccessibleTimeGraph.cpp
+          App.cpp
           AsyncTrack.cpp
           Batcher.cpp
           CallStackDataView.cpp
