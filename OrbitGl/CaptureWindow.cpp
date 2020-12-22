@@ -20,7 +20,7 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
   int AccessibleChildCount() const override { return 1; }
 
   const AccessibleInterface* AccessibleChild(int /*index*/) const override {
-    return window_->GetTimeGraph()->Accessibility();
+    return window_->GetTimeGraph()->GetOrCreateAccessibleInterface();
   }
 
  private:
