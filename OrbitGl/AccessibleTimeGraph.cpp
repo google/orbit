@@ -26,5 +26,5 @@ const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) co
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {
-  return time_graph_->GetCanvas()->Accessibility();
+  return time_graph_->GetCanvas()->GetOrCreateAccessibleInterface();
 }

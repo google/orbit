@@ -184,7 +184,9 @@ class TimeGraph {
   [[nodiscard]] const std::vector<std::shared_ptr<Track>>& GetVisibleTracks() const {
     return sorted_filtered_tracks_;
   }
-  [[nodiscard]] const TimeGraphAccessibility* Accessibility() const { return &accessibility_; }
+  [[nodiscard]] const TimeGraphAccessibility* GetOrCreateAccessibleInterface() const {
+    return &accessibility_;
+  }
 
  protected:
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
