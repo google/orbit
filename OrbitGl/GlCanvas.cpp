@@ -138,7 +138,7 @@ void GlCanvas::EnableImGui() {
   }
 }
 
-orbit_accessibility::AccessibleInterface* GlCanvas::Accessibility() {
+orbit_accessibility::AccessibleInterface* GlCanvas::GetOrCreateAccessibleInterface() {
   if (accessibility_ == nullptr) {
     accessibility_ = CreateAccessibilityInterface();
   }

@@ -119,7 +119,7 @@ class GlCanvas {
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
 
-  [[nodiscard]] orbit_accessibility::AccessibleInterface* Accessibility();
+  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
 
   static float kZValueSlider;
   static float kZValueSliderBg;
