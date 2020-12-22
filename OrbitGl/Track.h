@@ -106,7 +106,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
 
   [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
-  [[nodiscard]] bool IsCollapsed() { return collapse_toggle_->IsCollapsed(); }
+  [[nodiscard]] bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
 
   // Accessibility
   [[nodiscard]] const orbit_gl::AccessibleTrack* AccessibilityInterface() const {

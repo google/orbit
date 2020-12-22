@@ -25,15 +25,17 @@ AccessibilityRect AccessibleTrackContent::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
   CHECK(track_->GetTimeGraph() != nullptr);
 
-  auto& layout = track_->GetTimeGraph()->GetLayout();
-  return AccessibilityRect(0, static_cast<int>(layout.GetTrackTabHeight()),
-                           static_cast<int>(track_->GetSize()[0]),
-                           static_cast<int>(track_->GetSize()[1]));
+  TimeGraphLayout& layout = track_->GetTimeGraph()->GetLayout();
+  GlCanvas* canvas = track_->GetTimeGraph()->GetCanvas();
+
+  return AccessibilityRect(canvas->WorldToScreenWidth(0),
+                           canvas->WorldToScreenHeight(layout.GetTrackTabHeight()),
+                           canvas->WorldToScreenWidth(track_->GetSize()[0]),
+                           canvas->WorldToScreenHeight(track_->GetSize()[1]));
 }
 
 AccessibilityState AccessibleTrackContent::AccessibleState() const {
-  AccessibilityState result;
-  return result;
+  return AccessibilityState::Normal;
 }
 
 const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
@@ -49,15 +51,17 @@ AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
   CHECK(track_->GetTimeGraph() != nullptr);
 
-  auto& layout = track_->GetTimeGraph()->GetLayout();
-  return AccessibilityRect(static_cast<int>(layout.GetTrackTabOffset()), 0,
-                           static_cast<int>(layout.GetTrackTabWidth()),
-                           static_cast<int>(layout.GetTrackTabHeight()));
+  TimeGraphLayout& layout = track_->GetTimeGraph()->GetLayout();
+  GlCanvas* canvas = track_->GetTimeGraph()->GetCanvas();
+
+  return AccessibilityRect(canvas->WorldToScreenWidth(layout.GetTrackTabOffset()),
+                           canvas->WorldToScreenHeight(0),
+                           canvas->WorldToScreenWidth(layout.GetTrackTabWidth()),
+                           canvas->WorldToScreenHeight(layout.GetTrackTabHeight()));
 }
 
 AccessibilityState AccessibleTrackTab::AccessibleState() const {
-  AccessibilityState result;
-  return result;
+  return AccessibilityState::Normal;
 }
 
 const AccessibleInterface* AccessibleTrack::AccessibleParent() const {
@@ -75,21 +79,30 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
   CHECK(track_->GetTimeGraph() != nullptr);
   CHECK(track_->GetTimeGraph()->GetCanvas() != nullptr);
 
-  auto canvas = track_->GetTimeGraph()->GetCanvas();
-  auto pos = track_->GetPos();
-  auto size = track_->GetSize();
-  auto layout = track_->GetTimeGraph()->GetLayout();
+  TimeGraphLayout& layout = track_->GetTimeGraph()->GetLayout();
+  GlCanvas* canvas = track_->GetTimeGraph()->GetCanvas();
+  Vec2 pos = track_->GetPos();
+  pos[1] += layout.GetTrackTabHeight();
+  Vec2 size = track_->GetSize();
+  size[1] += layout.GetTrackTabHeight();
 
-  int top = static_cast<int>(
-      std::max(-pos[1] + canvas->GetWorldTopLeftY() - layout.GetTrackTabHeight(), 0.0f));
-  int left = static_cast<int>(pos[0]);
-  int width = static_cast<int>(size[0]);
-  int height =
-      std::max(std::min(static_cast<int>(size[1] + layout.GetTrackTabHeight() - std::min(top, 0)),
-                        canvas->GetHeight() - top),
-               0);
+  Vec2 screen_pos = canvas->WorldToScreen(pos);
+  int screen_width = canvas->WorldToScreenWidth(size[0]);
+  int screen_height = canvas->WorldToScreenHeight(size[1]);
 
-  return AccessibilityRect(left, top, width, height);
+  // Adjust the coordinates to clamp the result to an on-screen rect
+  // This will "cut" any part that is offscreen due to scrolling, and may result
+  // in a final result with width / height of 0.
+  if (screen_pos[1] + screen_height > canvas->GetHeight()) {
+    screen_height = std::max(0, canvas->GetHeight() - static_cast<int>(screen_pos[1]));
+  }
+  if (screen_pos[1] < 0) {
+    screen_height = std::max(0, static_cast<int>(screen_pos[1]) + screen_height);
+    screen_pos[1] = 0;
+  }
+
+  return AccessibilityRect(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1]),
+                           screen_width, screen_height);
 }
 
 AccessibilityState AccessibleTrack::AccessibleState() const {
@@ -97,8 +110,7 @@ AccessibilityState AccessibleTrack::AccessibleState() const {
 
   using State = orbit_accessibility::AccessibilityState;
 
-  State result = State::Normal;
-  result |= State::Focusable | State::Movable;
+  State result = State::Normal | State::Focusable | State::Movable;
   if (track_->IsTrackSelected()) {
     result |= State::Focused;
   }
