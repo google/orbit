@@ -22,10 +22,10 @@ class MoveFunctionsTab(Fragment):
         tab_item = find_control(wnd, "TabItem", name="Functions")
         right_tab_bar = find_control(
             find_control(wnd, "Group", name="RightTabWidget"),
-            "Tab")
+            "Tab", recurse=False)
         left_tab_bar = find_control(
             find_control(wnd, "Group", name="MainTabWidget"),
-            "Tab")
+            "Tab", recurse=False)
 
         # Init tests
         left_tab_count = left_tab_bar.control_count()

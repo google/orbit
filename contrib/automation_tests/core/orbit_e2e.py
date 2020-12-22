@@ -6,6 +6,7 @@ found in the LICENSE file.
 
 import logging
 from typing import Iterable, Type
+from collections import deque
 
 from absl import flags
 from pywinauto import Application, timings
@@ -28,7 +29,7 @@ class Fragment:
 
     e2e_test = property(lambda self: self._e2e_test)
 
-    def execute(self, e2e_test):
+    def execute(self, e2e_test: "E2ETest"):
         self._e2e_test = e2e_test
         self._execute(**self._args)
 
@@ -40,7 +41,7 @@ class Fragment:
     def expect_eq(self, left, right, description):
         self.expect_true(left == right, description)
 
-    def _execute(self):
+    def _execute(self, **kwargs):
         """
         Provide this method in your fragment
         """
@@ -72,6 +73,7 @@ class E2ETest:
 
     def set_up(self):
         timings.Timings.after_click_wait = 0.5
+        timings.Timings.after_clickinput_wait = 0.5
         ot.wait_for_orbit()
         logging.info("Setting up with dev_mode = %s", self.dev_mode)
         if not self.dev_mode:
@@ -99,21 +101,43 @@ class E2ETest:
 
 
 def find_control(parent: BaseWrapper, control_type, name=None, name_contains=None,
-                 auto_id_leaf=None, qt_class=None) -> BaseWrapper:
+                 auto_id_leaf=None, qt_class=None, recurse=True) -> BaseWrapper:
     """
     Returns the first child of BaseWrapper that matches all of the search parameters.
     As soon as a matching child is encountered, this function returns.
 
     If no child is found, an exception is thrown.
     """
-    desc = parent.descendants(control_type=control_type)
+    if not recurse:
+        desc = parent.children(control_type=control_type)
+    else:
+        desc = parent.descendants(control_type=control_type)
 
     for elem in desc:
+        # This seems to be a lot more reliable than the properties exposed by the wrapper element
+        # At least, this seems to consistently return the accessible name if it exists...
+        elem_name = elem.element_info.element.CurrentName
         if (not qt_class or elem.class_name() == qt_class) and \
-                (not name or elem.texts()[0] == name) and \
-                (not name_contains or name_contains in elem.texts()[0]) and \
+                (not name or elem.texts()[0] == name or elem_name == name) and \
+                (not name_contains or name_contains in elem.texts()[0] or name_contains in name) and \
                 (not auto_id_leaf or elem.automation_id().rsplit(".", 1)[-1]):
             return elem
 
-    raise OrbitE2EError('Could not find element of type %s (name="%s", name_contains="%s", qt_class=%s)' %
+    # If a name was given, try the magic lookup to give a hint what was wrong
+    if name:
+        try:
+            candidate = parent.__getattribute__(name)
+        except:
+            candidate = None
+
+        if candidate:
+            logging.error("Could not find the control you were looking for, but found a potential candidate: %s. "
+                          "Printing control identifiers.",
+                          candidate)
+            candidate.print_control_identifiers()
+        else:
+            logging.error("Could not find the control you were looking for. Tried magic, didn't work.")
+
+    raise OrbitE2EError('Could not find element of type %s (name="%s", name_contains="%s", qt_class="%s"). The log '
+                        'above may contain more details.' %
                         (control_type, name, name_contains, qt_class))
