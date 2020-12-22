@@ -156,10 +156,7 @@ target_sources(OrbitGlTests PRIVATE
                ScopedStatusTest.cpp
                SliderTest.cpp
                TimerInfosIteratorTest.cpp
-               # Todo (176066030): OrbitGl relies on flags usually defined in the OrbitQt executable, so the
-               # tests needs this to link against them. To avoid multiple definitions, we compile the flags
-               # cpp with the tests
-               ../OrbitQt/ClientFlags.cpp)
+               ClientFlags.cpp)
 
 target_link_libraries(
   OrbitGlTests

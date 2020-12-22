@@ -52,7 +52,6 @@ target_sources(
           CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
-          ClientFlags.cpp
           ConnectToStadiaWidget.cpp
           ConnectToStadiaWidget.ui
           Error.cpp
@@ -95,7 +94,11 @@ target_sources(
           TutorialOverlay.cpp
           TutorialOverlay.ui
           ../icons/orbiticons.qrc
-          ../images/orbitimages.qrc)
+          ../images/orbitimages.qrc
+          # Todo (176066030): OrbitGl relies on flags usually defined in the OrbitQt executable, so the
+          # tests needs this to link against them. To avoid multiple definitions, we compile the flags
+          # cpp with the tests
+          ../OrbitGl/ClientFlags.cpp)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -163,7 +166,6 @@ target_sources(OrbitQtTests
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.cpp
                 AccessibilityAdapterTest.cpp
-                ClientFlags.cpp
                 EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
@@ -173,6 +175,7 @@ target_sources(OrbitQtTests
                 TutorialOverlayTest.cpp
                 TutorialOverlay.cpp
                 TutorialOverlay.ui
+                ../OrbitGl/ClientFlags.cpp
                 ../images/orbitimages.qrc)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
