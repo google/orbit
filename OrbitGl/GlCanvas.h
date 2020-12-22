@@ -41,10 +41,15 @@ class GlCanvas {
   void PrepareScreenSpaceViewport();
   void PrepareGlState();
   static void CleanupGlState();
+
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
-  Vec2 ScreenToWorld(Vec2 screen_pos);
+  Vec2 ScreenToWorld(Vec2 screen_pos) const;
   float ScreenToWorldHeight(int height) const;
   float ScreenToWorldWidth(int width) const;
+
+  Vec2 WorldToScreen(Vec2 world_pos) const;
+  int WorldToScreenHeight(float height) const;
+  int WorldToScreenWidth(float width) const;
 
   // events
   virtual void MouseMoved(int x, int y, bool left, bool right, bool middle);
