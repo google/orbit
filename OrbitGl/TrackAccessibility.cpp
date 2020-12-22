@@ -62,7 +62,7 @@ AccessibilityState AccessibleTrackTab::AccessibleState() const {
 
 const AccessibleInterface* AccessibleTrack::AccessibleParent() const {
   CHECK(track_ != nullptr);
-  return track_->GetTimeGraph()->Accessibility();
+  return track_->GetTimeGraph()->GetOrCreateAccessibleInterface();
 }
 
 std::string AccessibleTrack::AccessibleName() const {
