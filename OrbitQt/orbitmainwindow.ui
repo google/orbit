@@ -14,7 +14,7 @@
    <string>Orbit Profiler</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QLineEdit[accessibleName=&quot;filter&quot;] {
+   <string notr="true">QLineEdit[clearButtonEnabled=&quot;true&quot;] {
 	background-image: url(:/actions/search_small_offset);
 	background-position: left center;
 	background-repeat: no-repeat;
@@ -116,6 +116,9 @@ QPushButton:disabled {
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="accessibleName">
+            <string>CaptureToolBar</string>
+           </property>
            <addaction name="actionToggle_Capture"/>
            <addaction name="actionClear_Capture"/>
            <addaction name="actionOpen_Capture"/>
@@ -148,7 +151,7 @@ QPushButton:disabled {
             <item>
              <widget class="QLineEdit" name="filterTracks">
               <property name="accessibleName">
-               <string>filter</string>
+               <string>FilterTracks</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QLineEdit {
@@ -166,7 +169,7 @@ QPushButton:disabled {
             <item>
              <widget class="QLineEdit" name="filterFunctions">
               <property name="accessibleName">
-               <string>filter</string>
+               <string>FilterFunctions</string>
               </property>
               <property name="placeholderText">
                <string>Filter Functions</string>
