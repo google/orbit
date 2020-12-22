@@ -333,12 +333,11 @@ void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
       world_top_left_y_ - (static_cast<float>(y) / static_cast<float>(GetHeight())) * world_height_;
 }
 
-Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) {
+Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) const {
   Vec2 world_pos;
-  world_pos[0] =
-      world_top_left_x_ + (screen_pos[0] / static_cast<float>(GetWidth())) * world_width_;
+  world_pos[0] = world_top_left_x_ + screen_pos[0] / static_cast<float>(GetWidth()) * world_width_;
   world_pos[1] =
-      world_top_left_y_ - (screen_pos[1] / static_cast<float>(GetHeight())) * world_height_;
+      world_top_left_y_ - screen_pos[1] / static_cast<float>(GetHeight()) * world_height_;
   return world_pos;
 }
 
@@ -348,6 +347,21 @@ float GlCanvas::ScreenToWorldHeight(int height) const {
 
 float GlCanvas::ScreenToWorldWidth(int width) const {
   return (static_cast<float>(width) / static_cast<float>(GetWidth())) * world_width_;
+}
+
+Vec2 GlCanvas::WorldToScreen(Vec2 world_pos) const {
+  Vec2 screen_pos;
+  screen_pos[0] = (world_pos[0] - world_top_left_x_) / world_width_ * GetWidth();
+  screen_pos[1] = (world_top_left_y_ - world_pos[1]) / world_height_ * GetHeight();
+  return screen_pos;
+}
+
+int GlCanvas::WorldToScreenHeight(float height) const {
+  return static_cast<int>(height / world_height_ * GetHeight());
+}
+
+int GlCanvas::WorldToScreenWidth(float width) const {
+  return static_cast<int>(width / world_width_ * GetWidth());
 }
 
 int GlCanvas::GetWidth() const { return screen_width_; }
