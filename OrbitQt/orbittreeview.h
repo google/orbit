@@ -38,12 +38,6 @@ class OrbitTreeView : public QTreeView {
   void OnRefreshButtonClicked();
   void SetIsInternalRefresh(bool status) { is_internal_refresh_ = status; }
 
- protected:
-  void drawRow(QPainter* painter, const QStyleOptionViewItem& options,
-               const QModelIndex& index) const override;
-
- signals:
-
  public slots:
   void columnResized(int column, int oldSize, int newSize);
 
