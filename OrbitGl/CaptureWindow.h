@@ -86,6 +86,6 @@ class CaptureWindow : public GlCanvas {
 
  private:
   OrbitApp* app_ = nullptr;
-  std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge> CreateAccessibilityInterface()
-      override;
+  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+  CreateAccessibilityInterface() override;
 };
