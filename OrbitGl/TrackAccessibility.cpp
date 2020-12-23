@@ -5,7 +5,6 @@
 #include "TrackAccessibility.h"
 
 #include "GlCanvas.h"
-#include "TimeGraph.h"
 #include "Track.h"
 
 namespace orbit_gl {
@@ -23,13 +22,11 @@ std::string AccessibleTrackContent::AccessibleName() const {
 
 AccessibilityRect AccessibleTrackContent::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
-  CHECK(track_->GetTimeGraph() != nullptr);
 
-  TimeGraphLayout& layout = track_->GetTimeGraph()->GetLayout();
-  GlCanvas* canvas = track_->GetTimeGraph()->GetCanvas();
+  GlCanvas* canvas = track_->GetCanvas();
 
   return AccessibilityRect(canvas->WorldToScreenWidth(0),
-                           canvas->WorldToScreenHeight(layout.GetTrackTabHeight()),
+                           canvas->WorldToScreenHeight(layout_->GetTrackTabHeight()),
                            canvas->WorldToScreenWidth(track_->GetSize()[0]),
                            canvas->WorldToScreenHeight(track_->GetSize()[1]));
 }
@@ -49,15 +46,13 @@ std::string AccessibleTrackTab::AccessibleName() const {
 
 AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
-  CHECK(track_->GetTimeGraph() != nullptr);
 
-  TimeGraphLayout& layout = track_->GetTimeGraph()->GetLayout();
-  GlCanvas* canvas = track_->GetTimeGraph()->GetCanvas();
+  GlCanvas* canvas = track_->GetCanvas();
 
-  return AccessibilityRect(canvas->WorldToScreenWidth(layout.GetTrackTabOffset()),
+  return AccessibilityRect(canvas->WorldToScreenWidth(layout_->GetTrackTabOffset()),
                            canvas->WorldToScreenHeight(0),
-                           canvas->WorldToScreenWidth(layout.GetTrackTabWidth()),
-                           canvas->WorldToScreenHeight(layout.GetTrackTabHeight()));
+                           canvas->WorldToScreenWidth(layout_->GetTrackTabWidth()),
+                           canvas->WorldToScreenHeight(layout_->GetTrackTabHeight()));
 }
 
 AccessibilityState AccessibleTrackTab::AccessibleState() const {
@@ -76,15 +71,13 @@ std::string AccessibleTrack::AccessibleName() const {
 
 AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
-  CHECK(track_->GetTimeGraph() != nullptr);
-  CHECK(track_->GetTimeGraph()->GetCanvas() != nullptr);
+  CHECK(track_->GetCanvas() != nullptr);
 
-  TimeGraphLayout& layout = track_->GetTimeGraph()->GetLayout();
-  GlCanvas* canvas = track_->GetTimeGraph()->GetCanvas();
+  GlCanvas* canvas = track_->GetCanvas();
   Vec2 pos = track_->GetPos();
-  pos[1] += layout.GetTrackTabHeight();
+  pos[1] += layout_->GetTrackTabHeight();
   Vec2 size = track_->GetSize();
-  size[1] += layout.GetTrackTabHeight();
+  size[1] += layout_->GetTrackTabHeight();
 
   Vec2 screen_pos = canvas->WorldToScreen(pos);
   int screen_width = canvas->WorldToScreenWidth(size[0]);

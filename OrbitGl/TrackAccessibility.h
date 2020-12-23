@@ -6,6 +6,7 @@
 #define ORBIT_GL_TRACK_ACCESSIBILITY_H_
 
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "TimeGraphLayout.h"
 
 class Track;
 
@@ -22,7 +23,7 @@ using orbit_accessibility::AccessibleInterface;
  */
 class AccessibleTrackContent : public AccessibleInterface {
  public:
-  AccessibleTrackContent(Track* track) : track_(track){};
+  AccessibleTrackContent(Track* track, TimeGraphLayout* layout) : track_(track), layout_(layout){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; }
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int) const override { return nullptr; }
@@ -37,6 +38,7 @@ class AccessibleTrackContent : public AccessibleInterface {
 
  private:
   Track* track_;
+  TimeGraphLayout* layout_;
 };
 
 /*
@@ -46,7 +48,7 @@ class AccessibleTrackContent : public AccessibleInterface {
  */
 class AccessibleTrackTab : public AccessibleInterface {
  public:
-  AccessibleTrackTab(Track* track) : track_(track){};
+  AccessibleTrackTab(Track* track, TimeGraphLayout* layout) : track_(track), layout_(layout){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; }
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int) const override { return nullptr; }
@@ -61,6 +63,7 @@ class AccessibleTrackTab : public AccessibleInterface {
 
  private:
   Track* track_;
+  TimeGraphLayout* layout_;
 };
 
 /*
@@ -69,7 +72,8 @@ class AccessibleTrackTab : public AccessibleInterface {
  */
 class AccessibleTrack : public AccessibleInterface {
  public:
-  AccessibleTrack(Track* track) : track_(track), content_(track_), tab_(track_){};
+  AccessibleTrack(Track* track, TimeGraphLayout* layout)
+      : track_(track), layout_(layout), content_(track_, layout_), tab_(track_, layout_){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 2; }
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int index) const override {
@@ -90,6 +94,7 @@ class AccessibleTrack : public AccessibleInterface {
 
  private:
   Track* track_;
+  TimeGraphLayout* layout_;
   AccessibleTrackContent content_;
   AccessibleTrackTab tab_;
 };

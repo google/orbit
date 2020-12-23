@@ -97,6 +97,8 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void SetColor(Color a_Color) { color_ = a_Color; }
   [[nodiscard]] Color GetBackgroundColor() const;
 
+  [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
+
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
   virtual void OnCollapseToggle(TriangleToggle::State state);
   [[nodiscard]] virtual bool IsCollapsable() const { return false; }
