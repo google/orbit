@@ -208,7 +208,7 @@ class GlCanvas {
   std::vector<RenderCallback> render_callbacks_;
 
  private:
-  virtual std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
   CreateAccessibilityInterface();
 };
 
