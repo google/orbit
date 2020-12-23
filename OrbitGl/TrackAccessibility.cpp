@@ -86,9 +86,12 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
   // Adjust the coordinates to clamp the result to an on-screen rect
   // This will "cut" any part that is offscreen due to scrolling, and may result
   // in a final result with width / height of 0.
+
+  // First: Clamp bottom
   if (screen_pos[1] + screen_height > canvas->GetHeight()) {
     screen_height = std::max(0, canvas->GetHeight() - static_cast<int>(screen_pos[1]));
   }
+  // Second: Clamp top
   if (screen_pos[1] < 0) {
     screen_height = std::max(0, static_cast<int>(screen_pos[1]) + screen_height);
     screen_pos[1] = 0;
