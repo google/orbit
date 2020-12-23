@@ -52,8 +52,6 @@ void TrackManager::Clear() {
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
 
-void TrackManager::SetStringManager(StringManager* str_manager) { string_manager_ = str_manager; }
-
 std::vector<Track*> TrackManager::GetAllTracks() const {
   std::vector<Track*> tracks;
   for (auto track : all_tracks_) {
@@ -83,7 +81,7 @@ void TrackManager::SortTracks() {
 
   ThreadTrack* process_track = nullptr;
 
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  const CaptureData* capture_data = app_->HasCaptureData() ? &app_->GetCaptureData() : nullptr;
   if (capture_data != nullptr) {
     // Get or create thread track from events' thread id.
     event_count_.clear();
@@ -351,9 +349,6 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
     track = std::make_shared<SchedulerTrack>(time_graph_, app_);
     AddTrack(track);
     scheduler_track_ = track;
-    uint32_t num_cores = time_graph_->GetNumCores();
-    time_graph_->GetLayout().SetNumCores(num_cores);
-    scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
   }
   return track.get();
 }
@@ -365,26 +360,6 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
     track = std::make_shared<ThreadTrack>(time_graph_, tid, app_);
     AddTrack(track);
     thread_tracks_[tid] = track;
-    track->SetTrackColor(TimeGraph::GetThreadColor(tid));
-    if (tid == orbit_base::kAllThreadsOfAllProcessesTid) {
-      track->SetName("All tracepoint events");
-      track->SetLabel("All tracepoint events");
-    } else if (tid == orbit_base::kAllProcessThreadsTid) {
-      // This is the process track.
-      const CaptureData& capture_data = app_->GetCaptureData();
-      std::string process_name = capture_data.process_name();
-      track->SetName(process_name);
-      const std::string_view all_threads = " (all_threads)";
-      track->SetLabel(process_name.append(all_threads));
-      track->SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
-    } else {
-      const std::string& thread_name = time_graph_->GetThreadNameFromTid(tid);
-      track->SetName(thread_name);
-      std::string tid_str = std::to_string(tid);
-      std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
-      track->SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
-      track->SetLabel(track_label);
-    }
   }
   return track.get();
 }
@@ -393,13 +368,7 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(time_graph_, string_manager_, timeline_hash, app_);
-    std::string timeline = string_manager_->Get(timeline_hash).value_or("");
-    std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
-    track->SetName(timeline);
-    track->SetLabel(label);
-    // This min combine two cases, label == timeline and when label includes timeline
-    track->SetNumberOfPrioritizedTrailingCharacters(std::min(label.size(), timeline.size() + 2));
+    track = std::make_shared<GpuTrack>(time_graph_, timeline_hash, app_);
     AddTrack(track);
     gpu_tracks_[timeline_hash] = track;
   }
@@ -411,8 +380,6 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
   std::shared_ptr<GraphTrack> track = graph_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<GraphTrack>(time_graph_, name);
-    track->SetName(name);
-    track->SetLabel(name);
     AddTrack(track);
     graph_tracks_[name] = track;
   }

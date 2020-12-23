@@ -38,13 +38,10 @@ class TimeGraphLayout {
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = value; }
   void SetDrawProperties(bool value) { draw_properties_ = value; }
-  void SetNumCores(int a_NumCores) { num_cores_ = a_NumCores; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return draw_track_background_; }
 
  protected:
-  int num_cores_;
-
   float text_box_height_;
   float core_height_;
   float thread_state_track_height_;

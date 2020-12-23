@@ -20,6 +20,15 @@ const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app) : TimerTrack(time_graph, app) {
   SetPinned(false);
+  num_cores_ = 0;
+}
+
+void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  TimerTrack::OnTimer(timer_info);
+  if (num_cores_ <= static_cast<uint32_t>(timer_info.processor())) {
+    num_cores_ = timer_info.processor() + 1;
+    label_ = absl::StrFormat("Scheduler (%u cores)", num_cores_);
+  }
 }
 
 float SchedulerTrack::GetHeight() const {
@@ -31,9 +40,8 @@ float SchedulerTrack::GetHeight() const {
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
   bool is_same_tid_as_selected = timer_info.thread_id() == app_->selected_thread_id();
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
-  int32_t capture_process_id = capture_data->process_id();
+  const CaptureData& capture_data = app_->GetCaptureData();
+  int32_t capture_process_id = capture_data.process_id();
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
 
@@ -46,7 +54,7 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
   } else if (!IsTimerActive(timer_info)) {
     return kInactiveColor;
   }
-  return time_graph_->GetThreadColor(timer_info.thread_id());
+  return TimeGraph::GetThreadColor(timer_info.thread_id());
 }
 
 float SchedulerTrack::GetYFromDepth(uint32_t depth) const {
@@ -70,8 +78,7 @@ std::string SchedulerTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
 
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  const CaptureData& capture_data = app_->GetCaptureData();
   return absl::StrFormat(
       "<b>CPU Core activity</b><br/>"
       "<br/>"
@@ -79,8 +86,8 @@ std::string SchedulerTrack::GetBoxTooltip(PickingId id) const {
       "<b>Process:</b> %s [%d]<br/>"
       "<b>Thread:</b> %s [%d]<br/>",
       text_box->GetTimerInfo().processor(),
-      capture_data->GetThreadName(text_box->GetTimerInfo().process_id()),
+      capture_data.GetThreadName(text_box->GetTimerInfo().process_id()),
       text_box->GetTimerInfo().process_id(),
-      capture_data->GetThreadName(text_box->GetTimerInfo().thread_id()),
+      capture_data.GetThreadName(text_box->GetTimerInfo().thread_id()),
       text_box->GetTimerInfo().thread_id());
 }

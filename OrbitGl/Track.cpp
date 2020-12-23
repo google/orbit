@@ -169,7 +169,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
 
     text_renderer.AddTextTrailingCharsPrioritized(
         label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
-        GetNumberOfPrioritizedTrailingCharacters(), font_size, label_width - label_offset_x);
+        num_prioritized_trailing_characters_, font_size, label_width - label_offset_x);
   }
 
   canvas_ = canvas;

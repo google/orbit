@@ -76,8 +76,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  const CaptureData& capture_data = app_->GetCaptureData();
 
   if (!picking) {
     // Sampling Events
@@ -90,10 +89,10 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     };
 
     if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
-      capture_data->GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
+      capture_data.GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
     } else {
-      capture_data->GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
-                                                                   action_on_callstack_events);
+      capture_data.GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
+                                                                  action_on_callstack_events);
     }
 
     // Draw selected events
@@ -122,10 +121,10 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       }
     };
     if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
-      capture_data->GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
+      capture_data.GetCallstackData()->ForEachCallstackEvent(action_on_callstack_events);
     } else {
-      capture_data->GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
-                                                                   action_on_callstack_events);
+      capture_data.GetCallstackData()->ForEachCallstackEventOfTid(thread_id_,
+                                                                  action_on_callstack_events);
     }
   }
 }
@@ -163,32 +162,29 @@ void EventTrack::SelectEvents() {
 }
 
 bool EventTrack::IsEmpty() const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  if (capture_data == nullptr) return true;
+  if (!app_->HasCaptureData()) return true;
+  const CaptureData& capture_data = app_->GetCaptureData();
   const uint32_t callstack_count =
       (thread_id_ == orbit_base::kAllProcessThreadsTid)
-          ? capture_data->GetCallstackData()->GetCallstackEventsCount()
-          : capture_data->GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_);
+          ? capture_data.GetCallstackData()->GetCallstackEventsCount()
+          : capture_data.GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_);
   return callstack_count == 0;
 }
 
 [[nodiscard]] uint64_t EventTrack::GetMinTime() const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
-  return capture_data->GetCallstackData()->min_time();
+  const CaptureData& capture_data = app_->GetCaptureData();
+  return capture_data.GetCallstackData()->min_time();
 }
 
 [[nodiscard]] uint64_t EventTrack::GetMaxTime() const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
-  return capture_data->GetCallstackData()->max_time();
+  const CaptureData& capture_data = app_->GetCaptureData();
+  return capture_data.GetCallstackData()->max_time();
 }
 
 [[nodiscard]] std::string EventTrack::SafeGetFormattedFunctionName(uint64_t addr,
                                                                    int max_line_length) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
-  const std::string& function_name = capture_data->GetFunctionNameByAddress(addr);
+  const CaptureData& capture_data = app_->GetCaptureData();
+  const std::string& function_name = capture_data.GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
   }
@@ -237,9 +233,8 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
     return unknown_return_text;
   }
 
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
-  const CallstackData* callstack_data = capture_data->GetCallstackData();
+  const CaptureData& capture_data = app_->GetCaptureData();
+  const CallstackData* callstack_data = capture_data.GetCallstackData();
   const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_hash = callstack_event->callstack_hash();

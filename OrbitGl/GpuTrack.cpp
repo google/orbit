@@ -38,12 +38,17 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(TimeGraph* time_graph, StringManager* string_manager, uint64_t timeline_hash,
-                   OrbitApp* app)
+GpuTrack::GpuTrack(TimeGraph* time_graph, uint64_t timeline_hash, OrbitApp* app)
     : TimerTrack(time_graph, app) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
-  string_manager_ = string_manager;
+  string_manager_ = app->GetStringManager();
+
+  std::string timeline = string_manager_->Get(timeline_hash).value_or("");
+  name_ = timeline;
+  label_ = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
+  // This min combine two cases, label == timeline and when label includes timeline
+  num_prioritized_trailing_characters_ = std::min(label_.size(), timeline.size() + 2);
 
   // Gpu tracks are collapsed by default.
   collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
@@ -71,7 +76,7 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
 
   // We color code the timeslices for GPU activity using the color
   // of the CPU thread track that submitted the job.
-  Color color = time_graph_->GetThreadColor(timer_info.thread_id());
+  Color color = TimeGraph::GetThreadColor(timer_info.thread_id());
 
   // We disambiguate the different types of GPU activity based on the
   // string that is displayed on their timeslice.
@@ -198,8 +203,7 @@ std::string GpuTrack::GetBoxTooltip(PickingId id) const {
 }
 
 std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  const CaptureData& capture_data = app_->GetCaptureData();
   return absl::StrFormat(
       "<b>Software Queue</b><br/>"
       "<i>Time between amdgpu_cs_ioctl (job submitted) and "
@@ -208,13 +212,12 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data.GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
 std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  const CaptureData& capture_data = app_->GetCaptureData();
   return absl::StrFormat(
       "<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
       "(job scheduled) and start of GPU execution</i>"
@@ -222,13 +225,12 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data.GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
 std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  const CaptureData& capture_data = app_->GetCaptureData();
   return absl::StrFormat(
       "<b>Harware Execution</b><br/>"
       "<i>End is marked by \"dma_fence_signaled\" event for this command "
@@ -237,6 +239,6 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data.GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }

@@ -306,6 +306,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
+  [[nodiscard]] StringManager* GetStringManager() { return string_manager_.get(); }
   void SetGrpcChannel(std::shared_ptr<grpc::Channel> grpc_channel) {
     CHECK(grpc_channel_ == nullptr);
     CHECK(grpc_channel != nullptr);

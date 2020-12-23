@@ -31,16 +31,17 @@ class ThreadTrack final : public TimerTrack {
   void OnPick(int x, int y) override;
 
   void UpdateBoxHeight() override;
-  void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                         float z_offset = 0) override;
 
  protected:
+  void InitializeNameAndLabel(int32_t thread_id);
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] virtual bool IsTrackSelected() const override;
 
+  void SetTrackColor(Color color);
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
                                     bool is_selected) const override;
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
@@ -56,6 +57,8 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<ThreadStateTrack> thread_state_track_;
   std::shared_ptr<EventTrack> event_track_;
   std::shared_ptr<TracepointTrack> tracepoint_track_;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

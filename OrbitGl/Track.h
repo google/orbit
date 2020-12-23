@@ -61,12 +61,6 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
   [[nodiscard]] virtual uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] virtual uint64_t GetMaxTime() const { return max_time_; }
-  void SetNumberOfPrioritizedTrailingCharacters(int num_characters) {
-    num_prioritized_trailing_characters_ = num_characters;
-  }
-  [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const {
-    return num_prioritized_trailing_characters_;
-  }
 
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() const { return {}; }
   [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() const { return {}; }
@@ -81,12 +75,9 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] Vec2 GetMoveDelta() const {
     return moving_ ? mouse_pos_[1] - mouse_pos_[0] : Vec2(0, 0);
   }
-  void SetName(const std::string& name) { name_ = name; }
   [[nodiscard]] const std::string& GetName() const { return name_; }
-  void SetLabel(const std::string& label) { label_ = label; }
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
-  void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
   void SetPos(float a_X, float a_Y);

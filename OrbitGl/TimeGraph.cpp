@@ -46,17 +46,12 @@ TimeGraph::TimeGraph(uint32_t font_size, OrbitApp* app)
           [this](const std::string& name, const TimerInfo& timer_info) {
             ProcessAsyncTimer(name, timer_info);
           });
-  num_cores_ = 0;
   manual_instrumentation_manager_ = app_->GetManualInstrumentationManager();
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
 }
 
 TimeGraph::~TimeGraph() {
   manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
-}
-
-void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
-  track_manager_->SetStringManager(str_manager.get());
 }
 
 void TimeGraph::SetCanvas(GlCanvas* canvas) {
@@ -269,12 +264,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     } else {
       auto scheduler_track = track_manager_->GetOrCreateSchedulerTrack();
       scheduler_track->OnTimer(timer_info);
-      if (GetNumCores() <= static_cast<uint32_t>(timer_info.processor())) {
-        auto num_cores = timer_info.processor() + 1;
-        SetNumCores(num_cores);
-        layout_.SetNumCores(num_cores);
-        scheduler_track->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
-      }
     }
   }
 
@@ -517,7 +506,7 @@ void TimeGraph::NeedsUpdate() {
 
 void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(track_manager_->GetStringManager() != nullptr);
+  CHECK(app_->GetStringManager() != nullptr);
 
   batcher_.StartNewFrame();
   text_renderer_static_.Clear();

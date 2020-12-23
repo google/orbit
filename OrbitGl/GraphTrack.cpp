@@ -7,7 +7,9 @@
 #include "GlCanvas.h"
 
 GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name)
-    : Track(time_graph), name_(std::move(name)) {}
+    : Track(time_graph), name_(std::move(name)) {
+  label_ = name_;
+}
 
 void GraphTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                   float z_offset) {

@@ -14,6 +14,7 @@ class SchedulerTrack final : public TimerTrack {
  public:
   explicit SchedulerTrack(TimeGraph* time_graph, OrbitApp* app);
   ~SchedulerTrack() override = default;
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] Type GetType() const override { return kSchedulerTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
@@ -29,6 +30,9 @@ class SchedulerTrack final : public TimerTrack {
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected) const override;
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
+
+ private:
+  uint32_t num_cores_;
 };
 
 #endif  // ORBIT_GL_SCHEDULER_TRACK_H_

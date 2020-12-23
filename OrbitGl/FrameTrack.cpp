@@ -67,9 +67,8 @@ FrameTrack::FrameTrack(TimeGraph* time_graph, const FunctionInfo& function, Orbi
     : TimerTrack(time_graph, app), function_(function) {
   // TODO(b/169554463): Support manual instrumentation.
   std::string function_name = function_utils::GetDisplayName(function_);
-  std::string name = absl::StrFormat("Frame track based on %s", function_name);
-  SetName(name);
-  SetLabel(name);
+  name_ = absl::StrFormat("Frame track based on %s", function_name);
+  label_ = name_;
 
   // Frame tracks are collapsed by default.
   collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,

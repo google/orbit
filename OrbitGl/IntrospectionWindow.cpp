@@ -10,7 +10,6 @@ using orbit_client_protos::TimerInfo;
 
 IntrospectionWindow::IntrospectionWindow(uint32_t font_size, OrbitApp* app)
     : CaptureWindow(font_size, app) {
-  time_graph_.SetStringManager(std::make_shared<StringManager>());
 }
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
