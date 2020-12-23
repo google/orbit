@@ -6,7 +6,7 @@ found in the LICENSE file.
 
 import logging
 from typing import Iterable, Type
-from collections import deque
+from copy import deepcopy
 
 from absl import flags
 from pywinauto import Application, timings
@@ -22,21 +22,31 @@ class OrbitE2EError(RuntimeError):
     pass
 
 
-class Fragment:
+class E2ETestCase:
+    """
+    Encapsulates a single test executed as part of a E2E Test Suite.
+    Inherit from this class to define a new test, and pass an instance of your test in the E2ETestSuite constructor
+    to have it executed.
+
+    All named arguments passed to the constructor of your test will be forwarded to the _execute method. To create
+    a parameterized test, simply inherit from this class and provide your own _execute methods with any number of
+    named arguments.
+    """
     def __init__(self, **kwargs):
-        self._e2e_test = None
+        self._suite = None
         self._args = kwargs
 
-    e2e_test = property(lambda self: self._e2e_test)
+    suite = property(lambda self: self._suite)
+    args = property(lambda self: deepcopy(self._args))
 
-    def execute(self, e2e_test: "E2ETest"):
-        self._e2e_test = e2e_test
+    def execute(self, suite: "E2ETestSuite"):
+        self._suite = suite
         self._execute(**self._args)
 
     def expect_true(self, cond, description):
         if not cond:
-            raise OrbitE2EError('Error executing test case %s, fragment %s. Condition expected to be True: "%s"' %
-                                (self.e2e_test.name, self.__class__.__name__, description))
+            raise OrbitE2EError('Error executing testcase %s, fragment %s. Condition expected to be True: "%s"' %
+                                (self.suite.name, self.__class__.__name__, description))
 
     def expect_eq(self, left, right, description):
         self.expect_true(left == right, description)
@@ -48,8 +58,8 @@ class Fragment:
         pass
 
 
-class E2ETest:
-    def __init__(self, test_name: str, fragments: Iterable[Fragment], dev_mode: bool = False,
+class E2ETestSuite:
+    def __init__(self, test_name: str, tests: Iterable[E2ETestCase], dev_mode: bool = False,
                  auto_connect: bool = True):
         try:
             self._application = Application(backend='uia').connect(title_re='orbitprofiler')
@@ -58,7 +68,7 @@ class E2ETest:
             raise
         self._test_name = test_name
         self._dev_mode = dev_mode or flags.FLAGS.dev_mode
-        self._fragments = fragments[:]
+        self._tests = tests[:]
         self._auto_connect = auto_connect
         self._top_window = None
 
@@ -89,14 +99,15 @@ class E2ETest:
             logging.info('Closed Orbit.')
         else:
             logging.info("DEV MODE: Skipped closing Orbit")
-        logging.info('Test "%s" executed without errors', self._test_name)
+        logging.info('Testcase "%s" executed without errors', self._test_name)
         timings.Timings.defaults()
 
     def execute(self):
         self.set_up()
-        for fragment in self._fragments:
-            logging.info('Executing fragment "%s"', fragment.__class__.__name__)
-            fragment.execute(self)
+        for test in self._tests:
+            logging.info('Running test "%s (%s)"', test.__class__.__name__,
+                         ", ".join("%s=%s" % (k, v) for k, v in test.args.items()))
+            test.execute(self)
         self.tear_down()
 
 
