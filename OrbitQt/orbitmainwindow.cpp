@@ -824,8 +824,9 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 }
 
 void OrbitMainWindow::on_actionOpenUserDataDirectory_triggered() {
-  if (!QDesktopServices::openUrl(QUrl(
-          QString::fromStdString(Path::CreateOrGetOrbitAppDataDir().string()), QUrl::StrictMode))) {
+  std::string app_data_dir = Path::CreateOrGetOrbitAppDataDir().string();
+  QUrl app_data_url = QUrl::fromLocalFile(QString::fromStdString(app_data_dir));
+  if (!QDesktopServices::openUrl(app_data_url)) {
     QMessageBox::critical(this, "Error opening directory",
                           "Could not open Orbit user data directory");
   }
