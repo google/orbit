@@ -35,3 +35,37 @@ protobuf_generate(TARGET MetricsUploader PROTOS proto/orbit_log_event.proto)
 target_include_directories(MetricsUploader PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/proto)
 target_link_libraries(MetricsUploader PUBLIC CONAN_PKG::protobuf)
+
+if (WIN32)
+# build .dll for tests
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+add_library(MetricsUploaderClientWithoutSendEvent SHARED TestClients/ClientWithoutSendEvent.cpp)
+target_link_libraries(MetricsUploaderClientWithoutSendEvent PRIVATE MetricsUploader)
+set_target_properties(MetricsUploaderClientWithoutSendEvent PROPERTIES FOLDER "MetricsUploaderTestClients")
+
+add_library(MetricsUploaderClientWithoutStart SHARED TestClients/ClientWithoutStart.cpp)
+target_link_libraries(MetricsUploaderClientWithoutStart PRIVATE MetricsUploader)
+set_target_properties(MetricsUploaderClientWithoutStart PROPERTIES FOLDER "MetricsUploaderTestClients")
+
+add_library(MetricsUploaderCompleteClient SHARED TestClients/CompleteClient.cpp)
+target_link_libraries(MetricsUploaderCompleteClient PRIVATE MetricsUploader)
+set_target_properties(MetricsUploaderCompleteClient PROPERTIES FOLDER "MetricsUploaderTestClients")
+
+add_library(MetricsUploaderStartWithErrorClient SHARED TestClients/StartWithErrorClient.cpp)
+target_link_libraries(MetricsUploaderStartWithErrorClient PRIVATE MetricsUploader)
+set_target_properties(MetricsUploaderStartWithErrorClient PROPERTIES FOLDER "MetricsUploaderTestClients")
+
+# add tests
+add_executable(MetricsUploaderTests)
+
+target_compile_options(MetricsUploaderTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(MetricsUploaderTests PRIVATE MetricsUploaderWindowsTest.cpp)
+
+target_link_libraries(MetricsUploaderTests PRIVATE MetricsUploader
+                                                   GTest::GTest
+                                                   GTest::Main)
+
+register_test(MetricsUploaderTests)
+endif()
