@@ -499,6 +499,7 @@ void OrbitMainWindow::SetupTargetLabel() {
   target_widget->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
   target_label_ = new QLabel();
   target_label_->setContentsMargins(6, 0, 0, 0);
+  target_label_->setObjectName("TargetLabel");
   auto* disconnect_target_button = new QPushButton("End Session");
   auto* target_layout = new QHBoxLayout();
   target_layout->addWidget(target_label_);
@@ -1163,6 +1164,11 @@ void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
+  // TODO (b/173011168): Color should not be defined inline. Replace with defined "good color"
+  // (green).
+  target_label_->setStyleSheet("#TargetLabel { color: #66BB6A; }");
+  target_label_->setText(QString::fromStdString(target.GetProcess()->name()) + " @ " +
+                         target.GetConnection()->GetInstance().display_name);
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
@@ -1170,10 +1176,16 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
+  // TODO (b/173011168): Color should not be defined inline. Replace with defined "good color"
+  // (green).
+  target_label_->setStyleSheet("#TargetLabel { color: #66BB6A; }");
+  target_label_->setText(QString("Local target: ") +
+                         QString::fromStdString(target.GetProcess()->name()));
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
-  target_label_->setStyleSheet("");
+  // TODO (b/173011168): Color should not be defined inline. Replace with defined color.
+  target_label_->setStyleSheet("#TargetLabel { color: #BDBDBD; }");
   target_label_->setText(QString::fromStdString(target.GetCaptureFilePath().filename().string()));
 }
 
