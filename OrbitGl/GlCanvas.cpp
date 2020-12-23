@@ -351,8 +351,8 @@ float GlCanvas::ScreenToWorldWidth(int width) const {
 
 Vec2 GlCanvas::WorldToScreen(Vec2 world_pos) const {
   Vec2 screen_pos;
-  screen_pos[0] = (world_pos[0] - world_top_left_x_) / world_width_ * GetWidth();
-  screen_pos[1] = (world_top_left_y_ - world_pos[1]) / world_height_ * GetHeight();
+  screen_pos[0] = floorf((world_pos[0] - world_top_left_x_) / world_width_ * GetWidth());
+  screen_pos[1] = floorf((world_top_left_y_ - world_pos[1]) / world_height_ * GetHeight());
   return screen_pos;
 }
 
