@@ -117,7 +117,9 @@ void OrbitTreeView::OnSort(int section, Qt::SortOrder order) {
   }
 
   model_->sort(section, order);
+  model_->GetDataView()->SetUpdateSelectedIndices(false);
   Refresh();
+  model_->GetDataView()->SetUpdateSelectedIndices(true);
 }
 
 void OrbitTreeView::OnFilter(const QString& filter) {
@@ -126,7 +128,9 @@ void OrbitTreeView::OnFilter(const QString& filter) {
   }
 
   model_->OnFilter(filter);
+  model_->GetDataView()->SetUpdateSelectedIndices(false);
   Refresh();
+  model_->GetDataView()->SetUpdateSelectedIndices(true);
 }
 
 void OrbitTreeView::OnTimer() {
@@ -141,8 +145,6 @@ void OrbitTreeView::Refresh() {
     return;
   }
 
-  QModelIndexList list = selectionModel()->selectedIndexes();
-
   if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions) {
     model_->layoutAboutToBeChanged();
     model_->layoutChanged();
@@ -152,16 +154,27 @@ void OrbitTreeView::Refresh() {
   reset();
 
   // Re-select previous selection
-  int selected = model_->GetSelectedIndex();
-  if (selected >= 0) {
-    QItemSelectionModel* selection = selectionModel();
-    QModelIndex idx = model_->CreateIndex(selected, 0);
-
-    // Don't re-trigger row selection callback when re-selecting.
-    is_internal_refresh_ = true;
-    selection->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-    is_internal_refresh_ = false;
+  QItemSelectionModel* selection = selectionModel();
+  QModelIndex index;
+  // Don't re-trigger row selection callback when re-selecting.
+  is_internal_refresh_ = true;
+  if (is_multi_selection_) {
+    std::vector<int> visible_selected_indices = model_->GetDataView()->GetVisibleSelectedIndices();
+    for (int row : visible_selected_indices) {
+      index = model_->CreateIndex(row, 0);
+      selection->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    }
+    if (model_->GetDataView()->GetType() == DataViewType::kSampling) {
+      OnMultiRowsSelected(visible_selected_indices);
+    }
+  } else {
+    int selected = model_->GetSelectedIndex();
+    if (selected >= 0) {
+      index = model_->CreateIndex(selected, 0);
+      selection->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    }
   }
+  is_internal_refresh_ = false;
 }
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
@@ -304,9 +317,14 @@ void OrbitTreeView::OnRowSelected(std::optional<int> row) {
 }
 
 void OrbitTreeView::OnMultiRowsSelected(std::vector<int>& rows) {
-  std::set<int> row_set(rows.begin(), rows.end());
-  rows.assign(row_set.begin(), row_set.end());
-  model_->OnMultiRowsSelected(rows);
+  if (model_ != nullptr) {
+    std::set<int> row_set(rows.begin(), rows.end());
+    rows.assign(row_set.begin(), row_set.end());
+    model_->OnMultiRowsSelected(rows);
+  }
+  for (OrbitTreeView* tree_view : links_) {
+    tree_view->Refresh();
+  }
 }
 
 void OrbitTreeView::OnRangeChanged(int /*min*/, int max) {
