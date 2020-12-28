@@ -266,10 +266,13 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   }
 }
 
-void SamplingReportDataView::OnSelect(std::optional<int> index) {
-  uint64_t function_address = index.has_value() ? GetSampledFunction(index.value()).absolute_address
-                                                : SamplingReport::kInvalidFunctionAddress;
-  sampling_report_->OnSelectAddress(function_address, tid_);
+void SamplingReportDataView::OnMultiSelect(const std::vector<int>& indices) {
+  size_t num_indices = indices.size();
+  std::vector<uint64_t> addresses(num_indices);
+  for (size_t i = 0; i < num_indices; ++i) {
+    addresses[i] = GetSampledFunction(indices[i]).absolute_address;
+  }
+  sampling_report_->OnSelectAddresses(addresses, tid_);
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {

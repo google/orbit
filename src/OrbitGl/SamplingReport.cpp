@@ -21,7 +21,6 @@ SamplingReport::SamplingReport(
       unique_callstacks_{std::move(unique_callstacks)},
       has_summary_{has_summary},
       app_{app} {
-  selected_address_ = kInvalidFunctionAddress;
   selected_thread_id_ = 0;
   callstack_data_view_ = nullptr;
   selected_sorted_callstack_report_ = nullptr;
@@ -50,14 +49,14 @@ void SamplingReport::FillReport() {
 }
 
 void SamplingReport::UpdateDisplayedCallstack() {
-  if (selected_address_ == SamplingReport::kInvalidFunctionAddress) {
+  if (selected_addresses_.empty()) {
     ClearReport();
     return;
   }
 
   selected_sorted_callstack_report_ =
-      post_processed_sampling_data_.GetSortedCallstackReportFromAddress(selected_address_,
-                                                                        selected_thread_id_);
+      post_processed_sampling_data_.GetSortedCallstackReportFromAddresses(selected_addresses_,
+                                                                          selected_thread_id_);
   if (selected_sorted_callstack_report_->callstacks_count.empty()) {
     ClearReport();
   } else {
@@ -87,10 +86,10 @@ void SamplingReport::UpdateReport(
   UpdateDisplayedCallstack();
 }
 
-void SamplingReport::OnSelectAddress(uint64_t address, ThreadID thread_id) {
+void SamplingReport::OnSelectAddresses(const std::vector<uint64_t>& addresses, ThreadID thread_id) {
   if (callstack_data_view_) {
-    if (selected_address_ != address || selected_thread_id_ != thread_id) {
-      selected_address_ = address;
+    if (selected_addresses_ != addresses || selected_thread_id_ != thread_id) {
+      selected_addresses_ = addresses;
       selected_thread_id_ = thread_id;
       UpdateDisplayedCallstack();
     }

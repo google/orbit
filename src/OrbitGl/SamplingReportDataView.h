@@ -32,7 +32,7 @@ class SamplingReportDataView : public DataView {
 
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
-  void OnSelect(std::optional<int> index) override;
+  void OnMultiSelect(const std::vector<int>& indices) override;
 
   void LinkDataView(DataView* data_view) override;
   void SetSamplingReport(class SamplingReport* sampling_report) {
