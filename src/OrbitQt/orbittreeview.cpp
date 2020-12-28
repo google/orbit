@@ -277,12 +277,21 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
   if (is_internal_refresh_) return;
 
   // Row selection callback.
-  QModelIndex index = selectionModel()->currentIndex();
-  std::optional<int> row(std::nullopt);
-  if (index.isValid()) {
-    row = index.row();
+  if (is_multi_selection_) {
+    QModelIndexList selected_indexes = selectionModel()->selectedIndexes();
+    std::vector<int> selected_rows;
+    for (QModelIndex& index : selected_indexes) {
+      selected_rows.push_back(index.row());
+    }
+    OnMultiRowsSelected(selected_rows);
+  } else {
+    QModelIndex index = selectionModel()->currentIndex();
+    std::optional<int> row(std::nullopt);
+    if (index.isValid()) {
+      row = index.row();
+    }
+    OnRowSelected(row);
   }
-  OnRowSelected(row);
 }
 
 void OrbitTreeView::OnRowSelected(std::optional<int> row) {
@@ -292,6 +301,12 @@ void OrbitTreeView::OnRowSelected(std::optional<int> row) {
   for (OrbitTreeView* tree_view : links_) {
     tree_view->Refresh();
   }
+}
+
+void OrbitTreeView::OnMultiRowsSelected(std::vector<int>& rows) {
+  std::set<int> row_set(rows.begin(), rows.end());
+  rows.assign(row_set.begin(), row_set.end());
+  model_->OnMultiRowsSelected(rows);
 }
 
 void OrbitTreeView::OnRangeChanged(int /*min*/, int max) {
