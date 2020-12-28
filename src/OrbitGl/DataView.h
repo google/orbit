@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "DataViewTypes.h"
+#include "absl/container/flat_hash_set.h"
 #include "OrbitBase/Logging.h"
 
 class OrbitApp;
@@ -36,7 +37,11 @@ class DataView {
   };
 
   explicit DataView(DataViewType type, OrbitApp* app)
-      : update_period_ms_(-1), selected_index_(-1), type_(type), app_{app} {}
+      : update_period_ms_(-1),
+        selected_index_(-1),
+        update_selected_indices_(true),
+        type_(type),
+        app_{app} {}
 
   virtual ~DataView() = default;
 
@@ -57,6 +62,7 @@ class DataView {
   // Filter callback set from UI layer.
   using FilterCallback = std::function<void(const std::string&)>;
   void SetUiFilterCallback(FilterCallback callback) { filter_callback_ = std::move(callback); }
+  void SetUpdateSelectedIndices(bool status) { update_selected_indices_ = status; }
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
   virtual void OnContextMenu(const std::string& action, int menu_index,
@@ -64,6 +70,7 @@ class DataView {
   virtual void OnSelect(std::optional<int> /*index*/) {}
   virtual int GetSelectedIndex() { return selected_index_; }
   virtual void OnMultiSelect(const std::vector<int>& /*indices*/) {}
+  [[nodiscard]] virtual const std::vector<int> GetVisibleSelectedIndices();
   virtual void OnDoubleClicked(int /*index*/) {}
   virtual void OnDataChanged();
   virtual void OnTimer() {}
@@ -98,6 +105,8 @@ class DataView {
   std::string filter_;
   int update_period_ms_;
   int selected_index_;
+  absl::flat_hash_set<int> selected_indices_;
+  bool update_selected_indices_;
   DataViewType type_;
 
   static const std::string kMenuActionCopySelection;

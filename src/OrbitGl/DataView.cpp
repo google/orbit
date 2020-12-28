@@ -77,6 +77,16 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
   }
 }
 
+const std::vector<int> DataView::GetVisibleSelectedIndices() {
+  std::vector<int> visible_selected_indices;
+  for (size_t row = 0; row < indices_.size(); ++row) {
+    if (selected_indices_.contains(indices_[row])) {
+      visible_selected_indices.push_back(static_cast<int>(row));
+    }
+  }
+  return visible_selected_indices;
+}
+
 void DataView::ExportCSV(const std::string& file_path) {
   std::ofstream out(file_path);
   if (out.fail()) return;

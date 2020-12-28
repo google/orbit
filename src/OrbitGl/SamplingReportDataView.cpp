@@ -273,6 +273,13 @@ void SamplingReportDataView::OnMultiSelect(const std::vector<int>& indices) {
     addresses[i] = GetSampledFunction(indices[i]).absolute_address;
   }
   sampling_report_->OnSelectAddresses(addresses, tid_);
+
+  if (update_selected_indices_) {
+    selected_indices_.clear();
+    for (int row : indices) {
+      selected_indices_.insert(indices_[row]);
+    }
+  }
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {
