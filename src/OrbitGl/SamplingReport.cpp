@@ -144,6 +144,7 @@ void SamplingReport::OnCallstackIndexChanged(size_t index) {
     auto it = unique_callstacks_.find(cs.callstack_id);
     CHECK(it != unique_callstacks_.end());
     callstack_data_view_->SetCallStack(*it->second);
+    callstack_data_view_->SetFunctionsToHighlight(selected_addresses_);
   } else {
     selected_callstack_index_ = 0;
   }
