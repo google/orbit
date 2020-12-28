@@ -63,6 +63,7 @@ class DataView {
                              const std::vector<int>& item_indices);
   virtual void OnSelect(std::optional<int> /*index*/) {}
   virtual int GetSelectedIndex() { return selected_index_; }
+  virtual void OnMultiSelect(const std::vector<int>& /*indices*/) {}
   virtual void OnDoubleClicked(int /*index*/) {}
   virtual void OnDataChanged();
   virtual void OnTimer() {}

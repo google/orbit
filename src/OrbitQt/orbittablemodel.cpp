@@ -104,3 +104,7 @@ void OrbitTableModel::OnRowSelected(std::optional<int> row) {
     data_view_->OnSelect(row);
   }
 }
+
+void OrbitTableModel::OnMultiRowsSelected(const std::vector<int>& rows) {
+  data_view_->OnMultiSelect(rows);
+}

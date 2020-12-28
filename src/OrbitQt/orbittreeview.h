@@ -51,6 +51,7 @@ class OrbitTreeView : public QTreeView {
   bool HasRefreshButton() const;
   void OnRefreshButtonClicked();
   void SetIsInternalRefresh(bool status) { is_internal_refresh_ = status; }
+  void SetIsMultiSelection(bool status) { is_multi_selection_ = status; }
 
  public slots:
   void columnResized(int column, int oldSize, int newSize);
@@ -63,6 +64,7 @@ class OrbitTreeView : public QTreeView {
   void OnRangeChanged(int min, int max);
   void OnRowSelected(std::optional<int> row);
   void OnDoubleClicked(QModelIndex index);
+  void OnMultiRowsSelected(std::vector<int>& rows);
 
  private:
   std::unique_ptr<OrbitTableModel> model_;
@@ -70,6 +72,7 @@ class OrbitTreeView : public QTreeView {
   std::vector<OrbitTreeView*> links_;
   bool auto_resize_;
   bool is_internal_refresh_ = false;
+  bool is_multi_selection_ = false;
 };
 
 #endif  // ORBIT_QT_ORBIT_TREE_VIEW_H_
