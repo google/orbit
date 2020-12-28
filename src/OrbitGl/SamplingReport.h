@@ -35,7 +35,7 @@ class SamplingReport {
                     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
-  void OnSelectAddress(uint64_t address, ThreadID thread_id);
+  void OnSelectAddresses(const std::vector<uint64_t>& addresses, ThreadID thread_id);
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
   [[nodiscard]] std::string GetSelectedCallstackString() const;
@@ -44,7 +44,6 @@ class SamplingReport {
   [[nodiscard]] bool HasSamples() const { return !unique_callstacks_.empty(); }
   [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
-  static const uint64_t kInvalidFunctionAddress = std::numeric_limits<uint64_t>::max();
 
  protected:
   void FillReport();
@@ -57,7 +56,7 @@ class SamplingReport {
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;
 
-  uint64_t selected_address_;
+  std::vector<uint64_t> selected_addresses_;
   ThreadID selected_thread_id_;
   std::unique_ptr<SortedCallstackReport> selected_sorted_callstack_report_;
   size_t selected_callstack_index_;

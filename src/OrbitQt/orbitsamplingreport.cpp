@@ -80,6 +80,7 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
     gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
     treeView->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
     treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
+    treeView->GetTreeView()->SetIsMultiSelection(true);
 
     treeView->Link(ui->CallstackTreeView);
 
@@ -118,11 +119,11 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
 void OrbitSamplingReport::OnCurrentThreadTabChanged(int current_tab_index) {
   auto treeView = m_OrbitDataViews[current_tab_index];
   QModelIndexList index_list = treeView->GetTreeView()->selectionModel()->selectedIndexes();
-  std::optional<int> row = std::nullopt;
-  if (!index_list.isEmpty() && index_list.front().isValid()) {
-    row = index_list.front().row();
+  std::vector<int> row_list;
+  for (QModelIndex& index : index_list) {
+    row_list.push_back(index.row());
   }
-  treeView->GetTreeView()->GetModel()->OnRowSelected(row);
+  treeView->GetTreeView()->GetModel()->OnMultiRowsSelected(row_list);
   RefreshCallstackView();
 }
 

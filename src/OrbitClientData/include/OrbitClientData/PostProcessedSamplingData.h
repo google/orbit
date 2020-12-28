@@ -84,10 +84,10 @@ class PostProcessedSamplingData {
 
   [[nodiscard]] const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
-  [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddress(uint64_t address,
-                                                                         ThreadID thread_id) const;
-  [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstackReportFromAddress(
-      uint64_t address, ThreadID thread_id) const;
+  [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddresses(
+      const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
+  [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstackReportFromAddresses(
+      const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
 
   [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;

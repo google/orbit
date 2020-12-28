@@ -48,22 +48,33 @@ const CallStack& PostProcessedSamplingData::GetResolvedCallstack(
   return *resolved_callstack_it->second;
 }
 
-std::multimap<int, CallstackID> PostProcessedSamplingData::GetCallstacksFromAddress(
-    uint64_t address, ThreadID thread_id) const {
-  const auto& callstacks_it = function_address_to_callstack_.find(address);
+std::multimap<int, CallstackID> PostProcessedSamplingData::GetCallstacksFromAddresses(
+    const std::vector<uint64_t>& addresses, ThreadID thread_id) const {
   const auto& sample_data_it = thread_id_to_sample_data_.find(thread_id);
-  if (callstacks_it == function_address_to_callstack_.end() ||
-      sample_data_it == thread_id_to_sample_data_.end()) {
+  if (sample_data_it == thread_id_to_sample_data_.end()) {
     return std::multimap<int, CallstackID>();
   }
-  return SortCallstacks(sample_data_it->second, callstacks_it->second);
+
+  std::set<CallstackID> callstacks;
+  for (uint64_t address : addresses) {
+    const auto& callstacks_it = function_address_to_callstack_.find(address);
+    if (callstacks_it != function_address_to_callstack_.end()) {
+      callstacks.insert(callstacks_it->second.begin(), callstacks_it->second.end());
+    }
+  }
+
+  if (callstacks.empty()) {
+    return std::multimap<int, CallstackID>();
+  } else {
+    return SortCallstacks(sample_data_it->second, callstacks);
+  }
 }
 
 std::unique_ptr<SortedCallstackReport>
-PostProcessedSamplingData::GetSortedCallstackReportFromAddress(uint64_t address,
-                                                               ThreadID thread_id) const {
+PostProcessedSamplingData::GetSortedCallstackReportFromAddresses(
+    const std::vector<uint64_t>& addresses, ThreadID thread_id) const {
   std::unique_ptr<SortedCallstackReport> report = std::make_unique<SortedCallstackReport>();
-  std::multimap<int, CallstackID> multi_map = GetCallstacksFromAddress(address, thread_id);
+  std::multimap<int, CallstackID> multi_map = GetCallstacksFromAddresses(addresses, thread_id);
   size_t unique_callstacks_count = multi_map.size();
   report->callstacks_count.resize(unique_callstacks_count);
   size_t index = unique_callstacks_count;
