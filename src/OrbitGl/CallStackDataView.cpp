@@ -86,6 +86,17 @@ std::string CallStackDataView::GetValue(int row, int column) {
   }
 }
 
+std::string CallStackDataView::GetToolTip(int row, int /*column*/) {
+  CallStackDataViewFrame frame = GetFrameFromRow(row);
+  if (functions_to_highlight_.find(frame.address) != functions_to_highlight_.end()) {
+    return absl::StrFormat(
+        "Functions marked with %s are part of the selection in the sampling report above",
+        CallStackDataView::kHighlightedFunctionString);
+  } else {
+    return "";
+  }
+}
+
 const std::string CallStackDataView::kMenuActionLoadSymbols = "Load Symbols";
 const std::string CallStackDataView::kMenuActionSelect = "Hook";
 const std::string CallStackDataView::kMenuActionUnselect = "Unhook";
