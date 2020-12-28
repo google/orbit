@@ -41,6 +41,11 @@ class CallStackDataView : public DataView {
     OnDataChanged();
   }
 
+  void SetFunctionsToHighlight(const std::vector<uint64_t>& absolute_addresses);
+  [[nodiscard]] bool WantsDisplayColor() override { return true; }
+  [[nodiscard]] bool GetDisplayColor(int row, int /*column*/, unsigned char& red,
+                                     unsigned char& green, unsigned char& blue) override;
+
  protected:
   void DoFilter() override;
 
@@ -77,6 +82,11 @@ class CallStackDataView : public DataView {
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
   static const std::string kMenuActionDisassembly;
+  static const std::string kHighlightedFunctionString;
+  static const std::string kHighlightedFunctionBlankString;
+
+ private:
+  absl::flat_hash_set<uint64_t> functions_to_highlight_;
 };
 
 #endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_

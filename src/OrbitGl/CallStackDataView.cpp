@@ -57,7 +57,10 @@ std::string CallStackDataView::GetValue(int row, int column) {
                  ? FunctionsDataView::kSelectedFunctionString
                  : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
-      return function != nullptr ? function_utils::GetDisplayName(*function) : frame.fallback_name;
+      return absl::StrCat(
+          functions_to_highlight_.contains(frame.address) ? kHighlightedFunctionString
+                                                          : kHighlightedFunctionBlankString,
+          function != nullptr ? function_utils::GetDisplayName(*function) : frame.fallback_name);
     case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
     case kColumnFile:
@@ -87,6 +90,9 @@ const std::string CallStackDataView::kMenuActionLoadSymbols = "Load Symbols";
 const std::string CallStackDataView::kMenuActionSelect = "Hook";
 const std::string CallStackDataView::kMenuActionUnselect = "Unhook";
 const std::string CallStackDataView::kMenuActionDisassembly = "Go to Disassembly";
+const std::string CallStackDataView::kHighlightedFunctionString = "➜ ";
+const std::string CallStackDataView::kHighlightedFunctionBlankString =
+    std::string(kHighlightedFunctionString.size(), ' ');
 
 std::vector<std::string> CallStackDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -194,6 +200,36 @@ void CallStackDataView::OnDataChanged() {
   }
 
   DataView::OnDataChanged();
+}
+
+void CallStackDataView::SetFunctionsToHighlight(const std::vector<uint64_t>& absolute_addresses) {
+  absl::flat_hash_set<uint64_t> sampling_function_set(absolute_addresses.begin(),
+                                                      absolute_addresses.end());
+  const CaptureData& capture_data = app_->GetCaptureData();
+  functions_to_highlight_.clear();
+
+  for (int index : indices_) {
+    CallStackDataViewFrame frame = GetFrameFromIndex(index);
+    std::optional<uint64_t> callstack_function_absolute_address =
+        capture_data.FindFunctionAbsoluteAddressByAddress(frame.address);
+    if (callstack_function_absolute_address.has_value() &&
+        sampling_function_set.contains(callstack_function_absolute_address.value())) {
+      functions_to_highlight_.insert(frame.address);
+    }
+  }
+}
+
+bool CallStackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
+                                        unsigned char& green, unsigned char& blue) {
+  CallStackDataViewFrame frame = GetFrameFromRow(row);
+  if (functions_to_highlight_.contains(frame.address)) {
+    red = 200;
+    green = 240;
+    blue = 200;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(int row) {
