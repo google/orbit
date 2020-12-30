@@ -21,45 +21,26 @@ This automation script covers a basic workflow:
  - in the "Live" tab, add an iterator for the instrumented function
 """
 
-import logging
-
-import orbit_testing
 from absl import app
-from pywinauto.application import Application
+
+from core.orbit_e2e import E2ETestSuite
+from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from fragments.symbols_tab import LoadSymbols, FilterAndHookFunction
+from fragments.capture_window import Capture
+from fragments.live_tab import AddIterator
 
 
 def main(argv):
-    orbit_testing.wait_for_orbit()
-    application = Application(backend='uia').connect(title_re='orbitprofiler')
-    orbit_testing.connect_to_gamelet(application)
-    orbit_testing.select_process(application, 'hello_')
-    orbit_testing.load_symbols(application, 'hello_')
-    orbit_testing.hook_function(application, 'DrawFrame')
-    orbit_testing.focus_on_capture_window(application)
-    orbit_testing.capture(application, 5)
-
-    main_wnd = application.window(title_re='orbitprofiler', found_index=0)
-
-    # Adding an iterator adds three new buttons and we use this knowledge to
-    # verify that an iterator was added correctly. It seems other widgets like
-    # the label are not well represented by pywinauto.
-    BUTTONS_PER_ITERATOR = 3
-    count_all_buttons_before = len(main_wnd.descendants(control_type='Button'))
-
-    # Find 'DrawFrame' in the live tab and add an iterator
-    children = main_wnd.TreeView.children()
-    for i in range(len(children)):
-        if 'DrawFrame' in children[i].window_text():
-            children[i].click_input(button='right')
-            main_wnd.child_window(title='Add iterator(s)',
-                                  control_type="MenuItem").click_input()
-
-    count_all_buttons_after = len(main_wnd.descendants(control_type='Button'))
-    if count_all_buttons_before + BUTTONS_PER_ITERATOR != count_all_buttons_after:
-        raise RuntimeError('Iterator not correctly added')
-
-    main_wnd.CloseButton.click_input()
-    logging.info('Closed Orbit.')
+    tests = [
+        ConnectToStadiaInstance(),
+        FilterAndSelectFirstProcess(process_filter="hello_ggp"),
+        LoadSymbols(module_search_string="hello_ggp"),
+        FilterAndHookFunction(function_search_string='DrawFrame'),
+        Capture(),
+        AddIterator(function_name="DrawFrame")
+    ]
+    suite = E2ETestSuite(test_name="Add Iterator", tests=tests)
+    suite.execute()
 
 
 if __name__ == '__main__':
