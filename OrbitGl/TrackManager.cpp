@@ -252,8 +252,8 @@ void TrackManager::UpdateMovingTrackSorting() {
     int moving_track_current_position = -1;
     for (auto track_it = visible_tracks_.begin(); track_it != visible_tracks_.end(); ++track_it) {
       if (moving_track->GetPos()[1] >= (*track_it)->GetPos()[1]) {
-        visible_tracks_.insert(track_it, moving_track);
         moving_track_current_position = track_it - visible_tracks_.begin();
+        visible_tracks_.insert(track_it, moving_track);
         break;
       }
     }
