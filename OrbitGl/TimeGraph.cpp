@@ -72,7 +72,6 @@ void TimeGraph::Clear() {
   batcher_.StartNewFrame();
   capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   capture_max_timestamp_ = 0;
-  thread_count_map_.clear();
 
   track_manager_->Clear();
 
@@ -265,7 +264,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
     if (timer_info.type() != TimerInfo::kCoreActivity) {
       track->OnTimer(timer_info);
-      ++thread_count_map_[timer_info.thread_id()];
     } else {
       auto scheduler_track = track_manager_->GetOrCreateSchedulerTrack();
       scheduler_track->OnTimer(timer_info);
@@ -303,7 +301,6 @@ void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {
     case orbit_api::kScopeStart: {
       ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
       track->OnTimer(timer_info);
-      ++thread_count_map_[timer_info.thread_id()];
     } break;
     case orbit_api::kScopeStartAsync:
     case orbit_api::kScopeStopAsync:

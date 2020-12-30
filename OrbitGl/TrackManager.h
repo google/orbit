@@ -70,7 +70,7 @@ class TrackManager {
  private:
   void UpdateFilteredTrackList();
   [[nodiscard]] int FindMovingTrackIndex();
-  [[nodiscard]] std::vector<int32_t> GetSortedThreadIds();
+  [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
 
   mutable std::recursive_mutex mutex_;
 
@@ -91,8 +91,6 @@ class TrackManager {
   std::vector<Track*> sorted_tracks_;
   bool sorting_invalidated_;
   Timer last_thread_reorder_;
-  std::map<int32_t, uint32_t> thread_count_map_;
-  std::map<int32_t, uint32_t> event_count_;
 
   std::string filter_;
   std::vector<Track*> visible_tracks_;
