@@ -219,7 +219,6 @@ class TimeGraph {
 
   TimeGraphAccessibility accessibility_;
 
-  std::map<int32_t, uint32_t> thread_count_map_;
   uint32_t num_cores_;
   // Be careful when directly changing these members without using the
   // methods NeedsRedraw() or NeedsUpdate():

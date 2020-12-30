@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 #include "App.h"
@@ -81,30 +82,8 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
 void TrackManager::SortTracks() {
   if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_) return;
 
-  ThreadTrack* process_track = nullptr;
-
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  if (capture_data != nullptr) {
-    // Get or create thread track from events' thread id.
-    event_count_.clear();
-    event_count_[orbit_base::kAllProcessThreadsTid] =
-        capture_data->GetCallstackData()->GetCallstackEventsCount();
-
-    // The process track is a special ThreadTrack of id "kAllThreadsFakeTid".
-    process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsTid);
-    for (const auto& tid_and_count :
-         capture_data->GetCallstackData()->GetCallstackEventsCountsPerTid()) {
-      const int32_t thread_id = tid_and_count.first;
-      const uint32_t count = tid_and_count.second;
-      event_count_[thread_id] = count;
-      GetOrCreateThreadTrack(thread_id);
-    }
-  }
-
   // Reorder threads once every second when capturing
   if (!app_->IsCapturing() || last_thread_reorder_.ElapsedMillis() > 1000.0) {
-    std::vector<int32_t> sorted_thread_ids = GetSortedThreadIds();
-
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     // Gather all tracks regardless of the process in sorted order
     std::vector<Track*> all_processes_sorted_tracks;
@@ -135,19 +114,23 @@ void TrackManager::SortTracks() {
     }
 
     // Process track.
-    if (process_track && !process_track->IsEmpty()) {
-      all_processes_sorted_tracks.push_back(process_track);
+    if (app_->HasCaptureData()) {
+      ThreadTrack* process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsTid);
+      if (!process_track->IsEmpty()) {
+        all_processes_sorted_tracks.push_back(process_track);
+      }
     }
 
     // Thread tracks.
-    for (auto thread_id : sorted_thread_ids) {
-      auto track = GetOrCreateThreadTrack(thread_id);
-      if (!track->IsEmpty()) {
-        all_processes_sorted_tracks.push_back(track);
+    std::vector<ThreadTrack*> sorted_thread_tracks = GetSortedThreadTracks();
+    for (ThreadTrack* thread_track : sorted_thread_tracks) {
+      if (!thread_track->IsEmpty()) {
+        all_processes_sorted_tracks.push_back(thread_track);
       }
     }
 
     // Separate "capture_pid" tracks from tracks that originate from other processes.
+    const CaptureData* capture_data = time_graph_->GetCaptureData();
     int32_t capture_pid = capture_data ? capture_data->process_id() : 0;
     std::vector<Track*> capture_pid_tracks;
     std::vector<Track*> external_pid_tracks;
@@ -204,33 +187,29 @@ void TrackManager::UpdateFilteredTrackList() {
   }
 }
 
-std::vector<int32_t>
-TrackManager::GetSortedThreadIds() {  // Show threads with instrumented functions first
-  std::vector<int32_t> sorted_thread_ids;
-  std::vector<std::pair<int32_t, uint32_t>> sorted_threads =
-      orbit_core::ReverseValueSort(thread_count_map_);
+std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
+  std::vector<ThreadTrack*> sorted_tracks;
+  absl::flat_hash_map<ThreadTrack*, uint32_t> num_events_by_track;
+  const CaptureData* capture_data = time_graph_->GetCaptureData();
+  const CallstackData* callstack_data = capture_data ? capture_data->GetCallstackData() : nullptr;
 
-  for (auto& [tid, unused_value] : sorted_threads) {
-    // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
-    // separately.
-    if (tid != orbit_base::kAllProcessThreadsTid) {
-      sorted_thread_ids.push_back(tid);
-    }
+  for (auto& [tid, track] : thread_tracks_) {
+    if (tid == orbit_base::kAllProcessThreadsTid)
+      continue;  // "kAllProcessThreadsTid" is handled separately.
+    sorted_tracks.push_back(track.get());
+    uint32_t num_events = callstack_data ? callstack_data->GetCallstackEventsOfTidCount(tid) : 0;
+    num_events_by_track[track.get()] = num_events;
   }
 
-  // Then show threads sorted by number of events
-  std::vector<std::pair<int32_t, uint32_t>> sorted_by_events =
-      orbit_core::ReverseValueSort(event_count_);
-  for (auto& [tid, unused_value] : sorted_by_events) {
-    // Track "kAllThreadsFakeTid" holds all target process sampling info, it is handled
-    // separately.
-    if (tid == orbit_base::kAllProcessThreadsTid) continue;
-    if (thread_count_map_.find(tid) == thread_count_map_.end()) {
-      sorted_thread_ids.push_back(tid);
-    }
-  }
+  // Tracks with instrumented timers appear first, ordered by descending order of timers.
+  // The remaining tracks appear after, ordered by descending order of callstack events.
+  std::sort(sorted_tracks.begin(), sorted_tracks.end(),
+            [&num_events_by_track](ThreadTrack* a, ThreadTrack* b) {
+              return std::make_tuple(a->GetNumTimers(), num_events_by_track[a]) >
+                     std::make_tuple(b->GetNumTimers(), num_events_by_track[b]);
+            });
 
-  return sorted_thread_ids;
+  return sorted_tracks;
 }
 
 void TrackManager::UpdateMovingTrackSorting() {
