@@ -13,8 +13,11 @@
   <property name="windowTitle">
    <string>Orbit Profiler</string>
   </property>
+  <property name="accessibleName">
+   <string>Orbit Profiler</string>
+  </property>
   <property name="styleSheet">
-   <string notr="true">QLineEdit[accessibleName=&quot;filter&quot;] {
+   <string notr="true">QLineEdit[clearButtonEnabled=&quot;true&quot;] {
 	background-image: url(:/actions/search_small_offset);
 	background-position: left center;
 	background-repeat: no-repeat;
@@ -95,7 +98,11 @@ QPushButton:disabled {
             <widget class="ProcessLauncherWidget" name="ProcessesList" native="true"/>
             <widget class="OrbitDataViewPanel" name="SessionList" native="true"/>
            </widget>
-           <widget class="OrbitDataViewPanel" name="ModulesList" native="true"/>
+           <widget class="OrbitDataViewPanel" name="ModulesList" native="true">
+            <property name="accessibleName">
+             <string>ModulesDataView</string>
+            </property>
+           </widget>
           </widget>
          </item>
         </layout>
@@ -115,6 +122,9 @@ QPushButton:disabled {
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="accessibleName">
+            <string>CaptureToolBar</string>
            </property>
            <addaction name="actionToggle_Capture"/>
            <addaction name="actionClear_Capture"/>
@@ -149,7 +159,7 @@ QPushButton:disabled {
             <item>
              <widget class="QLineEdit" name="filterTracks">
               <property name="accessibleName">
-               <string>filter</string>
+               <string>FilterTracks</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QLineEdit {
@@ -167,7 +177,7 @@ QPushButton:disabled {
             <item>
              <widget class="QLineEdit" name="filterFunctions">
               <property name="accessibleName">
-               <string>filter</string>
+               <string>FilterFunctions</string>
               </property>
               <property name="placeholderText">
                <string>Filter Functions</string>
@@ -243,7 +253,11 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="functionsTabLayout">
          <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="FunctionsList" native="true"/>
+          <widget class="OrbitDataViewPanel" name="FunctionsList" native="true">
+           <property name="accessibleName">
+            <string>FunctionsDataView</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>

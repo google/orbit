@@ -29,6 +29,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   const int height = 400;
   setMinimumSize(QSize(width, height));
   setSizeGripEnabled(true);
+  setWindowTitle("Orbit Profiler");
 
   // Layout
   const auto layout = QPointer{new QGridLayout{this}};
@@ -50,6 +51,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   table_view->viewport()->setFocusPolicy(Qt::NoFocus);
   table_view->horizontalHeader()->setStretchLastSection(true);
   table_view->setModel(model_);
+  table_view->setAccessibleName("InstanceList");
   layout->addWidget(table_view, 1, 0, 1, 2);
 
   // Ok / Cancel Buttons

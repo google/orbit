@@ -141,6 +141,8 @@ class OrbitMainWindow : public QMainWindow {
   void SetupHintFrame();
   void SetupTargetLabel();
 
+  void SetupAccessibleNamesForAutomation();
+
   void SaveCurrentTabLayoutAsDefaultInMemory();
 
   void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint pos);

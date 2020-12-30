@@ -205,6 +205,7 @@ void RunBetaUiInstance(std::optional<DeploymentConfiguration> deployment_configu
     }
 
     int application_return_code = 0;
+    orbit_qt::InstallAccessibilityFactories();
 
     {  // Scoping of QT UI Resources
 

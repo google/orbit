@@ -20,6 +20,7 @@ const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app) : TimerTrack(time_graph, app) {
   SetPinned(false);
+  SetName("Scheduler");
 }
 
 float SchedulerTrack::GetHeight() const {
