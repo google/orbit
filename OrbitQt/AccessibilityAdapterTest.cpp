@@ -29,22 +29,6 @@ TEST(AccessibilityAdapter, CreationAndManagement) {
   EXPECT_EQ(AccessibilityAdapter::RegisteredAdapterCount(), 0);
 }
 
-TEST(AccessibilityAdapter, ExternalWidget) {
-  QObject object;
-
-  /*
-   * This should usually happen automatically - OrbitGlWidgetAccessible will register
-   * and unregister on construction and deletion. This can currently not be tested though because we
-   * cannot create a OrbitGlWidgetAccessible without an OrbitGlWidget, and this has too many
-   * dependencies to be instantiated in a unit test at this point
-   */
-  std::unique_ptr<AccessibleObjectFake> obj = std::make_unique<AccessibleObjectFake>(nullptr);
-  AccessibilityAdapter::RegisterAdapter(obj.get(), QAccessible::queryAccessibleInterface(&object));
-  EXPECT_EQ(AccessibilityAdapter::RegisteredAdapterCount(), 1);
-  AccessibilityAdapter::QAccessibleDeleted(QAccessible::queryAccessibleInterface(&object));
-  EXPECT_EQ(AccessibilityAdapter::RegisteredAdapterCount(), 0);
-}
-
 TEST(AccessibilityAdapter, Hierarchy) {
   AccessibleObjectFake root(nullptr);
   root.Children().push_back(std::make_unique<AccessibleObjectFake>(&root));
