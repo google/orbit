@@ -202,7 +202,7 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   }
 
   // Tracks with instrumented timers appear first, ordered by descending order of timers.
-  // The remaining tracks appear after ordered by number of events.
+  // The remaining tracks appear after, ordered by descending order of callstack events.
   std::sort(sorted_tracks.begin(), sorted_tracks.end(),
             [&num_events_by_track](ThreadTrack* a, ThreadTrack* b) {
               return std::make_tuple(a->GetNumTimers(), num_events_by_track[a]) >
