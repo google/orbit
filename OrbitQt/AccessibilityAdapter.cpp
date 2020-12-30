@@ -103,6 +103,20 @@
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleInterfaceRegistry;
 
+namespace {
+/*
+ * Utility class to verify all created accessibility adapters have been cleaned up
+ * when the application exits as a sanity check for correct registration behavior.
+ *
+ * A static instance of this is created on AccessibilityAdapter::Init() and will thus
+ * be destructed at exit. At this point, all adapters should have been cleaned up.
+ */
+class TeardownCheck {
+ public:
+  ~TeardownCheck() { CHECK(orbit_qt::AccessibilityAdapter::RegisteredAdapterCount() == 0); }
+};
+}  // namespace
+
 namespace orbit_qt {
 
 absl::flat_hash_map<const AccessibleInterface*, QAccessibleInterface*>
@@ -111,6 +125,7 @@ absl::flat_hash_map<const AccessibleInterface*, std::unique_ptr<AccessibilityAda
     AccessibilityAdapter::managed_adapters_;
 
 void AccessibilityAdapter::Init() {
+  const static TeardownCheck teardown_check;
   AccessibleInterfaceRegistry::Get().SetOnUnregisterCallback(
       AccessibilityAdapter::OnInterfaceDeleted);
 }
@@ -147,17 +162,6 @@ QAccessibleInterface* AccessibilityAdapter::GetOrCreateAdapter(const AccessibleI
   RegisterAdapter(iface, adapter.get());
   managed_adapters_.emplace(iface, std::move(adapter));
   return ptr;
-}
-
-void AccessibilityAdapter::QAccessibleDeleted(QAccessibleInterface* iface) {
-  for (auto& it : all_interfaces_map_) {
-    if (it.second == iface) {
-      all_interfaces_map_.erase(it.first);
-      return;
-    }
-  }
-
-  UNREACHABLE();
 }
 
 int AccessibilityAdapter::indexOfChild(const QAccessibleInterface* child) const {
@@ -208,9 +212,6 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
   QAccessibleInterface* child(int index) const override;
   int childCount() const override;
   int indexOfChild(const QAccessibleInterface* child) const override;
-
- protected:
-  ~OrbitGlWidgetAccessible();
 };
 
 OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
@@ -224,10 +225,6 @@ OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
   CHECK(widget->accessibleName() == "");
   AccessibilityAdapter::RegisterAdapter(
       static_cast<OrbitGLWidget*>(widget)->GetCanvas()->GetOrCreateAccessibleInterface(), this);
-}
-
-OrbitGlWidgetAccessible::~OrbitGlWidgetAccessible() {
-  AccessibilityAdapter::QAccessibleDeleted(this);
 }
 
 int OrbitGlWidgetAccessible::childCount() const {

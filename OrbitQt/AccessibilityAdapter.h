@@ -47,7 +47,7 @@ class AccessibilityAdapter : public QAccessibleInterface {
     CHECK(!result || all_interfaces_map_.find(info_)->second == this);
     return result;
   }
-  QObject* object() const override { return &dummy_; }
+  QObject* object() const override { return nullptr; }
   QAccessibleInterface* focusChild() const override { return nullptr; }
 
   QAccessibleInterface* parent() const override {
@@ -78,14 +78,10 @@ class AccessibilityAdapter : public QAccessibleInterface {
                               QAccessibleInterface* qt_control) {
     all_interfaces_map_.emplace(gl_control, qt_control);
   }
-  /* Called when a QAccessibleInterface which has been registered through "RegisterAdapter",
-  but not created by this class, is deleted. Should only be needed for OrbitGlWidgets.*/
-  static void QAccessibleDeleted(QAccessibleInterface* iface);
 
   static int RegisteredAdapterCount() { return all_interfaces_map_.size(); }
 
  private:
-  mutable QObject dummy_;
   explicit AccessibilityAdapter(const orbit_accessibility::AccessibleInterface* info)
       : info_(info){};
 
