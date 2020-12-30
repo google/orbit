@@ -11,6 +11,9 @@ from absl import flags
 from core.common_controls import DataViewPanel
 from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
 
+from fragments.capture_window import Capture
+from fragments.live_tab import VerifyFunctionCallCount
+
 
 def _show_symbols_and_functions_tabs(top_window):
     logging.info("Showing symbols tab")
@@ -72,3 +75,58 @@ class FilterAndHookFunction(E2ETestCase):
 
         self.find_context_menu_item('Hook').click_input()
         wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(0, 0).texts()[0])
+
+
+class LoadAndVerifyHelloGgpPreset(E2ETestCase):
+    """
+    Load the predefined E2E test preset and verify if has been applied correctly.
+    TODO: This may need to be updated
+    """
+    def _execute(self):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        self._load_presets()
+        wait_for_condition(self._try_verify_functions_are_hooked)
+
+        Capture().execute(self.suite)
+
+        logging.info('Verifying function call counts')
+        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000).execute(self.suite)
+        VerifyFunctionCallCount(function_name='GgpIssueFrameToken', min_calls=30, max_calls=3000).execute(self.suite)
+
+    def _load_presets(self):
+        presets_panel = DataViewPanel(self.find_control('Group', 'DataViewPanelPresets'))
+
+        draw_frame_preset_row = presets_panel.find_first_item_row('draw_frame_in_hello_ggp_1_52', 1, True)
+        issue_frame_token_preset_row = presets_panel.find_first_item_row(
+            'ggp_issue_frame_token_in_hello_ggp_1_52', 1, True)
+
+        self.expect_true(draw_frame_preset_row is not None, 'Found draw_frame preset')
+        self.expect_true(issue_frame_token_preset_row is not None, 'Found ggp_issue_frame_token preset')
+
+        presets_panel.get_item_at(draw_frame_preset_row, 0).click_input(button='right')
+        self.find_context_menu_item('Load Preset').click_input()
+        logging.info('Loaded Preset DrawFrame')
+
+        presets_panel.get_item_at(issue_frame_token_preset_row, 0).click_input(button='right')
+        self.find_context_menu_item('Load Preset').click_input()
+        logging.info('Loaded Preset GgpIssueFrameToken')
+
+    def _try_verify_functions_are_hooked(self):
+        logging.info('Finding rows in the function list')
+        functions_panel = DataViewPanel(self.find_control('Group', 'DataViewPanelFunctions'))
+        draw_frame_row = functions_panel.find_first_item_row('DrawFrame', 1)
+        issue_frame_token_row = functions_panel.find_first_item_row('GgpIssueFrameToken', 1)
+
+        if draw_frame_row is None:
+            return False
+        if issue_frame_token_row is None:
+            return False
+
+        logging.info('Verifying hook status of functions')
+        self.expect_true('✓' in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
+                         'DrawFrame is marked as hooked')
+        self.expect_true('✓' in functions_panel.get_item_at(issue_frame_token_row, 0).texts()[0],
+                         'GgpIssueFrameToken is marked as hooked')
+
+        return True
