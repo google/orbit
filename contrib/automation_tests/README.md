@@ -68,8 +68,9 @@ UI changes. The string after the last '.' though can be used to retrieve the QT 
 - control_type: Type of the widget, but this is **not** the same as the QT Class Name
 
 These properties are unfortunately not considered when using PyWinAuto's magic best_match. It is
-recommended to instead use `core.orbit_e2e.find_control` which enables searching for those additional
-identifiers.
+recommended to instead use `orbit_e2e.find_control` which enables searching for those additional
+identifiers. There is also a simplified version `E2ETestCase::find_control` which automatically 
+searches the current application top window if no parent is specified.
 
 Best way to find your element:
 - Look at the hierarchy in Windows Accessibility Insights
@@ -84,13 +85,14 @@ PyWinAuto's magic best_match is *slow* for Orbit. Same is true for listing all d
 main window with `descendants()`. It is a lot faster, however, if `descendants()` is restricted to
 a control_type.
 
-Again, it is recommended to use `core.orbit_e2e.find_control`. This forces the use of a control_type and
-will result in decent performance while still allowing easy filtering.
+Again, it is recommended to use `orbit_e2e.find_control`. While this can also list
+controls of all types (control_type=None), passing a control_type will result in drastically increased
+performance while still allowing easy filtering.
  
 ### Dev Mode
 
 Running an E2E test with the `-dev_mode` command line parameter will:
-- Assume Orbit's main window is already visible and not require to go through the connection UI
 - Not close Orbit when a test is done
 
-Use this for quick iterations on new tests.
+Use this for quick iterations on new tests. In addition, omit the usual test cases to connect to the 
+stadia instance and select a process while you're developing, so you can simply keep Orbit open.  
