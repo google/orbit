@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="accessibleName">
+   <string>Orbit Profiler</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <property name="leftMargin">
     <number>0</number>
@@ -80,6 +83,9 @@
                <pointsize>12</pointsize>
               </font>
              </property>
+             <property name="accessibleName">
+              <string>ConnectToStadia</string>
+             </property>
              <property name="text">
               <string>Connect to a Stadia instance</string>
              </property>
@@ -127,6 +133,9 @@
              <property name="toolTip">
               <string>Refresh Instance list</string>
              </property>
+             <property name="accessibleName">
+              <string>RefreshInstanceList</string>
+             </property>
              <property name="icon">
               <iconset resource="../icons/orbiticons.qrc">
                <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>
@@ -160,17 +169,11 @@
                <property name="enabled">
                 <bool>true</bool>
                </property>
-               <property name="alternatingRowColors">
-                <bool>true</bool>
-               </property>
-               <property name="showGrid">
-                <bool>false</bool>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
                <property name="focusPolicy">
                 <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="accessibleName">
+                <string>InstanceList</string>
                </property>
                <property name="alternatingRowColors">
                 <bool>true</bool>
@@ -180,6 +183,12 @@
                </property>
                <property name="selectionBehavior">
                 <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <property name="showGrid">
+                <bool>false</bool>
+               </property>
+               <property name="wordWrap">
+                <bool>false</bool>
                </property>
                <attribute name="horizontalHeaderStretchLastSection">
                 <bool>true</bool>
@@ -196,6 +205,9 @@
                 <property name="visible">
                  <bool>false</bool>
                 </property>
+                <property name="accessibleName">
+                 <string>Overlay</string>
+                </property>
                </widget>
               </widget>
              </item>
@@ -209,6 +221,9 @@
                  <property name="toolTip">
                   <string>Connect to the selected instance on Orbits next start</string>
                  </property>
+                 <property name="accessibleName">
+                  <string>AutoConnect</string>
+                 </property>
                  <property name="text">
                   <string>Automatically connect to this instance next time</string>
                  </property>
@@ -218,6 +233,9 @@
                 <widget class="QPushButton" name="connectButton">
                  <property name="enabled">
                   <bool>false</bool>
+                 </property>
+                 <property name="accessibleName">
+                  <string>ConnectButton</string>
                  </property>
                  <property name="text">
                   <string>Connect</string>

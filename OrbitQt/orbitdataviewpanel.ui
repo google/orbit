@@ -36,7 +36,7 @@
      <item>
       <widget class="QLineEdit" name="FilterLineEdit">
        <property name="accessibleName">
-        <string>filter</string>
+        <string>Filter</string>
        </property>
        <property name="placeholderText">
         <string>Filter</string>
@@ -51,6 +51,9 @@
        <property name="toolTip">
         <string>Refresh list</string>
        </property>
+       <property name="accessibleName">
+        <string>Refresh</string>
+       </property>
        <property name="icon">
         <iconset resource="../icons/orbiticons.qrc">
          <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>
@@ -61,6 +64,9 @@
    </item>
    <item row="1" column="0">
     <widget class="OrbitTreeView" name="treeView">
+     <property name="accessibleName">
+      <string>DataView</string>
+     </property>
      <attribute name="headerMinimumSectionSize">
       <number>0</number>
      </attribute>

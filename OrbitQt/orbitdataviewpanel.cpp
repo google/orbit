@@ -46,6 +46,8 @@ void OrbitDataViewPanel::Initialize(DataView* data_view, SelectionType selection
   }
 
   data_view->SetUiFilterCallback([this](const std::string& filter) { SetFilter(filter.c_str()); });
+
+  setAccessibleName(QString("DataViewPanel") + QString::fromStdString(data_view->GetLabel()));
 }
 
 void OrbitDataViewPanel::Deinitialize() { ui->treeView->Deinitialize(); }
@@ -66,10 +68,9 @@ void OrbitDataViewPanel::ClearDataModel() { ui->treeView->ClearDataModel(); }
 
 void OrbitDataViewPanel::SetFilter(const QString& a_Filter) {
   ui->FilterLineEdit->setText(a_Filter);
-  ui->treeView->OnFilter(a_Filter);
 }
 
-void OrbitDataViewPanel::on_FilterLineEdit_textEdited(const QString& a_Text) {
+void OrbitDataViewPanel::on_FilterLineEdit_textChanged(const QString& a_Text) {
   ui->treeView->OnFilter(a_Text);
 }
 

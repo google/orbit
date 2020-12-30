@@ -435,6 +435,8 @@ void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
   ui->MainTabWidget->tabBar()->installEventFilter(this);
   ui->RightTabWidget->tabBar()->installEventFilter(this);
 
+  SetupAccessibleNamesForAutomation();
+
   setWindowTitle({});
   std::filesystem::path icon_file_name = (orbit_base::GetExecutableDir() / "orbit.ico");
   this->setWindowIcon(QIcon(QString::fromStdString(icon_file_name.string())));
@@ -528,6 +530,14 @@ void OrbitMainWindow::SetupTargetLabel() {
       QApplication::exit(kEndSessionReturnCode);
     }
   });
+}
+
+void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
+  for (QTabWidget* tab_widget : {ui->MainTabWidget, ui->RightTabWidget}) {
+    for (int i = 0; i < tab_widget->count(); ++i) {
+      tab_widget->widget(i)->setAccessibleName(tab_widget->widget(i)->objectName());
+    }
+  }
 }
 
 void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {

@@ -36,7 +36,7 @@ class OrbitDataViewPanel : public QWidget {
   QLineEdit* GetFilterLineEdit();
 
  private slots:
-  void on_FilterLineEdit_textEdited(const QString& a_Text);
+  void on_FilterLineEdit_textChanged(const QString& a_Text);
   void on_refreshButton_clicked();
 
  private:

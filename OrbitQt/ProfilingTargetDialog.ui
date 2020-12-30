@@ -11,7 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Orbit</string>
+   <string/>
+  </property>
+  <property name="accessibleName">
+   <string>Orbit Profiler</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QLineEdit {
@@ -150,6 +153,9 @@
                 <pointsize>12</pointsize>
                </font>
               </property>
+              <property name="accessibleName">
+               <string>LoadCapture</string>
+              </property>
               <property name="text">
                <string>Load a capture</string>
               </property>
@@ -224,6 +230,9 @@
          </property>
          <item row="0" column="0">
           <widget class="QFrame" name="processesFrame">
+           <property name="accessibleName">
+            <string>ProcessesFrame</string>
+           </property>
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
            </property>
@@ -246,8 +255,14 @@
             </item>
             <item>
              <widget class="QLineEdit" name="processFilterLineEdit">
+              <property name="accessibleName">
+               <string>FilterProcesses</string>
+              </property>
               <property name="placeholderText">
                <string>Filter</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -256,17 +271,20 @@
               <property name="enabled">
                <bool>true</bool>
               </property>
+              <property name="accessibleName">
+               <string>ProcessList</string>
+              </property>
               <property name="alternatingRowColors">
                <bool>true</bool>
-              </property>
-              <property name="showGrid">
-               <bool>false</bool>
               </property>
               <property name="selectionMode">
                <enum>QAbstractItemView::SingleSelection</enum>
               </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="showGrid">
+               <bool>false</bool>
               </property>
               <widget class="orbit_qt::OverlayWidget" name="processesTableOverlay" native="true">
                <property name="geometry">
@@ -279,6 +297,9 @@
                </property>
                <property name="visible">
                 <bool>false</bool>
+               </property>
+               <property name="accessibleName">
+                <string>Overlay</string>
                </property>
               </widget>
              </widget>
@@ -317,6 +338,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="confirmButton">
+          <property name="accessibleName">
+           <string>StartOrbit</string>
+          </property>
           <property name="text">
            <string>OK</string>
           </property>
