@@ -3,6 +3,14 @@ Copyright (c) 2020 The Orbit Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
+
+from absl import app
+
+from core.orbit_e2e import E2ETestSuite
+from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from fragments.capture_window import Capture
+from fragments.top_down_tab import VerifyHelloGgpTopDownContents
+
 """Inspect the top-down view in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -23,77 +31,16 @@ This automation script covers a basic workflow:
  - verify that the children of the first item are "*clone" and "_start" (in any order)
 """
 
-import logging
-
-import orbit_testing
-from absl import app
-from pywinauto.application import Application
-
 
 def main(argv):
-    orbit_testing.wait_for_orbit()
-    application = Application(backend='uia').connect(title_re='orbitprofiler')
-    orbit_testing.connect_to_gamelet(application)
-    orbit_testing.select_process(application, 'hello_')
-    orbit_testing.focus_on_capture_window(application)
-    orbit_testing.capture(application, 5)
-
-    main_wnd = application.window(title_re='orbitprofiler', found_index=0)
-    main_wnd.child_window(title="Top-Down").click_input()
-    logging.info('Switched to Top-Down tab')
-
-    # Now that the "Top-Down" tab is selected,
-    # main_wnd.TreeView is the QTreeView of the top-down view.
-    # main_wnd.TreeView.children(control_type='TreeItem') returns
-    # every cell in the top-down view, in order by row and then column.
-    # It can take a few seconds.
-    logging.info('Listing items of the top-down view...')
-    tree_items = main_wnd.TreeView.children(control_type='TreeItem')
-    TOP_DOWN_ROW_CELL_COUNT = 6
-    row_count_before_expansion = len(tree_items) / TOP_DOWN_ROW_CELL_COUNT
-
-    if row_count_before_expansion < 3:
-        raise RuntimeError('Less than 3 rows in the top-down view')
-
-    if (not tree_items[0].window_text().startswith('hello_') or
-            not tree_items[0].window_text().endswith(' (all threads)')):
-        raise RuntimeError(
-            'First item of the top-down view is not "hello_* (all threads)"')
-    logging.info('Verified that first item is "hello_* (all threads)"')
-
-    if ((not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().startswith(
-            'hello_') and
-         not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().startswith('Ggp')
-        ) or not tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().endswith(']')
-       ):
-        raise RuntimeError(
-            'Second item of the top-down view is not "hello_*]" nor "Ggp*]"')
-    logging.info('Verified that second item is "hello_*]" or "Ggp*]"')
-
-    tree_items[0].double_click_input()
-    logging.info('Expanded the first item')
-
-    logging.info('Re-listing items of the top-down view...')
-    tree_items = main_wnd.TreeView.children(control_type='TreeItem')
-    row_count_after_expansion = len(tree_items) / TOP_DOWN_ROW_CELL_COUNT
-
-    if row_count_after_expansion < row_count_before_expansion + 2:
-        raise RuntimeError(
-            'First item of the top-down view doesn\'t have at least two children'
-        )
-    if (not (
-        (tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text().endswith('clone') and
-         tree_items[2 * TOP_DOWN_ROW_CELL_COUNT].window_text() == '_start') or
-        (tree_items[TOP_DOWN_ROW_CELL_COUNT].window_text() == '_start') and
-            tree_items[2 * TOP_DOWN_ROW_CELL_COUNT].window_text().endswith(
-                'clone'))):
-        raise RuntimeError('Children of the first item of the top-down view '
-                           'are not "*clone" and "_start"')
-    logging.info(
-        'Verified that children of the first item are "*clone" and "_start"')
-
-    main_wnd.CloseButton.click_input()
-    logging.info('Closed Orbit.')
+    tests = [
+        ConnectToStadiaInstance(),
+        FilterAndSelectFirstProcess(process_filter='hello_ggp'),
+        Capture(),
+        VerifyHelloGgpTopDownContents()
+    ]
+    suite = E2ETestSuite(test_name="Top-Down View", tests=tests)
+    suite.execute()
 
 
 if __name__ == '__main__':
