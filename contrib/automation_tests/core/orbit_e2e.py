@@ -5,14 +5,15 @@ found in the LICENSE file.
 """
 
 import logging
-from typing import Iterable, Type
+from typing import Iterable, Callable
 from copy import deepcopy
+import time
 
 from absl import flags
 from pywinauto import Application, timings
 from pywinauto.base_wrapper import BaseWrapper
-
-import orbit_testing as ot
+from pywinauto.findwindows import ElementNotFoundError
+from pywinauto.keyboard import send_keys
 
 flags.DEFINE_boolean('dev_mode', False, 'Dev mode - expect Orbit MainWindow to be opened, '
                                         'and do not close Orbit at the end')
@@ -51,6 +52,29 @@ class E2ETestCase:
     def expect_eq(self, left, right, description):
         self.expect_true(left == right, description)
 
+    def find_control(self, control_type=None, name=None, parent: BaseWrapper=None, name_contains=None,
+                     auto_id_leaf=None, qt_class=None, recurse=True, raise_on_failure=True) -> BaseWrapper:
+        """
+        Returns the first child of BaseWrapper that matches all of the search parameters.
+        As soon as a matching child is encountered, this function returns.
+
+        If no child is found, an exception is thrown.
+        """
+        if not parent:
+            parent = self.suite.top_window()
+        return find_control(parent, control_type=control_type, name=name, name_contains=name_contains,
+                            auto_id_leaf=auto_id_leaf, qt_class=qt_class, recurse=recurse,
+                            raise_on_failure=raise_on_failure)
+
+    def find_context_menu_item(self, text: str, raise_on_failure=True):
+        """
+        Specialized version of find_control for context menu items. This is provided due to the special
+        behavior of context menus: They are not parented underneath the current main window, but are treated
+        as a separate window.
+        """
+        return self.find_control('MenuItem', text, parent=self.suite.application.top_window(),
+                                 raise_on_failure=raise_on_failure)
+
     def _execute(self, **kwargs):
         """
         Provide this method in your fragment
@@ -58,45 +82,44 @@ class E2ETestCase:
         pass
 
 
+class CloseOrbit(E2ETestCase):
+    def _execute(self):
+        # For some reason the line below does NOT work when Orbit is maximized - this is actually consistent with
+        # the results of AccessibilityInsights as the close button seems to have no on-screen rect...
+        # self.find_control("Button", "Close").click_input()
+        # ... so just send Alt + F4
+        send_keys('%{F4}')
+        logging.info('Closed Orbit.')
+
+
 class E2ETestSuite:
-    def __init__(self, test_name: str, tests: Iterable[E2ETestCase], dev_mode: bool = False,
-                 auto_connect: bool = True):
-        try:
-            self._application = Application(backend='uia').connect(title_re='orbitprofiler')
-        except Exception:
-            logging.error("Could not find Orbit application. Make sure to start Orbit before running E2E tests.")
-            raise
+    def __init__(self, test_name: str, tests: Iterable[E2ETestCase], dev_mode: bool = False):
+        logging.info('E2E Test Suite "%s" started.', test_name)
+        self._top_window = None
+        self._application = None
+        self._wait_for_orbit()
         self._test_name = test_name
         self._dev_mode = dev_mode or flags.FLAGS.dev_mode
         self._tests = tests[:]
-        self._auto_connect = auto_connect
-        self._top_window = None
 
     name = property(lambda self: self._test_name)
     application = property(lambda self: self._application)
     dev_mode = property(lambda self: self._dev_mode)
 
     def top_window(self, force_update=False):
-        if force_update:
+        if force_update or not self._top_window:
             self._top_window = self._application.top_window()
         return self._top_window
 
     def set_up(self):
         timings.Timings.after_click_wait = 0.5
         timings.Timings.after_clickinput_wait = 0.5
-        ot.wait_for_orbit()
         logging.info("Setting up with dev_mode = %s", self.dev_mode)
-        if not self.dev_mode:
-            if self._auto_connect:
-                ot.connect_to_gamelet(self.application)
-        else:
-            logging.info("DEV MODE: Skipped gamelet connection, assuming Main Window is active")
         self.top_window(True).set_focus()
 
     def tear_down(self):
         if not self._dev_mode:
-            find_control(self.top_window(), "Button", "Close").click_input()
-            logging.info('Closed Orbit.')
+            CloseOrbit().execute(self)
         else:
             logging.info("DEV MODE: Skipped closing Orbit")
         logging.info('Testcase "%s" executed without errors', self._test_name)
@@ -110,9 +133,42 @@ class E2ETestSuite:
             test.execute(self)
         self.tear_down()
 
+    def _wait_for_orbit(self):
+        logging.info('Waiting for Orbit')
+        logging.info('Start waiting for Orbit.')
+        while True:
+            try:
+                self._application = Application(backend='uia').connect(title_re='Orbit Profiler')
+                break
+            except ElementNotFoundError:
+                logging.error("Could not find Orbit window, retrying...")
+                pass
+        logging.info('Connected to Orbit.')
+        self.top_window(True).set_focus()
 
-def find_control(parent: BaseWrapper, control_type, name=None, name_contains=None,
-                 auto_id_leaf=None, qt_class=None, recurse=True) -> BaseWrapper:
+
+def wait_for_condition(callable: Callable, max_seconds: int = 5, interval: int = 1):
+    """
+    Wait until a condition is satisfied.
+
+    :param callable: Any callable that evaluates to True or False. If this returns True, the condition is considered
+        satisfied.
+    :param max_seconds: Maximum time to wait for the condition to be satisfied
+    :param interval: Sleep time in between calls to callable, in seconds
+    """
+    start = time.time()
+    while time.time() - start < max_seconds:
+        try:
+            if callable():
+                return
+        except:
+            pass
+        time.sleep(interval)
+    raise OrbitE2EError('Wait time exceeded')
+
+
+def find_control(parent: BaseWrapper, control_type=None, name=None, name_contains=None,
+                 auto_id_leaf=None, qt_class=None, recurse=True, raise_on_failure=True) -> BaseWrapper:
     """
     Returns the first child of BaseWrapper that matches all of the search parameters.
     As soon as a matching child is encountered, this function returns.
@@ -135,21 +191,8 @@ def find_control(parent: BaseWrapper, control_type, name=None, name_contains=Non
                 (not auto_id_leaf or elem.automation_id().rsplit(".", 1)[-1]):
             return elem
 
-    # If a name was given, try the magic lookup to give a hint what was wrong
-    if name:
-        try:
-            candidate = parent.__getattribute__(name)
-        except:
-            candidate = None
-
-        if candidate:
-            logging.error("Could not find the control you were looking for, but found a potential candidate: %s. "
-                          "Printing control identifiers.",
-                          candidate)
-            candidate.print_control_identifiers()
-        else:
-            logging.error("Could not find the control you were looking for. Tried magic, didn't work.")
-
-    raise OrbitE2EError('Could not find element of type %s (name="%s", name_contains="%s", qt_class="%s"). The log '
-                        'above may contain more details.' %
-                        (control_type, name, name_contains, qt_class))
+    if raise_on_failure:
+        raise OrbitE2EError('Could not find element of type %s (name="%s", name_contains="%s", qt_class="%s", recurse=%s).' %
+                            (control_type, name, name_contains, qt_class, recurse))
+    else:
+        return None
