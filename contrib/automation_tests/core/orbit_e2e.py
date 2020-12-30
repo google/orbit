@@ -130,8 +130,8 @@ def find_control(parent: BaseWrapper, control_type, name=None, name_contains=Non
         elem_name = elem.element_info.element.CurrentName
         elem_text = elem.texts()[0] if elem.texts() else ""
         if (not qt_class or elem.class_name() == qt_class) and \
-                (not name or elem.texts()[0] == name or elem_name == name) and \
-                (not name_contains or name_contains in elem.texts()[0] or name_contains in name) and \
+                (not name or elem_text == name or elem_name == name) and \
+                (not name_contains or name_contains in elem_text or name_contains in elem_name) and \
                 (not auto_id_leaf or elem.automation_id().rsplit(".", 1)[-1]):
             return elem
 
