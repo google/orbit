@@ -1,10 +1,19 @@
 [
+  # Orbit
+  { "include": ["<GL/glew.h>", "private", "\"OpenGl.h\"", "public"] },
+  # GTest
   { "include": ["@<gtest/.*>", "private", "<gtest/gtest.h>", "public"] },
+
+  # GMock
   { "include": ["@<gmock/.*>", "private", "<gmock/gmock.h>", "public"] },
+
+  # GTE
   { "include": ["<GteVector.inl>", "private", "<GteVector.h>", "public"] },
   { "include": ["<GteVector2.inl>", "private", "<GteVector2.h>", "public"] },
   { "include": ["<GteVector3.inl>", "private", "<GteVector3.h>", "public"] },
   { "include": ["<GteVector4.inl>", "private", "<GteVector4.h>", "public"] },
+
+  # GPRC
   { "include": ["@<grpcpp/impl/.*>", "private", "<grpcpp/grpcpp.h>", "public"] },
   { "include": ["<grpcpp/alarm_impl.h>", "private", "<grpcpp/alarm.h>", "public"] },
   { "include": ["<grpcpp/channel_impl.h>", "private", "<grpcpp/channel.h>", "public"] },
@@ -16,6 +25,8 @@
   { "include": ["<grpcpp/resource_quota_impl.h>", "private", "<grpcpp/resource_quota.h>", "public"] },
   { "include": ["<grpcpp/server_builder_impl.h>", "private", "<grpcpp/server_builder.h>", "public"] },
   { "include": ["<grpcpp/server_posix_impl.h>", "private", "<grpcpp/server_posix.h>", "public"] },
+
+  # Abseil
   { "include": ["\"absl/meta/type_traits.h\"", "private", "<absl/meta/type_traits.h>", "public"] },
   { "include": ["\"absl/hash/hash.h\"", "private", "<absl/hash/hash.h>", "public"] },
   { "include": ["\"absl/hash/hash_testing.h\"", "private", "<absl/hash/hash_testing.h>", "public"] },
@@ -104,5 +115,29 @@
   { "include": ["\"absl/base/const_init.h\"", "private", "<absl/base/const_init.h>", "public"] },
   { "include": ["\"absl/base/attributes.h\"", "private", "<absl/base/attributes.h>", "public"] },
   { "include": ["\"absl/base/call_once.h\"", "private", "<absl/base/call_once.h>", "public"] },
-  { "include": ["\"absl/base/config.h\"", "private", "<absl/base/config.h>", "public"] }
+  { "include": ["\"absl/base/config.h\"", "private", "<absl/base/config.h>", "public"] },
+
+  # Hack: iwyu has a bug. It suggests to include <ext/alloc_traits> whenever std::vector::operator[] is used.
+  # <ext/alloc_traits> is an implementation detail of libstdc++.
+  # The bug is tracked here: https://github.com/include-what-you-use/include-what-you-use/issues/166
+  { "include": ["<ext/alloc_traits.h>", "private", "<vector>", "public"] },
+
+  # ImGUI
+  { "include": ["<imgui_internal.h>", "private", "<imgui.h>", "public"] },
+
+  # Qt adjustments - There is an auto-generated mapping file for Qt. Just put adjustments here.
+  { "include": ["<QtCore/qglobal.h>", "private", "<QtGlobal>", "public"] },
+  { "include": ["<QtCore/qobjectdefs.h>", "private", "<QMetaObject>", "public"] },
+
+  # Vulkan
+  { "include": ["@[\"<]vulkan_core\\.h[\">]", "private", "<vulkan/vulkan_core.h>", "public"]},
+  { "include": ["@[\"<]vulkan\\.h[\">]", "private", "<vulkan/vulkan.h>", "public"]},
+  { "include": ["@[\"<]vk_platform\\.h[\">]", "private", "<vulkan/vk_platform.h>", "public"]},
+
+  # libstdc++
+  { "include": ["<bits/exception.h>", "private", "<exception>", "public"]},
+
+  # libc
+  { "include": ["<bits/types/struct_iovec.h>", "private", "<sys/uio.h>", "public"]},
+
 ]
