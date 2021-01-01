@@ -7,6 +7,7 @@
 # docker images that have versioning support enabled. For all other docker containers the tag `latest`
 # should be / will be assumed.
 declare -rA docker_image_tag_mapping=( \
+  [iwyu]="2" \
 )
 
 # Use `readonly DOCKER_IMAGE_TAG="${docker_image_tag_mapping[${CONAN_PROFILE}]-latest}"`
