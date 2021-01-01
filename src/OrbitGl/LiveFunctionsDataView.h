@@ -30,6 +30,8 @@ class LiveFunctionsDataView : public DataView {
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
+  const std::optional<int> GetSelectedIndex() override;
+  void UpdateSelectedFunctionId();
 
   void OnSelect(std::optional<int> row) override;
   void OnContextMenu(const std::string& action, int menu_index,
@@ -49,6 +51,7 @@ class LiveFunctionsDataView : public DataView {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_;
 
   LiveFunctionsController* live_functions_;
+  uint64_t selected_function_id_;
 
   enum ColumnIndex {
     kColumnSelected,

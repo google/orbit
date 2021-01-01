@@ -1087,6 +1087,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
     LiveFunctionsDataView& live_functions_data_view =
         live_functions_controller.value()->GetDataView();
     selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
+    live_functions_data_view.UpdateSelectedFunctionId();
   }
   ui->liveFunctions->OnRowSelected(selected_row);
 }
