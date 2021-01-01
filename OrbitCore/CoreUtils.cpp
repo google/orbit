@@ -6,8 +6,8 @@
 
 #ifdef _WIN32
 // clang-format off
-#include <cguid.h>
-#include <combaseapi.h>
+#include <cguid.h> // IWYU pragma: keep
+#include <combaseapi.h> // IWYU pragma: keep
 // clang-format on
 #else
 #include <sys/uio.h>

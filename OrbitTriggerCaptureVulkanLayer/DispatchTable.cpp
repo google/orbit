@@ -13,8 +13,8 @@
 #include "absl/synchronization/mutex.h"
 
 // clang-format off
-#include "vulkan/vulkan.h"
-#include "vk_layer_dispatch_table.h"
+#include "vulkan/vulkan.h" // IWYU pragma: keep
+#include "vk_layer_dispatch_table.h" // IWYU pragma: keep
 // clang-format on
 
 namespace {
