@@ -1,7 +1,47 @@
-FROM gcr.io/orbitprofiler/clang9_release:latest
+FROM ubuntu:20.04
 
-RUN sudo apt-get -qq update \
-    && sudo apt-get install -y --no-install-recommends \
-    clang-8 \
-    iwyu \
-    && sudo rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+       libglu1-mesa-dev \
+       mesa-common-dev \
+       libxmu-dev \
+       libxi-dev \
+       qt5-default \
+       libqt5webchannel5-dev \
+       libqt5websockets5-dev \
+       qtwebengine5-dev \
+       jq \
+       python2.7 \
+       python3-pip \
+       zip \
+       git \
+       make \
+       curl \
+       cmake \
+       ninja-build \
+       gnupg \
+       software-properties-common \
+       clang-9 \
+       clang-format-9 \
+       patchutils \
+       vulkan-validationlayers-dev \
+    && pip3 install conan==1.29.2 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+    && apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" \
+    && apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive \
+       apt-get install -y --no-install-recommends \
+       llvm-11-dev \
+       libclang-11-dev \
+       clang-11 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /src \
+    && git clone -b clang_11 https://github.com/include-what-you-use/include-what-you-use.git /src/iwyu \
+    && mkdir -p /src/iwyu/build \
+    && cmake -G Ninja -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 -DCMAKE_INSTALL_PREFIX=/usr \ 
+       -S /src/iwyu -B /src/iwyu/build \
+    && cmake --build /src/iwyu/build --target install \
+    && rm -rf /src/iwyu
