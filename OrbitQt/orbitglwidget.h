@@ -6,7 +6,7 @@
 #define ORBIT_QT_ORBIT_GL_WIDGET_H_
 
 // clang-format off
-#include "OpenGl.h"
+#include "OpenGl.h" // IWYU pragma: keep
 // clang-format on
 
 #include <QOpenGLFunctions>

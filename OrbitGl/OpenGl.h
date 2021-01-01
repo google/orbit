@@ -8,7 +8,7 @@
 #ifdef WIN32
 // windows.h must be included BEFORE GL/glew.h
 // otherwise wglew.h undefs WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <windows.h> // IWYU pragma: keep
 #endif
 // clang-format on
 
@@ -16,5 +16,5 @@
 #include <freetype-gl/freetype-gl.h>
 
 // clang-format off
-#include <GL/gl.h>
+#include <GL/gl.h> // IWYU pragma: keep
 // clang-format on
