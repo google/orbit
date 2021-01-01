@@ -274,7 +274,7 @@ void SamplingReportDataView::OnMultiSelect(const std::vector<int>& indices) {
   }
   sampling_report_->OnSelectAddresses(addresses, tid_);
 
-  if (update_selected_indices_) {
+  if (refresh_mode_ != RefreshMode::kOnFilter && refresh_mode_ != RefreshMode::kOnSort) {
     selected_indices_.clear();
     for (int row : indices) {
       selected_indices_.insert(indices_[row]);

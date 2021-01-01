@@ -34,7 +34,9 @@ class OrbitTableModel : public QAbstractTableModel {
   void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
   int GetUpdatePeriodMs() { return data_view_->GetUpdatePeriodMs(); }
-  int GetSelectedIndex() { return data_view_->GetSelectedIndex(); }
+  [[nodiscard]] std::optional<int> GetSelectedIndex() const {
+    return data_view_->GetSelectedIndex();
+  }
   QModelIndex CreateIndex(int row, int column) { return createIndex(row, column); }
   DataView* GetDataView() { return data_view_; }
   void SetDataView(DataView* model) { data_view_ = model; }

@@ -119,7 +119,7 @@ void ProcessesDataView::SetSelectedItem() {
   }
 
   // This happens when selected process disappears from the list.
-  selected_index_ = -1;
+  selected_index_ = std::nullopt;
 }
 
 bool ProcessesDataView::SelectProcess(const std::string& process_name) {

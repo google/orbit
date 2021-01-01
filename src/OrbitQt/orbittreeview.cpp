@@ -117,9 +117,7 @@ void OrbitTreeView::OnSort(int section, Qt::SortOrder order) {
   }
 
   model_->sort(section, order);
-  model_->GetDataView()->SetUpdateSelectedIndices(false);
-  Refresh();
-  model_->GetDataView()->SetUpdateSelectedIndices(true);
+  Refresh(RefreshMode::kOnSort);
 }
 
 void OrbitTreeView::OnFilter(const QString& filter) {
@@ -128,9 +126,7 @@ void OrbitTreeView::OnFilter(const QString& filter) {
   }
 
   model_->OnFilter(filter);
-  model_->GetDataView()->SetUpdateSelectedIndices(false);
-  Refresh();
-  model_->GetDataView()->SetUpdateSelectedIndices(true);
+  Refresh(RefreshMode::kOnFilter);
 }
 
 void OrbitTreeView::OnTimer() {
@@ -140,7 +136,7 @@ void OrbitTreeView::OnTimer() {
   }
 }
 
-void OrbitTreeView::Refresh() {
+void OrbitTreeView::Refresh(RefreshMode refresh_mode) {
   if (model_ == nullptr) {
     return;
   }
@@ -148,11 +144,21 @@ void OrbitTreeView::Refresh() {
   if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions) {
     model_->layoutAboutToBeChanged();
     model_->layoutChanged();
-    return;
+    // Don't continue the following re-selecting procedure for the live view unless the
+    // refresh is caused by filtering or sorting.
+    if (refresh_mode == RefreshMode::kOther) {
+      return;
+    }
+  } else {
+    reset();
   }
 
-  reset();
+  model_->GetDataView()->SetRefreshMode(refresh_mode);
+  DoReselection(refresh_mode);
+  model_->GetDataView()->SetRefreshMode(RefreshMode::kOther);
+}
 
+void OrbitTreeView::DoReselection(RefreshMode refresh_mode) {
   // Re-select previous selection
   QItemSelectionModel* selection = selectionModel();
   QModelIndex index;
@@ -164,14 +170,23 @@ void OrbitTreeView::Refresh() {
       index = model_->CreateIndex(row, 0);
       selection->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
     }
-    if (model_->GetDataView()->GetType() == DataViewType::kSampling) {
+    if (model_->GetDataView()->GetType() == DataViewType::kSampling &&
+        (refresh_mode == RefreshMode::kOnFilter || refresh_mode == RefreshMode::kOnSort)) {
+      // Propagate the re-selection caused by filtering and sorting to the dataview such that the
+      // callstack view will be updated accordingly.
       OnMultiRowsSelected(visible_selected_indices);
     }
   } else {
-    int selected = model_->GetSelectedIndex();
-    if (selected >= 0) {
-      index = model_->CreateIndex(selected, 0);
+    std::optional<int> selected_index = model_->GetSelectedIndex();
+    if (selected_index.has_value()) {
+      index = model_->CreateIndex(selected_index.value(), 0);
       selection->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    }
+    if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions &&
+        (refresh_mode == RefreshMode::kOnFilter || refresh_mode == RefreshMode::kOnSort)) {
+      // Propagate the re-selection caused by filtering and sorting to the dataview such that the
+      // function highlighting in capture window will be updated accordingly.
+      OnRowSelected(selected_index);
     }
   }
   is_internal_refresh_ = false;

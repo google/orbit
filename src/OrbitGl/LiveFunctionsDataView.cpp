@@ -35,7 +35,9 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
 LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app)
-    : DataView(DataViewType::kLiveFunctions, app), live_functions_(live_functions) {
+    : DataView(DataViewType::kLiveFunctions, app),
+      live_functions_(live_functions),
+      selected_function_id_(DataManager::kInvalidFunctionId) {
   update_period_ms_ = 300;
   OnDataChanged();
 }
@@ -95,6 +97,14 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 }
 
+const std::optional<int> LiveFunctionsDataView::GetSelectedIndex() {
+  return GetRowFromFunctionId(selected_function_id_);
+}
+
+void LiveFunctionsDataView::UpdateSelectedFunctionId() {
+  selected_function_id_ = app_->highlighted_function_id();
+}
+
 void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
   app_->DeselectTextBox();
 
@@ -102,6 +112,10 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
     app_->set_highlighted_function_id(DataManager::kInvalidFunctionId);
   } else {
     app_->set_highlighted_function_id(GetInstrumentedFunctionId(row.value()));
+  }
+
+  if (refresh_mode_ != RefreshMode::kOnFilter && refresh_mode_ != RefreshMode::kOnSort) {
+    UpdateSelectedFunctionId();
   }
 }
 
