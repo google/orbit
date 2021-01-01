@@ -209,16 +209,18 @@ if [ -n "$1" ]; then
     pushd ${REPO_ROOT} > /dev/null
 
     echo -e "\n\n\nHere is the full list of all things iwyu found:"
-    cat build/iwyu_results.txt
+    cat build/include-what-you-use.log
 
-    echo -e "\n\n\nThe following include problems occur in files this PR touched:"
+    echo -e "\n\n\nThe following is a diff that fixes all problems in files this PR touched:"
+    echo 'Execute `patch -p1 -i <filename.diff>` in the repo root to apply it to the code base.'
     readonly REFERENCE="${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-origin/master}"
     readonly MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
 
     PATTERN_FILE="$(mktemp)"
-    git diff -U0 --no-color --relative --name-only $MERGE_BASE | sed -e 's/$/:/' > ${PATTERN_FILE}
-    if grep -A1 -F "error:" build/iwyu_results.txt | grep -A1 -F -f ${PATTERN_FILE}; then
-      echo -e "\n\n"
+    git diff -U0 --no-color --relative --name-only $MERGE_BASE > ${PATTERN_FILE}
+    readonly FILTERED_DIFF="$(filterdiff -I ${PATTERN_FILE} build/iwyu.diff)"
+    if [ -n "${FILTERED_DIFF}" ]; then
+      echo -e "${FILTERED_DIFF}\n\n"
 
       # Replace `true` by `exit 1` here when the check is ready to fail in production!
       true
