@@ -11,7 +11,8 @@
 #define ORBIT_API_INTERNAL_IMPL
 // NOTE: Orbit.h will be moved to its own
 //       OrbitApi project in a subsequent PR.
-#include "../../../Orbit.h"
+// IWYU pragma: no_include "/mnt/Orbit.h"
+#include "../../../Orbit.h"  // IWYU pragma: export
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
