@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <string>
 
@@ -96,7 +97,7 @@ void LayerLogic::ProcessQueuePresentKHR() {
   if (!orbit_capture_running_) {
     auto frame_time = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
         current_time - last_frame_time_);
-    if (isgreater(frame_time.count(), layer_options_.GetFrameTimeThresholdMilliseconds())) {
+    if (std::isgreater(frame_time.count(), layer_options_.GetFrameTimeThresholdMilliseconds())) {
       LOG("Time frame is %fms and exceeds the %fms threshold; starting capture", frame_time.count(),
           layer_options_.GetFrameTimeThresholdMilliseconds());
       RunCapture();
