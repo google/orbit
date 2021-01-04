@@ -247,7 +247,13 @@ remove_oauth2l
 popd > /dev/null
 rm -rf "${TEMP_DIR}"
 
-readonly CONTAINER="gcr.io/orbitprofiler/${CONAN_PROFILE}:latest"
+# Obtain current docker image tags
+source "$(cd "$( dirname "${BASH_SOURCE[0]}" )/../../" >/dev/null 2>&1 && pwd)/third_party/conan/docker/tags.sh"
+
+# Use a specific tag from the mapping. If none is specified, fall back to `latest`.
+readonly DOCKER_IMAGE_TAG="${docker_image_tag_mapping[${CONAN_PROFILE}]-latest}"
+
+readonly CONTAINER="gcr.io/orbitprofiler/${CONAN_PROFILE}:${DOCKER_IMAGE_TAG}"
 
 if [ "$(uname -s)" == "Linux" ]; then
   echo "Bring up docker for Linux build."
