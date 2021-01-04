@@ -25,6 +25,14 @@ if (Test-Path Env:ORBIT_OVERRIDE_ARTIFACTORY_URL) {
   conan_disable_public_remotes
 } else {
   try {
+    $response = Invoke-WebRequest -URI http://invalid-hostname.internal/ -ErrorAction Ignore -MaximumRedirection 0 -UseBasicParsing
+    Write-Host "Detected catch-all DNS configuration. Using public remotes for conan."
+    exit
+  } catch {
+    # If we jump into this catch-block, that means there is no catch-all DNS.
+  }
+
+  try {
     $response = Invoke-WebRequest -URI http://artifactory.internal/ -ErrorAction Ignore -MaximumRedirection 0 -UseBasicParsing
     Write-Host "CI machine detected. Adjusting remotes..."
 

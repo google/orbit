@@ -44,9 +44,9 @@ elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
   conan remote add -i 0 -f artifactory "$ORBIT_OVERRIDE_ARTIFACTORY_URL" || exit $?
   conan_disable_public_remotes || exit $?
 else
-  curl -s http://artifactory.internal/ >/dev/null 2>&1
-  
-  if [ $? -eq 0 ]; then
+  if curl -s http://invalid-name.internal/ >/dev/null 2>&1; then
+    echo "Detected catchall-DNS configuration. Using public remotes for conan."
+  elif curl -s http://artifactory.internal/ >/dev/null 2>&1; then
     echo "CI machine detected. Adjusting remotes..."
     conan remote add -i 0 -f artifactory "http://artifactory.internal/artifactory/api/conan/conan" || exit $?
     conan_disable_public_remotes || exit $?
