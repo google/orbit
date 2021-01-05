@@ -249,6 +249,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     ProcessOrbitFunctionTimer(function->orbit_type(), timer_info);
   }
 
+  // TODO (b/175869409): Change the way to create and get the tracks. Move this part to
+  // TrackManager.
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity: {
       uint64_t timeline_hash = timer_info.timeline_hash();
