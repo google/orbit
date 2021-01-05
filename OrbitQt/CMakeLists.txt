@@ -13,6 +13,7 @@ target_sources(
   PRIVATE AccessibilityAdapter.h
           CallTreeViewItemModel.h
           CallTreeWidget.h
+          CaptureOptionsDialog.h
           Connections.h
           ConnectToStadiaWidget.h
           CopyKeySequenceEnabledTreeView.h
@@ -52,6 +53,8 @@ target_sources(
           CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
+          CaptureOptionsDialog.cpp
+          CaptureOptionsDialog.ui
           ConnectToStadiaWidget.cpp
           ConnectToStadiaWidget.ui
           Error.cpp
