@@ -36,7 +36,7 @@ string GetLastErrorAsString() {
       NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0,
       NULL);
 
-  ststring message(messageBuffer, size);
+  string message(messageBuffer, size);
 
   // Free the buffer.
   LocalFree(messageBuffer);
