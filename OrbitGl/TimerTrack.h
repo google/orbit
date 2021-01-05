@@ -61,7 +61,7 @@ class TimerTrack : public Track {
   virtual void UpdateBoxHeight();
   [[nodiscard]] virtual float GetTextBoxHeight(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const;
-  [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
+  [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
 
   [[nodiscard]] virtual float GetHeaderHeight() const;
 

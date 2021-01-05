@@ -43,10 +43,10 @@ std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
   return info;
 }
 
-float TimerTrack::GetYFromDepth(uint32_t depth) const {
+float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
-         box_height_ * (depth + 1);
+         box_height_ * static_cast<float>(timer_info.depth() + 1);
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
@@ -106,7 +106,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         double normalized_length = elapsed_us * inv_time_window;
         float world_timer_width = static_cast<float>(normalized_length * world_width);
         float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
-        float world_timer_y = GetYFromDepth(timer_info.depth());
+        float world_timer_y = GetYFromTimer(timer_info);
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
         bool is_selected = &text_box == selected_textbox;

@@ -29,7 +29,8 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] uint64_t GetFunctionAddress() const { return function_.address(); }
   [[nodiscard]] bool IsCollapsable() const override { return GetMaximumScaleFactor() > 0.f; }
 
-  [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
+  [[nodiscard]] virtual float GetYFromTimer(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] float GetTextBoxHeight(
