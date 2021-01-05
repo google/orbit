@@ -1261,16 +1261,10 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
     modules_to_load.push_back(module_data);
   }
   if (!module_paths_not_found.empty()) {
-    if (static_cast<int>(module_paths_not_found.size()) ==
-        preset_file->preset_info().path_to_module_size()) {
-      // no modules were loaded
-      SendErrorToUi("Preset loading failed",
-                    absl::StrFormat("None of the modules in the preset are loaded."));
-    } else {
-      SendWarningToUi("Preset only partially loaded",
-                      absl::StrFormat("The following modules are not loaded:\n\"%s\"",
-                                      absl::StrJoin(module_paths_not_found, "\"\n\"")));
-    }
+    // Note that unloadable presets are disabled.
+    SendWarningToUi("Preset only partially loaded",
+                    absl::StrFormat("The following modules are not loaded:\n\"%s\"",
+                                    absl::StrJoin(module_paths_not_found, "\"\n\"")));
   }
   if (!modules_to_load.empty()) {
     absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
