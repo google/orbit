@@ -83,8 +83,11 @@ std::string PresetsDataView::GetValue(int row, int column) {
 }
 
 std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
-  const PresetFile& preset = *GetPreset(row);
-  return preset.file_name();
+  const std::shared_ptr<PresetFile>& preset = GetPreset(row);
+  return absl::StrCat(preset->file_name(),
+                      app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
+                          ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
+                          : "");
 }
 
 void PresetsDataView::DoSort() {
@@ -120,7 +123,11 @@ std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
   std::vector<std::string> menu;
   // Note that the UI already enforces a single selection.
   if (selected_indices.size() == 1) {
-    Append(menu, {kMenuActionLoad, kMenuActionDelete});
+    const std::shared_ptr<PresetFile>& preset = GetPreset(selected_indices[0]);
+    if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
+      menu.emplace_back(kMenuActionLoad);
+    }
+    menu.emplace_back(kMenuActionDelete);
   }
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
@@ -159,7 +166,9 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
 
 void PresetsDataView::OnDoubleClicked(int index) {
   const std::shared_ptr<PresetFile>& preset = GetPreset(index);
-  app_->LoadPreset(preset);
+  if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
+    app_->LoadPreset(preset);
+  }
 }
 
 void PresetsDataView::DoFilter() {
