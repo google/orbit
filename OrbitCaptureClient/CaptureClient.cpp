@@ -15,7 +15,6 @@
 
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
-ABSL_DECLARE_FLAG(bool, thread_state);
 
 using orbit_client_protos::FunctionInfo;
 
@@ -41,7 +40,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data,
-    bool enable_introspection) {
+    bool collect_thread_state, bool enable_introspection) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return ErrorMessage(
@@ -60,10 +59,10 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   thread_pool->Schedule([this, process = std::move(process_copy), &module_manager,
                          selected_functions = std::move(selected_functions), selected_tracepoints,
                          user_defined_capture_data = std::move(user_defined_capture_data),
-                         enable_introspection]() mutable {
+                         collect_thread_state, enable_introspection]() mutable {
     Capture(std::move(process), module_manager, std::move(selected_functions),
             std::move(selected_tracepoints), std::move(user_defined_capture_data),
-            enable_introspection);
+            collect_thread_state, enable_introspection);
   });
 
   return outcome::success();
@@ -74,7 +73,7 @@ void CaptureClient::Capture(ProcessData&& process,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints,
                             UserDefinedCaptureData user_defined_capture_data,
-                            bool enable_introspection) {
+                            bool collect_thread_state, bool enable_introspection) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -102,7 +101,7 @@ void CaptureClient::Capture(ProcessData&& process,
     }
   }
 
-  capture_options->set_trace_thread_state(absl::GetFlag(FLAGS_thread_state));
+  capture_options->set_trace_thread_state(collect_thread_state);
   capture_options->set_trace_gpu_driver(true);
   for (const auto& [absolute_address, function] : selected_functions) {
     CaptureOptions::InstrumentedFunction* instrumented_function =

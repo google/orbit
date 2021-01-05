@@ -846,7 +846,8 @@ bool OrbitApp::StartCapture() {
   CHECK(capture_client_ != nullptr);
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), std::move(user_defined_capture_data), enable_introspection);
+      std::move(selected_tracepoints), std::move(user_defined_capture_data),
+      /*collect_thread_state=*/false, enable_introspection);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
