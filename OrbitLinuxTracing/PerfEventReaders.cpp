@@ -11,22 +11,14 @@
 
 namespace orbit_linux_tracing {
 
-pid_t ReadMmapRecordPid(PerfEventRingBuffer* ring_buffer) {
-  // Mmap records have the following layout:
-  // struct {
-  //   struct perf_event_header header;
-  //   u32    pid, tid;
-  //   u64    addr;
-  //   u64    len;
-  //   u64    pgoff;
-  //   char   filename[];
-  //   struct sample_id sample_id; /* if sample_id_all */
-  // };
-  // Because of filename, the layout is not fixed.
-
-  pid_t pid;
-  ring_buffer->ReadValueAtOffset(&pid, sizeof(perf_event_header));
-  return pid;
+void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+                         perf_event_sample_id_tid_time_streamid_cpu* sample_id) {
+  CHECK(sample_id != nullptr);
+  CHECK(header.size >
+        sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+  // sample_id_all is always the last field in the event
+  uint64_t offset = header.size - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
+  ring_buffer->ReadValueAtOffset(sample_id, offset);
 }
 
 uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
@@ -59,6 +51,49 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   ring_buffer->ReadValueAtOffset(
       &pid, sizeof(perf_event_header) + offsetof(perf_event_sample_id_tid_time_streamid_cpu, pid));
   return pid;
+}
+
+std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                    const perf_event_header& header) {
+  // Mmap records have the following layout:
+  // struct {
+  //   struct perf_event_header header;
+  //   u32    pid, tid;
+  //   u64    addr;
+  //   u64    len;
+  //   u64    pgoff;
+  //   char   filename[];
+  //   struct sample_id sample_id; /* if sample_id_all */
+  // };
+  // Because of filename, the layout is not fixed.
+
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  ReadPerfSampleIdAll(ring_buffer, header, &sample_id);
+
+  perf_event_mmap_up_to_pgoff mmap_event;
+  ring_buffer->ReadValueAtOffset(&mmap_event, 0);
+
+  // read filename
+  size_t filename_offset = sizeof(perf_event_mmap_up_to_pgoff);
+  // strictly > because filename is null-terminated string
+  CHECK(header.size > (filename_offset + sizeof(perf_event_sample_id_tid_time_streamid_cpu)));
+  size_t filename_size =
+      header.size - filename_offset - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
+  std::vector<char> filename_vector(filename_size);
+  ring_buffer->ReadRawAtOffset(&filename_vector[0], filename_offset, filename_size);
+  std::string filename(&filename_vector[0], filename_size);
+
+  ring_buffer->SkipRecord(header);
+
+  // Workaround for gcc's "cannot bind packed field ... to ‘long unsigned int&’"
+  uint64_t timestamp = sample_id.time;
+  int32_t pid = static_cast<int32_t>(sample_id.pid);
+
+  // Consider moving this to MMAP2 event which has more information (like flags)
+  auto event = std::make_unique<MmapPerfEvent>(pid, timestamp, mmap_event, std::move(filename));
+  event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
+
+  return event;
 }
 
 std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,

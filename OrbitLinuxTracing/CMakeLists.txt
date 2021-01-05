@@ -67,21 +67,37 @@ target_link_libraries(OrbitLinuxTracing PUBLIC
         CONAN_PKG::abseil
         CONAN_PKG::libunwindstack)
 
+add_executable(OrbitLinuxTracingTestDlopenPuppet)
+
+target_compile_options(OrbitLinuxTracingTestDlopenPuppet PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitLinuxTracingTestDlopenPuppet PRIVATE
+        TestPuppet.cpp)
+
+target_link_libraries(OrbitLinuxTracingTestDlopenPuppet PUBLIC
+        dl
+        OrbitBase)
+
+add_library(OrbitLinuxTracingTestPuppetLibrary SHARED)
+
+target_compile_options(OrbitLinuxTracingTestPuppetLibrary PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitLinuxTracingTestPuppetLibrary PRIVATE
+        TestPuppetLibrary.cpp)
+
 add_executable(OrbitLinuxTracingTests)
 
 target_compile_options(OrbitLinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-if (NOT WIN32)
-    target_sources(OrbitLinuxTracingTests PRIVATE
-            ContextSwitchManagerTest.cpp
-            GpuTracepointEventProcessorTest.cpp
-            LinuxTracingUtilsTest.cpp
-            PerfEventProcessorTest.cpp
-            PerfEventQueueTest.cpp
-            ThreadStateManagerTest.cpp
-            UprobesFunctionCallManagerTest.cpp
-            UprobesReturnAddressManagerTest.cpp)
-endif()
+target_sources(OrbitLinuxTracingTests PRIVATE
+        ContextSwitchManagerTest.cpp
+        GpuTracepointEventProcessorTest.cpp
+        LinuxTracingUtilsTest.cpp
+        PerfEventProcessorTest.cpp
+        PerfEventQueueTest.cpp
+        ThreadStateManagerTest.cpp
+        UprobesFunctionCallManagerTest.cpp
+        UprobesReturnAddressManagerTest.cpp)
 
 target_link_libraries(OrbitLinuxTracingTests PRIVATE
         OrbitLinuxTracing

@@ -139,6 +139,17 @@ struct __attribute__((__packed__)) perf_event_lost {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
+struct __attribute__((__packed__)) perf_event_mmap_up_to_pgoff {
+  perf_event_header header;
+  uint32_t pid;
+  uint32_t tid;
+  uint64_t address;
+  uint64_t length;
+  uint64_t page_offset;
+  // OMITTED: char filename[]
+  // OMITTED: perf_event_sample_id_tid_time_streamid_cpu sample_id;
+};
+
 }  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_RECORDS_H_

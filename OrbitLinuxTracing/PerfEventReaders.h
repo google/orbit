@@ -21,7 +21,11 @@ namespace orbit_linux_tracing {
 
 // Helper functions for reads from a perf_event_open ring buffer that require
 // more complex operations than simply copying an entire perf_event_open record.
-pid_t ReadMmapRecordPid(PerfEventRingBuffer* ring_buffer);
+
+// This function reads sample_id, which is always the last field
+// in the perf event record unless it is PERF_RECORD_SAMPLE.
+void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+                         perf_event_sample_id_tid_time_streamid_cpu* sample_id);
 
 uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer);
 
@@ -37,6 +41,9 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
 
 std::unique_ptr<GenericTracepointPerfEvent> ConsumeGenericTracepointPerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
+
+std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                    const perf_event_header& header);
 
 template <typename T, typename = std::enable_if_t<std::is_base_of_v<TracepointPerfEvent, T>>>
 std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
