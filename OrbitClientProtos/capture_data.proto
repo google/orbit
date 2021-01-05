@@ -148,6 +148,8 @@ message TimerInfo {
     kIntrospection = 2;
     kGpuActivity = 3;
     kFrame = 4;
+    kGpuCommandBuffer = 5;
+    kGpuDebugMarker = 6;
   }
   Type type = 6;
 
@@ -157,6 +159,15 @@ message TimerInfo {
   uint64 user_data_key = 10;
   uint64 timeline_hash = 11;
   repeated uint64 registers = 12;
+  Color color = 13;
+}
+
+message Color {
+  // Each color must be between 0.0f and 1.0f
+  float red = 1;
+  float green = 2;
+  float blue = 3;
+  float alpha = 4;
 }
 
 // libprotobuf-mutator needs a single proto with all the data
