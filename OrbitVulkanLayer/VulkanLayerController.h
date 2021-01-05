@@ -38,7 +38,7 @@ class VulkanLayerController {
   static constexpr uint32_t kLayerImplVersion = 1;
   static constexpr uint32_t kLayerSpecVersion = VK_API_VERSION_1_1;
 
-  static constexpr std::array<VkExtensionProperties, 3> kDeviceExtensions = {
+  static constexpr std::array<VkExtensionProperties, 3> kRequiredDeviceExtensions = {
       VkExtensionProperties{.extensionName = VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
                             .specVersion = VK_EXT_DEBUG_MARKER_SPEC_VERSION},
       VkExtensionProperties{.extensionName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
@@ -348,20 +348,20 @@ class VulkanLayerController {
     if (layer_name != nullptr && strcmp(layer_name, kLayerName) == 0) {
       // If properties == nullptr, only the number of extensions is queried.
       if (properties == nullptr) {
-        *property_count = kDeviceExtensions.size();
+        *property_count = kRequiredDeviceExtensions.size();
         return VK_SUCCESS;
       }
-      uint32_t num_extensions_to_copy = kDeviceExtensions.size();
+      uint32_t num_extensions_to_copy = kRequiredDeviceExtensions.size();
       // In the case that less extensions are queried then the layer uses, we copy on this number
       // and return VK_INCOMPLETE, according to the specification.
       if (*property_count < num_extensions_to_copy) {
         num_extensions_to_copy = *property_count;
       }
-      memcpy(properties, kDeviceExtensions.data(),
+      memcpy(properties, kRequiredDeviceExtensions.data(),
              num_extensions_to_copy * sizeof(VkExtensionProperties));
       *property_count = num_extensions_to_copy;
 
-      if (num_extensions_to_copy < kDeviceExtensions.size()) {
+      if (num_extensions_to_copy < kRequiredDeviceExtensions.size()) {
         return VK_INCOMPLETE;
       }
       return VK_SUCCESS;
@@ -391,7 +391,7 @@ class VulkanLayerController {
 
     // Append all of our extensions, that are not yet listed.
     // Note as this list of our extensions is very small, we are fine with O(N*M) runtime.
-    for (const auto& extension : kDeviceExtensions) {
+    for (const auto& extension : kRequiredDeviceExtensions) {
       bool already_present = false;
       for (const auto& other_extension : extensions) {
         if (strcmp(extension.extensionName, other_extension.extensionName) == 0) {
@@ -468,6 +468,7 @@ class VulkanLayerController {
   SubmissionTracker submission_tracker_;
   QueueManager queue_manager_;
 
+  // The number of timer query slots is chosen arbitrary such that it is large enough.
   static constexpr uint32_t kNumTimerQuerySlots = 65536;
 };
 
