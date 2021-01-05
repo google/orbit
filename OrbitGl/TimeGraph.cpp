@@ -249,31 +249,43 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     ProcessOrbitFunctionTimer(function->orbit_type(), timer_info);
   }
 
-  // TODO (b/175869409): Change the way to create and get the tracks. Move this part to
-  // TrackManager.
-  if (timer_info.type() == TimerInfo::kGpuActivity) {
-    uint64_t timeline_hash = timer_info.timeline_hash();
-    GpuTrack* track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
-    track->OnTimer(timer_info);
-  } else if (timer_info.type() == TimerInfo::kFrame) {
-    FrameTrack* track = track_manager_->GetOrCreateFrameTrack(*function);
-    track->OnTimer(timer_info);
-  } else if (timer_info.type() == TimerInfo::kIntrospection) {
-    ProcessIntrospectionTimer(timer_info);
-  } else {
-    ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-    if (timer_info.type() != TimerInfo::kCoreActivity) {
+  switch (timer_info.type()) {
+    case TimerInfo::kGpuActivity: {
+      uint64_t timeline_hash = timer_info.timeline_hash();
+      GpuTrack* track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
       track->OnTimer(timer_info);
-    } else {
-      auto scheduler_track = track_manager_->GetOrCreateSchedulerTrack();
-      scheduler_track->OnTimer(timer_info);
+      break;
+    }
+    case TimerInfo::kFrame: {
+      if (function == nullptr) {
+        break;
+      }
+      FrameTrack* track = track_manager_->GetOrCreateFrameTrack(*function);
+      track->OnTimer(timer_info);
+      break;
+    }
+    case TimerInfo::kIntrospection: {
+      ProcessIntrospectionTimer(timer_info);
+      break;
+    }
+    case TimerInfo::kCoreActivity: {
+      SchedulerTrack* track = track_manager_->GetOrCreateSchedulerTrack();
+      track->OnTimer(timer_info);
       if (GetNumCores() <= static_cast<uint32_t>(timer_info.processor())) {
         auto num_cores = timer_info.processor() + 1;
         SetNumCores(num_cores);
         layout_.SetNumCores(num_cores);
-        scheduler_track->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
+        track->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
       }
+      break;
     }
+    case TimerInfo::kNone: {
+      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      track->OnTimer(timer_info);
+      break;
+    }
+    default:
+      UNREACHABLE();
   }
 
   NeedsUpdate();
