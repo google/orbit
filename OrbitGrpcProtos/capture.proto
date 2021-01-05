@@ -225,13 +225,14 @@ message AddressInfo {
   }
 }
 
-message ModulesUpdateEvent {
+message ModuleUpdateEvent {
   int32 pid = 1;
   uint64 timestamp_ns = 2;
-  repeated ModuleInfo modules = 3;
+  ModuleInfo module = 3;
 }
 
 message CaptureEvent {
+  reserved 14;
   oneof event {
     SchedulingSlice scheduling_slice = 1;
     InternedCallstack interned_callstack = 2;
@@ -246,6 +247,6 @@ message CaptureEvent {
     InternedTracepointInfo interned_tracepoint_info = 9;
     TracepointEvent tracepoint_event = 10;
     IntrospectionScope introspection_scope = 12;
-    ModulesUpdateEvent modules_update_event = 14;
+    ModuleUpdateEvent modules_update_event = 15;
   }
 }

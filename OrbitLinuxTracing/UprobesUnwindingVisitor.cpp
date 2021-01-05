@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <asm/perf_regs.h>
+#include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Unwinder.h>
 
@@ -184,21 +185,30 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   return_address_manager_.ProcessUretprobes(event->GetTid());
 }
 
-void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
+void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   CHECK(listener_ != nullptr);
-  current_maps_ = LibunwindstackUnwinder::ParseMaps(event->GetMaps());
+  const std::string& filename = event->filename();
 
-  auto result_or_error = orbit_elf_utils::ParseMaps(event->GetMaps());
-  if (!result_or_error) {
-    ERROR("Couldn't parse maps: %s", result_or_error.error().message());
+  ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_result =
+      orbit_elf_utils::CreateModule(filename, event->address(), event->address() + event->length());
+  if (!module_info_result) {
+    ERROR("Unable to create module: %s", module_info_result.error().message());
     return;
   }
 
-  orbit_grpc_protos::ModulesUpdateEvent modules_update_event;
-  modules_update_event.set_pid(event->GetPid());
+  auto& module_info = module_info_result.value();
+
+  // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
+  current_maps_->Add(module_info.address_start(), module_info.address_end(), event->page_offset(),
+                     PROT_READ | PROT_EXEC, event->filename(), module_info.load_bias());
+
+  // This Sort is important here since libunwindstack does binary search for module by pc.
+  current_maps_->Sort();
+
+  orbit_grpc_protos::ModuleUpdateEvent modules_update_event;
+  modules_update_event.set_pid(event->pid());
   modules_update_event.set_timestamp_ns(event->GetTimestamp());
-  const auto& modules = result_or_error.value();
-  *modules_update_event.mutable_modules() = {modules.begin(), modules.end()};
+  *modules_update_event.mutable_module() = std::move(module_info);
 
   listener_->OnModulesUpdate(std::move(modules_update_event));
 }

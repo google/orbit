@@ -305,24 +305,27 @@ class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
-// This carries a snapshot of /proc/<pid>/maps and does not reflect a
-// perf_event_open event, but we want it to be part of the same hierarchy.
-class MapsPerfEvent : public PerfEvent {
+class MmapPerfEvent : public PerfEvent {
  public:
-  MapsPerfEvent(int32_t pid, uint64_t timestamp, std::string maps)
-      : pid_{pid}, timestamp_{timestamp}, maps_{std::move(maps)} {}
+  MmapPerfEvent(int32_t pid, uint64_t timestamp, const perf_event_mmap_up_to_pgoff& mmap_event,
+                std::string filename)
+      : pid_{pid}, timestamp_{timestamp}, mmap_event_{mmap_event}, filename_{std::move(filename)} {}
 
   uint64_t GetTimestamp() const override { return timestamp_; }
 
   void Accept(PerfEventVisitor* visitor) override;
 
-  [[nodiscard]] const std::string& GetMaps() const { return maps_; }
-  [[nodiscard]] int32_t GetPid() const { return pid_; }
+  [[nodiscard]] const std::string& filename() const { return filename_; }
+  [[nodiscard]] int32_t pid() const { return pid_; }
+  [[nodiscard]] uint64_t address() const { return mmap_event_.address; }
+  [[nodiscard]] uint64_t length() const { return mmap_event_.length; }
+  [[nodiscard]] uint64_t page_offset() const { return mmap_event_.page_offset; }
 
  private:
   int32_t pid_;
   uint64_t timestamp_;
-  std::string maps_;
+  perf_event_mmap_up_to_pgoff mmap_event_;
+  std::string filename_;
 };
 
 class GenericTracepointPerfEvent : public PerfEvent {

@@ -30,7 +30,7 @@ void UretprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(thi
 
 void LostPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-void MapsPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void MmapPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
 void TaskNewtaskPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 

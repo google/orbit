@@ -21,7 +21,7 @@ class TracerListener {
   virtual void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) = 0;
   virtual void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) = 0;
   virtual void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) = 0;
-  virtual void OnModulesUpdate(orbit_grpc_protos::ModulesUpdateEvent modules_update_event) = 0;
+  virtual void OnModulesUpdate(orbit_grpc_protos::ModuleUpdateEvent modules_update_event) = 0;
 };
 
 }  // namespace orbit_linux_tracing

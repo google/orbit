@@ -66,7 +66,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void visit(CallchainSamplePerfEvent* event) override;
   void visit(UprobesPerfEvent* event) override;
   void visit(UretprobesPerfEvent* event) override;
-  void visit(MapsPerfEvent* event) override;
+  void visit(MmapPerfEvent* event) override;
 
  private:
   UprobesFunctionCallManager function_call_manager_{};

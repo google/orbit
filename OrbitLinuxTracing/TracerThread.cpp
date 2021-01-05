@@ -766,17 +766,16 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
 
 void TracerThread::ProcessMmapEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
-  pid_t pid = ReadMmapRecordPid(ring_buffer);
-  ring_buffer->SkipRecord(header);
+  auto event = ConsumeMmapPerfEvent(ring_buffer, header);
 
-  if (pid != target_pid_) {
+  if (event->pid() != target_pid_) {
     return;
   }
 
-  // There was a call to mmap with PROT_EXEC, hence refresh the maps. This should happen rarely.
-  auto event =
-      std::make_unique<MapsPerfEvent>(target_pid_, MonotonicTimestampNs(), ReadMaps(target_pid_));
-  event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
+  if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
+    return;
+  }
+
   DeferEvent(std::move(event));
 }
 
