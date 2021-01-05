@@ -143,6 +143,14 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
   }
 }
 
+void ModulesDataView::OnDoubleClicked(int index) {
+  ModuleData* module_data = GetModule(index);
+  if (!module_data->is_loaded()) {
+    std::vector<ModuleData*> modules_to_load = {module_data};
+    app_->LoadModules(modules_to_load);
+  }
+}
+
 void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');

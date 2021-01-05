@@ -27,6 +27,7 @@ class PresetsDataView : public DataView {
   void OnDataChanged() override;
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
+  void OnDoubleClicked(int index) override;
 
   bool WantsDisplayColor() override { return true; }
   bool GetDisplayColor(int /*row*/, int /*column*/, unsigned char& /*red*/,
