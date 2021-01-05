@@ -335,6 +335,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     return module_manager_->GetModuleByPath(path);
   }
 
+  void SetCollectThreadStates(bool collect_thread_states);
+
   // TODO(kuebler): Move them to a separate controler at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
   void DeselectFunction(const orbit_client_protos::FunctionInfo& func);

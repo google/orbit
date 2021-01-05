@@ -190,6 +190,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   }
 
   UpdateCaptureStateDependentWidgets();
+
+  LoadCaptureOptionsIntoApp();
 }
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
@@ -226,6 +228,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_
 
   SaveCurrentTabLayoutAsDefaultInMemory();
   UpdateCaptureStateDependentWidgets();
+
+  LoadCaptureOptionsIntoApp();
 }
 
 void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
@@ -953,20 +957,26 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 
 void OrbitMainWindow::on_actionClear_Capture_triggered() { app_->ClearCapture(); }
 
+const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
+
+void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
+  QSettings settings;
+  app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+}
+
 void OrbitMainWindow::on_actionCaptureOptions_triggered() {
-  static const QString kCollectThreadStates{"CollectThreadStates"};
   QSettings settings;
 
   orbit_qt::CaptureOptionsDialog dialog{this};
-  dialog.SetCollectThreadStates(settings.value(kCollectThreadStates, false).toBool());
+  dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
     return;
   }
 
-  settings.setValue(kCollectThreadStates, dialog.GetCollectThreadStates());
-  // TODO: Forward the value to OrbitApp.
+  settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
+  LoadCaptureOptionsIntoApp();
 }
 
 void OrbitMainWindow::on_actionHelp_triggered() { app_->ToggleDrawHelp(); }
