@@ -392,14 +392,14 @@ class VulkanLayerController {
     // Append all of our extensions, that are not yet listed.
     // Note as this list of our extensions is very small, we are fine with O(N*M) runtime.
     for (const auto& extension : kDeviceExtensions) {
-      bool is_unique = true;
+      bool already_present = false;
       for (const auto& other_extension : extensions) {
         if (strcmp(extension.extensionName, other_extension.extensionName) == 0) {
-          is_unique = false;
+          already_present = true;
           break;
         }
       }
-      if (is_unique) {
+      if (!already_present) {
         extensions.push_back(extension);
       }
     }
