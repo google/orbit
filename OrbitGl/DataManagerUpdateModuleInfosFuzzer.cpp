@@ -31,7 +31,6 @@ ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of fra
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
-ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 // TODO(170468590): Remove this flag when the new UI is finished
 ABSL_FLAG(bool, enable_ui_beta, false, "Enable the new user interface");
 

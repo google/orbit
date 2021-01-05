@@ -25,8 +25,11 @@
 #include "SymbolHelper.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/flags/flag.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
+
+ABSL_DECLARE_FLAG(bool, thread_state);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -79,10 +82,11 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
 
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
+  bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   bool enable_introspection = false;
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool, target_process_, module_manager_, selected_functions_, selected_tracepoints,
-      UserDefinedCaptureData(), enable_introspection);
+      UserDefinedCaptureData(), collect_thread_state, enable_introspection);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
