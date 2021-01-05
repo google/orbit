@@ -79,6 +79,8 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
                    this, &ConnectToStadiaWidget::OnSelectionChanged);
   QObject::connect(ui_->rememberCheckBox, &QCheckBox::toggled, this,
                    &ConnectToStadiaWidget::OnRememberCheckBoxToggled);
+  QObject::connect(ui_->refreshButton, &QPushButton::clicked,
+                   [this]() { emit InstanceReloadRequested(); });
 
   SetupStateMachine();
 }
@@ -179,13 +181,18 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   s_instances_loading_.addTransition(this, &ConnectToStadiaWidget::ReceivedInstances, &s_idle_);
 
   // STATE s_instance_selected_
-  s_instance_selected_.addTransition(ui_->refreshButton, &QPushButton::clicked,
+  s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::InstanceReloadRequested,
                                      &s_instances_loading_);
   s_instance_selected_.addTransition(ui_->connectButton, &QPushButton::clicked,
                                      &s_waiting_for_creds_);
   s_instance_selected_.addTransition(ui_->instancesTableView, &QTableView::doubleClicked,
                                      &s_waiting_for_creds_);
   s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::Connect, &s_waiting_for_creds_);
+  QObject::connect(&s_instance_selected_, &QState::entered, this, [this]() {
+    if (instance_model_.rowCount() == 0) {
+      emit InstanceReloadRequested();
+    }
+  });
 
   // STATE s_waiting_for_creds_
   QObject::connect(&s_waiting_for_creds_, &QState::entered, this,

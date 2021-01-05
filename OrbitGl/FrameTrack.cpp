@@ -4,7 +4,16 @@
 
 #include "FrameTrack.h"
 
-#include "App.h"
+#include <GteVector.h>
+#include <absl/strings/str_format.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
+
+#include "Batcher.h"
+#include "CoreUtils.h"
+#include "GlCanvas.h"
+#include "GlUtils.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -54,8 +63,8 @@ float FrameTrack::GetAverageBoxHeight() const {
   }
 }
 
-FrameTrack::FrameTrack(TimeGraph* time_graph, const FunctionInfo& function)
-    : TimerTrack(time_graph), function_(function) {
+FrameTrack::FrameTrack(TimeGraph* time_graph, const FunctionInfo& function, OrbitApp* app)
+    : TimerTrack(time_graph, app), function_(function) {
   // TODO(b/169554463): Support manual instrumentation.
   std::string function_name = function_utils::GetDisplayName(function_);
   std::string name = absl::StrFormat("Frame track based on %s", function_name);
@@ -246,7 +255,7 @@ void FrameTrack::UpdateBoxHeight() {
   box_height_ = kBoxHeightMultiplier * time_graph_->GetLayout().GetTextBoxHeight();
 }
 
-std::vector<std::shared_ptr<TimerChain>> FrameTrack::GetAllSerializableChains() {
+std::vector<std::shared_ptr<TimerChain>> FrameTrack::GetAllSerializableChains() const {
   // Frametracks are just displaying existing data in a different way.
   // We don't want to write out all the timers of that track.
   // TODO(b/171026228): However, we should serialize them in some form.

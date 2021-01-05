@@ -13,7 +13,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-CallStackDataView::CallStackDataView() : DataView(DataViewType::kCallstack) {}
+CallStackDataView::CallStackDataView(OrbitApp* app) : DataView(DataViewType::kCallstack, app) {}
 
 void CallStackDataView::SetAsMainInstance() {}
 
@@ -44,7 +44,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return (function != nullptr && GOrbitApp->IsFunctionSelected(*function))
+      return (function != nullptr && app_->IsFunctionSelected(*function))
                  ? FunctionsDataView::kSelectedFunctionString
                  : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
@@ -62,7 +62,7 @@ std::string CallStackDataView::GetValue(int row, int column) {
       if (module != nullptr) {
         return module->name();
       }
-      const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+      const CaptureData& capture_data = app_->GetCaptureData();
       return std::filesystem::path(capture_data.GetModulePathByAddress(frame.address))
           .filename()
           .string();
@@ -90,9 +90,9 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
     const FunctionInfo* function = frame.function;
     const ModuleData* module = frame.module;
 
-    if (frame.function != nullptr && GOrbitApp->IsCaptureConnected(GOrbitApp->GetCaptureData())) {
-      enable_select |= !GOrbitApp->IsFunctionSelected(*function);
-      enable_unselect |= GOrbitApp->IsFunctionSelected(*function);
+    if (frame.function != nullptr && app_->IsCaptureConnected(app_->GetCaptureData())) {
+      enable_select |= !app_->IsFunctionSelected(*function);
+      enable_unselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
     } else if (module != nullptr && !module->is_loaded()) {
       enable_load = true;
@@ -119,27 +119,27 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module);
       }
     }
-    GOrbitApp->LoadModules(modules_to_load);
+    app_->LoadModules(modules_to_load);
 
   } else if (action == kMenuActionSelect) {
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
-      GOrbitApp->SelectFunction(*function);
+      app_->SelectFunction(*function);
     }
 
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
-      GOrbitApp->DeselectFunction(*function);
-      GOrbitApp->DisableFrameTrack(*function);
+      app_->DeselectFunction(*function);
+      app_->DisableFrameTrack(*function);
     }
 
   } else if (action == kMenuActionDisassembly) {
-    const int32_t pid = GOrbitApp->GetCaptureData().process_id();
+    const int32_t pid = app_->GetCaptureData().process_id();
     for (int i : item_indices) {
-      GOrbitApp->Disassemble(pid, *GetFrameFromRow(i).function);
+      app_->Disassemble(pid, *GetFrameFromRow(i).function);
     }
 
   } else {
@@ -196,7 +196,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   CHECK(index_in_callstack < static_cast<int>(callstack_.GetFramesCount()));
   uint64_t address = callstack_.GetFrame(index_in_callstack);
 
-  const CaptureData& capture_data = GOrbitApp->GetCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   const FunctionInfo* function = capture_data.FindFunctionByAddress(address, false);
   ModuleData* module = capture_data.FindModuleByAddress(address);
 

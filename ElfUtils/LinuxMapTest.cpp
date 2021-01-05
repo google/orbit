@@ -3,12 +3,76 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
 
 #include "ElfUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
+
+TEST(LinuxMap, CreateModuleHelloWorld) {
+  using orbit_elf_utils::CreateModule;
+  using orbit_grpc_protos::ModuleInfo;
+
+  const std::filesystem::path hello_world_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+  auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
+  ASSERT_TRUE(result) << result.error().message();
+
+  EXPECT_EQ(result.value().name(), "hello_world_elf");
+  EXPECT_EQ(result.value().file_path(), hello_world_path);
+  EXPECT_EQ(result.value().file_size(), 16616);
+  EXPECT_EQ(result.value().address_start(), kStartAddress);
+  EXPECT_EQ(result.value().address_end(), kEndAddress);
+  EXPECT_EQ(result.value().build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
+  EXPECT_EQ(result.value().load_bias(), 0x0);
+}
+
+TEST(LinuxMap, CreateModuleOnDev) {
+  using orbit_elf_utils::CreateModule;
+  using orbit_grpc_protos::ModuleInfo;
+
+  const std::filesystem::path dev_zero_path = "/dev/zero";
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+  auto result = CreateModule(dev_zero_path, kStartAddress, kEndAddress);
+  ASSERT_FALSE(result);
+  EXPECT_EQ(result.error().message(),
+            "The module \"/dev/zero\" is a character or block device (is in /dev/)");
+}
+
+TEST(LinuxMap, CreateModuleNotElf) {
+  using orbit_elf_utils::CreateModule;
+  using orbit_grpc_protos::ModuleInfo;
+
+  const std::filesystem::path text_file =
+      orbit_base::GetExecutableDir() / "testdata" / "textfile.txt";
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+  auto result = CreateModule(text_file, kStartAddress, kEndAddress);
+  ASSERT_FALSE(result);
+  EXPECT_THAT(result.error().message(),
+              testing::HasSubstr("The file was not recognized as a valid object file"));
+}
+
+TEST(LinuxMap, CreateModuleFileDoesNotExist) {
+  using orbit_elf_utils::CreateModule;
+  using orbit_grpc_protos::ModuleInfo;
+
+  const std::filesystem::path file_path = "/not/a/valid/file/path";
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+  auto result = CreateModule(file_path, kStartAddress, kEndAddress);
+  ASSERT_FALSE(result);
+  EXPECT_EQ(result.error().message(), "The module file \"/not/a/valid/file/path\" does not exist");
+}
 
 TEST(LinuxMap, ReadModules) {
   const auto result = orbit_elf_utils::ReadModules(getpid());

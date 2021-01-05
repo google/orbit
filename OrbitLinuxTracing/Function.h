@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 class Function {
  public:
   Function(std::string binary_path, uint64_t file_offset, uint64_t virtual_address)
@@ -27,6 +27,6 @@ class Function {
   uint64_t file_offset_;
   uint64_t virtual_address_;
 };
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_FUNCTION_H_

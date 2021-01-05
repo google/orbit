@@ -5,15 +5,15 @@
 #ifndef ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_
 #define ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_
 
-#include <OrbitBase/Logging.h>
 #include <absl/container/flat_hash_map.h>
 
 #include <stack>
 
+#include "OrbitBase/Logging.h"
 #include "PerfEventRecords.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // Keeps a stack, for every thread, of the open uprobes and matches them with
 // the uretprobes to produce FunctionCall objects.
@@ -83,6 +83,6 @@ class UprobesFunctionCallManager {
       tid_uprobes_stacks_{};
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_

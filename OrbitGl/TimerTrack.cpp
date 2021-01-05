@@ -20,7 +20,7 @@ using orbit_client_protos::TimerInfo;
 
 ABSL_DECLARE_FLAG(bool, show_return_values);
 
-TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
+TimerTrack::TimerTrack(TimeGraph* time_graph, OrbitApp* app) : Track(time_graph), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();
 }
 
@@ -66,8 +66,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   bool is_collapsed = collapse_toggle_->IsCollapsed();
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
-  const TextBox* selected_textbox = GOrbitApp->selected_text_box();
-  uint64_t highlighted_address = GOrbitApp->GetFunctionAddressToHighlight();
+  const TextBox* selected_textbox = app_->selected_text_box();
+  uint64_t highlighted_address = app_->GetFunctionAddressToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
   // events that would just draw over an already drawn line. When zoomed in
@@ -185,7 +185,7 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() const {
   std::vector<std::shared_ptr<TimerChain>> timers;
   absl::MutexLock lock(&mutex_);
   for (auto& pair : timers_) {
@@ -247,7 +247,7 @@ const TextBox* TimerTrack::GetDown(const TextBox* text_box) const {
   return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& pair : timers_) {
     chains.push_back(pair.second);
@@ -255,7 +255,7 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
   return chains;
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() {
+std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() const {
   return GetAllChains();
 }
 

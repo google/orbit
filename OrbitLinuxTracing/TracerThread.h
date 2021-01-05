@@ -5,8 +5,6 @@
 #ifndef ORBIT_LINUX_TRACING_TRACER_THREAD_H_
 #define ORBIT_LINUX_TRACING_TRACER_THREAD_H_
 
-#include <Function.h>
-#include <OrbitLinuxTracing/TracerListener.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <linux/perf_event.h>
@@ -23,16 +21,18 @@
 
 #include "ContextSwitchAndThreadStateVisitor.h"
 #include "ContextSwitchManager.h"
+#include "Function.h"
 #include "GpuTracepointEventProcessor.h"
 #include "LinuxTracingUtils.h"
 #include "ManualInstrumentationConfig.h"
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class TracerThread {
  public:
@@ -59,18 +59,19 @@ class TracerThread {
 
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
-  bool OpenUprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
+  bool OpenUprobes(const orbit_linux_tracing::Function& function, const std::vector<int32_t>& cpus,
                    absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenUretprobes(const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
+  bool OpenUretprobes(const orbit_linux_tracing::Function& function,
+                      const std::vector<int32_t>& cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
   void AddUprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-                                 const LinuxTracing::Function& function);
+                                 const orbit_linux_tracing::Function& function);
 
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-                                    const LinuxTracing::Function& function);
+                                    const orbit_linux_tracing::Function& function);
   void OpenUserSpaceProbesRingBuffers(
       const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu);
 
@@ -170,6 +171,7 @@ class TracerThread {
       discarded_out_of_order_count = 0;
       unwind_error_count = 0;
       discarded_samples_in_uretprobes_count = 0;
+      thread_state_count = 0;
     }
 
     uint64_t event_count_begin_ns = 0;
@@ -182,6 +184,7 @@ class TracerThread {
     std::atomic<uint64_t> discarded_out_of_order_count = 0;
     std::atomic<uint64_t> unwind_error_count = 0;
     std::atomic<uint64_t> discarded_samples_in_uretprobes_count = 0;
+    std::atomic<uint64_t> thread_state_count = 0;
   };
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
@@ -191,6 +194,6 @@ class TracerThread {
   static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_TRACER_THREAD_H_

@@ -15,6 +15,7 @@
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMenu>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QScrollBar>
 #include <QSignalMapper>
@@ -84,30 +85,53 @@ void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type
   }
 }
 
+void OrbitTreeView::Deinitialize() {
+  timer_.reset();
+  setModel(nullptr);
+  model_.reset();
+}
+
 void OrbitTreeView::SetDataModel(DataView* data_view) {
   model_ = std::make_unique<OrbitTableModel>();
   model_->SetDataView(data_view);
   setModel(model_.get());
 }
 
+void OrbitTreeView::ClearDataModel() {
+  setModel(nullptr);
+  model_.reset();
+}
+
 void OrbitTreeView::OnSort(int section, Qt::SortOrder order) {
+  if (model_ == nullptr) {
+    return;
+  }
+
   model_->sort(section, order);
   Refresh();
 }
 
 void OrbitTreeView::OnFilter(const QString& filter) {
+  if (model_ == nullptr) {
+    return;
+  }
+
   model_->OnFilter(filter);
   Refresh();
 }
 
 void OrbitTreeView::OnTimer() {
-  if (isVisible() && !model_->GetDataView()->SkipTimer()) {
+  if (model_ != nullptr && isVisible() && !model_->GetDataView()->SkipTimer()) {
     model_->OnTimer();
     Refresh();
   }
 }
 
 void OrbitTreeView::Refresh() {
+  if (model_ == nullptr) {
+    return;
+  }
+
   QModelIndexList list = selectionModel()->selectedIndexes();
 
   if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions) {
@@ -132,7 +156,7 @@ void OrbitTreeView::Refresh() {
 }
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
-  if (auto_resize_ && model_ && model_->GetDataView()) {
+  if (auto_resize_ && model_ != nullptr && model_->GetDataView()) {
     QSize header_size = size();
     for (size_t i = 0; i < model_->GetDataView()->GetColumns().size(); ++i) {
       float ratio = model_->GetDataView()->GetColumns()[i].ratio;
@@ -154,11 +178,6 @@ void OrbitTreeView::Link(OrbitTreeView* link) {
 
 void OrbitTreeView::SetGlWidget(OrbitGLWidget* gl_widget) {
   model_->GetDataView()->SetGlCanvas(gl_widget->GetCanvas());
-}
-
-void OrbitTreeView::drawRow(QPainter* painter, const QStyleOptionViewItem& options,
-                            const QModelIndex& index) const {
-  QTreeView::drawRow(painter, options, index);
 }
 
 QMenu* GContextMenu;
@@ -196,6 +215,10 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
 }
 
 void OrbitTreeView::OnMenuClicked(const std::string& action, int menu_index) {
+  if (model_ == nullptr) {
+    return;
+  }
+
   QModelIndexList selection_list = selectionModel()->selectedIndexes();
   std::set<int> selection_set;
   for (QModelIndex& index : selection_list) {
@@ -209,6 +232,10 @@ void OrbitTreeView::OnMenuClicked(const std::string& action, int menu_index) {
 }
 
 void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
+  if (model_ == nullptr) {
+    return;
+  }
+
   if (event->matches(QKeySequence::Copy)) {
     QModelIndexList list = selectionModel()->selectedIndexes();
     std::set<int> selection;
@@ -223,6 +250,16 @@ void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
   }
 }
 
+void OrbitTreeView::mousePressEvent(QMouseEvent* event) {
+  QModelIndex index = indexAt(event->pos());
+  // Deselect previous selections if clicking the empty area of the OrbitTreeView.
+  if (!index.isValid()) {
+    setCurrentIndex(QModelIndex());
+  } else {
+    QTreeView::mousePressEvent(event);
+  }
+}
+
 void OrbitTreeView::selectionChanged(const QItemSelection& selected,
                                      const QItemSelection& deselected) {
   QTreeView::selectionChanged(selected, deselected);
@@ -232,19 +269,27 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
 
   // Row selection callback.
   QModelIndex index = selectionModel()->currentIndex();
+  std::optional<int> row(std::nullopt);
   if (index.isValid()) {
-    OnRowSelected(index.row());
+    row = index.row();
   }
+  OnRowSelected(row);
 }
 
-void OrbitTreeView::OnRowSelected(int row) {
-  model_->OnRowSelected(row);
+void OrbitTreeView::OnRowSelected(std::optional<int> row) {
+  if (model_ != nullptr) {
+    model_->OnRowSelected(row);
+  }
   for (OrbitTreeView* tree_view : links_) {
     tree_view->Refresh();
   }
 }
 
 void OrbitTreeView::OnRangeChanged(int /*min*/, int max) {
+  if (model_ == nullptr) {
+    return;
+  }
+
   DataView* data_view = model_->GetDataView();
   if (data_view->ScrollToBottom()) {
     verticalScrollBar()->setValue(max);

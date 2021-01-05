@@ -7,8 +7,8 @@
 #include "App.h"
 #include "OrbitBase/ThreadConstants.h"
 
-TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id)
-    : EventTrack(time_graph) {
+TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
+    : EventTrack(time_graph, app) {
   thread_id_ = thread_id;
 }
 

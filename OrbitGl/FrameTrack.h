@@ -5,12 +5,28 @@
 #ifndef ORBIT_GL_FRAME_TRACK_H_
 #define ORBIT_GL_FRAME_TRACK_H_
 
+#include <stdint.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "CoreMath.h"
+#include "PickingManager.h"
+#include "TextBox.h"
+#include "TimerChain.h"
 #include "TimerTrack.h"
+#include "Track.h"
+#include "capture_data.pb.h"
+
+class OrbitApp;
 
 class FrameTrack : public TimerTrack {
  public:
-  explicit FrameTrack(TimeGraph* time_graph, const orbit_client_protos::FunctionInfo& function);
+  explicit FrameTrack(TimeGraph* time_graph, const orbit_client_protos::FunctionInfo& function,
+                      OrbitApp* app);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }
+  [[nodiscard]] uint64_t GetFunctionAddress() const { return function_.address(); }
   [[nodiscard]] bool IsCollapsable() const override { return GetMaximumScaleFactor() > 0.f; }
 
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
@@ -29,7 +45,7 @@ class FrameTrack : public TimerTrack {
 
   void UpdateBoxHeight() override;
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
 
  protected:
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,

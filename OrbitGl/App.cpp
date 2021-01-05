@@ -5,17 +5,29 @@
 #include "App.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/strings/str_split.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+#include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/port.h>
+#include <imgui.h>
 
-#include <chrono>
-#include <cmath>
+#include <algorithm>
+#include <cinttypes>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <memory>
 #include <outcome.hpp>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <utility>
 
 #include "CallStackDataView.h"
@@ -27,12 +39,15 @@
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
+#include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
@@ -46,10 +61,14 @@
 #include "SamplingReport.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "TimeGraph.h"
 #include "Timer.h"
+#include "TimerChain.h"
 #include "TimerInfosIterator.h"
 #include "capture_data.pb.h"
+#include "module.pb.h"
 #include "preset.pb.h"
+#include "process.pb.h"
 #include "symbol.pb.h"
 
 #ifdef _WIN32
@@ -60,6 +79,7 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
+ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -104,12 +124,10 @@ PresetLoadState GetPresetLoadStateForProcess(
 }
 }  // namespace
 
-std::unique_ptr<OrbitApp> GOrbitApp;
 bool DoZoom = false;
 
-OrbitApp::OrbitApp(ApplicationOptions&& options,
-                   std::unique_ptr<MainThreadExecutor> main_thread_executor)
-    : options_(std::move(options)), main_thread_executor_(std::move(main_thread_executor)) {
+OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor)
+    : main_thread_executor_(main_thread_executor) {
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
@@ -118,6 +136,14 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
 }
 
 OrbitApp::~OrbitApp() {
+  AbortCapture();
+
+  try {
+    thread_pool_->ShutdownAndWait();
+  } catch (const std::exception& e) {
+    FATAL("Exception occured in ThreadPool::ShutdownAndWait(): %s", e.what());
+  }
+
 #ifdef _WIN32
   oqpi::default_helpers::stop_scheduler();
 #endif
@@ -283,9 +309,8 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
   });
 }
 
-std::unique_ptr<OrbitApp> OrbitApp::Create(
-    ApplicationOptions&& options, std::unique_ptr<MainThreadExecutor> main_thread_executor) {
-  auto app = std::make_unique<OrbitApp>(std::move(options), std::move(main_thread_executor));
+std::unique_ptr<OrbitApp> OrbitApp::Create(MainThreadExecutor* main_thread_executor) {
+  auto app = std::make_unique<OrbitApp>(main_thread_executor);
 
 #ifdef _WIN32
   oqpi::default_helpers::start_default_scheduler();
@@ -297,31 +322,28 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(
 }
 
 void OrbitApp::PostInit() {
-  if (!options_.grpc_server_address.empty()) {
-    grpc_channel_ = grpc::CreateCustomChannel(
-        options_.grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
-    if (!grpc_channel_) {
-      ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
-    }
+  if (IsConnectedToInstance()) {
+    CHECK(process_manager_ != nullptr);
 
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
-    // TODO: Replace refresh_timeout with config option. Let users to modify it.
-    process_manager_ = ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
+    if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
+      auto callback = [this](std::vector<ProcessInfo> process_infos) {
+        main_thread_executor_->Schedule([this, process_infos = std::move(process_infos)]() {
+          data_manager_->UpdateProcessInfos(process_infos);
+          processes_data_view_->SetProcessList(process_infos);
 
-    auto callback = [this](std::vector<ProcessInfo> process_infos) {
-      main_thread_executor_->Schedule([this, process_infos = std::move(process_infos)]() {
-        data_manager_->UpdateProcessInfos(process_infos);
-        processes_data_view_->SetProcessList(process_infos);
+          if (GetTargetProcess() == nullptr && processes_data_view_->GetFirstProcessId() != -1) {
+            processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
+          }
+          FireRefreshCallbacks(DataViewType::kProcesses);
+        });
+      };
 
-        if (GetSelectedProcess() == nullptr && processes_data_view_->GetFirstProcessId() != -1) {
-          processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
-        }
-        FireRefreshCallbacks(DataViewType::kProcesses);
-      });
-    };
-
-    process_manager_->SetProcessListUpdateListener(callback);
+      process_manager_->SetProcessListUpdateListener(callback);
+    } else if (GetTargetProcess() != nullptr) {
+      UpdateProcessAndModuleList(GetTargetProcess()->pid());
+    }
 
     frame_pointer_validator_client_ =
         std::make_unique<FramePointerValidatorClient>(this, grpc_channel_);
@@ -448,7 +470,7 @@ void OrbitApp::ListPresets() {
 void OrbitApp::RefreshCaptureView() {
   ORBIT_SCOPE_FUNCTION;
   NeedsRedraw();
-  GOrbitApp->FireRefreshCallbacks();
+  FireRefreshCallbacks();
   DoZoom = true;  // TODO: remove global, review logic
 }
 
@@ -486,7 +508,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   const bool is_64_bit = process->is_64_bit();
   const uint64_t absolute_address = function_utils::GetAbsoluteAddress(function, *process, *module);
   thread_pool_->Schedule([this, absolute_address, is_64_bit, pid, function] {
-    auto result = process_manager_->LoadProcessMemory(pid, absolute_address, function.size());
+    auto result = GetProcessManager()->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
                                                             result.error().message()));
@@ -512,26 +534,17 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   });
 }
 
-void OrbitApp::OnExit() {
-  AbortCapture();
-
-  process_manager_->ShutdownAndWait();
-  thread_pool_->ShutdownAndWait();
-
-  GOrbitApp = nullptr;
-}
-
 Timer GMainTimer;
 
-// TODO: make it non-static
 void OrbitApp::MainTick() {
   ORBIT_SCOPE("OrbitApp::MainTick");
   GMainTimer.Restart();
 
-  if (DoZoom && GOrbitApp->HasCaptureData()) {
-    GCurrentTimeGraph->SortTracks();
-    GOrbitApp->capture_window_->ZoomAll();
-    GOrbitApp->NeedsRedraw();
+  if (DoZoom && HasCaptureData()) {
+    // TODO (b/176077097): TrackManager has to manage sorting by their own.
+    GCurrentTimeGraph->GetTrackManager()->SortTracks();
+    capture_window_->ZoomAll();
+    NeedsRedraw();
     DoZoom = false;
   }
 }
@@ -540,6 +553,7 @@ void OrbitApp::SetCaptureWindow(CaptureWindow* capture) {
   CHECK(capture_window_ == nullptr);
   GCurrentTimeGraph = capture->GetTimeGraph();
   capture_window_ = capture;
+  capture_window_->set_draw_help(false);
 }
 
 void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {
@@ -576,7 +590,7 @@ void OrbitApp::SetSamplingReport(
     sampling_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(std::move(post_processed_sampling_data),
+  auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks));
   CHECK(sampling_reports_callback_);
   DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
@@ -595,7 +609,7 @@ void OrbitApp::SetSelectionReport(
     selection_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(std::move(post_processed_sampling_data),
+  auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks), has_summary);
   DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
@@ -751,11 +765,12 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
 
 PresetLoadState OrbitApp::GetPresetLoadState(
     const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const {
-  return GetPresetLoadStateForProcess(preset, GetSelectedProcess());
+  return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
-  const auto& key_to_string_map = GCurrentTimeGraph->GetStringManager()->GetKeyToStringMap();
+  const auto& key_to_string_map =
+      GCurrentTimeGraph->GetTrackManager()->GetStringManager()->GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllSerializableTimerChains();
@@ -799,7 +814,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  const ProcessData* process = data_manager_->selected_process();
+  const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please select a target process for the capture.");
@@ -828,6 +843,7 @@ bool OrbitApp::StartCapture() {
   UserDefinedCaptureData user_defined_capture_data =
       data_manager_->mutable_user_defined_capture_data();
 
+  CHECK(capture_client_ != nullptr);
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), std::move(user_defined_capture_data), enable_introspection);
@@ -850,6 +866,8 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::AbortCapture() {
+  if (capture_client_ == nullptr) return;
+
   static constexpr int64_t kMaxWaitForAbortCaptureMs = 2000;
   if (!capture_client_->AbortCaptureAndWait(kMaxWaitForAbortCaptureMs)) {
     return;
@@ -912,7 +930,7 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
   // anymore. Otherwise, this function should probably be more sophisticated and also compare the
   // build-id of the selected process (main module) and the process of the capture.
 
-  const ProcessData* selected_process = GetSelectedProcess();
+  const ProcessData* selected_process = GetTargetProcess();
   if (selected_process == nullptr) return false;
 
   const ProcessData* capture_process = capture.process();
@@ -969,7 +987,7 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
        frame_track_function_hashes = std::move(frame_track_function_hashes),
        scoped_status = std::move(scoped_status),
        error_message_from_local = std::move(error_message_from_local)]() mutable {
-        const auto result = process_manager_->FindDebugInfoFile(module_data->file_path());
+        const auto result = GetProcessManager()->FindDebugInfoFile(module_data->file_path());
 
         if (!result) {
           SendErrorToUi(
@@ -1044,7 +1062,9 @@ void OrbitApp::LoadModules(
       continue;
     }
 
-    if (!absl::GetFlag(FLAGS_local)) {
+    // TODO(170468590): [ui beta] maybe come up with a better indicator whether orbit is connected
+    // than process_manager != nullptr
+    if (!absl::GetFlag(FLAGS_local) && GetProcessManager() != nullptr) {
       LoadModuleOnRemote(module, std::move(function_hashes_to_hook),
                          std::move(frame_track_function_hashes), symbols_path.error().message());
       continue;
@@ -1130,7 +1150,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
                                          std::move(frame_track_function_hashes)] {
       modules_currently_loading_.erase(module_data->file_path());
 
-      const ProcessData* selected_process = GetSelectedProcess();
+      const ProcessData* selected_process = GetTargetProcess();
       if (selected_process != nullptr &&
           selected_process->IsModuleLoaded(module_data->file_path())) {
         functions_data_view_->AddFunctions(module_data->GetFunctions());
@@ -1157,7 +1177,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
       }
 
       UpdateAfterSymbolLoading();
-      GOrbitApp->FireRefreshCallbacks();
+      FireRefreshCallbacks();
     });
   });
 }
@@ -1165,7 +1185,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
 ErrorMessageOr<void> OrbitApp::GetFunctionInfosFromHashes(
     const ModuleData* module, const std::vector<uint64_t>& function_hashes,
     std::vector<const FunctionInfo*>* function_infos) {
-  const ProcessData* process = GetSelectedProcess();
+  const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
     return ErrorMessage(absl::StrFormat(
         "Unable to get function infos for module \"%s\", because no process is selected",
@@ -1272,9 +1292,12 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
-  CHECK(processes_data_view_->GetSelectedProcessId() == pid);
+  if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
+    CHECK(processes_data_view_->GetSelectedProcessId() == pid);
+  }
+
   thread_pool_->Schedule([pid, this] {
-    ErrorMessageOr<std::vector<ModuleInfo>> result = process_manager_->LoadModuleList(pid);
+    ErrorMessageOr<std::vector<ModuleInfo>> result = GetProcessManager()->LoadModuleList(pid);
 
     if (result.has_error()) {
       ERROR("Error retrieving modules: %s", result.error().message());
@@ -1283,21 +1306,32 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
     }
 
     main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
-      // Make sure that pid is actually what user has selected at
-      // the moment we arrive here. If not - ignore the result.
-      if (pid != processes_data_view_->GetSelectedProcessId()) {
-        return;
+      if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
+        // Make sure that pid is actually what user has selected at
+        // the moment we arrive here. If not - ignore the result.
+        if (pid != processes_data_view_->GetSelectedProcessId()) {
+          return;
+        }
+      } else {
+        // Since this callback is executed asynchronously we can't be sure the target process has
+        // been changed in the meantime. So we check an abort in case.
+        if (pid != GetTargetProcess()->pid()) {
+          return;
+        }
       }
 
-      ProcessData* process = data_manager_->GetMutableProcessByPid(pid);
+      ProcessData* process = [&]() {
+        if (absl::GetFlag(FLAGS_enable_ui_beta)) {
+          return GetMutableTargetProcess();
+        } else {
+          return data_manager_->GetMutableProcessByPid(pid);
+        }
+      }();
       CHECK(process != nullptr);
       process->UpdateModuleInfos(module_infos);
 
-      // If no process was selected before, or the process changed
-      if (GetSelectedProcess() == nullptr || pid != GetSelectedProcess()->pid()) {
-        data_manager_->ClearSelectedFunctions();
-        data_manager_->ClearUserDefinedCaptureData();
-        data_manager_->set_selected_process(pid);
+      if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
+        SetTargetProcess(process);
       }
 
       // Updating the list of loaded modules (in memory) of a process, can mean that a process has
@@ -1350,7 +1384,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       modules_data_view_->UpdateModules(process);
 
       functions_data_view_->ClearFunctions();
-      for (const auto& [module_path, _] : GetSelectedProcess()->GetMemoryMap()) {
+      for (const auto& [module_path, _] : GetTargetProcess()->GetMemoryMap()) {
         ModuleData* module = module_manager_->GetMutableModuleByPath(module_path);
         if (module->is_loaded()) {
           functions_data_view_->AddFunctions(module->GetFunctions());
@@ -1382,7 +1416,7 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
 }
 
 [[nodiscard]] bool OrbitApp::IsFunctionSelected(uint64_t absolute_address) const {
-  const ProcessData* process = data_manager_->selected_process();
+  const ProcessData* process = GetTargetProcess();
   if (process == nullptr) return false;
 
   const auto result = process->FindModuleByAddress(absolute_address);
@@ -1533,28 +1567,28 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = std::make_unique<FunctionsDataView>();
+        functions_data_view_ = std::make_unique<FunctionsDataView>(this);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = std::make_unique<CallStackDataView>();
+        callstack_data_view_ = std::make_unique<CallStackDataView>(this);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = std::make_unique<ModulesDataView>();
+        modules_data_view_ = std::make_unique<ModulesDataView>(this);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
 
     case DataViewType::kProcesses:
       if (!processes_data_view_) {
-        processes_data_view_ = std::make_unique<ProcessesDataView>();
+        processes_data_view_ = std::make_unique<ProcessesDataView>(this);
         processes_data_view_->SetSelectionListener(
             [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
         panels_.push_back(processes_data_view_.get());
@@ -1563,7 +1597,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {
-        presets_data_view_ = std::make_unique<PresetsDataView>();
+        presets_data_view_ = std::make_unique<PresetsDataView>(this);
         panels_.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();
@@ -1580,7 +1614,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
-        tracepoints_data_view_ = std::make_unique<TracepointsDataView>();
+        tracepoints_data_view_ = std::make_unique<TracepointsDataView>(this);
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();
@@ -1593,7 +1627,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = std::make_unique<CallStackDataView>();
+    selection_callstack_data_view_ = std::make_unique<CallStackDataView>(this);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
@@ -1620,7 +1654,7 @@ bool OrbitApp::IsCapturing() const {
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(status_listener_ != nullptr);
-  return ScopedStatus{main_thread_executor_.get(), status_listener_, initial_message};
+  return ScopedStatus{GetMainThreadExecutor(), status_listener_, initial_message};
 }
 
 void OrbitApp::SelectTracepoint(const TracepointInfo& tracepoint) {
@@ -1735,5 +1769,15 @@ void OrbitApp::AddFrameTrackTimers(const FunctionInfo& function) {
     frame_timer.set_type(TimerInfo::kFrame);
 
     GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
+  }
+}
+
+void OrbitApp::SetTargetProcess(ProcessData* process) {
+  CHECK(process != nullptr);
+
+  if (process != process_) {
+    data_manager_->ClearSelectedFunctions();
+    data_manager_->ClearUserDefinedCaptureData();
+    process_ = process;
   }
 }

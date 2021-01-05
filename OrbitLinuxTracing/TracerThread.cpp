@@ -4,9 +4,6 @@
 
 #include "TracerThread.h"
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/ThreadUtils.h>
-#include <OrbitBase/Tracing.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
@@ -23,14 +20,17 @@
 #include <utility>
 
 #include "Function.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
 #include "tracepoint.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
@@ -102,7 +102,7 @@ void TracerThread::InitUprobesEventVisitor() {
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
-bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
+bool TracerThread::OpenUprobes(const orbit_linux_tracing::Function& function,
                                const std::vector<int32_t>& cpus,
                                absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
@@ -119,7 +119,7 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
   return true;
 }
 
-bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
+bool TracerThread::OpenUretprobes(const orbit_linux_tracing::Function& function,
                                   const std::vector<int32_t>& cpus,
                                   absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
@@ -138,7 +138,7 @@ bool TracerThread::OpenUretprobes(const LinuxTracing::Function& function,
 
 void TracerThread::AddUprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-    const LinuxTracing::Function& function) {
+    const orbit_linux_tracing::Function& function) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
@@ -150,7 +150,7 @@ void TracerThread::AddUprobesFileDescriptors(
 
 void TracerThread::AddUretprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-    const LinuxTracing::Function& function) {
+    const orbit_linux_tracing::Function& function) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uretprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
@@ -426,6 +426,7 @@ void TracerThread::InitContextSwitchAndThreadStateVisitor() {
   if (trace_thread_state_) {
     context_switch_and_thread_state_visitor_->SetThreadStatePidFilter(target_pid_);
   }
+  context_switch_and_thread_state_visitor_->SetThreadStateCounter(&stats_.thread_state_count);
   event_processor_.AddVisitor(context_switch_and_thread_state_visitor_.get());
 }
 
@@ -948,7 +949,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
@@ -1068,6 +1069,8 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
     double actual_window_s =
         static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
+    CHECK(actual_window_s > 0.0);
+
     LOG("Events per second (and total) last %.3f s:", actual_window_s);
     LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
         stats_.sched_switch_count);
@@ -1094,6 +1097,9 @@ void TracerThread::PrintStatsIfTimerElapsed() {
                                           : "DISCARDED AS OUT OF ORDER",
         discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
 
+    // Ensure we can divide by 0.0 safely in case stats_.sample_count is zero.
+    static_assert(std::numeric_limits<double>::is_iec559);
+
     uint64_t unwind_error_count = stats_.unwind_error_count;
     LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
         unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
@@ -1102,8 +1108,12 @@ void TracerThread::PrintStatsIfTimerElapsed() {
         discarded_samples_in_uretprobes_count / actual_window_s,
         discarded_samples_in_uretprobes_count,
         100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+
+    uint64_t thread_state_count = stats_.thread_state_count;
+    LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
+        thread_state_count);
     stats_.Reset();
   }
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

@@ -7,18 +7,21 @@
 
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
+#include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "Timer.h"
 
+class OrbitApp;
 class GlCanvas {
  public:
   explicit GlCanvas(uint32_t font_size);
   virtual ~GlCanvas();
 
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
-  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size);
+  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size,
+                                          OrbitApp* app);
 
   virtual void Initialize();
   virtual void Resize(int width, int height);
@@ -38,10 +41,15 @@ class GlCanvas {
   void PrepareScreenSpaceViewport();
   void PrepareGlState();
   static void CleanupGlState();
+
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
-  Vec2 ScreenToWorld(Vec2 screen_pos);
+  Vec2 ScreenToWorld(Vec2 screen_pos) const;
   float ScreenToWorldHeight(int height) const;
   float ScreenToWorldWidth(int width) const;
+
+  Vec2 WorldToScreen(Vec2 world_pos) const;
+  int WorldToScreenHeight(float height) const;
+  int WorldToScreenWidth(float width) const;
 
   // events
   virtual void MouseMoved(int x, int y, bool left, bool right, bool middle);
@@ -106,15 +114,12 @@ class GlCanvas {
   [[nodiscard]] virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
   void NeedsRedraw() { m_NeedsRedraw = true; }
 
-  [[nodiscard]] virtual bool GetNeedsCheckHighlightChange() const {
-    return needs_check_highlight_change_;
-  }
-  void ResetNeedsCheckHighlightChange() { needs_check_highlight_change_ = false; };
-
   [[nodiscard]] bool GetIsMouseOver() const { return is_mouse_over_; }
   void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
+
+  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
 
   static float kZValueSlider;
   static float kZValueSliderBg;
@@ -143,6 +148,8 @@ class GlCanvas {
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
+
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 
   int screen_width_;
   int screen_height_;
@@ -185,7 +192,6 @@ class GlCanvas {
   bool picking_;
   bool double_clicking_;
   bool control_key_;
-  bool needs_check_highlight_change_ = false;
   bool is_mouse_over_ = false;
   bool m_NeedsRedraw;
   int m_MainWindowWidth = 0;
@@ -194,6 +200,10 @@ class GlCanvas {
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
   std::vector<RenderCallback> render_callbacks_;
+
+ private:
+  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+  CreateAccessibilityInterface();
 };
 
 #endif  // ORBIT_GL_GL_CANVAS_H_

@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitLinuxTracing/Tracer.h>
+#include "OrbitLinuxTracing/Tracer.h"
+
 #include <pthread.h>
 
 #include <atomic>
@@ -12,7 +13,7 @@
 #include "TracerThread.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::CaptureOptions;
 
@@ -24,4 +25,4 @@ void Tracer::Run(const CaptureOptions& capture_options, TracerListener* listener
   session.Run(exit_requested);
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

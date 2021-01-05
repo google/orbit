@@ -6,14 +6,14 @@ found in the LICENSE file.
 
 from absl import app
 
-from core.orbit_e2e import E2ETest
+from core.orbit_e2e import E2ETestSuite
 from fragments.move_tabs import MoveFunctionsTab
 
 
 def main(argv):
-    fragments = [MoveFunctionsTab()]
-    test = E2ETest(test_name="Move tabs", fragments=fragments)
-    test.execute()
+    tests = [MoveFunctionsTab()]
+    suite = E2ETestSuite(test_name="Move tabs", tests=tests)
+    suite.execute()
 
 
 if __name__ == '__main__':

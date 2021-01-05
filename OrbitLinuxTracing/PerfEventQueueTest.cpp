@@ -6,7 +6,7 @@
 
 #include "PerfEventQueue.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 namespace {
 class TestEvent : public PerfEvent {
@@ -175,4 +175,4 @@ TEST(PerfEventQueue, FdWithOldestAndNewestEvent) {
   EXPECT_FALSE(event_queue.HasEvent());
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

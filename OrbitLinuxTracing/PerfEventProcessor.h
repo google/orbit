@@ -16,7 +16,7 @@
 #include "PerfEventQueue.h"
 #include "PerfEventVisitor.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // This class receives perf_event_open events coming from several ring buffers
 // and processes them in order according to their timestamps.
@@ -53,6 +53,6 @@ class PerfEventProcessor {
   std::vector<PerfEventVisitor*> visitors_;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_

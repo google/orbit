@@ -22,6 +22,7 @@ class ProcessLauncherWidget : public QWidget {
 
   void Refresh();
   void SetDataView(DataView* data_view);
+  void ClearDataView();
 
  private:
   Ui::ProcessLauncherWidget* ui;

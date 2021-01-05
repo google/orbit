@@ -13,7 +13,7 @@
 
 class CallStackDataView : public DataView {
  public:
-  CallStackDataView();
+  explicit CallStackDataView(OrbitApp* app);
 
   void SetAsMainInstance() override;
   const std::vector<Column>& GetColumns() override;

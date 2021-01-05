@@ -31,5 +31,7 @@
     <file alias="share">outline_share_white_48dp.png</file>
     <file alias="skip_next">outline_skip_next_white_48dp.png</file>
     <file alias="stop">outline_stop_white_48dp.png</file>
+    <file alias="arrow_back">outline_arrow_back_white_48dp.png</file>
+    <file alias="arrow_forward">outline_arrow_forward_white_48dp.png</file>
   </qresource>
 </RCC>

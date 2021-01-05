@@ -11,7 +11,8 @@ target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitGl
-  PUBLIC App.h
+  PUBLIC AccessibleTimeGraph.h
+         App.h
          AsyncTrack.h
          Batcher.h
          BlockChain.h
@@ -62,13 +63,16 @@ target_sources(
          TimerInfosIterator.h
          TimerTrack.h
          Track.h
+         TrackAccessibility.h
+         TrackManager.h
          TriangleToggle.h
          TracepointsDataView.h
          TracepointTrack.h)
 
 target_sources(
   OrbitGl
-  PRIVATE App.cpp
+  PRIVATE AccessibleTimeGraph.cpp
+          App.cpp
           AsyncTrack.cpp
           Batcher.cpp
           CallStackDataView.cpp
@@ -109,6 +113,8 @@ target_sources(
           ThreadStateTrack.cpp
           ThreadTrack.cpp
           Track.cpp
+          TrackAccessibility.cpp
+          TrackManager.cpp
           TriangleToggle.cpp
           TracepointsDataView.cpp
           TracepointTrack.cpp)
@@ -117,7 +123,8 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitGl
-  PUBLIC OrbitCore
+  PUBLIC OrbitAccessibility
+         OrbitCore
          OrbitCaptureClient
          OrbitClientData
          OrbitClientModel
@@ -151,7 +158,7 @@ target_sources(OrbitGlTests PRIVATE
                ScopedStatusTest.cpp
                SliderTest.cpp
                TimerInfosIteratorTest.cpp
-               UnitTestMockEnvironment.cpp)
+               ClientFlags.cpp)
 
 target_link_libraries(
   OrbitGlTests

@@ -76,7 +76,9 @@ class StadiaConnection {
   [[nodiscard]] ServiceDeployManager* GetServiceDeployManager() const {
     return service_deploy_manager_.get();
   }
-  [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() { return grpc_channel_; }
+  [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
+    return grpc_channel_;
+  }
 
  private:
   orbit_ggp::Instance instance_;

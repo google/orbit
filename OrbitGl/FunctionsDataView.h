@@ -5,23 +5,40 @@
 #ifndef ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 #define ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
 
+#include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
+
+#include <string>
+#include <vector>
+
 #include "DataView.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
+
+ABSL_DECLARE_FLAG(bool, enable_ui_beta);
+
 class FunctionsDataView : public DataView {
  public:
-  FunctionsDataView();
+  explicit FunctionsDataView(OrbitApp* app);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static std::string BuildSelectedColumnsString(const orbit_client_protos::FunctionInfo& function);
+  static std::string BuildSelectedColumnsString(OrbitApp* app,
+                                                const orbit_client_protos::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
+  std::string GetLabel() override {
+    if (absl::GetFlag(FLAGS_enable_ui_beta)) {
+      return "Functions";
+    }
+    return "";
+  }
 
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
@@ -56,8 +73,10 @@ class FunctionsDataView : public DataView {
   static const std::string kMenuActionDisassembly;
 
  private:
-  static bool ShouldShowSelectedFunctionIcon(const orbit_client_protos::FunctionInfo& function);
-  static bool ShouldShowFrameTrackIcon(const orbit_client_protos::FunctionInfo& function);
+  static bool ShouldShowSelectedFunctionIcon(OrbitApp* app,
+                                             const orbit_client_protos::FunctionInfo& function);
+  static bool ShouldShowFrameTrackIcon(OrbitApp* app,
+                                       const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
 };
 

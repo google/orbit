@@ -22,4 +22,6 @@ void ProcessLauncherWidget::SetDataView(DataView* data_view) {
   ui->LiveProcessList->Initialize(data_view, SelectionType::kDefault, FontType::kDefault);
 }
 
+void ProcessLauncherWidget::ClearDataView() { ui->LiveProcessList->Deinitialize(); }
+
 void ProcessLauncherWidget::Refresh() { ui->LiveProcessList->Refresh(); }

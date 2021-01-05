@@ -7,7 +7,7 @@
 
 #include "PerfEventOpen.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // This struct must be in sync with the SAMPLE_TYPE_TID_TIME_STREAMID_CPU in
 // PerfEventOpen.h, as the bits set in perf_event_attr::sample_type determine
@@ -139,6 +139,6 @@ struct __attribute__((__packed__)) perf_event_lost {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_RECORDS_H_

@@ -18,7 +18,9 @@ using orbit_client_protos::TimerInfo;
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(TimeGraph* time_graph) : TimerTrack(time_graph) { SetPinned(false); }
+SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app) : TimerTrack(time_graph, app) {
+  SetPinned(false);
+}
 
 float SchedulerTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -28,15 +30,14 @@ float SchedulerTrack::GetHeight() const {
 }
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  bool is_same_tid_as_selected = timer_info.thread_id() == GOrbitApp->selected_thread_id();
+  bool is_same_tid_as_selected = timer_info.thread_id() == app_->selected_thread_id();
   const CaptureData* capture_data = time_graph_->GetCaptureData();
   CHECK(capture_data != nullptr);
   int32_t capture_process_id = capture_data->process_id();
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
 
-  return is_same_tid_as_selected ||
-         (GOrbitApp->selected_thread_id() == -1 && is_same_pid_as_target);
+  return is_same_tid_as_selected || (app_->selected_thread_id() == -1 && is_same_pid_as_target);
 }
 
 Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {

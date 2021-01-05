@@ -18,11 +18,12 @@
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
 class TextRenderer;
 
 class TimerTrack : public Track {
  public:
-  explicit TimerTrack(TimeGraph* time_graph);
+  explicit TimerTrack(TimeGraph* time_graph, OrbitApp* app);
   ~TimerTrack() override = default;
 
   // Pickable
@@ -35,7 +36,7 @@ class TimerTrack : public Track {
                         float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return kTimerTrack; }
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() const override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
@@ -51,8 +52,8 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual const TextBox* GetUp(const TextBox* textbox) const;
   [[nodiscard]] virtual const TextBox* GetDown(const TextBox* textbox) const;
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] bool IsCollapsable() const override { return depth_ > 1; }
@@ -92,6 +93,8 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual std::string GetBoxTooltip(PickingId id) const;
   float GetHeight() const override;
   float box_height_;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_TIMER_TRACK_H_

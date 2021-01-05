@@ -11,6 +11,7 @@
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
 #include "OpenGl.h"
+#include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "TextBox.h"
 #include "absl/strings/str_format.h"
@@ -96,16 +97,17 @@ GlCanvas::~GlCanvas() {
   }
 }
 
-std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size) {
+std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size,
+                                           OrbitApp* app) {
   switch (canvas_type) {
     case CanvasType::kCaptureWindow: {
-      auto main_capture_window = std::make_unique<CaptureWindow>(font_size);
-      GOrbitApp->SetCaptureWindow(main_capture_window.get());
+      auto main_capture_window = std::make_unique<CaptureWindow>(font_size, app);
+      app->SetCaptureWindow(main_capture_window.get());
       return main_capture_window;
     }
     case CanvasType::kIntrospectionWindow: {
-      auto introspection_window = std::make_unique<IntrospectionWindow>(font_size);
-      GOrbitApp->SetIntrospectionWindow(introspection_window.get());
+      auto introspection_window = std::make_unique<IntrospectionWindow>(font_size, app);
+      app->SetIntrospectionWindow(introspection_window.get());
       return introspection_window;
     }
     case CanvasType::kDebug:
@@ -134,6 +136,13 @@ void GlCanvas::EnableImGui() {
   if (imgui_context_ == nullptr) {
     imgui_context_ = ImGui::CreateContext();
   }
+}
+
+orbit_accessibility::AccessibleInterface* GlCanvas::GetOrCreateAccessibleInterface() {
+  if (accessibility_ == nullptr) {
+    accessibility_ = CreateAccessibilityInterface();
+  }
+  return accessibility_.get();
 }
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
@@ -324,12 +333,11 @@ void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
       world_top_left_y_ - (static_cast<float>(y) / static_cast<float>(GetHeight())) * world_height_;
 }
 
-Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) {
+Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) const {
   Vec2 world_pos;
-  world_pos[0] =
-      world_top_left_x_ + (screen_pos[0] / static_cast<float>(GetWidth())) * world_width_;
+  world_pos[0] = world_top_left_x_ + screen_pos[0] / static_cast<float>(GetWidth()) * world_width_;
   world_pos[1] =
-      world_top_left_y_ - (screen_pos[1] / static_cast<float>(GetHeight())) * world_height_;
+      world_top_left_y_ - screen_pos[1] / static_cast<float>(GetHeight()) * world_height_;
   return world_pos;
 }
 
@@ -339,6 +347,21 @@ float GlCanvas::ScreenToWorldHeight(int height) const {
 
 float GlCanvas::ScreenToWorldWidth(int width) const {
   return (static_cast<float>(width) / static_cast<float>(GetWidth())) * world_width_;
+}
+
+Vec2 GlCanvas::WorldToScreen(Vec2 world_pos) const {
+  Vec2 screen_pos;
+  screen_pos[0] = floorf((world_pos[0] - world_top_left_x_) / world_width_ * GetWidth());
+  screen_pos[1] = floorf((world_top_left_y_ - world_pos[1]) / world_height_ * GetHeight());
+  return screen_pos;
+}
+
+int GlCanvas::WorldToScreenHeight(float height) const {
+  return static_cast<int>(height / world_height_ * GetHeight());
+}
+
+int GlCanvas::WorldToScreenWidth(float width) const {
+  return static_cast<int>(width / world_width_ * GetWidth());
 }
 
 int GlCanvas::GetWidth() const { return screen_width_; }
@@ -408,4 +431,9 @@ PickingMode GlCanvas::GetPickingMode() {
   }
 
   return PickingMode::kNone;
+}
+
+std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
+GlCanvas::CreateAccessibilityInterface() {
+  return std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
 }

@@ -16,7 +16,7 @@
 
 namespace orbit_service {
 
-class LinuxTracingHandler : public LinuxTracing::TracerListener {
+class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
  public:
   explicit LinuxTracingHandler(CaptureEventBuffer* capture_event_buffer)
       : capture_event_buffer_{capture_event_buffer} {}
@@ -43,7 +43,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
 
  private:
   CaptureEventBuffer* capture_event_buffer_;
-  std::unique_ptr<LinuxTracing::Tracer> tracer_;
+  std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
   std::unique_ptr<orbit_base::TracingListener> orbit_tracing_listener_;

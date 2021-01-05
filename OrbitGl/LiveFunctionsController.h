@@ -13,9 +13,12 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
+class OrbitApp;
+
 class LiveFunctionsController {
  public:
-  LiveFunctionsController() : live_functions_data_view_(this) {}
+  explicit LiveFunctionsController(OrbitApp* app)
+      : live_functions_data_view_(this, app), app_{app} {}
 
   LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
@@ -53,6 +56,8 @@ class LiveFunctionsController {
   uint64_t next_iterator_id_ = 0;
 
   uint64_t id_to_select_ = 0;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // LIVE_FUNCTIONS_H_

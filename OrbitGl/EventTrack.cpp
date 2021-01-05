@@ -11,7 +11,7 @@
 
 using orbit_client_protos::CallstackEvent;
 
-EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
+EventTrack::EventTrack(TimeGraph* a_TimeGraph, OrbitApp* app) : Track(a_TimeGraph), app_{app} {
   mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
   picked_ = false;
   color_ = Color(0, 255, 0, 255);
@@ -135,7 +135,7 @@ void EventTrack::SetPos(float a_X, float a_Y) { pos_ = Vec2(a_X, a_Y); }
 void EventTrack::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 
 void EventTrack::OnPick(int x, int y) {
-  GOrbitApp->set_selected_thread_id(thread_id_);
+  app_->set_selected_thread_id(thread_id_);
   Vec2& mouse_pos = mouse_pos_[0];
   canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
   mouse_pos_[1] = mouse_pos_[0];

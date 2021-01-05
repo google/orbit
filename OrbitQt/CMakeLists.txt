@@ -10,7 +10,8 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE CallTreeViewItemModel.h
+  PRIVATE AccessibilityAdapter.h
+          CallTreeViewItemModel.h
           CallTreeWidget.h
           Connections.h
           ConnectToStadiaWidget.h
@@ -37,15 +38,18 @@ target_sources(
           ProcessItemModel.h
           OverlayWidget.h
           processlauncherwidget.h
+          ProfilingTargetDialog.h
           resource.h
           RingBuffer.h
           servicedeploymanager.h
+          TargetConfiguration.h
           TutorialContent.h
           TutorialOverlay.h)
 
 target_sources(
   OrbitQt
-  PRIVATE CallTreeViewItemModel.cpp
+  PRIVATE AccessibilityAdapter.cpp
+          CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
           ConnectToStadiaWidget.cpp
@@ -83,18 +87,25 @@ target_sources(
           OverlayWidget.ui
           processlauncherwidget.cpp
           processlauncherwidget.ui
+          ProfilingTargetDialog.cpp
+          ProfilingTargetDialog.ui
           servicedeploymanager.cpp
           TutorialContent.cpp
           TutorialOverlay.cpp
           TutorialOverlay.ui
           ../icons/orbiticons.qrc
-          ../images/orbitimages.qrc)
+          ../images/orbitimages.qrc
+          # Todo (176066030): OrbitGl relies on flags usually defined in the OrbitQt executable, so the
+          # tests needs this to link against them. To avoid multiple definitions, we compile the flags
+          # cpp with the tests
+          ../OrbitGl/ClientFlags.cpp)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQt
-  PRIVATE OrbitCore
+  PRIVATE OrbitAccessibility
+          OrbitCore
           OrbitGl
           OrbitGgp
           OrbitSshQt
@@ -148,12 +159,14 @@ add_executable(OrbitQtTests)
 target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitQtTests
-        PRIVATE
+        PRIVATE AccessibilityAdapter.h
                 CutoutWidget.h
                 EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE EventLoopTest.cpp
+        PRIVATE AccessibilityAdapter.cpp
+                AccessibilityAdapterTest.cpp
+                EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 RingBufferTest.cpp
@@ -162,13 +175,15 @@ target_sources(OrbitQtTests
                 TutorialOverlayTest.cpp
                 TutorialOverlay.cpp
                 TutorialOverlay.ui
+                ../OrbitGl/ClientFlags.cpp
                 ../images/orbitimages.qrc)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQtTests
-  PRIVATE OrbitCore
+  PRIVATE OrbitAccessibility
+          OrbitCore
           OrbitGl
           Qt5::Widgets
           Qt5::Core

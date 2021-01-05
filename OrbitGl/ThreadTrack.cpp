@@ -17,15 +17,16 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id) : TimerTrack(time_graph) {
+ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
+    : TimerTrack(time_graph, app) {
   thread_id_ = thread_id;
 
-  thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id);
+  thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_);
 
-  event_track_ = std::make_shared<EventTrack>(time_graph);
+  event_track_ = std::make_shared<EventTrack>(time_graph, app_);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id);
+  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id, app_);
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
@@ -84,12 +85,12 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return timer_info.type() == TimerInfo::kIntrospection ||
-         GOrbitApp->IsFunctionVisible(timer_info.function_address());
+         app_->IsFunctionVisible(timer_info.function_address());
 }
 
 bool ThreadTrack::IsTrackSelected() const {
   return thread_id_ != orbit_base::kAllProcessThreadsTid &&
-         GOrbitApp->selected_thread_id() == thread_id_;
+         app_->selected_thread_id() == thread_id_;
 }
 
 [[nodiscard]] static inline Color ToColor(uint64_t val) {
@@ -121,7 +122,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
   }
 
   uint64_t address = timer_info.function_address();
-  const FunctionInfo* function_info = GOrbitApp->GetSelectedFunction(address);
+  const FunctionInfo* function_info = app_->GetSelectedFunction(address);
   CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection);
   std::optional<Color> user_color =
       function_info ? GetUserColor(timer_info, *function_info) : std::nullopt;
@@ -214,7 +215,7 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
 
 void ThreadTrack::OnPick(int x, int y) {
   Track::OnPick(x, y);
-  GOrbitApp->set_selected_thread_id(thread_id_);
+  app_->set_selected_thread_id(thread_id_);
 }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
@@ -247,7 +248,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     text_box->SetElapsedTimeTextLength(time.length());
 
-    const FunctionInfo* func = GOrbitApp->GetSelectedFunction(timer_info.function_address());
+    const FunctionInfo* func = app_->GetSelectedFunction(timer_info.function_address());
     if (func) {
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;

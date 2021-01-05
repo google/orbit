@@ -17,7 +17,7 @@
 #include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class GpuTracepointEventProcessor {
  public:
@@ -68,6 +68,6 @@ class GpuTracepointEventProcessor {
   absl::flat_hash_map<std::string, std::vector<uint64_t>> timeline_to_latest_timestamp_per_depth_;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR_H_

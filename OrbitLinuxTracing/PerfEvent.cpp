@@ -6,7 +6,7 @@
 
 #include "PerfEventVisitor.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // These cannot be implemented in the header PerfEvent.h, because there
 // PerfEventVisitor needs to be an incomplete type to avoid the circular
@@ -48,4 +48,4 @@ void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->vis
 
 void GenericTracepointPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

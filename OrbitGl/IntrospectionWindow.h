@@ -9,9 +9,11 @@
 #include "CaptureWindow.h"
 #include "OrbitBase/Tracing.h"
 
+class OrbitApp;
+
 class IntrospectionWindow : public CaptureWindow {
  public:
-  explicit IntrospectionWindow(uint32_t font_size);
+  explicit IntrospectionWindow(uint32_t font_size, OrbitApp* app);
   ~IntrospectionWindow() override;
   void ToggleRecording() override;
 

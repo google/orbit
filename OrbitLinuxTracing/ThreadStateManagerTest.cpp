@@ -12,7 +12,7 @@
 #include "ThreadStateManager.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::ThreadStateSlice;
 
@@ -342,4 +342,4 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   EXPECT_EQ(slice->end_timestamp_ns(), 300);
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

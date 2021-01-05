@@ -4,6 +4,8 @@
 
 #include "CaptureServiceImpl.h"
 
+#include <limits>
+
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "LinuxTracingHandler.h"
@@ -94,8 +96,12 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
   ~GrpcCaptureEventSender() override {
     LOG("Total number of events sent: %lu", total_number_of_events_sent_);
     LOG("Total number of bytes sent: %lu", total_number_of_bytes_sent_);
+
+    // Ensure we can divide by 0.f safely.
+    static_assert(std::numeric_limits<float>::is_iec559);
     float average_bytes =
         static_cast<float>(total_number_of_bytes_sent_) / total_number_of_events_sent_;
+
     LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 
@@ -123,7 +129,10 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
     number_of_bytes_sent += response.ByteSizeLong();
     reader_writer_->Write(response);
 
+    // Ensure we can divide by 0.f safely.
+    static_assert(std::numeric_limits<float>::is_iec559);
     float average_bytes = static_cast<float>(number_of_bytes_sent) / events.size();
+
     ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
     total_number_of_events_sent_ += events.size();
     total_number_of_bytes_sent_ += number_of_bytes_sent;

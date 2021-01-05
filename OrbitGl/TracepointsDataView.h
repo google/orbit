@@ -14,9 +14,11 @@
 
 using orbit_grpc_protos::TracepointInfo;
 
+class OrbitApp;
+
 class TracepointsDataView : public DataView {
  public:
-  TracepointsDataView();
+  explicit TracepointsDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCategory; }

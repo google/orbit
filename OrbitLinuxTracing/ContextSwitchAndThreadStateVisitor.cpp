@@ -12,7 +12,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitLinuxTracing/TracerListener.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -133,6 +133,9 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
     if (out_slice.has_value()) {
       CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
+      if (thread_state_counter_ != nullptr) {
+        ++(*thread_state_counter_);
+      }
     }
   }
 
@@ -143,6 +146,9 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
     if (in_slice.has_value()) {
       CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
+      if (thread_state_counter_ != nullptr) {
+        ++(*thread_state_counter_);
+      }
     }
   }
 }
@@ -157,6 +163,9 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
   if (state_slice.has_value()) {
     CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
+    if (thread_state_counter_ != nullptr) {
+      ++(*thread_state_counter_);
+    }
   }
 }
 
@@ -165,6 +174,9 @@ void ContextSwitchAndThreadStateVisitor::ProcessRemainingOpenStates(uint64_t tim
   for (ThreadStateSlice& slice : state_slices) {
     CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(slice);
+    if (thread_state_counter_ != nullptr) {
+      ++(*thread_state_counter_);
+    }
   }
 }
 
@@ -226,4 +238,4 @@ ThreadStateSlice::ThreadState ContextSwitchAndThreadStateVisitor::GetThreadState
   return ThreadStateSlice::kRunnable;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

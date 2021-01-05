@@ -16,10 +16,12 @@
 #include "OrbitClientData/PostProcessedSamplingData.h"
 #include "SamplingReportDataView.h"
 
+class OrbitApp;
+
 class SamplingReport {
  public:
   explicit SamplingReport(
-      PostProcessedSamplingData post_processed_sampling_data,
+      OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
       bool has_summary = true);
   void UpdateReport(PostProcessedSamplingData post_processed_sampling_data,
@@ -54,6 +56,7 @@ class SamplingReport {
   size_t selected_callstack_index_;
   std::function<void()> ui_refresh_func_;
   bool has_summary_;
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_SAMPLING_REPORT_H_

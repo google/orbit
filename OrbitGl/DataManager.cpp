@@ -4,11 +4,15 @@
 
 #include "DataManager.h"
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/node_hash_map.h>
+
+#include <limits>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
+#include "module.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
@@ -118,18 +122,6 @@ bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
 std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return std::vector<FunctionInfo>(selected_functions_.begin(), selected_functions_.end());
-}
-
-void DataManager::set_selected_process(int32_t pid) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  const ProcessData* process = GetProcessByPid(pid);
-  CHECK(process != nullptr);
-  selected_process_ = process;
-}
-
-const ProcessData* DataManager::selected_process() const {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  return selected_process_;
 }
 
 void DataManager::SelectTracepoint(const TracepointInfo& info) {

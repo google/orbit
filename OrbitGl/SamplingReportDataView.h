@@ -9,9 +9,11 @@
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "absl/container/flat_hash_set.h"
 
+class OrbitApp;
+
 class SamplingReportDataView : public DataView {
  public:
-  SamplingReportDataView();
+  explicit SamplingReportDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }

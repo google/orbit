@@ -8,12 +8,14 @@
 #include <absl/flags/usage_config.h>
 #include <absl/strings/str_format.h>
 
+#include <QAccessible>
 #include <QApplication>
 #include <QByteArray>
 #include <QColor>
 #include <QCoreApplication>
 #include <QDir>
 #include <QMessageBox>
+#include <QMetaType>
 #include <QObject>
 #include <QPalette>
 #include <QProcessEnvironment>
@@ -41,12 +43,11 @@
 #include <unistd.h>
 #endif
 
-#include "App.h"
-#include "ApplicationOptions.h"
+#include "AccessibilityAdapter.h"
+#include "Connections.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
 #include "ImGuiOrbit.h"
-#include "MainThreadExecutorImpl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
@@ -55,6 +56,8 @@
 #include "OrbitStartupWindow.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
+#include "ProfilingTargetDialog.h"
+#include "TargetConfiguration.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
 #include "servicedeploymanager.h"
@@ -64,40 +67,12 @@
 #include "CrashOptions.h"
 #endif
 
-ABSL_FLAG(bool, enable_stale_features, false,
-          "Enable obsolete features that are not working or are not "
-          "implemented in the client's UI");
-
-ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
-
-ABSL_FLAG(bool, nodeploy, false, "Disable automatic deployment of OrbitService");
-
-ABSL_FLAG(std::string, collector, "", "Full path of collector to be deployed");
-
-ABSL_FLAG(std::string, collector_root_password, "", "Collector's machine root password");
-
-ABSL_FLAG(uint16_t, grpc_port, 44765,
-          "The service's GRPC server port (use default value if unsure)");
-ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
-
-ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
-
-// TODO(b/160549506): Remove this flag once it can be specified in the ui.
-ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
-
-// TODO(b/160549506): Remove this flag once it can be specified in the ui.
-ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
-
-// TODO(kuebler): remove this once we have the validator complete
-ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
-
-// TODO: Remove this flag once we have a way to toggle the display return values
-ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
-
-ABSL_FLAG(bool, enable_tracepoint_feature, false,
-          "Enable the setting of the panel of kernel tracepoints");
-
-ABSL_FLAG(bool, thread_state, false, "Collect thread states");
+ABSL_DECLARE_FLAG(uint16_t, grpc_port);
+ABSL_DECLARE_FLAG(std::string, collector_root_password);
+ABSL_DECLARE_FLAG(std::string, collector);
+ABSL_DECLARE_FLAG(bool, local);
+ABSL_DECLARE_FLAG(bool, devmode);
+ABSL_DECLARE_FLAG(bool, nodeploy);
 
 using ServiceDeployManager = orbit_qt::ServiceDeployManager;
 using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
@@ -126,8 +101,7 @@ static outcome::result<GrpcPort> DeployOrbitService(
 }
 
 static outcome::result<void> RunUiInstance(
-    QApplication* app, std::optional<DeploymentConfiguration> deployment_configuration,
-    Context* context) {
+    std::optional<DeploymentConfiguration> deployment_configuration, Context* context) {
   std::optional<orbit_qt::ServiceDeployManager> service_deploy_manager;
 
   OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
@@ -154,8 +128,7 @@ static outcome::result<void> RunUiInstance(
   }());
   const auto& [ports, capture_path] = result;
 
-  ApplicationOptions options;
-  options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
+  std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
   ServiceDeployManager* service_deploy_manager_ptr = nullptr;
 
@@ -165,12 +138,11 @@ static outcome::result<void> RunUiInstance(
 
   std::optional<std::error_code> error;
 
-  GOrbitApp = OrbitApp::Create(std::move(options), CreateMainThreadExecutor());
-
+  orbit_qt::InstallAccessibilityFactories();
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
-    OrbitMainWindow w(app, service_deploy_manager_ptr, kDefaultFontSize);
+    OrbitMainWindow w(service_deploy_manager_ptr, grpc_server_address, kDefaultFontSize);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);
@@ -199,12 +171,92 @@ static outcome::result<void> RunUiInstance(
     Orbit_ImGui_Shutdown();
   }
 
-  GOrbitApp->OnExit();
-
   if (error) {
     return outcome::failure(error.value());
   } else {
     return outcome::success();
+  }
+}
+
+void RunBetaUiInstance(std::optional<DeploymentConfiguration> deployment_configuration,
+                       const Context* ssh_context) {
+  qRegisterMetaType<std::error_code>();
+
+  // TODO(170468590): [ui beta] when out of ui beta, remove optional from deployment_configuration
+  CHECK(deployment_configuration.has_value());
+
+  const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
+
+  orbit_qt::SshConnectionArtifacts ssh_connection_artifacts{ssh_context, grpc_port,
+                                                            &(deployment_configuration.value())};
+
+  std::optional<orbit_qt::TargetConfiguration> target_config;
+
+  while (true) {
+    {
+      orbit_qt::ProfilingTargetDialog target_dialog{&ssh_connection_artifacts,
+                                                    std::move(target_config)};
+      target_config = target_dialog.Exec();
+
+      if (!target_config.has_value()) {
+        // User closed dialog
+        break;
+      }
+    }
+
+    int application_return_code = 0;
+
+    {  // Scoping of QT UI Resources
+
+      ServiceDeployManager* service_deploy_manager_ptr = nullptr;
+      if (std::holds_alternative<orbit_qt::StadiaTarget>(target_config.value())) {
+        service_deploy_manager_ptr = std::get<orbit_qt::StadiaTarget>(target_config.value())
+                                         .GetConnection()
+                                         ->GetServiceDeployManager();
+      }
+
+      constexpr uint32_t kDefaultFontSize = 14;
+
+      OrbitMainWindow w(std::move(target_config.value()), kDefaultFontSize);
+
+      // "resize" is required to make "showMaximized" work properly.
+      w.resize(1280, 720);
+      w.showMaximized();
+
+      QMessageBox box(QMessageBox::Critical, QApplication::applicationName(), "", QMessageBox::Ok);
+      auto error_handler = [&]() -> ScopedConnection {
+        if (service_deploy_manager_ptr == nullptr) {
+          return ScopedConnection();
+        }
+
+        return orbit_ssh_qt::ScopedConnection{QObject::connect(
+            service_deploy_manager_ptr, &ServiceDeployManager::socketErrorOccurred, &box,
+            [&](std::error_code error) {
+              box.setText(
+                  QString("Connection error: %1").arg(QString::fromStdString(error.message())));
+              box.exec();
+              w.close();
+              w.ClearTargetConfiguration();
+              QApplication::exit(OrbitMainWindow::kEndSessionReturnCode);
+            })};
+      }();
+
+      application_return_code = QApplication::exec();
+
+      target_config = w.ClearTargetConfiguration();
+    }
+
+    Orbit_ImGui_Shutdown();
+
+    if (application_return_code == 0) {
+      // User closed window
+      break;
+    } else if (application_return_code == OrbitMainWindow::kEndSessionReturnCode) {
+      // User clicked end session, or socket error occurred.
+      continue;
+    } else {
+      UNREACHABLE();
+    }
   }
 }
 
@@ -270,7 +322,7 @@ static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& pr
 }
 
 static std::optional<orbit_qt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
-  if (absl::GetFlag(FLAGS_local)) {
+  if (absl::GetFlag(FLAGS_local) && !absl::GetFlag(FLAGS_enable_ui_beta)) {
     return std::nullopt;
   } else if (absl::GetFlag(FLAGS_nodeploy)) {
     return orbit_qt::NoDeployment{};
@@ -401,20 +453,25 @@ int main(int argc, char* argv[]) {
       return -1;
     }
 
-    while (true) {
-      const auto result = RunUiInstance(&app, deployment_configuration, &(context.value()));
-      if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
-          !deployment_configuration) {
-        // It was either a clean shutdown or the deliberately closed the
-        // dialog, or we started with the --local flag.
-        return 0;
-      } else if (result.error() == make_error_code(orbit_ggp::Error::kCouldNotUseGgpCli)) {
-        DisplayErrorToUser(QString::fromStdString(result.error().message()));
-        return 1;
-      } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
-        DisplayErrorToUser(
-            QString("An error occurred: %1").arg(QString::fromStdString(result.error().message())));
-        break;
+    if (absl::GetFlag(FLAGS_enable_ui_beta)) {
+      RunBetaUiInstance(deployment_configuration, &context.value());
+      return 0;
+    } else {
+      while (true) {
+        const auto result = RunUiInstance(deployment_configuration, &(context.value()));
+        if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
+            !deployment_configuration) {
+          // It was either a clean shutdown or the deliberately closed the
+          // dialog, or we started with the --local flag.
+          return 0;
+        } else if (result.error() == make_error_code(orbit_ggp::Error::kCouldNotUseGgpCli)) {
+          DisplayErrorToUser(QString::fromStdString(result.error().message()));
+          return 1;
+        } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
+          DisplayErrorToUser(QString("An error occurred: %1")
+                                 .arg(QString::fromStdString(result.error().message())));
+          break;
+        }
       }
     }
   }

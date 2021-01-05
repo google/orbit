@@ -61,7 +61,6 @@
 #include <QtWidgets>
 #include <fstream>
 
-#include "App.h"
 #include "Path.h"
 #include "CoreUtils.h"
 #include "absl/strings/str_format.h"
@@ -311,12 +310,10 @@ void OrbitCodeEditor::keyPressEvent(QKeyEvent* e) {
   } else if (m_Type == OrbitCodeEditor::FILE_MAPPING && e->key() == Qt::Key_S &&
              e->modifiers() == Qt::ControlModifier) {
     saveFileMap();
-    GOrbitApp->LoadFileMapping();
   } else if (e->key() == Qt::Key_M && e->modifiers() == Qt::ControlModifier) {
     if (GFileMapWidget->isVisible()) {
       GFileMapWidget->hide();
     } else {
-      GOrbitApp->LoadFileMapping();
       GFileMapEditor->loadFileMap();
       GFileMapWidget->show();
     }

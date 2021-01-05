@@ -5,16 +5,15 @@
 #ifndef ORBIT_LINUX_TRACING_TRACER_H_
 #define ORBIT_LINUX_TRACING_TRACER_H_
 
-#include <OrbitLinuxTracing/TracerListener.h>
-
 #include <atomic>
 #include <memory>
 #include <thread>
 #include <utility>
 
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class Tracer {
  public:
@@ -62,6 +61,6 @@ class Tracer {
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_TRACER_H_

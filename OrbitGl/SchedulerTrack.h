@@ -8,9 +8,11 @@
 #include "TimerTrack.h"
 #include "capture_data.pb.h"
 
-class SchedulerTrack : public TimerTrack {
+class OrbitApp;
+
+class SchedulerTrack final : public TimerTrack {
  public:
-  explicit SchedulerTrack(TimeGraph* time_graph);
+  explicit SchedulerTrack(TimeGraph* time_graph, OrbitApp* app);
   ~SchedulerTrack() override = default;
 
   [[nodiscard]] Type GetType() const override { return kSchedulerTrack; }

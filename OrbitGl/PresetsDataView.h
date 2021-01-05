@@ -10,9 +10,11 @@
 #include "DataView.h"
 #include "preset.pb.h"
 
+class OrbitApp;
+
 class PresetsDataView : public DataView {
  public:
-  PresetsDataView();
+  explicit PresetsDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnSessionName; }

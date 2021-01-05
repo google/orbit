@@ -4,8 +4,13 @@
 
 #include "orbitdataviewpanel.h"
 
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <new>
 #include <string>
 
+#include "orbittablemodel.h"
 #include "ui_orbitdataviewpanel.h"
 
 OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
@@ -35,12 +40,15 @@ void OrbitDataViewPanel::Initialize(DataView* data_view, SelectionType selection
 
   if (ui->treeView->HasRefreshButton()) {
     ui->refreshButton->show();
+    ui->horizontalLayout->setContentsMargins(0, 0, 6, 0);
   } else {
     ui->refreshButton->hide();
   }
 
   data_view->SetUiFilterCallback([this](const std::string& filter) { SetFilter(filter.c_str()); });
 }
+
+void OrbitDataViewPanel::Deinitialize() { ui->treeView->Deinitialize(); }
 
 OrbitTreeView* OrbitDataViewPanel::GetTreeView() { return ui->treeView; }
 
@@ -53,6 +61,8 @@ void OrbitDataViewPanel::Link(OrbitDataViewPanel* a_Panel) {
 void OrbitDataViewPanel::Refresh() { ui->treeView->Refresh(); }
 
 void OrbitDataViewPanel::SetDataModel(DataView* model) { ui->treeView->SetDataModel(model); }
+
+void OrbitDataViewPanel::ClearDataModel() { ui->treeView->ClearDataModel(); }
 
 void OrbitDataViewPanel::SetFilter(const QString& a_Filter) {
   ui->FilterLineEdit->setText(a_Filter);

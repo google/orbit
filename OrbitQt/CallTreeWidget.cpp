@@ -54,6 +54,13 @@ void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_vie
   ResizeColumnsIfNecessary();
 }
 
+void CallTreeWidget::ClearCallTreeView() {
+  hooked_proxy_model_.reset();
+  search_proxy_model_.reset();
+  hide_values_proxy_model_.reset();
+  model_.reset();
+}
+
 namespace {
 
 class HideValuesForTopDownProxyModel : public QIdentityProxyModel {
@@ -250,6 +257,10 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
 }
 
 void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
+  if (app_ == nullptr) {
+    return;
+  }
+
   QModelIndex index = ui_->callTreeTreeView->indexAt(point);
   if (!index.isValid()) {
     return;
@@ -293,7 +304,7 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   bool enable_select = false;
   bool enable_deselect = false;
   bool enable_disassembly = false;
-  if (GOrbitApp->IsCaptureConnected(GOrbitApp->GetCaptureData())) {
+  if (app_->IsCaptureConnected(app_->GetCaptureData())) {
     for (const FunctionInfo* function : functions) {
       enable_select |= !app_->IsFunctionSelected(*function);
       enable_deselect |= app_->IsFunctionSelected(*function);

@@ -13,7 +13,7 @@
 
 #include "OrbitBase/Logging.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 std::unique_ptr<unwindstack::BufferMaps> LibunwindstackUnwinder::ParseMaps(
     const std::string& maps_buffer) {
@@ -64,4 +64,4 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   return unwinder.frames();
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

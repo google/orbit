@@ -6,26 +6,26 @@ found in the LICENSE file.
 
 import logging
 
-from core.orbit_e2e import Fragment, find_control
+from core.orbit_e2e import E2ETestCase, find_control
 
 
-class MoveFunctionsTab(Fragment):
+class MoveFunctionsTab(E2ETestCase):
     def right_click_move_context(self, item):
         item.click_input(button='right')
-        context_menu = self.e2e_test.application.window(best_match="TabBarContextMenu")
+        context_menu = self.suite.application.window(best_match="TabBarContextMenu")
         find_control(context_menu, "MenuItem", name_contains="Move").click_input(button='left')
 
     def _execute(self):
-        wnd = self.e2e_test.top_window()
+        wnd = self.suite.top_window()
 
         # Find "Functions" tab and left and right tab bar
         tab_item = find_control(wnd, "TabItem", name="Functions")
         right_tab_bar = find_control(
             find_control(wnd, "Group", name="RightTabWidget"),
-            "Tab")
+            "Tab", recurse=False)
         left_tab_bar = find_control(
             find_control(wnd, "Group", name="MainTabWidget"),
-            "Tab")
+            "Tab", recurse=False)
 
         # Init tests
         left_tab_count = left_tab_bar.control_count()

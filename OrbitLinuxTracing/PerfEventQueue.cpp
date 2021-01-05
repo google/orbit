@@ -4,7 +4,7 @@
 
 #include "PerfEventQueue.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 void PerfEventQueue::PushEvent(std::unique_ptr<PerfEvent> event) {
   int origin_fd = event->GetOriginFileDescriptor();
@@ -95,4 +95,4 @@ void PerfEventQueue::MoveUpHeapBack() {
   }
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

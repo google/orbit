@@ -7,7 +7,7 @@
 
 #include "PerfEvent.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // Keep this class in sync with the hierarchy of PerfEvent in PerfEvent.h.
 class PerfEventVisitor {
@@ -33,6 +33,6 @@ class PerfEventVisitor {
   virtual void visit(GenericTracepointPerfEvent*) {}
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_VISITOR_H_

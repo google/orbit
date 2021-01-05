@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/SafeStrerror.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -25,7 +23,10 @@
 #include <thread>
 #include <vector>
 
-namespace LinuxTracing {
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
+
+namespace orbit_linux_tracing {
 
 namespace fs = std::filesystem;
 
@@ -286,4 +287,4 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
   return true;
 }
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing

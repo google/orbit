@@ -2,14 +2,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <google/protobuf/io/coded_stream.h>
 #include <libfuzzer/libfuzzer_macro.h>
 
-#include <cstdio>
-#include <filesystem>
+#include <atomic>
+#include <cstdint>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "App.h"
+#include "CallTreeView.h"
+#include "DataView.h"
+#include "DataViewTypes.h"
+#include "OrbitBase/ThreadPool.h"
+#include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
+#include "SamplingReport.h"
+#include "StringManager.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
 #include "capture_data.pb.h"
@@ -29,6 +41,8 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
+// TODO(170468590): Remove this flag when the new UI is finished
+ABSL_FLAG(bool, enable_ui_beta, false, "Enable the new user interface");
 
 DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& info) {
   std::string buffer{};
@@ -45,7 +59,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     }
   }
 
-  std::unique_ptr<OrbitApp> app = OrbitApp::Create({}, nullptr);
+  std::unique_ptr<OrbitApp> app = OrbitApp::Create(nullptr);
 
   app->SetCaptureStartedCallback([]() {});
   app->SetCaptureStoppedCallback([]() {});
@@ -62,7 +76,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   app->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
   app->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
 
-  TimeGraph time_graph{14};
+  TimeGraph time_graph{14, app.get()};
   GCurrentTimeGraph = &time_graph;
   auto string_manager = std::make_shared<StringManager>();
   time_graph.SetStringManager(string_manager);
@@ -73,8 +87,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   std::atomic<bool> cancellation_requested = false;
 
   orbit_client_data::ModuleManager module_manager;
-  capture_deserializer::Load(input_stream, "", GOrbitApp.get(), &module_manager,
-                             &cancellation_requested);
+  capture_deserializer::Load(input_stream, "", app.get(), &module_manager, &cancellation_requested);
 
   app->GetThreadPool()->ShutdownAndWait();
 }

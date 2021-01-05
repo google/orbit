@@ -6,29 +6,57 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <filesystem>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_elf_utils {
 
 using orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 
-static ErrorMessageOr<uint64_t> FileSize(const std::string& file_path) {
-  struct stat stat_buf {};
-  int ret = stat(file_path.c_str(), &stat_buf);
-  if (ret != 0) {
-    return ErrorMessage(absl::StrFormat("Unable to call stat with file \"%s\": %s", file_path,
-                                        SafeStrerror(errno)));
+ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path,
+                                        uint64_t start_address, uint64_t end_address) {
+  // This excludes mapped character or block devices.
+  if (absl::StartsWith(module_path.string(), "/dev/")) {
+    return ErrorMessage(absl::StrFormat(
+        "The module \"%s\" is a character or block device (is in /dev/)", module_path));
   }
-  return stat_buf.st_size;
+
+  if (!std::filesystem::exists(module_path)) {
+    return ErrorMessage(absl::StrFormat("The module file \"%s\" does not exist", module_path));
+  }
+  std::error_code error;
+  uint64_t file_size = std::filesystem::file_size(module_path, error);
+  if (error) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to get size of \"%s\": %s", module_path, error.message()));
+  }
+
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(module_path);
+  if (!elf_file) {
+    return ErrorMessage(absl::StrFormat("Unable to load module: %s", elf_file.error().message()));
+  }
+
+  ErrorMessageOr<uint64_t> load_bias = elf_file.value()->GetLoadBias();
+  // Every loadable module contains a load bias.
+  if (!load_bias) {
+    return load_bias.error();
+  }
+
+  ModuleInfo module_info;
+  module_info.set_name(std::filesystem::path{module_path}.filename());
+  module_info.set_file_path(module_path);
+  module_info.set_file_size(file_size);
+  module_info.set_address_start(start_address);
+  module_info.set_address_end(end_address);
+  module_info.set_build_id(elf_file.value()->GetBuildId());
+  module_info.set_load_bias(load_bias.value());
+
+  return module_info;
 }
 
 ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
@@ -55,9 +83,6 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
 
     const std::string& module_path = tokens[5];
 
-    // This excludes mapped character or block devices.
-    if (absl::StartsWith(module_path, "/dev/")) continue;
-
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
 
@@ -80,35 +105,15 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
   for (const auto& [module_path, address_range] : address_map) {
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
-    if (!std::filesystem::exists(module_path)) continue;
-    ErrorMessageOr<uint64_t> file_size = FileSize(module_path);
-    if (!file_size) continue;
 
-    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(module_path);
-    if (!elf_file) {
-      // TODO: Shouldn't this result in ErrorMessage?
-      ERROR("Unable to load module \"%s\": %s - will ignore.", module_path,
-            elf_file.error().message());
+    ErrorMessageOr<ModuleInfo> module_info =
+        CreateModule(module_path, address_range.start_address, address_range.end_address);
+    if (!module_info) {
+      ERROR("Unable to create module: %s", module_info.error().message());
       continue;
     }
 
-    ErrorMessageOr<uint64_t> load_bias = elf_file.value()->GetLoadBias();
-    // Every loadable module contains a load bias.
-    if (!load_bias) {
-      ERROR("No load bias found for module %s", module_path.c_str());
-      continue;
-    }
-
-    ModuleInfo module_info;
-    module_info.set_name(std::filesystem::path{module_path}.filename());
-    module_info.set_file_path(module_path);
-    module_info.set_file_size(file_size.value());
-    module_info.set_address_start(address_range.start_address);
-    module_info.set_address_end(address_range.end_address);
-    module_info.set_build_id(elf_file.value()->GetBuildId());
-    module_info.set_load_bias(load_bias.value());
-
-    result.push_back(module_info);
+    result.push_back(std::move(module_info.value()));
   }
 
   return result;

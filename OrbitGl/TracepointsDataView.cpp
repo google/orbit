@@ -11,7 +11,8 @@ static const std::string kMenuActionSelect = "Hook";
 static const std::string kMenuActionUnselect = "Unhook";
 }  // namespace
 
-TracepointsDataView::TracepointsDataView() : DataView(DataViewType::kTracepoints) {}
+TracepointsDataView::TracepointsDataView(OrbitApp* app)
+    : DataView(DataViewType::kTracepoints, app) {}
 
 const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {
@@ -30,7 +31,7 @@ std::string TracepointsDataView::GetValue(int row, int col) {
 
   switch (col) {
     case kColumnSelected:
-      return GOrbitApp->IsTracepointSelected(tracepoint) ? "X" : "-";
+      return app_->IsTracepointSelected(tracepoint) ? "X" : "-";
     case kColumnName:
       return tracepoint.name();
     case kColumnCategory:
@@ -98,8 +99,8 @@ std::vector<std::string> TracepointsDataView::GetContextMenu(
   bool enable_unselect = false;
   for (int index : selected_indices) {
     const TracepointInfo& tracepoint = GetTracepoint(index);
-    enable_select |= !GOrbitApp->IsTracepointSelected(tracepoint);
-    enable_unselect |= GOrbitApp->IsTracepointSelected(tracepoint);
+    enable_select |= !app_->IsTracepointSelected(tracepoint);
+    enable_unselect |= app_->IsTracepointSelected(tracepoint);
   }
 
   if (enable_select) menu.emplace_back(kMenuActionSelect);
@@ -113,11 +114,11 @@ void TracepointsDataView::OnContextMenu(const std::string& action, int menu_inde
                                         const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (int i : item_indices) {
-      GOrbitApp->SelectTracepoint(GetTracepoint(i));
+      app_->SelectTracepoint(GetTracepoint(i));
     }
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
-      GOrbitApp->DeselectTracepoint(GetTracepoint(i));
+      app_->DeselectTracepoint(GetTracepoint(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

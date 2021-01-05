@@ -240,7 +240,7 @@ QPushButton:disabled {
         <attribute name="title">
          <string>Functions</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
+        <layout class="QGridLayout" name="functionsTabLayout">
          <item row="0" column="0">
           <widget class="OrbitDataViewPanel" name="FunctionsList" native="true"/>
          </item>
@@ -419,12 +419,14 @@ QPushButton:disabled {
     <addaction name="actionOpen_Preset"/>
     <addaction name="actionSave_Preset_As"/>
     <addaction name="separator"/>
+    <addaction name="actionEnd_Session"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionOpenUserDataDirectory"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuFeedback">
@@ -565,6 +567,15 @@ QPushButton:disabled {
     <string>Introspection</string>
    </property>
   </action>
+  <action name="actionEnd_Session">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/arrow_back</normaloff>:/actions/arrow_back</iconset>
+   </property>
+   <property name="text">
+    <string>End Session</string>
+   </property>
+  </action>
   <action name="actionQuit">
    <property name="icon">
     <iconset resource="../icons/orbiticons.qrc">
@@ -637,6 +648,15 @@ QPushButton:disabled {
   <action name="actionServiceStackOverflow">
    <property name="text">
     <string>[Service] Stack Overflow</string>
+   </property>
+  </action>
+  <action name="actionOpenUserDataDirectory">
+   <property name="icon">
+    <iconset resource="../icons/orbiticons.qrc">
+     <normaloff>:/actions/folder</normaloff>:/actions/folder</iconset>
+   </property>
+   <property name="text">
+    <string>Open User Data Directory...</string>
    </property>
   </action>
  </widget>

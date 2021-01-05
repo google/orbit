@@ -10,10 +10,11 @@
 #include "capture_data.pb.h"
 
 class LiveFunctionsController;
+class OrbitApp;
 
 class LiveFunctionsDataView : public DataView {
  public:
-  LiveFunctionsDataView(LiveFunctionsController* live_functions);
+  explicit LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCount; }
@@ -26,7 +27,7 @@ class LiveFunctionsDataView : public DataView {
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void OnTimer() override;
-  int GetRowFromFunctionAddress(uint64_t function_address);
+  std::optional<int> GetRowFromFunctionAddress(uint64_t function_address);
 
  protected:
   void DoFilter() override;

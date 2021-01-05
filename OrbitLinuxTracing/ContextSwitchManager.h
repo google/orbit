@@ -13,7 +13,7 @@
 
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // For each core, keeps the last context switch into a process and matches it
 // with the next context switch away from a process to produce SchedulingSlice
@@ -47,6 +47,6 @@ class ContextSwitchManager {
   absl::flat_hash_map<uint16_t, OpenSwitchIn> open_switches_by_core_;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_CONTEXT_SWITCH_MANAGER_H_

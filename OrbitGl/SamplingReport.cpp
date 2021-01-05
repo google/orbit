@@ -4,16 +4,18 @@
 
 #include "SamplingReport.h"
 
+#include "App.h"
 #include "CallStackDataView.h"
 #include "absl/strings/str_format.h"
 
 SamplingReport::SamplingReport(
-    PostProcessedSamplingData post_processed_sampling_data,
+    OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
     bool has_summary)
     : post_processed_sampling_data_{std::move(post_processed_sampling_data)},
       unique_callstacks_{std::move(unique_callstacks)},
-      has_summary_{has_summary} {
+      has_summary_{has_summary},
+      app_{app} {
   selected_address_ = kInvalidFunctionAddress;
   selected_thread_id_ = 0;
   callstack_data_view_ = nullptr;
@@ -34,7 +36,7 @@ void SamplingReport::FillReport() {
   const auto& sample_data = post_processed_sampling_data_.GetThreadSampleData();
 
   for (const ThreadSampleData& thread_sample_data : sample_data) {
-    SamplingReportDataView thread_report;
+    SamplingReportDataView thread_report{app_};
     thread_report.SetSampledFunctions(thread_sample_data.sampled_function);
     thread_report.SetThreadID(thread_sample_data.thread_id);
     thread_report.SetSamplingReport(this);

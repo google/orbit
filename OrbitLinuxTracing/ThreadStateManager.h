@@ -9,7 +9,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture.pb.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // ThreadStateManager stores the state of threads, handles the state transitions,
 // builds and returns ThreadStateSlices.
@@ -63,6 +63,6 @@ class ThreadStateManager {
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_THREAD_STATE_MANAGER_H_

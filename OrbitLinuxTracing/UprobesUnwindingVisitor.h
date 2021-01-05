@@ -5,7 +5,6 @@
 #ifndef ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 #define ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 
-#include <OrbitLinuxTracing/TracerListener.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
 #include <sys/types.h>
@@ -19,12 +18,13 @@
 #include <vector>
 
 #include "LibunwindstackUnwinder.h"
+#include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 // UprobesUnwindingVisitor processes stack samples and uprobes/uretprobes
 // records (as well as memory maps changes, to keep necessary unwinding
@@ -83,6 +83,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
       uprobe_sps_ips_cpus_per_thread_{};
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_

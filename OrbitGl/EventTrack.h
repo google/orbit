@@ -9,11 +9,12 @@
 
 class CallStack;
 class GlCanvas;
+class OrbitApp;
 class TimeGraph;
 
 class EventTrack : public Track {
  public:
-  explicit EventTrack(TimeGraph* a_TimeGraph);
+  explicit EventTrack(TimeGraph* a_TimeGraph, OrbitApp* app);
   Type GetType() const override { return kEventTrack; }
 
   std::string GetTooltip() const override;
@@ -44,4 +45,7 @@ class EventTrack : public Track {
   [[nodiscard]] std::string FormatCallstackForTooltip(const CallStack& callstack,
                                                       int max_line_length = 80, int max_lines = 20,
                                                       int bottom_n_lines = 5) const;
+
+ private:
+  OrbitApp* app_ = nullptr;
 };

@@ -22,7 +22,7 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
 
-namespace LinuxTracing {
+namespace orbit_linux_tracing {
 
 class PerfEventVisitor;
 
@@ -532,6 +532,6 @@ class DmaFenceSignaledPerfEvent : public GpuPerfEvent {
   }
 };
 
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_H_

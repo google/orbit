@@ -22,6 +22,7 @@ target_sources(OrbitVulkanLayer PRIVATE
         QueueManager.h
         SubmissionTracker.h
         TimerQueryPool.h
+        VulkanLayerController.h
         VulkanLayerProducer.h
         VulkanLayerProducerImpl.cpp
         VulkanLayerProducerImpl.h)
@@ -43,6 +44,7 @@ target_sources(OrbitVulkanLayerTests PRIVATE
         SubmissionTrackerTest.cpp
         TimerQueryPoolTest.cpp
         QueueManagerTest.cpp
+        VulkanLayerControllerTest.cpp
         VulkanLayerProducerImplTest.cpp)
 
 target_link_libraries(

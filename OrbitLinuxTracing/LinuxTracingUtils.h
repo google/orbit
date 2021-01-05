@@ -5,14 +5,15 @@
 #ifndef ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
 #define ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/Profiling.h>
 #include <unistd.h>
 
 #include <ctime>
 #include <optional>
 
-namespace LinuxTracing {
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
+
+namespace orbit_linux_tracing {
 
 std::optional<std::string> ReadFile(std::string_view filename);
 
@@ -74,6 +75,6 @@ inline size_t GetPageSize() {
   // So we can safely cast here.
   return static_cast<size_t>(sysconf(_SC_PAGESIZE));
 }
-}  // namespace LinuxTracing
+}  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_LINUX_TRACING_UTILS_H_
