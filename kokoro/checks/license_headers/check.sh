@@ -15,7 +15,7 @@ if [ "$0" == "$SCRIPT" ]; then
 
   cd /mnt
   # Use origin/master as reference branch, if not specified by kokoro
-  REFERENCE="${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-origin/master}"
+  REFERENCE="origin/${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-master}"
   MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
   LICENSE_HEADER_MISSED=""
 
