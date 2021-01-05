@@ -17,6 +17,7 @@ target_sources(OrbitVulkanLayer PRIVATE
         DeviceManager.h
         DispatchTable.cpp
         DispatchTable.h
+        EntryPoints.cpp
         QueueManager.cpp
         QueueManager.h
         SubmissionTracker.h

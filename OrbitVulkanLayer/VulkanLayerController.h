@@ -142,11 +142,12 @@ class VulkanLayerController {
     return result;
   }
 
-  [[nodiscard]] PFN_vkVoidFunction OnGetDeviceProcAddr(VkDevice device, const char* name) {
+  [[nodiscard]] PFN_vkVoidFunction ForwardGetDeviceProcAddr(VkDevice device, const char* name) {
     return dispatch_table_.GetDeviceProcAddr(device)(device, name);
   }
 
-  [[nodiscard]] PFN_vkVoidFunction OnGetInstanceProcAddr(VkInstance instance, const char* name) {
+  [[nodiscard]] PFN_vkVoidFunction ForwardGetInstanceProcAddr(VkInstance instance,
+                                                              const char* name) {
     return dispatch_table_.GetInstanceProcAddr(instance)(instance, name);
   }
 
