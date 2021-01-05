@@ -118,6 +118,7 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionSave_Capture_triggered();
   void on_actionOpen_Capture_triggered();
   void on_actionClear_Capture_triggered();
+  void on_actionCaptureOptions_triggered();
   void on_actionHelp_triggered();
   void on_actionIntrospection_triggered();
 

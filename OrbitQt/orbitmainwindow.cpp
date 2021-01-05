@@ -60,6 +60,7 @@
 
 #include "App.h"
 #include "CallTreeWidget.h"
+#include "CaptureOptionsDialog.h"
 #include "Connections.h"
 #include "DataViewFactory.h"
 #include "GlCanvas.h"
@@ -614,6 +615,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
       (capture_state == CaptureClient::State::kStopped && assume_target_process_is_running));
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
   ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
+  ui->actionCaptureOptions->setEnabled(!is_capturing);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
   ui->actionSave_Capture->setEnabled(!is_capturing);
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
@@ -950,6 +952,22 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
 void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(); }
 
 void OrbitMainWindow::on_actionClear_Capture_triggered() { app_->ClearCapture(); }
+
+void OrbitMainWindow::on_actionCaptureOptions_triggered() {
+  static const QString kCollectThreadStates{"CollectThreadStates"};
+  QSettings settings;
+
+  orbit_qt::CaptureOptionsDialog dialog{this};
+  dialog.SetCollectThreadStates(settings.value(kCollectThreadStates, false).toBool());
+
+  int result = dialog.exec();
+  if (result != QDialog::Accepted) {
+    return;
+  }
+
+  settings.setValue(kCollectThreadStates, dialog.GetCollectThreadStates());
+  // TODO: Forward the value to OrbitApp.
+}
 
 void OrbitMainWindow::on_actionHelp_triggered() { app_->ToggleDrawHelp(); }
 

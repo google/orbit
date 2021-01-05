@@ -28,6 +28,7 @@
     <file alias="save_alt">outline_save_alt_white_48dp.png</file>
     <file alias="save">outline_save_white_48dp.png</file>
     <file alias="search">outline_search_white_48dp.png</file>
+    <file alias="settings">outline_settings_white_48dp.png</file>
     <file alias="share">outline_share_white_48dp.png</file>
     <file alias="skip_next">outline_skip_next_white_48dp.png</file>
     <file alias="stop">outline_stop_white_48dp.png</file>
