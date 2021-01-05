@@ -71,6 +71,12 @@ class DataManager final {
   [[nodiscard]] UserDefinedCaptureData& mutable_user_defined_capture_data() {
     return user_defined_capture_data_;
   }
+
+  void set_collect_thread_states(bool collect_thread_states) {
+    collect_thread_states_ = collect_thread_states;
+  }
+  [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
+
   static const uint64_t kInvalidFunctionAddress;
 
  private:
@@ -89,6 +95,8 @@ class DataManager final {
   // DataManager needs a copy of this so that we can persist user choices like frame tracks between
   // captures.
   UserDefinedCaptureData user_defined_capture_data_;
+
+  bool collect_thread_states_ = false;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

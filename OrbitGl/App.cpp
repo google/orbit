@@ -839,15 +839,16 @@ bool OrbitApp::StartCapture() {
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
-  bool enable_introspection = absl::GetFlag(FLAGS_devmode);
   UserDefinedCaptureData user_defined_capture_data =
       data_manager_->mutable_user_defined_capture_data();
+  bool collect_thread_states = data_manager_->collect_thread_states();
+  bool enable_introspection = absl::GetFlag(FLAGS_devmode);
 
   CHECK(capture_client_ != nullptr);
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), std::move(user_defined_capture_data),
-      /*collect_thread_state=*/false, enable_introspection);
+      std::move(selected_tracepoints), std::move(user_defined_capture_data), collect_thread_states,
+      enable_introspection);
 
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -1389,6 +1390,10 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       FireRefreshCallbacks();
     });
   });
+}
+
+void OrbitApp::SetCollectThreadStates(bool collect_thread_states) {
+  data_manager_->set_collect_thread_states(collect_thread_states);
 }
 
 void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {

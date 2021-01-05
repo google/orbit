@@ -160,6 +160,9 @@ class OrbitMainWindow : public QMainWindow {
 
   void OnProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> processes);
 
+  static const QString kCollectThreadStatesSettingKey;
+  void LoadCaptureOptionsIntoApp();
+
  private:
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
