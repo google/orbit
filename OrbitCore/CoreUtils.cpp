@@ -21,8 +21,11 @@
 #include "absl/base/attributes.h"
 #include "absl/base/casts.h"
 
+using std::string;
+using std::to_string;
+
 #ifdef _WIN32
-std::string GetLastErrorAsString() {
+string GetLastErrorAsString() {
   // Get the error message, if any.
   DWORD errorMessageID = ::GetLastError();
   if (errorMessageID == 0) return "No error message has been recorded";
@@ -33,7 +36,7 @@ std::string GetLastErrorAsString() {
       NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0,
       NULL);
 
-  std::string message(messageBuffer, size);
+  ststring message(messageBuffer, size);
 
   // Free the buffer.
   LocalFree(messageBuffer);
@@ -236,7 +239,7 @@ static const AFX_MAP_MESSAGE allMessages[] = {
         NULL,
     }  // end of message list
 };
-std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bShowFrequentMessages) {
+string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bShowFrequentMessages) {
   if (!bShowFrequentMessages &&
       (dwMessage == WM_MOUSEMOVE || dwMessage == WM_NCMOUSEMOVE || dwMessage == WM_NCHITTEST ||
        dwMessage == WM_SETCURSOR || dwMessage == WM_CTLCOLORBTN || dwMessage == WM_CTLCOLORDLG ||
@@ -255,14 +258,14 @@ std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bSho
     }
   }
 
-  return std::to_string(dwMessage);
+  return to_string(dwMessage);
 }
 
 #else
-std::string GetLastErrorAsString() { return ""; }
+string GetLastErrorAsString() { return ""; }
 #endif
 
-std::string orbit_core::FormatTime(const time_t& rawtime) {
+string orbit_core::FormatTime(const time_t& rawtime) {
   struct tm* time_info = nullptr;
   char buffer[80];
 #ifdef _WIN32
@@ -275,5 +278,5 @@ std::string orbit_core::FormatTime(const time_t& rawtime) {
 
   strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
 
-  return std::string(buffer);
+  return string(buffer);
 }
