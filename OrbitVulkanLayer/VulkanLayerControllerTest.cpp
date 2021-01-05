@@ -385,7 +385,7 @@ TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetDeviceProcAddr) {
       .Times(1)
       .WillOnce(Return(fake_get_device_proc_addr));
   VkDevice device = {};
-  PFN_vkVoidFunction result = controller_.OnGetDeviceProcAddr(device, "some function");
+  PFN_vkVoidFunction result = controller_.ForwardGetDeviceProcAddr(device, "some function");
   EXPECT_EQ(result, kExpectedFunction);
 }
 
@@ -441,7 +441,7 @@ TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetInstanceProcAddr) {
       .Times(1)
       .WillOnce(Return(fake_get_instance_proc_addr));
   VkInstance instance = {};
-  PFN_vkVoidFunction result = controller_.OnGetInstanceProcAddr(instance, "some function");
+  PFN_vkVoidFunction result = controller_.ForwardGetInstanceProcAddr(instance, "some function");
   EXPECT_EQ(result, kExpectedFunction);
 }
 
