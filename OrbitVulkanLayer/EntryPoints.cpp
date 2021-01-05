@@ -15,26 +15,25 @@
 /*
  * The big picture:
  * This is the main entry point for Orbit's Vulkan layer. The layer is structured as follows:
- * ° All instrumented Vulkan functions will hook into implementations found here
+ * - All instrumented Vulkan functions will hook into implementations found here
  *   (e.g. OrbitQueueSubmit) which will delegate to the `VulkanLayerController`.
- * ° For every `vkX` function, this controller has an `OnX` functions that will perform the actual
+ * - For every `vkX` function, this controller has an `OnX` functions that will perform the actual
  *   Vulkan call (using DispatchTable), but also glue together the logic of the layer.
- * ° These are the following helper classes to structure the actual layer logic:
- *   ° SubmissionTracker: Which is the heart of the layer logic. It keeps track of
+ * - These are the helper classes to structure the actual layer logic:
+ * -- SubmissionTracker: Which is the heart of the layer logic. It keeps track of
  *     command buffer usages and timings, debug markers and submissions.
- *   ° DispatchTable: It provides virtual dispatch for the Vulkan functions to be called.
- *   ° TimerQueryPool: Which keeps track of query pool slots used for timestamp queries and allows
+ * -- DispatchTable: It provides virtual dispatch for the Vulkan functions to be called.
+ * -- TimerQueryPool: Which keeps track of query pool slots used for timestamp queries and allows
  *     to assign those.
- *   ° VulkanLayerProducer: This is the producer used for the IPC with Orbit. Results will be sent
+ * -- VulkanLayerProducer: This is the producer used for the IPC with Orbit. Results will be sent
  *     by this as CaptureEvent protos.
- *   ° DeviceManager: It tracks the association of a VkDevice to the VkPhysicalDevice.
- *   ° QueueManager: It keeps track of association of VkQueue(s) to devices.
- *
+ * -- DeviceManager: It tracks the association of a VkDevice to the VkPhysicalDevice.
+ * -- QueueManager: It keeps track of association of VkQueue(s) to devices.
  *
  * The free functions in this namespace act as entry points to the layer.
  * OrbitGetDeviceProcAddr and OrbitGetInstanceProcAddr are the actual entry points, called by
- * the loader and potential other layers, and return pointers to the functions that this layer
- * intercepts. All other functions will be referenced by those two lookup functions.
+ * the loader and potential other layers. They return pointers to the functions that this layer
+ * intercepts. All other functions are accessible via those two lookup functions.
  */
 namespace orbit_vulkan_layer {
 
@@ -257,7 +256,5 @@ OrbitGetInstanceProcAddr(VkInstance instance, const char* name) {
 }
 
 #undef RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION
-
-#undef ORBIT_EXPORT
 
 }  // namespace orbit_vulkan_layer
