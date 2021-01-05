@@ -47,6 +47,8 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(
 
   connect(verticalScrollBar(), SIGNAL(rangeChanged(int, int)), this,
           SLOT(OnRangeChanged(int, int)));
+
+  connect(this, &OrbitTreeView::doubleClicked, this, &OrbitTreeView::OnDoubleClicked);
 }
 
 void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type,
@@ -293,6 +295,12 @@ void OrbitTreeView::OnRangeChanged(int /*min*/, int max) {
   DataView* data_view = model_->GetDataView();
   if (data_view->ScrollToBottom()) {
     verticalScrollBar()->setValue(max);
+  }
+}
+
+void OrbitTreeView::OnDoubleClicked(QModelIndex index) {
+  if (model_ != nullptr) {
+    model_->GetDataView()->OnDoubleClicked(index.row());
   }
 }
 

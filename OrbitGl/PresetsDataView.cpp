@@ -157,6 +157,11 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
   }
 }
 
+void PresetsDataView::OnDoubleClicked(int index) {
+  const std::shared_ptr<PresetFile>& preset = GetPreset(index);
+  app_->LoadPreset(preset);
+}
+
 void PresetsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
