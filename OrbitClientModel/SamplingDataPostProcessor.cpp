@@ -186,25 +186,11 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
 
 void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_address,
                                                             const CaptureData& capture_data) {
-  const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
-  const FunctionInfo* function = capture_data.FindFunctionByAddress(absolute_address, false);
-
-  // Find the start address of the function this address falls inside.
-  // Use the Function returned by Process::GetFunctionFromAddress, and
-  // when this fails (e.g., the module containing the function has not
-  // been loaded) use (for now) the LinuxAddressInfo that is collected
-  // for every address in a callstack. SamplingProfiler relies heavily
-  // on the association between address and function address held by
-  // exact_address_to_function_address_, otherwise each address is
-  // considered a different function.
-  uint64_t absolute_function_address;
-  if (function != nullptr) {
-    absolute_function_address = capture_data.GetAbsoluteAddress(*function);
-  } else if (address_info != nullptr) {
-    absolute_function_address = absolute_address - address_info->offset_in_function();
-  } else {
-    absolute_function_address = absolute_address;
-  }
+  // SamplingDataPostProcessor relies heavily on the association between address and function
+  // address held by exact_address_to_function_address_, otherwise each address is considered a
+  // different function. We are storing this mapping for faster lookup.
+  uint64_t absolute_function_address =
+      capture_data.GetFunctionBaseAddressByAddress(absolute_address);
 
   exact_address_to_function_address_[absolute_address] = absolute_function_address;
   function_address_to_exact_addresses_[absolute_function_address].insert(absolute_address);
