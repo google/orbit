@@ -92,13 +92,7 @@ class OrbitMainWindow : public QMainWindow {
 
   void RestoreDefaultTabLayout();
 
-  // TODO(170468590): [ui beta] When out of ui beta, this can return TargetConfiguration (without
-  // std::optional)
-  std::optional<orbit_qt::TargetConfiguration> ClearTargetConfiguration() {
-    std::optional<orbit_qt::TargetConfiguration> result = std::move(target_configuration_);
-    target_configuration_ = std::nullopt;
-    return result;
-  }
+  std::optional<orbit_qt::TargetConfiguration> ClearTargetConfiguration();
 
  protected:
   void closeEvent(QCloseEvent* event) override;
@@ -163,6 +157,8 @@ class OrbitMainWindow : public QMainWindow {
   // ProfilingTargetDialog)
   void SetupGrpcAndProcessManager(std::string grpc_server_address);
 
+  void OnProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> processes);
+
  private:
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
@@ -195,6 +191,10 @@ class OrbitMainWindow : public QMainWindow {
 
   // TODO(170468590): [ui beta] When out of ui beta, this does not need to be an optional anymore
   std::optional<orbit_qt::TargetConfiguration> target_configuration_;
+
+  enum class TargetProcessState { kRunning, kEnded };
+
+  TargetProcessState target_process_state_ = TargetProcessState::kRunning;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_
