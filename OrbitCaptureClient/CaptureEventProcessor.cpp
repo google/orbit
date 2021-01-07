@@ -66,7 +66,7 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
       break;
     case CaptureEvent::kGpuQueueSubmission:
       UNREACHABLE();
-    case CaptureEvent::kModulesUpdateEvent:
+    case CaptureEvent::kModuleUpdateEvent:
       // TODO (http://b/168797897): Process module update events
       break;
     case CaptureEvent::EVENT_NOT_SET:

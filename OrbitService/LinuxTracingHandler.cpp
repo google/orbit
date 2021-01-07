@@ -144,9 +144,9 @@ void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent t
 }
 
 void LinuxTracingHandler::OnModulesUpdate(
-    orbit_grpc_protos::ModuleUpdateEvent modules_update_event) {
+    orbit_grpc_protos::ModuleUpdateEvent module_update_event) {
   orbit_grpc_protos::CaptureEvent event;
-  *event.mutable_modules_update_event() = std::move(modules_update_event);
+  *event.mutable_module_update_event() = std::move(module_update_event);
 
   capture_event_buffer_->AddEvent(std::move(event));
 }

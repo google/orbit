@@ -81,7 +81,9 @@ std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_bu
       header.size - filename_offset - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
   std::vector<char> filename_vector(filename_size);
   ring_buffer->ReadRawAtOffset(&filename_vector[0], filename_offset, filename_size);
-  std::string filename(&filename_vector[0], filename_size);
+  // This is a bit paranoid but you never know
+  filename_vector[filename_size - 1] = '\0';
+  std::string filename(filename_vector.data());
 
   ring_buffer->SkipRecord(header);
 
