@@ -65,6 +65,7 @@ class GlCanvas {
   Vec2 WorldToScreen(Vec2 world_pos) const;
   int WorldToScreenHeight(float height) const;
   int WorldToScreenWidth(float width) const;
+  Vec2 QtScreenToGlScreen(Vec2 qt_pos) const;
 
   // events
   virtual void MouseMoved(int x, int y, bool left, bool right, bool middle);

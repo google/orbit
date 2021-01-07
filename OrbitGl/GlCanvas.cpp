@@ -359,6 +359,14 @@ Vec2 GlCanvas::WorldToScreen(Vec2 world_pos) const {
   return screen_pos;
 }
 
+// TODO (b/177350599): Unify QtScreen and GlScreen
+// QtScreen(x,y) --> GlScreen(x,height-y)
+Vec2 GlCanvas::QtScreenToGlScreen(Vec2 qt_pos) const {
+  Vec2 gl_pos = qt_pos;
+  gl_pos[1] = GetHeight() - qt_pos[1];
+  return gl_pos;
+}
+
 int GlCanvas::WorldToScreenHeight(float height) const {
   return static_cast<int>(height / world_height_ * GetHeight());
 }
