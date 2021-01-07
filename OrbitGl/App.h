@@ -39,6 +39,7 @@
 #include "IntrospectionWindow.h"
 #include "MainThreadExecutor.h"
 #include "ManualInstrumentationManager.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -74,10 +75,13 @@
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  OrbitApp(MainThreadExecutor* main_thread_executor);
+  OrbitApp(MainThreadExecutor* main_thread_executor,
+           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
-  static std::unique_ptr<OrbitApp> Create(MainThreadExecutor* main_thread_executor);
+  static std::unique_ptr<OrbitApp> Create(
+      MainThreadExecutor* main_thread_executor,
+      orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   void PostInit();
   void MainTick();
@@ -494,6 +498,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::optional<CaptureData> capture_data_;
 
   FrameTrackOnlineProcessor frame_track_online_processor_;
+
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // ORBIT_GL_APP_H_

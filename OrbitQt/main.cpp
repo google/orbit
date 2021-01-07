@@ -48,6 +48,7 @@
 #include "Error.h"
 #include "FunctionsDataView.h"
 #include "ImGuiOrbit.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
@@ -129,6 +130,7 @@ static outcome::result<void> RunUiInstance(
   const auto& [ports, capture_path] = result;
 
   std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
+  auto metrics_uploader = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
 
   ServiceDeployManager* service_deploy_manager_ptr = nullptr;
 
@@ -142,7 +144,8 @@ static outcome::result<void> RunUiInstance(
   {  // Scoping of QT UI Resources
     constexpr uint32_t kDefaultFontSize = 14;
 
-    OrbitMainWindow w(service_deploy_manager_ptr, grpc_server_address, kDefaultFontSize);
+    OrbitMainWindow w(service_deploy_manager_ptr, grpc_server_address, kDefaultFontSize,
+                      metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr);
 
     // "resize" is required to make "showMaximized" work properly.
     w.resize(1280, 720);

@@ -34,6 +34,7 @@
 #include "DataViewTypes.h"
 #include "DisassemblyReport.h"
 #include "MainThreadExecutor.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "StatusListener.h"
 #include "TargetConfiguration.h"
@@ -55,7 +56,8 @@ class OrbitMainWindow : public QMainWindow {
 
   // TODO (170468590) remove when not needed anymore
   explicit OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
-                           std::string grpc_server_address, uint32_t font_size);
+                           std::string grpc_server_address, uint32_t font_size,
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration, uint32_t font_size);
   ~OrbitMainWindow() override;

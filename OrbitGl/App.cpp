@@ -69,6 +69,7 @@
 #include "TrackManager.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
+#include "orbit_log_event.pb.h"
 #include "preset.pb.h"
 #include "process.pb.h"
 #include "symbol.pb.h"
@@ -129,8 +130,9 @@ PresetLoadState GetPresetLoadStateForProcess(
 
 bool DoZoom = false;
 
-OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor)
-    : main_thread_executor_(main_thread_executor) {
+OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor,
+                   orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : main_thread_executor_(main_thread_executor), metrics_uploader_(metrics_uploader) {
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
@@ -312,8 +314,10 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
   });
 }
 
-std::unique_ptr<OrbitApp> OrbitApp::Create(MainThreadExecutor* main_thread_executor) {
-  auto app = std::make_unique<OrbitApp>(main_thread_executor);
+std::unique_ptr<OrbitApp> OrbitApp::Create(
+    MainThreadExecutor* main_thread_executor,
+    orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+  auto app = std::make_unique<OrbitApp>(main_thread_executor, metrics_uploader);
 
 #ifdef _WIN32
   oqpi::default_helpers::start_default_scheduler();
@@ -361,6 +365,10 @@ void OrbitApp::PostInit() {
   string_manager_ = std::make_shared<StringManager>();
 
   GCurrentTimeGraph->SetStringManager(string_manager_);
+  if (metrics_uploader_ != nullptr) {
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
+  }
 
   if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     return;
