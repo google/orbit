@@ -71,7 +71,7 @@ if [ -n "$1" ]; then
                             ! -path "${MOUNT_POINT}/github" \
                             ! -path "${REPO_ROOT}" \
                             ! -path "${REPO_ROOT}/kokoro*" \
-                            ! -path "${REPO_ROOT}/build*"
+                            ! -path "${REPO_ROOT}/build*" \
                             -delete
       echo "Cleanup for non-presubmit done."
     fi
