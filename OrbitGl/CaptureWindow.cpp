@@ -563,6 +563,7 @@ void CaptureWindow::Draw() {
     ui_batcher_.DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
 
     PrepareScreenSpaceViewport();
+    // Text needs to be drawn in screen space.
     if (GetPickingMode() == PickingMode::kNone) {
       text_renderer_.RenderLayer(&ui_batcher_, layer);
       RenderText(layer);
@@ -859,7 +860,8 @@ void CaptureWindow::RenderTimeBar() {
       text_renderer_.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTimeBar,
                              Color(255, 255, 255, 255), font_size_);
 
-      Vec2 pos(world_x, world_y);
+      // Lines from time bar are drawn in screen space.
+      Vec2 pos = QtScreenToGlScreen(WorldToScreen(Vec2(world_x, world_y)));
       ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTimeBar, Color(255, 255, 255, 255));
     }
   }
