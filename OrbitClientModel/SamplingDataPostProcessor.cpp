@@ -189,8 +189,9 @@ void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_ad
   // SamplingDataPostProcessor relies heavily on the association between address and function
   // address held by exact_address_to_function_address_, otherwise each address is considered a
   // different function. We are storing this mapping for faster lookup.
-  uint64_t absolute_function_address =
-      capture_data.GetFunctionBaseAddressByAddress(absolute_address);
+  std::optional<uint64_t> absolute_function_address_option =
+      capture_data.FindFunctionAbsoluteAddressByAddress(absolute_address);
+  uint64_t absolute_function_address = absolute_function_address_option.value_or(absolute_address);
 
   exact_address_to_function_address_[absolute_address] = absolute_function_address;
   function_address_to_exact_addresses_[absolute_function_address].insert(absolute_address);
