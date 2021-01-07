@@ -4,6 +4,8 @@
 
 #include "GpuTrack.h"
 
+#include <utility>
+
 #include "App.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Profiling.h"
@@ -16,24 +18,35 @@ using orbit_client_protos::TimerInfo;
 constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
+constexpr const char* kCmdBufferString = "command buffer";
 
 namespace orbit_gl {
 
 std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
   std::string label;
   if (timeline.rfind("gfx", 0) == 0) {
+    if (timeline.find("_marker") != std::string::npos) {
+      return absl::StrFormat("Graphics queue debug markers (%s)", timeline);
+    }
     return absl::StrFormat("Graphics queue (%s)", timeline);
-  } else if (timeline.rfind("sdma", 0) == 0) {
-    return absl::StrFormat("Transfer queue (%s)", timeline);
-  } else if (timeline.rfind("comp", 0) == 0) {
-    return absl::StrFormat("Compute queue (%s)", timeline);
-  } else {
-    // On AMD, this should not happen and we don't support tracepoints for
-    // other GPUs (at the moment). We return the timeline to make sure we
-    // at least display something. When we add support for other GPU
-    // tracepoints, this needs to be changed.
-    return std::string(timeline);
   }
+  if (timeline.rfind("sdma", 0) == 0) {
+    if (timeline.find("_marker") != std::string::npos) {
+      return absl::StrFormat("Transfer queue debug markers (%s)", timeline);
+    }
+    return absl::StrFormat("Transfer queue (%s)", timeline);
+  }
+  if (timeline.rfind("comp", 0) == 0) {
+    if (timeline.find("_marker") != std::string::npos) {
+      return absl::StrFormat("Compute queue debug markers (%s)", timeline);
+    }
+    return absl::StrFormat("Compute queue (%s)", timeline);
+  }
+  // On AMD, this should not happen and we don't support tracepoints for
+  // other GPUs (at the moment). We return the timeline to make sure we
+  // at least display something. When we add support for other GPU
+  // tracepoints, this needs to be changed.
+  return std::string(timeline);
 }
 
 }  // namespace orbit_gl
@@ -48,6 +61,16 @@ GpuTrack::GpuTrack(TimeGraph* time_graph, StringManager* string_manager, uint64_
   // Gpu tracks are collapsed by default.
   collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
                              TriangleToggle::InitialStateUpdate::kReplaceInitialState);
+}
+
+void GpuTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  // In case of having command buffer timers, we need to double the depth of the Gpu timers (as we
+  // are drawing the corresponding command buffer timers below them). Therefore, we watch out for
+  // those timers.
+  if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
+    has_vulkan_layer_command_buffer_timers_ = true;
+  }
+  TimerTrack::OnTimer(timer_info);
 }
 
 bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -65,13 +88,24 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
     return kSelectionColor;
-  } else if (!IsTimerActive(timer_info)) {
+  }
+  if (!IsTimerActive(timer_info)) {
     return kInactiveColor;
+  }
+  if (timer_info.has_color()) {
+    return Color(static_cast<uint8_t>(timer_info.color().red() * 255),
+                 static_cast<uint8_t>(timer_info.color().green() * 255),
+                 static_cast<uint8_t>(timer_info.color().blue() * 255),
+                 static_cast<uint8_t>(timer_info.color().alpha() * 255));
+  }
+  if (timer_info.type() == TimerInfo::kGpuDebugMarker) {
+    std::string marker_text = string_manager_->Get(timer_info.user_data_key()).value_or("");
+    return TimeGraph::GetColor(marker_text);
   }
 
   // We color code the timeslices for GPU activity using the color
   // of the CPU thread track that submitted the job.
-  Color color = time_graph_->GetThreadColor(timer_info.thread_id());
+  Color color = TimeGraph::GetThreadColor(timer_info.thread_id());
 
   // We disambiguate the different types of GPU activity based on the
   // string that is displayed on their timeslice.
@@ -103,15 +137,28 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
-  return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f) -
-         adjusted_depth * layout.GetSpaceBetweenGpuDepths();
+  if (timer_info.type() == TimerInfo::kGpuDebugMarker) {
+    return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f);
+  }
+  CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
+        timer_info.type() == TimerInfo::kGpuCommandBuffer);
+
+  if (has_vulkan_layer_command_buffer_timers_) {
+    adjusted_depth *= 2.f;
+  }
+
+  float gap_space = adjusted_depth * layout.GetSpaceBetweenGpuDepths();
+  if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
+    ++adjusted_depth;
+  }
+  return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
 }
 
-// When track is collapsed, only draw "hardware execution" timers.
+// When track is collapsed, only draw "hardware execution" timers and "debug markers".
 bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
     std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
-    if (gpu_stage != kHwExecutionString) {
+    if (gpu_stage != kHwExecutionString && timer_info.type() != TimerInfo::kGpuDebugMarker) {
       return false;
     }
   }
@@ -126,7 +173,9 @@ void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, 
 
     text_box->SetElapsedTimeTextLength(time.length());
 
-    CHECK(timer_info.type() == TimerInfo::kGpuActivity);
+    CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
+          timer_info.type() == TimerInfo::kGpuCommandBuffer ||
+          timer_info.type() == TimerInfo::kGpuDebugMarker);
 
     std::string text = absl::StrFormat(
         "%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""), time.c_str());
@@ -154,6 +203,9 @@ float GpuTrack::GetHeight() const {
   bool collapsed = collapse_toggle_->IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
+  if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
+    depth *= 2;
+  }
   return layout.GetTextBoxHeight() * depth + (num_gaps * layout.GetSpaceBetweenGpuDepths()) +
          layout.GetTrackBottomMargin();
 }
@@ -188,10 +240,18 @@ std::string GpuTrack::GetBoxTooltip(PickingId id) const {
       string_manager_->Get(text_box->GetTimerInfo().user_data_key()).value_or("");
   if (gpu_stage == kSwQueueString) {
     return GetSwQueueTooltip(text_box->GetTimerInfo());
-  } else if (gpu_stage == kHwQueueString) {
+  }
+  if (gpu_stage == kHwQueueString) {
     return GetHwQueueTooltip(text_box->GetTimerInfo());
-  } else if (gpu_stage == kHwExecutionString) {
+  }
+  if (gpu_stage == kHwExecutionString) {
     return GetHwExecutionTooltip(text_box->GetTimerInfo());
+  }
+  if (gpu_stage == kCmdBufferString) {
+    return GetCommandBufferTooltip(text_box->GetTimerInfo());
+  }
+  if (text_box->GetTimerInfo().type() == TimerInfo::kGpuDebugMarker) {
+    return GetDebugMarkerTooltip(text_box->GetTimerInfo());
   }
 
   return "";
@@ -238,5 +298,38 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
       capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
+}
+
+std::string GpuTrack::GetCommandBufferTooltip(
+    const orbit_client_protos::TimerInfo& timer_info) const {
+  return absl::StrFormat(
+      "<b>Command Buffer Execution</b><br/>"
+      "<i>At `vkBeginCommandBuffer` and `vkEndCommandBuffer` `vkCmdWriteTimestamp`s have been "
+      "inserted. The gpu timestamps get aligned with the corresponding submit's hardware "
+      "execution </i>"
+      "<br/>"
+      "<br/>"
+      "<b>Submitted from thread:</b> %s [%d]<br/>"
+      "<b>Time:</b> %s",
+      app_->GetCaptureData().GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
+}
+
+std::string GpuTrack::GetDebugMarkerTooltip(
+    const orbit_client_protos::TimerInfo& timer_info) const {
+  std::string marker_text = string_manager_->Get(timer_info.user_data_key()).value_or("");
+  return absl::StrFormat(
+      "<b>Vulkan Debug Marker</b><br/>"
+      "<i>At the marker's begin and end `vkCmdWriteTimestamp`s have been "
+      "inserted. The gpu timestamps get aligned with the corresponding submit's hardware "
+      "execution </i>"
+      "<br/>"
+      "<br/>"
+      "<b>Marker text:</b> %s<br/>"
+      "<b>Submitted from thread:</b> %s [%d]<br/>"
+      "<b>Time:</b> %s",
+      marker_text, app_->GetCaptureData().GetThreadName(timer_info.thread_id()),
+      timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }

@@ -38,6 +38,12 @@ class GpuTrack : public TimerTrack {
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;
 
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+
+  [[nodiscard]] bool IsCollapsable() const override {
+    return depth_ > 1 || has_vulkan_layer_command_buffer_timers_;
+  }
+
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
@@ -50,11 +56,16 @@ class GpuTrack : public TimerTrack {
  private:
   uint64_t timeline_hash_;
   StringManager* string_manager_;
+  bool has_vulkan_layer_command_buffer_timers_ = false;
   [[nodiscard]] std::string GetSwQueueTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetHwQueueTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetHwExecutionTooltip(
+      const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] std::string GetCommandBufferTooltip(
+      const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] std::string GetDebugMarkerTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
 };
 
