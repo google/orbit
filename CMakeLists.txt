@@ -163,6 +163,7 @@ if(WITH_ORBITGL)
 endif()
 
 if(WITH_GUI)
+  add_subdirectory(MetricsUploader)
   add_subdirectory(OrbitGgp)
   add_subdirectory(OrbitSsh)
   add_subdirectory(OrbitSshQt)
