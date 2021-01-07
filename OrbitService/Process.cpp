@@ -90,9 +90,9 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
 
   auto file_path_result = orbit_base::GetExecutablePath(pid);
   if (file_path_result) {
-    process.set_full_path(std::move(file_path_result.value()));
+    process.set_full_path(file_path_result.value());
 
-    const auto& elf_file = orbit_elf_utils::ElfFile::Create(file_path_result.value().string());
+    const auto& elf_file = orbit_elf_utils::ElfFile::Create(file_path_result.value());
     if (elf_file) {
       process.set_is_64_bit(elf_file.value()->Is64Bit());
     } else {
