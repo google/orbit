@@ -271,6 +271,9 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       break;
     }
     case TimerInfo::kCoreActivity: {
+      // TODO(b/176962090): We need to create the `ThreadTrack` here even we don't use it, as we
+      //  don't create it on new callstack events, yet.
+      track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
       SchedulerTrack* track = track_manager_->GetOrCreateSchedulerTrack();
       track->OnTimer(timer_info);
       if (GetNumCores() <= static_cast<uint32_t>(timer_info.processor())) {
