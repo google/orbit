@@ -1,0 +1,18 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package orbit_metrics_uploader;
+
+// This proto is used for communication between Orbit and metrics uploader
+// client. Changing this proto requires changing the metrics uploader client
+// library accordingly.
+message OrbitLogEvent {
+  enum LogEventType {
+    UNKNOWN_EVENT_TYPE = 0;
+    ORBIT_INITIALIZED = 1;
+  }
+  LogEventType log_event_type = 1;
+}
