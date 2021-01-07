@@ -197,10 +197,11 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
 }
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
-                                 std::string grpc_server_address, uint32_t font_size)
+                                 std::string grpc_server_address, uint32_t font_size,
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : QMainWindow(nullptr),
       main_thread_executor_{CreateMainThreadExecutor()},
-      app_{OrbitApp::Create(main_thread_executor_.get())},
+      app_{OrbitApp::Create(main_thread_executor_.get(), metrics_uploader)},
       ui(new Ui::OrbitMainWindow) {
   SetupMainWindow(font_size);
 
