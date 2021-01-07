@@ -112,6 +112,23 @@ const std::string& CaptureData::GetFunctionNameByAddress(uint64_t absolute_addre
   return function_name;
 }
 
+// Find the start address of the function this address falls inside. Use the function returned by
+// FindFunctionByAddress, and when this fails (e.g., the module containing the function has not
+// been loaded) use (for now) the LinuxAddressInfo that is collected for every address in a
+// callstack.
+std::optional<uint64_t> CaptureData::FindFunctionAbsoluteAddressByAddress(
+    uint64_t absolute_address) const {
+  const FunctionInfo* function = FindFunctionByAddress(absolute_address, false);
+  if (function != nullptr) {
+    return GetAbsoluteAddress(*function);
+  }
+  const LinuxAddressInfo* address_info = GetAddressInfo(absolute_address);
+  if (address_info != nullptr) {
+    return absolute_address - address_info->offset_in_function();
+  }
+  return std::nullopt;
+}
+
 const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address) const {
   const ModuleData* module_data = FindModuleByAddress(absolute_address);
   if (module_data != nullptr) {

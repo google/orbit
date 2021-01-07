@@ -70,6 +70,8 @@ class CaptureData {
   void InsertAddressInfo(orbit_client_protos::LinuxAddressInfo address_info);
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] std::optional<uint64_t> FindFunctionAbsoluteAddressByAddress(
+      uint64_t absolute_address) const;
   [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
   [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& module_path) const {
     return module_manager_->GetModuleByPath(module_path);
