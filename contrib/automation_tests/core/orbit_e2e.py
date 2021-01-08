@@ -147,11 +147,11 @@ class E2ETestSuite:
         self.top_window(True).set_focus()
 
 
-def wait_for_condition(callable: Callable, max_seconds: int = 5, interval: int = 1):
+def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: int = 1):
     """
     Wait until a condition is satisfied.
 
-    :param callable: Any callable that evaluates to True or False. If this returns True, the condition is considered
+    :param any_callable: Any callable that evaluates to True or False. If this returns True, the condition is considered
         satisfied.
     :param max_seconds: Maximum time to wait for the condition to be satisfied
     :param interval: Sleep time in between calls to callable, in seconds
@@ -159,7 +159,7 @@ def wait_for_condition(callable: Callable, max_seconds: int = 5, interval: int =
     start = time.time()
     while time.time() - start < max_seconds:
         try:
-            if callable():
+            if any_callable():
                 return
         except:
             pass
@@ -168,7 +168,7 @@ def wait_for_condition(callable: Callable, max_seconds: int = 5, interval: int =
 
 
 def find_control(parent: BaseWrapper, control_type=None, name=None, name_contains=None,
-                 auto_id_leaf=None, qt_class=None, recurse=True, raise_on_failure=True) -> BaseWrapper:
+                 auto_id_leaf=None, qt_class=None, recurse=True, raise_on_failure=True) -> BaseWrapper or None:
     """
     Returns the first child of BaseWrapper that matches all of the search parameters.
     As soon as a matching child is encountered, this function returns.
