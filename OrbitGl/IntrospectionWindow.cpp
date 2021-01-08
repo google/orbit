@@ -62,7 +62,6 @@ void IntrospectionWindow::RenderImGui() {
 
   if (ImGui::CollapsingHeader("IntrospectionWindow")) {
     IMGUI_VAR_TO_TEXT(IsIntrospecting());
-    IMGUI_VAR_TO_TEXT(time_graph_.GetTrackManager()->GetAllTracks().size());
   }
 }
 
