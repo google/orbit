@@ -258,6 +258,18 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       track->OnTimer(timer_info);
       break;
     }
+    case TimerInfo::kGpuCommandBuffer: {
+      uint64_t timeline_hash = timer_info.timeline_hash();
+      GpuTrack* track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
+      track->OnTimer(timer_info);
+      break;
+    }
+    case TimerInfo::kGpuDebugMarker: {
+      uint64_t timeline_hash = timer_info.timeline_hash();
+      GpuTrack* track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
+      track->OnTimer(timer_info);
+      break;
+    }
     case TimerInfo::kFrame: {
       if (function == nullptr) {
         break;
