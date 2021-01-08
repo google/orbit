@@ -19,7 +19,7 @@ class SchedulerTrack final : public TimerTrack {
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] float GetHeight() const override;
-  [[nodiscard]] bool IsCollapsable() const override { return false; }
+  [[nodiscard]] bool IsCollapsible() const override { return false; }
 
   void UpdateBoxHeight() override;
   [[nodiscard]] float GetYFromTimer(
