@@ -8,7 +8,9 @@
 #include <libssh2.h>
 
 #include <outcome.hpp>
+#include <string>
 #include <system_error>
+#include <type_traits>
 
 namespace orbit_ssh {
 

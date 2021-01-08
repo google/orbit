@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <string>
 
+#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "capture_data.pb.h"
 

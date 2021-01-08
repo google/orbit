@@ -5,8 +5,22 @@
 #ifndef ORBIT_GL_GL_CANVAS_H_
 #define ORBIT_GL_GL_CANVAS_H_
 
+#include <imgui.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "AccessibleTimeGraph.h"
+#include "Batcher.h"
+#include "CoreMath.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
 #include "TextRenderer.h"
@@ -14,6 +28,7 @@
 #include "Timer.h"
 
 class OrbitApp;
+
 class GlCanvas {
  public:
   explicit GlCanvas(uint32_t font_size);

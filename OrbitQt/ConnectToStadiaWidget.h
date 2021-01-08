@@ -23,6 +23,7 @@
 #include <string>
 
 #include "Connections.h"
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/InstanceItemModel.h"

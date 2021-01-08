@@ -4,10 +4,28 @@
 
 #include "EventTrack.h"
 
+#include <absl/strings/str_format.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "App.h"
+#include "Batcher.h"
+#include "CoreUtils.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "PickingManager.h"
+#include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 

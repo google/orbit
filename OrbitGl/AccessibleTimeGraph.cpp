@@ -4,8 +4,13 @@
 
 #include "AccessibleTimeGraph.h"
 
+#include <vector>
+
 #include "GlCanvas.h"
 #include "TimeGraph.h"
+#include "Track.h"
+#include "TrackAccessibility.h"
+#include "TrackManager.h"
 
 AccessibilityRect TimeGraphAccessibility::AccessibleLocalRect() const {
   GlCanvas* canvas = time_graph_->GetCanvas();

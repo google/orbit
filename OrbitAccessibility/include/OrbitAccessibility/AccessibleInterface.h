@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <type_traits>
 
 namespace orbit_accessibility {
 

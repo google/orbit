@@ -20,6 +20,7 @@
 #include "Batcher.h"
 #include "CoreMath.h"
 #include "CoreUtils.h"
+#include "EventTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "PickingManager.h"

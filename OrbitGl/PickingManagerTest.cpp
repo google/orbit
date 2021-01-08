@@ -6,7 +6,9 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
+#include <memory>
+
+#include "CoreUtils.h"
 
 class UndraggableMock : public PickableMock {
   bool Draggable() override { return false; }

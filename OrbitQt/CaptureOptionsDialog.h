@@ -6,7 +6,10 @@
 #define ORBIT_QT_CAPTURE_OPTIONS_DIALOG_H_
 
 #include <QDialog>
+#include <QObject>
+#include <QString>
 #include <QWidget>
+#include <memory>
 
 #include "OrbitBase/Logging.h"
 #include "ui_CaptureOptionsDialog.h"

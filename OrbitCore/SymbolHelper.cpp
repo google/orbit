@@ -8,8 +8,12 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <outcome.hpp>
+#include <set>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"

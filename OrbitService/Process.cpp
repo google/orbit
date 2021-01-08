@@ -8,8 +8,11 @@
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
-#include <cmath>
 #include <filesystem>
+#include <optional>
+#include <outcome.hpp>
+#include <string>
+#include <utility>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"

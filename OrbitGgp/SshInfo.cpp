@@ -6,8 +6,8 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonValue>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 
 namespace orbit_ggp {

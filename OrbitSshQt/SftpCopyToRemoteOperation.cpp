@@ -4,7 +4,21 @@
 
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 
+#include <absl/base/macros.h>
+#include <stddef.h>
+
+#include <QIODevice>
+#include <string>
+#include <string_view>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/SftpFile.h"
+#include "OrbitSshQt/Error.h"
+#include "OrbitSshQt/ScopedConnection.h"
+#include "OrbitSshQt/Session.h"
+#include "OrbitSshQt/SftpChannel.h"
+#include "OrbitSshQt/StateMachineHelper.h"
 
 namespace orbit_ssh_qt {
 

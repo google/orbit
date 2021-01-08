@@ -6,7 +6,14 @@
 #define ORBIT_QT_ORBIT_TABLE_MODEL_H_
 
 #include <QAbstractTableModel>
+#include <QFlags>
+#include <QModelIndex>
+#include <QObject>
+#include <QString>
+#include <QVariant>
+#include <Qt>
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "DataView.h"

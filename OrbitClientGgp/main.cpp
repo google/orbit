@@ -2,11 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
+#include <absl/time/clock.h>
+#include <absl/time/time.h>
+#include <stdint.h>
+
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitClientGgp/ClientGgp.h"
+#include "OrbitClientGgp/ClientGgpOptions.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"

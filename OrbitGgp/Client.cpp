@@ -4,11 +4,13 @@
 
 #include "OrbitGgp/Client.h"
 
-#include <QEventLoop>
+#include <QByteArray>
+#include <QIODevice>
 #include <QPointer>
 #include <QProcess>
+#include <QStringList>
 #include <QTimer>
-#include <optional>
+#include <type_traits>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"

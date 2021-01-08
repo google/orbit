@@ -6,9 +6,14 @@
 #define ORBIT_QT_ELIDED_LABEL_H_
 
 #include <QLabel>
+#include <QObject>
+#include <QPaintEvent>
 #include <QPainter>
 #include <QSizePolicy>
+#include <QString>
 #include <QStyle>
+#include <QWidget>
+#include <Qt>
 
 class ElidedLabel : public QLabel {
   Q_OBJECT

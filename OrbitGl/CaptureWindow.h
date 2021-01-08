@@ -4,11 +4,19 @@
 
 #pragma once
 
+#include <stdint.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "Batcher.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
+#include "PickingManager.h"
 #include "TextBox.h"
+#include "TimeGraph.h"
 
 class OrbitApp;
 

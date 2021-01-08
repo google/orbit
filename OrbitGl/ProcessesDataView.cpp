@@ -4,11 +4,17 @@
 
 #include "ProcessesDataView.h"
 
-#include <utility>
+#include <absl/strings/str_split.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <memory>
 
 #include "App.h"
-#include "ModulesDataView.h"
-#include "OrbitClientData/Callstack.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
+#include "OrbitBase/Tracing.h"
 #include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::ProcessInfo;

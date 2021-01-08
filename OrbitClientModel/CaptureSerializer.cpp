@@ -5,12 +5,29 @@
 #include "OrbitClientModel/CaptureSerializer.h"
 
 #include <OrbitClientData/FunctionUtils.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_cat.h>
+#include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/port.h>
+#include <sys/types.h>
 
-#include <memory>
+#include <algorithm>
+#include <chrono>
+#include <filesystem>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "CoreUtils.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/FunctionInfoSet.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
+#include "OrbitClientData/TracepointData.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"

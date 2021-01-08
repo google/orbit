@@ -4,10 +4,14 @@
 
 #include "Batcher.h"
 
+#include <GteVector.h>
+#include <GteVector2.h>
 #include <math.h>
+#include <stddef.h>
 
 #include "CoreUtils.h"
 #include "OpenGl.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,

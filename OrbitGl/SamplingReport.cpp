@@ -4,8 +4,13 @@
 
 #include "SamplingReport.h"
 
+#include <absl/meta/type_traits.h>
+
+#include <algorithm>
+
 #include "App.h"
 #include "CallStackDataView.h"
+#include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
 
 SamplingReport::SamplingReport(

@@ -2,17 +2,32 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <QAbstractSocket>
+#include <QByteArray>
 #include <QCoreApplication>
-#include <QDir>
+#include <QEventLoop>
+#include <QList>
+#include <QObject>
+#include <QString>
+#include <QStringList>
 #include <QTcpSocket>
 #include <QTemporaryFile>
 #include <QTimer>
+#include <chrono>
 #include <filesystem>
-#include <iostream>
+#include <optional>
+#include <outcome.hpp>
+#include <string>
+#include <string_view>
+#include <system_error>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Context.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToLocalOperation.h"

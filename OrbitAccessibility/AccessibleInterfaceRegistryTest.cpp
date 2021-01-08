@@ -4,8 +4,9 @@
 
 #include <gtest/gtest.h>
 
-#include <functional>
+#include <memory>
 
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
 #include "OrbitAccessibility/AccessibleObjectFake.h"
 

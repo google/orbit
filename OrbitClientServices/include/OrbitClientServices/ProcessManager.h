@@ -5,9 +5,14 @@
 #ifndef ORBIT_CLIENT_SERVICES_PROCESS_MANAGER_H_
 #define ORBIT_CLIENT_SERVICES_PROCESS_MANAGER_H_
 
+#include <absl/time/time.h>
+#include <stdint.h>
+
+#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"

@@ -10,13 +10,13 @@
 #include <stdio.h>
 #include <sys/resource.h>
 
+#include <algorithm>
 #include <array>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>

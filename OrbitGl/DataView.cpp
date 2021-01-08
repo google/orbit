@@ -5,6 +5,7 @@
 #include "DataView.h"
 
 #include <fstream>
+#include <memory>
 
 #include "App.h"
 

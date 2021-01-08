@@ -5,10 +5,16 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <memory>
 #include <string>
+#include <thread>
+#include <utility>
 
 #include "MainThreadExecutor.h"
+#include "OrbitBase/Action.h"
 #include "ScopedStatus.h"
+#include "StatusListener.h"
 
 namespace {
 

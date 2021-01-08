@@ -5,6 +5,8 @@
 #ifndef ORBIT_SERVICE_PROCESS_H_
 #define ORBIT_SERVICE_PROCESS_H_
 
+#include <sys/types.h>
+
 #include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
 #include "process.pb.h"

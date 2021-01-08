@@ -4,8 +4,14 @@
 
 #include "OrbitSsh/SftpFile.h"
 
+#include <libssh2.h>
+
+#include <utility>
+
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Error.h"
+#include "OrbitSsh/Sftp.h"
 
 namespace orbit_ssh {
 outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp, std::string_view filepath,

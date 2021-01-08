@@ -4,12 +4,22 @@
 
 #pragma once
 
+#include <GteVector.h>
 #include <freetype-gl/mat4.h>
+#include <freetype-gl/texture-atlas.h>
+#include <freetype-gl/texture-font.h>
+#include <freetype-gl/vec234.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <map>
+#include <unordered_map>
+#include <vector>
 
 #include "Batcher.h"
+#include "CoreMath.h"
 #include "OpenGl.h"
+#include "PickingManager.h"
 
 namespace ftgl {
 struct vertex_buffer_t;

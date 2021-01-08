@@ -5,7 +5,10 @@
 #ifndef ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_OPTIONS_H_
 #define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_OPTIONS_H_
 
+#include <stdint.h>
+
 #include <string>
+#include <vector>
 
 #include "layer_config.pb.h"
 

@@ -4,6 +4,10 @@
 
 #include "OrbitClientData/TracepointData.h"
 
+#include <absl/meta/type_traits.h>
+
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 

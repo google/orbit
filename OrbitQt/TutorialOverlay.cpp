@@ -4,16 +4,20 @@
 
 #include "TutorialOverlay.h"
 
-#include <QFrame>
+#include <stddef.h>
+
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QList>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRegion>
 #include <QTabBar>
+#include <QTabWidget>
+#include <Qt>
 
-#include "CoreUtils.h"
+#include "CutoutWidget.h"
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_format.h"
 #include "ui_TutorialOverlay.h"
 
 static void RecursiveUpdate(QWidget* widget) {

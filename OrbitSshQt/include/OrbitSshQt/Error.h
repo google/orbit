@@ -5,7 +5,9 @@
 #ifndef ORBIT_SSH_QT_ERROR_H_
 #define ORBIT_SSH_QT_ERROR_H_
 
+#include <string>
 #include <system_error>
+#include <type_traits>
 
 namespace orbit_ssh_qt {
 

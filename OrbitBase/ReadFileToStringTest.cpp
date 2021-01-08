@@ -4,8 +4,13 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <memory>
+#include <outcome.hpp>
+
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 
 TEST(ReadFileToString, InvalidFile) {
   const auto result = orbit_base::ReadFileToString("non/existing/filename");

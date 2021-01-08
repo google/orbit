@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <memory>
+#include <utility>
 
 #include "OrbitBase/UniqueResource.h"
 

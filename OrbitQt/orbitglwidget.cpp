@@ -4,15 +4,31 @@
 
 #include "orbitglwidget.h"
 
+#include <stddef.h>
+
+#include <QAction>
+#include <QByteArray>
+#include <QCharRef>
+#include <QCursor>
+#include <QFlags>
+#include <QImage>
 #include <QImageWriter>
-#include <QMenuBar>
+#include <QMenu>
 #include <QMouseEvent>
-#include <QOpenGLDebugLogger>
+#include <QOpenGLContext>
+#include <QOpenGLDebugMessage>
+#include <QRect>
 #include <QSignalMapper>
+#include <QSurfaceFormat>
+#include <QtCore>
+#include <algorithm>
+#include <string>
+#include <vector>
 
 #include "App.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 #include "orbitmainwindow.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0

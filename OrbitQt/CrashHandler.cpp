@@ -4,6 +4,13 @@
 
 #include "CrashHandler.h"
 
+#include <base/files/file_path.h>
+#include <client/crash_report_database.h>
+#include <util/misc/capture_context.h>
+
+#include <algorithm>
+#include <map>
+
 #include "CoreUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitVersion/OrbitVersion.h"

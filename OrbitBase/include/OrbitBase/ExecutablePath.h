@@ -5,6 +5,8 @@
 #ifndef ORBIT_BASE_PATH_H_
 #define ORBIT_BASE_PATH_H_
 
+#include <stdint.h>
+
 #include <filesystem>
 #include <vector>
 

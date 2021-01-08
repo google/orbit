@@ -5,6 +5,12 @@
 #ifndef ORBIT_GL_MODULES_DATA_VIEW_H_
 #define ORBIT_GL_MODULES_DATA_VIEW_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <stdint.h>
+
+#include <string>
+#include <vector>
+
 #include "DataView.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"

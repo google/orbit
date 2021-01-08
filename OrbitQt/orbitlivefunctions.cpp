@@ -4,7 +4,24 @@
 
 #include "orbitlivefunctions.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
+#include <stddef.h>
+
+#include <QBoxLayout>
+#include <QItemSelectionModel>
+#include <QLayout>
+#include <QModelIndex>
+#include <cstdint>
+#include <memory>
+#include <utility>
+
 #include "App.h"
+#include "DataView.h"
+#include "LiveFunctionsDataView.h"
+#include "orbitdataviewpanel.h"
+#include "orbittablemodel.h"
+#include "orbittreeview.h"
 #include "ui_orbitlivefunctions.h"
 
 using orbit_client_protos::FunctionInfo;

@@ -4,11 +4,20 @@
 
 #include "CallStackDataView.h"
 
+#include <absl/strings/str_split.h>
+#include <stddef.h>
+
+#include <cstdint>
+#include <filesystem>
+
 #include "App.h"
-#include "OrbitBase/ExecutablePath.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
+#include "FunctionsDataView.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "absl/flags/flag.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;

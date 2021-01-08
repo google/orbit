@@ -4,9 +4,12 @@
 
 #include "Disassembler.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <capstone/capstone.h>
-#include <capstone/platform.h>
+
+#include <algorithm>
+#include <cstdint>
 
 void Disassembler::Disassemble(const void* machine_code, size_t size, uint64_t address,
                                bool is_64bit) {

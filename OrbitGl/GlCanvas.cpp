@@ -4,17 +4,20 @@
 
 #include "GlCanvas.h"
 
-#include <string>
+#include <GteVector.h>
+#include <absl/base/casts.h>
+#include <limits.h>
+#include <math.h>
 
 #include "App.h"
+#include "CaptureWindow.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
 #include "OpenGl.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
-#include "TextBox.h"
-#include "absl/strings/str_format.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 
 // Tracks: 0.0 - 0.1
 // World Overlay: 0.4 - 0.5

@@ -4,7 +4,14 @@
 
 #include "LinuxTracingHandler.h"
 
-#include "absl/flags/flag.h"
+#include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_cat.h>
+#include <absl/synchronization/mutex.h>
+#include <unistd.h>
+
+#include <utility>
+
+#include "OrbitBase/Logging.h"
 #include "llvm/Demangle/Demangle.h"
 
 namespace orbit_service {

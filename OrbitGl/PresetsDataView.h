@@ -5,7 +5,12 @@
 #ifndef ORBIT_GL_PRESET_DATA_VIEW_H_
 #define ORBIT_GL_PRESET_DATA_VIEW_H_
 
+#include <stdint.h>
+
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "DataView.h"
 #include "preset.pb.h"

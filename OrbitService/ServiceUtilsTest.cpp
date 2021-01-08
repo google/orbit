@@ -2,15 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <array>
 #include <deque>
+#include <filesystem>
+#include <iterator>
+#include <optional>
+#include <outcome.hpp>
+#include <string>
+#include <vector>
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
-#include "absl/strings/str_format.h"
-#include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
+#include "tracepoint.pb.h"
 
 namespace orbit_service::utils {
 

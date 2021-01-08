@@ -4,6 +4,14 @@
 
 #include "ThreadStateManager.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
+
+#include <type_traits>
+#include <utility>
+
+#include "OrbitBase/Logging.h"
+
 namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::ThreadStateSlice;

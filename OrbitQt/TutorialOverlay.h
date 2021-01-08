@@ -5,14 +5,25 @@
 #ifndef ORBIT_QT_TUTORIAL_OVERLAY_
 #define ORBIT_QT_TUTORIAL_OVERLAY_
 
+#include <QCloseEvent>
 #include <QDialog>
+#include <QEvent>
 #include <QLabel>
+#include <QObject>
 #include <QPoint>
 #include <QRadioButton>
+#include <QRect>
+#include <QShowEvent>
+#include <QString>
+#include <QWidget>
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "CutoutWidget.h"
 

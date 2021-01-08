@@ -5,8 +5,14 @@
 #ifndef ORBIT_CORE_CALLSTACK_DATA_H_
 #define ORBIT_CORE_CALLSTACK_DATA_H_
 
+#include <stdint.h>
+
+#include <functional>
+#include <limits>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #include "Callstack.h"
 #include "CallstackTypes.h"

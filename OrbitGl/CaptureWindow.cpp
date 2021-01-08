@@ -4,11 +4,41 @@
 
 #include "CaptureWindow.h"
 
+#include <GteVector.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/time/time.h>
+#include <imgui.h>
+#include <string.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <iterator>
+#include <ostream>
+#include <string_view>
+
+#include "AccessibleTimeGraph.h"
 #include "App.h"
+#include "CoreMath.h"
+#include "CoreUtils.h"
+#include "Geometry.h"
 #include "GlUtils.h"
+#include "ImGuiOrbit.h"
+#include "OpenGl.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/Tracing.h"
+#include "OrbitClientData/CallstackData.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "TextRenderer.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "Timer.h"
+#include "TrackManager.h"
 #include "absl/base/casts.h"
+#include "capture_data.pb.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;

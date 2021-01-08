@@ -5,6 +5,12 @@
 #ifndef ORBIT_LINUX_TRACING_THREAD_STATE_MANAGER_H_
 #define ORBIT_LINUX_TRACING_THREAD_STATE_MANAGER_H_
 
+#include <stdint.h>
+#include <sys/types.h>
+
+#include <optional>
+#include <vector>
+
 #include "OrbitBase/Logging.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture.pb.h"

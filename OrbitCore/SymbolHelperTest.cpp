@@ -2,12 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <memory>
+#include <filesystem>
+#include <outcome.hpp>
+#include <string>
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Result.h"
 #include "Path.h"
 #include "SymbolHelper.h"
 #include "absl/strings/ascii.h"

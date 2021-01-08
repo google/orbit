@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
-#include <utility>
+#include <memory>
 
 #include "RingBuffer.h"
 

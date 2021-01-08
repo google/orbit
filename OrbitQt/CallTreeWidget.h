@@ -5,12 +5,26 @@
 #ifndef ORBIT_QT_CALL_TREE_WIDGET_H_
 #define ORBIT_QT_CALL_TREE_WIDGET_H_
 
+#include <absl/strings/ascii.h>
+
+#include <QColor>
 #include <QIdentityProxyModel>
+#include <QModelIndex>
+#include <QObject>
+#include <QPainter>
+#include <QPoint>
+#include <QResizeEvent>
 #include <QSortFilterProxyModel>
 #include <QString>
+#include <QStyleOptionViewItem>
 #include <QStyledItemDelegate>
+#include <QVariant>
 #include <QWidget>
+#include <Qt>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"

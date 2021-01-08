@@ -4,7 +4,8 @@
 
 #include "ContextSwitchManager.h"
 
-#include <utility>
+#include <absl/meta/type_traits.h>
+#include <stdint.h>
 
 #include "OrbitBase/Logging.h"
 

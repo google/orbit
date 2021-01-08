@@ -4,12 +4,20 @@
 
 #pragma once
 
+#include <optional>
+#include <string>
+#include <vector>
+
 #include "CallStackDataView.h"
 #include "DataView.h"
+#include "OrbitClientData/CallstackTypes.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture_data.pb.h"
 
 class OrbitApp;
+class SamplingReport;
 
 class SamplingReportDataView : public DataView {
  public:

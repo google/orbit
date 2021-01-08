@@ -5,10 +5,13 @@
 #ifndef ORBIT_GPP_INSTANCE_H_
 #define ORBIT_GPP_INSTANCE_H_
 
+#include <QByteArray>
 #include <QDateTime>
 #include <QMetaType>
+#include <QString>
 #include <QVector>
 #include <outcome.hpp>
+#include <tuple>
 
 namespace orbit_ggp {
 

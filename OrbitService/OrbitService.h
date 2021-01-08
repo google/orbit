@@ -5,10 +5,13 @@
 #ifndef ORBIT_SERVICE_ORBIT_SERVICE_H
 #define ORBIT_SERVICE_ORBIT_SERVICE_H
 
+#include <stdint.h>
+
 #include <atomic>
 #include <chrono>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "capture.pb.h"

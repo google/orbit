@@ -5,8 +5,7 @@
 #include "include/OrbitFramePointerValidator/FunctionFramePointerValidator.h"
 
 #include <capstone/capstone.h>
-
-#include <iostream>
+#include <capstone/x86.h>
 
 #include "OrbitBase/Logging.h"
 

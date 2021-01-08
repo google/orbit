@@ -5,10 +5,20 @@
 #ifndef ORBIT_GL_ASYNC_TRACK_H_
 #define ORBIT_GL_ASYNC_TRACK_H_
 
+#include <cstdint>
+#include <memory>
 #include <string>
+#include <vector>
 
+#include "CoreMath.h"
+#include "EventTrack.h"
+#include "PickingManager.h"
+#include "TextBox.h"
+#include "TimerChain.h"
 #include "TimerTrack.h"
+#include "Track.h"
 #include "absl/container/flat_hash_map.h"
+#include "capture_data.pb.h"
 
 class OrbitApp;
 

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "CoreMath.h"
+#include "EventTrack.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 #include "TimerChain.h"

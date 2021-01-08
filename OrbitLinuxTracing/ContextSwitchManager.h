@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#include <cstdint>
 #include <optional>
 
 #include "capture.pb.h"

@@ -4,8 +4,13 @@
 
 #include "FrameTrackOnlineProcessor.h"
 
-#include <limits>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 
+#include <limits>
+#include <utility>
+
+#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "TimeGraph.h"

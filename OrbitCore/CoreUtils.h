@@ -5,6 +5,10 @@
 #ifndef ORBIT_CORE_CORE_UTILS_H_
 #define ORBIT_CORE_CORE_UTILS_H_
 
+#include <absl/time/time.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <sys/types.h>
 #include <xxhash.h>
 
 #include <algorithm>
@@ -18,6 +22,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <outcome.hpp>

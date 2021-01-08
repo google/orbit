@@ -6,11 +6,19 @@
 
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
+#include <absl/strings/str_cat.h>
+#include <absl/strings/str_split.h>
+#include <errno.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <cstdio>
+#include <filesystem>
+#include <functional>
 
 #include "App.h"
-#include "OrbitClientData/Callstack.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
 #include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"

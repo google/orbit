@@ -4,11 +4,27 @@
 
 #include "AsyncTrack.h"
 
+#include <GteVector.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_format.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
+
 #include "App.h"
+#include "Batcher.h"
+#include "CoreUtils.h"
 #include "GlCanvas.h"
+#include "GlUtils.h"
 #include "ManualInstrumentationManager.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "TextRenderer.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "TriangleToggle.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;

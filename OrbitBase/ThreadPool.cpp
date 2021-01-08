@@ -4,8 +4,14 @@
 
 #include "OrbitBase/ThreadPool.h"
 
+#include <absl/meta/type_traits.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
 #include <list>
 #include <thread>
+#include <type_traits>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"

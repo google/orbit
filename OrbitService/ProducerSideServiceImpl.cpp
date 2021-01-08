@@ -4,9 +4,15 @@
 
 #include "ProducerSideServiceImpl.h"
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+
 #include <thread>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "capture.pb.h"
 
 namespace orbit_service {
 

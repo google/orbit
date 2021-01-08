@@ -4,7 +4,7 @@
 
 #include "OrbitClientData/UserDefinedCaptureData.h"
 
-#include "OrbitClientData/FunctionUtils.h"
+#include <absl/container/flat_hash_map.h>
 
 void UserDefinedCaptureData::InsertFrameTrack(const orbit_client_protos::FunctionInfo& function) {
   frame_track_functions_.insert(function);

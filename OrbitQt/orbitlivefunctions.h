@@ -5,7 +5,11 @@
 #ifndef ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 #define ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_
 
+#include <stdint.h>
+
 #include <QLineEdit>
+#include <QObject>
+#include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
 #include <optional>

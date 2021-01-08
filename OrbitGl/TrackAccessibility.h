@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_TRACK_ACCESSIBILITY_H_
 #define ORBIT_GL_TRACK_ACCESSIBILITY_H_
 
+#include <string>
+
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "TimeGraphLayout.h"
 

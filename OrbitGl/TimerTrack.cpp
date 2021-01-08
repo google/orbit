@@ -4,14 +4,22 @@
 
 #include "TimerTrack.h"
 
+#include <GteVector.h>
+#include <absl/flags/declare.h>
+#include <absl/synchronization/mutex.h>
+#include <stddef.h>
+
+#include <algorithm>
 #include <limits>
+#include <utility>
 
 #include "App.h"
-#include "EventTrack.h"
+#include "Batcher.h"
 #include "GlCanvas.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "TriangleToggle.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 

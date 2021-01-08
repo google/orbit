@@ -16,11 +16,18 @@
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/meta/type_traits.h>
 
 #include <QAccessible>
+#include <QAccessibleInterface>
 #include <QAccessibleWidget>
+#include <QObject>
+#include <QRect>
+#include <QString>
 #include <QWidget>
+#include <memory>
 
+#include "AccessibleTimeGraph.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
 #include "orbitglwidget.h"

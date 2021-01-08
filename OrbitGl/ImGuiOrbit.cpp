@@ -13,6 +13,7 @@
 #include "ImGuiOrbit.h"
 
 #include <imgui.h>
+#include <stddef.h>
 
 #include "GlCanvas.h"
 #include "Images.h"
@@ -20,11 +21,11 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/strip.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#include <filesystem>
 
 ImFont* GOrbitImguiFont;
 

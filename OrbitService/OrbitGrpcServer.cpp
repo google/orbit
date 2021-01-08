@@ -4,7 +4,13 @@
 
 #include "OrbitGrpcServer.h"
 
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <grpcpp/security/server_credentials.h>
+#include <grpcpp/server_impl.h>
+
+#include <string>
+#include <utility>
 
 #include "CaptureServiceImpl.h"
 #include "CrashServiceImpl.h"

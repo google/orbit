@@ -6,6 +6,8 @@
 #define ORBIT_QT_ORBIT_ABOUT_DIALOG_H_
 
 #include <QDialog>
+#include <QString>
+#include <QWidget>
 #include <memory>
 
 #include "ui_orbitaboutdialog.h"

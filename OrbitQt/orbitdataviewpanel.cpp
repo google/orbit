@@ -7,7 +7,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <new>
 #include <string>
 
 #include "orbittablemodel.h"

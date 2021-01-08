@@ -4,7 +4,22 @@
 
 #include "ElfUtils/ElfFile.h"
 
-#include <string_view>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/Twine.h>
+#include <llvm/ADT/iterator_range.h>
+#include <llvm/BinaryFormat/ELF.h>
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ELF.h>
+#include <llvm/Object/ELFTypes.h>
+#include <llvm/Object/SymbolicFile.h>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/Error.h>
+#include <llvm/Support/MathExtras.h>
+#include <llvm/Support/MemoryBuffer.h>
+
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"

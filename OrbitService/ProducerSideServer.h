@@ -5,6 +5,10 @@
 #ifndef ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
 #define ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
 
+#include <memory>
+#include <string_view>
+
+#include "CaptureEventBuffer.h"
 #include "CaptureStartStopListener.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerSideServiceImpl.h"

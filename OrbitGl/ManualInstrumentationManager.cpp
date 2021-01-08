@@ -4,6 +4,14 @@
 
 #include "ManualInstrumentationManager.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/meta/type_traits.h>
+#include <absl/synchronization/mutex.h>
+#include <stddef.h>
+
+#include "OrbitBase/Logging.h"
+
 using orbit_client_protos::TimerInfo;
 
 void ManualInstrumentationManager::AddAsyncTimerListener(AsyncTimerInfoListener* listener) {

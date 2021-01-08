@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <string>
+
 #include "OrbitBase/ExecutablePath.h"
 
 TEST(ExecutablePath, GetExecutablePath) {

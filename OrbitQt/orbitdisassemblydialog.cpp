@@ -4,6 +4,13 @@
 
 #include "orbitdisassemblydialog.h"
 
+#include <QTextCursor>
+#include <memory>
+#include <utility>
+
+#include "CodeReport.h"
+#include "DisassemblyReport.h"
+#include "orbitcodeeditor.h"
 #include "ui_orbitdisassemblydialog.h"
 
 OrbitDisassemblyDialog::OrbitDisassemblyDialog(QWidget* parent)

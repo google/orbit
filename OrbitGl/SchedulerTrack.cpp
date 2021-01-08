@@ -4,14 +4,17 @@
 
 #include "SchedulerTrack.h"
 
-#include <absl/flags/flag.h>
+#include <GteVector.h>
+#include <absl/strings/str_format.h>
+#include <stdint.h>
 
 #include "App.h"
-#include "EventTrack.h"
-#include "GlCanvas.h"
-#include "OrbitClientData/FunctionUtils.h"
+#include "Batcher.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
 
 using orbit_client_protos::TimerInfo;
 

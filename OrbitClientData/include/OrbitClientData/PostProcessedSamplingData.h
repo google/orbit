@@ -5,8 +5,12 @@
 #ifndef ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
 #define ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
 
+#include <cstdint>
 #include <map>
+#include <memory>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "OrbitClientData/Callstack.h"

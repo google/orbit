@@ -4,6 +4,11 @@
 
 #ifndef ELF_UTILS_LINUX_MAP_H_
 #define ELF_UTILS_LINUX_MAP_H_
+
+#include <stdint.h>
+
+#include <string_view>
+
 #if defined(__linux)
 
 #include <filesystem>

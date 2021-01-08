@@ -2,9 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
 #include <unistd.h>
 
-#include "ProcessList.h"
+#include <memory>
+#include <outcome.hpp>
+#include <string_view>
+
+#include "Process.h"
 #include "gtest/gtest.h"
 
 constexpr int kTaskCommLength = 16;

@@ -4,13 +4,18 @@
 
 #include "Track.h"
 
-#include <absl/flags/flag.h>
+#include <math.h>
+#include <stddef.h>
 
-#include "App.h"
+#include <limits>
+
 #include "CoreMath.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "TextRenderer.h"
+#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
-#include "absl/strings/str_format.h"
 
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),

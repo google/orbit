@@ -5,8 +5,13 @@
 #ifndef ORBIT_GL_TRACK_H_
 #define ORBIT_GL_TRACK_H_
 
+#include <GteVector.h>
+#include <stdint.h>
+
+#include <algorithm>
 #include <atomic>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "Batcher.h"

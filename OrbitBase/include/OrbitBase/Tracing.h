@@ -5,6 +5,8 @@
 #ifndef ORBIT_BASE_TRACING_H_
 #define ORBIT_BASE_TRACING_H_
 
+#include <stdint.h>
+
 #include <functional>
 #include <memory>
 

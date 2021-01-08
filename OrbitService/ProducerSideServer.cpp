@@ -4,8 +4,16 @@
 
 #include "ProducerSideServer.h"
 
+#include <absl/strings/str_format.h>
+#include <errno.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/security/server_credentials.h>
+#include <grpcpp/server_impl.h>
 #include <sys/stat.h>
 
+#include <string>
+
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_service {

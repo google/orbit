@@ -6,6 +6,7 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 
 #include "OrbitBase/Logging.h"
 

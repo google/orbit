@@ -5,11 +5,16 @@
 #ifndef ORBIT_GL_CALLSTACK_DATA_VIEW_H_
 #define ORBIT_GL_CALLSTACK_DATA_VIEW_H_
 
+#include <stdint.h>
+
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "DataView.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ModuleData.h"
+#include "capture_data.pb.h"
 
 class CallStackDataView : public DataView {
  public:

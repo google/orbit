@@ -6,12 +6,15 @@
 #define ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
 
 #include <absl/synchronization/mutex.h>
+#include <grpcpp/grpcpp.h>
+#include <stddef.h>
 
 #include <memory>
 #include <string>
 
 #include "ProcessList.h"
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 namespace orbit_service {
 

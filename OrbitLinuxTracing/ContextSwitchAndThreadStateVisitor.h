@@ -9,6 +9,7 @@
 #include <absl/hash/hash.h>
 #include <sys/types.h>
 
+#include <atomic>
 #include <cstdint>
 #include <optional>
 #include <vector>

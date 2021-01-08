@@ -2,8 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <QApplication>
+#include <gtest/gtest.h>
 
+#include <QApplication>
+#include <QStatusBar>
+#include <memory>
+
+#include "StatusListener.h"
 #include "StatusListenerImpl.h"
 #include "gtest/gtest.h"
 

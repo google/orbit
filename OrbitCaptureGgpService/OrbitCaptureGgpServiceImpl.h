@@ -5,8 +5,14 @@
 #ifndef ORBIT_CAPTURE_GGP_SERVICE_ORBIT_CAPTURE_GGP_SERVICE_IMPL_H_
 #define ORBIT_CAPTURE_GGP_SERVICE_ORBIT_CAPTURE_GGP_SERVICE_IMPL_H_
 
+#include <grpcpp/grpcpp.h>
+
+#include <memory>
+
+#include "OrbitBase/ThreadPool.h"
 #include "OrbitClientGgp/ClientGgp.h"
 #include "services_ggp.grpc.pb.h"
+#include "services_ggp.pb.h"
 
 // Logic and data behind the server's behavior.
 class CaptureClientGgpServiceImpl final

@@ -5,6 +5,8 @@
 #ifndef ORBIT_ACCESSIBILITY_ACCESSIBLE_INTERFACE_REGISTRY_H_
 #define ORBIT_ACCESSIBILITY_ACCESSIBLE_INTERFACE_REGISTRY_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include <functional>
 
 #include "OrbitAccessibility/AccessibleInterface.h"

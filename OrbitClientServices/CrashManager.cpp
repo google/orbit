@@ -4,6 +4,11 @@
 
 #include "OrbitClientServices/CrashManager.h"
 
+#include <grpcpp/grpcpp.h>
+#include <stdint.h>
+
+#include <chrono>
+
 #include "OrbitBase/Logging.h"
 #include "services.grpc.pb.h"
 

@@ -6,10 +6,11 @@
 // The control is done by executing commands
 
 #include <dlfcn.h>
+#include <stddef.h>
 
+#include <filesystem>
 #include <iostream>
 #include <string>
-#include <thread>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"

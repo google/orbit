@@ -5,9 +5,12 @@
 #ifndef ORBITGL_TIMER_INFOS_ITERATOR_H_
 #define ORBITGL_TIMER_INFOS_ITERATOR_H_
 
+#include <stdint.h>
+
 #include <memory>
 #include <vector>
 
+#include "TextBox.h"
 #include "TimerChain.h"
 #include "capture_data.pb.h"
 

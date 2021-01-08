@@ -11,13 +11,17 @@
 #include <unwindstack/Unwinder.h>
 
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <utility>
 
 #include "ElfUtils/LinuxMap.h"
 #include "Function.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
+#include "PerfEventRecords.h"
 #include "capture.pb.h"
+#include "module.pb.h"
 
 namespace orbit_linux_tracing {
 

@@ -7,8 +7,8 @@
 #include <GteVector.h>
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/Tracing.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/time/time.h>
-#include <google/protobuf/stubs/port.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -18,16 +18,21 @@
 #include "App.h"
 #include "AsyncTrack.h"
 #include "CoreUtils.h"
+#include "FrameTrack.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
+#include "GpuTrack.h"
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "PickingManager.h"
+#include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
+#include "ThreadTrack.h"
 #include "TrackManager.h"
 #include "absl/strings/str_format.h"
 

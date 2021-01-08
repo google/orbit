@@ -2,8 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #include <capstone/capstone.h>
-#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <memory>
 
 #include "include/OrbitFramePointerValidator/FunctionFramePointerValidator.h"
 

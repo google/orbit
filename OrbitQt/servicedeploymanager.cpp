@@ -5,20 +5,28 @@
 #include "servicedeploymanager.h"
 
 #include <OrbitSshQt/SftpCopyToLocalOperation.h>
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
-#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 
 #include <QApplication>
-#include <QDir>
+#include <QEventLoop>
+#include <QMetaObject>
+#include <Qt>
 #include <chrono>
+#include <filesystem>
 #include <system_error>
 #include <thread>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "Error.h"
 #include "EventLoop.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"

@@ -2,11 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-generated-matchers.h>
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <limits>
+#include <tuple>
+#include <vector>
+
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
+#include "capture_data.pb.h"
 
 MATCHER(CallstackEventEq, "") {
   const orbit_client_protos::CallstackEvent& a = std::get<0>(arg);

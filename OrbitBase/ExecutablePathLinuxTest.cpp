@@ -3,8 +3,14 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <unistd.h>
+
+#include <filesystem>
+#include <memory>
+#include <outcome.hpp>
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Result.h"
 
 TEST(ExecutablePathLinux, GetExecutablePathWithPid) {
   const auto result = orbit_base::GetExecutablePath(getpid());

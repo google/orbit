@@ -4,7 +4,11 @@
 
 #include "PickingManager.h"
 
-#include "OpenGl.h"
+#include <absl/base/casts.h>
+#include <absl/synchronization/mutex.h>
+
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 
 PickingId PickingManager::GetOrCreatePickableId(std::shared_ptr<Pickable> pickable,
