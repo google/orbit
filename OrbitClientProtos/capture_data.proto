@@ -164,10 +164,10 @@ message TimerInfo {
 
 message Color {
   // Each color must be between 0.0f and 1.0f
-  float red = 1;
-  float green = 2;
-  float blue = 3;
-  float alpha = 4;
+  uint32 red = 1;
+  uint32 green = 2;
+  uint32 blue = 3;
+  uint32 alpha = 4;
 }
 
 // libprotobuf-mutator needs a single proto with all the data
