@@ -28,7 +28,6 @@ target_sources(
           orbitdisassemblydialog.h
           orbiteventiterator.h
           orbitglwidget.h
-          orbitglwidgetwithheader.h
           orbitlivefunctions.h
           orbitmainwindow.h
           orbitsamplingreport.h
@@ -73,8 +72,6 @@ target_sources(
           orbiteventiterator.cpp
           orbiteventiterator.ui
           orbitglwidget.cpp
-          orbitglwidgetwithheader.cpp
-          orbitglwidgetwithheader.ui
           orbitlivefunctions.cpp
           orbitlivefunctions.ui
           orbitmainwindow.cpp
