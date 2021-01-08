@@ -702,6 +702,9 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->CallStackView->Deinitialize();
   ui->liveFunctions->Deinitialize();
 
+  ui->samplingReport->Deinitialize();
+  ui->selectionReport->Deinitialize();
+
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugOpenGLWidget->Deinitialize(this);
   }

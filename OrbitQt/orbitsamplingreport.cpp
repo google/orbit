@@ -77,6 +77,13 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
           &OrbitSamplingReport::OnCurrentThreadTabChanged);
 }
 
+void OrbitSamplingReport::Deinitialize() {
+  for (OrbitDataViewPanel* panel : m_OrbitDataViews) {
+    panel->Deinitialize();
+  }
+  ui->CallstackTreeView->Deinitialize();
+}
+
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
   CHECK(m_SamplingReport != nullptr);
   m_SamplingReport->IncrementCallstackIndex();

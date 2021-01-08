@@ -24,6 +24,7 @@ class OrbitSamplingReport : public QWidget {
 
   void Initialize(DataView* callstack_data_view,
                   const std::shared_ptr<class SamplingReport>& report);
+  void Deinitialize();
 
   void RefreshCallstackView();
   void RefreshTabs();
