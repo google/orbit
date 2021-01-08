@@ -19,6 +19,11 @@ class FrameTrackOnlineProcessor {
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo& function);
 
+  void AddFrameTrack(const CaptureData& capture_data,
+                     const orbit_client_protos::FunctionInfo& function);
+  void RemoveFrameTrack(const CaptureData& capture_data,
+                        const orbit_client_protos::FunctionInfo& function);
+
  private:
   absl::flat_hash_set<uint64_t> current_frame_track_functions_;
   absl::flat_hash_map<uint64_t, uint64_t> previous_timestamp_ns_;
