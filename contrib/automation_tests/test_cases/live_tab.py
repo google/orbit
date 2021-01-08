@@ -11,7 +11,7 @@ from pywinauto.base_wrapper import BaseWrapper
 
 from core.orbit_e2e import E2ETestCase, wait_for_condition
 
-from fragments.capture_window import MatchTracks
+from test_cases.capture_window import MatchTracks
 
 
 class LiveTabTestCase(E2ETestCase):

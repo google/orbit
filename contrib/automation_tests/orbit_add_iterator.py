@@ -24,14 +24,14 @@ This automation script covers a basic workflow:
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from fragments.symbols_tab import LoadSymbols, FilterAndHookFunction
-from fragments.capture_window import Capture
-from fragments.live_tab import AddIterator
+from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
+from test_cases.capture_window import Capture
+from test_cases.live_tab import AddIterator
 
 
 def main(argv):
-    tests = [
+    test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         LoadSymbols(module_search_string="hello_ggp"),
@@ -39,7 +39,7 @@ def main(argv):
         Capture(),
         AddIterator(function_name="DrawFrame")
     ]
-    suite = E2ETestSuite(test_name="Add Iterator", tests=tests)
+    suite = E2ETestSuite(test_name="Add Iterator", test_cases=test_cases)
     suite.execute()
 
 

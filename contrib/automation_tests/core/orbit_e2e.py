@@ -93,14 +93,14 @@ class CloseOrbit(E2ETestCase):
 
 
 class E2ETestSuite:
-    def __init__(self, test_name: str, tests: Iterable[E2ETestCase], dev_mode: bool = False):
+    def __init__(self, test_name: str, test_cases: Iterable[E2ETestCase], dev_mode: bool = False):
         logging.info('E2E Test Suite "%s" started.', test_name)
         self._top_window = None
         self._application = None
         self._wait_for_orbit()
         self._test_name = test_name
         self._dev_mode = dev_mode or flags.FLAGS.dev_mode
-        self._tests = tests[:]
+        self._test_cases = test_cases[:]
 
     name = property(lambda self: self._test_name)
     application = property(lambda self: self._application)
@@ -127,7 +127,7 @@ class E2ETestSuite:
 
     def execute(self):
         self.set_up()
-        for test in self._tests:
+        for test in self._test_cases:
             logging.info('Running test "%s (%s)"', test.__class__.__name__,
                          ", ".join("%s=%s" % (k, v) for k, v in test.args.items()))
             test.execute(self)

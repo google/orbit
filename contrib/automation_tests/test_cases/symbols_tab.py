@@ -11,8 +11,8 @@ from absl import flags
 from core.common_controls import DataViewPanel
 from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
 
-from fragments.capture_window import Capture
-from fragments.live_tab import VerifyFunctionCallCount
+from test_cases.capture_window import Capture
+from test_cases.live_tab import VerifyFunctionCallCount
 
 
 def _show_symbols_and_functions_tabs(top_window):
