@@ -52,3 +52,18 @@ void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInf
     previous_timestamp_ns_[function_address] = timer_info.start();
   }
 }
+
+void FrameTrackOnlineProcessor::AddFrameTrack(const CaptureData& capture_data,
+                                              const orbit_client_protos::FunctionInfo& function) {
+  const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
+  current_frame_track_functions_.insert(function_address);
+  previous_timestamp_ns_.insert(
+      std::make_pair(function_address, std::numeric_limits<uint64_t>::max()));
+}
+
+void FrameTrackOnlineProcessor::RemoveFrameTrack(
+    const CaptureData& capture_data, const orbit_client_protos::FunctionInfo& function) {
+  const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
+  current_frame_track_functions_.erase(function_address);
+  previous_timestamp_ns_.erase(function_address);
+}
