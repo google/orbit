@@ -15,8 +15,7 @@
 #include <string>
 #include <thread>
 
-#include "../Orbit.h"
-#include "OrbitBase/ThreadUtils.h"
+#include "../OrbitAPI/include/OrbitAPI/Orbit.h"
 #include "absl/strings/str_format.h"
 
 #if __linux__
@@ -33,9 +32,6 @@ OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t slee
 }
 
 void OrbitTest::Init() {
-  const size_t kMinNumWorkers = 10;
-  const size_t kMaxNumWorkers = 100;
-  thread_pool_ = ThreadPool::Create(kMinNumWorkers, kMaxNumWorkers, absl::Milliseconds(500));
 }
 
 OrbitTest::~OrbitTest() {
@@ -93,36 +89,36 @@ static void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::m
 
 static void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
-  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kTeal);
-  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kOrange);
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorTeal);
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorOrange);
   SleepFor1Ms();
   SleepFor1Ms();
 }
 
-static void ExecuteTask(uint32_t id) {
-  static const std::vector<uint32_t> sleep_times_ms = {10, 200, 20,  300, 60,  100, 150,
-                                                       20, 30,  320, 380, 400, 450, 500};
-  uint32_t sleep_time = sleep_times_ms[id % sleep_times_ms.size()];
-  std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-  std::string str = absl::StrFormat(
-      "This is a very long dynamic string: The quick brown fox jumps over the lazy dog. This "
-      "string is associated with task id %u. We slept for %u ms.",
-      id, sleep_time);
-  ORBIT_ASYNC_STRING(str.c_str(), id);
-  ORBIT_STOP_ASYNC(id);
-}
+// static void ExecuteTask(uint32_t id) {
+//   static const std::vector<uint32_t> sleep_times_ms = {10, 200, 20,  300, 60,  100, 150,
+//                                                        20, 30,  320, 380, 400, 450, 500};
+//   uint32_t sleep_time = sleep_times_ms[id % sleep_times_ms.size()];
+//   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+//   std::string str = absl::StrFormat(
+//       "This is a very long dynamic string: The quick brown fox jumps over the lazy dog. This "
+//       "string is associated with task id %u. We slept for %u ms.",
+//       id, sleep_time);
+//   ORBIT_ASYNC_STRING(str.c_str(), id);
+//   ORBIT_STOP_ASYNC(id);
+// }
 
 void OrbitTest::ManualInstrumentationApiTest() {
   while (!m_ExitRequested) {
     ORBIT_SCOPE("ORBIT_SCOPE_TEST");
-    ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit::Color(0xff0000ff));
+    ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit_api_color(0xff0000ff));
     SleepFor2Ms();
 
-    ORBIT_START_WITH_COLOR("ORBIT_START_TEST", orbit::Color::kRed);
+    ORBIT_START_WITH_COLOR("ORBIT_START_TEST", kOrbitColorRed);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP();
 
-    ORBIT_START_ASYNC_WITH_COLOR("ORBIT_START_ASYNC_TEST", 0, orbit::Color::kLightBlue);
+    ORBIT_START_ASYNC_WITH_COLOR("ORBIT_START_ASYNC_TEST", 0, kOrbitColorLightBlue);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP_ASYNC(0);
 
@@ -140,15 +136,15 @@ void OrbitTest::ManualInstrumentationApiTest() {
 
     static uint64_t uint64_var = 0;
     if (++uint64_var > 100) uint64_var = 0;
-    ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, orbit::Color::kIndigo);
+    ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, kOrbitColorIndigo);
 
     static float float_var = 0.f;
     static volatile float sinf_coeff = 0.1f;
-    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), orbit::Color::kPink);
+    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), kOrbitColorPink);
 
     static double double_var = 0.0;
     static volatile double cos_coeff = 0.1;
-    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), orbit::Color::kPurple);
+    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), kOrbitColorPurple);
 
     for (int i = 0; i < 5; ++i) {
       std::string track_name = absl::StrFormat("DynamicName_%u", i);
@@ -156,14 +152,14 @@ void OrbitTest::ManualInstrumentationApiTest() {
     }
 
     // Async spans.
-    static uint32_t task_id = 0;
-    size_t kNumTasksToSchedule = 10;
-    for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
-      uint32_t id = ++task_id;
-      ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
-      thread_pool_->Schedule([id]() { ExecuteTask(id); });
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    // static uint32_t task_id = 0;
+    // size_t kNumTasksToSchedule = 0;
+    // for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
+    //   uint32_t id = ++task_id;
+    //   ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
+    //   ExecuteTask(id); // TODO: run on separate threads.
+    //   std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // }
   }
 }
 #else

@@ -11,10 +11,9 @@
 #include <memory>
 
 #define ORBIT_API_INTERNAL_IMPL
-// NOTE: Orbit.h will be moved to its own
-//       OrbitApi project in a subsequent PR.
 // IWYU pragma: no_include "/mnt/Orbit.h"
-#include "../../../Orbit.h"  // IWYU pragma: export
+#include "../../../OrbitAPI/include/OrbitAPI/Orbit.h"  // IWYU pragma: export
+#include "../../../OrbitAPI/include/OrbitAPI/EncodedEvent.h"  // IWYU pragma: export
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
@@ -24,7 +23,7 @@ namespace orbit_base {
 
 struct TracingScope {
   TracingScope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
-               orbit::Color color = orbit::Color::kAuto);
+               orbit_api_color color = kOrbitColorAuto);
   uint64_t begin = 0;
   uint64_t end = 0;
   uint32_t depth = 0;

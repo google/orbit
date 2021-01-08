@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_H_
-#define ORBIT_H_
+#ifndef ORBIT_API_ORBIT_H_
+#define ORBIT_API_ORBIT_H_
 
 #include <stdint.h>
 
-#include <cstring>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Orbit Manual Instrumentation API (header-only)
+// Orbit Manual Instrumentation API.
 //
 // While dynamic instrumentation is one of Orbit's core features, manual instrumentation can also be
 // extremely useful. The macros below allow you to profile sections of functions, track "async"
@@ -30,7 +32,7 @@
 // Colors:
 // Note that all of the macros above have a "_WITH_COLOR" variant that allow users to specify
 // a custom color for time slices, async strings and graph elements. A set of predefined colors can
-// be found below, see "orbit::Color". Custom colors can be set using the "orbit::Color(0xff0000ff)"
+// be found below, see "orbit_api_color". Set custom colors with the "orbit_api_color(0xff0000ff)"
 // syntax (rgba).
 //
 // Implementation:
@@ -81,8 +83,10 @@
 // name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
 // col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
 //
-#define ORBIT_SCOPE(name) ORBIT_SCOPE_WITH_COLOR(name, orbit::Color::kAuto)
+#ifdef __cplusplus
+#define ORBIT_SCOPE(name) ORBIT_SCOPE_WITH_COLOR(name, kOrbitColorAuto)
 #define ORBIT_SCOPE_WITH_COLOR(name, col) orbit_api::Scope ORBIT_VAR(name, col)
+#endif
 
 // ORBIT_START/ORBIT_STOP: Profile sections inside a scope.
 //
@@ -105,18 +109,18 @@
 //   DoSomeMoreWork();
 //   ORBIT_STOP();
 //
-//   ORBIT_START_WITH_COLOR("DoSomeOtherWork", orbit::Color::kLightGreen);
+//   ORBIT_START_WITH_COLOR("DoSomeOtherWork", KOrbitColorLightGreen);
 //   DoSomeOtherWork();
 //   ORBIT_STOP();
 // }
 //
 // Parameters:
 // name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
-// col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
+// col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
 //
-#define ORBIT_START(name) ORBIT_START_WITH_COLOR(name, orbit::Color::kAuto)
-#define ORBIT_START_WITH_COLOR(name, col) orbit_api::Start(name, col)
-#define ORBIT_STOP() orbit_api::Stop()
+#define ORBIT_START(name) orbit_api_start(name, kOrbitColorAuto)
+#define ORBIT_START_WITH_COLOR(name, color) orbit_api_start(name, color)
+#define ORBIT_STOP() orbit_api_stop()
 
 // ORBIT_START_ASYNC/ORBIT_STOP_ASYNC: Profile time spans across scopes or threads.
 //
@@ -141,11 +145,11 @@
 // name: [const char*] Name of the *track* that will display the async events in Orbit.
 // id: [uint64_t] A user-provided unique id for the time slice. This unique id is used to match the
 //     ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique for the current track.
-// col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
+// col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
 //
-#define ORBIT_START_ASYNC(name, id) ORBIT_START_ASYNC_WITH_COLOR(name, id, orbit::Color::kAuto)
-#define ORBIT_START_ASYNC_WITH_COLOR(name, id, col) orbit_api::StartAsync(name, id, col)
-#define ORBIT_STOP_ASYNC(id) orbit_api::StopAsync(id)
+#define ORBIT_START_ASYNC(name, id) orbit_api_start_async(name, id, kOrbitColorAuto)
+#define ORBIT_START_ASYNC_WITH_COLOR(name, id, color) orbit_api_start_async(name, id, color)
+#define ORBIT_STOP_ASYNC(id) orbit_api_stop_async(id)
 
 // ORBIT_ASYNC_STRING: Provide an additional string for an async time span.
 //
@@ -166,10 +170,10 @@
 // Parameters:
 // str: [const char*] String of arbitrary length to display in the time slice corresponding to "id".
 // id: [uint64_t] A user-provided unique id for the time slice.
-// col: [orbit::Color] User-defined color for the current string (see orbit::Color below).
+// col: [orbit_api_color] User-defined color for the current string (see orbit_api_color below).
 //
-#define ORBIT_ASYNC_STRING(str, id) orbit_api::AsyncString(str, id, orbit::Color::kAuto)
-#define ORBIT_ASYNC_STRING_WITH_COLOR(str, id, col) orbit_api::AsyncString(str, id, col)
+#define ORBIT_ASYNC_STRING(string, id) orbit_api_async_string(string, id, kOrbitColorAuto)
+#define ORBIT_ASYNC_STRING_WITH_COLOR(string, id, color) orbit_api_async_string(string, id, color)
 
 // ORBIT_[type]: Graph variables.
 //
@@ -197,21 +201,21 @@
 // Parameters:
 // name: [const char*] Name of the track that will display the graph in Orbit.
 // val: [int, int64_t, uint32_t, uint64_t, float, double] Value to be plotted.
-// col: [orbit::Color] User-defined color for the current value (see orbit::Color below).
+// col: [orbit_api_color] User-defined color for the current value (see orbit_api_color below).
 //
-#define ORBIT_INT(name, val) ORBIT_INT_WITH_COLOR(name, val, orbit::Color::kAuto)
-#define ORBIT_INT64(name, val) ORBIT_INT64_WITH_COLOR(name, val, orbit::Color::kAuto)
-#define ORBIT_UINT(name, val) ORBIT_UINT_WITH_COLOR(name, val, orbit::Color::kAuto)
-#define ORBIT_UINT64(name, val) ORBIT_UINT64_WITH_COLOR(name, val, orbit::Color::kAuto)
-#define ORBIT_FLOAT(name, val) ORBIT_FLOAT_WITH_COLOR(name, val, orbit::Color::kAuto)
-#define ORBIT_DOUBLE(name, val) ORBIT_DOUBLE_WITH_COLOR(name, val, orbit::Color::kAuto)
+#define ORBIT_INT(name, value) orbit_api_track_int(name, value, kOrbitColorAuto)
+#define ORBIT_INT64(name, value) orbit_api_track_int64(name, value, kOrbitColorAuto)
+#define ORBIT_UINT(name, value) orbit_api_track_uint(name, value, kOrbitColorAuto)
+#define ORBIT_UINT64(name, value) orbit_api_track_uint64(name, value, kOrbitColorAuto)
+#define ORBIT_FLOAT(name, value) orbit_api_track_float(name, value, kOrbitColorAuto)
+#define ORBIT_DOUBLE(name, value) orbit_api_track_double(name, value, kOrbitColorAuto)
 
-#define ORBIT_INT_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackInt, name, val, col)
-#define ORBIT_INT64_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackInt64, name, val, col)
-#define ORBIT_UINT_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackUint, name, val, col)
-#define ORBIT_UINT64_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackUint64, name, val, col)
-#define ORBIT_FLOAT_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackFloat, name, val, col)
-#define ORBIT_DOUBLE_WITH_COLOR(name, val, col) ORBIT_TRACK(orbit_api::kTrackDouble, name, val, col)
+#define ORBIT_INT_WITH_COLOR(name, value, color) orbit_api_track_int(name, value, color)
+#define ORBIT_INT64_WITH_COLOR(name, value, color) orbit_api_track_int64(name, value, color)
+#define ORBIT_UINT_WITH_COLOR(name, value, color) orbit_api_track_uint(name, value, color)
+#define ORBIT_UINT64_WITH_COLOR(name, value, color) orbit_api_track_uint64(name, value, color)
+#define ORBIT_FLOAT_WITH_COLOR(name, value, color) orbit_api_track_float(name, value, color)
+#define ORBIT_DOUBLE_WITH_COLOR(name, value, color) orbit_api_track_double(name, value, color)
 
 #else
 
@@ -221,7 +225,6 @@
 #define ORBIT_START_ASYNC(name, id)
 #define ORBIT_STOP_ASYNC(id)
 #define ORBIT_ASYNC_STRING(str, id)
-#define ORBIT_ASYNC_STRING_WITH_COLOR(str, id, col)
 #define ORBIT_INT(name, value)
 #define ORBIT_INT64(name, value)
 #define ORBIT_UINT(name, value)
@@ -232,6 +235,7 @@
 #define ORBIT_SCOPE_WITH_COLOR(name, color)
 #define ORBIT_START_WITH_COLOR(name, color)
 #define ORBIT_START_ASYNC_WITH_COLOR(name, id, color)
+#define ORBIT_ASYNC_STRING_WITH_COLOR(str, id, col)
 #define ORBIT_INT_WITH_COLOR(name, value, color)
 #define ORBIT_INT64_WITH_COLOR(name, value, color)
 #define ORBIT_UINT_WITH_COLOR(name, value, color)
@@ -241,204 +245,63 @@
 
 #endif
 
-// NOTE: Do not use any of the code below directly.
-namespace orbit {
-
 // Material Design Colors #500
-enum class Color : uint32_t {
-  kAuto = 0x00000000,
-  kRed = 0xf44336ff,
-  kPink = 0xe91e63ff,
-  kPurple = 0x9c27b0ff,
-  kDeepPurple = 0x673ab7ff,
-  kIndigo = 0x3f51b5ff,
-  kBlue = 0x2196f3ff,
-  kLightBlue = 0x03a9f4ff,
-  kCyan = 0x00bcd4ff,
-  kTeal = 0x009688ff,
-  kGreen = 0x4caf50ff,
-  kLightGreen = 0x8bc34aff,
-  kLime = 0xcddc39ff,
-  kYellow = 0xffeb3bff,
-  kAmber = 0xffc107ff,
-  kOrange = 0xff9800ff,
-  kDeepOrange = 0xff5722ff,
-  kBrown = 0x795548ff,
-  kGrey = 0x9e9e9eff,
-  kBlueGrey = 0x607d8bff
+enum orbit_api_color {
+  kOrbitColorAuto = 0x00000000,
+  kOrbitColorRed = 0xf44336ff,
+  kOrbitColorPink = 0xe91e63ff,
+  kOrbitColorPurple = 0x9c27b0ff,
+  kOrbitColorDeepPurple = 0x673ab7ff,
+  kOrbitColorIndigo = 0x3f51b5ff,
+  kOrbitColorBlue = 0x2196f3ff,
+  kOrbitColorLightBlue = 0x03a9f4ff,
+  kOrbitColorCyan = 0x00bcd4ff,
+  kOrbitColorTeal = 0x009688ff,
+  kOrbitColorGreen = 0x4caf50ff,
+  kOrbitColorLightGreen = 0x8bc34aff,
+  kOrbitColorLime = 0xcddc39ff,
+  kOrbitColorYellow = 0xffeb3bff,
+  kOrbitColorAmber = 0xffc107ff,
+  kOrbitColorOrange = 0xff9800ff,
+  kOrbitColorDeepOrange = 0xff5722ff,
+  kOrbitColorBrown = 0x795548ff,
+  kOrbitColorGrey = 0x9e9e9eff,
+  kOrbitColorBlueGrey = 0x607d8bff
 };
-
-}  // namespace orbit
-
-namespace orbit_api {
-constexpr uint8_t kVersion = 1;
-
-enum EventType : uint8_t {
-  kNone = 0,
-  kScopeStart = 1,
-  kScopeStop = 2,
-  kScopeStartAsync = 3,
-  kScopeStopAsync = 4,
-  kTrackInt = 5,
-  kTrackInt64 = 6,
-  kTrackUint = 7,
-  kTrackUint64 = 8,
-  kTrackFloat = 9,
-  kTrackDouble = 10,
-  kString = 11,
-};
-
-constexpr size_t kMaxEventStringSize = 34;
-struct Event {
-  uint8_t version;                 // 1
-  uint8_t type;                    // 1
-  char name[kMaxEventStringSize];  // 34
-  orbit::Color color;              // 4
-  uint64_t data;                   // 8
-};
-
-union EncodedEvent {
-  EncodedEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
-               orbit::Color color = orbit::Color::kAuto) {
-    static_assert(sizeof(EncodedEvent) == 48, "orbit_api::EncodedEvent should be 48 bytes.");
-    static_assert(sizeof(Event) == 48, "orbit_api::Event should be 48 bytes.");
-    event.version = kVersion;
-    event.type = static_cast<uint8_t>(type);
-    memset(event.name, 0, kMaxEventStringSize);
-    if (name != nullptr) {
-      std::strncpy(event.name, name, kMaxEventStringSize - 1);
-      event.name[kMaxEventStringSize - 1] = 0;
-    }
-    event.data = data;
-    event.color = color;
-  }
-
-  EncodedEvent(uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5) {
-    args[0] = a0;
-    args[1] = a1;
-    args[2] = a2;
-    args[3] = a3;
-    args[4] = a4;
-    args[5] = a5;
-  }
-  Event event;
-  uint64_t args[6];
-};
-
-template <typename Dest, typename Source>
-inline Dest Encode(const Source& source) {
-  static_assert(sizeof(Source) <= sizeof(Dest), "orbit_api::Encode destination type is too small");
-  Dest dest = 0;
-  std::memcpy(&dest, &source, sizeof(Source));
-  return dest;
-}
-
-template <typename Dest, typename Source>
-inline Dest Decode(const Source& source) {
-  static_assert(sizeof(Dest) <= sizeof(Source), "orbit_api::Decode destination type is too big");
-  Dest dest = 0;
-  std::memcpy(&dest, &source, sizeof(Dest));
-  return dest;
-}
-
-}  // namespace orbit_api
 
 #if ORBIT_API_ENABLED
+
+void orbit_api_start(const char* name, orbit_api_color color);
+void orbit_api_stop();
+void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color);
+void orbit_api_stop_async(uint64_t id);
+void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color);
+void orbit_api_track_int(const char* name, int value, orbit_api_color color);
+void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color);
+void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color);
+void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color);
+void orbit_api_track_float(const char* name, float value, orbit_api_color color);
+void orbit_api_track_double(const char* name, double value, orbit_api_color color);
 
 // Internal macros.
 #define ORBIT_CONCAT_IND(x, y) (x##y)
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
 #define ORBIT_VAR ORBIT_UNIQUE(ORB)
-#define ORBIT_TRACK(type, name, val, col) \
-  orbit_api::TrackValue(type, name, orbit_api::Encode<uint64_t>(val), col)
 
-#if defined(_WIN32)
-#define ORBIT_STUB inline __declspec(noinline)
-#else
-#define ORBIT_STUB inline __attribute__((noinline))
-#endif  // defined(_WIN32)
-
+#ifdef __cplusplus
 namespace orbit_api {
-
-// Used to prevent compiler from stripping out empty function.
-#define ORB_NOOP           \
-  do {                     \
-    static volatile int x; \
-    x;                     \
-  } while (0)
-
-// The stub functions below are automatically dynamically instrumented.
-ORBIT_STUB void Start(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
-ORBIT_STUB void Stop(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
-ORBIT_STUB void StartAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
-ORBIT_STUB void StopAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
-ORBIT_STUB void TrackValue(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) { ORB_NOOP; }
-
-// NOTE: Do not use these directly, use corresponding macros instead.
-#ifndef ORBIT_API_INTERNAL_IMPL
-
-// Default values.
-constexpr const char* kNameNullPtr = nullptr;
-constexpr uint64_t kDataZero = 0;
-constexpr orbit::Color kColorAuto = orbit::Color::kAuto;
-
-inline void Start(const char* name, orbit::Color color) {
-  EncodedEvent e(EventType::kScopeStart, name, kDataZero, color);
-  Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
-}
-
-inline void Stop() {
-  EncodedEvent e(EventType::kScopeStop);
-  Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
-}
-
-inline void StartAsync(const char* name, uint64_t id, orbit::Color color) {
-  EncodedEvent e(EventType::kScopeStartAsync, name, id, color);
-  StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
-}
-
-inline void StopAsync(uint64_t id) {
-  EncodedEvent e(EventType::kScopeStopAsync, kNameNullPtr, id, kColorAuto);
-  StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
-}
-
-inline void AsyncString(const char* str, uint64_t id, orbit::Color color) {
-  if (str == nullptr) return;
-  constexpr size_t chunk_size = kMaxEventStringSize - 1;
-  const char* end = str + strlen(str);
-  while (str < end) {
-    EncodedEvent e(EventType::kString, kNameNullPtr, id, color);
-    std::strncpy(e.event.name, str, chunk_size);
-    e.event.name[chunk_size] = 0;
-    TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
-    str += chunk_size;
-  }
-}
-
-inline void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color) {
-  EncodedEvent e(type, name, value, color);
-  TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
-}
-
-#else
-
-void Start(const char* name, orbit::Color color);
-void Stop();
-void StartAsync(const char* name, uint64_t id, orbit::Color color);
-void StopAsync(uint64_t id);
-void AsyncString(const char* str, uint64_t id, orbit::Color color);
-void TrackValue(EventType type, const char* name, uint64_t value, orbit::Color color);
-
-#endif  // ORBIT_API_INTERNAL_IMPL
-
 struct Scope {
-  Scope(const char* name, orbit::Color color) { Start(name, color); }
-  ~Scope() { Stop(); }
+  Scope(const char* name, orbit_api_color color) { orbit_api_start(name, color); }
+  ~Scope() { orbit_api_stop(); }
 };
-
 }  // namespace orbit_api
+#endif  // __cplusplus
 
 #endif  // ORBIT_API_ENABLED
 
-#endif  // ORBIT_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // ORBIT_API_ORBIT_H

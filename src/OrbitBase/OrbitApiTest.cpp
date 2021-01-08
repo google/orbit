@@ -20,7 +20,7 @@ TEST(OrbitApi, Encoding) {
   constexpr orbit_api::EventType kType = orbit_api::kTrackInt64;
   constexpr const char* kName = "The quick brown fox jumps over the lazy dog";
   constexpr double kData = 1234567.12345671234567;
-  constexpr orbit::Color kColor = orbit::Color::kAmber;
+  constexpr orbit_api_color kColor = kOrbitColorAmber;
 
   orbit_api::EncodedEvent e(kType, kName, orbit_api::Encode<uint64_t>(kData), kColor);
   auto decoded_event = Decode(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);

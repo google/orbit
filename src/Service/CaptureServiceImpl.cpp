@@ -145,9 +145,8 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
 
     // Ensure we can divide by 0.f safely.
     static_assert(std::numeric_limits<float>::is_iec559);
-    float average_bytes = static_cast<float>(number_of_bytes_sent) / events.size();
-
-    ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
+    ORBIT_FLOAT("Average bytes per CaptureEvent",
+                static_cast<float>(number_of_bytes_sent) / events.size());
     total_number_of_events_sent_ += events.size();
     total_number_of_bytes_sent_ += number_of_bytes_sent;
   }
