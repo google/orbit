@@ -101,7 +101,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
 
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
   virtual void OnCollapseToggle(TriangleToggle::State state);
-  [[nodiscard]] virtual bool IsCollapsable() const { return false; }
+  [[nodiscard]] virtual bool IsCollapsible() const { return false; }
   [[nodiscard]] int32_t GetProcessId() const { return process_id_; }
   void SetProcessId(uint32_t pid) { process_id_ = pid; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;

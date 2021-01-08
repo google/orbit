@@ -144,7 +144,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   }
 
   // Collapse toggle state management.
-  if (!this->IsCollapsable()) {
+  if (!this->IsCollapsible()) {
     collapse_toggle_->SetState(TriangleToggle::State::kInactive);
   } else if (collapse_toggle_->IsInactive()) {
     collapse_toggle_->ResetToInitialState();

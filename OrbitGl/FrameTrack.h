@@ -27,7 +27,7 @@ class FrameTrack : public TimerTrack {
                       OrbitApp* app);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }
   [[nodiscard]] uint64_t GetFunctionAddress() const { return function_.address(); }
-  [[nodiscard]] bool IsCollapsable() const override { return GetMaximumScaleFactor() > 0.f; }
+  [[nodiscard]] bool IsCollapsible() const override { return GetMaximumScaleFactor() > 0.f; }
 
   [[nodiscard]] virtual float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;

@@ -56,7 +56,7 @@ class TimerTrack : public Track {
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
   [[nodiscard]] bool IsEmpty() const override;
 
-  [[nodiscard]] bool IsCollapsable() const override { return depth_ > 1; }
+  [[nodiscard]] bool IsCollapsible() const override { return depth_ > 1; }
 
   virtual void UpdateBoxHeight();
   [[nodiscard]] virtual float GetTextBoxHeight(

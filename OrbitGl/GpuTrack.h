@@ -40,7 +40,7 @@ class GpuTrack : public TimerTrack {
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
-  [[nodiscard]] bool IsCollapsable() const override {
+  [[nodiscard]] bool IsCollapsible() const override {
     return depth_ > 1 || has_vulkan_layer_command_buffer_timers_;
   }
 

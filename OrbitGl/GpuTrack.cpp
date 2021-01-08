@@ -143,13 +143,20 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
         timer_info.type() == TimerInfo::kGpuCommandBuffer);
 
+  // Command buffer timers to be drawn underneath the matching "hw execution" timer, which as the
+  // same depth value as the command buffer timer. Therefore, we need to double the depth in the
+  // case that we have command buffer timers.
   if (has_vulkan_layer_command_buffer_timers_) {
     adjusted_depth *= 2.f;
   }
 
   float gap_space = adjusted_depth * layout.GetSpaceBetweenGpuDepths();
+
+  // Command buffer timers have the same depth value as their matching "hw execution" timer.
+  // As we want to draw command buffers underneath the hw execution timers, we need to increase
+  // the depth by one.
   if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
-    ++adjusted_depth;
+    adjusted_depth += 1.f;
   }
   return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
 }
@@ -158,9 +165,7 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
     std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
-    if (gpu_stage != kHwExecutionString && timer_info.type() != TimerInfo::kGpuDebugMarker) {
-      return false;
-    }
+    return gpu_stage == kHwExecutionString || timer_info.type() == TimerInfo::kGpuDebugMarker;
   }
   return true;
 }
@@ -306,8 +311,8 @@ std::string GpuTrack::GetCommandBufferTooltip(
   return absl::StrFormat(
       "<b>Command Buffer Execution</b><br/>"
       "<i>At `vkBeginCommandBuffer` and `vkEndCommandBuffer` `vkCmdWriteTimestamp`s have been "
-      "inserted. The gpu timestamps get aligned with the corresponding submit's hardware "
-      "execution </i>"
+      "inserted. The GPU timestamps get aligned with the corresponding hardware execution of the"
+      "submission.</i>"
       "<br/>"
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
@@ -322,8 +327,8 @@ std::string GpuTrack::GetDebugMarkerTooltip(
   return absl::StrFormat(
       "<b>Vulkan Debug Marker</b><br/>"
       "<i>At the marker's begin and end `vkCmdWriteTimestamp`s have been "
-      "inserted. The gpu timestamps get aligned with the corresponding submit's hardware "
-      "execution </i>"
+      "inserted. The GPU timestamps get aligned with the corresponding hardware execution of the"
+      "submission.</i>"
       "<br/>"
       "<br/>"
       "<b>Marker text:</b> %s<br/>"

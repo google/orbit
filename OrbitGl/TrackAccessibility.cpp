@@ -110,7 +110,7 @@ AccessibilityState AccessibleTrack::AccessibleState() const {
   if (track_->IsTrackSelected()) {
     result |= State::Focused;
   }
-  if (track_->IsCollapsable()) {
+  if (track_->IsCollapsible()) {
     result |= State::Expandable;
     if (track_->IsCollapsed()) {
       result |= State::Collapsed;
