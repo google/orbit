@@ -71,9 +71,11 @@ static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
     case ThreadStateSliceInfo::kTraced:
       return kPurple500;
     case ThreadStateSliceInfo::kDead:
+      [[fallthrough]];
     case ThreadStateSliceInfo::kZombie:
       return kBlack;
     case ThreadStateSliceInfo::kParked:
+      [[fallthrough]];
     case ThreadStateSliceInfo::kIdle:
       return kBrown500;
     default:
@@ -108,6 +110,34 @@ static std::string GetThreadStateName(ThreadStateSliceInfo::ThreadState state) {
   }
 }
 
+static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState state) {
+  switch (state) {
+    case ThreadStateSliceInfo::kRunning:
+      return "The thread is currently scheduled on the CPU.";
+    case ThreadStateSliceInfo::kRunnable:
+      return "The thread is ready to use the CPU, but is currently not scheduled.";
+    case ThreadStateSliceInfo::kInterruptibleSleep:
+      return "The thread is waiting for a resource to become available or for an event to happen.";
+    case ThreadStateSliceInfo::kUninterruptibleSleep:
+      return "The thread performed a specific system call that cannot be interrupted by any signal "
+             "and is waiting for the call to complete.";
+    case ThreadStateSliceInfo::kStopped:
+      return "The execution of the thread was suspended with the SIGSTOP signal.";
+    case ThreadStateSliceInfo::kTraced:
+      return "The thread is stopped because a tracer (for example, a debugger) is attached to it.";
+    case ThreadStateSliceInfo::kDead:
+      [[fallthrough]];
+    case ThreadStateSliceInfo::kZombie:
+      return "The thread has exited.";
+    case ThreadStateSliceInfo::kParked:
+      return "Parked kernel thread.";
+    case ThreadStateSliceInfo::kIdle:
+      return "Idle kernel thread.";
+    default:
+      UNREACHABLE();
+  }
+}
+
 std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
@@ -118,8 +148,11 @@ std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
       static_cast<const ThreadStateSliceInfo*>(user_data->custom_data_);
   return absl::StrFormat(
       "<b>%s</b><br/>"
-      "<i>Thread state</i><br/>",
-      GetThreadStateName(thread_state_slice->thread_state()));
+      "<i>Thread state</i><br/>"
+      "<br/>"
+      "%s",
+      GetThreadStateName(thread_state_slice->thread_state()),
+      GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
 void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
