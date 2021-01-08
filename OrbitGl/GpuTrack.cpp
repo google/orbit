@@ -64,7 +64,7 @@ GpuTrack::GpuTrack(TimeGraph* time_graph, StringManager* string_manager, uint64_
 }
 
 void GpuTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  // In case of having command buffer timers, we need to double the depth of the Gpu timers (as we
+  // In case of having command buffer timers, we need to double the depth of the GPU timers (as we
   // are drawing the corresponding command buffer timers below them). Therefore, we watch out for
   // those timers.
   if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
@@ -147,7 +147,7 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
         timer_info.type() == TimerInfo::kGpuCommandBuffer);
 
-  // Command buffer timers to be drawn underneath the matching "hw execution" timer, which as the
+  // Command buffer timers are drawn underneath the matching "hw execution" timer, which has the
   // same depth value as the command buffer timer. Therefore, we need to double the depth in the
   // case that we have command buffer timers.
   if (has_vulkan_layer_command_buffer_timers_) {
