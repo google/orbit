@@ -7,8 +7,8 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from fragments.symbols_tab import LoadAndVerifyHelloGgpPreset
+from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from test_cases.symbols_tab import LoadAndVerifyHelloGgpPreset
 
 """Apply two presets in Orbit using pywinauto.
 
@@ -25,12 +25,12 @@ to by run from  64 bit python.
 
 
 def main(argv):
-    tests = [
+    test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         LoadAndVerifyHelloGgpPreset()
     ]
-    suite = E2ETestSuite(test_name="Load Preset", tests=tests)
+    suite = E2ETestSuite(test_name="Load Preset", test_cases=test_cases)
     suite.execute()
 
 

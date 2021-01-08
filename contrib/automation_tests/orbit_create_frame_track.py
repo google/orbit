@@ -7,10 +7,10 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from fragments.capture_window import Capture
-from fragments.symbols_tab import LoadSymbols, FilterAndHookFunction
-from fragments.live_tab import AddFrameTrack
+from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from test_cases.capture_window import Capture
+from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
+from test_cases.live_tab import AddFrameTrack
 
 """Create a frame track in Orbit using pywinauto.
 
@@ -32,7 +32,7 @@ This automation script covers a basic workflow:
 
 
 def main(argv):
-    tests = [
+    test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         LoadSymbols(module_search_string="hello_ggp"),
@@ -40,7 +40,7 @@ def main(argv):
         Capture(),
         AddFrameTrack(function_name="DrawFrame")
     ]
-    suite = E2ETestSuite(test_name="Add Frame Track", tests=tests)
+    suite = E2ETestSuite(test_name="Add Frame Track", test_cases=test_cases)
     suite.execute()
 
 

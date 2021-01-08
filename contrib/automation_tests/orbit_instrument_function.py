@@ -3,6 +3,15 @@ Copyright (c) 2020 The Orbit Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
+
+from absl import app
+
+from core.orbit_e2e import E2ETestSuite, E2ETestCase
+from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from test_cases.capture_window import Capture
+from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
+from test_cases.live_tab import VerifyFunctionCallCount
+
 """Instrument a single function in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -20,17 +29,9 @@ This automation script covers a basic workflow:
  - take a capture and verify the hooked function is recorded
 """
 
-from absl import app
-
-from core.orbit_e2e import E2ETestSuite, E2ETestCase
-from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from fragments.capture_window import Capture
-from fragments.symbols_tab import LoadSymbols, FilterAndHookFunction
-from fragments.live_tab import VerifyFunctionCallCount
-
 
 def main(argv):
-    tests = [
+    test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
         LoadSymbols(module_search_string="hello_ggp"),
@@ -38,7 +39,7 @@ def main(argv):
         Capture(),
         VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000)
     ]
-    suite = E2ETestSuite(test_name="Connect & Capture", tests=tests)
+    suite = E2ETestSuite(test_name="Connect & Capture", test_cases=test_cases)
     suite.execute()
 
 

@@ -7,12 +7,12 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from fragments.capture_window import SelectTrack, DeselectTrack, MoveTrack, FilterTracks, MatchTracks, Capture
-from fragments.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from test_cases.capture_window import SelectTrack, DeselectTrack, MoveTrack, FilterTracks, MatchTracks, Capture
+from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 
 
 def main(argv):
-    tests = [
+    test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
@@ -30,7 +30,7 @@ def main(argv):
         FilterTracks(filter_string="Hello", expected_count=2),
         FilterTracks(filter_string="ggp", expected_count=3, allow_additional_tracks=True),
         FilterTracks(filter_string="", expected_count=6, allow_additional_tracks=True)]
-    suite = E2ETestSuite(test_name="Track Interaction", tests=tests)
+    suite = E2ETestSuite(test_name="Track Interaction", test_cases=test_cases)
     suite.execute()
 
 
