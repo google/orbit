@@ -93,10 +93,14 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
     return kInactiveColor;
   }
   if (timer_info.has_color()) {
-    return Color(static_cast<uint8_t>(timer_info.color().red() * 255),
-                 static_cast<uint8_t>(timer_info.color().green() * 255),
-                 static_cast<uint8_t>(timer_info.color().blue() * 255),
-                 static_cast<uint8_t>(timer_info.color().alpha() * 255));
+    CHECK(timer_info.color().red() < 256);
+    CHECK(timer_info.color().green() < 256);
+    CHECK(timer_info.color().blue() < 256);
+    CHECK(timer_info.color().alpha() < 256);
+    return Color(static_cast<uint8_t>(timer_info.color().red()),
+                 static_cast<uint8_t>(timer_info.color().green()),
+                 static_cast<uint8_t>(timer_info.color().blue()),
+                 static_cast<uint8_t>(timer_info.color().alpha()));
   }
   if (timer_info.type() == TimerInfo::kGpuDebugMarker) {
     std::string marker_text = string_manager_->Get(timer_info.user_data_key()).value_or("");
