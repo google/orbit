@@ -163,7 +163,7 @@ message TimerInfo {
 }
 
 message Color {
-  // Each color must be between 0.0f and 1.0f
+  // Each color must be between 0 and 255 (including).
   uint32 red = 1;
   uint32 green = 2;
   uint32 blue = 3;
