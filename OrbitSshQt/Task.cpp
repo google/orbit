@@ -4,7 +4,13 @@
 
 #include "OrbitSshQt/Task.h"
 
+#include <absl/base/macros.h>
+
+#include <type_traits>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
 namespace orbit_ssh_qt {

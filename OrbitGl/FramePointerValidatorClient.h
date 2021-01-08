@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_
 #define ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_
 
+#include <memory>
+#include <vector>
+
 #include "OrbitClientData/ModuleData.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"

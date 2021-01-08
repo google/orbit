@@ -4,8 +4,9 @@
 
 #include "CaptureOptionsDialog.h"
 
+#include <QCheckBox>
 #include <QDialog>
-#include <QSettings>
+#include <QDialogButtonBox>
 #include <QWidget>
 
 #include "ui_CaptureOptionsDialog.h"

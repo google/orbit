@@ -2,12 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <dirent.h>
-#include <sys/stat.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdint.h>
 #include <unistd.h>
+
+#include <filesystem>
+#include <string>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "absl/strings/str_format.h"
 

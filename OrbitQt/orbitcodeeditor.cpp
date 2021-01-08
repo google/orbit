@@ -54,13 +54,32 @@
 #include "OpenGl.h" // IWYU pragma: keep
 // clang-format on
 
-#include "orbitcodeeditor.h"
-
+#include <absl/strings/str_split.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <QPushButton>
 #include <QTextCursor>
-#include <QtWidgets>
 #include <fstream>
+#include <QFile>
+#include <QFont>
+#include <QFontDatabase>
+#include <QFontMetrics>
+#include <QLatin1Char>
+#include <QLineEdit>
+#include <QPainter>
+#include <QPalette>
+#include <QRectF>
+#include <QStringList>
+#include <QTextBlock>
+#include <QTextFormat>
+#include <QTextOption>
+#include <QTextStream>
+#include <QtCore>
+#include <filesystem>
+#include <vector>
 
+#include "orbitcodeeditor.h"
 #include "Path.h"
 #include "CoreUtils.h"
 #include "absl/strings/str_format.h"

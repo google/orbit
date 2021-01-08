@@ -6,6 +6,7 @@
 #define ORBIT_QT_DEPLOYMENT_CONFIGURATIONS_H_
 
 #include <filesystem>
+#include <string>
 #include <utility>
 #include <variant>
 

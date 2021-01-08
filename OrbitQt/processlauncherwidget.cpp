@@ -4,11 +4,8 @@
 
 #include "processlauncherwidget.h"
 
-#include <QFileDialog>
-#include <QLineEdit>
-
-#include "App.h"
-#include "absl/flags/flag.h"
+#include "orbitdataviewpanel.h"
+#include "types.h"
 #include "ui_processlauncherwidget.h"
 
 ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)

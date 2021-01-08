@@ -5,10 +5,13 @@
 #ifndef ORBIT_SSH_ERROR_H_
 #define ORBIT_SSH_ERROR_H_
 
+#include <libssh2.h>
 #include <libssh2_sftp.h>
 
 #include <outcome.hpp>
+#include <string>
 #include <system_error>
+#include <type_traits>
 
 namespace orbit_ssh {
 

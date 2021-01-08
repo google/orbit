@@ -4,6 +4,14 @@
 
 #include "StatusListenerImpl.h"
 
+#include <absl/container/flat_hash_map.h>
+
+#include <QString>
+#include <algorithm>
+#include <limits>
+#include <type_traits>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 
 uint64_t StatusListenerImpl::AddStatus(std::string message) {

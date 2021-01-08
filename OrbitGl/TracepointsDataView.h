@@ -5,6 +5,8 @@
 #ifndef ORBIT_TRACEPOINTSDATAVIEW_H
 #define ORBIT_TRACEPOINTSDATAVIEW_H
 
+#include <stdint.h>
+
 #include <deque>
 #include <string>
 #include <vector>

@@ -6,23 +6,30 @@
 // complains about being included after gl.h
 // clang-format off
 #include "OpenGl.h" // IWYU pragma: keep
+#include "DataViewTypes.h"
 // clang-format on
 
-#include "orbittreeview.h"
-
+#include <stddef.h>
 #include <QApplication>
 #include <QFontDatabase>
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMouseEvent>
-#include <QPainter>
 #include <QScrollBar>
-#include <QSignalMapper>
 #include <set>
 #include <utility>
+#include <QAbstractItemView>
+#include <QAction>
+#include <QFont>
+#include <QItemSelectionModel>
+#include <QKeySequence>
+#include <QList>
+#include <QModelIndexList>
+#include <QSize>
+#include <algorithm>
 
-#include "App.h"
+#include "orbittreeview.h"
 #include "DataView.h"
 #include "orbitglwidget.h"
 

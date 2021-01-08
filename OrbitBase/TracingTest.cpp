@@ -3,12 +3,15 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
 
-#include <chrono>
+#include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <thread>
+#include <utility>
+#include <vector>
 
-#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/Tracing.h"
 #include "absl/container/flat_hash_map.h"

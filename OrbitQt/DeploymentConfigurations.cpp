@@ -4,8 +4,11 @@
 
 #include "DeploymentConfigurations.h"
 
+#include <QChar>
+#include <QCharRef>
 #include <QCoreApplication>
 #include <QDir>
+#include <QString>
 
 static const char* const kSignatureExtension = ".asc";
 static const char* const kPackageNameTemplate = "OrbitProfiler-%1.deb";

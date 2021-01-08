@@ -6,8 +6,8 @@
 
 #include <QHostAddress>
 #include <QMargins>
+#include <QSize>
 #include <QWebChannel>
-#include <QWebEnginePage>
 #include <QWebEngineProfile>
 #include <QWebSocketServer>
 #include <memory>

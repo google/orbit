@@ -5,11 +5,18 @@
 #ifndef ORBIT_QT_ORBIT_EVENT_ITERATOR_H_
 #define ORBIT_QT_ORBIT_EVENT_ITERATOR_H_
 
+#include <stdint.h>
+
 #include <QFrame>
 #include <QLabel>
+#include <QObject>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QString>
 #include <QTextLayout>
+#include <QWidget>
+#include <functional>
+#include <string>
 
 #include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"

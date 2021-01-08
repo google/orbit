@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <sys/types.h>
 
 #include <memory>
 #include <optional>

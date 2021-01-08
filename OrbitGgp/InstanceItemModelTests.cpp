@@ -6,7 +6,13 @@
 
 #include <QAbstractItemModel>
 #include <QDateTime>
+#include <QModelIndex>
+#include <QObject>
+#include <QString>
+#include <QVariant>
 #include <QVector>
+#include <QtCore>
+#include <memory>
 
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/InstanceItemModel.h"

@@ -5,8 +5,10 @@
 #ifndef ORBIT_CORE_STRING_MANAGER_H_
 #define ORBIT_CORE_STRING_MANAGER_H_
 
+#include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"

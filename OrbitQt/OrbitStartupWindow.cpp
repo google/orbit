@@ -8,14 +8,23 @@
 #include <QApplication>
 #include <QDialogButtonBox>
 #include <QFileDialog>
+#include <QFlags>
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QItemSelectionModel>
 #include <QLabel>
 #include <QMessageBox>
+#include <QModelIndex>
+#include <QObject>
 #include <QPushButton>
+#include <QSize>
+#include <QStyle>
 #include <QTableView>
+#include <QVariant>
 #include <QVector>
+#include <Qt>
+#include <filesystem>
+#include <system_error>
 
 #include "OrbitBase/Logging.h"
 #include "Path.h"

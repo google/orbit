@@ -4,13 +4,14 @@
 
 #include "ProcessList.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/numbers.h>
-#include <absl/strings/str_format.h>
+#include <stdint.h>
 
 #include <filesystem>
-#include <unordered_map>
+#include <outcome.hpp>
+#include <string>
 
-#include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "ServiceUtils.h"
 

@@ -4,14 +4,8 @@
 
 #include "DispatchTable.h"
 
-#include <string.h>
-
-#include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
-
 // clang-format off
 #include "vulkan/vulkan.h" // IWYU pragma: keep
 #include "vk_layer_dispatch_table.h" // IWYU pragma: keep

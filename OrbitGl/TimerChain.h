@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <iosfwd>
 #include <limits>
 
 #include "TextBox.h"

@@ -2,10 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
+#include <vector>
+
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/TracepointData.h"
-#include "gmock/gmock-matchers.h"
+#include "capture_data.pb.h"
 #include "gtest/gtest.h"
+#include "tracepoint.pb.h"
 
 using ::testing::UnorderedElementsAre;
 

@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_PICKING_MANAGER_H
 #define ORBIT_GL_PICKING_MANAGER_H
 
+#include <array>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>

@@ -5,6 +5,7 @@
 #include "GpuTracepointEventProcessor.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
 
 #include <algorithm>
 #include <ctime>
@@ -13,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "OrbitBase/Logging.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {

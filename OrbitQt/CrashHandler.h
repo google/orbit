@@ -7,7 +7,9 @@
 
 #include <client/crashpad_client.h>
 
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "client/crash_report_database.h"
 

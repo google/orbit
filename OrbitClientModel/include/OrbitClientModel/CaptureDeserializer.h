@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_CAPTURE_DESERIALIZER_H_
 #define ORBIT_GL_CAPTURE_DESERIALIZER_H_
 
+#include <atomic>
 #include <iosfwd>
 #include <outcome.hpp>
 #include <string>

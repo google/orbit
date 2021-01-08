@@ -5,13 +5,23 @@
 #ifndef ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 #define ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadPool.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
@@ -20,7 +30,9 @@
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientServices/ProcessClient.h"
 #include "StringManager.h"
+#include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
+#include "tracepoint.pb.h"
 
 class ClientGgp final : public CaptureListener {
  public:

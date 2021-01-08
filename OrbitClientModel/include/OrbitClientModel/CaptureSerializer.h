@@ -5,11 +5,15 @@
 #ifndef ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
 #define ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <stdint.h>
+
 #include <iosfwd>
 #include <outcome.hpp>
 #include <string>
 
 #include "CaptureData.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"

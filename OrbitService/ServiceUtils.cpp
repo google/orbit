@@ -5,23 +5,32 @@
 #include "ServiceUtils.h"
 
 #include <absl/base/casts.h>
+#include <absl/base/macros.h>
 #include <absl/strings/match.h>
+#include <absl/strings/numbers.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
-#include <cxxabi.h>
-#include <sys/types.h>
 #include <sys/uio.h>
 
+#include <algorithm>
 #include <filesystem>
-#include <functional>
+#include <iosfwd>
+#include <map>
 #include <memory>
 #include <numeric>
+#include <outcome.hpp>
+#include <set>
 #include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
+#include "module.pb.h"
 
 namespace orbit_service::utils {
 

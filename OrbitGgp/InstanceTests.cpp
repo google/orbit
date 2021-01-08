@@ -5,8 +5,14 @@
 #include <gtest/gtest.h>
 
 #include <QDateTime>
-#include <QJsonDocument>
+#include <QMetaType>
+#include <QString>
 #include <QVector>
+#include <Qt>
+#include <memory>
+#include <outcome.hpp>
+#include <system_error>
+#include <utility>
 
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"

@@ -5,9 +5,16 @@
 #ifndef ORBIT_SSH_QT_TASK_H_
 #define ORBIT_SSH_QT_TASK_H_
 
+#include <stddef.h>
+
 #include <QObject>
 #include <QPointer>
+#include <QString>
+#include <optional>
+#include <outcome.hpp>
 #include <string>
+#include <string_view>
+#include <system_error>
 
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/ScopedConnection.h"

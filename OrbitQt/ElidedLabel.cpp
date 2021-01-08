@@ -4,6 +4,9 @@
 
 #include "ElidedLabel.h"
 
+#include <QFontMetrics>
+#include <QPainter>
+#include <QPoint>
 #include <QTextLayout>
 
 void ElidedLabel::paintEvent(QPaintEvent* event) {

@@ -5,8 +5,15 @@
 #ifndef ORBIT_CLIENT_DATA_PROCESS_DATA_H_
 #define ORBIT_CLIENT_DATA_PROCESS_DATA_H_
 
+#include <absl/strings/str_format.h>
+#include <inttypes.h>
+#include <stdint.h>
+
+#include <map>
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

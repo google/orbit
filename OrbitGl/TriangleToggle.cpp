@@ -4,8 +4,13 @@
 
 #include "TriangleToggle.h"
 
+#include <GteVector.h>
+#include <math.h>
+
+#include "Batcher.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
-#include "OpenGl.h"
+#include "TimeGraph.h"
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
                                TimeGraph* time_graph)

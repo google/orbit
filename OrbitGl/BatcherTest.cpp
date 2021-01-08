@@ -3,8 +3,22 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "Batcher.h"
+#include "BlockChain.h"
+#include "CoreMath.h"
+#include "CoreUtils.h"
+#include "Geometry.h"
+#include "PickingManager.h"
 #include "PickingManagerTest.h"
 
 namespace {

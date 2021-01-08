@@ -22,6 +22,7 @@
 #include <cinttypes>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <fstream>
 #include <memory>
 #include <outcome.hpp>
@@ -65,6 +66,7 @@
 #include "Timer.h"
 #include "TimerChain.h"
 #include "TimerInfosIterator.h"
+#include "TrackManager.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "preset.pb.h"
@@ -73,6 +75,7 @@
 
 #ifdef _WIN32
 #include "oqpi.hpp"
+
 #define OQPI_USE_DEFAULT
 #endif
 

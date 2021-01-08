@@ -11,7 +11,7 @@
 #include <memory>
 #include <thread>
 
-#include "LinuxTracingUtils.h"
+#include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRecords.h"

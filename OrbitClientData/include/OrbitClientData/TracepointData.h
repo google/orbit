@@ -9,6 +9,7 @@
 #include <absl/synchronization/mutex.h>
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <map>

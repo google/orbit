@@ -2,23 +2,35 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <memory>
+#include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
+#include <gtest/gtest.h>
+#include <sys/types.h>
+
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "CaptureSerializationTestMatchers.h"
 #include "CoreUtils.h"
-#include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
+#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "capture_data.pb.h"
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "module.pb.h"
 #include "process.pb.h"
+#include "tracepoint.pb.h"
 
 using orbit_client_data::ModuleManager;
 using orbit_client_protos::CallstackEvent;

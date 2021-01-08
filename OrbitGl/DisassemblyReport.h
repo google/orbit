@@ -5,6 +5,10 @@
 #ifndef ORBIT_GL_DISASSEMBLY_REPORT_H_
 #define ORBIT_GL_DISASSEMBLY_REPORT_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <optional>
 #include <utility>
 
 #include "CodeReport.h"

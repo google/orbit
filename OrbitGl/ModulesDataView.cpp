@@ -4,7 +4,20 @@
 
 #include "ModulesDataView.h"
 
+#include <absl/flags/declare.h>
+#include <absl/strings/ascii.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <functional>
+
 #include "App.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 

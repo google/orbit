@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
+#include <string>
+
 #include "StringManager.h"
 
 TEST(StringManager, Contains) {

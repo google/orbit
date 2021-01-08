@@ -4,8 +4,25 @@
 
 #include "TracepointTrack.h"
 
+#include <GteVector.h>
+#include <absl/strings/str_format.h>
+
+#include <memory>
+#include <utility>
+
 #include "App.h"
+#include "Batcher.h"
+#include "CoreMath.h"
+#include "Geometry.h"
+#include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "OrbitClientServices/TracepointServiceClient.h"
+#include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "capture_data.pb.h"
+#include "tracepoint.pb.h"
 
 TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
     : EventTrack(time_graph, app) {

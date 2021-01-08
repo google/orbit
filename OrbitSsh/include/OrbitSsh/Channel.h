@@ -11,6 +11,7 @@
 #include <optional>
 #include <outcome.hpp>
 #include <string>
+#include <string_view>
 
 #include "Error.h"
 #include "Session.h"

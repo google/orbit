@@ -4,6 +4,17 @@
 
 #include "OrbitSsh/Socket.h"
 
+#ifdef _WIN32
+#include <winsock.h>
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#endif
+
+#include <type_traits>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 

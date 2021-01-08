@@ -39,6 +39,7 @@
 #include "TargetConfiguration.h"
 #include "capture_data.pb.h"
 #include "orbitglwidget.h"
+#include "process.pb.h"
 #include "servicedeploymanager.h"
 #include "ui_orbitmainwindow.h"
 

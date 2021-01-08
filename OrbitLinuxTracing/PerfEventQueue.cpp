@@ -4,6 +4,14 @@
 
 #include "PerfEventQueue.h"
 
+#include <absl/meta/type_traits.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <utility>
+
+#include "OrbitBase/Logging.h"
+
 namespace orbit_linux_tracing {
 
 void PerfEventQueue::PushEvent(std::unique_ptr<PerfEvent> event) {

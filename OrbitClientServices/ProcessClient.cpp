@@ -4,15 +4,18 @@
 
 #include "OrbitClientServices/ProcessClient.h"
 
+#include <grpcpp/grpcpp.h>
+
+#include <chrono>
 #include <memory>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
-#include "grpcpp/grpcpp.h"
-#include "outcome.hpp"
 #include "services.grpc.pb.h"
-#include "symbol.pb.h"
+#include "services.pb.h"
 
 namespace {
 

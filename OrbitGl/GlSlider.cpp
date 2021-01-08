@@ -4,11 +4,14 @@
 
 #include "GlSlider.h"
 
+#include <GteVector.h>
 #include <math.h>
 
 #include <algorithm>
 
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
 #include "PickingManager.h"
 
 const float GlSlider::kGradientFactor = 0.25f;

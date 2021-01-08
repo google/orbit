@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_ACCESSIBLE_TIME_GRAPH_H_
 #define ORBIT_GL_ACCESSIBLE_TIME_GRAPH_H_
 
+#include <string>
+
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
 

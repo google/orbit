@@ -5,8 +5,10 @@
 #include "OrbitBase/ReadFileToString.h"
 
 #include <absl/strings/str_format.h>
+#include <errno.h>
 
 #include <fstream>
+#include <iterator>
 
 #include "OrbitBase/SafeStrerror.h"
 

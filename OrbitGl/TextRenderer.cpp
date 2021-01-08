@@ -4,13 +4,26 @@
 
 #include "TextRenderer.h"
 
+#include <float.h>
 #include <freetype-gl/shader.h>
+#include <freetype-gl/vector.h>
 #include <freetype-gl/vertex-buffer.h>
+#include <limits.h>
+#include <math.h>
+#include <string.h>
 
-#include "App.h"
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <filesystem>
+#include <iosfwd>
+#include <string>
+#include <utility>
+
 #include "GlCanvas.h"
-#include "GlUtils.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 
 typedef struct {
   float x, y, z;     // position

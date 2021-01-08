@@ -15,8 +15,10 @@
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "TriangleToggle.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;

@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <chrono>
+#include <memory>
 #include <thread>
 
 #include "OrbitBase/Profiling.h"

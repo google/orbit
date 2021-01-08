@@ -5,11 +5,14 @@
 #include "OrbitClientServices/ProcessManager.h"
 
 #include <absl/synchronization/mutex.h>
+#include <grpcpp/channel.h>
 
-#include <algorithm>
+#include <exception>
 #include <memory>
+#include <outcome.hpp>
 #include <string>
 #include <thread>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

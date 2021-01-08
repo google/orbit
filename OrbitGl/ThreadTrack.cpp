@@ -4,15 +4,32 @@
 
 #include "ThreadTrack.h"
 
+#include <GteVector.h>
+#include <absl/strings/str_format.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
+#include <atomic>
+#include <optional>
+
 #include "App.h"
+#include "Batcher.h"
+#include "CoreUtils.h"
 #include "GlCanvas.h"
+#include "GlUtils.h"
 #include "ManualInstrumentationManager.h"
-#include "OrbitBase/Profiling.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/FunctionUtils.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "TextBox.h"
+#include "TextRenderer.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
+#include "TimerChain.h"
+#include "TriangleToggle.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;

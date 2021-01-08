@@ -4,13 +4,15 @@
 
 #include <gtest/gtest.h>
 
-#include <QAccessibleWidget>
-#include <QApplication>
-#include <list>
+#include <QAccessible>
+#include <QAccessibleInterface>
+#include <QString>
+#include <algorithm>
+#include <memory>
+#include <vector>
 
 #include "AccessibilityAdapter.h"
 #include "OrbitAccessibility/AccessibleObjectFake.h"
-#include "orbitglwidget.h"
 
 namespace orbit_qt {
 

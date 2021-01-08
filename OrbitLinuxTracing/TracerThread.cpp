@@ -6,7 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/hash/hash.h>
+#include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 #include <pthread.h>
 #include <stddef.h>
@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "Function.h"
+#include "LinuxTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"

@@ -4,10 +4,19 @@
 
 #include "ElfUtils/LinuxMap.h"
 
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 
+#include <algorithm>
 #include <filesystem>
+#include <map>
+#include <memory>
+#include <outcome.hpp>
+#include <string>
+#include <system_error>
+#include <type_traits>
+#include <utility>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"

@@ -11,11 +11,15 @@
 #include <OrbitSshQt/SftpChannel.h>
 #include <OrbitSshQt/StateMachineHelper.h>
 
+#include <QByteArray>
 #include <QFile>
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <filesystem>
 #include <optional>
+#include <outcome.hpp>
+#include <system_error>
 
 namespace orbit_ssh_qt {
 namespace details {

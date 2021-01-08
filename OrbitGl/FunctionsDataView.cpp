@@ -4,13 +4,27 @@
 
 #include "FunctionsDataView.h"
 
+#include <absl/strings/str_cat.h>
+#include <absl/strings/str_split.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <functional>
+
 #include "App.h"
+#include "CoreUtils.h"
+#include "DataViewTypes.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "absl/flags/flag.h"
+#include "OrbitClientData/ModuleData.h"
+#include "OrbitClientData/ProcessData.h"
+#include "OrbitClientModel/CaptureData.h"
 #include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 #include "oqpi.hpp"
+
 #define OQPI_USE_DEFAULT
 #endif
 

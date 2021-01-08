@@ -5,9 +5,14 @@
 #ifndef ORBIT_SERVICE_CAPTURE_SERVICE_IMPL_H_
 #define ORBIT_SERVICE_CAPTURE_SERVICE_IMPL_H_
 
+#include <grpcpp/grpcpp.h>
+
+#include <atomic>
+
 #include "CaptureStartStopListener.h"
 #include "absl/container/flat_hash_set.h"
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 namespace orbit_service {
 

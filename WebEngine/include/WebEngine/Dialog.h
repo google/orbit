@@ -7,11 +7,14 @@
 
 #include <QDialog>
 #include <QGridLayout>
+#include <QObject>
+#include <QString>
 #include <QWebChannel>
 #include <QWebEnginePage>
 #include <QWebEngineProfile>
 #include <QWebEngineView>
 #include <QWebSocketServer>
+#include <QWidget>
 #include <memory>
 
 #include "WebEngine/DeleteLaterDeleter.h"

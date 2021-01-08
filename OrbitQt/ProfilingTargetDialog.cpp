@@ -13,9 +13,6 @@
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
 
-#include <QAbstractButton>
-#include <QAbstractItemView>
-#include <QAbstractState>
 #include <QFileDialog>
 #include <QFrame>
 #include <QHeaderView>

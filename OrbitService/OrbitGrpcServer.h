@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "CaptureStartStopListener.h"
 

@@ -5,10 +5,17 @@
 #ifndef ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 #define ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 
+#include <grpcpp/grpcpp.h>
+#include <stdint.h>
+
+#include <atomic>
+
+#include "CaptureEventBuffer.h"
 #include "CaptureStartStopListener.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "producer_side_services.grpc.pb.h"
+#include "producer_side_services.pb.h"
 
 namespace orbit_service {
 

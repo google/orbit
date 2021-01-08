@@ -95,10 +95,14 @@
 
 #include "AccessibilityAdapter.h"
 
-#include <QWidget>
+#include <QAccessibleWidget>
+#include <QLatin1String>
 #include <mutex>
+#include <utility>
 
+#include "GlCanvas.h"
 #include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
+#include "orbitglwidget.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleInterfaceRegistry;

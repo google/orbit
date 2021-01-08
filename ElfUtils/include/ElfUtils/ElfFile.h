@@ -5,9 +5,13 @@
 #ifndef ELF_UTILS_ELF_FILE_H_
 #define ELF_UTILS_ELF_FILE_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "OrbitBase/Result.h"

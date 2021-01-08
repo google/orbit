@@ -3,7 +3,11 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <memory>
+
+#include "PerfEvent.h"
 #include "PerfEventQueue.h"
 
 namespace orbit_linux_tracing {

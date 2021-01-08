@@ -6,9 +6,9 @@
 
 #include <QCoreApplication>
 #include <QMetaObject>
-#include <list>
-#include <thread>
+#include <utility>
 
+#include "OrbitBase/Action.h"
 #include "OrbitBase/Tracing.h"
 
 namespace {

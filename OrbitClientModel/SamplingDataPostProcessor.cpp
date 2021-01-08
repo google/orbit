@@ -4,9 +4,17 @@
 
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
 
+#include <absl/meta/type_traits.h>
+
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
+#include <map>
 #include <memory>
+#include <optional>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"

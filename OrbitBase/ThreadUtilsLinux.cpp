@@ -2,13 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/strings/strip.h>
-#include <sys/syscall.h>
+#include <absl/strings/str_format.h>
+#include <pthread.h>
+#include <syscall.h>
 #include <time.h>
 #include <unistd.h>
 
+#include <string>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_base {

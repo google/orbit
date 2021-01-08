@@ -4,7 +4,11 @@
 
 #pragma once
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <string>
+#include <vector>
 
 #include "CoreUtils.h"
 #include "absl/strings/str_format.h"

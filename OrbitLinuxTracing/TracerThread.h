@@ -25,6 +25,7 @@
 #include "GpuTracepointEventProcessor.h"
 #include "LinuxTracingUtils.h"
 #include "ManualInstrumentationConfig.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitLinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"

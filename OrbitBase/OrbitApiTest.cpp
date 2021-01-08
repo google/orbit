@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <string>
 
 #include "OrbitBase/Tracing.h"
 

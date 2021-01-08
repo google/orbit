@@ -5,10 +5,15 @@
 #ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 
+#include <cstdint>
+#include <string>
+
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture.pb.h"
 #include "services.pb.h"
+#include "tracepoint.pb.h"
 
 class CaptureEventProcessor {
  public:

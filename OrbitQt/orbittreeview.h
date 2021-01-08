@@ -5,11 +5,25 @@
 #ifndef ORBIT_QT_ORBIT_TREE_VIEW_H_
 #define ORBIT_QT_ORBIT_TREE_VIEW_H_
 
+#include <QFlags>
 #include <QItemSelection>
+#include <QKeyEvent>
+#include <QModelIndex>
+#include <QMouseEvent>
+#include <QObject>
+#include <QPoint>
+#include <QResizeEvent>
+#include <QString>
 #include <QTimer>
 #include <QTreeView>
+#include <QWidget>
+#include <Qt>
 #include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
+#include "DataView.h"
 #include "orbitglwidget.h"
 #include "orbittablemodel.h"
 #include "types.h"

@@ -5,6 +5,14 @@
 #ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
+#include <grpcpp/grpcpp.h>
+#include <stdint.h>
+
+#include <atomic>
+#include <memory>
+
 #include "CaptureListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -17,6 +25,7 @@
 #include "capture_data.pb.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 class CaptureClient {
  public:

@@ -3,16 +3,22 @@
 // found in the LICENSE file.
 
 #include <absl/synchronization/mutex.h>
-#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
-#include <chrono>
+#ifdef _WIN32
+// No special windows header needed
+#else
+#include <pthread.h>
+#endif
+
+#include <ctime>
+#include <string>
 #include <thread>
 
 #include "OrbitBase/ThreadUtils.h"
 
 TEST(ThreadUtils, GetCurrentThreadId) {
-#if _WIN32
+#ifdef _WIN32
   uint32_t current_tid = orbit_base::GetCurrentThreadId();
   uint32_t worker_tid = 0;
 #else

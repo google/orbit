@@ -5,9 +5,14 @@
 #ifndef ORBIT_QT_ORBIT_DATA_VIEW_PANEL_H_
 #define ORBIT_QT_ORBIT_DATA_VIEW_PANEL_H_
 
+#include <QFlags>
 #include <QLineEdit>
+#include <QObject>
+#include <QString>
 #include <QWidget>
+#include <Qt>
 
+#include "DataView.h"
 #include "orbittablemodel.h"
 #include "orbittreeview.h"
 #include "types.h"

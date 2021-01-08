@@ -5,7 +5,15 @@
 #ifndef ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
 #define ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
 
+#include <stdint.h>
+
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "DataView.h"
+#include "TextBox.h"
 #include "TimerChain.h"
 #include "capture_data.pb.h"
 

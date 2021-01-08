@@ -11,8 +11,6 @@
 #include <array>
 #include <cstdint>
 
-#include "OrbitBase/Logging.h"
-
 namespace orbit_linux_tracing {
 
 std::unique_ptr<unwindstack::BufferMaps> LibunwindstackUnwinder::ParseMaps(

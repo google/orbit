@@ -5,10 +5,14 @@
 #ifndef ORBIT_SERVICE_SERVICE_UTILS_H_
 #define ORBIT_SERVICE_SERVICE_UTILS_H_
 
+#include <stdint.h>
+
+#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <outcome.hpp>
 #include <string>
 #include <unordered_map>

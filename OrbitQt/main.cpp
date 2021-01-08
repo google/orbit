@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
 #include <absl/strings/str_format.h>
 
-#include <QAccessible>
 #include <QApplication>
 #include <QByteArray>
 #include <QColor>
@@ -26,7 +26,6 @@
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
-#include <memory>
 #include <optional>
 #include <outcome.hpp>
 #include <string>
@@ -47,6 +46,7 @@
 #include "Connections.h"
 #include "DeploymentConfigurations.h"
 #include "Error.h"
+#include "FunctionsDataView.h"
 #include "ImGuiOrbit.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"

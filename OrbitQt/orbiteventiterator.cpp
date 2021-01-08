@@ -4,6 +4,11 @@
 
 #include "orbiteventiterator.h"
 
+#include <QLabel>
+#include <QPushButton>
+#include <algorithm>
+
+#include "ElidedLabel.h"
 #include "absl/strings/str_format.h"
 #include "ui_orbiteventiterator.h"
 

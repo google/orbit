@@ -4,7 +4,13 @@
 
 #include "OrbitClientServices/TracepointServiceClient.h"
 
+#include <absl/strings/str_format.h>
+#include <grpcpp/grpcpp.h>
+
+#include <string>
+
 #include "OrbitBase/Logging.h"
+#include "services.pb.h"
 
 using orbit_grpc_protos::GetTracepointListRequest;
 using orbit_grpc_protos::GetTracepointListResponse;

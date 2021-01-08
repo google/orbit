@@ -3,13 +3,22 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <unistd.h>
 
 #include <filesystem>
+#include <memory>
+#include <outcome.hpp>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "ElfUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Result.h"
+#include "module.pb.h"
 
 TEST(LinuxMap, CreateModuleHelloWorld) {
   using orbit_elf_utils::CreateModule;

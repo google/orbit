@@ -4,7 +4,6 @@
 
 #include "OverlayWidget.h"
 
-#include <QAbstractButton>
 #include <QColor>
 #include <QPainter>
 

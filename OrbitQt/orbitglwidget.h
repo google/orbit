@@ -9,8 +9,17 @@
 #include "OpenGl.h" // IWYU pragma: keep
 // clang-format on
 
+#include <stdint.h>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QObject>
+#include <QString>
+#include <QWheelEvent>
+#include <QWidget>
+#include <memory>
 
 #include "GlCanvas.h"
 

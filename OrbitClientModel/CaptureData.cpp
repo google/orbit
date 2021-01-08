@@ -4,12 +4,14 @@
 
 #include "OrbitClientModel/CaptureData.h"
 
-#include <memory>
+#include <absl/container/flat_hash_map.h>
 
-#include "OrbitBase/Profiling.h"
+#include <algorithm>
+#include <memory>
+#include <outcome.hpp>
+
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
-#include "process.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;

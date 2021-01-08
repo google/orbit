@@ -2,20 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <grpcpp/grpcpp.h>
+#include <absl/strings/str_format.h>
+#include <stdint.h>
 
-#include <memory>
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Result.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/flags/usage_config.h"
-#include "services_ggp.grpc.pb.h"
 
 ABSL_FLAG(uint16_t, grpc_port, 44767, "gRPC server port for capture ggp service");
 

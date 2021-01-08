@@ -5,11 +5,17 @@
 #ifndef ORBIT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
 #define ORBIT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
 
+#include <grpcpp/grpcpp.h>
+#include <stdint.h>
+
+#include <atomic>
+#include <memory>
 #include <thread>
 
 #include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"
 #include "producer_side_services.grpc.pb.h"
+#include "producer_side_services.pb.h"
 
 namespace orbit_producer {
 

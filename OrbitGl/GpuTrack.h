@@ -5,11 +5,19 @@
 #ifndef ORBIT_GL_GPU_TRACK_H_
 #define ORBIT_GL_GPU_TRACK_H_
 
-#include <memory>
+#include <stdint.h>
 
+#include <memory>
+#include <string>
+#include <string_view>
+
+#include "CoreMath.h"
+#include "EventTrack.h"
+#include "PickingManager.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "TimerTrack.h"
+#include "Track.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;

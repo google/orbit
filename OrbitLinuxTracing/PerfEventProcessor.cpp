@@ -7,8 +7,8 @@
 #include <memory>
 #include <utility>
 
-#include "LinuxTracingUtils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
 
 namespace orbit_linux_tracing {

@@ -5,9 +5,17 @@
 #ifndef ORBIT_GL_GRAPH_TRACK_H
 #define ORBIT_GL_GRAPH_TRACK_H
 
-#include <limits>
-#include <optional>
+#include <stdint.h>
 
+#include <limits>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+
+#include "Batcher.h"
+#include "CoreMath.h"
+#include "PickingManager.h"
 #include "Timer.h"
 #include "Track.h"
 

@@ -4,7 +4,15 @@
 
 #include "TrackAccessibility.h"
 
+#include <GteVector.h>
+
+#include <algorithm>
+
+#include "AccessibleTimeGraph.h"
+#include "CoreMath.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
+#include "TimeGraph.h"
 #include "Track.h"
 
 namespace orbit_gl {

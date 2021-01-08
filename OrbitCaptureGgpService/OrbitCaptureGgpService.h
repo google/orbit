@@ -6,6 +6,7 @@
 #define ORBIT_CAPTURE_GGP_SERVICE_ORBIT_CAPTURE_GGP_SERVICE_H_
 
 #include <grpcpp/grpcpp.h>
+#include <stdint.h>
 
 #include "services_ggp.grpc.pb.h"
 

@@ -8,6 +8,7 @@
 #include <QMetaType>
 #include <string>
 #include <system_error>
+#include <type_traits>
 
 namespace orbit_qt {
 

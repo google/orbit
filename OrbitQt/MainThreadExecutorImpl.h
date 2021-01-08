@@ -5,6 +5,8 @@
 #ifndef ORBIT_QT_MAIN_THREAD_EXECUTOR_IMPL_H_
 #define ORBIT_QT_MAIN_THREAD_EXECUTOR_IMPL_H_
 
+#include <memory>
+
 #include "MainThreadExecutor.h"
 
 // Create main thread executor implementation based on QT event loop.

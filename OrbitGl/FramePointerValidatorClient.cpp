@@ -6,15 +6,22 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <grpcpp/grpcpp.h>
+#include <stddef.h>
 
+#include <algorithm>
+#include <chrono>
 #include <string>
 
 #include "App.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "capture_data.pb.h"
+#include "code_block.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::CodeBlock;

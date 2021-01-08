@@ -5,10 +5,14 @@
 #include "OrbitService.h"
 
 #include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <chrono>
 #include <cstdio>
+#include <memory>
+#include <string>
 #include <thread>
 
 #include "OrbitBase/Logging.h"

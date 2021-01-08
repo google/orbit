@@ -4,8 +4,15 @@
 
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <google/protobuf/stubs/port.h>
+
+#include <utility>
+
 #include "CoreUtils.h"
-#include "OrbitBase/Tracing.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitClientData/Callstack.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;

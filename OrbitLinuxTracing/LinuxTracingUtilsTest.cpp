@@ -7,6 +7,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <pthread.h>
+#include <sys/types.h>
 #include <syscall.h>
 #include <unistd.h>
 

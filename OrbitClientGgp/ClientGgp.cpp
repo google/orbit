@@ -4,23 +4,29 @@
 
 #include "OrbitClientGgp/ClientGgp.h"
 
+#include <absl/flags/declare.h>
+#include <absl/strings/str_format.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/support/channel_arguments.h>
+
+#include <algorithm>
 #include <cstdint>
 #include <limits>
-#include <map>
 #include <memory>
+#include <outcome.hpp>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
-#include "OrbitClientServices/ProcessManager.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "absl/container/flat_hash_map.h"
@@ -28,6 +34,7 @@
 #include "absl/flags/flag.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
+#include "process.pb.h"
 
 ABSL_DECLARE_FLAG(bool, thread_state);
 

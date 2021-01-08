@@ -4,6 +4,11 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <math.h>
+#include <stdint.h>
+
+#include <memory>
+#include <utility>
 
 #include "GlCanvas.h"
 #include "GlSlider.h"

@@ -6,6 +6,7 @@
 #define ORBIT_CLIENT_MODEL_SAMPLING_DATA_POST_PROCESSOR_H_
 
 #include "OrbitClientData/CallstackData.h"
+#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "OrbitClientModel/CaptureData.h"
 
 namespace orbit_client_model {

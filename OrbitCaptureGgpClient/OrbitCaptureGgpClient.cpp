@@ -5,14 +5,20 @@
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/support/channel_arguments.h>
+#include <stdint.h>
 
+#include <limits>
 #include <memory>
+#include <outcome.hpp>
 #include <string>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "services_ggp.grpc.pb.h"
+#include "services_ggp.pb.h"
 
 using orbit_grpc_protos::ShutdownServiceRequest;
 using orbit_grpc_protos::ShutdownServiceResponse;
