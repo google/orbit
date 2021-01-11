@@ -252,7 +252,10 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   // TODO (b/175869409): Change the way to create and get the tracks. Move this part to
   // TrackManager.
   switch (timer_info.type()) {
-    case TimerInfo::kGpuActivity: {
+    // All GPU timers are handled equally here.
+    case TimerInfo::kGpuActivity:
+    case TimerInfo::kGpuCommandBuffer:
+    case TimerInfo::kGpuDebugMarker: {
       uint64_t timeline_hash = timer_info.timeline_hash();
       GpuTrack* track = track_manager_->GetOrCreateGpuTrack(timeline_hash);
       track->OnTimer(timer_info);
