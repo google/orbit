@@ -63,7 +63,6 @@ class FilterAndSelectFirstProcess(E2ETestCase):
     """
     def _execute(self, process_filter):
         window = self.suite.top_window()
-        logging.info('Setting filter text for process list')
 
         if flags.FLAGS.enable_ui_beta:
             filter_edit = self.find_control('Edit', 'FilterProcesses')
@@ -72,6 +71,9 @@ class FilterAndSelectFirstProcess(E2ETestCase):
             filter_edit = self.find_control('Edit', 'Filter', parent=window.DataViewProcesses)
             process_list = window.DataViewProcesses.DataView
 
+        logging.info('Waiting for process list to be populated')
+        wait_for_condition(lambda: process_list.item_count() > 0, 30)
+        logging.info('Setting filter text for process list')
         if process_filter:
             filter_edit.set_edit_text(process_filter)
         self.expect_true(process_list.item_count() > 0, 'Process list has at least one entry')
