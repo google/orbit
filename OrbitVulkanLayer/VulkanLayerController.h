@@ -6,6 +6,7 @@
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_CONTROLLER_H_
 
 #include "OrbitBase/Logging.h"
+#include "OrbitProducerSideChannel/ProducerSideChannel.h"
 #include "VulkanLayerProducerImpl.h"
 #include "absl/base/casts.h"
 #include "vulkan/vk_layer.h"
@@ -441,9 +442,8 @@ class VulkanLayerController {
     absl::MutexLock lock{&vulkan_layer_producer_mutex_};
     if (vulkan_layer_producer_ == nullptr) {
       vulkan_layer_producer_ = std::make_unique<VulkanLayerProducerImpl>();
-      // TODO: As soon as we have producer side channel for the port, use it.
       LOG("Bringing up VulkanLayerProducer");
-      vulkan_layer_producer_->BringUp(nullptr);
+      vulkan_layer_producer_->BringUp(orbit_producer_side_channel::CreateProducerSideChannel());
       submission_tracker_.SetVulkanLayerProducer(vulkan_layer_producer_.get());
     }
   }
