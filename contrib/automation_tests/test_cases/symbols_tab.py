@@ -86,7 +86,7 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
         self._load_presets()
-        wait_for_condition(self._try_verify_functions_are_hooked)
+        wait_for_condition(lambda: self._try_verify_functions_are_hooked)
 
         Capture().execute(self.suite)
 
