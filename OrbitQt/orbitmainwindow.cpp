@@ -25,6 +25,7 @@
 #include <QFileDialog>
 #include <QFlags>
 #include <QFontMetrics>
+#include <QGraphicsOpacityEffect>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QIODevice>
@@ -632,7 +633,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
   ui->actionCaptureOptions->setEnabled(!is_capturing);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
-  ui->actionSave_Capture->setEnabled(!is_capturing);
+  ui->actionSave_Capture->setEnabled(!is_capturing && has_data);
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
 
@@ -640,6 +641,16 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   // of beta
   if (hint_frame_ != nullptr) {
     hint_frame_->setVisible(!has_data);
+  }
+
+  // Gray out disabled actions on the capture toolbar.
+  for (QAction* action : ui->capture_toolbar->actions()) {
+    // setGraphicsEffect(effect) transfers the ownership of effect to the QWidget. If the effect is
+    // installed on a different item, setGraphicsEffect() will remove the effect from the original
+    // item and install it on this item.
+    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect;
+    effect->setOpacity(action->isEnabled() ? 1 : 0.3);
+    ui->capture_toolbar->widgetForAction(action)->setGraphicsEffect(effect);
   }
 }
 
