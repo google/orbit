@@ -702,64 +702,45 @@ static std::string VariableToString(std::string_view name, const T& value) {
 }
 
 void CaptureWindow::RenderImGui() {
-  // Don't draw ImGui when picking.
-  if (GetPickingMode() != PickingMode::kNone) {
-    return;
+  if (ImGui::CollapsingHeader("Layout Properties")) {
+    if (time_graph_.GetLayout().DrawProperties()) {
+      NeedsUpdate();
+    }
+
+    static bool draw_text_outline = false;
+    if (ImGui::Checkbox("Draw Text Outline", &draw_text_outline)) {
+      TextRenderer::SetDrawOutline(draw_text_outline);
+      NeedsUpdate();
+    }
   }
 
-  if (ImGui::BeginTabBar("CaptureWindowTabBar", ImGuiTabBarFlags_None)) {
-    if (ImGui::BeginTabItem("Layout Properties")) {
-      if (time_graph_.GetLayout().DrawProperties()) {
-        NeedsUpdate();
-      }
+  if (ImGui::CollapsingHeader("Capture Info")) {
+    IMGUI_VAR_TO_TEXT(screen_width_);
+    IMGUI_VAR_TO_TEXT(screen_height_);
+    IMGUI_VAR_TO_TEXT(world_height_);
+    IMGUI_VAR_TO_TEXT(world_width_);
+    IMGUI_VAR_TO_TEXT(world_top_left_x_);
+    IMGUI_VAR_TO_TEXT(world_top_left_y_);
+    IMGUI_VAR_TO_TEXT(world_min_width_);
+    IMGUI_VAR_TO_TEXT(mouse_screen_x_);
+    IMGUI_VAR_TO_TEXT(mouse_screen_y_);
+    IMGUI_VAR_TO_TEXT(mouse_world_x_);
+    IMGUI_VAR_TO_TEXT(mouse_world_y_);
+    IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetTrackManager()->GetAllTracks().size());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetTrackManager()->GetTracksTotalHeight());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetMinTimeUs());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetMaxTimeUs());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetCaptureMin());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetCaptureMax());
+    IMGUI_VAR_TO_TEXT(time_graph_.GetTimeWindowUs());
 
-      static bool draw_text_outline = false;
-      if (ImGui::Checkbox("Draw Text Outline", &draw_text_outline)) {
-        TextRenderer::SetDrawOutline(draw_text_outline);
-        NeedsUpdate();
-      }
-      ImGui::EndTabItem();
+    const CaptureData* capture_data = time_graph_.GetCaptureData();
+    if (capture_data != nullptr) {
+      IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->callstack_events_by_tid().size());
+      IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->GetCallstackEventsCount());
     }
-
-    if (ImGui::BeginTabItem("Capture Info")) {
-      IMGUI_VAR_TO_TEXT(screen_width_);
-      IMGUI_VAR_TO_TEXT(screen_height_);
-      IMGUI_VAR_TO_TEXT(world_height_);
-      IMGUI_VAR_TO_TEXT(world_width_);
-      IMGUI_VAR_TO_TEXT(world_top_left_x_);
-      IMGUI_VAR_TO_TEXT(world_top_left_y_);
-      IMGUI_VAR_TO_TEXT(world_min_width_);
-      IMGUI_VAR_TO_TEXT(mouse_screen_x_);
-      IMGUI_VAR_TO_TEXT(mouse_screen_y_);
-      IMGUI_VAR_TO_TEXT(mouse_world_x_);
-      IMGUI_VAR_TO_TEXT(mouse_world_y_);
-      IMGUI_VAR_TO_TEXT(time_graph_.GetNumDrawnTextBoxes());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetNumTimers());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetTrackManager()->GetTracksTotalHeight());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetMinTimeUs());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetMaxTimeUs());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetCaptureMin());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetCaptureMax());
-      IMGUI_VAR_TO_TEXT(time_graph_.GetTimeWindowUs());
-
-      const CaptureData* capture_data = time_graph_.GetCaptureData();
-      if (capture_data != nullptr) {
-        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->callstack_events_by_tid().size());
-        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->GetCallstackEventsCount());
-      }
-
-      ImGui::EndTabItem();
-    }
-
-    if (ImGui::BeginTabItem("Misc")) {
-      static bool show_imgui_demo = false;
-      ImGui::Checkbox("Show ImGui Demo", &show_imgui_demo);
-      if (show_imgui_demo) {
-        ImGui::ShowDemoWindow();
-      }
-      ImGui::EndTabItem();
-    }
-    ImGui::EndTabBar();
   }
 }
 

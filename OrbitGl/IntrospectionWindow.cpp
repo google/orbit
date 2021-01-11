@@ -61,4 +61,12 @@ void IntrospectionWindow::ToggleRecording() {
   }
 }
 
+void IntrospectionWindow::RenderImGui() {
+  CaptureWindow::RenderImGui();
+
+  if (ImGui::CollapsingHeader("IntrospectionWindow")) {
+    IMGUI_VAR_TO_TEXT(IsIntrospecting());
+  }
+}
+
 bool IntrospectionWindow::ShouldAutoZoom() const { return IsIntrospecting(); }
