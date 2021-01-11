@@ -30,6 +30,7 @@ target_sources(OrbitVulkanLayer PRIVATE
 target_link_libraries(OrbitVulkanLayer PUBLIC
         OrbitBase
         OrbitProducer
+        OrbitProducerSideChannel
         OrbitProtos
         Vulkan::Vulkan
         Vulkan::ValidationLayers)
