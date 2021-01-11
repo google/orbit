@@ -104,7 +104,8 @@ target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQt
-  PRIVATE MetricsUploader
+  PRIVATE CodeViewer
+          MetricsUploader
           OrbitAccessibility
           OrbitCore
           OrbitGl
@@ -113,6 +114,7 @@ target_link_libraries(
           OrbitVersion
           Qt5::Widgets
           Qt5::Core
+          SyntaxHighlighter
           qtpropertybrowser::qtpropertybrowser)
 
 if(WITH_CRASH_HANDLING)
