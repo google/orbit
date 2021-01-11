@@ -190,9 +190,22 @@ class Capture(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
-    def _execute(self, length_in_seconds: int = 5):
-        self._show_capture_window()
+    def _set_capture_options(self, collect_thread_states: bool):
+        capture_tab = self.find_control('Group', "CaptureTab")
 
+        logging.info('Opening "Capture Options" dialog')
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        capture_options_button.click_input()
+
+        collect_thread_states_checkbox = self.find_control('CheckBox', 'Collect thread states')
+        if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
+            logging.info('Toggling "Collect thread states" checkbox')
+            collect_thread_states_checkbox.click_input()
+
+        logging.info('Saving "Capture Options"')
+        self.find_control('Button', 'OK').click_input()
+
+    def _take_capture(self, length_in_seconds: int):
         capture_tab = self.find_control('Group', "CaptureTab")
         toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
 
@@ -202,8 +215,12 @@ class Capture(E2ETestCase):
         logging.info('Stopping capture')
         toggle_capture_button.click_input()
 
-        self._verify_existence_of_tracks()
-
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
         MatchTracks(expected_count=1, allow_additional_tracks=True).execute(self.suite)
+
+    def _execute(self, length_in_seconds: int = 5, collect_thread_states: bool = False):
+        self._show_capture_window()
+        self._set_capture_options(collect_thread_states)
+        self._take_capture(length_in_seconds)
+        self._verify_existence_of_tracks()
