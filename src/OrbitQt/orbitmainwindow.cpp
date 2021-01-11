@@ -63,6 +63,8 @@
 #include "App.h"
 #include "CallTreeWidget.h"
 #include "CaptureOptionsDialog.h"
+#include "CodeViewer/Dialog.h"
+#include "CodeViewer/FontSizeInEm.h"
 #include "Connections.h"
 #include "DataViewFactory.h"
 #include "GlCanvas.h"
@@ -82,15 +84,14 @@
 #include "Path.h"
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
+#include "SyntaxHighlighter/X86Assembly.h"
 #include "TargetConfiguration.h"
 #include "TutorialContent.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
-#include "orbitcodeeditor.h"
 #include "orbitdataviewpanel.h"
-#include "orbitdisassemblydialog.h"
 #include "orbitglwidget.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
@@ -126,6 +127,25 @@ const QString kTargetLabelDefaultStyleSheet = "#TargetLabel { color: %1; }";
 const QString kTargetLabelColorConnected = "#66BB6A";
 const QString kTargetLabelColorFileTarget = "#BDBDBD";
 const QString kTargetLabelColorTargetProcessDied = "orange";
+
+void OpenDisassembly(const std::string& assembly, const DisassemblyReport& report) {
+  orbit_code_viewer::Dialog dialog{};
+  dialog.setWindowTitle("Orbit Disassembly");
+  dialog.SetEnableLineNumbers(true);
+
+  auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
+  dialog.SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
+
+  constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
+  dialog.SetHeatmap(kHeatmapAreaWidth, [&report](int line_number) {
+    if (report.GetNumSamples() == 0) return 0.0f;
+
+    return static_cast<float>(report.GetNumSamplesAtLine(line_number)) /
+           static_cast<float>(report.GetNumSamples());
+  });
+
+  dialog.exec();
+}
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
@@ -357,9 +377,7 @@ void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
       });
 
   app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  app_->SetDisassemblyCallback([this](std::string disassembly, DisassemblyReport report) {
-    OpenDisassembly(std::move(disassembly), std::move(report));
-  });
+  app_->SetDisassemblyCallback(&OpenDisassembly);
   app_->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
   });
@@ -1126,17 +1144,6 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   setWindowTitle(QString::fromStdString(filepath));
   UpdateCaptureStateDependentWidgets();
   FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);
-}
-
-void OrbitMainWindow::OpenDisassembly(std::string a_String, DisassemblyReport report) {
-  auto* dialog = new OrbitDisassemblyDialog(this);
-  dialog->SetText(std::move(a_String));
-  dialog->SetDisassemblyReport(std::move(report));
-  dialog->setWindowTitle("Orbit Disassembly");
-  dialog->setAttribute(Qt::WA_DeleteOnClose);
-  dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |
-                         Qt::WindowMaximizeButtonHint);
-  dialog->show();
 }
 
 void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
