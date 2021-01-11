@@ -417,11 +417,8 @@ void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
       data_view_factory->GetOrCreateDataView(DataViewType::kTracepoints), SelectionType::kExtended,
       FontType::kDefault);
 
-  SetupCodeView();
-
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CallStackTab));
-    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
   }
 
   if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
@@ -490,15 +487,6 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   QFontMetrics fm(ui->timerLabel->font());
   int pixel_width = fm.horizontalAdvance("w");
   ui->timerLabel->setMinimumWidth(5 * pixel_width);
-}
-
-void OrbitMainWindow::SetupCodeView() {
-  ui->CodeTextEdit->SetEditorType(OrbitCodeEditor::CODE_VIEW);
-  ui->FileMappingTextEdit->SetEditorType(OrbitCodeEditor::FILE_MAPPING);
-  ui->FileMappingTextEdit->SetSaveButton(ui->SaveFileMapping);
-  ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
-  ui->FileMappingWidget->hide();
-  OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
 }
 
 void OrbitMainWindow::SetupHintFrame() {

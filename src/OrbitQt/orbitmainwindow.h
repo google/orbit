@@ -138,7 +138,6 @@ class OrbitMainWindow : public QMainWindow {
  private:
   void StartMainTimer();
   void SetupCaptureToolbar();
-  void SetupCodeView();
   void SetupMainWindow(uint32_t font_size);
   void SetupHintFrame();
   void SetupTargetLabel();

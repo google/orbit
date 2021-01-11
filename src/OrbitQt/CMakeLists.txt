@@ -23,9 +23,7 @@ target_sources(
           Error.h
           EventLoop.h
           orbitaboutdialog.h
-          orbitcodeeditor.h
           orbitdataviewpanel.h
-          orbitdisassemblydialog.h
           orbiteventiterator.h
           orbitglwidget.h
           orbitlivefunctions.h
@@ -64,11 +62,8 @@ target_sources(
           main.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
-          orbitcodeeditor.cpp
           orbitdataviewpanel.cpp
           orbitdataviewpanel.ui
-          orbitdisassemblydialog.cpp
-          orbitdisassemblydialog.ui
           orbiteventiterator.cpp
           orbiteventiterator.ui
           orbitglwidget.cpp
