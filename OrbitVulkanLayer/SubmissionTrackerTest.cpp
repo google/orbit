@@ -660,6 +660,69 @@ TEST_F(SubmissionTrackerTest, StartCaptureDuringSubmissionWontWriteData) {
   tracker_.CompleteSubmits(device_);
 }
 
+TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
+  ExpectFourNextReadyQuerySlotCalls();
+  // Ensure that the first submission will be considered to be not ready after the first present.
+  // Afterwards, all submissions are considered ready.
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      .WillOnce(Return(mock_get_query_pool_results_function_not_ready_))
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
+
+  std::vector<uint32_t> actual_reset_slots;
+  auto fake_reset_query_slots = [&actual_reset_slots](VkDevice /*device*/,
+                                                      const std::vector<uint32_t> slots_to_reset) {
+    actual_reset_slots.insert(actual_reset_slots.end(), slots_to_reset.begin(),
+                              slots_to_reset.end());
+  };
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(fake_reset_query_slots));
+
+  std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
+  auto fake_enqueue_capture_event =
+      [&actual_capture_events](orbit_grpc_protos::CaptureEvent&& capture_event) {
+        actual_capture_events.emplace_back(std::move(capture_event));
+        return true;
+      };
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(2)
+      .WillRepeatedly(Invoke(fake_enqueue_capture_event));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+
+  // Submission #1:
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  std::optional<QueueSubmission> queue_submission_optional_1 =
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
+  // The results are not yet ready at this point in time.
+  tracker_.CompleteSubmits(device_);
+
+  // Submission #2:
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  std::optional<QueueSubmission> queue_submission_optional_2 =
+      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
+  // Now the results are ready for all submissions.
+  tracker_.CompleteSubmits(device_);
+
+  ASSERT_EQ(actual_capture_events.size(), 2);
+  EXPECT_TRUE(actual_capture_events[0].has_gpu_queue_submission());
+  EXPECT_TRUE(actual_capture_events[1].has_gpu_queue_submission());
+  EXPECT_LT(actual_capture_events[0]
+                .mutable_gpu_queue_submission()
+                ->meta_info()
+                .pre_submission_cpu_timestamp(),
+            actual_capture_events[1]
+                .mutable_gpu_queue_submission()
+                ->meta_info()
+                .pre_submission_cpu_timestamp());
+  EXPECT_THAT(actual_reset_slots,
+              UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3, kSlotIndex4));
+}
+
 TEST_F(SubmissionTrackerTest, WillResetProperlyWhenStartStopAndStartACaptureWithinASubmission) {
   EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
       .Times(1)
@@ -1365,7 +1428,6 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
     actual_reset_slots.insert(actual_reset_slots.end(), slots_to_reset.begin(),
                               slots_to_reset.end());
   };
-  std::vector<uint32_t> actual_reset_slots_2;
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(mock_reset_query_slots));
 
   std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
