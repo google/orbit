@@ -471,14 +471,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     std::vector<QueueSubmission> completed_submissions =
         PullCompletedSubmissions(device, query_pool);
 
-    // We sort the completed submissions by timestamp to avoid sending the capture events out of
-    // order.
-    std::sort(completed_submissions.begin(), completed_submissions.end(),
-              [](const QueueSubmission& lhs, const QueueSubmission& rhs) {
-                return lhs.meta_information.pre_submission_cpu_timestamp <
-                       rhs.meta_information.pre_submission_cpu_timestamp;
-              });
-
     if (completed_submissions.empty()) {
       return;
     }
@@ -701,6 +693,14 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         }
       }
     }
+
+    // We sort the completed submissions by timestamp to avoid sending the capture events out of
+    // order.
+    std::sort(completed_submissions.begin(), completed_submissions.end(),
+              [](const QueueSubmission& lhs, const QueueSubmission& rhs) {
+                return lhs.meta_information.pre_submission_cpu_timestamp <
+                       rhs.meta_information.pre_submission_cpu_timestamp;
+              });
 
     return completed_submissions;
   }
