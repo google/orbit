@@ -96,7 +96,11 @@ QPushButton:disabled {
              <enum>Qt::Horizontal</enum>
             </property>
             <widget class="ProcessLauncherWidget" name="ProcessesList" native="true"/>
-            <widget class="OrbitDataViewPanel" name="SessionList" native="true"/>
+            <widget class="OrbitDataViewPanel" name="SessionList" native="true">
+             <property name="accessibleName">
+              <string>PresetsDataView</string>
+             </property>
+            </widget>
            </widget>
            <widget class="OrbitDataViewPanel" name="ModulesList" native="true">
             <property name="accessibleName">
@@ -267,7 +271,11 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="CallStackView" native="true"/>
+          <widget class="OrbitDataViewPanel" name="CallStackView" native="true">
+           <property name="accessibleName">
+            <string>CallstackDataView</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -277,7 +285,11 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="liveGridLayout">
          <item row="0" column="0">
-          <widget class="OrbitLiveFunctions" name="liveFunctions" native="true"/>
+          <widget class="OrbitLiveFunctions" name="liveFunctions" native="true">
+           <property name="accessibleName">
+            <string>LiveDataView</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -287,7 +299,11 @@ QPushButton:disabled {
         </attribute>
         <layout class="QGridLayout" name="samplingGridLayout">
          <item row="0" column="0">
-          <widget class="OrbitSamplingReport" name="samplingReport" native="true"/>
+          <widget class="OrbitSamplingReport" name="samplingReport" native="true">
+           <property name="accessibleName">
+            <string>SamplingDataView</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
