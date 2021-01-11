@@ -12,7 +12,7 @@ from typing import Tuple, List
 from core.common_controls import Track
 from core.orbit_e2e import E2ETestCase, E2ETestSuite
 from pywinauto.base_wrapper import BaseWrapper
-from pywinauto import mouse
+from pywinauto import mouse, keyboard
 
 
 class CaptureWindowE2ETestCaseBase(E2ETestCase):
@@ -174,8 +174,10 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         track_filter = self.find_control("Edit", "FilterTracks", parent=toolbar)
 
         logging.info("Setting track filter text: '%s'", filter_string)
-        track_filter.set_edit_text(filter_string)
-        tracks = self._find_tracks()
+        track_filter.set_focus()
+        track_filter.set_edit_text('')
+        # Using send_keys instead of set_edit_text directly because set_edit_text ignores the wait timings...
+        keyboard.send_keys(filter_string)
 
         # Verify by re-using a MatchTracks Fragment
         match_tracks = MatchTracks(expected_count=expected_count, expected_names=expected_names,

@@ -9,8 +9,9 @@ import time
 
 from absl import flags
 from pywinauto.application import Application
+from pywinauto.keyboard import send_keys
 
-from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
+from core.orbit_e2e import E2ETestCase, wait_for_condition
 from core.common_controls import DataViewPanel
 
 
@@ -77,7 +78,9 @@ class FilterAndSelectFirstProcess(E2ETestCase):
         wait_for_condition(lambda: process_list.item_count() > 0, 30)
         logging.info('Setting filter text for process list')
         if process_filter:
-            filter_edit.set_edit_text(process_filter)
+            filter_edit.set_focus()
+            filter_edit.set_edit_text('')
+            send_keys(process_filter)
         self.expect_true(process_list.item_count() > 0, 'Process list has at least one entry')
 
         if flags.FLAGS.enable_ui_beta:

@@ -8,6 +8,8 @@ import logging
 
 from absl import flags
 
+from pywinauto.keyboard import send_keys
+
 from core.common_controls import DataViewPanel
 from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
 
@@ -41,7 +43,9 @@ class LoadSymbols(E2ETestCase):
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0, 100)
 
         logging.info('Filtering and loading')
-        modules_dataview.filter.set_edit_text(module_search_string)
+        modules_dataview.filter.set_focus()
+        modules_dataview.filter.set_edit_text('')
+        send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() == 1)
         modules_dataview.get_item_at(0, 0).click_input('right')
 
@@ -69,7 +73,9 @@ class FilterAndHookFunction(E2ETestCase):
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
 
         logging.info('Filtering and hooking')
-        functions_dataview.filter.set_edit_text(function_search_string)
+        functions_dataview.filter.set_focus()
+        functions_dataview.filter.set_edit_text('')
+        send_keys(function_search_string)
         wait_for_condition(lambda: functions_dataview.get_row_count() == 1)
         functions_dataview.get_item_at(0, 0).click_input('right')
 

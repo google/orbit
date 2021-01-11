@@ -114,7 +114,6 @@ class E2ETestSuite:
     def set_up(self):
         timings.Timings.after_click_wait = 0.5
         timings.Timings.after_clickinput_wait = 0.5
-        timings.Timings.after_editsetedittext_wait = 0.1
         logging.info("Setting up with dev_mode = %s", self.dev_mode)
         self.top_window(True).set_focus()
 
