@@ -662,6 +662,8 @@ TEST_F(SubmissionTrackerTest, StartCaptureDuringSubmissionWontWriteData) {
 
 TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   ExpectFourNextReadyQuerySlotCalls();
+  // Ensure that the first submission will be considered to be not ready after the first present.
+  // Afterwards, all submissions are considered ready.
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillOnce(Return(mock_get_query_pool_results_function_not_ready_))
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
