@@ -357,55 +357,6 @@ QPushButton:disabled {
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="CodeTab">
-        <attribute name="title">
-         <string>Code</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_10">
-         <item row="0" column="0">
-          <widget class="QLineEdit" name="lineEdit"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="OrbitCodeEditor" name="CodeTextEdit">
-           <property name="accessibleName">
-            <string>CodeTextEdit</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QWidget" name="FileMappingWidget" native="true">
-           <layout class="QGridLayout" name="gridLayout_9">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="SaveFileMapping">
-              <property name="text">
-               <string>Save File Mapping</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="OrbitCodeEditor" name="FileMappingTextEdit">
-              <property name="accessibleName">
-               <string>FileMappingTextEdit</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="tracepointsTab">
         <attribute name="title">
          <string>Tracepoints</string>
@@ -709,11 +660,6 @@ QPushButton:disabled {
    <class>OrbitDataViewPanel</class>
    <extends>QWidget</extends>
    <header>orbitdataviewpanel.h</header>
-  </customwidget>
-  <customwidget>
-   <class>OrbitCodeEditor</class>
-   <extends>QPlainTextEdit</extends>
-   <header>orbitcodeeditor.h</header>
   </customwidget>
   <customwidget>
    <class>OrbitGLWidget</class>
