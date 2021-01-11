@@ -667,22 +667,22 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
 
   std::vector<uint32_t> actual_reset_slots;
-  auto mock_reset_query_slots = [&actual_reset_slots](VkDevice /*device*/,
+  auto fake_reset_query_slots = [&actual_reset_slots](VkDevice /*device*/,
                                                       const std::vector<uint32_t> slots_to_reset) {
     actual_reset_slots.insert(actual_reset_slots.end(), slots_to_reset.begin(),
                               slots_to_reset.end());
   };
-  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(mock_reset_query_slots));
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(fake_reset_query_slots));
 
   std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
-  auto mock_enqueue_capture_event =
+  auto fake_enqueue_capture_event =
       [&actual_capture_events](orbit_grpc_protos::CaptureEvent&& capture_event) {
         actual_capture_events.emplace_back(std::move(capture_event));
         return true;
       };
   EXPECT_CALL(*producer_, EnqueueCaptureEvent)
       .Times(2)
-      .WillRepeatedly(Invoke(mock_enqueue_capture_event));
+      .WillRepeatedly(Invoke(fake_enqueue_capture_event));
 
   producer_->StartCapture();
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
@@ -706,9 +706,9 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   // Now the results are ready for all submissions.
   tracker_.CompleteSubmits(device_);
 
-  EXPECT_EQ(actual_capture_events.size(), 2);
-  ASSERT_TRUE(actual_capture_events[0].has_gpu_queue_submission());
-  ASSERT_TRUE(actual_capture_events[1].has_gpu_queue_submission());
+  ASSERT_EQ(actual_capture_events.size(), 2);
+  EXPECT_TRUE(actual_capture_events[0].has_gpu_queue_submission());
+  EXPECT_TRUE(actual_capture_events[1].has_gpu_queue_submission());
   EXPECT_LT(actual_capture_events[0]
                 .mutable_gpu_queue_submission()
                 ->meta_info()

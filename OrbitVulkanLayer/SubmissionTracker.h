@@ -474,9 +474,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     // We sort the completed submissions by timestamp to avoid sending the capture events out of
     // order.
     std::sort(completed_submissions.begin(), completed_submissions.end(),
-              [](const QueueSubmission& left, const QueueSubmission& right) {
-                return left.meta_information.pre_submission_cpu_timestamp <
-                       right.meta_information.pre_submission_cpu_timestamp;
+              [](const QueueSubmission& lhs, const QueueSubmission& rhs) {
+                return lhs.meta_information.pre_submission_cpu_timestamp <
+                       rhs.meta_information.pre_submission_cpu_timestamp;
               });
 
     if (completed_submissions.empty()) {
