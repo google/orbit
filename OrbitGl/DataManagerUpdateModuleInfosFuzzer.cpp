@@ -32,7 +32,7 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 // TODO(170468590): Remove this flag when the new UI is finished
-ABSL_FLAG(bool, enable_ui_beta, false, "Enable the new user interface");
+ABSL_FLAG(bool, enable_ui_beta, true, "Enable the new user interface");
 
 using orbit_client_data::ModuleManager;
 using orbit_grpc_protos::GetModuleListResponse;
