@@ -5,6 +5,8 @@
 #ifndef ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
 #define ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 
 #include <algorithm>
@@ -28,8 +30,6 @@
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/TracepointData.h"
-#include "OrbitClientData/UserDefinedCaptureData.h"
-#include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
 #include "tracepoint.pb.h"
@@ -38,16 +38,17 @@ class CaptureData {
  public:
   explicit CaptureData(
       ProcessData&& process, orbit_client_data::ModuleManager* module_manager,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data)
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions,
+      TracepointInfoSet selected_tracepoints,
+      absl::flat_hash_set<uint64_t> frame_track_function_ids)
       : process_(std::move(process)),
         module_manager_(module_manager),
-        selected_functions_{std::move(selected_functions)},
+        instrumented_functions_{std::move(instrumented_functions)},
         selected_tracepoints_{std::move(selected_tracepoints)},
         callstack_data_(std::make_unique<CallstackData>()),
         selection_callstack_data_(std::make_unique<CallstackData>()),
         tracepoint_data_(std::make_unique<TracepointData>()),
-        user_defined_capture_data_(std::move(user_defined_capture_data)) {}
+        frame_track_function_ids_(std::move(frame_track_function_ids)) {}
 
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
@@ -57,12 +58,14 @@ class CaptureData {
   CaptureData& operator=(CaptureData&& other) = default;
 
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
-  selected_functions() const {
-    return selected_functions_;
+  instrumented_functions() const {
+    return instrumented_functions_;
   }
 
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetSelectedFunction(
-      uint64_t function_address) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetInstrumentedFunctionById(
+      uint64_t function_id) const;
+  [[nodiscard]] std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
+      const orbit_client_protos::FunctionInfo& function) const;
 
   [[nodiscard]] int32_t process_id() const;
 
@@ -204,17 +207,18 @@ class CaptureData {
     post_processed_sampling_data_ = std::move(post_processed_sampling_data);
   }
 
-  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
-  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
-    return user_defined_capture_data_;
+  void EnableFrameTrack(uint64_t instrumented_function_id);
+  void DisableFrameTrack(uint64_t instrumented_function_id);
+  [[nodiscard]] bool IsFrameTrackEnabled(uint64_t instrumented_function_id) const;
+
+  [[nodiscard]] const absl::flat_hash_set<uint64_t>& frame_track_function_ids() const {
+    return frame_track_function_ids_;
   }
 
  private:
   ProcessData process_;
   orbit_client_data::ModuleManager* module_manager_;
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions_;
 
   TracepointInfoSet selected_tracepoints_;
   // std::unique_ptr<> allows to move and copy CallstackData easier
@@ -239,7 +243,7 @@ class CaptureData {
 
   std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
 
-  UserDefinedCaptureData user_defined_capture_data_;
+  absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 };
 
 #endif  // ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_

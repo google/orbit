@@ -33,6 +33,8 @@ using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
+static constexpr uint64_t kInvalidFunctionId = 0;
+
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
     case CaptureEvent::kSchedulingSlice:
@@ -126,7 +128,7 @@ void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_cal
   timer_info.set_start(function_call.end_timestamp_ns() - function_call.duration_ns());
   timer_info.set_end(function_call.end_timestamp_ns());
   timer_info.set_depth(static_cast<uint8_t>(function_call.depth()));
-  timer_info.set_function_address(function_call.absolute_address());
+  timer_info.set_function_id(function_call.function_id());
   timer_info.set_user_data_key(function_call.return_value());
   timer_info.set_processor(-1);
   timer_info.set_type(TimerInfo::kNone);
@@ -146,7 +148,7 @@ void CaptureEventProcessor::ProcessIntrospectionScope(
   timer_info.set_start(introspection_scope.end_timestamp_ns() - introspection_scope.duration_ns());
   timer_info.set_end(introspection_scope.end_timestamp_ns());
   timer_info.set_depth(static_cast<uint8_t>(introspection_scope.depth()));
-  timer_info.set_function_address(0);  // function address n/a, set to invalid value
+  timer_info.set_function_id(kInvalidFunctionId);  // function id n/a, set to 0
   timer_info.set_processor(-1);        // cpu info not available, set to invalid value
   timer_info.set_type(TimerInfo::kIntrospection);
   timer_info.mutable_registers()->CopyFrom(introspection_scope.registers());

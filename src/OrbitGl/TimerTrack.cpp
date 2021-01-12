@@ -75,7 +75,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
   const TextBox* selected_textbox = app_->selected_text_box();
-  uint64_t highlighted_address = app_->GetFunctionAddressToHighlight();
+  uint64_t highlighted_function_id = app_->GetFunctionIdToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
   // events that would just draw over an already drawn line. When zoomed in
@@ -104,7 +104,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
         if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
         if (!TimerFilter(timer_info)) continue;
-        uint64_t function_address = timer_info.function_address();
+        uint64_t function_id = timer_info.function_id();
 
         UpdateDepth(timer_info.depth() + 1);
         double start_us = time_graph_->GetUsFromTick(timer_info.start());
@@ -118,7 +118,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
         bool is_selected = &text_box == selected_textbox;
-        bool is_highlighted = !is_selected && function_address == highlighted_address;
+        bool is_highlighted = !is_selected && function_id == highlighted_function_id;
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));

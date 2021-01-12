@@ -59,7 +59,7 @@ class MockCaptureListener : public CaptureListener {
       (ProcessData&& /*process*/,
        (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
        TracepointInfoSet /*selected_tracepoints*/,
-       UserDefinedCaptureData /*user_defined_capture_data*/),
+       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
       (override));
   MOCK_METHOD(void, OnCaptureComplete, (), (override));
   MOCK_METHOD(void, OnCaptureCancelled, (), (override));
@@ -213,7 +213,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   FunctionCall* function_call = event.mutable_function_call();
   function_call->set_pid(42);
   function_call->set_tid(24);
-  function_call->set_absolute_address(123);
+  function_call->set_function_id(123);
   function_call->set_duration_ns(97);
   function_call->set_end_timestamp_ns(100);
   function_call->set_depth(3);
@@ -228,7 +228,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
 
   EXPECT_EQ(actual_timer.process_id(), function_call->pid());
   EXPECT_EQ(actual_timer.thread_id(), function_call->tid());
-  EXPECT_EQ(actual_timer.function_address(), function_call->absolute_address());
+  EXPECT_EQ(actual_timer.function_id(), function_call->function_id());
   EXPECT_EQ(actual_timer.start(), function_call->end_timestamp_ns() - function_call->duration_ns());
   EXPECT_EQ(actual_timer.end(), function_call->end_timestamp_ns());
   EXPECT_EQ(actual_timer.depth(), function_call->depth());

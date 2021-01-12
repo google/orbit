@@ -24,7 +24,7 @@ TEST(TimerInfosIterator, Access) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TextBox box;
   TimerInfo timer;
-  timer.set_function_address(1);
+  timer.set_function_id(1);
   // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
   timer.set_end(1);
   box.SetTimerInfo(timer);
@@ -32,13 +32,13 @@ TEST(TimerInfosIterator, Access) {
   chains.push_back(chain);
 
   // Just validate setting worked as expected
-  EXPECT_EQ(1, timer.function_address());
-  EXPECT_EQ(1, box.GetTimerInfo().function_address());
+  EXPECT_EQ(1, timer.function_id());
+  EXPECT_EQ(1, box.GetTimerInfo().function_id());
 
   // Now create an iterator and test to access it
   TimerInfosIterator it(chains.begin(), chains.end());
-  EXPECT_EQ(1, it->function_address());
-  EXPECT_EQ(1, (*it).function_address());
+  EXPECT_EQ(1, it->function_id());
+  EXPECT_EQ(1, (*it).function_id());
 }
 
 TEST(TimerInfosIterator, Copy) {
@@ -46,7 +46,7 @@ TEST(TimerInfosIterator, Copy) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TextBox box;
   TimerInfo timer;
-  timer.set_function_address(1);
+  timer.set_function_id(1);
   // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
   timer.set_end(1);
   box.SetTimerInfo(timer);
@@ -55,23 +55,23 @@ TEST(TimerInfosIterator, Copy) {
 
   // Now create an iterator and test to access it
   TimerInfosIterator it(chains.begin(), chains.end());
-  EXPECT_EQ(1, it->function_address());
+  EXPECT_EQ(1, it->function_id());
 
   // Now create a Copy
   TimerInfosIterator it_copy1 = it;
-  EXPECT_EQ(1, it_copy1->function_address());
+  EXPECT_EQ(1, it_copy1->function_id());
 
   // Increase the original and check that the copy does not modify
   ++it;
-  EXPECT_EQ(1, it_copy1->function_address());
+  EXPECT_EQ(1, it_copy1->function_id());
 
   // Create a copy using the copy-constructor
   TimerInfosIterator it_copy2(it_copy1);
-  EXPECT_EQ(1, it_copy2->function_address());
+  EXPECT_EQ(1, it_copy2->function_id());
 
   // Increase the original and check that the copy does not modify
   ++it_copy1;
-  EXPECT_EQ(1, it_copy2->function_address());
+  EXPECT_EQ(1, it_copy2->function_id());
 }
 
 TEST(TimerInfosIterator, Move) {
@@ -79,7 +79,7 @@ TEST(TimerInfosIterator, Move) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TextBox box;
   TimerInfo timer;
-  timer.set_function_address(1);
+  timer.set_function_id(1);
   // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
   timer.set_end(1);
   box.SetTimerInfo(timer);
@@ -88,15 +88,15 @@ TEST(TimerInfosIterator, Move) {
 
   // Now create an iterator and test to access it
   TimerInfosIterator it(chains.begin(), chains.end());
-  EXPECT_EQ(1, it->function_address());
+  EXPECT_EQ(1, it->function_id());
 
   // Now create a Copy
   TimerInfosIterator it_copy1 = std::move(it);
-  EXPECT_EQ(1, it_copy1->function_address());
+  EXPECT_EQ(1, it_copy1->function_id());
 
   // Create a copy using the copy-constructor
   TimerInfosIterator it_copy2(std::move(it_copy1));
-  EXPECT_EQ(1, it_copy2->function_address());
+  EXPECT_EQ(1, it_copy2->function_id());
 }
 
 TEST(TimerInfosIterator, Equality) {
@@ -104,7 +104,7 @@ TEST(TimerInfosIterator, Equality) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TextBox box;
   TimerInfo timer;
-  timer.set_function_address(1);
+  timer.set_function_id(1);
   timer.set_end(1);
   box.SetTimerInfo(timer);
   chain->push_back(box);
@@ -136,7 +136,7 @@ TEST(TimerInfosIterator, ForEachEmpty) {
 
   std::vector<uint64_t> result;
   for (auto it = it_begin; it != it_end; ++it) {
-    result.push_back(it->function_address());
+    result.push_back(it->function_id());
   }
   EXPECT_THAT(result, testing::ElementsAre());
 }
@@ -155,7 +155,7 @@ TEST(TimerInfosIterator, ForEachLarge) {
     for (size_t box_count = 0; box_count < max_timers; ++box_count) {
       TextBox box;
       TimerInfo timer;
-      timer.set_function_address(count);
+      timer.set_function_id(count);
       timer.set_start(count);
       timer.set_end(count + 1);
       box.SetTimerInfo(timer);
@@ -172,7 +172,7 @@ TEST(TimerInfosIterator, ForEachLarge) {
 
   std::vector<uint64_t> result;
   for (auto it = it_begin; it != it_end; ++it) {
-    result.push_back(it->function_address());
+    result.push_back(it->function_id());
   }
   EXPECT_THAT(result, testing::ElementsAreArray(expected));
 }

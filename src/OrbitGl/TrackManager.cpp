@@ -74,8 +74,9 @@ std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
 }
 
 std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<FrameTrack*> tracks;
-  for (auto& [unused_key, track] : frame_tracks_) {
+  for (auto& [unused_id, track] : frame_tracks_) {
     tracks.push_back(track.get());
   }
   return tracks;
@@ -320,8 +321,9 @@ void TrackManager::AddTrack(std::shared_ptr<Track> track) {
   sorting_invalidated_ = true;
 }
 
-void TrackManager::RemoveFrameTrack(uint64_t function_address) {
-  frame_tracks_.erase(function_address);
+void TrackManager::RemoveFrameTrack(uint64_t function_id) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  frame_tracks_.erase(function_id);
   sorting_invalidated_ = true;
   // We need to do SortTracks again to have visible_tracks_ updated
   SortTracks();
@@ -414,15 +416,20 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
-FrameTrack* TrackManager::GetOrCreateFrameTrack(const FunctionInfo& function) {
+FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id,
+                                                const FunctionInfo& function) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<FrameTrack> track = frame_tracks_[function.address()];
-  if (track == nullptr) {
-    track = std::make_shared<FrameTrack>(time_graph_, function, app_);
-    // Normally we would call AddTrack(track) here, but frame tracks are removable by users
-    // and therefore cannot be simply thrown into the flat vector of tracks.
-    sorting_invalidated_ = true;
-    frame_tracks_[function.address()] = track;
+  auto track_it = frame_tracks_.find(function_id);
+  if (track_it != frame_tracks_.end()) {
+    return track_it->second.get();
   }
+
+  auto track = std::make_shared<FrameTrack>(time_graph_, function_id, function, app_);
+
+  // Normally we would call AddTrack(track) here, but frame tracks are removable by users
+  // and therefore cannot be simply thrown into the flat vector of tracks.
+  sorting_invalidated_ = true;
+  frame_tracks_[function_id] = track;
+
   return track.get();
 }

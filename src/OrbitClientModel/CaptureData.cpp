@@ -65,12 +65,25 @@ void CaptureData::UpdateFunctionStats(const FunctionInfo& function, uint64_t ela
   }
 }
 
-const FunctionInfo* CaptureData::GetSelectedFunction(uint64_t function_address) const {
-  auto selected_functions_it = selected_functions_.find(function_address);
-  if (selected_functions_it == selected_functions_.end()) {
+const FunctionInfo* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
+  auto selected_functions_it = instrumented_functions_.find(function_id);
+  if (selected_functions_it == instrumented_functions_.end()) {
     return nullptr;
   }
   return &selected_functions_it->second;
+}
+
+std::optional<uint64_t> CaptureData::FindInstrumentedFunctionIdSlow(
+    const orbit_client_protos::FunctionInfo& function) const {
+  for (const auto& it : instrumented_functions_) {
+    const auto& target_function = it.second;
+    if (target_function.file() == function.file() &&
+        target_function.address() == function.address()) {
+      return it.first;
+    }
+  }
+
+  return std::nullopt;
 }
 
 const LinuxAddressInfo* CaptureData::GetAddressInfo(uint64_t absolute_address) const {
@@ -178,14 +191,21 @@ int32_t CaptureData::process_id() const { return process_.pid(); }
 
 std::string CaptureData::process_name() const { return process_.name(); }
 
-void CaptureData::EnableFrameTrack(const FunctionInfo& function) {
-  user_defined_capture_data_.InsertFrameTrack(function);
+void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
+  if (frame_track_function_ids_.contains(instrumented_function_id)) {
+    const FunctionInfo* function = GetInstrumentedFunctionById(instrumented_function_id);
+    CHECK(function != nullptr);
+    LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
+        function->name());
+    return;
+  }
+  frame_track_function_ids_.insert(instrumented_function_id);
 }
 
-void CaptureData::DisableFrameTrack(const FunctionInfo& function) {
-  user_defined_capture_data_.EraseFrameTrack(function);
+void CaptureData::DisableFrameTrack(uint64_t instrumented_function_id) {
+  frame_track_function_ids_.erase(instrumented_function_id);
 }
 
-[[nodiscard]] bool CaptureData::IsFrameTrackEnabled(const FunctionInfo& function) const {
-  return user_defined_capture_data_.ContainsFrameTrack(function);
+[[nodiscard]] bool CaptureData::IsFrameTrackEnabled(uint64_t instrumented_function_id) const {
+  return frame_track_function_ids_.contains(instrumented_function_id);
 }

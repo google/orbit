@@ -52,7 +52,7 @@ class ClientGgp final : public CaptureListener {
       ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints,
-      UserDefinedCaptureData user_defined_capture_data) override;
+      absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnCaptureComplete() override;
   void OnCaptureCancelled() override;
   void OnCaptureFailed(ErrorMessage error_message) override;

@@ -9,23 +9,27 @@
 
 #include <cstdint>
 
+#include "Function.h"
+
+namespace orbit_linux_tracing {
 class ManualInstrumentationConfig {
  public:
-  void AddTimerStartAddress(uint64_t address) { timer_start_addresses_.insert(address); }
+  void AddTimerStartFunctionId(uint64_t id) { timer_start_function_ids_.insert(id); }
 
-  void AddTimerStopAddress(uint64_t address) { timer_stop_addresses_.insert(address); }
+  void AddTimerStopFunctionId(uint64_t id) { timer_stop_function_ids_.insert(id); }
 
-  bool IsTimerStartAddress(uint64_t address) const {
-    return timer_start_addresses_.contains(address);
+  [[nodiscard]] bool IsTimerStartFunction(uint64_t function_id) const {
+    return timer_start_function_ids_.contains(function_id);
   }
 
-  bool IsTimerStopAddress(uint64_t address) const {
-    return timer_stop_addresses_.contains(address);
+  [[nodiscard]] bool IsTimerStopFunction(uint64_t function_id) const {
+    return timer_stop_function_ids_.contains(function_id);
   }
 
  private:
-  absl::flat_hash_set<uint64_t> timer_start_addresses_;
-  absl::flat_hash_set<uint64_t> timer_stop_addresses_;
+  absl::flat_hash_set<uint64_t> timer_start_function_ids_;
+  absl::flat_hash_set<uint64_t> timer_stop_function_ids_;
 };
+}  // namespace orbit_linux_tracing
 
 #endif

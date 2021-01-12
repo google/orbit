@@ -40,7 +40,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app, SelectionType selection_type,
   ui->data_view_panel_->Initialize(data_view, selection_type, font_type, is_main_instance);
 
   live_functions_->SetAddIteratorCallback(
-      [this](size_t id, FunctionInfo* function) { this->AddIterator(id, function); });
+      [this](uint64_t id, const FunctionInfo* function) { this->AddIterator(id, function); });
 
   all_events_iterator_ = new OrbitEventIterator(this);
   all_events_iterator_->SetNextButtonCallback([this]() {
@@ -70,7 +70,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app, SelectionType selection_type,
 
 void OrbitLiveFunctions::Deinitialize() {
   delete all_events_iterator_;
-  live_functions_->SetAddIteratorCallback([](size_t, FunctionInfo*) {});
+  live_functions_->SetAddIteratorCallback([](uint64_t, const FunctionInfo*) {});
   ui->data_view_panel_->Deinitialize();
   live_functions_.reset();
 }
@@ -87,7 +87,7 @@ void OrbitLiveFunctions::OnDataChanged() {
   }
 }
 
-void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
+void OrbitLiveFunctions::AddIterator(size_t id, const FunctionInfo* function) {
   if (!live_functions_) return;
 
   OrbitEventIterator* iterator_ui = new OrbitEventIterator(this);

@@ -50,14 +50,14 @@ void DataManager::DeselectFunction(const FunctionInfo& function) {
   selected_functions_.erase(function);
 }
 
-void DataManager::set_visible_functions(absl::flat_hash_set<uint64_t> visible_functions) {
+void DataManager::set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  visible_functions_ = std::move(visible_functions);
+  visible_function_ids_ = std::move(visible_function_ids);
 }
 
-void DataManager::set_highlighted_function(uint64_t highlighted_function_address) {
+void DataManager::set_highlighted_function_id(uint64_t highlighted_function_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  highlighted_function_ = highlighted_function_address;
+  highlighted_function_id_ = highlighted_function_id;
 }
 
 void DataManager::set_selected_thread_id(int32_t thread_id) {
@@ -65,16 +65,14 @@ void DataManager::set_selected_thread_id(int32_t thread_id) {
   selected_thread_id_ = thread_id;
 }
 
-bool DataManager::IsFunctionVisible(uint64_t function_address) const {
+bool DataManager::IsFunctionVisible(uint64_t function_id) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  return visible_functions_.contains(function_address);
+  return visible_function_ids_.contains(function_id);
 }
 
-const uint64_t DataManager::kInvalidFunctionAddress = std::numeric_limits<uint64_t>::max();
-
-uint64_t DataManager::highlighted_function() const {
+uint64_t DataManager::highlighted_function_id() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  return highlighted_function_;
+  return highlighted_function_id_;
 }
 
 int32_t DataManager::selected_thread_id() const {

@@ -34,15 +34,16 @@ class LiveFunctionsController {
   void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
 
   void SetAddIteratorCallback(
-      std::function<void(uint64_t, orbit_client_protos::FunctionInfo*)> callback) {
-    add_iterator_callback_ = callback;
+      std::function<void(uint64_t, const orbit_client_protos::FunctionInfo*)> callback) {
+    add_iterator_callback_ = std::move(callback);
   }
 
   uint64_t GetCaptureMin();
   uint64_t GetCaptureMax();
   uint64_t GetStartTime(uint64_t index);
 
-  void AddIterator(orbit_client_protos::FunctionInfo* function);
+  void AddIterator(uint64_t instrumented_function_id,
+                   const orbit_client_protos::FunctionInfo* function);
 
  private:
   void Move();
@@ -52,9 +53,7 @@ class LiveFunctionsController {
   absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> function_iterators_;
   absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
 
-  std::function<void(uint64_t, orbit_client_protos::FunctionInfo*)> add_iterator_callback_;
-
-  uint64_t next_iterator_id_ = 0;
+  std::function<void(uint64_t, const orbit_client_protos::FunctionInfo*)> add_iterator_callback_;
 
   uint64_t id_to_select_ = 0;
 

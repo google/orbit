@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cinttypes>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -58,16 +59,16 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
 
   for (const CaptureOptions::InstrumentedFunction& instrumented_function :
        capture_options.instrumented_functions()) {
-    uint64_t absolute_address = instrumented_function.absolute_address();
-    instrumented_functions_.emplace_back(instrumented_function.file_path(),
-                                         instrumented_function.file_offset(), absolute_address);
+    uint64_t function_id = instrumented_function.function_id();
+    instrumented_functions_.emplace_back(function_id, instrumented_function.file_path(),
+                                         instrumented_function.file_offset());
 
     // Manual instrumentation.
     if (instrumented_function.function_type() == CaptureOptions_InstrumentedFunction::kTimerStart) {
-      manual_instrumentation_config_.AddTimerStartAddress(absolute_address);
+      manual_instrumentation_config_.AddTimerStartFunctionId(function_id);
     } else if (instrumented_function.function_type() ==
                CaptureOptions_InstrumentedFunction::kTimerStop) {
-      manual_instrumentation_config_.AddTimerStopAddress(absolute_address);
+      manual_instrumentation_config_.AddTimerStopFunctionId(function_id);
     }
   }
 
@@ -107,12 +108,13 @@ bool TracerThread::OpenUprobes(const orbit_linux_tracing::Function& function,
                                const std::vector<int32_t>& cpus,
                                absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
-  const char* module = function.BinaryPath().c_str();
-  const uint64_t offset = function.FileOffset();
+  const char* module = function.file_path().c_str();
+  const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
     int fd = uprobes_retaddr_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Opening uprobe %#lx on cpu %d", function.VirtualAddress(), cpu);
+      ERROR("Opening uprobe %s+%#" PRIx64 " on cpu %d", function.file_path(),
+            function.file_offset(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -124,12 +126,13 @@ bool TracerThread::OpenUretprobes(const orbit_linux_tracing::Function& function,
                                   const std::vector<int32_t>& cpus,
                                   absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
-  const char* module = function.BinaryPath().c_str();
-  const uint64_t offset = function.FileOffset();
+  const char* module = function.file_path().c_str();
+  const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
     int fd = uretprobes_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Opening uretprobe %#lx on cpu %d", function.VirtualAddress(), cpu);
+      ERROR("Opening uretprobe %s+%#" PRIx64 " on cpu %d", function.file_path(),
+            function.file_offset(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -169,16 +172,15 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
   for (const auto& function : instrumented_functions_) {
     absl::flat_hash_map<int32_t, int> uprobes_fds_per_cpu;
     absl::flat_hash_map<int32_t, int> uretprobes_fds_per_cpu;
-    uint64_t address = function.VirtualAddress();
 
-    if (manual_instrumentation_config_.IsTimerStartAddress(address)) {
+    if (manual_instrumentation_config_.IsTimerStartFunction(function.function_id())) {
       // Only open uprobes for a "timer start" manual instrumentation function.
       if (!OpenUprobes(function, cpus, &uprobes_fds_per_cpu)) {
         CloseFileDescriptors(uprobes_fds_per_cpu);
         uprobes_event_open_errors = true;
         continue;
       }
-    } else if (manual_instrumentation_config_.IsTimerStopAddress(address)) {
+    } else if (manual_instrumentation_config_.IsTimerStopFunction(function.function_id())) {
       // Only open uretprobes for a "timer stop" manual instrumentation
       // function.
       if (!OpenUretprobes(function, cpus, &uretprobes_fds_per_cpu)) {

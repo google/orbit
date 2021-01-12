@@ -148,7 +148,7 @@ bool ProcessesDataView::SelectProcess(int32_t process_id) {
 }
 
 void ProcessesDataView::DoFilter() {
-  std::vector<uint32_t> indices;
+  std::vector<uint64_t> indices;
   const std::vector<ProcessInfo>& processes = process_list_;
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');

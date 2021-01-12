@@ -1081,12 +1081,12 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
 void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
   std::optional<int> selected_row(std::nullopt);
   if (timer_info) {
-    uint64_t function_address = timer_info->function_address();
+    uint64_t function_id = timer_info->function_id();
     const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
     CHECK(live_functions_controller.has_value());
     LiveFunctionsDataView& live_functions_data_view =
         live_functions_controller.value()->GetDataView();
-    selected_row = live_functions_data_view.GetRowFromFunctionAddress(function_address);
+    selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
   }
   ui->liveFunctions->OnRowSelected(selected_row);
 }

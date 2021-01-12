@@ -162,10 +162,8 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  const CaptureData& capture_data = app_->GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(*(function_iterators_[id]));
-  const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
-      function_address, current_textboxes_[id]->GetTimerInfo().end());
+  const TextBox* text_box =
+      GCurrentTimeGraph->FindNextFunctionCall(id, current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -174,10 +172,8 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  const CaptureData& capture_data = app_->GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(*(function_iterators_[id]));
-  const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
-      function_address, current_textboxes_[id]->GetTimerInfo().end());
+  const TextBox* text_box =
+      GCurrentTimeGraph->FindPreviousFunctionCall(id, current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -194,31 +190,25 @@ void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   if (id == id_to_select_ && !current_textboxes_.empty()) {
     id_to_select_ = current_textboxes_.begin()->first;
   } else if (current_textboxes_.empty()) {
-    // TODO: Not sure this is a good idea...
-    id_to_select_ = 0;
+    id_to_select_ = DataManager::kInvalidFunctionId;
   }
   Move();
 }
 
-void LiveFunctionsController::AddIterator(FunctionInfo* function) {
-  uint64_t id = next_iterator_id_;
-  ++next_iterator_id_;
-
-  const CaptureData& capture_data = app_->GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(*function);
+void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionInfo* function) {
   const TextBox* box = app_->selected_text_box();
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
   // screen.
-  if (!box || box->GetTimerInfo().function_address() != function_address) {
-    box = SnapToClosestStart(function_address);
+  if (!box || box->GetTimerInfo().function_id() != function_id) {
+    box = SnapToClosestStart(function_id);
   }
 
-  function_iterators_.insert(std::make_pair(id, function));
-  current_textboxes_.insert(std::make_pair(id, box));
-  id_to_select_ = id;
+  function_iterators_.insert(std::make_pair(function_id, function));
+  current_textboxes_.insert(std::make_pair(function_id, box));
+  id_to_select_ = function_id;
   if (add_iterator_callback_) {
-    add_iterator_callback_(id, function);
+    add_iterator_callback_(function_id, function);
   }
   Move();
 }
@@ -238,6 +228,5 @@ void LiveFunctionsController::Reset() {
   function_iterators_.clear();
   current_textboxes_.clear();
   GCurrentTimeGraph->SetIteratorOverlayData({}, {});
-  next_iterator_id_ = 0;
-  id_to_select_ = 0;
+  id_to_select_ = DataManager::kInvalidFunctionId;
 }

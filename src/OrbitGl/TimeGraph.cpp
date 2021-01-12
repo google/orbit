@@ -277,7 +277,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       if (function == nullptr) {
         break;
       }
-      FrameTrack* track = track_manager_->GetOrCreateFrameTrack(*function);
+      FrameTrack* track =
+          track_manager_->GetOrCreateFrameTrack(timer_info.function_id(), *function);
       track->OnTimer(timer_info);
       break;
     }
@@ -490,7 +491,7 @@ void TimeGraph::Select(const TextBox* text_box) {
   VerticallyMoveIntoView(timer_info);
 }
 
-const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, uint64_t current_time,
+const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_id, uint64_t current_time,
                                                    std::optional<int32_t> thread_id) const {
   const TextBox* previous_box = nullptr;
   uint64_t previous_box_time = std::numeric_limits<uint64_t>::lowest();
@@ -502,7 +503,7 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, ui
       for (uint64_t i = 0; i < block.size(); i++) {
         const TextBox& box = block[i];
         auto box_time = box.GetTimerInfo().end();
-        if ((box.GetTimerInfo().function_address() == function_address) &&
+        if ((box.GetTimerInfo().function_id() == function_id) &&
             (!thread_id || thread_id.value() == box.GetTimerInfo().thread_id()) &&
             (box_time < current_time) && (previous_box_time < box_time)) {
           previous_box = &box;
@@ -514,7 +515,7 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address, ui
   return previous_box;
 }
 
-const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
+const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_id, uint64_t current_time,
                                                std::optional<int32_t> thread_id) const {
   const TextBox* next_box = nullptr;
   uint64_t next_box_time = std::numeric_limits<uint64_t>::max();
@@ -526,7 +527,7 @@ const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64
       for (uint64_t i = 0; i < block.size(); i++) {
         const TextBox& box = block[i];
         auto box_time = box.GetTimerInfo().end();
-        if ((box.GetTimerInfo().function_address() == function_address) &&
+        if ((box.GetTimerInfo().function_id() == function_id) &&
             (!thread_id || thread_id.value() == box.GetTimerInfo().thread_id()) &&
             (box_time > current_time) && (next_box_time > box_time)) {
           next_box = &box;
@@ -796,7 +797,7 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
   if (!from) {
     return;
   }
-  auto function_address = from->GetTimerInfo().function_address();
+  auto function_id = from->GetTimerInfo().function_id();
   auto current_time = from->GetTimerInfo().end();
   auto thread_id = from->GetTimerInfo().thread_id();
   if (jump_direction == JumpDirection::kPrevious) {
@@ -805,10 +806,10 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
         goal = FindPrevious(from);
         break;
       case JumpScope::kSameFunction:
-        goal = FindPreviousFunctionCall(function_address, current_time);
+        goal = FindPreviousFunctionCall(function_id, current_time);
         break;
       case JumpScope::kSameThreadSameFunction:
-        goal = FindPreviousFunctionCall(function_address, current_time, thread_id);
+        goal = FindPreviousFunctionCall(function_id, current_time, thread_id);
         break;
       default:
         // Other choices are not implemented.
@@ -822,10 +823,10 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
         goal = FindNext(from);
         break;
       case JumpScope::kSameFunction:
-        goal = FindNextFunctionCall(function_address, current_time);
+        goal = FindNextFunctionCall(function_id, current_time);
         break;
       case JumpScope::kSameThreadSameFunction:
-        goal = FindNextFunctionCall(function_address, current_time, thread_id);
+        goal = FindNextFunctionCall(function_id, current_time, thread_id);
         break;
       default:
         CHECK(false);
@@ -919,14 +920,14 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
   }
 }
 
-bool TimeGraph::HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const {
+bool TimeGraph::HasFrameTrack(uint64_t function_id) const {
   auto frame_tracks = track_manager_->GetFrameTracks();
   return (std::find_if(frame_tracks.begin(), frame_tracks.end(), [&](auto frame_track) {
-            return frame_track->GetFunctionAddress() == function.address();
+            return frame_track->GetFunctionId() == function_id;
           }) != frame_tracks.end());
 }
 
-void TimeGraph::RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) {
-  track_manager_->RemoveFrameTrack(function.address());
+void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
+  track_manager_->RemoveFrameTrack(function_id);
   NeedsUpdate();
 }

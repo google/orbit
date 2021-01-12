@@ -47,8 +47,9 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp*
   // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
   const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
-                   : nullptr;
+      capture_data
+          ? capture_data->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
+          : nullptr;
   CHECK(func || timer_info.type() == TimerInfo::kIntrospection);
   std::string module_name =
       func != nullptr ? function_utils::GetLoadedModuleName(*func) : "unknown";
