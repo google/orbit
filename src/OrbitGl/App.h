@@ -128,7 +128,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       ProcessData&& process,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints,
-      UserDefinedCaptureData user_defined_capture_data) override;
+      absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnCaptureComplete() override;
   void OnCaptureCancelled() override;
   void OnCaptureFailed(ErrorMessage error_message) override;
@@ -347,14 +347,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
   [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetSelectedFunction(
-      uint64_t absolute_address) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetInstrumentedFunction(
+      uint64_t function_id) const;
 
-  void SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions);
-  [[nodiscard]] bool IsFunctionVisible(uint64_t function_address);
+  void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions);
+  [[nodiscard]] bool IsFunctionVisible(uint64_t function_id);
 
-  [[nodiscard]] uint64_t highlighted_function() const;
-  void set_highlighted_function(uint64_t highlighted_function_address);
+  [[nodiscard]] uint64_t highlighted_function_id() const;
+  void set_highlighted_function_id(uint64_t highlighted_function_id);
 
   [[nodiscard]] ThreadID selected_thread_id() const;
   void set_selected_thread_id(ThreadID thread_id);
@@ -363,7 +363,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SelectTextBox(const TextBox* text_box);
   void DeselectTextBox();
 
-  [[nodiscard]] uint64_t GetFunctionAddressToHighlight() const;
+  [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;
 
   void SelectCallstackEvents(
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
@@ -385,14 +385,17 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
 
   // Adds the frame track to the capture settings and also adds a frame track to the current
-  // capture data, *if* the captures contains function calls to the function.
+  // capture data, *if* the captures contains function calls to the function and the function
+  // was instrumented.
   void AddFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void AddFrameTrack(uint64_t instrumented_function_id);
+
   // Removes the frame track from the capture settings and also removes the frame track
   // (if it exists) from the capture data.
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void RemoveFrameTrack(uint64_t instrumented_function_id);
 
-  [[nodiscard]] bool HasFrameTrackInCaptureData(
-      const orbit_client_protos::FunctionInfo& function) const;
+  [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
   ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
@@ -419,7 +422,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   ErrorMessageOr<void> EnableFrameTracksFromHashes(const ModuleData* module,
                                                    const std::vector<uint64_t>& function_hashes);
-  void AddFrameTrackTimers(const orbit_client_protos::FunctionInfo& function);
+  void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;

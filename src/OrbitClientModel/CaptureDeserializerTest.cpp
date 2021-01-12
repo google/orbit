@@ -68,7 +68,7 @@ class MockCaptureListener : public CaptureListener {
       (ProcessData&& /*process*/,
        (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
        TracepointInfoSet /*selected_tracepoints*/,
-       UserDefinedCaptureData /*user_defined_capture_data*/),
+       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
       (override));
   MOCK_METHOD(void, OnCaptureComplete, (), (override));
   MOCK_METHOD(void, OnCaptureCancelled, (), (override));
@@ -661,22 +661,20 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   MockCaptureListener listener;
   CaptureInfo capture_info;
 
-  FunctionInfo frame_track_function;
-  frame_track_function.set_name("foo");
-  frame_track_function.set_address(123);
-  frame_track_function.set_loaded_module_path("path/to/module");
+  uint64_t frame_track_function_id = 42;
   capture_info.mutable_user_defined_capture_info()
       ->mutable_frame_tracks_info()
-      ->add_frame_track_functions()
-      ->CopyFrom(frame_track_function);
+      ->add_frame_track_function_ids(frame_track_function_id);
 
   std::atomic<bool> cancellation_requested = false;
   uint8_t empty_data = 0;
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
   // There will be no call to OnCaptureStarted other then the one specified next.
-  UserDefinedCaptureData actual_capture_data;
-  EXPECT_CALL(listener, OnCaptureStarted).Times(1).WillOnce(SaveArg<3>(&actual_capture_data));
+  absl::flat_hash_set<uint64_t> actual_frame_track_function_ids;
+  EXPECT_CALL(listener, OnCaptureStarted)
+      .Times(1)
+      .WillOnce(SaveArg<3>(&actual_frame_track_function_ids));
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
   EXPECT_CALL(listener, OnCaptureFailed).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
@@ -685,11 +683,8 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                   &empty_stream, &cancellation_requested);
 
-  ASSERT_EQ(1, actual_capture_data.frame_track_functions().size());
-  FunctionInfo actual_function_info = *actual_capture_data.frame_track_functions().begin();
-  EXPECT_EQ(frame_track_function.name(), actual_function_info.name());
-  EXPECT_EQ(frame_track_function.address(), actual_function_info.address());
-  EXPECT_EQ(frame_track_function.loaded_module_path(), actual_function_info.loaded_module_path());
+  ASSERT_EQ(1, actual_frame_track_function_ids.size());
+  EXPECT_TRUE(actual_frame_track_function_ids.contains(frame_track_function_id));
 }
 
 }  // namespace

@@ -63,7 +63,7 @@ TEST(CaptureSerializer, GetCaptureFileName) {
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules(module_infos);
 
-  CaptureData capture_data{std::move(process), &module_manager, {}, {}, UserDefinedCaptureData{}};
+  CaptureData capture_data{std::move(process), &module_manager, {}, {}, {}};
 
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
   std::string expected_file_name = absl::StrCat("p_", orbit_core::FormatTime(timestamp), ".orbit");
@@ -101,13 +101,14 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules(module_infos);
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-  FunctionInfo selected_function;
-  selected_function.set_name("foo");
-  selected_function.set_address(123);
-  selected_function.set_loaded_module_path("path/to/module");
+  constexpr uint64_t kInstrumentedFunctionId = 23;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions;
+  FunctionInfo instrumented_function;
+  instrumented_function.set_name("foo");
+  instrumented_function.set_address(123);
+  instrumented_function.set_loaded_module_path("path/to/module");
   uint64_t selected_function_absolute_address = 123 + 15 - 0;
-  selected_functions[selected_function_absolute_address] = selected_function;
+  instrumented_functions[kInstrumentedFunctionId] = instrumented_function;
 
   TracepointInfoSet selected_tracepoints;
   TracepointInfo selected_tracepoint_info;
@@ -115,15 +116,11 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   selected_tracepoint_info.set_name("sched_switch");
   selected_tracepoints.insert(selected_tracepoint_info);
 
-  UserDefinedCaptureData user_defined_capture_data;
-  FunctionInfo frame_track_function;
-  frame_track_function.set_name("foo");
-  frame_track_function.set_address(123);
-  selected_function.set_loaded_module_path("path/to/module");
-  user_defined_capture_data.InsertFrameTrack(frame_track_function);
+  absl::flat_hash_set<uint64_t> frame_track_function_ids;
+  frame_track_function_ids.insert(kInstrumentedFunctionId);
 
-  CaptureData capture_data{std::move(process), &module_manager, selected_functions,
-                           selected_tracepoints, user_defined_capture_data};
+  CaptureData capture_data{std::move(process), &module_manager, instrumented_functions,
+                           selected_tracepoints, frame_track_function_ids};
 
   capture_data.AddOrAssignThreadName(42, "t42");
   capture_data.AddOrAssignThreadName(43, "t43");
@@ -173,9 +170,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
       tracepoint_event.time(), tracepoint_event.tracepoint_info_key(), tracepoint_event.pid(),
       tracepoint_event.tid(), tracepoint_event.cpu(), true);
 
-  capture_data.UpdateFunctionStats(selected_function, 100);
-  capture_data.UpdateFunctionStats(selected_function, 110);
-  capture_data.UpdateFunctionStats(selected_function, 120);
+  capture_data.UpdateFunctionStats(instrumented_function, 100);
+  capture_data.UpdateFunctionStats(instrumented_function, 110);
+  capture_data.UpdateFunctionStats(instrumented_function, 120);
 
   absl::flat_hash_map<uint64_t, std::string> key_to_string_map;
   key_to_string_map[0] = "a";
@@ -187,8 +184,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
 
   ASSERT_EQ(1, capture_info.selected_functions_size());
   const FunctionInfo& actual_selected_function = capture_info.selected_functions(0);
-  EXPECT_EQ(selected_function.address(), actual_selected_function.address());
-  EXPECT_EQ(selected_function.name(), actual_selected_function.name());
+  EXPECT_EQ(instrumented_function.address(), actual_selected_function.address());
+  EXPECT_EQ(instrumented_function.name(), actual_selected_function.name());
 
   EXPECT_EQ(process_id, capture_info.process().pid());
   EXPECT_EQ(process_name, capture_info.process().name());
@@ -240,22 +237,20 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(tracepoint_event.time(), actual_tracepoint_event.time());
   EXPECT_EQ(tracepoint_event.tracepoint_info_key(), actual_tracepoint_event.tracepoint_info_key());
 
-  ASSERT_EQ(
-      1,
-      capture_info.user_defined_capture_info().frame_tracks_info().frame_track_functions().size());
-  const orbit_client_protos::FunctionInfo& actual_frame_track_function =
-      capture_info.user_defined_capture_info().frame_tracks_info().frame_track_functions(0);
-  EXPECT_EQ(frame_track_function.name(), actual_frame_track_function.name());
-  EXPECT_EQ(frame_track_function.address(), actual_frame_track_function.address());
-  EXPECT_EQ(frame_track_function.loaded_module_path(),
-            actual_frame_track_function.loaded_module_path());
+  ASSERT_EQ(1, capture_info.user_defined_capture_info()
+                   .frame_tracks_info()
+                   .frame_track_function_ids()
+                   .size());
+  uint64_t actual_frame_track_function_id =
+      capture_info.user_defined_capture_info().frame_tracks_info().frame_track_function_ids(0);
+  EXPECT_EQ(actual_frame_track_function_id, kInstrumentedFunctionId);
 
   ASSERT_EQ(1, capture_info.function_stats_size());
   ASSERT_TRUE(capture_info.function_stats().contains(selected_function_absolute_address));
   const FunctionStats& actual_function_stats =
       capture_info.function_stats().at(selected_function_absolute_address);
   const FunctionStats& expected_function_stats =
-      capture_data.GetFunctionStatsOrDefault(selected_function);
+      capture_data.GetFunctionStatsOrDefault(instrumented_function);
   EXPECT_EQ(expected_function_stats.count(), actual_function_stats.count());
   EXPECT_EQ(expected_function_stats.total_time_ns(), actual_function_stats.total_time_ns());
   EXPECT_EQ(expected_function_stats.average_time_ns(), actual_function_stats.average_time_ns());

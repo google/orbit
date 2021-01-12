@@ -110,7 +110,8 @@ message CaptureHeader {
 }
 
 message FrameTracksInfo {
-  repeated FunctionInfo frame_track_functions = 1;
+  reserved 1;
+  repeated uint64 frame_track_function_ids = 2;
 }
 
 message UserDefinedCaptureInfo {
@@ -155,7 +156,7 @@ message TimerInfo {
 
   int32 processor = 7;
   uint64 callstack_id = 8;
-  uint64 function_address = 9;
+  uint64 function_id = 9;
   uint64 user_data_key = 10;
   uint64 timeline_hash = 11;
   repeated uint64 registers = 12;

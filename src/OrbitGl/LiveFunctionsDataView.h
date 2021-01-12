@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
 #define ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
 #include <optional>
@@ -35,16 +36,17 @@ class LiveFunctionsDataView : public DataView {
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void OnTimer() override;
-  std::optional<int> GetRowFromFunctionAddress(uint64_t function_address);
+  std::optional<int> GetRowFromFunctionId(uint64_t function_id);
 
  protected:
   void DoFilter() override;
   void DoSort() override;
-  [[nodiscard]] orbit_client_protos::FunctionInfo* GetSelectedFunction(unsigned int row);
-  [[nodiscard]] std::pair<TextBox*, TextBox*> GetMinMax(
-      const orbit_client_protos::FunctionInfo& function) const;
+  [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo& GetInstrumentedFunction(
+      uint32_t row) const;
+  [[nodiscard]] const std::pair<TextBox*, TextBox*> GetMinMax(uint64_t function_id) const;
 
-  std::vector<orbit_client_protos::FunctionInfo> functions_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_;
 
   LiveFunctionsController* live_functions_;
 

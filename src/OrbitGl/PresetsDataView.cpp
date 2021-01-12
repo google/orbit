@@ -180,7 +180,7 @@ void PresetsDataView::OnDoubleClicked(int index) {
 }
 
 void PresetsDataView::DoFilter() {
-  std::vector<uint32_t> indices;
+  std::vector<uint64_t> indices;
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 

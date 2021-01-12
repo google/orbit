@@ -72,8 +72,9 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 
   const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      capture_data ? capture_data->GetSelectedFunction(text_box->GetTimerInfo().function_address())
-                   : nullptr;
+      capture_data
+          ? capture_data->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
+          : nullptr;
 
   if (!func) {
     return text_box->GetText();
@@ -102,7 +103,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return timer_info.type() == TimerInfo::kIntrospection ||
-         app_->IsFunctionVisible(timer_info.function_address());
+         app_->IsFunctionVisible(timer_info.function_id());
 }
 
 bool ThreadTrack::IsTrackSelected() const {
@@ -138,8 +139,8 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
     return kInactiveColor;
   }
 
-  uint64_t address = timer_info.function_address();
-  const FunctionInfo* function_info = app_->GetSelectedFunction(address);
+  uint64_t function_id = timer_info.function_id();
+  const FunctionInfo* function_info = app_->GetInstrumentedFunction(function_id);
   CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection);
   std::optional<Color> user_color =
       function_info ? GetUserColor(timer_info, *function_info) : std::nullopt;
@@ -265,7 +266,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     text_box->SetElapsedTimeTextLength(time.length());
 
-    const FunctionInfo* func = app_->GetSelectedFunction(timer_info.function_address());
+    const FunctionInfo* func = app_->GetInstrumentedFunction(timer_info.function_id());
     if (func) {
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;

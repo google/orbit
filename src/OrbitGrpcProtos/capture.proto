@@ -24,7 +24,7 @@ message CaptureOptions {
   message InstrumentedFunction {
     string file_path = 1;
     uint64 file_offset = 2;
-    uint64 absolute_address = 3;
+    uint64 function_id = 3;
 
     enum FunctionType {
       kRegular = 0;
@@ -69,7 +69,7 @@ message FunctionCall {
   reserved 4;
   int32 pid = 1;
   int32 tid = 2;
-  uint64 absolute_address = 3;
+  uint64 function_id = 3;
   uint64 duration_ns = 9;
   uint64 end_timestamp_ns = 5;
   int32 depth = 6;

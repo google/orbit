@@ -53,7 +53,7 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
     ThreadPool* thread_pool, const ProcessData& process,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data,
+    TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
     bool collect_thread_state, bool enable_introspection) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
@@ -72,10 +72,10 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
 
   thread_pool->Schedule([this, process = std::move(process_copy), &module_manager,
                          selected_functions = std::move(selected_functions), selected_tracepoints,
-                         user_defined_capture_data = std::move(user_defined_capture_data),
+                         frame_track_function_ids = std::move(frame_track_function_ids),
                          collect_thread_state, enable_introspection]() mutable {
     Capture(std::move(process), module_manager, std::move(selected_functions),
-            std::move(selected_tracepoints), std::move(user_defined_capture_data),
+            std::move(selected_tracepoints), std::move(frame_track_function_ids),
             collect_thread_state, enable_introspection);
   });
 
@@ -86,7 +86,7 @@ void CaptureClient::Capture(ProcessData&& process,
                             const orbit_client_data::ModuleManager& module_manager,
                             absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                             TracepointInfoSet selected_tracepoints,
-                            UserDefinedCaptureData user_defined_capture_data,
+                            absl::flat_hash_set<uint64_t> frame_track_function_ids,
                             bool collect_thread_state, bool enable_introspection) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
@@ -117,14 +117,14 @@ void CaptureClient::Capture(ProcessData&& process,
 
   capture_options->set_trace_thread_state(collect_thread_state);
   capture_options->set_trace_gpu_driver(true);
-  for (const auto& [absolute_address, function] : selected_functions) {
+  for (const auto& [function_id, function] : selected_functions) {
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
     const ModuleData* module = module_manager.GetModuleByPath(function.loaded_module_path());
     CHECK(module != nullptr);
     instrumented_function->set_file_offset(function_utils::Offset(function, *module));
-    instrumented_function->set_absolute_address(absolute_address);
+    instrumented_function->set_function_id(function_id);
     instrumented_function->set_function_type(
         InstrumentedFunctionTypeFromOrbitType(function.orbit_type()));
   }
@@ -165,7 +165,7 @@ void CaptureClient::Capture(ProcessData&& process,
 
   capture_listener_->OnCaptureStarted(std::move(process), std::move(selected_functions),
                                       std::move(selected_tracepoints),
-                                      std::move(user_defined_capture_data));
+                                      std::move(frame_track_function_ids));
 
   while (!writes_done_failed_ && !try_abort_) {
     CaptureResponse response;

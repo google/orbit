@@ -93,7 +93,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   bool enable_introspection = false;
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool, target_process_, module_manager_, selected_functions_, selected_tracepoints,
-      UserDefinedCaptureData(), collect_thread_state, enable_introspection);
+      absl::flat_hash_set<uint64_t>{}, collect_thread_state, enable_introspection);
 
   if (result.has_error()) {
     ERROR("Error starting capture: %s", result.error().message());
@@ -243,13 +243,13 @@ std::string ClientGgp::SelectedFunctionMatch(const FunctionInfo& func) {
 }
 
 absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
+  uint64_t function_id = 1;
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions;
   absl::flat_hash_set<std::string> capture_functions_used;
   for (const FunctionInfo* func : main_module_->GetFunctions()) {
     const std::string& selected_function_match = SelectedFunctionMatch(*func);
     if (!selected_function_match.empty()) {
-      uint64_t address = function_utils::GetAbsoluteAddress(*func, target_process_, *main_module_);
-      selected_functions[address] = *func;
+      selected_functions[function_id++] = *func;
       if (!capture_functions_used.contains(selected_function_match)) {
         capture_functions_used.insert(selected_function_match);
       }
@@ -276,9 +276,10 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 void ClientGgp::OnCaptureStarted(
     ProcessData&& process,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints, UserDefinedCaptureData user_defined_capture_data) {
+    TracepointInfoSet selected_tracepoints,
+    absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   capture_data_ = CaptureData(std::move(process), &module_manager_, std::move(selected_functions),
-                              std::move(selected_tracepoints), user_defined_capture_data);
+                              std::move(selected_tracepoints), std::move(frame_track_function_ids));
   LOG("Capture started");
 }
 
@@ -298,9 +299,9 @@ void ClientGgp::OnCaptureFailed(ErrorMessage error_message) {
 }
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  if (timer_info.function_address() > 0) {
+  if (timer_info.function_id() != 0) {
     const FunctionInfo* func =
-        GetCaptureData().FindFunctionByAddress(timer_info.function_address(), false);
+        GetCaptureData().GetInstrumentedFunctionById(timer_info.function_id());
     // For timers, the function must be present in the process
     CHECK(func != nullptr);
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();

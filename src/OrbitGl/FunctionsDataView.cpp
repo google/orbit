@@ -58,8 +58,20 @@ bool FunctionsDataView::ShouldShowSelectedFunctionIcon(OrbitApp* app,
 }
 
 bool FunctionsDataView::ShouldShowFrameTrackIcon(OrbitApp* app, const FunctionInfo& function) {
-  return app->IsFrameTrackEnabled(function) ||
-         (app->HasCaptureData() && app->HasFrameTrackInCaptureData(function));
+  if (app->IsFrameTrackEnabled(function)) {
+    return true;
+  }
+
+  if (!app->HasCaptureData()) {
+    return false;
+  }
+
+  const CaptureData& capture_data = app->GetCaptureData();
+  std::optional<uint64_t> instrumented_function_id =
+      capture_data.FindInstrumentedFunctionIdSlow(function);
+
+  return instrumented_function_id &&
+         app->HasFrameTrackInCaptureData(instrumented_function_id.value());
 }
 
 std::string FunctionsDataView::BuildSelectedColumnsString(OrbitApp* app,
@@ -249,7 +261,7 @@ void FunctionsDataView::DoFilter() {
   ParallelFilter();
 #else
   // TODO: port parallel filtering
-  std::vector<uint32_t> indices;
+  std::vector<uint64_t> indices;
   const std::vector<const FunctionInfo*>& functions(functions_);
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];

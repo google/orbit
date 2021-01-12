@@ -74,7 +74,7 @@ CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
-  for (const auto& pair : capture_data.selected_functions()) {
+  for (const auto& pair : capture_data.instrumented_functions()) {
     capture_info.add_selected_functions()->CopyFrom(pair.second);
   }
 
@@ -169,11 +169,10 @@ CaptureInfo GenerateCaptureInfo(
 
   capture_info.mutable_key_to_string()->insert(key_to_string_map.begin(), key_to_string_map.end());
 
-  for (const auto& function : capture_data.user_defined_capture_data().frame_track_functions()) {
+  for (uint64_t function_id : capture_data.frame_track_function_ids()) {
     capture_info.mutable_user_defined_capture_info()
         ->mutable_frame_tracks_info()
-        ->add_frame_track_functions()
-        ->CopyFrom(function);
+        ->add_frame_track_function_ids(function_id);
   }
 
   return capture_info;

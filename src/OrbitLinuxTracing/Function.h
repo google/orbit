@@ -5,28 +5,35 @@
 #ifndef ORBIT_LINUX_TRACING_FUNCTION_H_
 #define ORBIT_LINUX_TRACING_FUNCTION_H_
 
+#include <absl/hash/hash.h>
+
 #include <cstdint>
 #include <string>
 
 namespace orbit_linux_tracing {
 class Function {
  public:
-  Function(std::string binary_path, uint64_t file_offset, uint64_t virtual_address)
-      : binary_path_{std::move(binary_path)},
-        file_offset_{file_offset},
-        virtual_address_{virtual_address} {}
+  Function(uint64_t function_id, std::string file_path, uint64_t file_offset)
+      : function_id_{function_id}, file_path_{std::move(file_path)}, file_offset_{file_offset} {}
 
-  const std::string& BinaryPath() const { return binary_path_; }
+  [[nodiscard]] uint64_t function_id() const { return function_id_; }
+  [[nodiscard]] const std::string& file_path() const { return file_path_; }
+  [[nodiscard]] uint64_t file_offset() const { return file_offset_; }
 
-  uint64_t FileOffset() const { return file_offset_; }
-
-  uint64_t VirtualAddress() const { return virtual_address_; }
+  bool operator==(const Function& other) {
+    return (this->file_offset_ == other.file_offset_) && (this->file_path_ == other.file_path_);
+  }
 
  private:
-  std::string binary_path_;
+  uint64_t function_id_;
+  std::string file_path_;
   uint64_t file_offset_;
-  uint64_t virtual_address_;
 };
+
+template <typename H>
+H AbslHashValue(H state, const Function& function) {
+  return H::combine(std::move(state), function.file_path(), function.file_offset());
+}
 }  // namespace orbit_linux_tracing
 
 #endif  // ORBIT_LINUX_TRACING_FUNCTION_H_

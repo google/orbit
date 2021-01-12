@@ -18,25 +18,23 @@
 FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(const CaptureData& capture_data,
                                                      TimeGraph* time_graph)
     : time_graph_(time_graph) {
-  const UserDefinedCaptureData& user_defined_capture_data =
-      capture_data.user_defined_capture_data();
-  for (const auto& function : user_defined_capture_data.frame_track_functions()) {
-    const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
-    current_frame_track_functions_.insert(function_address);
-    previous_timestamp_ns_.insert(
-        std::make_pair(function_address, std::numeric_limits<uint64_t>::max()));
+  const auto& frame_track_function_ids = capture_data.frame_track_function_ids();
+  for (const auto& function_id : frame_track_function_ids) {
+    current_frame_track_function_ids_.insert(function_id);
+    function_id_to_previous_timestamp_ns_.insert(
+        std::make_pair(function_id, std::numeric_limits<uint64_t>::max()));
   }
 }
 
 void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                                              const orbit_client_protos::FunctionInfo& function) {
-  uint64_t function_address = timer_info.function_address();
-  if (!current_frame_track_functions_.contains(function_address)) {
+  uint64_t function_id = timer_info.function_id();
+  if (!current_frame_track_function_ids_.contains(function_id)) {
     return;
   }
-  uint64_t previous_timestamp_ns = previous_timestamp_ns_.at(function_address);
+  uint64_t previous_timestamp_ns = function_id_to_previous_timestamp_ns_.at(function_id);
   if (previous_timestamp_ns == std::numeric_limits<uint64_t>::max()) {
-    previous_timestamp_ns_[function_address] = timer_info.start();
+    function_id_to_previous_timestamp_ns_[function_id] = timer_info.start();
     return;
   }
 
@@ -54,21 +52,17 @@ void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInf
 
     time_graph_->ProcessTimer(frame_timer, &function);
 
-    previous_timestamp_ns_[function_address] = timer_info.start();
+    function_id_to_previous_timestamp_ns_[function_id] = timer_info.start();
   }
 }
 
-void FrameTrackOnlineProcessor::AddFrameTrack(const CaptureData& capture_data,
-                                              const orbit_client_protos::FunctionInfo& function) {
-  const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
-  current_frame_track_functions_.insert(function_address);
-  previous_timestamp_ns_.insert(
-      std::make_pair(function_address, std::numeric_limits<uint64_t>::max()));
+void FrameTrackOnlineProcessor::AddFrameTrack(uint64_t function_id) {
+  current_frame_track_function_ids_.insert(function_id);
+  function_id_to_previous_timestamp_ns_.insert(
+      std::make_pair(function_id, std::numeric_limits<uint64_t>::max()));
 }
 
-void FrameTrackOnlineProcessor::RemoveFrameTrack(
-    const CaptureData& capture_data, const orbit_client_protos::FunctionInfo& function) {
-  const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
-  current_frame_track_functions_.erase(function_address);
-  previous_timestamp_ns_.erase(function_address);
+void FrameTrackOnlineProcessor::RemoveFrameTrack(uint64_t function_id) {
+  current_frame_track_function_ids_.erase(function_id);
+  function_id_to_previous_timestamp_ns_.erase(function_id);
 }

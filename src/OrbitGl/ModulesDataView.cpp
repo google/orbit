@@ -165,7 +165,7 @@ void ModulesDataView::OnDoubleClicked(int index) {
 }
 
 void ModulesDataView::DoFilter() {
-  std::vector<uint32_t> indices;
+  std::vector<uint64_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < modules_.size(); ++i) {

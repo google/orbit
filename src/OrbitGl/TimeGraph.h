@@ -58,7 +58,7 @@ class TimeGraph {
   // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
   void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
-  [[nodiscard]] TrackManager* const GetTrackManager() const { return track_manager_.get(); }
+  [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 
   [[nodiscard]] float GetThreadTotalHeight() const;
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
@@ -176,8 +176,8 @@ class TimeGraph {
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
   [[nodiscard]] uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
-  [[nodiscard]] bool HasFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
-  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  [[nodiscard]] bool HasFrameTrack(uint64_t function_id) const;
+  void RemoveFrameTrack(uint64_t function_id);
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
   [[nodiscard]] const TimeGraphAccessibility* GetOrCreateAccessibleInterface() const {

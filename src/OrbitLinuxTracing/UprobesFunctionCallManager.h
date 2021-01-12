@@ -27,10 +27,10 @@ class UprobesFunctionCallManager {
   UprobesFunctionCallManager(UprobesFunctionCallManager&&) = default;
   UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
 
-  void ProcessUprobes(pid_t tid, uint64_t function_address, uint64_t begin_timestamp,
+  void ProcessUprobes(pid_t tid, uint64_t function_id, uint64_t begin_timestamp,
                       const perf_event_sample_regs_user_sp_ip_arguments& regs) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
-    tid_uprobes_stack.emplace(function_address, begin_timestamp, regs);
+    tid_uprobes_stack.emplace(function_id, begin_timestamp, regs);
   }
 
   std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(pid_t pid, pid_t tid,
@@ -49,7 +49,7 @@ class UprobesFunctionCallManager {
     orbit_grpc_protos::FunctionCall function_call;
     function_call.set_pid(pid);
     function_call.set_tid(tid);
-    function_call.set_absolute_address(tid_uprobe.function_address);
+    function_call.set_function_id(tid_uprobe.function_id);
     function_call.set_duration_ns(end_timestamp - tid_uprobe.begin_timestamp);
     function_call.set_end_timestamp_ns(end_timestamp);
     function_call.set_depth(tid_uprobes_stack.size() - 1);
@@ -70,10 +70,10 @@ class UprobesFunctionCallManager {
 
  private:
   struct OpenUprobes {
-    OpenUprobes(uint64_t function_address, uint64_t begin_timestamp,
+    OpenUprobes(uint64_t function_id, uint64_t begin_timestamp,
                 const perf_event_sample_regs_user_sp_ip_arguments& regs)
-        : function_address{function_address}, begin_timestamp{begin_timestamp}, registers(regs) {}
-    uint64_t function_address;
+        : function_id{function_id}, begin_timestamp{begin_timestamp}, registers(regs) {}
+    uint64_t function_id;
     uint64_t begin_timestamp;
     perf_event_sample_regs_user_sp_ip_arguments registers;
   };

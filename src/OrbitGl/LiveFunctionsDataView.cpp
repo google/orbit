@@ -66,7 +66,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     return "";
   }
 
-  const FunctionInfo& function = *GetSelectedFunction(row);
+  const FunctionInfo& function = GetInstrumentedFunction(row);
   const FunctionStats& stats = app_->GetCaptureData().GetFunctionStatsOrDefault(function);
 
   switch (column) {
@@ -99,27 +99,27 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
   app_->DeselectTextBox();
 
   if (!row.has_value()) {
-    app_->set_highlighted_function(DataManager::kInvalidFunctionAddress);
+    app_->set_highlighted_function_id(DataManager::kInvalidFunctionId);
   } else {
-    const CaptureData& capture_data = app_->GetCaptureData();
-    app_->set_highlighted_function(
-        capture_data.GetAbsoluteAddress(*GetSelectedFunction(row.value())));
+    app_->set_highlighted_function_id(GetInstrumentedFunctionId(row.value()));
   }
 }
 
-#define ORBIT_FUNC_SORT(Member)                                                      \
-  [&](int a, int b) {                                                                \
-    return orbit_core::Compare(functions[a].Member, functions[b].Member, ascending); \
+#define ORBIT_FUNC_SORT(Member)                                                            \
+  [&](uint64_t a, uint64_t b) {                                                            \
+    return orbit_core::Compare(functions.at(a).Member, functions.at(b).Member, ascending); \
   }
-#define ORBIT_STAT_SORT(Member)                                                                    \
-  [&](int a, int b) {                                                                              \
-    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(functions[a]); \
-    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(functions[b]); \
-    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending);                         \
+#define ORBIT_STAT_SORT(Member)                                            \
+  [&](uint64_t a, uint64_t b) {                                            \
+    const FunctionStats& stats_a =                                         \
+        app_->GetCaptureData().GetFunctionStatsOrDefault(functions.at(a)); \
+    const FunctionStats& stats_b =                                         \
+        app_->GetCaptureData().GetFunctionStatsOrDefault(functions.at(b)); \
+    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending); \
   }
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
-  [&](int a, int b) {                                                              \
-    return orbit_core::Compare(Func(functions[a]), Func(functions[b]), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                     \
+  [&](uint64_t a, uint64_t b) {                                                          \
+    return orbit_core::Compare(Func(functions.at(a)), Func(functions.at(b)), ascending); \
   }
 
 void LiveFunctionsDataView::DoSort() {
@@ -128,9 +128,9 @@ void LiveFunctionsDataView::DoSort() {
     return;
   }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(int a, int b)> sorter = nullptr;
+  std::function<bool(uint64_t a, uint64_t b)> sorter = nullptr;
 
-  const std::vector<FunctionInfo>& functions = functions_;
+  const absl::flat_hash_map<uint64_t, FunctionInfo>& functions = functions_;
 
   switch (sorting_column_) {
     case kColumnSelected:
@@ -191,7 +191,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
 
   const CaptureData& capture_data = app_->GetCaptureData();
   for (int index : selected_indices) {
-    const FunctionInfo& selected_function = *GetSelectedFunction(index);
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(index);
+    const FunctionInfo& selected_function = GetInstrumentedFunction(index);
 
     if (app_->IsCaptureConnected(capture_data)) {
       enable_select |= !app_->IsFunctionSelected(selected_function);
@@ -207,8 +208,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
       enable_enable_frame_track |= !app_->IsFrameTrackEnabled(selected_function);
       enable_disable_frame_track |= app_->IsFrameTrackEnabled(selected_function);
     } else {
-      enable_enable_frame_track |= !app_->HasFrameTrackInCaptureData(selected_function);
-      enable_disable_frame_track |= app_->HasFrameTrackInCaptureData(selected_function);
+      enable_enable_frame_track |= !app_->HasFrameTrackInCaptureData(instrumented_function_id);
+      enable_disable_frame_track |= app_->HasFrameTrackInCaptureData(instrumented_function_id);
     }
   }
 
@@ -230,7 +231,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
-    const FunctionInfo& function = *GetSelectedFunction(selected_indices[0]);
+    const FunctionInfo& function = GetInstrumentedFunction(selected_indices[0]);
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(function);
     if (stats.count() > 0) {
       menu.insert(menu.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast, kMenuActionJumpToMin,
@@ -247,76 +248,76 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   if (action == kMenuActionSelect || action == kMenuActionUnselect ||
       action == kMenuActionDisassembly) {
     for (int i : item_indices) {
-      FunctionInfo* selected_function = GetSelectedFunction(i);
+      const FunctionInfo selected_function = GetInstrumentedFunction(i);
       if (action == kMenuActionSelect) {
-        app_->SelectFunction(*selected_function);
+        app_->SelectFunction(selected_function);
       } else if (action == kMenuActionUnselect) {
-        app_->DeselectFunction(*selected_function);
+        app_->DeselectFunction(selected_function);
         // Unhooking a function implies disabling (and removing) the frame
         // track for this function. While it would be possible to keep the
         // current frame track in the capture data, this would lead to a
         // somewhat inconsistent state where the frame track for this function
         // is enabled for the current capture but disabled for the next one.
-        app_->DisableFrameTrack(*selected_function);
-        app_->RemoveFrameTrack(*selected_function);
+        app_->DisableFrameTrack(selected_function);
+        app_->RemoveFrameTrack(selected_function);
       } else if (action == kMenuActionDisassembly) {
         int32_t pid = capture_data.process_id();
-        app_->Disassemble(pid, *selected_function);
+        app_->Disassemble(pid, selected_function);
       }
     }
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
-    auto function_address = capture_data.GetAbsoluteAddress(*GetSelectedFunction(item_indices[0]));
+    auto function_id = GetInstrumentedFunctionId(item_indices[0]);
     auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
-        function_address, std::numeric_limits<uint64_t>::lowest());
+        function_id, std::numeric_limits<uint64_t>::lowest());
     if (first_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(first_box);
     }
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
-    auto function_address = capture_data.GetAbsoluteAddress(*GetSelectedFunction(item_indices[0]));
+    auto function_id = GetInstrumentedFunctionId(item_indices[0]);
     auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
-        function_address, std::numeric_limits<uint64_t>::max());
+        function_id, std::numeric_limits<uint64_t>::max());
     if (last_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(last_box);
     }
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
-    const FunctionInfo& function = *GetSelectedFunction(item_indices[0]);
-    auto [min_box, _] = GetMinMax(function);
+    uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
+    auto [min_box, _] = GetMinMax(function_id);
     if (min_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(min_box);
     }
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
-    const FunctionInfo& function = *GetSelectedFunction(item_indices[0]);
-    auto [_, max_box] = GetMinMax(function);
+    uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
+    auto [_, max_box] = GetMinMax(function_id);
     if (max_box != nullptr) {
       GCurrentTimeGraph->SelectAndZoom(max_box);
     }
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
-      FunctionInfo* selected_function = GetSelectedFunction(i);
+      uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
+      const FunctionInfo& instrumented_function = GetInstrumentedFunction(i);
       const FunctionStats& stats =
-          app_->GetCaptureData().GetFunctionStatsOrDefault(*selected_function);
+          app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function);
       if (stats.count() > 0) {
-        live_functions_->AddIterator(selected_function);
+        live_functions_->AddIterator(instrumented_function_id, &instrumented_function);
       }
     }
   } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
-      FunctionInfo* function = GetSelectedFunction(i);
+      const FunctionInfo function = GetInstrumentedFunction(i);
       if (app_->IsCaptureConnected(capture_data)) {
-        app_->SelectFunction(*function);
+        app_->SelectFunction(function);
       }
-      app_->EnableFrameTrack(*function);
-      app_->AddFrameTrack(*function);
+      app_->EnableFrameTrack(function);
+      app_->AddFrameTrack(GetInstrumentedFunctionId(i));
     }
   } else if (action == kMenuActionDisableFrameTrack) {
     for (int i : item_indices) {
-      FunctionInfo* function = GetSelectedFunction(i);
-      app_->DisableFrameTrack(*function);
-      app_->RemoveFrameTrack(*function);
+      app_->DisableFrameTrack(GetInstrumentedFunction(i));
+      app_->RemoveFrameTrack(GetInstrumentedFunctionId(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
@@ -325,15 +326,16 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
 
 void LiveFunctionsDataView::DoFilter() {
   if (!app_->HasCaptureData()) {
-    CHECK(functions_.size() == 0);
+    CHECK(functions_.empty());
     return;
   }
-  std::vector<uint32_t> indices;
+  std::vector<uint64_t> indices;
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
-  for (size_t i = 0; i < functions_.size(); ++i) {
-    const FunctionInfo& function = functions_[i];
+  for (const auto& entry : functions_) {
+    uint64_t function_id = entry.first;
+    const FunctionInfo& function = entry.second;
     std::string name = ToLower(function_utils::GetDisplayName(function));
 
     bool match = true;
@@ -346,20 +348,18 @@ void LiveFunctionsDataView::DoFilter() {
     }
 
     if (match) {
-      indices.push_back(i);
+      indices.push_back(function_id);
     }
   }
 
   indices_ = std::move(indices);
 
   // Filter drawn textboxes
-  absl::flat_hash_set<uint64_t> visible_functions;
-  const CaptureData& capture_data = app_->GetCaptureData();
+  absl::flat_hash_set<uint64_t> visible_function_ids;
   for (size_t i = 0; i < indices_.size(); ++i) {
-    FunctionInfo* func = GetSelectedFunction(i);
-    visible_functions.insert(capture_data.GetAbsoluteAddress(*func));
+    visible_function_ids.insert(GetInstrumentedFunctionId(i));
   }
-  app_->SetVisibleFunctions(std::move(visible_functions));
+  app_->SetVisibleFunctionIds(std::move(visible_function_ids));
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
@@ -371,18 +371,14 @@ void LiveFunctionsDataView::OnDataChanged() {
     return;
   }
 
-  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions =
-      app_->GetCaptureData().selected_functions();
-  size_t functions_count = selected_functions.size();
-  indices_.resize(functions_count);
-  size_t i = 0;
-  for (const auto& pair : selected_functions) {
+  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& instrumented_functions =
+      app_->GetCaptureData().instrumented_functions();
+  for (const auto& pair : instrumented_functions) {
     if (function_utils::IsOrbitFunc(pair.second)) {
       continue;
     }
-    functions_.push_back(pair.second);
-    indices_[i] = i;
-    ++i;
+    functions_.insert_or_assign(pair.first, pair.second);
+    indices_.push_back(pair.first);
   }
 
   DataView::OnDataChanged();
@@ -394,14 +390,18 @@ void LiveFunctionsDataView::OnTimer() {
   }
 }
 
-FunctionInfo* LiveFunctionsDataView::GetSelectedFunction(unsigned int row) {
-  CHECK(row < functions_.size());
-  return &(functions_[indices_[row]]);
+uint64_t LiveFunctionsDataView::GetInstrumentedFunctionId(uint32_t row) const {
+  CHECK(row < indices_.size());
+  return indices_[row];
 }
 
-std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInfo& function) const {
-  const CaptureData& capture_data = app_->GetCaptureData();
-  auto function_address = capture_data.GetAbsoluteAddress(function);
+const FunctionInfo& LiveFunctionsDataView::GetInstrumentedFunction(uint32_t row) const {
+  CHECK(row < indices_.size());
+  CHECK(functions_.find(indices_[row]) != functions_.end());
+  return functions_.at(indices_[row]);
+}
+
+const std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(uint64_t function_id) const {
   TextBox* min_box = nullptr;
   TextBox* max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -411,7 +411,7 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInf
     for (auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
-        if (box.GetTimerInfo().function_address() == function_address) {
+        if (box.GetTimerInfo().function_id() == function_id) {
           uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
           if (min_box == nullptr ||
               elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
@@ -428,9 +428,9 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(const FunctionInf
   return std::make_pair(min_box, max_box);
 }
 
-std::optional<int> LiveFunctionsDataView::GetRowFromFunctionAddress(uint64_t function_address) {
-  for (int function_row = 0; function_row < static_cast<int>(GetNumElements()); function_row++) {
-    if (absl::StrFormat("0x%llx", function_address) == GetValue(function_row, kColumnAddress)) {
+std::optional<int> LiveFunctionsDataView::GetRowFromFunctionId(uint64_t function_id) {
+  for (size_t function_row = 0; function_row < indices_.size(); function_row++) {
+    if (indices_[function_row] == function_id) {
       return function_row;
     }
   }

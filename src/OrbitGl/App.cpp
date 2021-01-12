@@ -157,7 +157,7 @@ OrbitApp::~OrbitApp() {
 void OrbitApp::OnCaptureStarted(ProcessData&& process,
                                 absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
                                 TracepointInfoSet selected_tracepoints,
-                                UserDefinedCaptureData user_defined_capture_data) {
+                                absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -168,7 +168,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
       [this, &initialization_complete, &mutex, process = std::move(process),
        selected_functions = std::move(selected_functions),
        selected_tracepoints = std::move(selected_tracepoints),
-       user_defined_capture_data = std::move(user_defined_capture_data)]() mutable {
+       frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
         const bool has_selected_functions = !selected_functions.empty();
 
         ClearCapture();
@@ -177,7 +177,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
         // this task is completely executed.
         capture_data_ =
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
-                        std::move(selected_tracepoints), std::move(user_defined_capture_data));
+                        std::move(selected_tracepoints), std::move(frame_track_function_ids));
         capture_window_->GetTimeGraph()->SetCaptureData(&capture_data_.value());
 
         frame_track_online_processor_ =
@@ -257,16 +257,17 @@ void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 }
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
-  if (timer_info.function_address() > 0) {
-    CaptureData& capture_data = GetMutableCaptureData();
-    const FunctionInfo& func = capture_data.selected_functions().at(timer_info.function_address());
-    uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-    capture_data.UpdateFunctionStats(func, elapsed_nanos);
-    GCurrentTimeGraph->ProcessTimer(timer_info, &func);
-    frame_track_online_processor_.ProcessTimer(timer_info, func);
-  } else {
+  if (timer_info.function_id() == 0) {
     GCurrentTimeGraph->ProcessTimer(timer_info, nullptr);
+    return;
   }
+
+  CaptureData& capture_data = GetMutableCaptureData();
+  const FunctionInfo& func = capture_data.instrumented_functions().at(timer_info.function_id());
+  uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
+  capture_data.UpdateFunctionStats(func, elapsed_nanos);
+  GCurrentTimeGraph->ProcessTimer(timer_info, &func);
+  frame_track_online_processor_.ProcessTimer(timer_info, func);
 }
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
@@ -863,24 +864,29 @@ bool OrbitApp::StartCapture() {
   selected_functions.insert(selected_functions.end(), orbit_functions.begin(),
                             orbit_functions.end());
 
+  UserDefinedCaptureData user_defined_capture_data = data_manager_->user_defined_capture_data();
+
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
+  absl::flat_hash_set<uint64_t> frame_track_function_ids;
+  // non-zero since 0 is reserved for invalid ids.
+  uint64_t function_id = 1;
   for (auto& function : selected_functions) {
     const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
     CHECK(module != nullptr);
-    uint64_t absolute_address = function_utils::GetAbsoluteAddress(function, *process, *module);
-    selected_functions_map[absolute_address] = std::move(function);
+    if (user_defined_capture_data.ContainsFrameTrack(function)) {
+      frame_track_function_ids.insert(function_id);
+    }
+    selected_functions_map[function_id++] = std::move(function);
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
-  UserDefinedCaptureData user_defined_capture_data =
-      data_manager_->mutable_user_defined_capture_data();
   bool collect_thread_states = data_manager_->collect_thread_states();
   bool enable_introspection = absl::GetFlag(FLAGS_devmode);
 
   CHECK(capture_client_ != nullptr);
   ErrorMessageOr<void> result = capture_client_->StartCapture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), std::move(user_defined_capture_data), collect_thread_states,
+      std::move(selected_tracepoints), std::move(frame_track_function_ids), collect_thread_states,
       enable_introspection);
 
   if (result.has_error()) {
@@ -1478,12 +1484,12 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   return data_manager_->IsFunctionSelected(*function);
 }
 
-const FunctionInfo* OrbitApp::GetSelectedFunction(uint64_t absolute_address) const {
-  return HasCaptureData() ? GetCaptureData().GetSelectedFunction(absolute_address) : nullptr;
+const FunctionInfo* OrbitApp::GetInstrumentedFunction(uint64_t function_id) const {
+  return HasCaptureData() ? GetCaptureData().GetInstrumentedFunctionById(function_id) : nullptr;
 }
 
-void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functions) {
-  data_manager_->set_visible_functions(std::move(visible_functions));
+void OrbitApp::SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_function_ids) {
+  data_manager_->set_visible_function_ids(std::move(visible_function_ids));
   NeedsRedraw();
 }
 
@@ -1491,10 +1497,12 @@ void OrbitApp::SetVisibleFunctions(absl::flat_hash_set<uint64_t> visible_functio
   return data_manager_->IsFunctionVisible(function_address);
 }
 
-uint64_t OrbitApp::highlighted_function() const { return data_manager_->highlighted_function(); }
+uint64_t OrbitApp::highlighted_function_id() const {
+  return data_manager_->highlighted_function_id();
+}
 
-void OrbitApp::set_highlighted_function(uint64_t highlighted_function_address) {
-  data_manager_->set_highlighted_function(highlighted_function_address);
+void OrbitApp::set_highlighted_function_id(uint64_t highlighted_function_id) {
+  data_manager_->set_highlighted_function_id(highlighted_function_id);
   NeedsRedraw();
 }
 
@@ -1509,29 +1517,28 @@ const TextBox* OrbitApp::selected_text_box() const { return data_manager_->selec
 void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_selected_text_box(text_box);
   const TimerInfo* timer_info = text_box ? &text_box->GetTimerInfo() : nullptr;
-  uint64_t function_address =
-      timer_info ? timer_info->function_address() : DataManager::kInvalidFunctionAddress;
-  data_manager_->set_highlighted_function(function_address);
+  uint64_t function_id = timer_info ? timer_info->function_id() : DataManager::kInvalidFunctionId;
+  data_manager_->set_highlighted_function_id(function_id);
   CHECK(timer_selected_callback_);
   timer_selected_callback_(timer_info);
 }
 
 void OrbitApp::DeselectTextBox() { data_manager_->set_selected_text_box(nullptr); }
 
-uint64_t OrbitApp::GetFunctionAddressToHighlight() const {
+uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   const TextBox* selected_textbox = selected_text_box();
   const TimerInfo* selected_timer_info =
       selected_textbox ? &selected_textbox->GetTimerInfo() : nullptr;
-  uint64_t selected_address =
-      selected_timer_info ? selected_timer_info->function_address() : highlighted_function();
+  uint64_t selected_function_id =
+      selected_timer_info ? selected_timer_info->function_id() : highlighted_function_id();
 
   // Highlighting of manually instrumented scopes is not yet supported.
-  const FunctionInfo* function_info = GetSelectedFunction(selected_address);
+  const FunctionInfo* function_info = GetInstrumentedFunction(selected_function_id);
   if (function_info == nullptr || function_utils::IsOrbitFunc(*function_info)) {
-    return DataManager::kInvalidFunctionAddress;
+    return DataManager::kInvalidFunctionId;
   }
 
-  return selected_address;
+  return selected_function_id;
 }
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
@@ -1724,39 +1731,72 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) {
     return;
   }
-  const uint64_t function_address = GetCaptureData().GetAbsoluteAddress(function);
-  if (GetCaptureData().GetSelectedFunction(function_address) == nullptr) {
+
+  std::optional<uint64_t> instrumented_function_id =
+      GetCaptureData().FindInstrumentedFunctionIdSlow(function);
+  // If the function is not instrumented - ignore it. This happens when user
+  // enables frame tracks for a not instrumented function from the function list.
+  if (!instrumented_function_id) {
     return;
   }
+
+  AddFrameTrack(instrumented_function_id.value());
+}
+
+void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
+  CHECK(instrumented_function_id != 0);
+  if (!HasCaptureData()) {
+    return;
+  }
+
+  const FunctionInfo* function =
+      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
+  CHECK(function != nullptr);
+
   // We only add a frame track to the actual capture data if the function for the frame
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
   // states where "empty" frame tracks exist in the capture data (which would also be
   // serialized).
-  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(function);
+  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(*function);
   if (stats.count() > 1) {
-    frame_track_online_processor_.AddFrameTrack(GetCaptureData(), function);
-    GetMutableCaptureData().EnableFrameTrack(function);
+    frame_track_online_processor_.AddFrameTrack(instrumented_function_id);
+    GetMutableCaptureData().EnableFrameTrack(instrumented_function_id);
     if (!IsCapturing()) {
-      AddFrameTrackTimers(function);
+      AddFrameTrackTimers(instrumented_function_id);
     }
   } else {
     CHECK(empty_frame_track_warning_callback_);
-    empty_frame_track_warning_callback_(function.pretty_name());
+    empty_frame_track_warning_callback_(function->pretty_name());
   }
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
+  CHECK(HasCaptureData());
+  std::optional<uint64_t> instrumented_function_id =
+      GetCaptureData().FindInstrumentedFunctionIdSlow(function);
+  // If the function is not instrumented - ignore it. This happens when user
+  // enables frame tracks for a not instrumented function from the function list.
+  if (!instrumented_function_id) {
+    return;
+  }
+
+  RemoveFrameTrack(instrumented_function_id.value());
+}
+
+void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
+  const FunctionInfo* function =
+      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
   // Removing a frame track requires that the frame track is disabled in the settings
   // (what is stored in DataManager).
-  CHECK(!IsFrameTrackEnabled(function));
+  CHECK(!IsFrameTrackEnabled(*function));
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   // We can only remove the frame track from the capture data if we have capture data and
   // the frame track is actually enabled in the capture data.
-  if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(function)) {
-    frame_track_online_processor_.RemoveFrameTrack(GetCaptureData(), function);
-    GetMutableCaptureData().DisableFrameTrack(function);
-    GCurrentTimeGraph->RemoveFrameTrack(function);
+  if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
+    frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
+    GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
+    GCurrentTimeGraph->RemoveFrameTrack(instrumented_function_id);
   }
 }
 
@@ -1764,25 +1804,25 @@ bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
   return data_manager_->IsFrameTrackEnabled(function);
 }
 
-bool OrbitApp::HasFrameTrackInCaptureData(const FunctionInfo& function) const {
-  return GCurrentTimeGraph->HasFrameTrack(function);
+bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const {
+  return GCurrentTimeGraph->HasFrameTrack(instrumented_function_id);
 }
 
 void OrbitApp::RefreshFrameTracks() {
   CHECK(HasCaptureData());
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  for (const auto& function :
-       GetCaptureData().user_defined_capture_data().frame_track_functions()) {
-    GCurrentTimeGraph->RemoveFrameTrack(function);
-    AddFrameTrackTimers(function);
+  for (const auto& function_id : GetCaptureData().frame_track_function_ids()) {
+    GCurrentTimeGraph->RemoveFrameTrack(function_id);
+    AddFrameTrackTimers(function_id);
   }
 }
 
-void OrbitApp::AddFrameTrackTimers(const FunctionInfo& function) {
+void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
   CHECK(HasCaptureData());
-  const CaptureData& capture_data = GetCaptureData();
-  const uint64_t function_address = capture_data.GetAbsoluteAddress(function);
-  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(function);
+  const FunctionInfo* function =
+      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
+  CHECK(function != nullptr);
+  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(*function);
   if (stats.count() == 0) {
     return;
   }
@@ -1797,7 +1837,7 @@ void OrbitApp::AddFrameTrackTimers(const FunctionInfo& function) {
     for (const TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); ++i) {
         const TextBox& box = block[i];
-        if (box.GetTimerInfo().function_address() == function_address) {
+        if (box.GetTimerInfo().function_id() == instrumented_function_id) {
           all_start_times.push_back(box.GetTimerInfo().start());
         }
       }
@@ -1817,7 +1857,7 @@ void OrbitApp::AddFrameTrackTimers(const FunctionInfo& function) {
     frame_timer.set_user_data_key(k);
     frame_timer.set_type(TimerInfo::kFrame);
 
-    GCurrentTimeGraph->ProcessTimer(frame_timer, &function);
+    GCurrentTimeGraph->ProcessTimer(frame_timer, function);
   }
 }
 

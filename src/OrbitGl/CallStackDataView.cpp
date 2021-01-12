@@ -161,7 +161,7 @@ void CallStackDataView::DoFilter() {
     return;
   }
 
-  std::vector<uint32_t> indices;
+  std::vector<uint64_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < callstack_.GetFramesCount(); ++i) {
