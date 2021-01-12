@@ -80,109 +80,15 @@ using OrbitStartupWindow = orbit_qt::OrbitStartupWindow;
 using Error = orbit_qt::Error;
 using ScopedConnection = orbit_ssh_qt::ScopedConnection;
 using GrpcPort = ServiceDeployManager::GrpcPort;
-using SshCredentials = orbit_ssh::Credentials;
 using Context = orbit_ssh::Context;
 
-static outcome::result<GrpcPort> DeployOrbitService(
-    std::optional<ServiceDeployManager>& service_deploy_manager,
-    const DeploymentConfiguration* deployment_configuration, Context* context,
-    const SshCredentials& ssh_credentials, const GrpcPort& remote_ports) {
-  QProgressDialog progress_dialog{};
-
-  service_deploy_manager.emplace(deployment_configuration, context, ssh_credentials, remote_ports);
-  QObject::connect(&progress_dialog, &QProgressDialog::canceled, &service_deploy_manager.value(),
-                   &ServiceDeployManager::Cancel);
-  QObject::connect(&service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
-                   &progress_dialog, &QProgressDialog::setLabelText);
-  QObject::connect(&service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
-                   [](const QString& msg) { LOG("Status message: %s", msg.toStdString()); });
-
-  return service_deploy_manager->Exec();
-}
-
-static outcome::result<void> RunUiInstance(
-    std::optional<DeploymentConfiguration> deployment_configuration, Context* context) {
-  std::optional<orbit_qt::ServiceDeployManager> service_deploy_manager;
-
-  OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
-    const GrpcPort remote_ports{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
-
-    if (!deployment_configuration) {
-      // When the local flag is present
-      return std::make_tuple(remote_ports, QString{});
-    }
-
-    OrbitStartupWindow sw{};
-    OUTCOME_TRY(result, sw.Run<orbit_ssh::Credentials>());
-
-    if (!std::holds_alternative<orbit_ssh::Credentials>(result)) {
-      // The user chose to open a capture.
-      return std::make_tuple(remote_ports, std::get<QString>(result));
-    }
-
-    // The user chose a remote profiling target.
-    OUTCOME_TRY(tunnel_ports,
-                DeployOrbitService(service_deploy_manager, &(deployment_configuration.value()),
-                                   context, std::get<SshCredentials>(result), remote_ports));
-    return std::make_tuple(tunnel_ports, QString{});
-  }());
-  const auto& [ports, capture_path] = result;
-
-  std::string grpc_server_address = absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
-
-  ServiceDeployManager* service_deploy_manager_ptr = nullptr;
-
-  if (service_deploy_manager) {
-    service_deploy_manager_ptr = &service_deploy_manager.value();
-  }
-
-  std::optional<std::error_code> error;
-
-  orbit_qt::InstallAccessibilityFactories();
-  {  // Scoping of QT UI Resources
-    constexpr uint32_t kDefaultFontSize = 14;
-
-    OrbitMainWindow w(service_deploy_manager_ptr, grpc_server_address, kDefaultFontSize);
-
-    // "resize" is required to make "showMaximized" work properly.
-    w.resize(1280, 720);
-    w.showMaximized();
-
-    auto error_handler = [&]() -> ScopedConnection {
-      if (!service_deploy_manager) {
-        return ScopedConnection();
-      }
-
-      return orbit_ssh_qt::ScopedConnection{QObject::connect(
-          &service_deploy_manager.value(), &ServiceDeployManager::socketErrorOccurred,
-          &service_deploy_manager.value(), [&](std::error_code e) {
-            error = e;
-            w.close();
-            QApplication::quit();
-          })};
-    }();
-
-    if (!capture_path.isEmpty()) {
-      w.OpenCapture(capture_path.toStdString());
-    }
-
-    QApplication::exec();
-
-    Orbit_ImGui_Shutdown();
-  }
-
-  if (error) {
-    return outcome::failure(error.value());
-  } else {
-    return outcome::success();
-  }
-}
-
+// TODO(177304549): This still contains Beta; rename to RunUiInstance
 void RunBetaUiInstance(std::optional<DeploymentConfiguration> deployment_configuration,
                        const Context* ssh_context) {
   qRegisterMetaType<std::error_code>();
 
-  // TODO(170468590): [ui beta] when out of ui beta, remove optional from deployment_configuration
+  // TODO(177304549): This is optional because of the old UI; Refactor: remove optional from
+  // deployment_configuration
   CHECK(deployment_configuration.has_value());
 
   const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
@@ -323,9 +229,7 @@ static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& pr
 }
 
 static std::optional<orbit_qt::DeploymentConfiguration> FigureOutDeploymentConfiguration() {
-  if (absl::GetFlag(FLAGS_local) && !absl::GetFlag(FLAGS_enable_ui_beta)) {
-    return std::nullopt;
-  } else if (absl::GetFlag(FLAGS_nodeploy)) {
+  if (absl::GetFlag(FLAGS_nodeploy)) {
     return orbit_qt::NoDeployment{};
   }
 
@@ -454,29 +358,11 @@ int main(int argc, char* argv[]) {
       return -1;
     }
 
-    if (absl::GetFlag(FLAGS_enable_ui_beta)) {
-      RunBetaUiInstance(deployment_configuration, &context.value());
-      return 0;
-    } else {
-      while (true) {
-        const auto result = RunUiInstance(deployment_configuration, &(context.value()));
-        if (result || result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
-            !deployment_configuration) {
-          // It was either a clean shutdown or the deliberately closed the
-          // dialog, or we started with the --local flag.
-          return 0;
-        } else if (result.error() == make_error_code(orbit_ggp::Error::kCouldNotUseGgpCli)) {
-          DisplayErrorToUser(QString::fromStdString(result.error().message()));
-          return 1;
-        } else if (result.error() != make_error_code(Error::kUserCanceledServiceDeployment)) {
-          DisplayErrorToUser(QString("An error occurred: %1")
-                                 .arg(QString::fromStdString(result.error().message())));
-          break;
-        }
-      }
-    }
+    RunBetaUiInstance(deployment_configuration, &context.value());
+    return 0;
   }
 
+  // TODO(177304549): This is still here from the old UI; -> remove
   execv(path_to_executable.toLocal8Bit().constData(), original_argv);
   UNREACHABLE();
 }
