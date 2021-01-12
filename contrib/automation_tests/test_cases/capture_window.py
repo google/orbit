@@ -194,14 +194,16 @@ class Capture(E2ETestCase):
         logging.info('Opening "Capture Options" dialog')
         capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
         capture_options_button.click_input()
+        
+        capture_options_dialog = self.find_control('Window', 'Capture Options')
 
-        collect_thread_states_checkbox = self.find_control('CheckBox', 'Collect thread states')
+        collect_thread_states_checkbox = self.find_control('CheckBox', 'Collect thread states', parent=capture_options_dialog)
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
 
         logging.info('Saving "Capture Options"')
-        self.find_control('Button', 'OK').click_input()
+        self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
     def _take_capture(self, length_in_seconds: int):
         capture_tab = self.find_control('Group', "CaptureTab")
