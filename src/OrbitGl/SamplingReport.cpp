@@ -55,8 +55,9 @@ void SamplingReport::UpdateDisplayedCallstack() {
   }
 
   selected_sorted_callstack_report_ =
-      post_processed_sampling_data_.GetSortedCallstackReportFromAddresses(selected_addresses_,
-                                                                          selected_thread_id_);
+      post_processed_sampling_data_.GetSortedCallstackReportFromAddresses(
+          std::vector<uint64_t>(selected_addresses_.begin(), selected_addresses_.end()),
+          selected_thread_id_);
   if (selected_sorted_callstack_report_->callstacks_count.empty()) {
     ClearReport();
   } else {
@@ -86,7 +87,8 @@ void SamplingReport::UpdateReport(
   UpdateDisplayedCallstack();
 }
 
-void SamplingReport::OnSelectAddresses(const std::vector<uint64_t>& addresses, ThreadID thread_id) {
+void SamplingReport::OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses,
+                                       ThreadID thread_id) {
   if (callstack_data_view_) {
     if (selected_addresses_ != addresses || selected_thread_id_ != thread_id) {
       selected_addresses_ = addresses;

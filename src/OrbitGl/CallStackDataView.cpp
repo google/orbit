@@ -213,9 +213,8 @@ void CallStackDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
-void CallStackDataView::SetFunctionsToHighlight(const std::vector<uint64_t>& absolute_addresses) {
-  absl::flat_hash_set<uint64_t> sampling_function_set(absolute_addresses.begin(),
-                                                      absolute_addresses.end());
+void CallStackDataView::SetFunctionsToHighlight(
+    const absl::flat_hash_set<uint64_t>& absolute_addresses) {
   const CaptureData& capture_data = app_->GetCaptureData();
   functions_to_highlight_.clear();
 
@@ -224,7 +223,7 @@ void CallStackDataView::SetFunctionsToHighlight(const std::vector<uint64_t>& abs
     std::optional<uint64_t> callstack_function_absolute_address =
         capture_data.FindFunctionAbsoluteAddressByAddress(frame.address);
     if (callstack_function_absolute_address.has_value() &&
-        sampling_function_set.contains(callstack_function_absolute_address.value())) {
+        absolute_addresses.contains(callstack_function_absolute_address.value())) {
       functions_to_highlight_.insert(frame.address);
     }
   }

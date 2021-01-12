@@ -42,7 +42,7 @@ class CallStackDataView : public DataView {
     OnDataChanged();
   }
 
-  void SetFunctionsToHighlight(const std::vector<uint64_t>& absolute_addresses);
+  void SetFunctionsToHighlight(const absl::flat_hash_set<uint64_t>& absolute_addresses);
   [[nodiscard]] bool WantsDisplayColor() override { return true; }
   [[nodiscard]] bool GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                      unsigned char& green, unsigned char& blue) override;
