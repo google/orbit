@@ -103,7 +103,6 @@ ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
-ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
@@ -140,6 +139,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   SetupHintFrame();
 
   ui->RightTabWidget->setTabText(ui->RightTabWidget->indexOf(ui->FunctionsTab), "Symbols");
+
+  // TODO (177304549): This next line is still here from the old UI. Remove ui->HomeTab completely
   ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->HomeTab));
 
   // remove Functions list from position 0,0
@@ -170,8 +171,9 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
                               /*is_main_instance=*/true, /*uniform_row_height=*/false,
                               /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
 
-  // TODO(170468590): [ui beta] When out of ui beta, target_configuration_ should not be an optional
-  // anymore, and this CHECK and convenience local variable are not needed anymore.
+  // TODO(177304549): This is still here because of the old UI. Refactor to: target_configuration_
+  // should not be an optional anymore, and this CHECK and convenience local variable are not needed
+  // anymore.
   CHECK(target_configuration_.has_value());
   const orbit_qt::TargetConfiguration& target = target_configuration_.value();
 
@@ -181,53 +183,14 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
 
   SaveCurrentTabLayoutAsDefaultInMemory();
 
-  // TODO(170468590): [ui beta] Currently a call to OpenCapture() needs to happen after
-  // OrbitApp::PostInit(). As soon as PostInit() is cleaned up (see todo comments
-  // in PostInit), it should be called before std::visit and then OpenCapture can be called
-  // inside SetTarget(FileTarget).
+  // TODO(177304549): This is still the way it is because of the old UI. Refactor:
+  // As soon as PostInit() is cleaned up (see todo comments in PostInit), it should be called before
+  // std::visit and then OpenCapture can be called inside SetTarget(FileTarget).
   std::string file_path_to_open;
   if (std::holds_alternative<orbit_qt::FileTarget>(target)) {
     OpenCapture(std::get<orbit_qt::FileTarget>(target).GetCaptureFilePath().string());
   }
 
-  UpdateCaptureStateDependentWidgets();
-
-  LoadCaptureOptionsIntoApp();
-}
-
-OrbitMainWindow::OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
-                                 std::string grpc_server_address, uint32_t font_size)
-    : QMainWindow(nullptr),
-      main_thread_executor_{CreateMainThreadExecutor()},
-      app_{OrbitApp::Create(main_thread_executor_.get())},
-      ui(new Ui::OrbitMainWindow) {
-  SetupMainWindow(font_size);
-
-  app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
-                                                       std::string_view destination) {
-    CHECK(service_deploy_manager != nullptr);
-    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
-  });
-
-  DataViewFactory* data_view_factory = app_.get();
-  ui->ProcessesList->SetDataView(data_view_factory->GetOrCreateDataView(DataViewType::kProcesses));
-
-  ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
-                              SelectionType::kExtended, FontType::kDefault);
-  ui->FunctionsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
-                                SelectionType::kExtended, FontType::kDefault);
-  ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
-                              SelectionType::kDefault, FontType::kDefault,
-                              /*is_main_instance=*/true, /*uniform_row_height=*/false,
-                              /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
-
-  ui->actionEnd_Session->setVisible(false);
-
-  SetupGrpcAndProcessManager(grpc_server_address);
-
-  app_->PostInit();
-
-  SaveCurrentTabLayoutAsDefaultInMemory();
   UpdateCaptureStateDependentWidgets();
 
   LoadCaptureOptionsIntoApp();
@@ -602,19 +565,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   const bool is_connected = app_->IsConnectedToInstance();
   CaptureClient::State capture_state = app_->GetCaptureState();
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
+  const bool is_target_process_running = target_process_state_ == TargetProcessState::kRunning;
 
-  // The detection mechanism is only implemented for the new UI, so we maintain
-  // the old behaviour for the old UI and assume the target process is always running.
-  // TODO (170468590): [ui beta] This can be renamed to is_target_process_running when
-  // the feature flag gets removed.
-  const bool assume_target_process_is_running =
-      (!absl::GetFlag(FLAGS_enable_ui_beta)) ||
-      target_process_state_ == TargetProcessState::kRunning;
-
-  if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
-    set_tab_enabled(ui->HomeTab, true);
-    ui->HomeTab->setEnabled(!is_capturing);
-  }
   set_tab_enabled(ui->FunctionsTab, true);
   set_tab_enabled(ui->CaptureTab, true);
   set_tab_enabled(ui->liveTab, has_data);
@@ -627,7 +579,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 
   ui->actionToggle_Capture->setEnabled(
       capture_state == CaptureClient::State::kStarted ||
-      (capture_state == CaptureClient::State::kStopped && assume_target_process_is_running));
+      (capture_state == CaptureClient::State::kStopped && is_target_process_running));
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
   ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
   ui->actionCaptureOptions->setEnabled(!is_capturing);
@@ -636,8 +588,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
 
-  // TODO (170468590): [ui beta] Remove this "if", it will not be necessary anymore when ui is out
-  // of beta
+  // TODO (177304549): This if is still because of the old UI. Refactor: Remove this "if", it will
+  // not be necessary anymore when ui is out of beta
   if (hint_frame_ != nullptr) {
     hint_frame_->setVisible(!has_data);
   }
@@ -724,6 +676,8 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->SessionList->Deinitialize();
   ui->FunctionsList->Deinitialize();
   ui->ModulesList->Deinitialize();
+
+  // TODO(177304549): This is still here from the old UI. Remove ui->ProcessList completely
   ui->ProcessesList->ClearDataView();
 
   delete ui;
@@ -754,9 +708,8 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       ui->ModulesList->Refresh();
       break;
     case DataViewType::kProcesses:
-      if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
-        ui->ProcessesList->Refresh();
-      }
+      // TODO (177304549): This is still here from the old UI. Remove ui->HomeTab completely
+      // completely.
       break;
     case DataViewType::kPresets:
       ui->SessionList->Refresh();
@@ -1261,24 +1214,6 @@ void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
   target_label_->setText(QString::fromStdString(target.GetCaptureFilePath().filename().string()));
 }
 
-void OrbitMainWindow::SetupGrpcAndProcessManager(std::string grpc_server_address) {
-  std::shared_ptr<grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
-      grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
-  if (!grpc_channel) {
-    ERROR("Unable to create GRPC channel to %s", grpc_server_address);
-  }
-
-  if (!grpc_channel->WaitForConnected(
-          gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(5, GPR_TIMESPAN)))) {
-    ERROR("Unable to connect via GRPC channel to %s", grpc_server_address);
-  }
-
-  process_manager_ = ProcessManager::Create(grpc_channel, absl::Milliseconds(1000));
-
-  app_->SetGrpcChannel(std::move(grpc_channel));
-  app_->SetProcessManager(process_manager_.get());
-}
-
 void OrbitMainWindow::OnProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> processes) {
   const auto is_current_process = [this](const auto& process) {
     const ProcessData* const target_process = app_->GetTargetProcess();
@@ -1300,8 +1235,8 @@ void OrbitMainWindow::OnProcessListUpdated(std::vector<orbit_grpc_protos::Proces
   UpdateCaptureStateDependentWidgets();
 }
 
-// TODO(170468590): [ui beta] When out of ui beta, this can return TargetConfiguration (without
-// std::optional)
+// TODO(177304549): This still returns an optional because of the old UI. Refactor: do not use
+// std::optional anymore here.
 std::optional<orbit_qt::TargetConfiguration> OrbitMainWindow::ClearTargetConfiguration() {
   using StadiaTarget = orbit_qt::StadiaTarget;
   if (target_configuration_.has_value() &&

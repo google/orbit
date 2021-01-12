@@ -53,10 +53,6 @@ class OrbitMainWindow : public QMainWindow {
  public:
   static constexpr int kEndSessionReturnCode = 1;
 
-  // TODO (170468590) remove when not needed anymore
-  explicit OrbitMainWindow(orbit_qt::ServiceDeployManager* service_deploy_manager,
-                           std::string grpc_server_address, uint32_t font_size);
-
   explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration, uint32_t font_size);
   ~OrbitMainWindow() override;
 
@@ -157,10 +153,6 @@ class OrbitMainWindow : public QMainWindow {
   void SetTarget(const orbit_qt::LocalTarget& target);
   void SetTarget(const orbit_qt::FileTarget& target);
 
-  // TODO(170468590): [ui beta] When out of ui beta, this is not needed anymore (is done by
-  // ProfilingTargetDialog)
-  void SetupGrpcAndProcessManager(std::string grpc_server_address);
-
   void OnProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> processes);
 
   static const QString kCollectThreadStatesSettingKey;
@@ -192,11 +184,8 @@ class OrbitMainWindow : public QMainWindow {
   };
   std::map<QTabWidget*, TabWidgetLayout> default_tab_layout_;
 
-  // TODO(170468590): [ui beta] When out of ui beta, this process_manager_ is not needed anymore,
-  // since the one from the Target is used;
-  std::unique_ptr<ProcessManager> process_manager_;
-
-  // TODO(170468590): [ui beta] When out of ui beta, this does not need to be an optional anymore
+  // TODO(177304549): This is still here because of the old UI. Refactor: this does not need to be
+  // an optional anymore
   std::optional<orbit_qt::TargetConfiguration> target_configuration_;
 
   enum class TargetProcessState { kRunning, kEnded };
