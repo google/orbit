@@ -58,18 +58,8 @@ bool FunctionsDataView::ShouldShowSelectedFunctionIcon(OrbitApp* app,
 }
 
 bool FunctionsDataView::ShouldShowFrameTrackIcon(OrbitApp* app, const FunctionInfo& function) {
-  if (app->IsFrameTrackEnabled(function)) {
-    return true;
-  }
-  if (app->HasCaptureData()) {
-    const CaptureData& capture_data = app->GetCaptureData();
-    if (!app->IsCaptureConnected(capture_data) && app->HasFrameTrackInCaptureData(function)) {
-      // This case occurs when loading a capture. We still want to show the indicator that a frame
-      // track is enabled for the function.
-      return true;
-    }
-  }
-  return false;
+  return app->IsFrameTrackEnabled(function) ||
+         (app->HasCaptureData() && app->HasFrameTrackInCaptureData(function));
 }
 
 std::string FunctionsDataView::BuildSelectedColumnsString(OrbitApp* app,
@@ -218,10 +208,13 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
       app_->DeselectFunction(*GetFunction(i));
-      // If a function is deselected, we have to make sure that the frame track is
-      // not created for this function on the next capture. However, we do not
-      // want to remove the frame track from the capture data.
+      // Unhooking a function implies disabling (and removing) the frame
+      // track for this function. While it would be possible to keep the
+      // current frame track in the capture data, this would lead to a
+      // somewhat inconsistent state where the frame track for this function
+      // is enabled for the current capture but disabled for the next one.
       app_->DisableFrameTrack(*GetFunction(i));
+      app_->RemoveFrameTrack(*GetFunction(i));
     }
   } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
