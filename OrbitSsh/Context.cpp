@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitSsh/Context.h>
-#include <OrbitSsh/Error.h>
+#include "OrbitSsh/Context.h"
+
 #include <libssh2.h>
+
+#include "OrbitSsh/Error.h"
 
 namespace orbit_ssh {
 

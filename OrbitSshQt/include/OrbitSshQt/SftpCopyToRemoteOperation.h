@@ -5,12 +5,6 @@
 #ifndef ORBIT_SSH_QT_SFTP_COPY_TO_REMOTE_OPERATION_H_
 #define ORBIT_SSH_QT_SFTP_COPY_TO_REMOTE_OPERATION_H_
 
-#include <OrbitSsh/SftpFile.h>
-#include <OrbitSshQt/ScopedConnection.h>
-#include <OrbitSshQt/Session.h>
-#include <OrbitSshQt/SftpChannel.h>
-#include <OrbitSshQt/StateMachineHelper.h>
-
 #include <QByteArray>
 #include <QFile>
 #include <QObject>
@@ -20,6 +14,12 @@
 #include <optional>
 #include <outcome.hpp>
 #include <system_error>
+
+#include "OrbitSsh/SftpFile.h"
+#include "OrbitSshQt/ScopedConnection.h"
+#include "OrbitSshQt/Session.h"
+#include "OrbitSshQt/SftpChannel.h"
+#include "OrbitSshQt/StateMachineHelper.h"
 
 namespace orbit_ssh_qt {
 namespace details {

@@ -5,8 +5,6 @@
 #ifndef ORBIT_SSH_SESSION_H_
 #define ORBIT_SSH_SESSION_H_
 
-#include <OrbitSsh/Context.h>
-#include <OrbitSsh/Socket.h>
 #include <libssh2.h>
 
 #include <filesystem>
@@ -15,6 +13,8 @@
 #include <string>
 
 #include "OrbitSsh/AddrAndPort.h"
+#include "OrbitSsh/Context.h"
+#include "OrbitSsh/Socket.h"
 
 namespace orbit_ssh {
 
