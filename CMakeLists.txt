@@ -164,6 +164,7 @@ endif()
 
 if(WITH_GUI)
   add_subdirectory(src/CodeViewer)
+  add_subdirectory(src/CodeViewerDemo)
   add_subdirectory(src/MetricsUploader)
   add_subdirectory(src/OrbitGgp)
   add_subdirectory(src/OrbitSsh)
