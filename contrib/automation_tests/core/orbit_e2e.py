@@ -112,8 +112,8 @@ class E2ETestSuite:
         return self._top_window
 
     def set_up(self):
-        timings.Timings.after_click_wait = 0.5
-        timings.Timings.after_clickinput_wait = 0.5
+        timings.Timings.after_click_wait = 1.0
+        timings.Timings.after_clickinput_wait = 1.0
         logging.info("Setting up with dev_mode = %s", self.dev_mode)
         self.top_window(True).set_focus()
 
@@ -136,13 +136,16 @@ class E2ETestSuite:
     def _wait_for_orbit(self):
         logging.info('Waiting for Orbit')
         logging.info('Start waiting for Orbit.')
-        while True:
+
+        def create_application():
             try:
                 self._application = Application(backend='uia').connect(title_re='Orbit Profiler')
-                break
+                return True
             except ElementNotFoundError:
                 logging.error("Could not find Orbit window, retrying...")
-                pass
+                return False
+
+        wait_for_condition(create_application, 600)
         logging.info('Connected to Orbit.')
         self.top_window(True).set_focus()
 
