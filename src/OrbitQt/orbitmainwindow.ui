@@ -139,105 +139,11 @@ QPushButton:disabled {
           </widget>
          </item>
          <item>
-          <widget class="QFrame" name="filterPanel">
-           <property name="accessibleName">
-            <string/>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <property name="lineWidth">
-            <number>0</number>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLineEdit" name="filterTracks">
-              <property name="accessibleName">
-               <string>FilterTracks</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLineEdit {
-	background-image: url(:/actions/filter_list_small_offset);
-}</string>
-              </property>
-              <property name="placeholderText">
-               <string>Filter Tracks</string>
-              </property>
-              <property name="clearButtonEnabled">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="filterFunctions">
-              <property name="accessibleName">
-               <string>FilterFunctions</string>
-              </property>
-              <property name="placeholderText">
-               <string>Filter Functions</string>
-              </property>
-              <property name="clearButtonEnabled">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="pixmap">
-               <pixmap resource="../icons/orbiticons.qrc">:/actions/access_time</pixmap>
-              </property>
-              <property name="scaledContents">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="timerLabel">
-              <property name="text">
-               <string>1s</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
           <widget class="OrbitGLWidget" name="CaptureGLWidget"/>
          </item>
         </layout>
         <zorder>CaptureGLWidget</zorder>
         <zorder>capture_toolbar</zorder>
-        <zorder>filterPanel</zorder>
        </widget>
       </widget>
       <widget class="QTabWidget" name="RightTabWidget">
@@ -671,40 +577,7 @@ QPushButton:disabled {
   <include location="../icons/orbiticons.qrc"/>
   <include location="../images/orbitimages.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>filterFunctions</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>OrbitMainWindow</receiver>
-   <slot>OnFilterFunctionsTextChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>281</x>
-     <y>230</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>487</x>
-     <y>335</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>filterTracks</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>OrbitMainWindow</receiver>
-   <slot>OnFilterTracksTextChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>111</x>
-     <y>230</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>487</x>
-     <y>335</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>OnFilterTracksTextChanged(QString)</slot>
   <slot>OnFilterFunctionsTextChanged(QString)</slot>

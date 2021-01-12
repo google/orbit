@@ -431,13 +431,6 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   connect(filter_panel_action_, &FilterPanelWidgetAction::FilterFunctionsTextChanged, this,
           &OrbitMainWindow::OnFilterFunctionsTextChanged);
   toolbar->addAction(filter_panel_action_);
-  toolbar->addWidget(ui->filterPanel);
-
-  // Timer
-  toolbar->addWidget(CreateSpacer(toolbar));
-  QFontMetrics fm(ui->timerLabel->font());
-  int pixel_width = fm.horizontalAdvance("w");
-  ui->timerLabel->setMinimumWidth(5 * pixel_width);
 }
 
 void OrbitMainWindow::SetupHintFrame() {
@@ -851,7 +844,6 @@ void OrbitMainWindow::OnTimer() {
     gl_widget->update();
   }
 
-  ui->timerLabel->setText(QString::fromStdString(app_->GetCaptureTime()));
   filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
 }
 
@@ -862,9 +854,6 @@ void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
 
 void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
   // Set main toolbar functions filter without triggering signals.
-  ui->filterFunctions->blockSignals(true);
-  ui->filterFunctions->setText(text);
-  ui->filterFunctions->blockSignals(false);
   filter_panel_action_->SetFilterFunctionsText(text);
 }
 
