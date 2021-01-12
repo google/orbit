@@ -15,7 +15,7 @@ from core.orbit_e2e import E2ETestCase, wait_for_condition
 from core.common_controls import DataViewPanel
 
 
-flags.DEFINE_bool('enable_ui_beta', False, 'Expect Orbit to be started with the new UI')
+flags.DEFINE_bool('enable_ui_beta', True, 'Expect Orbit to be started with the new UI')
 
 
 def wait_for_main_window(application: Application):
