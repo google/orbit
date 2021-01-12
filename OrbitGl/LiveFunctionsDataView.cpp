@@ -252,8 +252,13 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
         app_->SelectFunction(*selected_function);
       } else if (action == kMenuActionUnselect) {
         app_->DeselectFunction(*selected_function);
-        // We disable the frame track, but do not remove it from current capture data.
+        // Unhooking a function implies disabling (and removing) the frame
+        // track for this function. While it would be possible to keep the
+        // current frame track in the capture data, this would lead to a
+        // somewhat inconsistent state where the frame track for this function
+        // is enabled for the current capture but disabled for the next one.
         app_->DisableFrameTrack(*selected_function);
+        app_->RemoveFrameTrack(*selected_function);
       } else if (action == kMenuActionDisassembly) {
         int32_t pid = capture_data.process_id();
         app_->Disassemble(pid, *selected_function);
