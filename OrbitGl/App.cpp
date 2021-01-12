@@ -82,7 +82,6 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_ui_beta);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -330,21 +329,7 @@ void OrbitApp::PostInit() {
 
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
-    if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
-      auto callback = [this](std::vector<ProcessInfo> process_infos) {
-        main_thread_executor_->Schedule([this, process_infos = std::move(process_infos)]() {
-          data_manager_->UpdateProcessInfos(process_infos);
-          processes_data_view_->SetProcessList(process_infos);
-
-          if (GetTargetProcess() == nullptr && processes_data_view_->GetFirstProcessId() != -1) {
-            processes_data_view_->SelectProcess(processes_data_view_->GetFirstProcessId());
-          }
-          FireRefreshCallbacks(DataViewType::kProcesses);
-        });
-      };
-
-      process_manager_->SetProcessListUpdateListener(callback);
-    } else if (GetTargetProcess() != nullptr) {
+    if (GetTargetProcess() != nullptr) {
       UpdateProcessAndModuleList(GetTargetProcess()->pid());
     }
 
@@ -1089,7 +1074,7 @@ void OrbitApp::LoadModules(
       continue;
     }
 
-    // TODO(170468590): [ui beta] maybe come up with a better indicator whether orbit is connected
+    // TODO(177304549): [new UI] maybe come up with a better indicator whether orbit is connected
     // than process_manager != nullptr
     if (!absl::GetFlag(FLAGS_local) && GetProcessManager() != nullptr) {
       LoadModuleOnRemote(module, std::move(function_hashes_to_hook),
@@ -1313,10 +1298,6 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
-  if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
-    CHECK(processes_data_view_->GetSelectedProcessId() == pid);
-  }
-
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = GetProcessManager()->LoadModuleList(pid);
 
@@ -1327,33 +1308,16 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
     }
 
     main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
-      if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
-        // Make sure that pid is actually what user has selected at
-        // the moment we arrive here. If not - ignore the result.
-        if (pid != processes_data_view_->GetSelectedProcessId()) {
-          return;
-        }
-      } else {
-        // Since this callback is executed asynchronously we can't be sure the target process has
-        // been changed in the meantime. So we check an abort in case.
-        if (pid != GetTargetProcess()->pid()) {
-          return;
-        }
+      // Since this callback is executed asynchronously we can't be sure the target process has
+      // been changed in the meantime. So we check and abort in case.
+      if (pid != GetTargetProcess()->pid()) {
+        return;
       }
 
-      ProcessData* process = [&]() {
-        if (absl::GetFlag(FLAGS_enable_ui_beta)) {
-          return GetMutableTargetProcess();
-        } else {
-          return data_manager_->GetMutableProcessByPid(pid);
-        }
-      }();
+      ProcessData* process = GetMutableTargetProcess();
+
       CHECK(process != nullptr);
       process->UpdateModuleInfos(module_infos);
-
-      if (!absl::GetFlag(FLAGS_enable_ui_beta)) {
-        SetTargetProcess(process);
-      }
 
       // Updating the list of loaded modules (in memory) of a process, can mean that a process has
       // now less loaded modules than before. If the user hooked (selected) functions of a module
