@@ -4,7 +4,6 @@
 
 #include "servicedeploymanager.h"
 
-#include <OrbitSshQt/SftpCopyToLocalOperation.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
@@ -29,6 +28,7 @@
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
+#include "OrbitSshQt/SftpCopyToLocalOperation.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 

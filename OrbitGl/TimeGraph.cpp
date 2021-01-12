@@ -5,8 +5,6 @@
 #include "TimeGraph.h"
 
 #include <GteVector.h>
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/Tracing.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/time/time.h>
 #include <stddef.h>
@@ -25,7 +23,9 @@
 #include "GpuTrack.h"
 #include "GraphTrack.h"
 #include "ManualInstrumentationManager.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "PickingManager.h"

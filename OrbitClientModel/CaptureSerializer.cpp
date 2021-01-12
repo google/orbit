@@ -4,7 +4,6 @@
 
 #include "OrbitClientModel/CaptureSerializer.h"
 
-#include <OrbitClientData/FunctionUtils.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_cat.h>
 #include <google/protobuf/stubs/common.h>
@@ -23,6 +22,7 @@
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionInfoSet.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointData.h"

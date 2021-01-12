@@ -4,8 +4,6 @@
 
 #include "PresetsDataView.h"
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/SafeStrerror.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
 #include <errno.h>
@@ -19,6 +17,8 @@
 #include "App.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"

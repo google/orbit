@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/Logging.h>
+#include "OrbitBase/Logging.h"
+
 #include <absl/base/const_init.h>
 #include <absl/synchronization/mutex.h>
 

@@ -5,14 +5,14 @@
 #ifndef ORBIT_QT_ORBIT_DISASSEMBLY_DIALOG_H_
 #define ORBIT_QT_ORBIT_DISASSEMBLY_DIALOG_H_
 
-#include <DisassemblyReport.h>
-
 #include <QDialog>
 #include <QObject>
 #include <QString>
 #include <QWidget>
 #include <functional>
 #include <string>
+
+#include "DisassemblyReport.h"
 
 namespace Ui {
 class OrbitDisassemblyDialog;

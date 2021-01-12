@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <OrbitBase/Logging.h>
 #include <Windows.h>
 #include <processthreadsapi.h>
 
 #include <string>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_base {
