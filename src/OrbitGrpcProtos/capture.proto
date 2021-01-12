@@ -105,7 +105,7 @@ message InternedTracepointInfo {
 message TracepointEvent {
   int32 pid = 1;
   int32 tid = 2;
-  int64 time = 3;
+  uint64 time = 3;
   int32 cpu = 4;
   oneof tracepoint_info_or_key {
     TracepointInfo tracepoint_info = 5;
