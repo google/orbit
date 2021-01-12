@@ -31,7 +31,7 @@ You have two options:
 
 const qwebchannel_search_path = (() => {
   if (process.env.ORBIT_BUILD_FOLDER) {
-    return path.resolve(process.env.ORBIT_BUILD_FOLDER, "WebUI");
+    return path.resolve(process.env.ORBIT_BUILD_FOLDER, "src", "WebUI");
   } else {
     return __dirname;
   }
@@ -74,6 +74,7 @@ module.exports = (env, args) => {
     config.mode = "production";
     config.output.path = path.resolve(
       process.env.ORBIT_BUILD_FOLDER,
+      "src",
       "WebUI",
       "dist"
     );

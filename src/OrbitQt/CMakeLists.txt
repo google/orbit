@@ -93,8 +93,8 @@ target_sources(
           TutorialContent.cpp
           TutorialOverlay.cpp
           TutorialOverlay.ui
-          ../icons/orbiticons.qrc
-          ../images/orbitimages.qrc
+          ../../icons/orbiticons.qrc
+          ../../images/orbitimages.qrc
           # Todo (176066030): OrbitGl relies on flags usually defined in the OrbitQt executable, so the
           # tests needs this to link against them. To avoid multiple definitions, we compile the flags
           # cpp with the tests
@@ -177,7 +177,7 @@ target_sources(OrbitQtTests
                 TutorialOverlay.cpp
                 TutorialOverlay.ui
                 ../OrbitGl/ClientFlags.cpp
-                ../images/orbitimages.qrc)
+                ../../images/orbitimages.qrc)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
