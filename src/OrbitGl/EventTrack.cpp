@@ -29,7 +29,7 @@
 
 using orbit_client_protos::CallstackEvent;
 
-EventTrack::EventTrack(TimeGraph* a_TimeGraph, OrbitApp* app) : Track(a_TimeGraph), app_{app} {
+EventTrack::EventTrack(TimeGraph* time_graph, OrbitApp* app) : Track(time_graph), app_{app} {
   mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
   picked_ = false;
   color_ = Color(0, 255, 0, 255);
@@ -77,8 +77,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
     y1 = y0 - size_[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
-    batcher->AddBox(box, picked_color, shared_from_this());
+    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
+    batcher->AddBox(picked_box, picked_color, shared_from_this());
   }
 
   canvas_ = canvas;
@@ -115,8 +115,8 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     }
 
     // Draw selected events
-    Color selectedColor[2];
-    Fill(selectedColor, kGreenSelection);
+    std::array<Color, 2> selected_color;
+    Fill(selected_color, kGreenSelection);
     for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(thread_id_)) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), pos_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
@@ -133,7 +133,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
-          nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+          nullptr, [this](PickingId id) -> std::string { return GetSampleTooltip(id); });
       user_data->custom_data_ = &event;
       batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
@@ -146,10 +146,6 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
     }
   }
 }
-
-void EventTrack::SetPos(float a_X, float a_Y) { pos_ = Vec2(a_X, a_Y); }
-
-void EventTrack::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
 
 void EventTrack::OnPick(int x, int y) {
   app_->set_selected_thread_id(thread_id_);
@@ -167,9 +163,9 @@ void EventTrack::OnRelease() {
   picked_ = false;
 }
 
-void EventTrack::OnDrag(int a_X, int a_Y) {
+void EventTrack::OnDrag(int x, int y) {
   Vec2& to = mouse_pos_[1];
-  canvas_->ScreenToWorld(a_X, a_Y, to[0], to[1]);
+  canvas_->ScreenToWorld(x, y, to[0], to[1]);
 }
 
 void EventTrack::SelectEvents() {
@@ -219,7 +215,7 @@ bool EventTrack::IsEmpty() const {
   fn_name = Replace(fn_name, "<", "&lt;");
   fn_name = Replace(fn_name, ">", "&gt;");
   return fn_name;
-};
+}
 
 std::string EventTrack::FormatCallstackForTooltip(const CallStack& callstack, int max_line_length,
                                                   int max_lines, int bottom_n_lines) const {
@@ -232,15 +228,13 @@ std::string EventTrack::FormatCallstackForTooltip(const CallStack& callstack, in
   const int top_n = std::min(max_lines, size) - bottom_n;
 
   for (int i = 0; i < top_n; ++i) {
-    result =
-        result + "<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length);
+    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length));
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
-    result =
-        result + "<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length);
+    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length));
   }
 
   return result;
@@ -250,7 +244,7 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
 
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
-  if (!user_data || !user_data->custom_data_) {
+  if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return unknown_return_text;
   }
 
