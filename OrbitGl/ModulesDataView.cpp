@@ -188,7 +188,7 @@ void ModulesDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 }
 
 void ModulesDataView::UpdateModules(const ProcessData* process) {

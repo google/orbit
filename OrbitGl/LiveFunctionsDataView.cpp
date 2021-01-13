@@ -350,7 +350,7 @@ void LiveFunctionsDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 
   // Filter drawn textboxes
   absl::flat_hash_set<uint64_t> visible_functions;

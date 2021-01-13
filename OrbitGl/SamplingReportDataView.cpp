@@ -325,7 +325,7 @@ void SamplingReportDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 }
 
 const SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) const {

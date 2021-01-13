@@ -183,7 +183,7 @@ void CallStackDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 }
 
 void CallStackDataView::OnDataChanged() {

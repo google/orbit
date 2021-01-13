@@ -173,7 +173,7 @@ void ProcessesDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 }
 
 void ProcessesDataView::UpdateProcessList() {

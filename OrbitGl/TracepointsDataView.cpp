@@ -82,7 +82,7 @@ void TracepointsDataView::DoFilter() {
 
   for (size_t i = 0; i < tracepoints_.size(); ++i) {
     const TracepointInfo& tracepoint = tracepoints_[i];
-    const std::string tracepoint_string = tracepoint.name();
+    const std::string& tracepoint_string = tracepoint.name();
 
     bool match = true;
 
@@ -98,7 +98,7 @@ void TracepointsDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 }
 
 std::vector<std::string> TracepointsDataView::GetContextMenu(

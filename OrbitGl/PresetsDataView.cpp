@@ -202,7 +202,7 @@ void PresetsDataView::DoFilter() {
     }
   }
 
-  indices_ = indices;
+  indices_ = std::move(indices);
 }
 
 void PresetsDataView::OnDataChanged() {
