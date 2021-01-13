@@ -21,7 +21,7 @@ class TimeGraph;
 
 class EventTrack : public Track {
  public:
-  explicit EventTrack(TimeGraph* a_TimeGraph, OrbitApp* app);
+  explicit EventTrack(TimeGraph* time_graph, OrbitApp* app);
   Type GetType() const override { return kEventTrack; }
 
   std::string GetTooltip() const override;
@@ -32,15 +32,12 @@ class EventTrack : public Track {
 
   void OnPick(int x, int y) override;
   void OnRelease() override;
-  void OnDrag(int a_X, int a_Y) override;
+  void OnDrag(int x, int y) override;
   bool Draggable() override { return true; }
   float GetHeight() const override { return size_[1]; }
 
   void SetThreadId(ThreadID thread_id) { thread_id_ = thread_id; }
-  void SetTimeGraph(TimeGraph* a_TimeGraph) { time_graph_ = a_TimeGraph; }
-  void SetPos(float a_X, float a_Y);
-  void SetSize(float a_SizeX, float a_SizeY);
-  void SetColor(Color color) { color_ = color; }
+  void SetPos(float x, float y) { pos_ = Vec2(x, y); }
   bool IsEmpty() const override;
   [[nodiscard]] uint64_t GetMinTime() const override;
   [[nodiscard]] uint64_t GetMaxTime() const override;
