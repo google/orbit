@@ -45,19 +45,32 @@ message CaptureOptions {
   bool enable_introspection = 9;
 }
 
+// For CaptureEvents with a duration, excluding for now GPU-related ones, we
+// represent the time interval as (duration_ns, end_timestamp_ns). As durations
+// are smaller in magnitude than absolute timestamps, and as protobufs use
+// variable-length encoding, this saves some bandwidth compared to
+// (start_timestamp_ns, end_timestamp_ns).
+// The pair (duration_ns, end_timestamp_ns) was preferred over
+// (start_timestamp_ns, duration_ns) because this way, when perf_event_open
+// events are processed in order, the CaptureEvents are sorted by the only
+// absolute timestamp contained in them (as they are obviously generated when
+// the "end" perf_event_open event is processed).
+
 message SchedulingSlice {
+  reserved 4;
   int32 pid = 1;
   int32 tid = 2;
   int32 core = 3;
-  uint64 in_timestamp_ns = 4;
+  uint64 duration_ns = 6;
   uint64 out_timestamp_ns = 5;
 }
 
 message FunctionCall {
+  reserved 4;
   int32 pid = 1;
   int32 tid = 2;
   uint64 absolute_address = 3;
-  uint64 begin_timestamp_ns = 4;
+  uint64 duration_ns = 9;
   uint64 end_timestamp_ns = 5;
   int32 depth = 6;
   uint64 return_value = 7;
@@ -65,9 +78,10 @@ message FunctionCall {
 }
 
 message IntrospectionScope {
+  reserved 3;
   int32 pid = 1;
   int32 tid = 2;
-  uint64 begin_timestamp_ns = 3;
+  uint64 duration_ns = 7;
   uint64 end_timestamp_ns = 4;
   int32 depth = 5;
   repeated uint64 registers = 6;
@@ -184,6 +198,7 @@ message ThreadName {
 }
 
 message ThreadStateSlice {
+  reserved 4;
   int32 pid = 1;  // pid is currently not set as we don't have the information.
   int32 tid = 2;
 
@@ -208,7 +223,7 @@ message ThreadStateSlice {
   }
   ThreadState thread_state = 3;
 
-  uint64 begin_timestamp_ns = 4;
+  uint64 duration_ns = 6;
   uint64 end_timestamp_ns = 5;
 }
 

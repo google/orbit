@@ -85,7 +85,7 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   scheduling_slice->set_core(2);
   scheduling_slice->set_pid(42);
   scheduling_slice->set_tid(24);
-  scheduling_slice->set_in_timestamp_ns(3);
+  scheduling_slice->set_duration_ns(97);
   scheduling_slice->set_out_timestamp_ns(100);
 
   TimerInfo actual_timer;
@@ -93,7 +93,8 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
 
   event_processor.ProcessEvent(event);
 
-  EXPECT_EQ(actual_timer.start(), scheduling_slice->in_timestamp_ns());
+  EXPECT_EQ(actual_timer.start(),
+            scheduling_slice->out_timestamp_ns() - scheduling_slice->duration_ns());
   EXPECT_EQ(actual_timer.end(), scheduling_slice->out_timestamp_ns());
   EXPECT_EQ(actual_timer.process_id(), scheduling_slice->pid());
   EXPECT_EQ(actual_timer.thread_id(), scheduling_slice->tid());
@@ -213,7 +214,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   function_call->set_pid(42);
   function_call->set_tid(24);
   function_call->set_absolute_address(123);
-  function_call->set_begin_timestamp_ns(3);
+  function_call->set_duration_ns(97);
   function_call->set_end_timestamp_ns(100);
   function_call->set_depth(3);
   function_call->set_return_value(16);
@@ -228,7 +229,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   EXPECT_EQ(actual_timer.process_id(), function_call->pid());
   EXPECT_EQ(actual_timer.thread_id(), function_call->tid());
   EXPECT_EQ(actual_timer.function_address(), function_call->absolute_address());
-  EXPECT_EQ(actual_timer.start(), function_call->begin_timestamp_ns());
+  EXPECT_EQ(actual_timer.start(), function_call->end_timestamp_ns() - function_call->duration_ns());
   EXPECT_EQ(actual_timer.end(), function_call->end_timestamp_ns());
   EXPECT_EQ(actual_timer.depth(), function_call->depth());
   EXPECT_EQ(actual_timer.user_data_key(), function_call->return_value());
@@ -247,7 +248,7 @@ TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
   IntrospectionScope* introspection_scope = event.mutable_introspection_scope();
   introspection_scope->set_pid(42);
   introspection_scope->set_tid(24);
-  introspection_scope->set_begin_timestamp_ns(3);
+  introspection_scope->set_duration_ns(97);
   introspection_scope->set_end_timestamp_ns(100);
   introspection_scope->set_depth(3);
   introspection_scope->add_registers(4);
@@ -260,7 +261,8 @@ TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
 
   EXPECT_EQ(actual_timer.process_id(), introspection_scope->pid());
   EXPECT_EQ(actual_timer.thread_id(), introspection_scope->tid());
-  EXPECT_EQ(actual_timer.start(), introspection_scope->begin_timestamp_ns());
+  EXPECT_EQ(actual_timer.start(),
+            introspection_scope->end_timestamp_ns() - introspection_scope->duration_ns());
   EXPECT_EQ(actual_timer.end(), introspection_scope->end_timestamp_ns());
   EXPECT_EQ(actual_timer.depth(), introspection_scope->depth());
   ASSERT_EQ(actual_timer.registers_size(), introspection_scope->registers_size());
@@ -537,7 +539,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
 
   CaptureEvent running_event;
   ThreadStateSlice* running_thread_state_slice = running_event.mutable_thread_state_slice();
-  running_thread_state_slice->set_begin_timestamp_ns(100);
+  running_thread_state_slice->set_duration_ns(100);
   running_thread_state_slice->set_end_timestamp_ns(200);
   running_thread_state_slice->set_pid(14);
   running_thread_state_slice->set_tid(24);
@@ -545,7 +547,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
 
   CaptureEvent runnable_event;
   ThreadStateSlice* runnable_thread_state_slice = runnable_event.mutable_thread_state_slice();
-  runnable_thread_state_slice->set_begin_timestamp_ns(100);
+  runnable_thread_state_slice->set_duration_ns(100);
   runnable_thread_state_slice->set_end_timestamp_ns(200);
   runnable_thread_state_slice->set_pid(14);
   runnable_thread_state_slice->set_tid(24);
@@ -553,7 +555,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
 
   CaptureEvent dead_event;
   ThreadStateSlice* dead_thread_state_slice = dead_event.mutable_thread_state_slice();
-  dead_thread_state_slice->set_begin_timestamp_ns(100);
+  dead_thread_state_slice->set_duration_ns(100);
   dead_thread_state_slice->set_end_timestamp_ns(200);
   dead_thread_state_slice->set_pid(14);
   dead_thread_state_slice->set_tid(24);
@@ -572,8 +574,25 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   event_processor.ProcessEvent(runnable_event);
   event_processor.ProcessEvent(dead_event);
 
+  EXPECT_EQ(
+      actual_running_thread_state_slice_info.begin_timestamp_ns(),
+      running_thread_state_slice->end_timestamp_ns() - running_thread_state_slice->duration_ns());
+  EXPECT_EQ(actual_running_thread_state_slice_info.end_timestamp_ns(),
+            running_thread_state_slice->end_timestamp_ns());
+  EXPECT_EQ(actual_running_thread_state_slice_info.tid(), running_thread_state_slice->tid());
+  EXPECT_EQ(actual_running_thread_state_slice_info.thread_state(), ThreadStateSliceInfo::kRunning);
+
+  EXPECT_EQ(
+      actual_runnable_thread_state_slice_info.begin_timestamp_ns(),
+      runnable_thread_state_slice->end_timestamp_ns() - runnable_thread_state_slice->duration_ns());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info.end_timestamp_ns(),
+            runnable_thread_state_slice->end_timestamp_ns());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info.tid(), runnable_thread_state_slice->tid());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info.thread_state(),
+            ThreadStateSliceInfo::kRunnable);
+
   EXPECT_EQ(actual_dead_thread_state_slice_info.begin_timestamp_ns(),
-            dead_thread_state_slice->begin_timestamp_ns());
+            dead_thread_state_slice->end_timestamp_ns() - dead_thread_state_slice->duration_ns());
   EXPECT_EQ(actual_dead_thread_state_slice_info.end_timestamp_ns(),
             dead_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_dead_thread_state_slice_info.tid(), dead_thread_state_slice->tid());

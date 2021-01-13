@@ -31,7 +31,7 @@ TEST(ContextSwitchManager, OneCoreMatch) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 1);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   processed_scheduling_slice =
@@ -54,7 +54,7 @@ TEST(ContextSwitchManager, OneCoreMatchUnknownInPid) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 1);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   processed_scheduling_slice =
@@ -76,7 +76,7 @@ TEST(ContextSwitchManager, OneCoreThreadExit) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 1);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   processed_scheduling_slice =
@@ -98,7 +98,7 @@ TEST(ContextSwitchManager, OneCoreThreadExitUnknownPid) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), -1);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 1);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   processed_scheduling_slice =
@@ -163,7 +163,7 @@ TEST(ContextSwitchManager, OneCoreTwoMatches) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid1);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid1);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 1);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   context_switch_manager.ProcessContextSwitchIn(kPid2, kTid2, kCore, 102);
@@ -174,7 +174,7 @@ TEST(ContextSwitchManager, OneCoreTwoMatches) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid2);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid2);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 102);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 1);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 103);
 
   processed_scheduling_slice =
@@ -202,7 +202,7 @@ TEST(ContextSwitchManager, TwoCoresMatches) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid2);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid2);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore2);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 101);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 2);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 103);
 
   processed_scheduling_slice =
@@ -211,7 +211,7 @@ TEST(ContextSwitchManager, TwoCoresMatches) {
   EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid1);
   EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid1);
   EXPECT_EQ(processed_scheduling_slice.value().core(), kCore1);
-  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().duration_ns(), 2);
   EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 102);
 
   processed_scheduling_slice =

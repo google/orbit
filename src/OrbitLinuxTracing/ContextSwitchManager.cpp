@@ -60,7 +60,7 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
   scheduling_slice.set_pid(pid_to_set);
   scheduling_slice.set_tid(tid);
   scheduling_slice.set_core(core);
-  scheduling_slice.set_in_timestamp_ns(open_timestamp_ns);
+  scheduling_slice.set_duration_ns(timestamp_ns - open_timestamp_ns);
   scheduling_slice.set_out_timestamp_ns(timestamp_ns);
   return scheduling_slice;
 }
