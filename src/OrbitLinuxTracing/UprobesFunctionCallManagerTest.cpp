@@ -30,7 +30,7 @@ TEST(UprobesFunctionCallManager, OneUprobe) {
   EXPECT_EQ(processed_function_call.value().pid(), pid);
   EXPECT_EQ(processed_function_call.value().tid(), tid);
   EXPECT_EQ(processed_function_call.value().absolute_address(), 100);
-  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 1);
+  EXPECT_EQ(processed_function_call.value().duration_ns(), 1);
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 2);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 3);
@@ -53,7 +53,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().pid(), pid);
   EXPECT_EQ(processed_function_call.value().tid(), tid);
   EXPECT_EQ(processed_function_call.value().absolute_address(), 200);
-  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 2);
+  EXPECT_EQ(processed_function_call.value().duration_ns(), 1);
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 3);
   EXPECT_EQ(processed_function_call.value().depth(), 1);
   EXPECT_EQ(processed_function_call.value().return_value(), 4);
@@ -64,7 +64,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().pid(), pid);
   EXPECT_EQ(processed_function_call.value().tid(), tid);
   EXPECT_EQ(processed_function_call.value().absolute_address(), 100);
-  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 1);
+  EXPECT_EQ(processed_function_call.value().duration_ns(), 3);
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 4);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 5);
@@ -77,7 +77,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().pid(), pid);
   EXPECT_EQ(processed_function_call.value().tid(), tid);
   EXPECT_EQ(processed_function_call.value().absolute_address(), 300);
-  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 5);
+  EXPECT_EQ(processed_function_call.value().duration_ns(), 1);
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 6);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 7);
@@ -101,7 +101,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().pid(), pid);
   EXPECT_EQ(processed_function_call.value().tid(), tid);
   EXPECT_EQ(processed_function_call.value().absolute_address(), 100);
-  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 1);
+  EXPECT_EQ(processed_function_call.value().duration_ns(), 2);
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 3);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 4);
@@ -112,7 +112,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().pid(), pid);
   EXPECT_EQ(processed_function_call.value().tid(), tid2);
   EXPECT_EQ(processed_function_call.value().absolute_address(), 200);
-  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 2);
+  EXPECT_EQ(processed_function_call.value().duration_ns(), 2);
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 4);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 5);

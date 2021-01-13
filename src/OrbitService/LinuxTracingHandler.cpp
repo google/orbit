@@ -47,7 +47,7 @@ void LinuxTracingHandler::SetupIntrospection() {
         IntrospectionScope introspection_scope;
         introspection_scope.set_pid(getpid());
         introspection_scope.set_tid(scope.tid);
-        introspection_scope.set_begin_timestamp_ns(scope.begin);
+        introspection_scope.set_duration_ns(scope.end - scope.begin);
         introspection_scope.set_end_timestamp_ns(scope.end);
         introspection_scope.set_depth(scope.depth);
         introspection_scope.mutable_registers()->Reserve(6);

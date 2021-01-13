@@ -50,7 +50,7 @@ class UprobesFunctionCallManager {
     function_call.set_pid(pid);
     function_call.set_tid(tid);
     function_call.set_absolute_address(tid_uprobe.function_address);
-    function_call.set_begin_timestamp_ns(tid_uprobe.begin_timestamp);
+    function_call.set_duration_ns(end_timestamp - tid_uprobe.begin_timestamp);
     function_call.set_end_timestamp_ns(end_timestamp);
     function_call.set_depth(tid_uprobes_stack.size() - 1);
     function_call.set_return_value(return_value);

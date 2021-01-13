@@ -84,7 +84,7 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
 
 void CaptureEventProcessor::ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice) {
   TimerInfo timer_info;
-  timer_info.set_start(scheduling_slice.in_timestamp_ns());
+  timer_info.set_start(scheduling_slice.out_timestamp_ns() - scheduling_slice.duration_ns());
   timer_info.set_end(scheduling_slice.out_timestamp_ns());
   timer_info.set_process_id(scheduling_slice.pid());
   timer_info.set_thread_id(scheduling_slice.tid());
@@ -123,7 +123,7 @@ void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_cal
   TimerInfo timer_info;
   timer_info.set_process_id(function_call.pid());
   timer_info.set_thread_id(function_call.tid());
-  timer_info.set_start(function_call.begin_timestamp_ns());
+  timer_info.set_start(function_call.end_timestamp_ns() - function_call.duration_ns());
   timer_info.set_end(function_call.end_timestamp_ns());
   timer_info.set_depth(static_cast<uint8_t>(function_call.depth()));
   timer_info.set_function_address(function_call.absolute_address());
@@ -143,7 +143,7 @@ void CaptureEventProcessor::ProcessIntrospectionScope(
   TimerInfo timer_info;
   timer_info.set_process_id(introspection_scope.pid());
   timer_info.set_thread_id(introspection_scope.tid());
-  timer_info.set_start(introspection_scope.begin_timestamp_ns());
+  timer_info.set_start(introspection_scope.end_timestamp_ns() - introspection_scope.duration_ns());
   timer_info.set_end(introspection_scope.end_timestamp_ns());
   timer_info.set_depth(static_cast<uint8_t>(introspection_scope.depth()));
   timer_info.set_function_address(0);  // function address n/a, set to invalid value
@@ -253,7 +253,8 @@ void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thre
     default:
       UNREACHABLE();
   }
-  slice_info.set_begin_timestamp_ns(thread_state_slice.begin_timestamp_ns());
+  slice_info.set_begin_timestamp_ns(thread_state_slice.end_timestamp_ns() -
+                                    thread_state_slice.duration_ns());
   slice_info.set_end_timestamp_ns(thread_state_slice.end_timestamp_ns());
   capture_listener_->OnThreadStateSlice(std::move(slice_info));
 }
