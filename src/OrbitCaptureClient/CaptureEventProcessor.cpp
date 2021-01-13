@@ -266,9 +266,8 @@ void CaptureEventProcessor::ProcessGpuQueueSubmission(
   const GpuJob* matching_gpu_job =
       FindMatchingGpuJob(thread_id, pre_submission_cpu_timestamp, post_submission_cpu_timestamp);
 
-  // If we haven't found the matching "GpuSubmission" or the submission contains "begin" markers
-  // (which might have the "end" markers in a later submission), we save the "GpuSubmission" for
-  // later.
+  // If we haven't found the matching "GpuJob" or the submission contains "begin" markers (which
+  // might have the "end" markers in a later submission), we save the "GpuSubmission" for later.
   // Note that as soon as all "begin" markers have been processed, the "GpuSubmission" will be
   // deleted again.
   if (matching_gpu_job == nullptr || gpu_queue_submission.num_begin_markers() > 0) {
@@ -424,8 +423,8 @@ void CaptureEventProcessor::SendTracepointInfoToListenerIfNecessary(
   }
 }
 
-// Finds the GpuQueueSubmission that fully contains the given given timestamp and happened on the
-// given thread id. Returns `nullptr` if there is no such submission.
+// Finds the GpuQueueSubmission that fully contains the given timestamp and happened on the given
+// thread id. Returns `nullptr` if there is no such submission.
 const GpuQueueSubmission* CaptureEventProcessor::FindMatchingGpuQueueSubmission(
     int32_t thread_id, uint64_t submit_time) {
   const auto& post_submission_time_to_gpu_submission_it =
@@ -530,7 +529,7 @@ void CaptureEventProcessor::DecrementUnprocessedBeginMarkers(int32_t thread_id,
       tid_to_post_submission_time_to_num_begin_markers_.at(thread_id);
   CHECK(post_submission_time_to_num_begin_markers.contains(post_submission_timestamp));
   uint64_t new_num = post_submission_time_to_num_begin_markers.at(post_submission_timestamp) - 1;
-  post_submission_time_to_num_begin_markers[post_submission_timestamp] = new_num;
+  post_submission_time_to_num_begin_markers.at(post_submission_timestamp) = new_num;
   if (new_num == 0) {
     post_submission_time_to_num_begin_markers.erase(post_submission_timestamp);
     if (post_submission_time_to_num_begin_markers.empty()) {
@@ -616,6 +615,8 @@ void CaptureEventProcessor::ProcessGpuDebugMarkers(
   uint64_t submission_post_submission_cpu_timestamp =
       submission_meta_info.post_submission_cpu_timestamp();
 
+  static constexpr int32_t kUnknownThreadId = -1;
+
   for (const auto& completed_marker : gpu_queue_submission.completed_markers()) {
     CHECK(first_command_buffer != std::nullopt);
     TimerInfo marker_timer;
@@ -671,6 +672,8 @@ void CaptureEventProcessor::ProcessGpuDebugMarkers(
                              begin_submission_first_command_buffer->begin_gpu_timestamp_ns());
       if (begin_marker_thread_id == gpu_queue_submission.meta_info().tid()) {
         marker_timer.set_thread_id(begin_marker_thread_id);
+      } else {
+        marker_timer.set_thread_id(kUnknownThreadId);
       }
 
       DecrementUnprocessedBeginMarkers(begin_marker_thread_id,
@@ -678,7 +681,7 @@ void CaptureEventProcessor::ProcessGpuDebugMarkers(
                                        begin_marker_post_submission_cpu_timestamp);
     } else {
       marker_timer.set_start(begin_capture_time_ns_);
-      marker_timer.set_thread_id(-1);
+      marker_timer.set_thread_id(kUnknownThreadId);
     }
 
     marker_timer.set_depth(completed_marker.depth());

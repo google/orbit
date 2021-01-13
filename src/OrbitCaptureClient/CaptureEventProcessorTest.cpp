@@ -466,11 +466,14 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   EXPECT_EQ(actual_tracepoint_event.cpu(), tracepoint->cpu());
 }
 
+constexpr int32_t kGpuPid = 1;
+constexpr int32_t kGpuTid = 2;
+
 GpuJob* CreateGpuJob(CaptureEvent* capture_event, uint64_t sw_queue, uint64_t hw_queue,
                      uint64_t hw_execution_begin, uint64_t hw_execution_end) {
   GpuJob* gpu_job = capture_event->mutable_gpu_job();
-  gpu_job->set_pid(1);
-  gpu_job->set_tid(2);
+  gpu_job->set_pid(kGpuPid);
+  gpu_job->set_tid(kGpuTid);
   gpu_job->set_context(3);
   gpu_job->set_seqno(4);
   gpu_job->set_timeline("timeline");
@@ -549,7 +552,7 @@ GpuQueueSubmissionMetaInfo* CreateGpuQueueSubmissionMetaInfo(GpuQueueSubmission*
                                                              uint64_t pre_timestamp,
                                                              uint64_t post_timestamp) {
   GpuQueueSubmissionMetaInfo* meta_info = submission->mutable_meta_info();
-  meta_info->set_tid(2);
+  meta_info->set_tid(kGpuTid);
   meta_info->set_pre_submission_cpu_timestamp(pre_timestamp);
   meta_info->set_post_submission_cpu_timestamp(post_timestamp);
   return meta_info;
@@ -562,17 +565,23 @@ void AddGpuCommandBufferToGpuSubmitInfo(GpuSubmitInfo* submit_info, uint64_t gpu
   command_buffer->set_end_gpu_timestamp_ns(gpu_end_timestamp);
 }
 
+constexpr float kGpuDebugMarkerAlpha = 1.f;
+constexpr float kGpuDebugMarkerRed = 0.75f;
+constexpr float kGpuDebugMarkerGreen = 0.5f;
+constexpr float kGpuDebugMarkerBlue = 0.25f;
+constexpr uint32_t kGpuDebugMarkerDepth = 1;
+
 void AddGpuDebugMarkerToGpuQueueSubmission(GpuQueueSubmission* submission,
                                            GpuQueueSubmissionMetaInfo* begin_meta_info,
                                            uint64_t marker_text_key, uint64_t begin_gpu_timestamp,
                                            uint64_t end_gpu_timestamp) {
   GpuDebugMarker* debug_marker = submission->add_completed_markers();
   Color* color = debug_marker->mutable_color();
-  color->set_alpha(1.f);
-  color->set_red(0.75f);
-  color->set_green(0.5f);
-  color->set_blue(0.25f);
-  debug_marker->set_depth(1);
+  color->set_alpha(kGpuDebugMarkerAlpha);
+  color->set_red(kGpuDebugMarkerRed);
+  color->set_green(kGpuDebugMarkerGreen);
+  color->set_blue(kGpuDebugMarkerBlue);
+  debug_marker->set_depth(kGpuDebugMarkerDepth);
   debug_marker->set_text_key(marker_text_key);
   debug_marker->set_end_gpu_timestamp_ns(end_gpu_timestamp);
   if (begin_meta_info == nullptr) {
@@ -606,10 +615,10 @@ void ExpectDebugMarkerTimerEq(const TimerInfo& actual_timer, uint64_t cpu_begin,
   EXPECT_EQ(actual_timer.type(), TimerInfo::kGpuDebugMarker);
   EXPECT_EQ(actual_timer.timeline_hash(), timeline_key);
   EXPECT_EQ(actual_timer.user_data_key(), marker_key);
-  EXPECT_EQ(actual_timer.color().alpha(), static_cast<uint32_t>(1.f * 255));
-  EXPECT_EQ(actual_timer.color().red(), static_cast<uint32_t>(.75f * 255));
-  EXPECT_EQ(actual_timer.color().green(), static_cast<uint32_t>(.5f * 255));
-  EXPECT_EQ(actual_timer.color().blue(), static_cast<uint32_t>(.25f * 255));
+  EXPECT_EQ(actual_timer.color().alpha(), static_cast<uint32_t>(kGpuDebugMarkerAlpha * 255));
+  EXPECT_EQ(actual_timer.color().red(), static_cast<uint32_t>(kGpuDebugMarkerRed * 255));
+  EXPECT_EQ(actual_timer.color().green(), static_cast<uint32_t>(kGpuDebugMarkerGreen * 255));
+  EXPECT_EQ(actual_timer.color().blue(), static_cast<uint32_t>(kGpuDebugMarkerBlue * 255));
 }
 
 TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
