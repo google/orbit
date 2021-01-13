@@ -105,23 +105,39 @@ std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
 void CallstackData::ForEachCallstackEvent(
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
   std::lock_guard lock(mutex_);
-  for (const auto& tid_and_events : callstack_events_by_tid_) {
-    for (const auto& time_and_event : tid_and_events.second) {
-      action(time_and_event.second);
+  for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
+    for (const auto& [unused_timestamp, event] : events) {
+      action(event);
     }
   }
 }
 
-void CallstackData::ForEachCallstackEventOfTid(
-    int32_t tid,
+void CallstackData::ForEachCallstackEventInTimeRange(
+    uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
   std::lock_guard lock(mutex_);
+  CHECK(min_timestamp <= max_timestamp);
+  for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
+    for (auto event_it = events.lower_bound(min_timestamp);
+         event_it != events.upper_bound(max_timestamp); ++event_it) {
+      action(event_it->second);
+    }
+  }
+}
+
+void CallstackData::ForEachCallstackEventOfTidInTimeRange(
+    int32_t tid, uint64_t min_timestamp, uint64_t max_timestamp,
+    const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
+  std::lock_guard lock(mutex_);
+  CHECK(min_timestamp <= max_timestamp);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
     return;
   }
-  for (const auto& time_and_event : tid_and_events_it->second) {
-    action(time_and_event.second);
+  const auto& events = tid_and_events_it->second;
+  for (auto event_it = events.lower_bound(min_timestamp);
+       event_it != events.upper_bound(max_timestamp); ++event_it) {
+    action(event_it->second);
   }
 }
 
