@@ -30,7 +30,7 @@ if [ "$0" == "$SCRIPT" ]; then
       echo "$file"
     fi
 
-  done <<< $(git diff -U0 --no-color --relative --name-only $MERGE_BASE \
+  done <<< $(git diff -U0 --no-color --relative --name-only --diff-filter=r $MERGE_BASE \
   | grep -v third_party/ \
   | grep -v /build \
   | egrep '\.cpp$|\.h$|CMakeLists\.txt$|\.js$|\.proto$|\.py$')
