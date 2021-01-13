@@ -555,16 +555,17 @@ GpuQueueSubmissionMetaInfo* CreateGpuQueueSubmissionMetaInfo(GpuQueueSubmission*
   return meta_info;
 }
 
-void AddGpuCommandBuffer(GpuSubmitInfo* submit_info, uint64_t gpu_begin_timestamp,
-                         uint64_t gpu_end_timestamp) {
+void AddGpuCommandBufferToGpuSubmitInfo(GpuSubmitInfo* submit_info, uint64_t gpu_begin_timestamp,
+                                        uint64_t gpu_end_timestamp) {
   GpuCommandBuffer* command_buffer = submit_info->add_command_buffers();
   command_buffer->set_begin_gpu_timestamp_ns(gpu_begin_timestamp);
   command_buffer->set_end_gpu_timestamp_ns(gpu_end_timestamp);
 }
 
-void AddGpuDebugMarker(GpuQueueSubmission* submission, GpuQueueSubmissionMetaInfo* begin_meta_info,
-                       uint64_t marker_text_key, uint64_t begin_gpu_timestamp,
-                       uint64_t end_gpu_timestamp) {
+void AddGpuDebugMarkerToGpuQueueSubmission(GpuQueueSubmission* submission,
+                                           GpuQueueSubmissionMetaInfo* begin_meta_info,
+                                           uint64_t marker_text_key, uint64_t begin_gpu_timestamp,
+                                           uint64_t end_gpu_timestamp) {
   GpuDebugMarker* debug_marker = submission->add_completed_markers();
   Color* color = debug_marker->mutable_color();
   color->set_alpha(1.f);
@@ -628,9 +629,9 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   GpuQueueSubmissionMetaInfo* meta_info = CreateGpuQueueSubmissionMetaInfo(submission, 9, 11);
 
   GpuSubmitInfo* submit_info = submission->add_submit_infos();
-  AddGpuCommandBuffer(submit_info, 115, 119);
-  AddGpuCommandBuffer(submit_info, 120, 124);
-  AddGpuDebugMarker(submission, meta_info, 42, 116, 121);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info, 115, 119);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info, 120, 124);
+  AddGpuDebugMarkerToGpuQueueSubmission(submission, meta_info, 42, 116, 121);
   submission->set_num_begin_markers(1);
 
   uint64_t actual_timeline_key;
@@ -700,9 +701,9 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   GpuQueueSubmissionMetaInfo* meta_info = CreateGpuQueueSubmissionMetaInfo(submission, 9, 11);
 
   GpuSubmitInfo* submit_info = submission->add_submit_infos();
-  AddGpuCommandBuffer(submit_info, 115, 119);
-  AddGpuCommandBuffer(submit_info, 120, 124);
-  AddGpuDebugMarker(submission, meta_info, 42, 116, 121);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info, 115, 119);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info, 120, 124);
+  AddGpuDebugMarkerToGpuQueueSubmission(submission, meta_info, 42, 116, 121);
   submission->set_num_begin_markers(1);
 
   EXPECT_CALL(listener, OnTimer).Times(0);
@@ -740,7 +741,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   TimerInfo debug_marker_timer;
   EXPECT_CALL(listener, OnTimer)
       .Times(6)
-      // The first three timers are from the GpuJob, which we not test in here.
+      // The first three timers are from the GpuJob, which we don't test here.
       .WillOnce(Return())
       .WillOnce(Return())
       .WillOnce(Return())
@@ -778,16 +779,16 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   GpuQueueSubmission* submission_1 = queue_submission_event_1.mutable_gpu_queue_submission();
   GpuQueueSubmissionMetaInfo* meta_info_1 = CreateGpuQueueSubmissionMetaInfo(submission_1, 9, 11);
   GpuSubmitInfo* submit_info_1 = submission_1->add_submit_infos();
-  AddGpuCommandBuffer(submit_info_1, 115, 119);
-  AddGpuCommandBuffer(submit_info_1, 120, 124);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info_1, 115, 119);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info_1, 120, 124);
   submission_1->set_num_begin_markers(1);
 
   CaptureEvent queue_submission_event_2;
   GpuQueueSubmission* submission_2 = queue_submission_event_2.mutable_gpu_queue_submission();
   CreateGpuQueueSubmissionMetaInfo(submission_2, 49, 51);
   GpuSubmitInfo* submit_info_2 = submission_2->add_submit_infos();
-  AddGpuCommandBuffer(submit_info_2, 145, 154);
-  AddGpuDebugMarker(submission_2, meta_info_1, 42, 116, 153);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info_2, 145, 154);
+  AddGpuDebugMarkerToGpuQueueSubmission(submission_2, meta_info_1, 42, 116, 153);
 
   uint64_t actual_timeline_key;
   EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))
@@ -870,8 +871,8 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   GpuQueueSubmission* submission_2 = queue_submission_event_2.mutable_gpu_queue_submission();
   CreateGpuQueueSubmissionMetaInfo(submission_2, 49, 51);
   GpuSubmitInfo* submit_info_2 = submission_2->add_submit_infos();
-  AddGpuCommandBuffer(submit_info_2, 145, 154);
-  AddGpuDebugMarker(submission_2, nullptr, 42, 116, 153);
+  AddGpuCommandBufferToGpuSubmitInfo(submit_info_2, 145, 154);
+  AddGpuDebugMarkerToGpuQueueSubmission(submission_2, nullptr, 42, 116, 153);
 
   uint64_t actual_timeline_key;
   EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))

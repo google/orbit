@@ -46,7 +46,7 @@ class CaptureEventProcessor {
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
 
   // Vulkan Layer related helpers:
-  void DoProcessGpuQueueSubmission(
+  void ProcessGpuQueueSubmissionWithMatchingGpuJob(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
       const orbit_grpc_protos::GpuJob& matching_gpu_job);
   void ProcessGpuCommandBuffers(
@@ -59,7 +59,7 @@ class CaptureEventProcessor {
       const orbit_grpc_protos::GpuJob& matching_gpu_job,
       const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
       const std::string& timeline);
-  static std::optional<orbit_grpc_protos::GpuCommandBuffer> FindFirstCommandBuffer(
+  static std::optional<orbit_grpc_protos::GpuCommandBuffer> ExtractFirstCommandBuffer(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   const orbit_grpc_protos::GpuJob* FindMatchingGpuJob(int32_t thread_id,
                                                       uint64_t pre_submission_cpu_timestamp,
@@ -68,7 +68,10 @@ class CaptureEventProcessor {
                                                                               uint64_t submit_time);
   [[nodiscard]] bool HasUnprocessedBeginMarkers(int32_t thread_id,
                                                 uint64_t post_submission_timestamp) const;
-  void DecrementUnprocessedBeginMarkers(int32_t thread_id, uint64_t post_submission_timestamp);
+  void DecrementUnprocessedBeginMarkers(int32_t thread_id, uint64_t submission_timestamp,
+                                        uint64_t post_submission_timestamp);
+  void DeleteSavedGpuJob(int32_t thread_id, uint64_t submission_timestamp);
+  void DeleteSavedGpuSubmission(int32_t thread_id, uint64_t post_submission_timestamp);
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
   absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;
