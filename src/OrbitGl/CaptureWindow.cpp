@@ -525,7 +525,7 @@ void CaptureWindow::Draw() {
 
     Vec2 pos(mouse_world_x_, world_top_left_y_);
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueText, Color(0, 255, 0, 127));
+    ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueUi, Color(0, 255, 0, 127));
 
     if (draw_help_) {
       RenderHelpUi();
@@ -888,8 +888,8 @@ void CaptureWindow::RenderSelectionOverlay() {
     const Color text_color(255, 255, 255, 255);
     float pos_x = pos[0] + size[0];
 
-    text_renderer_.AddText(text.c_str(), pos_x, select_stop_[1], GlCanvas::kZValueText, text_color,
-                           font_size_, size[0], true);
+    text_renderer_.AddText(text.c_str(), pos_x, select_stop_[1], GlCanvas::kZValueTextUi,
+                           text_color, font_size_, size[0], true);
 
     const unsigned char g = 100;
     Color grey(g, g, g, 255);

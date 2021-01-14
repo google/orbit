@@ -650,7 +650,7 @@ void TimeGraph::DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Col
 
   const Color kBlack(0, 0, 0, 255);
   float text_width = canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueText, kBlack,
+      text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueTextUi, kBlack,
       time.length(), font_size_, max_size);
 
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), GetTextBoxHeight());

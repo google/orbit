@@ -232,7 +232,7 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   float x = pos_[0];
   Vec2 from(x, y);
   Vec2 to(x + size_[0], y);
-  float ui_z = GlCanvas::kZValueUi;
+  float text_z = GlCanvas::kZValueTrackText + z_offset;
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   std::string avg_time = GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns()));
@@ -243,14 +243,13 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   Vec2 white_text_box_position(pos_[0] + layout.GetRightMargin(),
                                y - layout.GetTextBoxHeight() / 2.f);
 
-  batcher->AddLine(from, from + Vec2(layout.GetRightMargin() / 2.f, 0), ui_z, kWhiteColor);
-  batcher->AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, ui_z,
+  batcher->AddLine(from, from + Vec2(layout.GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
+  batcher->AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
                    kWhiteColor);
 
   canvas->GetTextRenderer().AddText(label.c_str(), white_text_box_position[0],
-                                    white_text_box_position[1] + layout.GetTextOffset(),
-                                    GlCanvas::kZValueTextUi, kWhiteColor, font_size,
-                                    white_text_box_size[0]);
+                                    white_text_box_position[1] + layout.GetTextOffset(), text_z,
+                                    kWhiteColor, font_size, white_text_box_size[0]);
 }
 
 void FrameTrack::UpdateBoxHeight() {
