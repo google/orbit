@@ -36,6 +36,20 @@ namespace orbit_qt {
 
 class AccessibilityAdapter;
 
+class OrbitGlInterfaceWrapper : public QObject {
+  Q_OBJECT;
+
+ public:
+  explicit OrbitGlInterfaceWrapper(const orbit_gl::AccessibleInterface* iface);
+  const orbit_gl::AccessibleInterface* GetInterface() const { return iface_; }
+  [[nodiscard]] const orbit_gl::AccessibleInterface* GetInterface() const { return iface_; }
+  AccessibilityAdapter* GetAdapter() { return adapter_.get(); }
+
+ private:
+  const orbit_gl::AccessibleInterface* iface_;
+  std::unique_ptr<AccessibilityAdapter> adapter_;
+};
+
 class AdapterRegistry {
  public:
   ~AdapterRegistry() { CHECK(all_interfaces_map_.size() == 0); }
@@ -60,7 +74,7 @@ class AdapterRegistry {
   absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*, QAccessibleInterface*>
       all_interfaces_map_;
   absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*,
-                      std::unique_ptr<AccessibilityAdapter>>
+                      std::unique_ptr<OrbitGlInterfaceWrapper>>
       managed_adapters_;
 };
 
@@ -72,7 +86,7 @@ class AdapterRegistry {
  * See file documentation above for more details.
  */
 class AccessibilityAdapter : public QAccessibleInterface {
-  friend class AdapterRegistry;
+  friend class OrbitGlInterfaceWrapper;
 
  public:
   AccessibilityAdapter() = delete;
