@@ -107,38 +107,25 @@
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleInterfaceRegistry;
 
-namespace {
-/*
- * Utility class to verify all created accessibility adapters have been cleaned up
- * when the application exits as a sanity check for correct registration behavior.
- *
- * A static instance of this is created on AccessibilityAdapter::Init() and will thus
- * be destructed at exit. At this point, all adapters should have been cleaned up.
- */
-class TeardownCheck {
- public:
-  ~TeardownCheck() { CHECK(orbit_qt::AccessibilityAdapter::RegisteredAdapterCount() == 0); }
-};
-}  // namespace
-
 namespace orbit_qt {
 
-absl::flat_hash_map<const AccessibleInterface*, QAccessibleInterface*>
-    AccessibilityAdapter::all_interfaces_map_;
-absl::flat_hash_map<const AccessibleInterface*, std::unique_ptr<AccessibilityAdapter>>
-    AccessibilityAdapter::managed_adapters_;
+AdapterRegistry& AdapterRegistry::Get() {
+  static AdapterRegistry registry;
+  static std::once_flag flag;
 
-void AccessibilityAdapter::Init() {
-  const static TeardownCheck teardown_check;
-  AccessibleInterfaceRegistry::Get().SetOnUnregisterCallback(
-      AccessibilityAdapter::OnInterfaceDeleted);
+  std::call_once(flag, [&]() {
+    AccessibleInterfaceRegistry::Get().SetOnUnregisterCallback(
+        std::bind(&AdapterRegistry::OnInterfaceDeleted, &registry, std::placeholders::_1));
+  });
+
+  return registry;
 }
 
 /*
  * Callback fired when GlAccessibleInterfaces are deleted. This takes care of deleting only those
  * interfaces created by AccessibilityAdapter.
  */
-void AccessibilityAdapter::OnInterfaceDeleted(AccessibleInterface* iface) {
+void AdapterRegistry::OnInterfaceDeleted(AccessibleInterface* iface) {
   if (all_interfaces_map_.contains(iface)) {
     all_interfaces_map_.erase(iface);
   }
@@ -148,10 +135,7 @@ void AccessibilityAdapter::OnInterfaceDeleted(AccessibleInterface* iface) {
   }
 }
 
-QAccessibleInterface* AccessibilityAdapter::GetOrCreateAdapter(const AccessibleInterface* iface) {
-  static std::once_flag flag;
-  std::call_once(flag, Init);
-
+QAccessibleInterface* AdapterRegistry::GetOrCreateAdapter(const AccessibleInterface* iface) {
   if (iface == nullptr) {
     return nullptr;
   }
@@ -172,7 +156,7 @@ int AccessibilityAdapter::indexOfChild(const QAccessibleInterface* child) const 
   // This could be quite a bottleneck, I am not sure in which context
   // and how excessive this method is actually called.
   for (int i = 0; i < info_->AccessibleChildCount(); ++i) {
-    if (GetOrCreateAdapter(info_->AccessibleChild(i)) == child) {
+    if (AdapterRegistry::Get().GetOrCreateAdapter(info_->AccessibleChild(i)) == child) {
       return i;
     }
   }
@@ -227,7 +211,7 @@ OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
    * check can't catch...
    */
   CHECK(widget->accessibleName() == "");
-  AccessibilityAdapter::RegisterAdapter(
+  AdapterRegistry::Get().RegisterAdapter(
       static_cast<OrbitGLWidget*>(widget)->GetCanvas()->GetOrCreateAccessibleInterface(), this);
 }
 
@@ -249,10 +233,10 @@ int OrbitGlWidgetAccessible::indexOfChild(const QAccessibleInterface* child) con
 }
 
 QAccessibleInterface* OrbitGlWidgetAccessible::child(int index) const {
-  return AccessibilityAdapter::GetOrCreateAdapter(static_cast<OrbitGLWidget*>(widget())
-                                                      ->GetCanvas()
-                                                      ->GetOrCreateAccessibleInterface()
-                                                      ->AccessibleChild(index));
+  return AdapterRegistry::Get().GetOrCreateAdapter(static_cast<OrbitGLWidget*>(widget())
+                                                       ->GetCanvas()
+                                                       ->GetOrCreateAccessibleInterface()
+                                                       ->AccessibleChild(index));
 }
 
 QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* object) {
