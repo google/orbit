@@ -250,7 +250,14 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
     capture_max_timestamp_ = timer_info.end();
   }
 
-  if (function != nullptr && function->orbit_type() != FunctionInfo::kNone) {
+  // Functions for manual instrumentation scopes and tracked values are those with orbit_type() !=
+  // FunctionInfo::kNone. All proper timers for these have timer_info.type() == TimerInfo::kNone. It
+  // is possible to add frame tracks for these special functions, as they are simply hooked
+  // functions, but in those cases the timer type is TimerInfo::kFrame. We need to exclude those
+  // frame track timers from the special processing here as they do not represent manual
+  // instrumentation scopes.
+  if (function != nullptr && function->orbit_type() != FunctionInfo::kNone &&
+      timer_info.type() == TimerInfo::kNone) {
     ProcessOrbitFunctionTimer(function->orbit_type(), timer_info);
   }
 
