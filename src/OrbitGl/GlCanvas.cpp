@@ -27,9 +27,9 @@ float GlCanvas::kZValueTrack = 0.01f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.07f;
+float GlCanvas::kZValueTrackText = 0.09f;
 float GlCanvas::kZValueOverlay = 0.43f;
 float GlCanvas::kZValueOverlayTextBackground = 0.45f;
-float GlCanvas::kZValueText = 0.47f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
 float GlCanvas::kZValueTextUi = 0.61f;
@@ -43,8 +43,13 @@ float GlCanvas::kZValueSlider = 0.89f;
 float GlCanvas::kZOffsetMovingTack = 0.1f;
 float GlCanvas::kZOffsetPinnedTrack = 0.2f;
 
-// Max Number of layers: 16 original, 4 for moving track, 4 for pinned Track, 4 epsilon in Slider
-unsigned GlCanvas::kMaxNumberRealZLayers = 16 + 4 + 4 + 4;
+constexpr unsigned kNumberOriginalLayers = 16;
+constexpr unsigned kExtraLayersForMovingTracks = 5;
+constexpr unsigned kExtraLayersForPinnedTracks = 5;
+constexpr unsigned kExtraLayersForSliderEpsilons = 4;
+unsigned GlCanvas::kMaxNumberRealZLayers = kNumberOriginalLayers + kExtraLayersForMovingTracks +
+                                           kExtraLayersForPinnedTracks +
+                                           kExtraLayersForSliderEpsilons;
 
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
