@@ -106,15 +106,6 @@ ProcessData* DataManager::GetMutableProcessByPid(int32_t process_id) {
   return &it->second;
 }
 
-const ProcessData* DataManager::GetProcessByPid(int32_t process_id) const {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  auto it = process_map_.find(process_id);
-  if (it == process_map_.end()) return nullptr;
-
-  return &it->second;
-}
-
 bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_functions_.contains(function);
