@@ -40,14 +40,11 @@ class OrbitGlInterfaceWrapper : public QObject {
   Q_OBJECT;
 
  public:
-  explicit OrbitGlInterfaceWrapper(const orbit_gl::AccessibleInterface* iface);
-  const orbit_gl::AccessibleInterface* GetInterface() const { return iface_; }
+  explicit OrbitGlInterfaceWrapper(const orbit_gl::AccessibleInterface* iface) : iface_(iface) {}
   [[nodiscard]] const orbit_gl::AccessibleInterface* GetInterface() const { return iface_; }
-  AccessibilityAdapter* GetAdapter() { return adapter_.get(); }
 
  private:
   const orbit_gl::AccessibleInterface* iface_;
-  std::unique_ptr<AccessibilityAdapter> adapter_;
 };
 
 class AdapterRegistry {
@@ -58,9 +55,10 @@ class AdapterRegistry {
   AdapterRegistry& operator=(const AdapterRegistry&) = delete;
   AdapterRegistry& operator=(AdapterRegistry&&) noexcept = delete;
 
-  static AdapterRegistry& Get();
+  [[nodiscard]] static AdapterRegistry& Get();
 
-  QAccessibleInterface* GetOrCreateAdapter(const orbit_accessibility::AccessibleInterface* iface);
+  [[nodiscard]] QAccessibleInterface* GetOrCreateAdapter(
+      const orbit_accessibility::AccessibleInterface* iface);
   void RegisterAdapter(const orbit_accessibility::AccessibleInterface* gl_control,
                        QAccessibleInterface* qt_control) {
     all_interfaces_map_.emplace(gl_control, qt_control);
@@ -68,8 +66,11 @@ class AdapterRegistry {
 
   void OnInterfaceDeleted(orbit_accessibility::AccessibleInterface* iface);
 
+  [[nodiscard]] QAccessibleInterface* InterfaceWrapperFactory(const QString& classname,
+                                                              QObject* object);
+
  private:
-  AdapterRegistry(){};
+  explicit AdapterRegistry() = default;
 
   absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*, QAccessibleInterface*>
       all_interfaces_map_;
@@ -86,7 +87,7 @@ class AdapterRegistry {
  * See file documentation above for more details.
  */
 class AccessibilityAdapter : public QAccessibleInterface {
-  friend class OrbitGlInterfaceWrapper;
+  friend class AdapterRegistry;
 
  public:
   AccessibilityAdapter() = delete;
@@ -96,11 +97,11 @@ class AccessibilityAdapter : public QAccessibleInterface {
   AccessibilityAdapter& operator=(AccessibilityAdapter&& rhs) = delete;
 
   bool isValid() const override {
-    bool result = info_ != nullptr;
+    bool result = info_ != nullptr && object_ != nullptr;
     return result;
   }
 
-  QObject* object() const override { return nullptr; }
+  QObject* object() const override { return object_; }
   QAccessibleInterface* focusChild() const override { return nullptr; }
 
   QAccessibleInterface* parent() const override {
@@ -126,10 +127,12 @@ class AccessibilityAdapter : public QAccessibleInterface {
   }
 
  private:
-  explicit AccessibilityAdapter(const orbit_accessibility::AccessibleInterface* info)
-      : info_(info){};
+  explicit AccessibilityAdapter(const orbit_accessibility::AccessibleInterface* info,
+                                QObject* object)
+      : info_(info), object_(object){};
 
   const orbit_accessibility::AccessibleInterface* info_;
+  QObject* object_;
 };
 
 void InstallAccessibilityFactories();
