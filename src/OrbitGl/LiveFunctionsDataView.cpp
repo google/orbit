@@ -377,6 +377,9 @@ void LiveFunctionsDataView::OnDataChanged() {
   indices_.resize(functions_count);
   size_t i = 0;
   for (const auto& pair : selected_functions) {
+    if (function_utils::IsOrbitFunc(pair.second)) {
+      continue;
+    }
     functions_.push_back(pair.second);
     indices_[i] = i;
     ++i;
