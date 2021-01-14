@@ -165,13 +165,17 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
   std::optional<GpuCommandBuffer> first_command_buffer =
       ExtractFirstCommandBuffer(gpu_queue_submission);
 
-  ProcessGpuCommandBuffers(gpu_queue_submission, matching_gpu_job, first_command_buffer,
-                           timeline_hash, get_string_hash_and_send_to_listener_if_necessary,
-                           &result);
+  std::vector<TimerInfo> command_buffer_timers =
+      ProcessGpuCommandBuffers(gpu_queue_submission, matching_gpu_job, first_command_buffer,
+                               timeline_hash, get_string_hash_and_send_to_listener_if_necessary);
 
-  ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer, timeline,
-                         string_intern_pool, get_string_hash_and_send_to_listener_if_necessary,
-                         &result);
+  result.insert(result.end(), command_buffer_timers.begin(), command_buffer_timers.end());
+
+  std::vector<TimerInfo> debug_marker_timers =
+      ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer, timeline,
+                             string_intern_pool, get_string_hash_and_send_to_listener_if_necessary);
+
+  result.insert(result.end(), debug_marker_timers.begin(), debug_marker_timers.end());
 
   return result;
 }
@@ -232,19 +236,20 @@ void GpuQueueSubmissionProcessor::DeleteSavedGpuSubmission(int32_t thread_id,
   }
 }
 
-void GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
+std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
     const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
     const orbit_grpc_protos::GpuJob& matching_gpu_job,
     const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
     uint64_t timeline_hash,
     const std::function<uint64_t(const std::string& str)>&
-        get_string_hash_and_send_to_listener_if_necessary,
-    std::vector<TimerInfo>* result) {
+        get_string_hash_and_send_to_listener_if_necessary) {
   constexpr const char* kCommandBufferLabel = "command buffer";
   uint64_t command_buffer_text_key =
       get_string_hash_and_send_to_listener_if_necessary(kCommandBufferLabel);
 
   int32_t thread_id = gpu_queue_submission.meta_info().tid();
+
+  std::vector<TimerInfo> result;
 
   for (const auto& submit_info : gpu_queue_submission.submit_infos()) {
     for (const auto& command_buffer : submit_info.command_buffers()) {
@@ -267,21 +272,22 @@ void GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
       command_buffer_timer.set_thread_id(thread_id);
       command_buffer_timer.set_type(TimerInfo::kGpuCommandBuffer);
       command_buffer_timer.set_user_data_key(command_buffer_text_key);
-      result->push_back(command_buffer_timer);
+      result.push_back(command_buffer_timer);
     }
   }
+  return result;
 }
 
-void GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
+std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
     const std::optional<GpuCommandBuffer>& first_command_buffer, const std::string& timeline,
     const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
     const std::function<uint64_t(const std::string& str)>&
-        get_string_hash_and_send_to_listener_if_necessary,
-    std::vector<TimerInfo>* result) {
+        get_string_hash_and_send_to_listener_if_necessary) {
   if (gpu_queue_submission.completed_markers_size() == 0) {
-    return;
+    return {};
   }
+  std::vector<TimerInfo> result;
   std::string timeline_marker = timeline + "_marker";
   uint64_t timeline_marker_hash =
       get_string_hash_and_send_to_listener_if_necessary(timeline_marker);
@@ -382,8 +388,9 @@ void GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       color->set_alpha(static_cast<uint32_t>(completed_marker.color().alpha() * 255));
     }
     marker_timer.set_user_data_key(text_key);
-    result->push_back(marker_timer);
+    result.push_back(marker_timer);
   }
+  return result;
 }
 
 std::optional<orbit_grpc_protos::GpuCommandBuffer>
