@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/node_hash_map.h>
 #include <absl/meta/type_traits.h>
+#include "absl/strings/match.h"
 
 #include <algorithm>
 #include <utility>
@@ -61,6 +62,18 @@ ModuleData* ModuleManager::GetMutableModuleByPath(const std::string& path) {
   if (it == module_map_.end()) return nullptr;
 
   return &it->second;
+}
+
+std::vector<ModuleData*> ModuleManager::GetMutableModulesByName(const std::string& name){
+  absl::MutexLock lock(&mutex_);
+  std::vector<ModuleData*> result;
+  for(auto& pair : module_map_) {
+    LOG("%s : %s", name, pair.first);
+    if (absl::StrContains(pair.first, name)) {
+      result.push_back(&pair.second);
+    }
+  }
+  return result;
 }
 
 std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(

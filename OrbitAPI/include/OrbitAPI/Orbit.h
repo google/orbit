@@ -57,6 +57,12 @@ extern "C" {
 
 #if ORBIT_API_ENABLED
 
+// Call once at application start.
+#define ORBIT_API_INIT() orbit_api_init()
+
+// Call once at application exit.
+#define ORBIT_API_DEINIT() orbit_api_deinit()
+
 // ORBIT_SCOPE: Profile current scope.
 //
 // Overview:
@@ -219,6 +225,8 @@ extern "C" {
 
 #else
 
+#define ORBIT_API_INIT()
+#define ORBIT_API_DEINIT()
 #define ORBIT_SCOPE(name)
 #define ORBIT_START(name)
 #define ORBIT_STOP()
