@@ -41,7 +41,6 @@ class DataManager final {
   void set_selected_thread_id(int32_t thread_id);
   void set_selected_text_box(const TextBox* text_box);
 
-  [[nodiscard]] const ProcessData* GetProcessByPid(int32_t process_id) const;
   [[nodiscard]] ProcessData* GetMutableProcessByPid(int32_t process_id);
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;

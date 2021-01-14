@@ -526,12 +526,12 @@ void OrbitApp::RenderImGui() {
 }
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
-  const ProcessData* process = data_manager_->GetProcessByPid(pid);
-  CHECK(process != nullptr);
+  CHECK(process_ != nullptr);
   const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
   CHECK(module != nullptr);
-  const bool is_64_bit = process->is_64_bit();
-  const uint64_t absolute_address = function_utils::GetAbsoluteAddress(function, *process, *module);
+  const bool is_64_bit = process_->is_64_bit();
+  const uint64_t absolute_address =
+      function_utils::GetAbsoluteAddress(function, *process_, *module);
   thread_pool_->Schedule([this, absolute_address, is_64_bit, pid, function] {
     auto result = GetProcessManager()->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
