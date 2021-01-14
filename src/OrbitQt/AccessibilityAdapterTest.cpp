@@ -19,6 +19,8 @@ namespace orbit_qt {
 using orbit_accessibility::AccessibleObjectFake;
 
 TEST(AdapterRegistry, CreationAndManagement) {
+  InstallAccessibilityFactories();
+
   auto obj = std::make_unique<AccessibleObjectFake>(nullptr);
   QAccessibleInterface* a1 = AdapterRegistry::Get().GetOrCreateAdapter(obj.get());
   EXPECT_TRUE(a1->isValid());
@@ -29,6 +31,8 @@ TEST(AdapterRegistry, CreationAndManagement) {
 }
 
 TEST(AccessibilityAdapter, Hierarchy) {
+  InstallAccessibilityFactories();
+
   AccessibleObjectFake root(nullptr);
   root.Children().push_back(std::make_unique<AccessibleObjectFake>(&root));
   root.Children().push_back(std::make_unique<AccessibleObjectFake>(&root));

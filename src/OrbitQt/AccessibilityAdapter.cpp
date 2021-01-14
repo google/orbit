@@ -113,12 +113,26 @@ AdapterRegistry& AdapterRegistry::Get() {
   static AdapterRegistry registry;
   static std::once_flag flag;
 
-  std::call_once(flag, [&]() {
+  std::call_once(flag, []() {
     AccessibleInterfaceRegistry::Get().SetOnUnregisterCallback(
-        std::bind(&AdapterRegistry::OnInterfaceDeleted, &registry, std::placeholders::_1));
+        [](AccessibleInterface* iface) { registry.OnInterfaceDeleted(iface); });
   });
 
   return registry;
+}
+
+QAccessibleInterface* AdapterRegistry::InterfaceWrapperFactory(const QString& classname,
+                                                               QObject* object) {
+  if (classname == QLatin1String("orbit_qt::OrbitGlInterfaceWrapper")) {
+    auto iface_obj = static_cast<OrbitGlInterfaceWrapper*>(object);
+    CHECK(!all_interfaces_map_.contains(iface_obj->GetInterface()));
+    auto wrapper = std::make_unique<OrbitGlInterfaceWrapper>(iface_obj->GetInterface());
+    QAccessibleInterface* result = new AccessibilityAdapter(iface_obj->GetInterface(), object);
+    RegisterAdapter(iface_obj->GetInterface(), result);
+    return result;
+  }
+
+  return nullptr;
 }
 
 /*
@@ -146,7 +160,8 @@ QAccessibleInterface* AdapterRegistry::GetOrCreateAdapter(const AccessibleInterf
   }
 
   auto wrapper = std::make_unique<OrbitGlInterfaceWrapper>(iface);
-  QAccessibleInterface* result = wrapper->GetAdapter();
+  QAccessibleInterface* result = QAccessible::queryAccessibleInterface(wrapper.get());
+  CHECK(result != nullptr);
   RegisterAdapter(iface, result);
   managed_adapters_.emplace(iface, std::move(wrapper));
   return result;
@@ -241,7 +256,7 @@ QAccessibleInterface* OrbitGlWidgetAccessible::child(int index) const {
 
 QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* object) {
   QAccessibleInterface* iface = nullptr;
-  if (classname == QLatin1String("OrbitGLWidget") && object && object->isWidgetType()) {
+  if (classname == QLatin1String("OrbitGLWidget") && object->isWidgetType()) {
     iface = static_cast<QAccessibleInterface*>(
         new OrbitGlWidgetAccessible(static_cast<OrbitGLWidget*>(object)));
   }
@@ -249,13 +264,13 @@ QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* 
   return iface;
 }
 
-void InstallAccessibilityFactories() {
-  QAccessible::installFactory(orbit_qt::GlAccessibilityFactory);
+QAccessibleInterface* WrapperAccessibilityFactory(const QString& classname, QObject* object) {
+  return AdapterRegistry::Get().InterfaceWrapperFactory(classname, object);
 }
 
-OrbitGlInterfaceWrapper::OrbitGlInterfaceWrapper(const orbit_gl::AccessibleInterface* iface)
-    : iface_(iface) {
-  adapter_ = std::unique_ptr<AccessibilityAdapter>(new AccessibilityAdapter(iface));
+void InstallAccessibilityFactories() {
+  QAccessible::installFactory(orbit_qt::GlAccessibilityFactory);
+  QAccessible::installFactory(WrapperAccessibilityFactory);
 }
 
 }  // namespace orbit_qt
