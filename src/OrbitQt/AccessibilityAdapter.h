@@ -34,6 +34,36 @@
 
 namespace orbit_qt {
 
+class AccessibilityAdapter;
+
+class AdapterRegistry {
+ public:
+  ~AdapterRegistry() { CHECK(all_interfaces_map_.size() == 0); }
+  AdapterRegistry(const AdapterRegistry&) = delete;
+  AdapterRegistry(AdapterRegistry&&) noexcept = delete;
+  AdapterRegistry& operator=(const AdapterRegistry&) = delete;
+  AdapterRegistry& operator=(AdapterRegistry&&) noexcept = delete;
+
+  static AdapterRegistry& Get();
+
+  QAccessibleInterface* GetOrCreateAdapter(const orbit_accessibility::AccessibleInterface* iface);
+  void RegisterAdapter(const orbit_accessibility::AccessibleInterface* gl_control,
+                       QAccessibleInterface* qt_control) {
+    all_interfaces_map_.emplace(gl_control, qt_control);
+  }
+
+  void OnInterfaceDeleted(orbit_accessibility::AccessibleInterface* iface);
+
+ private:
+  AdapterRegistry(){};
+
+  absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*, QAccessibleInterface*>
+      all_interfaces_map_;
+  absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*,
+                      std::unique_ptr<AccessibilityAdapter>>
+      managed_adapters_;
+};
+
 /*
  * Instances of this act as adapters from QAccessibleInterface to orbit_gl::AccessibleInterface
  * and vice versa. Static methods of AccessibilityAdapter provide factory methods and tracking of
@@ -42,6 +72,8 @@ namespace orbit_qt {
  * See file documentation above for more details.
  */
 class AccessibilityAdapter : public QAccessibleInterface {
+  friend class AdapterRegistry;
+
  public:
   AccessibilityAdapter() = delete;
   AccessibilityAdapter(const AccessibilityAdapter& rhs) = delete;
@@ -51,17 +83,17 @@ class AccessibilityAdapter : public QAccessibleInterface {
 
   bool isValid() const override {
     bool result = info_ != nullptr;
-    CHECK(!result || all_interfaces_map_.find(info_)->second == this);
     return result;
   }
+
   QObject* object() const override { return nullptr; }
   QAccessibleInterface* focusChild() const override { return nullptr; }
 
   QAccessibleInterface* parent() const override {
-    return GetOrCreateAdapter(info_->AccessibleParent());
+    return AdapterRegistry::Get().GetOrCreateAdapter(info_->AccessibleParent());
   }
   QAccessibleInterface* child(int index) const override {
-    return GetOrCreateAdapter(info_->AccessibleChild(index));
+    return AdapterRegistry::Get().GetOrCreateAdapter(info_->AccessibleChild(index));
   }
   int childCount() const override { return info_->AccessibleChildCount(); }
   int indexOfChild(const QAccessibleInterface* child) const override;
@@ -79,31 +111,11 @@ class AccessibilityAdapter : public QAccessibleInterface {
     return absl::bit_cast<QAccessible::State>(info_->AccessibleState());
   }
 
-  static QAccessibleInterface* GetOrCreateAdapter(
-      const orbit_accessibility::AccessibleInterface* iface);
-  static void RegisterAdapter(const orbit_accessibility::AccessibleInterface* gl_control,
-                              QAccessibleInterface* qt_control) {
-    all_interfaces_map_.emplace(gl_control, qt_control);
-  }
-
-  static int RegisteredAdapterCount() { return all_interfaces_map_.size(); }
-
  private:
   explicit AccessibilityAdapter(const orbit_accessibility::AccessibleInterface* info)
       : info_(info){};
 
   const orbit_accessibility::AccessibleInterface* info_;
-
-  static absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*, QAccessibleInterface*>
-      all_interfaces_map_;
-  // Subset of all_interfaces_map_: Contains the adapters created by this class and their managed
-  // pointers
-  static absl::flat_hash_map<const orbit_accessibility::AccessibleInterface*,
-                             std::unique_ptr<AccessibilityAdapter>>
-      managed_adapters_;
-
-  static void Init();
-  static void OnInterfaceDeleted(orbit_accessibility::AccessibleInterface* iface);
 };
 
 void InstallAccessibilityFactories();
