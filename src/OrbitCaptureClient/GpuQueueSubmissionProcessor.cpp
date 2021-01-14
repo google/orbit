@@ -72,12 +72,12 @@ std::vector<orbit_client_protos::TimerInfo> GpuQueueSubmissionProcessor::Process
     return {};
   }
 
+  uint64_t post_submission_cpu_timestamp =
+      matching_gpu_submission->meta_info().post_submission_cpu_timestamp();
+
   std::vector<TimerInfo> result = ProcessGpuQueueSubmissionWithMatchingGpuJob(
       *matching_gpu_submission, gpu_job, string_intern_pool,
       get_string_hash_and_send_to_listener_if_necessary);
-
-  uint64_t post_submission_cpu_timestamp =
-      matching_gpu_submission->meta_info().post_submission_cpu_timestamp();
 
   if (!HasUnprocessedBeginMarkers(thread_id, post_submission_cpu_timestamp)) {
     DeleteSavedGpuSubmission(thread_id, post_submission_cpu_timestamp);
