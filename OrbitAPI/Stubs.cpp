@@ -6,7 +6,7 @@
 
 namespace orbit_api {
 
-// The stub functions below are automatically dynamically instrumented.
+// The stubs below are automatically dynamically instrumented by Orbit.
 void Start(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) {}
 void Stop(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) {}
 void StartAsync(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) {}

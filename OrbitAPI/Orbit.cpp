@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#define ORBIT_API_INTERNAL_IMPL
 #include "OrbitAPI/Orbit.h"
 
 #include "OrbitAPI/EncodedEvent.h"
