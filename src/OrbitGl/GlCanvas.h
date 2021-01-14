@@ -44,8 +44,8 @@ class GlCanvas {
   virtual void PreRender(){};
   virtual void PostRender() {}
 
-  virtual int GetWidth() const;
-  virtual int GetHeight() const;
+  [[nodiscard]] virtual int GetWidth() const;
+  [[nodiscard]] virtual int GetHeight() const;
 
   virtual void SetMainWindowSize(int width, int height) {
     m_MainWindowWidth = width;
@@ -58,14 +58,14 @@ class GlCanvas {
   static void CleanupGlState();
 
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
-  Vec2 ScreenToWorld(Vec2 screen_pos) const;
-  float ScreenToWorldHeight(int height) const;
-  float ScreenToWorldWidth(int width) const;
+  [[nodiscard]] Vec2 ScreenToWorld(Vec2 screen_pos) const;
+  [[nodiscard]] float ScreenToWorldHeight(int height) const;
+  [[nodiscard]] float ScreenToWorldWidth(int width) const;
 
-  Vec2 WorldToScreen(Vec2 world_pos) const;
-  int WorldToScreenHeight(float height) const;
-  int WorldToScreenWidth(float width) const;
-  Vec2 QtScreenToGlScreen(Vec2 qt_pos) const;
+  [[nodiscard]] Vec2 WorldToScreen(Vec2 world_pos) const;
+  [[nodiscard]] int WorldToScreenHeight(float height) const;
+  [[nodiscard]] int WorldToScreenWidth(float width) const;
+  [[nodiscard]] Vec2 QtScreenToGlScreen(Vec2 qt_pos) const;
 
   // events
   virtual void MouseMoved(int x, int y, bool left, bool right, bool middle);
@@ -89,23 +89,23 @@ class GlCanvas {
   virtual std::vector<std::string> GetContextMenu() { return std::vector<std::string>(); }
   virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
 
-  float GetWorldWidth() const { return world_width_; }
-  float GetWorldHeight() const { return world_height_; }
-  float GetWorldMaxY() const { return world_max_y_; }
-  float GetWorldTopLeftX() const { return world_top_left_x_; }
-  float GetWorldTopLeftY() const { return world_top_left_y_; }
+  [[nodiscard]] float GetWorldWidth() const { return world_width_; }
+  [[nodiscard]] float GetWorldHeight() const { return world_height_; }
+  [[nodiscard]] float GetWorldMaxY() const { return world_max_y_; }
+  [[nodiscard]] float GetWorldTopLeftX() const { return world_top_left_x_; }
+  [[nodiscard]] float GetWorldTopLeftY() const { return world_top_left_y_; }
   virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
   TextRenderer& GetTextRenderer() { return text_renderer_; }
-  uint32_t GetInitialFontSize() const { return initial_font_size_; }
+  [[nodiscard]] uint32_t GetInitialFontSize() const { return initial_font_size_; }
 
   virtual void UpdateWheelMomentum(float delta_time);
   virtual void OnTimer();
 
-  float GetMouseX() const { return mouse_world_x_; }
+  [[nodiscard]] float GetMouseX() const { return mouse_world_x_; }
 
-  float GetMousePosX() const { return static_cast<float>(mouse_screen_x_); }
-  float GetMousePosY() const { return static_cast<float>(mouse_screen_y_); }
+  [[nodiscard]] float GetMousePosX() const { return static_cast<float>(mouse_screen_x_); }
+  [[nodiscard]] float GetMousePosY() const { return static_cast<float>(mouse_screen_y_); }
 
   void ResetHoverTimer();
 
