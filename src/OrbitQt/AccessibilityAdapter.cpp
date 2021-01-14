@@ -145,11 +145,11 @@ QAccessibleInterface* AdapterRegistry::GetOrCreateAdapter(const AccessibleInterf
     return it->second;
   }
 
-  auto adapter = std::unique_ptr<AccessibilityAdapter>(new AccessibilityAdapter(iface));
-  AccessibilityAdapter* ptr = adapter.get();
-  RegisterAdapter(iface, adapter.get());
-  managed_adapters_.emplace(iface, std::move(adapter));
-  return ptr;
+  auto wrapper = std::make_unique<OrbitGlInterfaceWrapper>(iface);
+  QAccessibleInterface* result = wrapper->GetAdapter();
+  RegisterAdapter(iface, result);
+  managed_adapters_.emplace(iface, std::move(wrapper));
+  return result;
 }
 
 int AccessibilityAdapter::indexOfChild(const QAccessibleInterface* child) const {
@@ -251,6 +251,11 @@ QAccessibleInterface* GlAccessibilityFactory(const QString& classname, QObject* 
 
 void InstallAccessibilityFactories() {
   QAccessible::installFactory(orbit_qt::GlAccessibilityFactory);
+}
+
+OrbitGlInterfaceWrapper::OrbitGlInterfaceWrapper(const orbit_gl::AccessibleInterface* iface)
+    : iface_(iface) {
+  adapter_ = std::unique_ptr<AccessibilityAdapter>(new AccessibilityAdapter(iface));
 }
 
 }  // namespace orbit_qt
