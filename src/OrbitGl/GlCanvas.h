@@ -86,7 +86,9 @@ class GlCanvas {
   virtual void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   virtual bool ControlPressed();
 
-  virtual std::vector<std::string> GetContextMenu() { return std::vector<std::string>(); }
+  [[nodiscard]] virtual std::vector<std::string> GetContextMenu() {
+    return std::vector<std::string>();
+  }
   virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
 
   [[nodiscard]] float GetWorldWidth() const { return world_width_; }
@@ -96,7 +98,7 @@ class GlCanvas {
   [[nodiscard]] float GetWorldTopLeftY() const { return world_top_left_y_; }
   virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
-  TextRenderer& GetTextRenderer() { return text_renderer_; }
+  [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
   [[nodiscard]] uint32_t GetInitialFontSize() const { return initial_font_size_; }
 
   virtual void UpdateWheelMomentum(float delta_time);
@@ -109,7 +111,7 @@ class GlCanvas {
 
   void ResetHoverTimer();
 
-  float GetDeltaTimeSeconds() const { return delta_time_; }
+  [[nodiscard]] float GetDeltaTimeSeconds() const { return delta_time_; }
 
   virtual void Draw() {}
   virtual void DrawScreenSpace() {}
