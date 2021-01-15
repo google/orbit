@@ -26,7 +26,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
@@ -720,10 +719,16 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
     uint64_t id_a = boxes[k - 1].first;
     uint64_t id_b = boxes[k].first;
-    CHECK(iterator_functions_.find(id_a) != iterator_functions_.end());
-    CHECK(iterator_functions_.find(id_b) != iterator_functions_.end());
-    const std::string& label =
-        GetLabelBetweenIterators(*(iterator_functions_[id_a]), *(iterator_functions_[id_b]));
+    CHECK(iterator_id_to_function_id_.find(id_a) != iterator_id_to_function_id_.end());
+    CHECK(iterator_id_to_function_id_.find(id_b) != iterator_id_to_function_id_.end());
+    uint64_t function_a_id = iterator_id_to_function_id_.at(id_a);
+    uint64_t function_b_id = iterator_id_to_function_id_.at(id_b);
+    const CaptureData& capture_data = app_->GetCaptureData();
+    const FunctionInfo* function_a = capture_data.GetInstrumentedFunctionById(function_a_id);
+    const FunctionInfo* function_b = capture_data.GetInstrumentedFunctionById(function_b_id);
+    CHECK(function_a != nullptr);
+    CHECK(function_b != nullptr);
+    const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);
     const std::string& time =
         GetTimeString(boxes[k - 1].second->GetTimerInfo(), boxes[k].second->GetTimerInfo());
 

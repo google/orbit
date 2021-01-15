@@ -50,11 +50,12 @@ class LiveFunctionsController {
 
   LiveFunctionsDataView live_functions_data_view_;
 
-  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> function_iterators_;
+  absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
   absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
 
   std::function<void(uint64_t, const orbit_client_protos::FunctionInfo*)> add_iterator_callback_;
 
+  uint64_t next_iterator_id_ = 1;
   uint64_t id_to_select_ = 0;
 
   OrbitApp* app_ = nullptr;
