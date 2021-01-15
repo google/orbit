@@ -162,10 +162,9 @@ class TimeGraph {
 
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
-      const absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>&
-          iterator_functions) {
+      const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id) {
     iterator_text_boxes_ = iterator_text_boxes;
-    iterator_functions_ = iterator_functions;
+    iterator_id_to_function_id_ = iterator_id_to_function_id;
     NeedsRedraw();
   }
 
@@ -203,7 +202,7 @@ class TimeGraph {
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
-  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> iterator_functions_;
+  absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
 
   double ref_time_us_ = 0;
   double min_time_us_ = 0;
