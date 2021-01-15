@@ -276,6 +276,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("*", src="bin/resources", dst="bin/resources", symlinks=True)
         self.copy("*", src="bin/translations", dst="bin/translations", symlinks=True)
         self.copy("*.so*", src="lib/", dst="lib", symlinks=True)
+        self.copy("*.json*", src="lib/", dst="lib", symlinks=True)
         self.copy("*.dll", src="bin/", dst="bin", symlinks=True)
         self.copy("*.pdb", src="bin/", dst="bin")
         self.copy("Orbit", src="bin/", dst="bin")
