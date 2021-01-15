@@ -118,7 +118,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
         bool is_selected = &text_box == selected_textbox;
-        bool is_highlighted = !is_selected && function_id == highlighted_function_id;
+        bool is_highlighted = !is_selected && function_id != DataManager::kInvalidFunctionId &&
+                              function_id == highlighted_function_id;
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
