@@ -183,6 +183,8 @@ if [ -n "$1" ]; then
     cp -v OrbitProfiler*.deb Orbit/collector/
     cp -v OrbitProfiler*.deb.asc Orbit/collector/
     cp -v bin/OrbitClientGgp Orbit/collector/
+    cp -v lib/libOrbitVulkanLayer.so Orbit/collector/
+    cp -v lib/VkLayer_Orbit_implicit.json Orbit/collector/
     zip Collector.zip -r Orbit/
     rm -rf Orbit/
     popd > /dev/null
