@@ -1229,6 +1229,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
 ErrorMessageOr<void> OrbitApp::GetFunctionInfosFromHashes(
     const ModuleData* module, const std::vector<uint64_t>& function_hashes,
     std::vector<const FunctionInfo*>* function_infos) {
+  CHECK(module != nullptr);
   const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
     return ErrorMessage(absl::StrFormat(
@@ -1268,7 +1269,7 @@ ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
 }
 
 ErrorMessageOr<void> OrbitApp::EnableFrameTracksFromHashes(
-    const ModuleData* module, const std::vector<uint64_t> function_hashes) {
+    const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
   std::vector<const FunctionInfo*> function_infos;
   const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
   for (const auto* function : function_infos) {

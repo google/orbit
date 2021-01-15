@@ -418,7 +418,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       std::vector<const orbit_client_protos::FunctionInfo*>* function_infos);
 
   ErrorMessageOr<void> EnableFrameTracksFromHashes(const ModuleData* module,
-                                                   const std::vector<uint64_t> function_hashes);
+                                                   const std::vector<uint64_t>& function_hashes);
   void AddFrameTrackTimers(const orbit_client_protos::FunctionInfo& function);
   void RefreshFrameTracks();
 
