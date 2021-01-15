@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <memory>
 #include <unordered_map>
 
 #include <MemoryLocal.h>
@@ -60,8 +61,8 @@ TEST(DexFileTest, from_file_no_leak) {
   size_t last_allocated_bytes = 0;
   for (size_t i = 0; i < kNumLeakLoops; i++) {
     MemoryFake memory;
-    MapInfo info(nullptr, nullptr, 0, 0x10000, 0, 0x5, tf.path);
-    EXPECT_TRUE(DexFile::Create(0, sizeof(kDexData), &memory, &info) != nullptr);
+    auto info = MapInfo::Create(0, 0x10000, 0, 0x5, tf.path);
+    EXPECT_TRUE(DexFile::Create(0, sizeof(kDexData), &memory, info.get()) != nullptr);
     ASSERT_NO_FATAL_FAILURE(CheckForLeak(i, &first_allocated_bytes, &last_allocated_bytes));
   }
 }
@@ -88,8 +89,8 @@ TEST(DexFileTest, create_using_file) {
             static_cast<size_t>(TEMP_FAILURE_RETRY(write(tf.fd, kDexData, sizeof(kDexData)))));
 
   MemoryFake memory;
-  MapInfo info(nullptr, nullptr, 0, 0x10000, 0, 0x5, tf.path);
-  EXPECT_TRUE(DexFile::Create(0x500, sizeof(kDexData), &memory, &info) != nullptr);
+  auto info = MapInfo::Create(0, 0x10000, 0, 0x5, tf.path);
+  EXPECT_TRUE(DexFile::Create(0x500, sizeof(kDexData), &memory, info.get()) != nullptr);
 }
 
 TEST(DexFileTest, create_using_file_non_zero_start) {
@@ -101,8 +102,8 @@ TEST(DexFileTest, create_using_file_non_zero_start) {
             static_cast<size_t>(TEMP_FAILURE_RETRY(write(tf.fd, kDexData, sizeof(kDexData)))));
 
   MemoryFake memory;
-  MapInfo info(nullptr, nullptr, 0x100, 0x10000, 0, 0x5, tf.path);
-  EXPECT_TRUE(DexFile::Create(0x600, sizeof(kDexData), &memory, &info) != nullptr);
+  auto info = MapInfo::Create(0x100, 0x10000, 0, 0x5, tf.path);
+  EXPECT_TRUE(DexFile::Create(0x600, sizeof(kDexData), &memory, info.get()) != nullptr);
 }
 
 TEST(DexFileTest, create_using_file_non_zero_offset) {
@@ -114,22 +115,22 @@ TEST(DexFileTest, create_using_file_non_zero_offset) {
             static_cast<size_t>(TEMP_FAILURE_RETRY(write(tf.fd, kDexData, sizeof(kDexData)))));
 
   MemoryFake memory;
-  MapInfo info(nullptr, nullptr, 0x100, 0x10000, 0x200, 0x5, tf.path);
-  EXPECT_TRUE(DexFile::Create(0x400, sizeof(kDexData), &memory, &info) != nullptr);
+  auto info = MapInfo::Create(0x100, 0x10000, 0x200, 0x5, tf.path);
+  EXPECT_TRUE(DexFile::Create(0x400, sizeof(kDexData), &memory, info.get()) != nullptr);
 }
 
 TEST(DexFileTest, create_using_memory_empty_file) {
   MemoryFake memory;
   memory.SetMemory(0x4000, kDexData, sizeof(kDexData));
-  MapInfo info(nullptr, nullptr, 0x100, 0x10000, 0x200, 0x5, "");
-  EXPECT_TRUE(DexFile::Create(0x4000, sizeof(kDexData), &memory, &info) != nullptr);
+  auto info = MapInfo::Create(0x100, 0x10000, 0x200, 0x5, "");
+  EXPECT_TRUE(DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get()) != nullptr);
 }
 
 TEST(DexFileTest, create_using_memory_file_does_not_exist) {
   MemoryFake memory;
   memory.SetMemory(0x4000, kDexData, sizeof(kDexData));
-  MapInfo info(nullptr, nullptr, 0x100, 0x10000, 0x200, 0x5, "/does/not/exist");
-  EXPECT_TRUE(DexFile::Create(0x4000, sizeof(kDexData), &memory, &info) != nullptr);
+  auto info = MapInfo::Create(0x100, 0x10000, 0x200, 0x5, "/does/not/exist");
+  EXPECT_TRUE(DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get()) != nullptr);
 }
 
 TEST(DexFileTest, create_using_memory_file_is_malformed) {
@@ -141,13 +142,14 @@ TEST(DexFileTest, create_using_memory_file_is_malformed) {
 
   MemoryFake memory;
   memory.SetMemory(0x4000, kDexData, sizeof(kDexData));
-  MapInfo info(nullptr, nullptr, 0x4000, 0x10000, 0x200, 0x5, "/does/not/exist");
-  std::shared_ptr<DexFile> dex_file = DexFile::Create(0x4000, sizeof(kDexData), &memory, &info);
+  auto info = MapInfo::Create(0x4000, 0x10000, 0x200, 0x5, "/does/not/exist");
+  std::shared_ptr<DexFile> dex_file =
+      DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get());
   ASSERT_TRUE(dex_file != nullptr);
 
   // Check it came from memory by clearing memory and verifying it fails.
   memory.Clear();
-  dex_file = DexFile::Create(0x4000, sizeof(kDexData), &memory, &info);
+  dex_file = DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get());
   EXPECT_TRUE(dex_file == nullptr);
 }
 
@@ -168,8 +170,8 @@ TEST(DexFileTest, create_using_memory_size_too_small) {
 TEST(DexFileTest, get_method) {
   MemoryFake memory;
   memory.SetMemory(0x4000, kDexData, sizeof(kDexData));
-  MapInfo info(nullptr, nullptr, 0x100, 0x10000, 0x200, 0x5, "");
-  std::shared_ptr<DexFile> dex_file(DexFile::Create(0x4000, sizeof(kDexData), &memory, &info));
+  auto info = MapInfo::Create(0x100, 0x10000, 0x200, 0x5, "");
+  std::shared_ptr<DexFile> dex_file(DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get()));
   ASSERT_TRUE(dex_file != nullptr);
 
   SharedString method;
@@ -186,8 +188,8 @@ TEST(DexFileTest, get_method) {
 TEST(DexFileTest, get_method_empty) {
   MemoryFake memory;
   memory.SetMemory(0x4000, kDexData, sizeof(kDexData));
-  MapInfo info(nullptr, nullptr, 0x100, 0x10000, 0x200, 0x5, "");
-  std::shared_ptr<DexFile> dex_file(DexFile::Create(0x4000, sizeof(kDexData), &memory, &info));
+  auto info = MapInfo::Create(0x100, 0x10000, 0x200, 0x5, "");
+  std::shared_ptr<DexFile> dex_file(DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get()));
   ASSERT_TRUE(dex_file != nullptr);
 
   SharedString method;
@@ -205,8 +207,9 @@ TEST(DexFileTest, get_method_from_cache) {
             static_cast<size_t>(TEMP_FAILURE_RETRY(write(tf.fd, kDexData, sizeof(kDexData)))));
 
   MemoryFake memory;
-  MapInfo info(nullptr, nullptr, 0x4000, 0x10000, 0, 0x5, tf.path);
-  std::shared_ptr<DexFile> dex_file = DexFile::Create(0x4000, sizeof(kDexData), &memory, &info);
+  auto info = MapInfo::Create(0x4000, 0x10000, 0, 0x5, tf.path);
+  std::shared_ptr<DexFile> dex_file =
+      DexFile::Create(0x4000, sizeof(kDexData), &memory, info.get());
   EXPECT_TRUE(dex_file != nullptr);
 
   SharedString method;

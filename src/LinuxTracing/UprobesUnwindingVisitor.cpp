@@ -105,7 +105,7 @@ static bool CallchainIsInUserSpaceInstrumentation(
   const uint64_t* library_frame_ptr =
       std::find_if(callchain + 1, callchain + callchain_size,
                    [&maps, &injected_library_map_name](uint64_t frame) {
-                     unwindstack::MapInfo* map_info = maps.Find(frame);
+                     std::shared_ptr<unwindstack::MapInfo> map_info = maps.Find(frame);
                      return map_info != nullptr && map_info->name() == injected_library_map_name;
                    });
   if (library_frame_ptr == callchain + callchain_size) {
@@ -229,7 +229,7 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
 
   // Some samples can actually fall inside u(ret)probes code. Set their type accordingly, as we
   // don't want to show the unnamed uprobes module in the samples.
-  unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
+  std::shared_ptr<unwindstack::MapInfo> top_ip_map_info = current_maps_->Find(top_ip);
   if (top_ip_map_info != nullptr && top_ip_map_info->name() == "[uprobes]") {
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
@@ -256,7 +256,8 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
   // missing). We do a plausibility check for this assumption by checking if the callstack only
   // contains executable code.
   for (uint64_t frame_index = 1; frame_index < event_data.GetCallchainSize(); ++frame_index) {
-    unwindstack::MapInfo* map_info = current_maps_->Find(event_data.GetCallchain()[frame_index]);
+    std::shared_ptr<unwindstack::MapInfo> map_info =
+        current_maps_->Find(event_data.GetCallchain()[frame_index]);
     if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
       if (unwind_error_counter_ != nullptr) {
         ++(*unwind_error_counter_);
@@ -278,7 +279,8 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
   // instrumentation didn't appear in the callchain because it called a leaf function in another
   // module, but after calling PatchCallerOfLeafFunction it's now the second innermost frame.
   if (user_space_instrumentation_addresses_ != nullptr && event_data.GetCallchainSize() >= 4) {
-    unwindstack::MapInfo* second_ip_map_info = current_maps_->Find(event_data.GetCallchain()[2]);
+    std::shared_ptr<unwindstack::MapInfo> second_ip_map_info =
+        current_maps_->Find(event_data.GetCallchain()[2]);
     if (second_ip_map_info != nullptr &&
         second_ip_map_info->name() ==
             user_space_instrumentation_addresses_->GetInjectedLibraryMapName() &&

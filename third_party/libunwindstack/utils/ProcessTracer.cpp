@@ -202,7 +202,7 @@ bool ProcessTracer::ProcIsInDesiredElf(pid_t pid, const std::string& desired_elf
     return false;
   }
   Maps* maps = unwinder.GetMaps();
-  MapInfo* map_info = maps->Find(regs->pc());
+  auto map_info = maps->Find(regs->pc());
   if (map_info == nullptr) {
     regs->fallback_pc();
     map_info = maps->Find(regs->pc());

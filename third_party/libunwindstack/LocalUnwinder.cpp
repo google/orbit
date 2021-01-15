@@ -44,8 +44,6 @@
 namespace unwindstack {
 
 bool LocalUnwinder::Init() {
-  pthread_rwlock_init(&maps_rwlock_, nullptr);
-
   // Create the maps.
   maps_.reset(new unwindstack::LocalUpdatableMaps());
   if (!maps_->Parse()) {
@@ -81,13 +79,13 @@ bool LocalUnwinder::Unwind(std::vector<LocalFrameData>* frame_info, size_t max_f
     uint64_t cur_pc = regs->pc();
     uint64_t cur_sp = regs->sp();
 
-    MapInfo* map_info = maps_->Find(cur_pc);
+    std::shared_ptr<MapInfo> map_info = maps_->Find(cur_pc);
     if (map_info == nullptr) {
       break;
     }
 
     Object* object = map_info->GetObject(process_memory_, arch);
-    uint64_t rel_pc = object->GetRelPc(cur_pc, map_info);
+    uint64_t rel_pc = object->GetRelPc(cur_pc, map_info.get());
     uint64_t step_pc = rel_pc;
     uint64_t pc_adjustment;
     if (adjust_pc) {

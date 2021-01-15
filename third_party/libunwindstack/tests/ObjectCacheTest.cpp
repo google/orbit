@@ -17,6 +17,8 @@
 #include <elf.h>
 #include <unistd.h>
 
+#include <memory>
+
 #include <android-base/file.h>
 
 #include <gtest/gtest.h>
@@ -78,12 +80,12 @@ void ObjectCacheTest::VerifySameMap(bool cache_enabled) {
 
   uint64_t start = 0x1000;
   uint64_t end = 0x20000;
-  MapInfo info1(nullptr, nullptr, start, end, 0, 0x5, tf.path);
-  MapInfo info2(nullptr, nullptr, start, end, 0, 0x5, tf.path);
+  auto info1 = MapInfo::Create(start, end, 0, 0x5, tf.path);
+  auto info2 = MapInfo::Create(start, end, 0, 0x5, tf.path);
 
-  Object* object1 = info1.GetObject(memory_, ARCH_ARM);
+  Object* object1 = info1->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object1->valid());
-  Object* object2 = info2.GetObject(memory_, ARCH_ARM);
+  Object* object2 = info2->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object2->valid());
 
   if (cache_enabled) {
@@ -119,68 +121,68 @@ void ObjectCacheTest::VerifyWithinSameMap(bool cache_enabled) {
   uint64_t start = 0x1000;
   uint64_t end = 0x20000;
   // Will have an elf at offset 0 in file.
-  MapInfo info0_1(nullptr, nullptr, start, end, 0, 0x5, tf.path);
-  MapInfo info0_2(nullptr, nullptr, start, end, 0, 0x5, tf.path);
+  auto info0_1 = MapInfo::Create(start, end, 0, 0x5, tf.path);
+  auto info0_2 = MapInfo::Create(start, end, 0, 0x5, tf.path);
   // Will have an elf at offset 0x100 in file.
-  MapInfo info100_1(nullptr, nullptr, start, end, 0x100, 0x5, tf.path);
-  MapInfo info100_2(nullptr, nullptr, start, end, 0x100, 0x5, tf.path);
+  auto info100_1 = MapInfo::Create(start, end, 0x100, 0x5, tf.path);
+  auto info100_2 = MapInfo::Create(start, end, 0x100, 0x5, tf.path);
   // Will have an elf at offset 0x200 in file.
-  MapInfo info200_1(nullptr, nullptr, start, end, 0x200, 0x5, tf.path);
-  MapInfo info200_2(nullptr, nullptr, start, end, 0x200, 0x5, tf.path);
+  auto info200_1 = MapInfo::Create(start, end, 0x200, 0x5, tf.path);
+  auto info200_2 = MapInfo::Create(start, end, 0x200, 0x5, tf.path);
   // Will have an elf at offset 0 in file.
-  MapInfo info300_1(nullptr, nullptr, start, end, 0x300, 0x5, tf.path);
-  MapInfo info300_2(nullptr, nullptr, start, end, 0x300, 0x5, tf.path);
+  auto info300_1 = MapInfo::Create(start, end, 0x300, 0x5, tf.path);
+  auto info300_2 = MapInfo::Create(start, end, 0x300, 0x5, tf.path);
 
-  Object* object0_1 = info0_1.GetObject(memory_, ARCH_ARM);
+  Object* object0_1 = info0_1->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object0_1->valid());
   EXPECT_EQ(ARCH_ARM, object0_1->arch());
-  Object* object0_2 = info0_2.GetObject(memory_, ARCH_ARM);
+  Object* object0_2 = info0_2->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object0_2->valid());
   EXPECT_EQ(ARCH_ARM, object0_2->arch());
-  EXPECT_EQ(0U, info0_1.object_offset());
-  EXPECT_EQ(0U, info0_2.object_offset());
+  EXPECT_EQ(0U, info0_1->object_offset());
+  EXPECT_EQ(0U, info0_2->object_offset());
   if (cache_enabled) {
     EXPECT_EQ(object0_1, object0_2);
   } else {
     EXPECT_NE(object0_1, object0_2);
   }
 
-  Object* object100_1 = info100_1.GetObject(memory_, ARCH_X86);
+  Object* object100_1 = info100_1->GetObject(memory_, ARCH_X86);
   ASSERT_TRUE(object100_1->valid());
   EXPECT_EQ(ARCH_X86, object100_1->arch());
-  Object* object100_2 = info100_2.GetObject(memory_, ARCH_X86);
+  Object* object100_2 = info100_2->GetObject(memory_, ARCH_X86);
   ASSERT_TRUE(object100_2->valid());
   EXPECT_EQ(ARCH_X86, object100_2->arch());
-  EXPECT_EQ(0U, info100_1.object_offset());
-  EXPECT_EQ(0U, info100_2.object_offset());
+  EXPECT_EQ(0U, info100_1->object_offset());
+  EXPECT_EQ(0U, info100_2->object_offset());
   if (cache_enabled) {
     EXPECT_EQ(object100_1, object100_2);
   } else {
     EXPECT_NE(object100_1, object100_2);
   }
 
-  Object* object200_1 = info200_1.GetObject(memory_, ARCH_X86_64);
+  Object* object200_1 = info200_1->GetObject(memory_, ARCH_X86_64);
   ASSERT_TRUE(object200_1->valid());
   EXPECT_EQ(ARCH_X86_64, object200_1->arch());
-  Object* object200_2 = info200_2.GetObject(memory_, ARCH_X86_64);
+  Object* object200_2 = info200_2->GetObject(memory_, ARCH_X86_64);
   ASSERT_TRUE(object200_2->valid());
   EXPECT_EQ(ARCH_X86_64, object200_2->arch());
-  EXPECT_EQ(0U, info200_1.object_offset());
-  EXPECT_EQ(0U, info200_2.object_offset());
+  EXPECT_EQ(0U, info200_1->object_offset());
+  EXPECT_EQ(0U, info200_2->object_offset());
   if (cache_enabled) {
     EXPECT_EQ(object200_1, object200_2);
   } else {
     EXPECT_NE(object200_1, object200_2);
   }
 
-  Object* object300_1 = info300_1.GetObject(memory_, ARCH_ARM);
+  Object* object300_1 = info300_1->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object300_1->valid());
   EXPECT_EQ(ARCH_ARM, object300_1->arch());
-  Object* object300_2 = info300_2.GetObject(memory_, ARCH_ARM);
+  Object* object300_2 = info300_2->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object300_2->valid());
   EXPECT_EQ(ARCH_ARM, object300_2->arch());
-  EXPECT_EQ(0x300U, info300_1.object_offset());
-  EXPECT_EQ(0x300U, info300_2.object_offset());
+  EXPECT_EQ(0x300U, info300_1->object_offset());
+  EXPECT_EQ(0x300U, info300_2->object_offset());
   if (cache_enabled) {
     EXPECT_EQ(object300_1, object300_2);
     EXPECT_EQ(object0_1, object300_1);
@@ -216,33 +218,33 @@ void ObjectCacheTest::VerifyWithinSameMapNeverReadAtZero(bool cache_enabled) {
   uint64_t start = 0x1000;
   uint64_t end = 0x20000;
   // Multiple info sections at different offsets will have non-zero elf offsets.
-  MapInfo info300_1(nullptr, nullptr, start, end, 0x300, 0x5, tf.path);
-  MapInfo info300_2(nullptr, nullptr, start, end, 0x300, 0x5, tf.path);
-  MapInfo info400_1(nullptr, nullptr, start, end, 0x400, 0x5, tf.path);
-  MapInfo info400_2(nullptr, nullptr, start, end, 0x400, 0x5, tf.path);
+  auto info300_1 = MapInfo::Create(start, end, 0x300, 0x5, tf.path);
+  auto info300_2 = MapInfo::Create(start, end, 0x300, 0x5, tf.path);
+  auto info400_1 = MapInfo::Create(start, end, 0x400, 0x5, tf.path);
+  auto info400_2 = MapInfo::Create(start, end, 0x400, 0x5, tf.path);
 
-  Object* object300_1 = info300_1.GetObject(memory_, ARCH_ARM);
+  Object* object300_1 = info300_1->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object300_1->valid());
   EXPECT_EQ(ARCH_ARM, object300_1->arch());
-  Object* object300_2 = info300_2.GetObject(memory_, ARCH_ARM);
+  Object* object300_2 = info300_2->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object300_2->valid());
   EXPECT_EQ(ARCH_ARM, object300_2->arch());
-  EXPECT_EQ(0x300U, info300_1.object_offset());
-  EXPECT_EQ(0x300U, info300_2.object_offset());
+  EXPECT_EQ(0x300U, info300_1->object_offset());
+  EXPECT_EQ(0x300U, info300_2->object_offset());
   if (cache_enabled) {
     EXPECT_EQ(object300_1, object300_2);
   } else {
     EXPECT_NE(object300_1, object300_2);
   }
 
-  Object* object400_1 = info400_1.GetObject(memory_, ARCH_ARM);
+  Object* object400_1 = info400_1->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object400_1->valid());
   EXPECT_EQ(ARCH_ARM, object400_1->arch());
-  Object* object400_2 = info400_2.GetObject(memory_, ARCH_ARM);
+  Object* object400_2 = info400_2->GetObject(memory_, ARCH_ARM);
   ASSERT_TRUE(object400_2->valid());
   EXPECT_EQ(ARCH_ARM, object400_2->arch());
-  EXPECT_EQ(0x400U, info400_1.object_offset());
-  EXPECT_EQ(0x400U, info400_2.object_offset());
+  EXPECT_EQ(0x400U, info400_1->object_offset());
+  EXPECT_EQ(0x400U, info400_2->object_offset());
   if (cache_enabled) {
     EXPECT_EQ(object400_1, object400_2);
     EXPECT_EQ(object300_1, object400_1);
