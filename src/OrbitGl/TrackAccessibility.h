@@ -27,8 +27,8 @@ class AccessibleTrackContent : public AccessibleInterface {
  public:
   AccessibleTrackContent(Track* track, TimeGraphLayout* layout) : track_(track), layout_(layout){};
 
-  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] const AccessibleInterface* AccessibleChild(int) const override { return nullptr; }
+  [[nodiscard]] int AccessibleChildCount() const override;
+  [[nodiscard]] const AccessibleInterface* AccessibleChild(int) const override;
   [[nodiscard]] const AccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
@@ -52,8 +52,8 @@ class AccessibleTrackTab : public AccessibleInterface {
  public:
   AccessibleTrackTab(Track* track, TimeGraphLayout* layout) : track_(track), layout_(layout){};
 
-  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] const AccessibleInterface* AccessibleChild(int) const override { return nullptr; }
+  [[nodiscard]] int AccessibleChildCount() const override;
+  [[nodiscard]] const AccessibleInterface* AccessibleChild(int) const override;
   [[nodiscard]] const AccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
@@ -77,14 +77,8 @@ class AccessibleTrack : public AccessibleInterface {
   AccessibleTrack(Track* track, TimeGraphLayout* layout)
       : track_(track), layout_(layout), content_(track_, layout_), tab_(track_, layout_){};
 
-  [[nodiscard]] int AccessibleChildCount() const override { return 2; }
-  [[nodiscard]] const AccessibleInterface* AccessibleChild(int index) const override {
-    if (index == 0) {
-      return &tab_;
-    } else {
-      return &content_;
-    }
-  }
+  [[nodiscard]] int AccessibleChildCount() const override;
+  [[nodiscard]] const AccessibleInterface* AccessibleChild(int index) const override;
   [[nodiscard]] const AccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override;

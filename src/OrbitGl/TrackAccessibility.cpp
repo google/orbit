@@ -19,6 +19,10 @@ namespace orbit_gl {
 
 using orbit_accessibility::AccessibleInterface;
 
+int AccessibleTrackContent::AccessibleChildCount() const { return 0; }
+
+const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int) const { return nullptr; }
+
 const AccessibleInterface* AccessibleTrackContent::AccessibleParent() const {
   return track_->AccessibilityInterface();
 }
@@ -43,6 +47,10 @@ AccessibilityState AccessibleTrackContent::AccessibleState() const {
   return AccessibilityState::Normal;
 }
 
+int AccessibleTrackTab::AccessibleChildCount() const { return 0; }
+
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int) const { return nullptr; }
+
 const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
   return track_->AccessibilityInterface();
 }
@@ -65,6 +73,16 @@ AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
 
 AccessibilityState AccessibleTrackTab::AccessibleState() const {
   return AccessibilityState::Normal;
+}
+
+int AccessibleTrack::AccessibleChildCount() const { return 2; }
+
+const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
+  if (index == 0) {
+    return &tab_;
+  } else {
+    return &content_;
+  }
 }
 
 const AccessibleInterface* AccessibleTrack::AccessibleParent() const {
