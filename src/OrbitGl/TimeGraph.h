@@ -24,7 +24,6 @@
 #include "ManualInstrumentationManager.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "PickingManager.h"
-#include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
@@ -115,7 +114,6 @@ class TimeGraph {
   [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
   void SetTextRenderer(TextRenderer* text_renderer) { text_renderer_ = text_renderer; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
-  void SetStringManager(std::shared_ptr<StringManager> str_manager);
   void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {

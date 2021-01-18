@@ -352,8 +352,6 @@ void OrbitApp::PostInit() {
   ListPresets();
 
   string_manager_ = std::make_shared<StringManager>();
-
-  GCurrentTimeGraph->SetStringManager(string_manager_);
   if (metrics_uploader_ != nullptr) {
     metrics_uploader_->SendLogEvent(
         orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
@@ -791,8 +789,7 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
-  const auto& key_to_string_map =
-      GCurrentTimeGraph->GetTrackManager()->GetStringManager()->GetKeyToStringMap();
+  const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllSerializableTimerChains();

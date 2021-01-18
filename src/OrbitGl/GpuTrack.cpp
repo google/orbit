@@ -64,12 +64,11 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(TimeGraph* time_graph, StringManager* string_manager, uint64_t timeline_hash,
-                   OrbitApp* app)
+GpuTrack::GpuTrack(TimeGraph* time_graph, uint64_t timeline_hash, OrbitApp* app)
     : TimerTrack(time_graph, app) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
-  string_manager_ = string_manager;
+  string_manager_ = app->GetStringManager();
 
   // Gpu tracks are collapsed by default.
   collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
