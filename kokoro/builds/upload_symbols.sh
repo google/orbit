@@ -27,7 +27,7 @@ function retrieve_oauth_token_header {
 function get_api_key {
   local header=$1
   local gcurl="curl -H \"${header}\" -H \"Content-Type: application/json\""
-  local keys=$(eval $gcurl https://apikeys.googleapis.com/v2beta1/projects/60941241589/keys)
+  local keys=$(eval $gcurl https://apikeys.googleapis.com/v2alpha1/projects/60941241589/keys)
   if [ -z "$keys" ] || [ $(echo "$keys" | jq 'has("keys")') == "false" ]; then
     echo "Can't get list of API keys"
     echo $keys
@@ -40,7 +40,7 @@ function get_api_key {
     exit 1
   fi
 
-  eval $gcurl https://apikeys.googleapis.com/v2beta1/$crash_symbol_key_full_name/keyString | jq '.keyString' | tr -d '"'
+  eval $gcurl https://apikeys.googleapis.com/v2alpha1/$crash_symbol_key_full_name/keyString | jq '.keyString' | tr -d '"'
 }
 
 function remove_oauth2l {

@@ -18,7 +18,7 @@ function get_authorization_header {
 }
 
 function get_crash_symbol_collector_key_name($authorization) {
-  $keys = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -Uri "https://apikeys.googleapis.com/v2beta1/projects/60941241589/keys"
+  $keys = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -Uri "https://apikeys.googleapis.com/v2alpha1/projects/60941241589/keys"
   if (-Not $keys.keys) {
     Write-Host $keys
     Throw "Can't get list of API keys"
@@ -31,7 +31,7 @@ function get_crash_symbol_collector_key_name($authorization) {
 }
 
 function get_api_key_by_key_name($authorization, $key_full_name) {
-  $key = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -uri "https://apikeys.googleapis.com/v2beta1/$key_full_name/keyString"
+  $key = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -uri "https://apikeys.googleapis.com/v2alpha1/$key_full_name/keyString"
   return $key.keyString
 }
 
