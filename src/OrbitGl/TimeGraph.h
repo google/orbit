@@ -60,7 +60,6 @@ class TimeGraph {
   void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 
-  [[nodiscard]] float GetThreadTotalHeight() const;
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
   [[nodiscard]] float GetWorldFromTick(uint64_t time) const;
   [[nodiscard]] float GetWorldFromUs(double micros) const;
@@ -198,7 +197,6 @@ class TimeGraph {
   TextRenderer* text_renderer_ = nullptr;
   GlCanvas* canvas_ = nullptr;
   int num_drawn_text_boxes_ = 0;
-  bool sorting_invalidated_ = true;
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
@@ -207,7 +205,7 @@ class TimeGraph {
   double ref_time_us_ = 0;
   double min_time_us_ = 0;
   double max_time_us_ = 0;
-  uint64_t capture_min_timestamp_ = 0;
+  uint64_t capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   uint64_t capture_max_timestamp_ = 0;
   uint64_t current_mouse_time_ns_ = 0;
   double time_window_us_ = 0;
