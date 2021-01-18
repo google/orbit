@@ -182,8 +182,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   CaptureInfo capture_info =
       capture_serializer::internal::GenerateCaptureInfo(capture_data, key_to_string_map);
 
-  ASSERT_EQ(1, capture_info.selected_functions_size());
-  const FunctionInfo& actual_selected_function = capture_info.selected_functions(0);
+  ASSERT_EQ(1, capture_info.instrumented_functions_size());
+  const FunctionInfo& actual_selected_function =
+      capture_info.instrumented_functions().begin()->second;
   EXPECT_EQ(instrumented_function.address(), actual_selected_function.address());
   EXPECT_EQ(instrumented_function.name(), actual_selected_function.name());
 

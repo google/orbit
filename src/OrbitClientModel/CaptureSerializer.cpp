@@ -75,7 +75,7 @@ CaptureInfo GenerateCaptureInfo(
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
   for (const auto& pair : capture_data.instrumented_functions()) {
-    capture_info.add_selected_functions()->CopyFrom(pair.second);
+    (*capture_info.mutable_instrumented_functions())[pair.first] = pair.second;
   }
 
   ProcessInfo* process = capture_info.mutable_process();

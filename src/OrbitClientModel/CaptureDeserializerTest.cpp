@@ -192,12 +192,14 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   module_info->set_address_start(10);
   module_info->set_address_end(123);
 
-  FunctionInfo* selected_function = capture_info.add_selected_functions();
-  selected_function->set_name("foo");
-  selected_function->set_pretty_name("void foo()");
-  selected_function->set_loaded_module_path("path/to/module");
-  selected_function->set_address(21);
-  selected_function->set_size(12);
+  constexpr uint64_t kInstrumentedFunctionId = 1;
+  FunctionInfo instrumented_function;
+  instrumented_function.set_name("foo");
+  instrumented_function.set_pretty_name("void foo()");
+  instrumented_function.set_loaded_module_path("path/to/module");
+  instrumented_function.set_address(21);
+  instrumented_function.set_size(12);
+  (*capture_info.mutable_instrumented_functions())[kInstrumentedFunctionId] = instrumented_function;
 
   std::atomic<bool> cancellation_requested = false;
   uint8_t empty_data = 0;
@@ -207,24 +209,23 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
   EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
       .Times(1)
-      .WillOnce([selected_function, module_info](
+      .WillOnce([&instrumented_function, kInstrumentedFunctionId](
                     ProcessData&& process,
                     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
-                        actual_selected_functions,
+                        actual_instrumented_functions,
                     Unused, Unused) {
         EXPECT_EQ(process.name(), "process");
         EXPECT_EQ(process.pid(), 42);
         EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
 
-        ASSERT_EQ(actual_selected_functions.size(), 1);
-        uint64_t absolute_address =
-            selected_function->address() + module_info->address_start() - module_info->load_bias();
-        ASSERT_TRUE(actual_selected_functions.contains(absolute_address));
-        FunctionInfo actual_function_info = actual_selected_functions.at(absolute_address);
+        ASSERT_EQ(actual_instrumented_functions.size(), 1);
+        ASSERT_TRUE(actual_instrumented_functions.contains(kInstrumentedFunctionId));
+        FunctionInfo actual_function_info =
+            actual_instrumented_functions.at(kInstrumentedFunctionId);
 
-        EXPECT_EQ(actual_function_info.name(), selected_function->name());
-        EXPECT_EQ(actual_function_info.pretty_name(), selected_function->pretty_name());
-        EXPECT_EQ(actual_function_info.size(), selected_function->size());
+        EXPECT_EQ(actual_function_info.name(), instrumented_function.name());
+        EXPECT_EQ(actual_function_info.pretty_name(), instrumented_function.pretty_name());
+        EXPECT_EQ(actual_function_info.size(), instrumented_function.size());
       });
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
   EXPECT_CALL(listener, OnCaptureFailed).Times(0);

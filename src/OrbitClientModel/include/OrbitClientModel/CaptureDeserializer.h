@@ -38,7 +38,7 @@ void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
                      google::protobuf::io::CodedInputStream* coded_input,
                      std::atomic<bool>* cancellation_requested);
 
-inline const std::string kRequiredCaptureVersion = "1.55";
+inline const std::string kRequiredCaptureVersion = "1.59";
 
 }  // namespace internal
 
