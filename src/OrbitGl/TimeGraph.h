@@ -121,7 +121,6 @@ class TimeGraph {
   }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
-  [[nodiscard]] uint32_t GetNumCores() const { return num_cores_; }
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableTimerChains() const;
@@ -187,7 +186,6 @@ class TimeGraph {
   void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
-  void SetNumCores(uint32_t num_cores) { num_cores_ = num_cores; }
 
  private:
   uint32_t font_size_;
@@ -215,7 +213,6 @@ class TimeGraph {
 
   TimeGraphAccessibility accessibility_;
 
-  uint32_t num_cores_;
   // Be careful when directly changing these members without using the
   // methods NeedsRedraw() or NeedsUpdate():
   // needs_update_primitives_ should always imply needs_redraw_, that is

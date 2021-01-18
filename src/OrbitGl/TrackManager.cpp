@@ -334,9 +334,6 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
     track = std::make_shared<SchedulerTrack>(time_graph_, app_);
     AddTrack(track);
     scheduler_track_ = track;
-    uint32_t num_cores = time_graph_->GetNumCores();
-    time_graph_->GetLayout().SetNumCores(num_cores);
-    scheduler_track_->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
   }
   return track.get();
 }

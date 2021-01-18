@@ -50,7 +50,6 @@ TimeGraph::TimeGraph(uint32_t font_size, OrbitApp* app)
           [this](const std::string& name, const TimerInfo& timer_info) {
             ProcessAsyncTimer(name, timer_info);
           });
-  num_cores_ = 0;
   manual_instrumentation_manager_ = app_->GetManualInstrumentationManager();
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
 }
@@ -284,14 +283,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       // TODO(b/176962090): We need to create the `ThreadTrack` here even we don't use it, as we
       //  don't create it on new callstack events, yet.
       track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      SchedulerTrack* track = track_manager_->GetOrCreateSchedulerTrack();
-      track->OnTimer(timer_info);
-      if (GetNumCores() <= static_cast<uint32_t>(timer_info.processor())) {
-        auto num_cores = timer_info.processor() + 1;
-        SetNumCores(num_cores);
-        layout_.SetNumCores(num_cores);
-        track->SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores));
-      }
+      SchedulerTrack* scheduler_track = track_manager_->GetOrCreateSchedulerTrack();
+      scheduler_track->OnTimer(timer_info);
       break;
     }
     case TimerInfo::kNone: {
