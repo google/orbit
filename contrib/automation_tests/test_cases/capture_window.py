@@ -7,7 +7,7 @@ found in the LICENSE file.
 import logging
 import time
 
-from typing import Tuple, List
+from typing import Tuple, List, Iterable
 
 from core.common_controls import Track
 from core.orbit_e2e import E2ETestCase, E2ETestSuite
@@ -120,13 +120,16 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
     """
     Verify that the existing visible tracks match the expected tracks
     """
-    def _execute(self, expected_count: int = None, expected_names: List[str] = None, allow_additional_tracks=False):
+    def _execute(self, expected_count: int = None, expected_names: List[str or Iterable[str]] = None,
+                 allow_additional_tracks=False):
         """
         You need to pass either expected_track_count, or expected_name_list. If both are passed, they need to match
         w.r.t. expected number of tracks.
         :param expected_count: # of tracks to be visible
         :param expected_names: List of (partial) matching names of tracks to be visible.
-            The name is a partial match, but the exact number of tracks is expected.
+            The name is a partial match, but the exact number of tracks is expected. Each entry in this list can either
+            be a string or a list of strings. If an entry is a list of strings, the test expects at least on of the
+            names to be matched (i.e. this is an "or" condition on multiple possible track names)
         :param allow_additional_tracks: If True, encountering additional tracks beyond the given list / number is not
             considered an error
         """
@@ -150,14 +153,24 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
                 found = False
                 for track in tracks:
                     track_name = track.texts()[0]
-                    if name in track_name:
+                    if self._match(name, track_name):
                         found = True
                         names_found += 1
                         break
-                self.expect_true(found, "Found a match for track name '%s'" % name)
+                self.expect_true(found, "Found a match for track name '%s'" % str(name))
 
         if expected_names and not allow_additional_tracks:
             self.expect_eq(names_found, expected_count, "No additional tracks are found")
+
+    @staticmethod
+    def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
+        if isinstance(expected_name, str):
+            return found_name in expected_name
+        else:
+            for option in expected_name:
+                if found_name in option:
+                    return True
+        return False
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):

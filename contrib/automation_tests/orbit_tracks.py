@@ -16,8 +16,9 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
+        # "sdma0" is not present on the DevKits, instead there is "vce0", so this tests for "sdma0 or vce0"
         MatchTracks(expected_names=[
-            "Scheduler", "gfx", "sdma0", "hello_ggp_stand", "hello_ggp_stand", "GgpSwapchain"],
+            "Scheduler", ("sdma0", "vce0"), "gfx", "hello_ggp_stand", "hello_ggp_stand"],
             allow_additional_tracks=True),
         SelectTrack(track_index=5),
         DeselectTrack(),
@@ -25,11 +26,13 @@ def main(argv):
         MoveTrack(track_index=5, new_index=0),
         MoveTrack(track_index=0, new_index=3),
         MoveTrack(track_index=3, new_index=5),
-        # TODO: Filtering tracks should probably be tested on a loaded capture...
+        # TODO: The numbers below are very pessimistic, but it's not assured additional tracks like
+        # GgpSwapChain, GgpVideoIpcRead etc are present - GgpSwapChain is missing on the DevKit, others
+        # depend on the samples that have been taken
         FilterTracks(filter_string="hello", expected_count=2),
         FilterTracks(filter_string="Hello", expected_count=2),
-        FilterTracks(filter_string="ggp", expected_count=3, allow_additional_tracks=True),
-        FilterTracks(filter_string="", expected_count=6, allow_additional_tracks=True)]
+        FilterTracks(filter_string="ggp", expected_count=2, allow_additional_tracks=True),
+        FilterTracks(filter_string="", expected_count=4, allow_additional_tracks=True)]
     suite = E2ETestSuite(test_name="Track Interaction", test_cases=test_cases)
     suite.execute()
 
