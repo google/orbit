@@ -18,12 +18,9 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
 #include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
-#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
@@ -159,14 +156,11 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     return;
   }
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
-  for (const auto& function : capture_info.selected_functions()) {
-    const auto& module_it = module_map.find(function.loaded_module_path());
-    CHECK(module_it != module_map.end());
-    ModuleData module(module_it->second);
-    uint64_t address = function_utils::GetAbsoluteAddress(function, process, module);
-    selected_functions[address] = function;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions;
+  for (const auto& function : capture_info.instrumented_functions()) {
+    instrumented_functions.insert_or_assign(function.first, function.second);
   }
+
   TracepointInfoSet selected_tracepoints;
   for (const orbit_client_protos::TracepointInfo& tracepoint_info :
        capture_info.tracepoint_infos()) {
@@ -187,7 +181,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     frame_track_function_ids.insert(function_id);
   }
 
-  capture_listener->OnCaptureStarted(std::move(process), std::move(selected_functions),
+  capture_listener->OnCaptureStarted(std::move(process), std::move(instrumented_functions),
                                      std::move(selected_tracepoints),
                                      std::move(frame_track_function_ids));
 

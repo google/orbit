@@ -119,8 +119,8 @@ message UserDefinedCaptureInfo {
 }
 
 message CaptureInfo {
-  reserved 2, 3;
-  repeated FunctionInfo selected_functions = 1;
+  reserved 1, 2, 3;
+  map<uint64, FunctionInfo> instrumented_functions = 16;
   map<int32, string> thread_names = 4;
   repeated ThreadStateSliceInfo thread_state_slices = 12;
   repeated LinuxAddressInfo address_infos = 5;
