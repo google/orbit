@@ -128,7 +128,7 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) c
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
-  Color color = time_graph_->GetColor(name);
+  Color color = TimeGraph::GetColor(name);
 
   constexpr uint8_t kOddAlpha = 210;
   if (!(timer_info.depth() & 0x1)) {

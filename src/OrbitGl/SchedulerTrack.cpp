@@ -50,7 +50,7 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
   } else if (!IsTimerActive(timer_info)) {
     return kInactiveColor;
   }
-  return time_graph_->GetThreadColor(timer_info.thread_id());
+  return TimeGraph::GetThreadColor(timer_info.thread_id());
 }
 
 float SchedulerTrack::GetYFromTimer(const TimerInfo& timer_info) const {

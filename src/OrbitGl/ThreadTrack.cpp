@@ -150,10 +150,10 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
     color = user_color.value();
   } else if (timer_info.type() == TimerInfo::kIntrospection) {
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    color = event.color == orbit::Color::kAuto ? time_graph_->GetColor(event.name)
+    color = event.color == orbit::Color::kAuto ? TimeGraph::GetColor(event.name)
                                                : ToColor(static_cast<uint64_t>(event.color));
   } else {
-    color = time_graph_->GetThreadColor(timer_info.thread_id());
+    color = TimeGraph::GetThreadColor(timer_info.thread_id());
   }
 
   constexpr uint8_t kOddAlpha = 210;
