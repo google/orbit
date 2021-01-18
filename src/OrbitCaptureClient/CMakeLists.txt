@@ -16,11 +16,13 @@ target_include_directories(OrbitCaptureClient PRIVATE
 target_sources(OrbitCaptureClient PUBLIC 
         include/OrbitCaptureClient/CaptureClient.h
         include/OrbitCaptureClient/CaptureListener.h
-        include/OrbitCaptureClient/CaptureEventProcessor.h)
+        include/OrbitCaptureClient/CaptureEventProcessor.h
+        include/OrbitCaptureClient/GpuQueueSubmissionProcessor.h)
 
 target_sources(OrbitCaptureClient PRIVATE 
         CaptureClient.cpp
-        CaptureEventProcessor.cpp)
+        CaptureEventProcessor.cpp
+        GpuQueueSubmissionProcessor.cpp)
 
 target_link_libraries(OrbitCaptureClient PUBLIC 
         OrbitCore

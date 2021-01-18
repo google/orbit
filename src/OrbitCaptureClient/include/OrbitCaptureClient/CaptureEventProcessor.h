@@ -5,12 +5,14 @@
 #ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include <cstdint>
+#include <functional>
 #include <string>
 
 #include "OrbitCaptureClient/CaptureListener.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
+#include "OrbitCaptureClient/GpuQueueSubmissionProcessor.h"
 #include "capture.pb.h"
 #include "services.pb.h"
 #include "tracepoint.pb.h"
@@ -43,9 +45,10 @@ class CaptureEventProcessor {
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
+  void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
-  absl::flat_hash_map<uint64_t, std::string> string_intern_pool;
+  absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> tracepoint_intern_pool_;
   CaptureListener* capture_listener_ = nullptr;
 
@@ -57,6 +60,8 @@ class CaptureEventProcessor {
   absl::flat_hash_set<uint64_t> tracepoint_hashes_seen_;
   void SendTracepointInfoToListenerIfNecessary(
       const orbit_grpc_protos::TracepointInfo& tracepoint_info, const uint64_t& hash);
+
+  GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_
