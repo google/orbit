@@ -55,8 +55,6 @@ void TrackManager::Clear() {
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
 
-void TrackManager::SetStringManager(StringManager* str_manager) { string_manager_ = str_manager; }
-
 std::vector<Track*> TrackManager::GetAllTracks() const {
   std::vector<Track*> tracks;
   for (auto track : all_tracks_) {
@@ -378,8 +376,8 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(time_graph_, string_manager_, timeline_hash, app_);
-    std::string timeline = string_manager_->Get(timeline_hash).value_or("");
+    track = std::make_shared<GpuTrack>(time_graph_, timeline_hash, app_);
+    std::string timeline = app_->GetStringManager()->Get(timeline_hash).value_or("");
     std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);
     track->SetLabel(label);

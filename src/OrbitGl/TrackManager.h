@@ -46,9 +46,6 @@ class TrackManager {
     return tracepoints_system_wide_track_;
   }
 
-  void SetStringManager(StringManager* str_manager);
-  [[nodiscard]] const StringManager* GetStringManager() const { return string_manager_; }
-
   void SortTracks();
   void SetFilter(const std::string& filter);
 
@@ -97,7 +94,6 @@ class TrackManager {
   std::vector<Track*> visible_tracks_;
 
   float tracks_total_height_;
-  StringManager* string_manager_;
 
   OrbitApp* app_ = nullptr;
 };

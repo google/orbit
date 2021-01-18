@@ -59,10 +59,6 @@ TimeGraph::~TimeGraph() {
   manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
 }
 
-void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
-  track_manager_->SetStringManager(str_manager.get());
-}
-
 void TimeGraph::SetCanvas(GlCanvas* canvas) {
   canvas_ = canvas;
   text_renderer_->SetCanvas(canvas);
@@ -545,7 +541,7 @@ void TimeGraph::NeedsUpdate() {
 
 void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(track_manager_->GetStringManager() != nullptr);
+  CHECK(app_->GetStringManager() != nullptr);
 
   batcher_.StartNewFrame();
   text_renderer_static_.Clear();

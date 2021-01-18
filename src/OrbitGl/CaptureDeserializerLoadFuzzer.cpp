@@ -72,8 +72,6 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
 
   TimeGraph time_graph{14, app.get()};
   GCurrentTimeGraph = &time_graph;
-  auto string_manager = std::make_shared<StringManager>();
-  time_graph.SetStringManager(string_manager);
   app->ClearCapture();
 
   // NOLINTNEXTLINE
