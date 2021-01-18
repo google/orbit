@@ -7,7 +7,6 @@
 #include <imgui.h>
 
 TimeGraphLayout::TimeGraphLayout() {
-  num_cores_ = 0;
   text_box_height_ = 20.f;
   core_height_ = 10.f;
   thread_state_track_height_ = 4.0f;
