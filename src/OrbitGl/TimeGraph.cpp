@@ -245,9 +245,8 @@ double TimeGraph::GetTime(double ratio) const {
 }
 
 void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* function) {
-  if (timer_info.end() > capture_max_timestamp_) {
-    capture_max_timestamp_ = timer_info.end();
-  }
+  capture_min_timestamp_ = std::min(capture_min_timestamp_, timer_info.start());
+  capture_max_timestamp_ = std::max(capture_max_timestamp_, timer_info.end());
 
   // Functions for manual instrumentation scopes and tracked values are those with orbit_type() !=
   // FunctionInfo::kNone. All proper timers for these have timer_info.type() == TimerInfo::kNone. It

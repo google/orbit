@@ -496,11 +496,6 @@ std::vector<std::string> CaptureWindow::GetContextMenu() { return std::vector<st
 
 void CaptureWindow::OnContextMenu(const std::string& /*action*/, int /*menu_index*/) {}
 
-void CaptureWindow::OnCaptureStarted() {
-  time_graph_.ZoomAll();
-  NeedsRedraw();
-}
-
 bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
 
 std::unique_ptr<AccessibleWidgetBridge> CaptureWindow::CreateAccessibilityInterface() {
