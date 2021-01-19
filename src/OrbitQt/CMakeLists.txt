@@ -22,6 +22,7 @@ target_sources(
           ElidedLabel.h
           Error.h
           EventLoop.h
+          FilterPanelWidget.h
           orbitaboutdialog.h
           orbitdataviewpanel.h
           orbiteventiterator.h
@@ -53,6 +54,7 @@ target_sources(
           ConnectToStadiaWidget.ui
           Error.cpp
           ElidedLabel.cpp
+          FilterPanelWidget.cpp
           MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
