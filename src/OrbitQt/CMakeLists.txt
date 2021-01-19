@@ -29,7 +29,6 @@ target_sources(
           orbitlivefunctions.h
           orbitmainwindow.h
           orbitsamplingreport.h
-          OrbitStartupWindow.h
           orbittablemodel.h
           orbittreeview.h
           opengldetect.h
@@ -72,7 +71,6 @@ target_sources(
           orbitmainwindow.ui
           orbitsamplingreport.cpp
           orbitsamplingreport.ui
-          OrbitStartupWindow.cpp
           orbittablemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
