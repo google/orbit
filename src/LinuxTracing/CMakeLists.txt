@@ -62,8 +62,8 @@ target_sources(LinuxTracing PRIVATE
 
 target_link_libraries(LinuxTracing PUBLIC
         ElfUtils
+        GrpcProtos
         OrbitBase
-        OrbitProtos
         CONAN_PKG::abseil
         CONAN_PKG::libunwindstack)
 

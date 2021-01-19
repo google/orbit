@@ -37,10 +37,10 @@ target_sources(OrbitClientData PRIVATE
         TracepointData.cpp
         UserDefinedCaptureData.cpp)
 
-target_link_libraries(OrbitClientData PUBLIC 
+target_link_libraries(OrbitClientData PUBLIC
+        GrpcProtos
         OrbitClientProtos
         OrbitBase
-        OrbitProtos
         xxHash::xxHash)
 
 

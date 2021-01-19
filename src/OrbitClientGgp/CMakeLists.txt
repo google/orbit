@@ -23,11 +23,11 @@ target_sources(OrbitClientGgpLib PRIVATE
     ClientGgp.cpp)
 
 target_link_libraries(OrbitClientGgpLib PUBLIC
+    GrpcProtos
     OrbitBase
     OrbitCaptureClient
     OrbitClientModel
     OrbitClientServices
-    OrbitProtos
     OrbitVersion)
 
 project(OrbitClientGgp)

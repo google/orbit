@@ -24,8 +24,8 @@ target_sources(OrbitFramePointerValidator PRIVATE
         FunctionFramePointerValidator.cpp)
 
 target_link_libraries(OrbitFramePointerValidator PUBLIC
+        GrpcProtos
         OrbitBase
-        OrbitProtos
         CONAN_PKG::abseil
         CONAN_PKG::capstone)
 

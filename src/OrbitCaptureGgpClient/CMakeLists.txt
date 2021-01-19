@@ -20,9 +20,9 @@ target_sources(OrbitCaptureGgpClientLib PUBLIC
 target_sources(OrbitCaptureGgpClientLib PRIVATE
         OrbitCaptureGgpClient.cpp)
 
-target_link_libraries(OrbitCaptureGgpClientLib PUBLIC 
-        OrbitBase
-        OrbitProtos)
+target_link_libraries(OrbitCaptureGgpClientLib PUBLIC
+        GrpcProtos
+        OrbitBase)
 
 project(OrbitCaptureGgpClient)
 add_executable(OrbitCaptureGgpClient main.cpp)

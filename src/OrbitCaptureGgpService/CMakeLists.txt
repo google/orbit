@@ -19,8 +19,8 @@ target_sources(OrbitCaptureGgpService PRIVATE
         OrbitCaptureGgpServiceImpl.cpp
         OrbitCaptureGgpServiceImpl.h)
 
-target_link_libraries(OrbitCaptureGgpService PUBLIC 
+target_link_libraries(OrbitCaptureGgpService PUBLIC
+        GrpcProtos
         OrbitBase
-        OrbitClientGgpLib
-        OrbitProtos)
+        OrbitClientGgpLib)
 
