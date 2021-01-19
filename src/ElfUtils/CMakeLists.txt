@@ -26,8 +26,8 @@ target_include_directories(ElfUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(
   ElfUtils
-  PUBLIC OrbitBase
-         OrbitProtos
+  PUBLIC GrpcProtos
+         OrbitBase
          CONAN_PKG::abseil
          CONAN_PKG::llvm_object
          CONAN_PKG::llvm_symbolize

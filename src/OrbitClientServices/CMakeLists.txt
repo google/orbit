@@ -26,6 +26,6 @@ target_sources(OrbitClientServices PRIVATE
         TracepointServiceClient.cpp)
 
 target_link_libraries(OrbitClientServices PUBLIC
+        GrpcProtos
         OrbitBase
-        OrbitCore
-        OrbitProtos)
+        OrbitCore)

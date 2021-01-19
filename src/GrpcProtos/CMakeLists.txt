@@ -4,14 +4,14 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(OrbitProtos)
+project(GrpcProtos)
 
-add_library(OrbitProtos STATIC)
-target_compile_options(OrbitProtos PRIVATE ${STRICT_COMPILE_FLAGS})
-target_compile_definitions(OrbitProtos PRIVATE -D_WIN32_WINNT=0x0700)
-target_compile_definitions(OrbitProtos PRIVATE -DNTDDI_VERSION=0x06030000)
+add_library(GrpcProtos STATIC)
+target_compile_options(GrpcProtos PRIVATE ${STRICT_COMPILE_FLAGS})
+target_compile_definitions(GrpcProtos PRIVATE -D_WIN32_WINNT=0x0700)
+target_compile_definitions(GrpcProtos PRIVATE -DNTDDI_VERSION=0x06030000)
 
-target_sources(OrbitProtos PRIVATE
+target_sources(GrpcProtos PRIVATE
         capture.proto
         code_block.proto
         module.proto
@@ -22,4 +22,4 @@ target_sources(OrbitProtos PRIVATE
         symbol.proto
         tracepoint.proto)
 
-grpc_helper(OrbitProtos)
+grpc_helper(GrpcProtos)

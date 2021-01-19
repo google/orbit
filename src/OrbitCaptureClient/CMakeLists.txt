@@ -24,9 +24,9 @@ target_sources(OrbitCaptureClient PRIVATE
         CaptureEventProcessor.cpp
         GpuQueueSubmissionProcessor.cpp)
 
-target_link_libraries(OrbitCaptureClient PUBLIC 
-        OrbitCore
-        OrbitProtos)
+target_link_libraries(OrbitCaptureClient PUBLIC
+        GrpcProtos
+        OrbitCore)
 
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
 target_link_libraries(
