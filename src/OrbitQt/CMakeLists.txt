@@ -23,6 +23,7 @@ target_sources(
           Error.h
           EventLoop.h
           FilterPanelWidget.h
+          FilterPanelWidgetAction.h
           orbitaboutdialog.h
           orbitdataviewpanel.h
           orbiteventiterator.h
@@ -55,6 +56,7 @@ target_sources(
           Error.cpp
           ElidedLabel.cpp
           FilterPanelWidget.cpp
+          FilterPanelWidgetAction.cpp
           MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
