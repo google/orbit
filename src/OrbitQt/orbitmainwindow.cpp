@@ -329,13 +329,13 @@ void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
   });
 
   app_->SetSamplingReportCallback(
-      [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
-        this->OnNewSamplingReport(callstack_data_view, std::move(report));
+      [this](DataView* callstack_data_view, const std::shared_ptr<SamplingReport>& report) {
+        this->OnNewSamplingReport(callstack_data_view, report);
       });
 
   app_->SetSelectionReportCallback(
-      [this](DataView* callstack_data_view, std::shared_ptr<SamplingReport> report) {
-        this->OnNewSelectionReport(callstack_data_view, std::move(report));
+      [this](DataView* callstack_data_view, const std::shared_ptr<SamplingReport>& report) {
+        this->OnNewSelectionReport(callstack_data_view, report);
       });
 
   app_->SetTopDownViewCallback([this](std::unique_ptr<CallTreeView> top_down_view) {
@@ -470,7 +470,7 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   // Timer
   toolbar->addWidget(CreateSpacer(toolbar));
   QFontMetrics fm(ui->timerLabel->font());
-  int pixel_width = fm.width("w");
+  int pixel_width = fm.horizontalAdvance("w");
   ui->timerLabel->setMinimumWidth(5 * pixel_width);
 }
 
@@ -547,10 +547,9 @@ void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {
   default_tab_layout_.clear();
   std::array<QTabWidget*, 2> tab_widgets = {ui->MainTabWidget, ui->RightTabWidget};
   for (QTabWidget* tab_widget : tab_widgets) {
-    TabWidgetLayout layout;
+    TabWidgetLayout layout = {};
     for (int i = 0; i < tab_widget->count(); ++i) {
-      layout.tabs_and_titles.push_back(
-          std::make_pair(tab_widget->widget(i), tab_widget->tabText(i)));
+      layout.tabs_and_titles.emplace_back(tab_widget->widget(i), tab_widget->tabText(i));
     }
     layout.current_index = tab_widget->currentIndex();
     default_tab_layout_[tab_widget] = layout;
@@ -785,7 +784,7 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
 }
 
 void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
-                                          std::shared_ptr<SamplingReport> sampling_report) {
+                                          const std::shared_ptr<SamplingReport>& sampling_report) {
   ui->samplingGridLayout->removeWidget(ui->samplingReport);
   delete ui->samplingReport;
 
@@ -808,13 +807,13 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
 }
 
 void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
-                                           std::shared_ptr<SamplingReport> sampling_report) {
+                                           const std::shared_ptr<SamplingReport>& sampling_report) {
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;
   bool has_samples = sampling_report->HasSamples();
 
   ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
-  ui->selectionReport->Initialize(callstack_data_view, std::move(sampling_report));
+  ui->selectionReport->Initialize(callstack_data_view, sampling_report);
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 
   UpdateActiveTabsAfterSelection(has_samples);
@@ -953,15 +952,6 @@ void OrbitMainWindow::on_actionQuit_triggered() {
   QApplication::quit();
 }
 
-QPixmap QtGrab(OrbitMainWindow* a_Window) {
-  QPixmap pixMap = a_Window->grab();
-  if (GContextMenu) {
-    QPixmap menuPixMap = GContextMenu->grab();
-    pixMap.copy();
-  }
-  return pixMap;
-}
-
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Specify a file to save...",
@@ -1023,7 +1013,7 @@ void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
   QSettings settings;
   const QString skip_capture_warning("SkipCaptureVersionWarning");
   if (!settings.value(skip_capture_warning, false).toBool()) {
-    QMessageBox message_box;
+    QMessageBox message_box(this);
     message_box.setText(
         "Note: Captures saved with this version of Orbit might be incompatible "
         "with future versions. Please check release notes for more "
@@ -1050,7 +1040,7 @@ void OrbitMainWindow::ShowEmptyFrameTrackWarningIfNeeded(std::string_view functi
       "was not added to the capture.",
       function);
   if (!settings.value(empty_frame_track_warning, false).toBool()) {
-    QMessageBox message_box;
+    QMessageBox message_box(this);
     message_box.setText(message.c_str());
     message_box.addButton(QMessageBox::Ok);
     QCheckBox check_box("Don't show this message again.");
@@ -1243,9 +1233,8 @@ void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
     // This lambda is called from a background-thread, so we use QMetaObject::invokeMethod
     // to execute our logic on the main thread.
-    QMetaObject::invokeMethod(this, [&, processes = std::move(processes)]() {
-      OnProcessListUpdated(std::move(processes));
-    });
+    QMetaObject::invokeMethod(
+        this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
   });
 }
 
@@ -1263,9 +1252,8 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
   target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
     // This lambda is called from a background-thread, so we use QMetaObject::invokeMethod
     // to execute our logic on the main thread.
-    QMetaObject::invokeMethod(this, [&, processes = std::move(processes)]() {
-      OnProcessListUpdated(std::move(processes));
-    });
+    QMetaObject::invokeMethod(
+        this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
   });
 }
 
@@ -1292,7 +1280,8 @@ void OrbitMainWindow::SetupGrpcAndProcessManager(std::string grpc_server_address
   app_->SetProcessManager(process_manager_.get());
 }
 
-void OrbitMainWindow::OnProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> processes) {
+void OrbitMainWindow::OnProcessListUpdated(
+    const std::vector<orbit_grpc_protos::ProcessInfo>& processes) {
   const auto is_current_process = [this](const auto& process) {
     const ProcessData* const target_process = app_->GetTargetProcess();
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();
