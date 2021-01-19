@@ -39,6 +39,7 @@
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
+#include "GrpcProtos/Constants.h"
 #include "ImGuiOrbit.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
@@ -48,7 +49,6 @@
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
-#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
@@ -1517,7 +1517,8 @@ const TextBox* OrbitApp::selected_text_box() const { return data_manager_->selec
 void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_selected_text_box(text_box);
   const TimerInfo* timer_info = text_box ? &text_box->GetTimerInfo() : nullptr;
-  uint64_t function_id = timer_info ? timer_info->function_id() : DataManager::kInvalidFunctionId;
+  uint64_t function_id =
+      timer_info ? timer_info->function_id() : orbit_grpc_protos::kInvalidFunctionId;
   data_manager_->set_highlighted_function_id(function_id);
   CHECK(timer_selected_callback_);
   timer_selected_callback_(timer_info);
@@ -1535,7 +1536,7 @@ uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   // Highlighting of manually instrumented scopes is not yet supported.
   const FunctionInfo* function_info = GetInstrumentedFunction(selected_function_id);
   if (function_info == nullptr || function_utils::IsOrbitFunc(*function_info)) {
-    return DataManager::kInvalidFunctionId;
+    return orbit_grpc_protos::kInvalidFunctionId;
   }
 
   return selected_function_id;

@@ -22,6 +22,7 @@
 #include "DataManager.h"
 #include "DataViewTypes.h"
 #include "FunctionsDataView.h"
+#include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/FunctionUtils.h"
@@ -37,7 +38,7 @@ using orbit_client_protos::FunctionStats;
 LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app)
     : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
-      selected_function_id_(DataManager::kInvalidFunctionId) {
+      selected_function_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;
   OnDataChanged();
 }
@@ -109,7 +110,7 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
   app_->DeselectTextBox();
 
   if (!row.has_value()) {
-    app_->set_highlighted_function_id(DataManager::kInvalidFunctionId);
+    app_->set_highlighted_function_id(orbit_grpc_protos::kInvalidFunctionId);
   } else {
     app_->set_highlighted_function_id(GetInstrumentedFunctionId(row.value()));
   }
