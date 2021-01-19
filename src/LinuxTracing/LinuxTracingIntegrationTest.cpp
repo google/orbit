@@ -396,7 +396,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::CaptureEvent>& 
       case orbit_grpc_protos::CaptureEvent::kInternedString:
         UNREACHABLE();
       case orbit_grpc_protos::CaptureEvent::kGpuJob:
-        // Currently GpuJobs are not sent in order with the other events.
+        EXPECT_GE(event.gpu_job().dma_fence_signaled_time_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.gpu_job().dma_fence_signaled_time_ns();
         break;
       case orbit_grpc_protos::CaptureEvent::kThreadName:
         EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);

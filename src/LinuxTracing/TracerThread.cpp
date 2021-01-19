@@ -457,11 +457,11 @@ bool TracerThread::OpenContextSwitchAndThreadStateTracepoints(const std::vector<
       &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
-bool TracerThread::InitGpuTracepointEventVisitor() {
+void TracerThread::InitGpuTracepointEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   gpu_event_visitor_ = std::make_unique<GpuTracepointVisitor>();
   gpu_event_visitor_->SetListener(listener_);
-  return true;
+  event_processor_.AddVisitor(gpu_event_visitor_.get());
 }
 
 // This method enables events for GPU event tracing. We trace three events that correspond to the
@@ -564,20 +564,13 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_open_errors |= !OpenContextSwitchAndThreadStateTracepoints(all_cpus);
   }
 
-  bool gpu_event_open_errors = false;
   if (trace_gpu_driver_) {
-    if (InitGpuTracepointEventVisitor()) {
-      // We want to trace all GPU activity, hence we pass 'all_cpus' here.
-      gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
+    // We want to trace all GPU activity, hence we pass 'all_cpus' here.
+    if (OpenGpuTracepoints(all_cpus)) {
+      InitGpuTracepointEventVisitor();
     } else {
-      ERROR(
-          "Failed to initialize GPU tracepoint event processor: "
-          "skipping opening GPU tracepoint events");
+      LOG("There were errors opening GPU tracepoint events");
     }
-  }
-
-  if (gpu_event_open_errors) {
-    LOG("There were errors opening GPU tracepoint events");
   }
 
   perf_event_open_errors |= !OpenInstrumentedTracepoints(all_cpus);
@@ -900,22 +893,21 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {
-    // TODO: Consider processing GPU events on the ProcessDeferredEvents thread.
-    //  Note that this is currently not trivial, because dma_fence_signaled
-    //  events can be out of order of timestamp even on the same ring buffer,
-    //  which contradicts a fundamental assumption of PerfEventProcessor.
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
-    event->Accept(gpu_event_visitor_.get());
+    event->SetOriginFileDescriptor(fd);
+    DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
   } else if (is_amdgpu_sched_run_job_event) {
     auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
-    event->Accept(gpu_event_visitor_.get());
+    event->SetOriginFileDescriptor(fd);
+    DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
   } else if (is_dma_fence_signaled_event) {
     auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
-    event->Accept(gpu_event_visitor_.get());
+    event->SetOriginFileDescriptor(fd);
+    DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
 
   } else if (is_user_instrumented_tracepoint) {
@@ -1056,8 +1048,8 @@ void TracerThread::Reset() {
   deferred_events_.clear();
   uprobes_unwinding_visitor_.reset();
   switches_states_names_visitor_.reset();
-  event_processor_.ClearVisitors();
   gpu_event_visitor_.reset();
+  event_processor_.ClearVisitors();
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {
