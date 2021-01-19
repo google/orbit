@@ -21,7 +21,7 @@ Orbit combines sampling and dynamic instrumentation to optimize the profiling wo
 
 **Note**
 
-Orbit is undergoing a major overhaul. The focus has now shifted to the Linux version. Windows local profiling is currently broken in the master branch. It is possible however to profile Linux exectuable from a Windows UI instance. For Windows local profiling, please use the released [binaries](https://github.com/google/orbit/releases). Windows development will resume in the coming months.
+Orbit is undergoing a major overhaul. The focus has now shifted to the Linux version. Windows local profiling is currently broken in the main branch. It is possible however to profile Linux exectuable from a Windows UI instance. For Windows local profiling, please use the released [binaries](https://github.com/google/orbit/releases). Windows development will resume in the coming months.
 
 **Build**
 

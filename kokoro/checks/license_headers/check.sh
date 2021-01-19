@@ -14,9 +14,9 @@ if [ "$0" == "$SCRIPT" ]; then
   # We are inside the docker container
 
   cd /mnt
-  # Use origin/master as reference branch, if not specified by kokoro
-  REFERENCE="origin/${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-master}"
-  MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
+  # Use origin/main as reference branch, if not specified by kokoro
+  REFERENCE="origin/${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-main}"
+  MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on main this PR was branched from.
   LICENSE_HEADER_MISSED=""
 
   echo -e "The following files are missing a license/copyright header:\n"

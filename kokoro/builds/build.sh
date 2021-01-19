@@ -215,8 +215,8 @@ if [ -n "$1" ]; then
 
     echo -e "\n\n\nThe following is a diff that fixes all problems in files this PR touched:"
     echo 'Execute `patch -p1 -i <filename.diff>` in the repo root to apply it to the code base.'
-    readonly REFERENCE="${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-origin/master}"
-    readonly MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
+    readonly REFERENCE="${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-origin/main}"
+    readonly MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on main this PR was branched from.
 
     PATTERN_FILE="$(mktemp)"
     git diff -U0 --no-color --relative --name-only $MERGE_BASE > ${PATTERN_FILE}

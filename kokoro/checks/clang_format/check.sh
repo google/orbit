@@ -27,9 +27,9 @@ if [ "$0" == "$SCRIPT" ]; then
   echo -e "--\n"
 
   cd /mnt
-  # Use origin/master as reference branch, if not specified by kokoro
-  REFERENCE="origin/${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-master}"
-  MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on master this PR was branched from.
+  # Use origin/main as reference branch, if not specified by kokoro
+  REFERENCE="origin/${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-main}"
+  MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on main this PR was branched from.
   FORMATTING_DIFF="$(git diff -U0 --no-color --relative --diff-filter=r $MERGE_BASE | clang-format-diff-9 -p1)"
 
   if [ -n "$FORMATTING_DIFF" ]; then
