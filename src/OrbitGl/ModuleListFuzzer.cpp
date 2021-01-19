@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "ModulesDataView.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"

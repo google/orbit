@@ -172,8 +172,8 @@ add_fuzzer(CaptureDeserializerLoadFuzzer CaptureDeserializerLoadFuzzer.cpp)
 target_link_libraries(CaptureDeserializerLoadFuzzer
                       PRIVATE OrbitGl CONAN_PKG::libprotobuf-mutator)
 
-add_fuzzer(DataManagerUpdateModuleInfosFuzzer
-           DataManagerUpdateModuleInfosFuzzer.cpp)
-target_link_libraries(DataManagerUpdateModuleInfosFuzzer
+add_fuzzer(ModuleListFuzzer
+           ModuleListFuzzer.cpp)
+target_link_libraries(ModuleListFuzzer
                       PRIVATE OrbitGl CONAN_PKG::libprotobuf-mutator)
 
