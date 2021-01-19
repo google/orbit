@@ -37,6 +37,7 @@ using orbit_client_protos::TimerInfo;
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
     : TimerTrack(time_graph, app) {
   thread_id_ = thread_id;
+  InitializeNameAndLabel(thread_id);
 
   thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_);
 
@@ -44,6 +45,29 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app
   event_track_->SetThreadId(thread_id);
 
   tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id, app_);
+  SetTrackColor(TimeGraph::GetThreadColor(thread_id));
+}
+
+void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
+  if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
+    SetName("All tracepoint events");
+    SetLabel("All tracepoint events");
+  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
+    // This is the process track.
+    const CaptureData& capture_data = app_->GetCaptureData();
+    std::string process_name = capture_data.process_name();
+    SetName(process_name);
+    const std::string_view all_threads = " (all_threads)";
+    SetLabel(process_name.append(all_threads));
+    SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
+  } else {
+    const std::string& thread_name = time_graph_->GetThreadNameFromTid(thread_id);
+    SetName(thread_name);
+    std::string tid_str = std::to_string(thread_id);
+    std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
+    SetLabel(track_label);
+    SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
+  }
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
