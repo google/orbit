@@ -11,6 +11,8 @@
 #include <utility>
 
 #include "OrbitBase/Action.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 #include "absl/time/time.h"
 
 // This class implements a thread pool. ThreadPool allows to execute
@@ -38,8 +40,28 @@ class ThreadPool {
   virtual void Schedule(std::unique_ptr<Action> action) = 0;
 
   template <typename F>
-  void Schedule(F&& functor) {
-    Schedule(CreateAction(std::forward<F>(functor)));
+  auto Schedule(F&& functor) -> orbit_base::Future<std::decay_t<decltype(functor())>> {
+    using ReturnType = std::decay_t<decltype(functor())>;
+
+    orbit_base::Promise<ReturnType> promise;
+    orbit_base::Future<ReturnType> future = promise.GetFuture();
+
+    if constexpr (std::is_same_v<ReturnType, void>) {
+      auto function_wrapper = [functor = std::forward<F>(functor),
+                               promise = std::move(promise)]() mutable {
+        functor();
+        promise.MarkFinished();
+      };
+      Schedule(CreateAction(std::move(function_wrapper)));
+    } else {
+      auto function_wrapper = [functor = std::forward<F>(functor),
+                               promise = std::move(promise)]() mutable {
+        promise.SetResult(functor());
+      };
+      Schedule(CreateAction(std::move(function_wrapper)));
+    }
+
+    return future;
   }
 
   // Initiates shutdown, any Schedule after this call will fail.

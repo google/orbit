@@ -6,8 +6,10 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <chrono>
 #include <memory>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
@@ -377,4 +379,113 @@ TEST(ThreadPool, WaitWithoutShutdown) {
         thread_pool->Wait();
       },
       "");
+}
+
+TEST(ThreadPool, FutureBasic) {
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
+  std::unique_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
+
+  absl::Mutex mutex;
+  bool called = false;
+
+  {
+    absl::MutexLock lock(&mutex);
+    orbit_base::Future<void> future = thread_pool->Schedule([&]() {
+      absl::MutexLock lock(&mutex);
+      called = true;
+    });
+
+    EXPECT_TRUE(future.IsValid());
+    EXPECT_FALSE(future.IsFinished());
+
+    EXPECT_TRUE(mutex.AwaitWithTimeout(absl::Condition(
+                                           +[](bool* called) { return *called; }, &called),
+                                       absl::Milliseconds(100)));
+
+    for (int elapsed_ms = 0; !future.IsFinished() && elapsed_ms < 100; ++elapsed_ms) {
+      absl::SleepFor(absl::Milliseconds(1));
+    }
+
+    EXPECT_TRUE(future.IsValid());
+    EXPECT_TRUE(future.IsFinished());
+  }
+
+  thread_pool->ShutdownAndWait();
+}
+
+TEST(ThreadPool, FutureContinuation) {
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
+  std::unique_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
+
+  absl::Mutex mutex;
+  bool called = false;
+
+  {
+    absl::MutexLock lock(&mutex);
+    orbit_base::Future<void> future =
+        thread_pool->Schedule([&]() { absl::MutexLock lock(&mutex); });
+
+    future.RegisterContinuation([&]() { called = true; });
+
+    EXPECT_TRUE(future.IsValid());
+    EXPECT_FALSE(future.IsFinished());
+
+    EXPECT_TRUE(mutex.AwaitWithTimeout(absl::Condition(
+                                           +[](bool* called) { return *called; }, &called),
+                                       absl::Milliseconds(100)));
+
+    future.Wait();
+    EXPECT_TRUE(future.IsValid());
+    EXPECT_TRUE(future.IsFinished());
+  }
+
+  thread_pool->ShutdownAndWait();
+}
+
+TEST(ThreadPool, FutureWithMoveOnlyResult) {
+  class MoveOnlyInt {
+    int value_;
+
+   public:
+    explicit MoveOnlyInt(int value) : value_(value) {}
+    [[nodiscard]] int GetInt() const { return value_; }
+
+    MoveOnlyInt(const MoveOnlyInt&) = delete;
+    MoveOnlyInt& operator=(const MoveOnlyInt&) = delete;
+    MoveOnlyInt(MoveOnlyInt&&) = default;
+    MoveOnlyInt& operator=(MoveOnlyInt&&) = default;
+    ~MoveOnlyInt() noexcept = default;
+  };
+
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
+  std::unique_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
+
+  absl::Mutex mutex;
+
+  {
+    mutex.Lock();
+    orbit_base::Future<MoveOnlyInt> future = thread_pool->Schedule([&]() {
+      absl::MutexLock lock(&mutex);
+      return MoveOnlyInt{42};
+    });
+
+    EXPECT_TRUE(future.IsValid());
+    EXPECT_FALSE(future.IsFinished());
+    mutex.Unlock();
+
+    EXPECT_TRUE(future.IsValid());
+    EXPECT_EQ(future.Get().GetInt(), 42);
+    EXPECT_TRUE(future.IsFinished());
+  }
+
+  thread_pool->ShutdownAndWait();
 }
