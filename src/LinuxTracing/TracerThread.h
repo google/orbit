@@ -21,7 +21,7 @@
 
 #include "ContextSwitchManager.h"
 #include "Function.h"
-#include "GpuTracepointEventProcessor.h"
+#include "GpuTracepointVisitor.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
 #include "ManualInstrumentationConfig.h"
@@ -80,7 +80,7 @@ class TracerThread {
   void InitSwitchesStatesNamesVisitor();
   bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
-  bool InitGpuTracepointEventProcessor();
+  bool InitGpuTracepointEventVisitor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
 
   bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
@@ -158,7 +158,7 @@ class TracerThread {
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
   std::unique_ptr<SwitchesStatesNamesVisitor> switches_states_names_visitor_;
   PerfEventProcessor event_processor_;
-  std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
+  std::unique_ptr<GpuTracepointVisitor> gpu_event_visitor_;
 
   struct EventStats {
     void Reset() {

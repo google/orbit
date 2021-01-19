@@ -457,10 +457,10 @@ bool TracerThread::OpenContextSwitchAndThreadStateTracepoints(const std::vector<
       &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
-bool TracerThread::InitGpuTracepointEventProcessor() {
+bool TracerThread::InitGpuTracepointEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  gpu_event_processor_ = std::make_unique<GpuTracepointEventProcessor>();
-  gpu_event_processor_->SetListener(listener_);
+  gpu_event_visitor_ = std::make_unique<GpuTracepointVisitor>();
+  gpu_event_visitor_->SetListener(listener_);
   return true;
 }
 
@@ -566,7 +566,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
   bool gpu_event_open_errors = false;
   if (trace_gpu_driver_) {
-    if (InitGpuTracepointEventProcessor()) {
+    if (InitGpuTracepointEventVisitor()) {
       // We want to trace all GPU activity, hence we pass 'all_cpus' here.
       gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
     } else {
@@ -907,15 +907,15 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
-    gpu_event_processor_->PushEvent(*event);
+    event->Accept(gpu_event_visitor_.get());
     ++stats_.gpu_events_count;
   } else if (is_amdgpu_sched_run_job_event) {
     auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
-    gpu_event_processor_->PushEvent(*event);
+    event->Accept(gpu_event_visitor_.get());
     ++stats_.gpu_events_count;
   } else if (is_dma_fence_signaled_event) {
     auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
-    gpu_event_processor_->PushEvent(*event);
+    event->Accept(gpu_event_visitor_.get());
     ++stats_.gpu_events_count;
 
   } else if (is_user_instrumented_tracepoint) {
@@ -1057,7 +1057,7 @@ void TracerThread::Reset() {
   uprobes_unwinding_visitor_.reset();
   switches_states_names_visitor_.reset();
   event_processor_.ClearVisitors();
-  gpu_event_processor_.reset();
+  gpu_event_visitor_.reset();
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {

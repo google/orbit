@@ -16,25 +16,26 @@
 
 #include "LinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
+#include "PerfEventVisitor.h"
 
 namespace orbit_linux_tracing {
 
-class GpuTracepointEventProcessor {
+class GpuTracepointVisitor : public PerfEventVisitor {
  public:
-  void PushEvent(const AmdgpuCsIoctlPerfEvent& sample);
-  void PushEvent(const AmdgpuSchedRunJobPerfEvent& sample);
-  void PushEvent(const DmaFenceSignaledPerfEvent& sample);
-
   void SetListener(TracerListener* listener);
 
+  void visit(AmdgpuCsIoctlPerfEvent* event) override;
+  void visit(AmdgpuSchedRunJobPerfEvent* event) override;
+  void visit(DmaFenceSignaledPerfEvent* event) override;
+
  private:
-  // Keys are context, seqno, and timeline
+  // Keys are context, seqno, and timeline.
   using Key = std::tuple<uint32_t, uint32_t, std::string>;
 
-  int ComputeDepthForEvent(const std::string& timeline, uint64_t start_timestamp,
-                           uint64_t end_timestamp);
+  int ComputeDepthForGpuJob(const std::string& timeline, uint64_t start_timestamp,
+                            uint64_t end_timestamp);
 
-  void CreateGpuExecutionEventIfComplete(const Key& key);
+  void CreateGpuJobAndSendToListenerIfComplete(const Key& key);
 
   TracerListener* listener_ = nullptr;
 
