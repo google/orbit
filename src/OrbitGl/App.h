@@ -297,8 +297,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::vector<ModuleData*>& modules,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {},
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map = {});
-  // TODO(170468590): [ui beta] when out of ui beta, clean this up (it should not be necessary to
-  // have an argument here, since OrbitApp will always only have one process associated)
+  // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
+  // should not be necessary to have an argument here, since OrbitApp will always only have one
+  // process associated)
   void UpdateProcessAndModuleList(int32_t pid);
 
   void UpdateAfterSymbolLoading();
@@ -457,6 +458,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   std::vector<DataView*> panels_;
 
+  // TODO(177304549): This was necessary for the old UI. Remove
   std::unique_ptr<ProcessesDataView> processes_data_view_;
   std::unique_ptr<ModulesDataView> modules_data_view_;
   std::unique_ptr<FunctionsDataView> functions_data_view_;

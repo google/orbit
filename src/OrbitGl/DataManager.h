@@ -32,6 +32,7 @@ class DataManager final {
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
       : main_thread_id_(thread_id) {}
 
+  // TODO(177304549): This was necessary for the old UI. Remove
   void UpdateProcessInfos(const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos);
 
   void SelectFunction(const orbit_client_protos::FunctionInfo& function);
@@ -42,6 +43,7 @@ class DataManager final {
   void set_selected_thread_id(int32_t thread_id);
   void set_selected_text_box(const TextBox* text_box);
 
+  // TODO(177304549): This was necessary for the old UI. Remove
   [[nodiscard]] ProcessData* GetMutableProcessByPid(int32_t process_id);
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
