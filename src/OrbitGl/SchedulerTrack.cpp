@@ -24,6 +24,7 @@ const Color kSelectionColor(0, 128, 255, 255);
 SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app) : TimerTrack(time_graph, app) {
   SetPinned(false);
   SetName("Scheduler");
+  SetLabel("Scheduler (0 cores)");
   num_cores_ = 0;
 }
 
@@ -31,7 +32,7 @@ void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(timer_info);
   if (num_cores_ <= static_cast<uint32_t>(timer_info.processor())) {
     num_cores_ = timer_info.processor() + 1;
-    label_ = (absl::StrFormat("Scheduler (%u cores)", num_cores_));
+    SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores_));
   }
 }
 

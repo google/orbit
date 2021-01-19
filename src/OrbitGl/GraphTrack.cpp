@@ -15,8 +15,10 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
-GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name)
-    : Track(time_graph), name_(std::move(name)) {}
+GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name) : Track(time_graph) {
+  SetName(name);
+  SetLabel(name);
+}
 
 void GraphTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                   float z_offset) {

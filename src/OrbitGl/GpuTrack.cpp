@@ -70,6 +70,13 @@ GpuTrack::GpuTrack(TimeGraph* time_graph, uint64_t timeline_hash, OrbitApp* app)
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();
 
+  std::string timeline = app_->GetStringManager()->Get(timeline_hash).value_or("");
+  std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
+  SetName(timeline);
+  SetLabel(label);
+  // This min combine two cases, label == timeline and when label includes timeline
+  SetNumberOfPrioritizedTrailingCharacters(std::min(label.size(), timeline.size() + 2));
+
   // Gpu tracks are collapsed by default.
   collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
                              TriangleToggle::InitialStateUpdate::kReplaceInitialState);

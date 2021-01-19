@@ -43,7 +43,6 @@ class GraphTrack : public Track {
   double max_ = std::numeric_limits<double>::lowest();
   double value_range_ = 0;
   double inv_value_range_ = 0;
-  std::string name_;
 };
 
 #endif
