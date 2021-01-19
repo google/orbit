@@ -66,8 +66,8 @@ float FrameTrack::GetAverageBoxHeight() const {
 }
 
 FrameTrack::FrameTrack(TimeGraph* time_graph, uint64_t function_id, const FunctionInfo& function,
-                       OrbitApp* app)
-    : TimerTrack(time_graph, app), function_id_(function_id), function_(function) {
+                       OrbitApp* app, CaptureData* capture_data)
+    : TimerTrack(time_graph, app, capture_data), function_id_(function_id), function_(function) {
   // TODO(b/169554463): Support manual instrumentation.
   std::string function_name = function_utils::GetDisplayName(function_);
   std::string name = absl::StrFormat("Frame track based on %s", function_name);

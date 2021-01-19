@@ -56,7 +56,7 @@ class TimeGraph {
 
   // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
-  void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
+  void SetCaptureData(CaptureData* capture_data);
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }

@@ -24,7 +24,8 @@ class OrbitApp;
 
 class AsyncTrack final : public TimerTrack {
  public:
-  explicit AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app);
+  explicit AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app,
+                      CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return kAsyncTrack; };
   [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;

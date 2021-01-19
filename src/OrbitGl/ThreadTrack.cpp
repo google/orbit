@@ -34,17 +34,19 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
-    : TimerTrack(time_graph, app) {
+ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
+                         CaptureData* capture_data)
+    : TimerTrack(time_graph, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_track_ = std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_);
+  thread_state_track_ =
+      std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_, capture_data);
 
-  event_track_ = std::make_shared<EventTrack>(time_graph, app_);
+  event_track_ = std::make_shared<EventTrack>(time_graph, app_, capture_data);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id, app_);
+  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id, app_, capture_data);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 
@@ -68,6 +70,13 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
     SetLabel(track_label);
     SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
   }
+}
+
+void ThreadTrack::SetCaptureData(CaptureData* capture_data) {
+  Track::SetCaptureData(capture_data);
+  thread_state_track_->SetCaptureData(capture_data);
+  event_track_->SetCaptureData(capture_data);
+  tracepoint_track_->SetCaptureData(capture_data);
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
@@ -94,10 +103,9 @@ std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
 
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      capture_data
-          ? capture_data->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
+      capture_data_
+          ? capture_data_->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
           : nullptr;
 
   if (!func) {

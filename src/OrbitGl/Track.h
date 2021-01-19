@@ -6,6 +6,7 @@
 #define ORBIT_GL_TRACK_H_
 
 #include <GteVector.h>
+#include <OrbitClientModel/CaptureData.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -25,6 +26,7 @@
 #include "TimerChain.h"
 #include "TrackAccessibility.h"
 #include "TriangleToggle.h"
+#include "capture_data.pb.h"
 
 class GlCanvas;
 class TimeGraph;
@@ -44,8 +46,10 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
     kUnknown,
   };
 
-  explicit Track(TimeGraph* time_graph);
+  explicit Track(TimeGraph* time_graph, CaptureData* capture_data);
   ~Track() override = default;
+  virtual void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
+
   virtual void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode, float z_offset = 0);
   virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                 float z_offset = 0);
@@ -149,6 +153,7 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 
   orbit_gl::AccessibleTrack accessibility_;
+  CaptureData* capture_data_ = nullptr;
 };
 
 #endif

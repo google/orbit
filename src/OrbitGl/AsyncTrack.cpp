@@ -30,8 +30,9 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app)
-    : TimerTrack(time_graph, app) {
+AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app,
+                       CaptureData* capture_data)
+    : TimerTrack(time_graph, app, capture_data) {
   SetName(name);
   SetLabel(name);
 }
@@ -45,10 +46,9 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp*
 
   // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
   // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
   const FunctionInfo* func =
-      capture_data
-          ? capture_data->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
+      capture_data_
+          ? capture_data_->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
           : nullptr;
   CHECK(func || timer_info.type() == TimerInfo::kIntrospection);
   std::string module_name =

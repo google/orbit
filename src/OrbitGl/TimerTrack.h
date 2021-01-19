@@ -31,7 +31,7 @@ class TextRenderer;
 
 class TimerTrack : public Track {
  public:
-  explicit TimerTrack(TimeGraph* time_graph, OrbitApp* app);
+  explicit TimerTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data);
   ~TimerTrack() override = default;
 
   // Pickable

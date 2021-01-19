@@ -80,6 +80,13 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
   return tracks;
 }
 
+void TrackManager::SetCaptureData(CaptureData* capture_data) {
+  capture_data_ = capture_data;
+  for (Track* track : GetAllTracks()) {
+    track->SetCaptureData(capture_data);
+  }
+}
+
 void TrackManager::SortTracks() {
   if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_) return;
 
@@ -131,8 +138,7 @@ void TrackManager::SortTracks() {
     }
 
     // Separate "capture_pid" tracks from tracks that originate from other processes.
-    const CaptureData* capture_data = time_graph_->GetCaptureData();
-    int32_t capture_pid = capture_data ? capture_data->process_id() : 0;
+    int32_t capture_pid = capture_data_ ? capture_data_->process_id() : 0;
     std::vector<Track*> capture_pid_tracks;
     std::vector<Track*> external_pid_tracks;
     for (auto& track : all_processes_sorted_tracks) {
@@ -191,8 +197,7 @@ void TrackManager::UpdateFilteredTrackList() {
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   std::vector<ThreadTrack*> sorted_tracks;
   absl::flat_hash_map<ThreadTrack*, uint32_t> num_events_by_track;
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  const CallstackData* callstack_data = capture_data ? capture_data->GetCallstackData() : nullptr;
+  const CallstackData* callstack_data = capture_data_ ? capture_data_->GetCallstackData() : nullptr;
 
   for (auto& [tid, track] : thread_tracks_) {
     if (tid == orbit_base::kAllProcessThreadsTid)
@@ -331,7 +336,7 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
-    track = std::make_shared<SchedulerTrack>(time_graph_, app_);
+    track = std::make_shared<SchedulerTrack>(time_graph_, app_, capture_data_);
     AddTrack(track);
     scheduler_track_ = track;
   }
@@ -342,7 +347,7 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(time_graph_, tid, app_);
+    track = std::make_shared<ThreadTrack>(time_graph_, tid, app_, capture_data_);
     AddTrack(track);
     thread_tracks_[tid] = track;
   }
@@ -353,7 +358,7 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(time_graph_, timeline_hash, app_);
+    track = std::make_shared<GpuTrack>(time_graph_, timeline_hash, app_, capture_data_);
     AddTrack(track);
     gpu_tracks_[timeline_hash] = track;
   }
@@ -364,7 +369,7 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GraphTrack> track = graph_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<GraphTrack>(time_graph_, name);
+    track = std::make_shared<GraphTrack>(time_graph_, name, capture_data_);
     AddTrack(track);
     graph_tracks_[name] = track;
   }
@@ -375,7 +380,7 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<AsyncTrack>(time_graph_, name, app_);
+    track = std::make_shared<AsyncTrack>(time_graph_, name, app_, capture_data_);
     AddTrack(track);
     async_tracks_[name] = track;
   }
@@ -391,7 +396,8 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id,
     return track_it->second.get();
   }
 
-  auto track = std::make_shared<FrameTrack>(time_graph_, function_id, function, app_);
+  auto track =
+      std::make_shared<FrameTrack>(time_graph_, function_id, function, app_, capture_data_);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks.

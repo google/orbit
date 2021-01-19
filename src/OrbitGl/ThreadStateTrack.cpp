@@ -20,16 +20,16 @@
 
 using orbit_client_protos::ThreadStateSliceInfo;
 
-ThreadStateTrack::ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app)
-    : Track{time_graph}, app_{app} {
+ThreadStateTrack::ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
+                                   CaptureData* capture_data)
+    : Track{time_graph, capture_data}, app_{app} {
   thread_id_ = thread_id;
   picked_ = false;
 }
 
 bool ThreadStateTrack::IsEmpty() const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  if (capture_data == nullptr) return true;
-  return !capture_data->HasThreadStatesForThread(thread_id_);
+  if (capture_data_ == nullptr) return true;
+  return !capture_data_->HasThreadStatesForThread(thread_id_);
 }
 
 void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
@@ -168,9 +168,8 @@ void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   uint64_t ignore_until_ns = 0;
 
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
-  capture_data->ForEachThreadStateSliceIntersectingTimeRange(
+  CHECK(capture_data_ != nullptr);
+  capture_data_->ForEachThreadStateSliceIntersectingTimeRange(
       thread_id_, min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
         if (slice.end_timestamp_ns() <= ignore_until_ns) {
           // Reduce overdraw by not drawing slices whose entire width would only draw over a

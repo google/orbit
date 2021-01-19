@@ -21,7 +21,7 @@ class TimeGraph;
 
 class EventTrack : public Track {
  public:
-  explicit EventTrack(TimeGraph* time_graph, OrbitApp* app);
+  explicit EventTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data);
   Type GetType() const override { return kEventTrack; }
 
   std::string GetTooltip() const override;
