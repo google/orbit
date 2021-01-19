@@ -10,7 +10,6 @@ import "capture.proto";
 import "code_block.proto";
 import "module.proto";
 import "process.proto";
-import "symbol.proto";
 import "tracepoint.proto";
 
 message CaptureRequest {
