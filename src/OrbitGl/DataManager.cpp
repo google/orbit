@@ -5,38 +5,13 @@
 #include "DataManager.h"
 
 #include <absl/container/flat_hash_set.h>
-#include <absl/container/node_hash_map.h>
-#include <absl/meta/type_traits.h>
 
-#include <limits>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/ProcessData.h"
-#include "module.pb.h"
 
 using orbit_client_protos::FunctionInfo;
-using orbit_grpc_protos::ModuleInfo;
-using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
-
-void DataManager::UpdateProcessInfos(const std::vector<ProcessInfo>& process_infos) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  // Note that at this point the data manager does not remove old processes.
-  // To do it correctly we may need to implement some callback logic here
-  // since the ProcessData can be in use by some views.
-  for (const ProcessInfo& info : process_infos) {
-    int32_t process_id = info.pid();
-    auto it = process_map_.find(process_id);
-    if (it != process_map_.end()) {
-      it->second.SetProcessInfo(info);
-    } else {
-      auto [inserted_it, success] = process_map_.try_emplace(process_id, info);
-      CHECK(success);
-    }
-  }
-}
 
 void DataManager::SelectFunction(const FunctionInfo& function) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
@@ -93,15 +68,6 @@ void DataManager::set_selected_text_box(const TextBox* text_box) {
 void DataManager::ClearSelectedFunctions() {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_functions_.clear();
-}
-
-ProcessData* DataManager::GetMutableProcessByPid(int32_t process_id) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-
-  auto it = process_map_.find(process_id);
-  if (it == process_map_.end()) return nullptr;
-
-  return &it->second;
 }
 
 bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
