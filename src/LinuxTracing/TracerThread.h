@@ -80,7 +80,7 @@ class TracerThread {
   void InitSwitchesStatesNamesVisitor();
   bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
-  bool InitGpuTracepointEventVisitor();
+  void InitGpuTracepointEventVisitor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
 
   bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
@@ -157,8 +157,8 @@ class TracerThread {
   std::mutex deferred_events_mutex_;
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
   std::unique_ptr<SwitchesStatesNamesVisitor> switches_states_names_visitor_;
-  PerfEventProcessor event_processor_;
   std::unique_ptr<GpuTracepointVisitor> gpu_event_visitor_;
+  PerfEventProcessor event_processor_;
 
   struct EventStats {
     void Reset() {
