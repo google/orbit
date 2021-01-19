@@ -26,8 +26,8 @@ target_sources(LinuxTracing PRIVATE
         ContextSwitchManager.cpp
         ContextSwitchManager.h
         Function.h
-        GpuTracepointEventProcessor.h
-        GpuTracepointEventProcessor.cpp
+        GpuTracepointVisitor.h
+        GpuTracepointVisitor.cpp
         KernelTracepoints.h
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
@@ -73,7 +73,7 @@ target_compile_options(LinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(LinuxTracingTests PRIVATE
         ContextSwitchManagerTest.cpp
-        GpuTracepointEventProcessorTest.cpp
+        GpuTracepointVisitorTest.cpp
         LinuxTracingUtilsTest.cpp
         PerfEventProcessorTest.cpp
         PerfEventQueueTest.cpp
