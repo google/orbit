@@ -81,22 +81,19 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   // events that would just draw over an already drawn line. When zoomed in
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
-  uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
-  uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
   uint64_t pixel_delta_in_ticks = time_window_ns / canvas->GetWidth();
   uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
+    for (auto& block : *chain) {
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       // We have to reset this when we go to the next depth, as otherwise we
       // would miss drawing events that should be drawn.
-      min_ignore = std::numeric_limits<uint64_t>::max();
-      max_ignore = std::numeric_limits<uint64_t>::min();
+      uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
+      uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
       for (size_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
@@ -118,7 +115,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
         bool is_selected = &text_box == selected_textbox;
-        bool is_highlighted = !is_selected && function_id != DataManager::kInvalidFunctionId &&
+        bool is_highlighted = !is_selected &&
+                              function_id != orbit_grpc_protos::kInvalidFunctionId &&
                               function_id == highlighted_function_id;
 
         Vec2 pos(world_timer_x, world_timer_y);

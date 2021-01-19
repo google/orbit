@@ -185,7 +185,7 @@ void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   if (id == id_to_select_ && !current_textboxes_.empty()) {
     id_to_select_ = current_textboxes_.begin()->first;
   } else if (current_textboxes_.empty()) {
-    id_to_select_ = DataManager::kInvalidFunctionId;
+    id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
   }
   Move();
 }
@@ -224,5 +224,5 @@ void LiveFunctionsController::Reset() {
   iterator_id_to_function_id_.clear();
   current_textboxes_.clear();
   GCurrentTimeGraph->SetIteratorOverlayData({}, {});
-  id_to_select_ = DataManager::kInvalidFunctionId;
+  id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
 }
