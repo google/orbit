@@ -5,6 +5,8 @@
 /*
  * Bridging accessibility from OrbitQt and OrbitGl.
  *
+ * Design can be found at go/stadia-orbit-capture-window-e2e.
+ *
  * The accessibility adapter exposes accessibility information of the OpenGl capture window to the
  * E2E tests. E2E tests work on top of Microsoft UI Automation
  *(https://docs.microsoft.com/en-us/windows/win32/winauto/uiauto-msaa).
@@ -46,13 +48,19 @@
  *                                            |
  *                                            +
  *
- * The static methods of AccessibilityAdapter keep track of all adapters created so far and, given
+ * AdapterRegistry keeps track of all adapters created so far and, given
  * an AccessibleInterface, can find the corresponsing QAccessibleInterface (which will be
  * implemented by a AccessibilityAdapter in most cases, but we'll get there...).
- * AccessibilityAdapter::GetOrCreateAdapter will return an existing interface, or create a new
+ * AdapterRegistry::GetOrCreateAdapter will return an existing interface, or create a new
  * adapter if needed. This usually happens as the tree is traversed - each AccessibilityAdapter
  * will query the children exposed through its AccessibleInterface pointer, and will create new
  * adapters for each of them as we go down the tree.
+ *
+ * To not interfere with the internal resource management of QT, AdapterRegistry does not create
+ * AccessibilityAdapter instances directly, but instead creates dummy QObjects of type
+ * OrbitGlInterfaceWrapper. By registering a custom accessibility factory, QT then takes care of
+ * creating the corresponding AccessibilityAdapters, and AdapterRegistry merely manages the lifetime
+ * of the dummy objects instead of the adapters.
  *
  * Everything above OrbitGlWidget is handled by the default implementation of Qt, and everything
  * below is handled by these adapters. To bridge the gap between OrbitGlWidget and GlCanvas, there
@@ -86,7 +94,7 @@
  * The OrbitGlWidgetAccessible is automatically created when an OrbitGlWidget is constructed by
  * installing a QT Accessibility Factory (InstallAccessibilityFactories()).
  *
- * To make sure adapters created by AccessibilityAdapter::GetOrCreateAdapter are deleted when the
+ * To make sure adapters created by AdapterRegistry::GetOrCreateAdapter are deleted when the
  * corresponding AccessibleInterface is deleted, these interfaces register themselves in the
  * AccessibleInterfaceRegistry (see AccessibleInterfaceRegistry.h), which in turn allows to register
  * a callback on interface deletion. AccessibilityAdapter registers itself for this callback and
