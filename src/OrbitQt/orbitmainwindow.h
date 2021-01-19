@@ -33,6 +33,7 @@
 #include "DataView.h"
 #include "DataViewTypes.h"
 #include "DisassemblyReport.h"
+#include "FilterPanelWidgetAction.h"
 #include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitClientServices/ProcessManager.h"
@@ -94,6 +95,10 @@ class OrbitMainWindow : public QMainWindow {
  protected:
   void closeEvent(QCloseEvent* event) override;
 
+ public slots:
+  void OnFilterFunctionsTextChanged(const QString& text);
+  void OnFilterTracksTextChanged(const QString& text);
+
  private slots:
   void on_actionOpenUserDataDirectory_triggered();
   void on_actionAbout_triggered();
@@ -103,8 +108,6 @@ class OrbitMainWindow : public QMainWindow {
 
   void OnTimer();
   void OnLiveTabFunctionsFilterTextChanged(const QString& text);
-  void OnFilterFunctionsTextChanged(const QString& text);
-  void OnFilterTracksTextChanged(const QString& text);
 
   void on_actionOpen_Preset_triggered();
   void on_actionEnd_Session_triggered();
@@ -162,6 +165,7 @@ class OrbitMainWindow : public QMainWindow {
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
+  FilterPanelWidgetAction* filter_panel_action_ = nullptr;
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> gl_widgets_;
   OrbitGLWidget* introspection_widget_ = nullptr;

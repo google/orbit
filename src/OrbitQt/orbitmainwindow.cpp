@@ -425,6 +425,12 @@ void OrbitMainWindow::SetupCaptureToolbar() {
 
   // Attach the filter panel to the toolbar
   toolbar->addWidget(CreateSpacer(toolbar));
+  filter_panel_action_ = new FilterPanelWidgetAction(toolbar);
+  connect(filter_panel_action_, &FilterPanelWidgetAction::FilterTracksTextChanged, this,
+          &OrbitMainWindow::OnFilterTracksTextChanged);
+  connect(filter_panel_action_, &FilterPanelWidgetAction::FilterFunctionsTextChanged, this,
+          &OrbitMainWindow::OnFilterFunctionsTextChanged);
+  toolbar->addAction(filter_panel_action_);
   toolbar->addWidget(ui->filterPanel);
 
   // Timer
@@ -846,6 +852,7 @@ void OrbitMainWindow::OnTimer() {
   }
 
   ui->timerLabel->setText(QString::fromStdString(app_->GetCaptureTime()));
+  filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
 }
 
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
@@ -858,6 +865,7 @@ void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
   ui->filterFunctions->blockSignals(true);
   ui->filterFunctions->setText(text);
   ui->filterFunctions->blockSignals(false);
+  filter_panel_action_->SetFilterFunctionsText(text);
 }
 
 void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
