@@ -38,8 +38,8 @@ target_sources(OrbitClientData PRIVATE
         UserDefinedCaptureData.cpp)
 
 target_link_libraries(OrbitClientData PUBLIC
+        ClientProtos
         GrpcProtos
-        OrbitClientProtos
         OrbitBase
         xxHash::xxHash)
 

@@ -26,9 +26,9 @@ target_sources(OrbitClientModel PRIVATE
         SamplingDataPostProcessor.cpp)
 
 target_link_libraries(OrbitClientModel PUBLIC
+        ClientProtos
         OrbitCaptureClient
-        OrbitCore
-        OrbitClientProtos)
+        OrbitCore)
 
 add_executable(OrbitClientModelTests)
 
