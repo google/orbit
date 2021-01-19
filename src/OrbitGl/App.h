@@ -238,7 +238,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   using RefreshCallback = std::function<void(DataViewType type)>;
   void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
 
-  using SamplingReportCallback = std::function<void(DataView*, std::shared_ptr<SamplingReport>)>;
+  using SamplingReportCallback =
+      std::function<void(DataView*, const std::shared_ptr<SamplingReport>&)>;
   void SetSamplingReportCallback(SamplingReportCallback callback) {
     sampling_reports_callback_ = std::move(callback);
   }

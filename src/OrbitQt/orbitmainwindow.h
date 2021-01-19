@@ -73,9 +73,9 @@ class OrbitMainWindow : public QMainWindow {
   void UpdatePanel(DataViewType a_Type);
 
   void OnNewSamplingReport(DataView* callstack_data_view,
-                           std::shared_ptr<class SamplingReport> sampling_report);
+                           const std::shared_ptr<class SamplingReport>& sampling_report);
   void OnNewSelectionReport(DataView* callstack_data_view,
-                            std::shared_ptr<class SamplingReport> sampling_report);
+                            const std::shared_ptr<class SamplingReport>& sampling_report);
 
   void OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void OnNewSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view);
@@ -163,7 +163,7 @@ class OrbitMainWindow : public QMainWindow {
   // ProfilingTargetDialog)
   void SetupGrpcAndProcessManager(std::string grpc_server_address);
 
-  void OnProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> processes);
+  void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
   static const QString kCollectThreadStatesSettingKey;
   void LoadCaptureOptionsIntoApp();
