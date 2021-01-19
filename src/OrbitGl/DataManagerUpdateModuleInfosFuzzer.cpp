@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "DataManager.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/ModuleManager.h"
@@ -47,14 +46,10 @@ DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   int32_t pid = 1;
   ProcessInfo process_info{};
   process_info.set_pid(pid);
+  ProcessData process = ProcessData(process_info);
 
-  DataManager data_manager{};
-  data_manager.UpdateProcessInfos(std::vector{process_info});
-
-  ProcessData* process = data_manager.GetMutableProcessByPid(pid);
-  CHECK(process != nullptr);
-  process->UpdateModuleInfos(modules);
+  process.UpdateModuleInfos(modules);
 
   ModulesDataView modules_data_view{nullptr};
-  modules_data_view.UpdateModules(process);
+  modules_data_view.UpdateModules(&process);
 }
