@@ -17,12 +17,13 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
-Track::Track(TimeGraph* time_graph)
+Track::Track(TimeGraph* time_graph, CaptureData* capture_data)
     : time_graph_(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
           [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)),
-      accessibility_(this, &time_graph->GetLayout()) {
+      accessibility_(this, &time_graph->GetLayout()),
+      capture_data_(capture_data) {
   mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
   pos_ = Vec2(0, 0);
   size_ = Vec2(0, 0);
@@ -201,8 +202,7 @@ void Track::SetY(float y) {
 }
 
 Color Track::GetBackgroundColor() const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  int32_t capture_process_id = capture_data ? capture_data->process_id() : -1;
+  int32_t capture_process_id = capture_data_ ? capture_data_->process_id() : -1;
   if (GetType() == kSchedulerTrack) {
     return color_;
   } else if (process_id_ != -1 && process_id_ != capture_process_id) {

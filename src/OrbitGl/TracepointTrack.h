@@ -14,7 +14,8 @@
 
 class TracepointTrack : public EventTrack {
  public:
-  explicit TracepointTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app);
+  explicit TracepointTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
+                           CaptureData* capture_data);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 

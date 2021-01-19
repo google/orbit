@@ -46,6 +46,7 @@ class TrackManager {
     return tracepoints_system_wide_track_;
   }
 
+  void SetCaptureData(CaptureData* capture_data);
   void SortTracks();
   void SetFilter(const std::string& filter);
 
@@ -94,6 +95,7 @@ class TrackManager {
   std::vector<Track*> visible_tracks_;
 
   float tracks_total_height_;
+  CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 };

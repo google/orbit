@@ -64,8 +64,9 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(TimeGraph* time_graph, uint64_t timeline_hash, OrbitApp* app)
-    : TimerTrack(time_graph, app) {
+GpuTrack::GpuTrack(TimeGraph* time_graph, uint64_t timeline_hash, OrbitApp* app,
+                   CaptureData* capture_data)
+    : TimerTrack(time_graph, app, capture_data) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();
@@ -286,8 +287,7 @@ std::string GpuTrack::GetBoxTooltip(PickingId id) const {
 }
 
 std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  CHECK(capture_data_ != nullptr);
   return absl::StrFormat(
       "<b>Software Queue</b><br/>"
       "<i>Time between amdgpu_cs_ioctl (job submitted) and "
@@ -296,13 +296,12 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
 std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  CHECK(capture_data_ != nullptr);
   return absl::StrFormat(
       "<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
       "(job scheduled) and start of GPU execution</i>"
@@ -310,13 +309,12 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
 std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
-  const CaptureData* capture_data = time_graph_->GetCaptureData();
-  CHECK(capture_data != nullptr);
+  CHECK(capture_data_ != nullptr);
   return absl::StrFormat(
       "<b>Harware Execution</b><br/>"
       "<i>End is marked by \"dma_fence_signaled\" event for this command "
@@ -325,7 +323,7 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      capture_data->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
 
