@@ -11,10 +11,10 @@
 #include <string>
 
 #include "CaptureEventBuffer.h"
+#include "LinuxTracing/Tracer.h"
+#include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitLinuxTracing/Tracer.h"
-#include "OrbitLinuxTracing/TracerListener.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "capture.pb.h"
