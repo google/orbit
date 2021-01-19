@@ -21,12 +21,15 @@ target_include_directories(OrbitBase PRIVATE
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/ExecutablePath.h
+        include/OrbitBase/Future.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/GetProcessIds.h
         include/OrbitBase/Profiling.h
+        include/OrbitBase/Promise.h
         include/OrbitBase/ReadFileToString.h
         include/OrbitBase/SafeStrerror.h
+        include/OrbitBase/SharedState.h
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
@@ -70,6 +73,8 @@ target_sources(OrbitBaseTests PRIVATE
         ThreadUtilsTest.cpp
         TracingTest.cpp
         UniqueResourceTest.cpp
+        FutureTest.cpp
+        PromiseTest.cpp
 )
 
 if (NOT WIN32)
