@@ -105,6 +105,7 @@ target_link_libraries(
           OrbitGgp
           OrbitSshQt
           OrbitVersion
+          QtUtils
           Qt5::Widgets
           Qt5::Core
           SyntaxHighlighter
@@ -163,6 +164,8 @@ target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.cpp
                 AccessibilityAdapterTest.cpp
                 EventLoopTest.cpp
+                MainThreadExecutorImplTest.cpp
+                MainThreadExecutorImpl.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 StatusListenerImplTest.cpp
@@ -180,6 +183,7 @@ target_link_libraries(
   PRIVATE OrbitAccessibility
           OrbitCore
           OrbitGl
+          QtUtils
           Qt5::Widgets
           Qt5::Core
           Qt5::Test

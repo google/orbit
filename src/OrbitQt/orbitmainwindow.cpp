@@ -145,7 +145,7 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
                                  uint32_t font_size)
     : QMainWindow(nullptr),
-      main_thread_executor_{CreateMainThreadExecutor()},
+      main_thread_executor_{std::make_unique<orbit_qt::MainThreadExecutorImpl>()},
       app_{OrbitApp::Create(main_thread_executor_.get())},
       ui(new Ui::OrbitMainWindow),
       target_configuration_(std::move(target_configuration)) {
@@ -1136,6 +1136,9 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
       app_->AbortCapture();
     }
   } else {
+    if (main_thread_executor_) {
+      main_thread_executor_->AbortWaitingJobs();
+    }
     QMainWindow::closeEvent(event);
   }
 }
