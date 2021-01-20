@@ -9,6 +9,7 @@
 #include <absl/time/time.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "Batcher.h"
 #include "CoreUtils.h"
@@ -49,9 +50,8 @@ float FrameTrack::GetMaximumBoxHeight() const {
   const float box_height_normalizer = is_collapsed ? scale_factor : 1.f;
   if (scale_factor == 0.f) {
     return 0.f;
-  } else {
-    return scale_factor * box_height_ / box_height_normalizer;
   }
+  return scale_factor * box_height_ / box_height_normalizer;
 }
 
 float FrameTrack::GetAverageBoxHeight() const {
@@ -60,16 +60,17 @@ float FrameTrack::GetAverageBoxHeight() const {
   const float box_height_normalizer = is_collapsed ? scale_factor : 1.f;
   if (scale_factor == 0.f) {
     return 0.f;
-  } else {
-    return box_height_ / box_height_normalizer;
   }
+  return box_height_ / box_height_normalizer;
 }
 
-FrameTrack::FrameTrack(TimeGraph* time_graph, uint64_t function_id, const FunctionInfo& function,
+FrameTrack::FrameTrack(TimeGraph* time_graph, uint64_t function_id, FunctionInfo function,
                        OrbitApp* app, CaptureData* capture_data)
-    : TimerTrack(time_graph, app, capture_data), function_id_(function_id), function_(function) {
+    : TimerTrack(time_graph, app, capture_data),
+      function_id_(function_id),
+      function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
-  std::string function_name = function_utils::GetDisplayName(function_);
+  const std::string& function_name = function_utils::GetDisplayName(function_);
   std::string name = absl::StrFormat("Frame track based on %s", function_name);
   SetName(name);
   SetLabel(name);
@@ -173,7 +174,7 @@ void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
 }
 
 std::string FrameTrack::GetTooltip() const {
-  std::string function_name = function_utils::GetDisplayName(function_);
+  const std::string& function_name = function_utils::GetDisplayName(function_);
   return absl::StrFormat(
       "<b>Frame track</b><br/>"
       "<i>Shows frame timings based on subsequent callst to %s. "
@@ -204,7 +205,7 @@ std::string FrameTrack::GetBoxTooltip(PickingId id) const {
     return "";
   }
   // TODO(b/169554463): Support manual instrumentation.
-  std::string function_name = function_utils::GetDisplayName(function_);
+  const std::string& function_name = function_utils::GetDisplayName(function_);
 
   return absl::StrFormat(
       "<b>Frame time</b><br/>"
