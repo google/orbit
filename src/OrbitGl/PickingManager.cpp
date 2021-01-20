@@ -11,7 +11,7 @@
 
 #include "OrbitBase/Logging.h"
 
-PickingId PickingManager::GetOrCreatePickableId(std::shared_ptr<Pickable> pickable,
+PickingId PickingManager::GetOrCreatePickableId(const std::shared_ptr<Pickable>& pickable,
                                                 BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
   uint32_t pickable_id = 0;
@@ -84,8 +84,9 @@ bool PickingManager::IsDragging() const {
   return picked && picked->Draggable();
 }
 
-Color PickingManager::GetPickableColor(std::shared_ptr<Pickable> pickable, BatcherId batcher_id) {
-  PickingId id = GetOrCreatePickableId(std::move(pickable), batcher_id);
+Color PickingManager::GetPickableColor(const std::shared_ptr<Pickable>& pickable,
+                                       BatcherId batcher_id) {
+  PickingId id = GetOrCreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }
 
