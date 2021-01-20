@@ -911,7 +911,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {
-    // TODO: Consider deferring GPU events.
+    // TODO: Consider processing GPU events on the ProcessDeferredEvents thread.
+    //  Note that this is currently not trivial, because dma_fence_signaled
+    //  events can be out of order of timestamp even on the same ring buffer,
+    //  which contradicts a fundamental assumption of PerfEventProcessor.
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
