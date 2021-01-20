@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_DISASSEMBLER_H_
+#define ORBIT_GL_DISASSEMBLER_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -24,3 +25,5 @@ class Disassembler {
   std::string result_;
   std::vector<uint64_t> line_to_address_;
 };
+
+#endif  // ORBIT_GL_DISASSEMBLER_H_
