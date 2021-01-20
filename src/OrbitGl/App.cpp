@@ -945,14 +945,6 @@ void OrbitApp::ToggleCapture() {
   }
 }
 
-bool OrbitApp::SelectProcess(const std::string& process) {
-  if (processes_data_view_) {
-    return processes_data_view_->SelectProcess(process);
-  }
-
-  return false;
-}
-
 bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
   // This function is used to determine if a capture is in a connected state. Lets imagine a user
   // selects a process and takes a capture. Then the process of the capture is the same as the

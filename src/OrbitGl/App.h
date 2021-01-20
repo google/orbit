@@ -169,8 +169,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                                 const CaptureData& capture_data);
   void ClearSelectionBottomUpView();
 
-  bool SelectProcess(const std::string& process);
-
   // This needs to be called from the main thread.
   [[nodiscard]] bool IsCaptureConnected(const CaptureData& capture) const;
 
