@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_DATA_VIEW_H_
+#define ORBIT_GL_DATA_VIEW_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -70,9 +71,9 @@ class DataView {
   virtual void OnContextMenu(const std::string& action, int menu_index,
                              const std::vector<int>& item_indices);
   virtual void OnSelect(std::optional<int> /*index*/) {}
-  [[nodiscard]] virtual const std::optional<int> GetSelectedIndex() { return selected_index_; }
+  [[nodiscard]] virtual std::optional<int> GetSelectedIndex() { return selected_index_; }
   virtual void OnMultiSelect(const std::vector<int>& /*indices*/) {}
-  [[nodiscard]] virtual const std::vector<int> GetVisibleSelectedIndices();
+  [[nodiscard]] virtual std::vector<int> GetVisibleSelectedIndices();
   virtual void OnDoubleClicked(int /*index*/) {}
   virtual void OnDataChanged();
   virtual void OnTimer() {}
@@ -116,3 +117,5 @@ class DataView {
 
   OrbitApp* app_ = nullptr;
 };
+
+#endif  // ORBIT_GL_DATA_VIEW_H_

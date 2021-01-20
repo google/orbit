@@ -30,7 +30,7 @@ class LiveFunctionsDataView : public DataView {
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
-  const std::optional<int> GetSelectedIndex() override;
+  std::optional<int> GetSelectedIndex() override;
   void UpdateSelectedFunctionId();
 
   void OnSelect(std::optional<int> row) override;
