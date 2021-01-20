@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_GL_SLIDER_H_
+#define ORBIT_GL_GL_SLIDER_H_
 
 #include <functional>
 #include <memory>
@@ -17,7 +18,7 @@ class GlCanvas;
 
 class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> {
  public:
-  ~GlSlider(){};
+  ~GlSlider() override = default;
 
   [[nodiscard]] bool Draggable() override { return true; }
   virtual void Draw(GlCanvas* canvas) = 0;
@@ -57,7 +58,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   [[nodiscard]] bool CanResize() const { return can_resize_; }
 
  protected:
-  GlSlider(bool is_vertical);
+  explicit GlSlider(bool is_vertical);
 
   static Color GetLighterColor(const Color& color);
   static Color GetDarkerColor(const Color& color);
@@ -110,8 +111,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
 class GlVerticalSlider : public GlSlider {
  public:
-  GlVerticalSlider() : GlSlider(true){};
-  ~GlVerticalSlider(){};
+  GlVerticalSlider() : GlSlider(true) {}
 
   void Draw(GlCanvas* canvas) override;
 
@@ -121,11 +121,12 @@ class GlVerticalSlider : public GlSlider {
 
 class GlHorizontalSlider : public GlSlider {
  public:
-  GlHorizontalSlider() : GlSlider(false) { can_resize_ = true; };
-  ~GlHorizontalSlider(){};
+  GlHorizontalSlider() : GlSlider(false) { can_resize_ = true; }
 
   void Draw(GlCanvas* canvas) override;
 
  protected:
   [[nodiscard]] int GetBarPixelLength() const override;
 };
+
+#endif  // ORBIT_GL_GL_SLIDER_H_
