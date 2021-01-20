@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_TEXT_BOX_H_
 #define ORBIT_GL_TEXT_BOX_H_
 
+#include <utility>
+
 #include "CoreMath.h"
 #include "capture_data.pb.h"
 
@@ -12,9 +14,9 @@ class TextRenderer;
 
 class TextBox {
  public:
-  TextBox() : pos_(Vec2::Zero()), size_(Vec2(100.f, 10.f)), elapsed_time_text_length_(0){};
-  TextBox(const Vec2& pos, const Vec2& size, const std::string& text = "")
-      : pos_(pos), size_(size), text_(text), elapsed_time_text_length_(0) {}
+  TextBox() : pos_(Vec2::Zero()), size_(Vec2(100.f, 10.f)) {}
+  TextBox(const Vec2& pos, const Vec2& size, std::string text = "")
+      : pos_(pos), size_(size), text_(std::move(text)) {}
 
   void SetSize(const Vec2& size) { size_ = size; }
   void SetPos(const Vec2& pos) { pos_ = pos; }
@@ -41,7 +43,7 @@ class TextBox {
   Vec2 size_;
   std::string text_;
   orbit_client_protos::TimerInfo timer_info_;
-  size_t elapsed_time_text_length_;
+  size_t elapsed_time_text_length_ = 0;
 };
 
 #endif  // ORBIT_GL_TEXT_BOX_H_
