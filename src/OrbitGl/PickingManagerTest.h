@@ -23,7 +23,6 @@ class PickableMock : public Pickable {
     dragging_ = false;
     picked_ = false;
   }
-  void Draw(GlCanvas*, PickingMode, float) {}
 
   bool Draggable() override { return true; }
 

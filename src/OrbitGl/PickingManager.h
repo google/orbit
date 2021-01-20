@@ -26,9 +26,9 @@ enum class PickingMode { kNone, kHover, kClick };
 class Pickable {
  public:
   virtual ~Pickable() = default;
-  virtual void OnPick(int a_X, int a_Y) = 0;
-  virtual void OnDrag(int /*a_X*/, int /*a_Y*/) {}
-  virtual void OnRelease(){};
+  virtual void OnPick(int x, int y) = 0;
+  virtual void OnDrag(int /*x*/, int /*y*/) {}
+  virtual void OnRelease() {}
   [[nodiscard]] virtual bool Draggable() { return false; }
   [[nodiscard]] virtual std::string GetTooltip() const { return ""; }
 };
@@ -102,12 +102,13 @@ class PickingManager {
   [[nodiscard]] std::shared_ptr<Pickable> GetPickableFromId(PickingId id) const;
   [[nodiscard]] bool IsDragging() const;
 
-  [[nodiscard]] Color GetPickableColor(std::shared_ptr<Pickable> pickable, BatcherId batcher_id);
+  [[nodiscard]] Color GetPickableColor(const std::shared_ptr<Pickable>& pickable,
+                                       BatcherId batcher_id);
 
   [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  [[nodiscard]] PickingId GetOrCreatePickableId(std::shared_ptr<Pickable> pickable,
+  [[nodiscard]] PickingId GetOrCreatePickableId(const std::shared_ptr<Pickable>& pickable,
                                                 BatcherId batcher_id);
   [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
 
