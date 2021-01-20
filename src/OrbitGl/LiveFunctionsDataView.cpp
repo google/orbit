@@ -98,7 +98,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 }
 
-const std::optional<int> LiveFunctionsDataView::GetSelectedIndex() {
+std::optional<int> LiveFunctionsDataView::GetSelectedIndex() {
   return GetRowFromFunctionId(selected_function_id_);
 }
 
