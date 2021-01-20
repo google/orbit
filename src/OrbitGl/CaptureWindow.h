@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_CAPTURE_WINDOW_H_
+#define ORBIT_GL_CAPTURE_WINDOW_H_
 
 #include <stdint.h>
 
@@ -96,3 +97,5 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
   CreateAccessibilityInterface() override;
 };
+
+#endif  // ORBIT_GL_CAPTURE_WINDOW_H_
