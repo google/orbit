@@ -33,7 +33,7 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
 DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
-  const auto range = module_list.modules();
+  const auto& range = module_list.modules();
   std::vector<ModuleInfo> modules{range.begin(), range.end()};
 
   ModuleManager module_manager;
