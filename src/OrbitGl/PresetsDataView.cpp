@@ -24,7 +24,6 @@
 #include "absl/strings/str_join.h"
 
 using orbit_client_protos::PresetFile;
-using orbit_client_protos::PresetInfo;
 
 constexpr const char* kLoadableColumnName = "Loadable";
 constexpr const char* kPresetColumnName = "Preset";
