@@ -32,7 +32,7 @@ class ThreadStateTrack final : public Track {
                         float z_offset) override;
 
   void OnPick(int x, int y) override;
-  void OnDrag(int, int) override {}
+  void OnDrag(int /*x*/, int /*y*/) override {}
   void OnRelease() override { picked_ = false; };
   float GetHeight() const override { return size_[1]; }
 
