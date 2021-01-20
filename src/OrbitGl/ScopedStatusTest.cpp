@@ -28,6 +28,15 @@ class MockStatusListener : public StatusListener {
 class MockMainThreadExecutor : public MainThreadExecutor {
  public:
   MOCK_METHOD(void, Schedule, (std::unique_ptr<Action> action), (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitFor,
+              (const orbit_base::Future<void>&, std::chrono::milliseconds), (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitFor, (const orbit_base::Future<void>&),
+              (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitForAll,
+              (absl::Span<orbit_base::Future<void>>, std::chrono::milliseconds), (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitForAll, (absl::Span<orbit_base::Future<void>>),
+              (override));
+  MOCK_METHOD(void, AbortWaitingJobs, (), (override));
 };
 
 }  // namespace

@@ -162,7 +162,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
 
-  main_thread_executor_->Schedule(
+  (void)main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, process = std::move(process),
        selected_functions = std::move(selected_functions),
        selected_tracepoints = std::move(selected_tracepoints),
@@ -205,7 +205,7 @@ void OrbitApp::OnCaptureComplete() {
       orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
                                                           GetCaptureData());
 
-  main_thread_executor_->Schedule(
+  (void)main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(post_processed_sampling_data)]() mutable {
         ORBIT_SCOPE("OnCaptureComplete");
         RefreshFrameTracks();
@@ -228,7 +228,7 @@ void OrbitApp::OnCaptureComplete() {
 }
 
 void OrbitApp::OnCaptureCancelled() {
-  main_thread_executor_->Schedule([this]() mutable {
+  (void)main_thread_executor_->Schedule([this]() mutable {
     ORBIT_SCOPE("OnCaptureCancelled");
     CHECK(capture_failed_callback_);
     capture_failed_callback_();
@@ -241,7 +241,7 @@ void OrbitApp::OnCaptureCancelled() {
 }
 
 void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
-  main_thread_executor_->Schedule([this, error_message = std::move(error_message)]() mutable {
+  (void)main_thread_executor_->Schedule([this, error_message = std::move(error_message)]() mutable {
     ORBIT_SCOPE("OnCaptureFailed");
     CHECK(capture_failed_callback_);
     capture_failed_callback_();
@@ -369,7 +369,7 @@ void OrbitApp::PostInit() {
       return;
     }
 
-    main_thread_executor_->Schedule([result, this]() {
+    (void)main_thread_executor_->Schedule([result, this]() {
       tracepoints_data_view_->SetTracepoints(result.value());
 
       FireRefreshCallbacks(DataViewType::kTracepoints);
@@ -964,7 +964,7 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
 }
 
 void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport report) {
-  main_thread_executor_->Schedule(
+  (void)main_thread_executor_->Schedule(
       [this, disassembly = std::move(disassembly), report = std::move(report)]() mutable {
         CHECK(disassembly_callback_);
         disassembly_callback_(std::move(disassembly), std::move(report));
@@ -972,28 +972,28 @@ void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport re
 }
 
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
-  main_thread_executor_->Schedule([this, tooltip] {
+  (void)main_thread_executor_->Schedule([this, tooltip] {
     CHECK(tooltip_callback_);
     tooltip_callback_(tooltip);
   });
 }
 
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
-  main_thread_executor_->Schedule([this, title, text] {
+  (void)main_thread_executor_->Schedule([this, title, text] {
     CHECK(info_message_callback_);
     info_message_callback_(title, text);
   });
 }
 
 void OrbitApp::SendWarningToUi(const std::string& title, const std::string& text) {
-  main_thread_executor_->Schedule([this, title, text] {
+  (void)main_thread_executor_->Schedule([this, title, text] {
     CHECK(warning_message_callback_);
     warning_message_callback_(title, text);
   });
 }
 
 void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) {
-  main_thread_executor_->Schedule([this, title, text] {
+  (void)main_thread_executor_->Schedule([this, title, text] {
     CHECK(error_message_callback_);
     error_message_callback_(title, text);
   });
@@ -1018,7 +1018,7 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
               absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
                               module_data->file_path(), error_message_from_local,
                               result.error().message()));
-          main_thread_executor_->Schedule([this, module_data]() {
+          (void)main_thread_executor_->Schedule([this, module_data]() {
             modules_currently_loading_.erase(module_data->file_path());
           });
           return;
@@ -1028,7 +1028,7 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
 
         LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-        main_thread_executor_->Schedule(
+        (void)main_thread_executor_->Schedule(
             [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
              frame_track_function_hashes = std::move(frame_track_function_hashes), debug_file_path,
              scoped_status = std::move(scoped_status)]() mutable {
@@ -1167,41 +1167,42 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
     scoped_status.UpdateMessage(message);
     LOG("%s", message);
 
-    main_thread_executor_->Schedule([this, scoped_status = std::move(scoped_status), module_data,
-                                     function_hashes_to_hook = std::move(function_hashes_to_hook),
-                                     frame_track_function_hashes =
-                                         std::move(frame_track_function_hashes)] {
-      modules_currently_loading_.erase(module_data->file_path());
+    (void)main_thread_executor_->Schedule(
+        [this, scoped_status = std::move(scoped_status), module_data,
+         function_hashes_to_hook = std::move(function_hashes_to_hook),
+         frame_track_function_hashes = std::move(frame_track_function_hashes)] {
+          modules_currently_loading_.erase(module_data->file_path());
 
-      const ProcessData* selected_process = GetTargetProcess();
-      if (selected_process != nullptr &&
-          selected_process->IsModuleLoaded(module_data->file_path())) {
-        functions_data_view_->AddFunctions(module_data->GetFunctions());
-        LOG("Added loaded function symbols for module \"%s\" to the functions tab",
-            module_data->file_path());
-      }
+          const ProcessData* selected_process = GetTargetProcess();
+          if (selected_process != nullptr &&
+              selected_process->IsModuleLoaded(module_data->file_path())) {
+            functions_data_view_->AddFunctions(module_data->GetFunctions());
+            LOG("Added loaded function symbols for module \"%s\" to the functions tab",
+                module_data->file_path());
+          }
 
-      if (!function_hashes_to_hook.empty()) {
-        const auto selection_result =
-            SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
-        if (!selection_result) {
-          LOG("Warning, automated hooked incomplete: %s", selection_result.error().message());
-        }
-        LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
-      }
+          if (!function_hashes_to_hook.empty()) {
+            const auto selection_result =
+                SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
+            if (!selection_result) {
+              LOG("Warning, automated hooked incomplete: %s", selection_result.error().message());
+            }
+            LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
+          }
 
-      if (!frame_track_function_hashes.empty()) {
-        const auto frame_track_result =
-            EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
-        if (!frame_track_result) {
-          LOG("Warning, could not insert frame tracks: %s", frame_track_result.error().message());
-        }
-        LOG("Added frame tracks in module \"%s\"", module_data->file_path());
-      }
+          if (!frame_track_function_hashes.empty()) {
+            const auto frame_track_result =
+                EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
+            if (!frame_track_result) {
+              LOG("Warning, could not insert frame tracks: %s",
+                  frame_track_result.error().message());
+            }
+            LOG("Added frame tracks in module \"%s\"", module_data->file_path());
+          }
 
-      UpdateAfterSymbolLoading();
-      FireRefreshCallbacks();
-    });
+          UpdateAfterSymbolLoading();
+          FireRefreshCallbacks();
+        });
   });
 }
 
@@ -1319,7 +1320,7 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
       return;
     }
 
-    main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
+    (void)main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
       // Since this callback is executed asynchronously we can't be sure the target process has
       // been changed in the meantime. So we check and abort in case.
       if (pid != GetTargetProcess()->pid()) {

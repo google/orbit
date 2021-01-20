@@ -5,10 +5,15 @@
 #ifndef ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
 #define ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
 
+#include <absl/types/span.h>
+
+#include <chrono>
 #include <memory>
 #include <thread>
 
 #include "OrbitBase/Action.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 
 // This class implements a mechanism for landing
 // actions to the main thread. As a general rule
@@ -35,9 +40,43 @@ class MainThreadExecutor {
   virtual void Schedule(std::unique_ptr<Action> action) = 0;
 
   template <typename F>
-  void Schedule(F&& functor) {
-    Schedule(CreateAction(std::forward<F>(functor)));
+  [[nodiscard]] auto Schedule(F&& functor)
+      -> orbit_base::Future<std::decay_t<decltype(functor())>> {
+    using ReturnType = std::decay_t<decltype(functor())>;
+
+    orbit_base::Promise<ReturnType> promise;
+    orbit_base::Future<ReturnType> future = promise.GetFuture();
+
+    if constexpr (std::is_same_v<ReturnType, void>) {
+      auto function_wrapper = [functor = std::forward<F>(functor),
+                               promise = std::move(promise)]() mutable {
+        functor();
+        promise.MarkFinished();
+      };
+      Schedule(CreateAction(std::move(function_wrapper)));
+    } else {
+      auto function_wrapper = [functor = std::forward<F>(functor),
+                               promise = std::move(promise)]() mutable {
+        promise.SetResult(functor());
+      };
+      Schedule(CreateAction(std::move(function_wrapper)));
+    }
+
+    return future;
   }
+
+  enum class WaitResult { kCompleted, kTimedOut, kAborted };
+  [[nodiscard]] virtual WaitResult WaitFor(const orbit_base::Future<void>& future,
+                                           std::chrono::milliseconds timeout) = 0;
+
+  [[nodiscard]] virtual WaitResult WaitFor(const orbit_base::Future<void>& future) = 0;
+
+  [[nodiscard]] virtual WaitResult WaitForAll(absl::Span<orbit_base::Future<void>> futures,
+                                              std::chrono::milliseconds timeout) = 0;
+
+  [[nodiscard]] virtual WaitResult WaitForAll(absl::Span<orbit_base::Future<void>> futures) = 0;
+
+  virtual void AbortWaitingJobs() = 0;
 };
 
 #endif  // ORBIT_GL_MAIN_THREAD_EXECUTOR_H_

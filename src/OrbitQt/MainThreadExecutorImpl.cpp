@@ -6,29 +6,79 @@
 
 #include <QCoreApplication>
 #include <QMetaObject>
+#include <chrono>
+#include <optional>
 #include <utility>
 
 #include "OrbitBase/Action.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
+#include "QtUtils/FutureWatcher.h"
 
-namespace {
-
-class MainThreadExecutorImpl : public MainThreadExecutor {
- public:
-  MainThreadExecutorImpl() = default;
-
-  void Schedule(std::unique_ptr<Action> action) override;
-};
+namespace orbit_qt {
 
 void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
-  QMetaObject::invokeMethod(QCoreApplication::instance(), [action = std::move(action)]() {
-    ORBIT_SCOPE("MainThreadExecutor Action");
-    action->Execute();
-  });
+  QMetaObject::invokeMethod(
+      QCoreApplication::instance(),
+      [action = std::move(action)]() {
+        ORBIT_SCOPE("MainThreadExecutor Action");
+        action->Execute();
+      },
+      Qt::QueuedConnection);
 }
 
-}  // namespace
+void MainThreadExecutorImpl::AbortWaitingJobs() { emit AbortRequested(); }
 
-std::unique_ptr<MainThreadExecutor> CreateMainThreadExecutor() {
-  return std::make_unique<MainThreadExecutorImpl>();
+MainThreadExecutor::WaitResult MapToWaitResult(orbit_qt_utils::FutureWatcher::Reason result) {
+  using Reason = orbit_qt_utils::FutureWatcher::Reason;
+  using WaitResult = MainThreadExecutor::WaitResult;
+
+  switch (result) {
+    case Reason::kFutureCompleted:
+      return WaitResult::kCompleted;
+    case Reason::kAbortRequested:
+      return WaitResult::kAborted;
+    case Reason::kTimeout:
+      return WaitResult::kTimedOut;
+  }
+
+  UNREACHABLE();
 }
+
+MainThreadExecutor::WaitResult MainThreadExecutorImpl::WaitFor(
+    const orbit_base::Future<void>& future, std::chrono::milliseconds timeout) {
+  orbit_qt_utils::FutureWatcher watcher{};
+  QObject::connect(this, &MainThreadExecutorImpl::AbortRequested, &watcher,
+                   &orbit_qt_utils::FutureWatcher::Abort);
+  const auto result = watcher.WaitFor(future, timeout);
+  return MapToWaitResult(result);
+}
+
+MainThreadExecutor::WaitResult MainThreadExecutorImpl::WaitFor(
+    const orbit_base::Future<void>& future) {
+  orbit_qt_utils::FutureWatcher watcher{};
+  QObject::connect(this, &MainThreadExecutorImpl::AbortRequested, &watcher,
+                   &orbit_qt_utils::FutureWatcher::Abort);
+  const auto result = watcher.WaitFor(future, std::nullopt);
+  return MapToWaitResult(result);
+}
+
+MainThreadExecutor::WaitResult MainThreadExecutorImpl::WaitForAll(
+    absl::Span<orbit_base::Future<void>> futures, std::chrono::milliseconds timeout) {
+  orbit_qt_utils::FutureWatcher watcher{};
+  QObject::connect(this, &MainThreadExecutorImpl::AbortRequested, &watcher,
+                   &orbit_qt_utils::FutureWatcher::Abort);
+  const auto result = watcher.WaitForAll(futures, timeout);
+  return MapToWaitResult(result);
+}
+
+MainThreadExecutor::WaitResult MainThreadExecutorImpl::WaitForAll(
+    absl::Span<orbit_base::Future<void>> futures) {
+  orbit_qt_utils::FutureWatcher watcher{};
+  QObject::connect(this, &MainThreadExecutorImpl::AbortRequested, &watcher,
+                   &orbit_qt_utils::FutureWatcher::Abort);
+  const auto result = watcher.WaitForAll(futures, std::nullopt);
+  return MapToWaitResult(result);
+}
+
+}  // namespace orbit_qt
