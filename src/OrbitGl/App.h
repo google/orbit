@@ -74,8 +74,8 @@
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  OrbitApp(MainThreadExecutor* main_thread_executor,
-           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
+  explicit OrbitApp(MainThreadExecutor* main_thread_executor,
+                    orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
@@ -259,7 +259,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   }
   using TimerSelectedCallback = std::function<void(const orbit_client_protos::TimerInfo*)>;
   void SetTimerSelectedCallback(TimerSelectedCallback callback) {
-    timer_selected_callback_ = callback;
+    timer_selected_callback_ = std::move(callback);
   }
 
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
