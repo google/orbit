@@ -25,8 +25,6 @@ std::string ErrorCategory::message(int condition) const {
       return "Could not start tunnel to remote.";
     case Error::kUserCanceledServiceDeployment:
       return "User canceled the deployment.";
-    case Error::kUserClosedStartUpWindow:
-      return "User closed window.";
   }
 
   return absl::StrFormat("Unknown error condition: %i.", condition);
