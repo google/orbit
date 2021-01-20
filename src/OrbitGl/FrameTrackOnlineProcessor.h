@@ -17,7 +17,7 @@ class TimeGraph;
 // FrameTrackOnlineProcessor is used to create frame track timers during a capture.
 class FrameTrackOnlineProcessor {
  public:
-  FrameTrackOnlineProcessor() : time_graph_(nullptr) {}
+  FrameTrackOnlineProcessor() = default;
   FrameTrackOnlineProcessor(const CaptureData& capture_data, TimeGraph* time_graph);
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo& function);
@@ -29,7 +29,7 @@ class FrameTrackOnlineProcessor {
   absl::flat_hash_set<uint64_t> current_frame_track_function_ids_;
   absl::flat_hash_map<uint64_t, uint64_t> function_id_to_previous_timestamp_ns_;
 
-  TimeGraph* time_graph_;
+  TimeGraph* time_graph_{nullptr};
   int current_frame_index_ = 0;
 };
 
