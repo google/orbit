@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_EVENT_TRACK_H_
+#define ORBIT_GL_EVENT_TRACK_H_
 
 #include <GteVector.h>
 #include <stdint.h>
@@ -53,3 +54,5 @@ class EventTrack : public Track {
  private:
   OrbitApp* app_ = nullptr;
 };
+
+#endif  // ORBIT_GL_EVENT_TRACK_H_
