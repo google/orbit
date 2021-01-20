@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TEXT_RENDERER_H_
+#define ORBIT_GL_TEXT_RENDERER_H_
 
 #include <GteVector.h>
 #include <freetype-gl/mat4.h>
@@ -90,3 +91,5 @@ inline vec4 ColorToVec4(const Color& color) {
   vec.a = color[3] * coeff;
   return vec;
 }
+
+#endif  // ORBIT_GL_TEXT_RENDERER_H_

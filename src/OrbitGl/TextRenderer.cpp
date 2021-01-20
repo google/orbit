@@ -25,11 +25,11 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 
-typedef struct {
+struct vertex_t {
   float x, y, z;     // position
   float s, t;        // texture
   float r, g, b, a;  // color
-} vertex_t;
+};
 
 bool TextRenderer::draw_outline_ = false;
 
@@ -54,8 +54,8 @@ TextRenderer::~TextRenderer() {
 void TextRenderer::Init() {
   if (initialized_) return;
 
-  int atlasSize = 2 * 1024;
-  texture_atlas_ = texture_atlas_new(atlasSize, atlasSize, 1);
+  int atlas_size = 2 * 1024;
+  texture_atlas_ = texture_atlas_new(atlas_size, atlas_size, 1);
 
   const auto exe_dir = orbit_base::GetExecutableDir();
   const auto font_file_name = (exe_dir / "fonts" / "Vera.ttf").string();
@@ -82,7 +82,7 @@ void TextRenderer::Init() {
 
 texture_font_t* TextRenderer::GetFont(uint32_t size) {
   CHECK(!fonts_by_size_.empty());
-  if (!fonts_by_size_.count(size)) {
+  if (fonts_by_size_.count(size) == 0) {
     auto iterator_next = fonts_by_size_.upper_bound(size);
     // If there isn't that font_size in the map, we will search for the next one or previous one
     if (iterator_next != fonts_by_size_.end()) {
@@ -94,9 +94,9 @@ texture_font_t* TextRenderer::GetFont(uint32_t size) {
   return fonts_by_size_[size];
 }
 
-void TextRenderer::RenderLayer(Batcher*, float layer) {
+void TextRenderer::RenderLayer(Batcher* /*batcher*/, float layer) {
   ORBIT_SCOPE_FUNCTION;
-  if (!vertex_buffers_by_layer_.count(layer)) return;
+  if (vertex_buffers_by_layer_.count(layer) == 0) return;
   auto& buffer = vertex_buffers_by_layer_.at(layer);
 
   // Lazy init
@@ -170,7 +170,10 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* vertex_buffer)
 void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const vec4& color,
                                    vec2* pen, float max_size, float z, vec2* out_text_pos,
                                    vec2* out_text_size) {
-  float r = color.red, g = color.green, b = color.blue, a = color.alpha;
+  float r = color.red;
+  float g = color.green;
+  float b = color.blue;
+  float a = color.alpha;
 
   float max_width = max_size == -1.f ? FLT_MAX : ToScreenSpace(max_size);
   float str_width = 0.f;
@@ -178,7 +181,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
   float max_x = -FLT_MAX;
   float min_y = FLT_MAX;
   float max_y = -FLT_MAX;
-  constexpr std::array<GLuint, 6> indices = {0, 1, 2, 0, 2, 3};
+  constexpr std::array<GLuint, 6> kIndices = {0, 1, 2, 0, 2, 3};
   vec2 initial_pen = *pen;
 
   for (size_t i = 0; i < strlen(text); ++i) {
@@ -225,7 +228,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       if (!vertex_buffers_by_layer_.count(z)) {
         vertex_buffers_by_layer_[z] = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
       }
-      vertex_buffer_push_back(vertex_buffers_by_layer_.at(z), vertices, 4, indices.data(), 6);
+      vertex_buffer_push_back(vertex_buffers_by_layer_.at(z), vertices, 4, kIndices.data(), 6);
       pen->x += glyph->advance_x;
     }
   }
@@ -291,7 +294,7 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
     }
 
     texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
-    if (glyph != NULL) {
+    if (glyph != nullptr) {
       float kerning = 0.0f;
       if (i > 0) {
         kerning = texture_glyph_get_kerning(glyph, text + i - 1);
@@ -317,29 +320,29 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
 
   auto fitting_chars_count = i;
 
-  static const char* ELLIPSIS_TEXT = "... ";
-  static const size_t ELLIPSIS_TEXT_LEN = strlen(ELLIPSIS_TEXT);
-  static const size_t LEADING_CHARS_COUNT = 1;
-  static const size_t ELLIPSIS_BUFFER_SIZE = ELLIPSIS_TEXT_LEN + LEADING_CHARS_COUNT;
+  static const char* kEllipsisText = "... ";
+  static const size_t kEllipsisTextLen = strlen(kEllipsisText);
+  static const size_t kLeadingCharsCount = 1;
+  static const size_t kEllipsisBufferSize = kEllipsisTextLen + kLeadingCharsCount;
 
   bool use_ellipsis_text = (fitting_chars_count < text_length) &&
-                           (fitting_chars_count > (trailing_chars_length + ELLIPSIS_BUFFER_SIZE));
+                           (fitting_chars_count > (trailing_chars_length + kEllipsisBufferSize));
 
   if (!use_ellipsis_text) {
     AddText(text, x, y, z, color, font_size, max_size);
     return GetStringWidth(text, font_size);
-  } else {
-    auto leading_char_count = fitting_chars_count - (trailing_chars_length + ELLIPSIS_TEXT_LEN);
-
-    std::string modified_text(text, leading_char_count);
-    modified_text.append(ELLIPSIS_TEXT);
-
-    auto timePosition = text_length - trailing_chars_length;
-    modified_text.append(&text[timePosition], trailing_chars_length);
-
-    AddText(modified_text.c_str(), x, y, z, color, font_size, max_size);
-    return GetStringWidth(modified_text.c_str(), font_size);
   }
+
+  auto leading_char_count = fitting_chars_count - (trailing_chars_length + kEllipsisTextLen);
+
+  std::string modified_text(text, leading_char_count);
+  modified_text.append(kEllipsisText);
+
+  auto time_position = text_length - trailing_chars_length;
+  modified_text.append(&text[time_position], trailing_chars_length);
+
+  AddText(modified_text.c_str(), x, y, z, color, font_size, max_size);
+  return GetStringWidth(modified_text.c_str(), font_size);
 }
 
 float TextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
@@ -356,7 +359,7 @@ int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size
   std::size_t len = strlen(text);
   for (std::size_t i = 0; i < len; ++i) {
     texture_glyph_t* glyph = texture_font_get_glyph(GetFont(font_size), text + i);
-    if (glyph != NULL) {
+    if (glyph != nullptr) {
       float kerning = 0.0f;
       if (i > 0) {
         kerning = texture_glyph_get_kerning(glyph, text + i - 1);
