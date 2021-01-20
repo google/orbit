@@ -38,7 +38,6 @@ target_sources(
           processlauncherwidget.h
           ProfilingTargetDialog.h
           resource.h
-          RingBuffer.h
           servicedeploymanager.h
           TargetConfiguration.h
           TutorialContent.h
@@ -167,7 +166,6 @@ target_sources(OrbitQtTests
                 EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
-                RingBufferTest.cpp
                 StatusListenerImplTest.cpp
                 StatusListenerImpl.cpp
                 TutorialOverlayTest.cpp
