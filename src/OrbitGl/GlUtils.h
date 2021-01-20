@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_GL_UTILS_H_
+#define ORBIT_GL_GL_UTILS_H_
 
 #include <freetype-gl/mat4.h>
 #include <stdint.h>
@@ -29,3 +30,5 @@ inline std::ostream& operator<<(std::ostream& os, const ftgl::mat4& mat) {
 [[nodiscard]] inline double TicksToMicroseconds(uint64_t start, uint64_t end) {
   return static_cast<double>(end - start) * 0.001;
 }
+
+#endif  // ORBIT_GL_GL_UTILS_H_
