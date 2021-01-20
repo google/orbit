@@ -91,7 +91,6 @@
 #include "orbitglwidget.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
-#include "processlauncherwidget.h"
 #include "servicedeploymanager.h"
 #include "services.pb.h"
 #include "types.h"
@@ -671,9 +670,6 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->SessionList->Deinitialize();
   ui->FunctionsList->Deinitialize();
   ui->ModulesList->Deinitialize();
-
-  // TODO(177304549): This is still here from the old UI. Remove ui->ProcessList completely
-  ui->ProcessesList->ClearDataView();
 
   delete ui;
 }
