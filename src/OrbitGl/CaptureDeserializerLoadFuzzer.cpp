@@ -66,7 +66,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   app->SetErrorMessageCallback([](const std::string& /*title*/, const std::string& /*text*/) {});
   app->SetRefreshCallback([](DataViewType /*type*/) {});
   app->SetSamplingReportCallback(
-      [](DataView* /*view*/, std::shared_ptr<SamplingReport> /*report*/) {});
+      [](DataView* /*view*/, const std::shared_ptr<SamplingReport>& /*report*/) {});
   app->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
   app->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
 
