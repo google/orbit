@@ -590,6 +590,18 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   }
 }
 
+void OrbitMainWindow::UpdateProcessConnectionStateDependentWidgets() {
+  CaptureClient::State capture_state = app_->GetCaptureState();
+  const bool is_capturing = capture_state != CaptureClient::State::kStopped;
+  const bool is_connected = app_->IsConnectedToInstance();
+  const bool is_target_process_running = target_process_state_ == TargetProcessState::kRunning;
+
+  ui->actionToggle_Capture->setEnabled(
+      capture_state == CaptureClient::State::kStarted ||
+      (capture_state == CaptureClient::State::kStopped && is_target_process_running));
+  ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
+}
+
 void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
   const QTabWidget* capture_parent = FindParentTabWidget(ui->CaptureTab);
 
@@ -1196,7 +1208,7 @@ void OrbitMainWindow::OnProcessListUpdated(
     target_label_->setToolTip({});
     target_process_state_ = TargetProcessState::kRunning;
   }
-  UpdateCaptureStateDependentWidgets();
+  UpdateProcessConnectionStateDependentWidgets();
 }
 
 orbit_qt::TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
