@@ -117,12 +117,16 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(const Key& k
 // The following three overloaded PushEvent methods handle the three different
 // types of events that we can get from the GPU driver tracepoints we are
 // tracing.
-// We allow for the possibility that these events arrive out-of-order (depending
-// on the order in which events are read from perf_event_open ring buffers) with
-// the following approach: We record all three types of events in different
-// maps. Whenever a new event arrives, we add it to the corresponding map and
-// then try to create a complete GPU execution event. This event is only created
-// when all three types of GPU events have been received.
+// We allow for the possibility that these events arrive out-of-order. This is
+// not only because the order in which we poll perf_event_open ring buffers is
+// not based on the timestamp of their first event, but more importantly also
+// because we have observed dma_fence_signaled events sometimes coming out of
+// order of timestamp even with respect to other events (including other
+// dma_fence_signaled events) on the same ring buffer.
+// We use the following approach: We record all three types of events in
+// different maps. Whenever a new event arrives, we add it to the corresponding
+// map and then try to create a complete GPU execution event. This event is only
+// created when all three types of GPU events have been received.
 
 void GpuTracepointEventProcessor::PushEvent(const AmdgpuCsIoctlPerfEvent& sample) {
   AmdgpuCsIoctlEvent event{sample.GetTid(), sample.GetTimestamp(), sample.GetContext(),
