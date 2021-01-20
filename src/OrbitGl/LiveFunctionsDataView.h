@@ -46,7 +46,7 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;
   [[nodiscard]] const orbit_client_protos::FunctionInfo& GetInstrumentedFunction(
       uint32_t row) const;
-  [[nodiscard]] const std::pair<TextBox*, TextBox*> GetMinMax(uint64_t function_id) const;
+  [[nodiscard]] std::pair<TextBox*, TextBox*> GetMinMax(uint64_t function_id) const;
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_;
 

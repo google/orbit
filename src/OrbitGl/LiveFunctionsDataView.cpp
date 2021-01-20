@@ -139,7 +139,7 @@ void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
 
 void LiveFunctionsDataView::DoSort() {
   if (!app_->HasCaptureData()) {
-    CHECK(functions_.size() == 0);
+    CHECK(functions_.empty());
     return;
   }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
@@ -416,7 +416,7 @@ const FunctionInfo& LiveFunctionsDataView::GetInstrumentedFunction(uint32_t row)
   return functions_.at(indices_[row]);
 }
 
-const std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(uint64_t function_id) const {
+std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(uint64_t function_id) const {
   TextBox* min_box = nullptr;
   TextBox* max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =
