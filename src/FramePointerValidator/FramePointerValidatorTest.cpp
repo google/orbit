@@ -19,7 +19,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitFramePointerValidator/FramePointerValidator.h"
+#include "FramePointerValidator/FramePointerValidator.h"
 #include "code_block.pb.h"
 #include "symbol.pb.h"
 

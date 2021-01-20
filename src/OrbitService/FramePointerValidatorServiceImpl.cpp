@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
+#include "FramePointerValidator/FramePointerValidator.h"
 #include "OrbitBase/Result.h"
-#include "OrbitFramePointerValidator/FramePointerValidator.h"
 #include "code_block.pb.h"
 
 namespace orbit_service {

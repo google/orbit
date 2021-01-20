@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FRAME_POINTER_VALIDATOR_H_
-#define ORBIT_CORE_FRAME_POINTER_VALIDATOR_H_
+#ifndef FRAME_POINTER_VALIDATOR_FRAME_POINTER_VALIDATOR_H_
+#define FRAME_POINTER_VALIDATOR_FRAME_POINTER_VALIDATOR_H_
 
 #include <filesystem>
 #include <optional>
@@ -21,4 +21,4 @@ class FramePointerValidator {
       const std::filesystem::path& file_name, bool is_64_bit);
 };
 
-#endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_H_
+#endif  // FRAME_POINTER_VALIDATOR_FRAME_POINTER_VALIDATOR_H_
