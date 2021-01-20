@@ -92,13 +92,10 @@ using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
-using orbit_client_protos::PresetModule;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::ModuleInfo;
-using orbit_grpc_protos::ModuleSymbols;
-using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace {
@@ -433,7 +430,7 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
 
   for (const auto& file : std::filesystem::directory_iterator(directory)) {
     if (std::filesystem::is_regular_file(file)) {
-      auto path = file.path();
+      const auto& path = file.path();
       if (path.extension().string() == extension) {
         files.push_back(path);
       }
