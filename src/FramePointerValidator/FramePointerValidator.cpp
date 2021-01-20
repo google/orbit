@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "include/OrbitFramePointerValidator/FramePointerValidator.h"
+#include "FramePointerValidator/FramePointerValidator.h"
 
 #include <capstone/capstone.h>
 #include <stddef.h>
@@ -15,7 +15,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
-#include "include/OrbitFramePointerValidator/FunctionFramePointerValidator.h"
+#include "FramePointerValidator/FunctionFramePointerValidator.h"
 
 using orbit_grpc_protos::CodeBlock;
 
