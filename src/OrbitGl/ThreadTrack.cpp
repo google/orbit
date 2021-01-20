@@ -167,7 +167,8 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
     return kSelectionColor;
-  } else if (!IsTimerActive(timer_info)) {
+  }
+  if (!IsTimerActive(timer_info)) {
     return kInactiveColor;
   }
 

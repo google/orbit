@@ -52,7 +52,7 @@ class ThreadTrack final : public TimerTrack {
 
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
-  [[nodiscard]] virtual bool IsTrackSelected() const override;
+  [[nodiscard]] bool IsTrackSelected() const override;
 
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
                                     bool is_selected) const override;
