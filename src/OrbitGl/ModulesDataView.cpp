@@ -224,11 +224,10 @@ bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& re
     red = 42;
     green = 218;
     blue = 130;
-    return true;
   } else {
     red = 42;
     green = 130;
     blue = 218;
-    return true;
   }
+  return true;
 }
