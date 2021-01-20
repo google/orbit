@@ -35,7 +35,7 @@ target_link_libraries(OrbitVulkanLayer PUBLIC
         GrpcProtos
         OrbitBase
         OrbitProducer
-        OrbitProducerSideChannel
+        ProducerSideChannel
         Vulkan::Vulkan
         Vulkan::ValidationLayers)
 

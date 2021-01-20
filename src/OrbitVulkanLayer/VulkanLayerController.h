@@ -6,7 +6,7 @@
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_CONTROLLER_H_
 
 #include "OrbitBase/Logging.h"
-#include "OrbitProducerSideChannel/ProducerSideChannel.h"
+#include "ProducerSideChannel/ProducerSideChannel.h"
 #include "VulkanLayerProducerImpl.h"
 #include "absl/base/casts.h"
 #include "vulkan/vk_layer.h"
