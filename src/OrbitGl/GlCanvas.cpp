@@ -410,7 +410,7 @@ void GlCanvas::Render(int width, int height) {
 
   Draw();
 
-  for (auto render_callback : render_callbacks_) {
+  for (const auto& render_callback : render_callbacks_) {
     render_callback();
   }
 
