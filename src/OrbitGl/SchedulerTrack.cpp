@@ -57,7 +57,8 @@ bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
 Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
   if (is_selected) {
     return kSelectionColor;
-  } else if (!IsTimerActive(timer_info)) {
+  }
+  if (!IsTimerActive(timer_info)) {
     return kInactiveColor;
   }
   return TimeGraph::GetThreadColor(timer_info.thread_id());
