@@ -1593,14 +1593,9 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       }
       return modules_data_view_.get();
 
+    // TODO(177304549) remove (artifact from old ui)
     case DataViewType::kProcesses:
-      if (!processes_data_view_) {
-        processes_data_view_ = std::make_unique<ProcessesDataView>(this);
-        processes_data_view_->SetSelectionListener(
-            [&](int32_t pid) { UpdateProcessAndModuleList(pid); });
-        panels_.push_back(processes_data_view_.get());
-      }
-      return processes_data_view_.get();
+      UNREACHABLE();
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {

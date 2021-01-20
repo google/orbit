@@ -457,8 +457,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   std::vector<DataView*> panels_;
 
-  // TODO(177304549): This was necessary for the old UI. Remove
-  std::unique_ptr<ProcessesDataView> processes_data_view_;
   std::unique_ptr<ModulesDataView> modules_data_view_;
   std::unique_ptr<FunctionsDataView> functions_data_view_;
   std::unique_ptr<CallStackDataView> callstack_data_view_;
