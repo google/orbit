@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_
-#define ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_
+#ifndef ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
+#define ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
 
 #include <memory>
 #include <thread>
@@ -40,4 +40,4 @@ class MainThreadExecutor {
   }
 };
 
-#endif  // ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_
+#endif  // ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
