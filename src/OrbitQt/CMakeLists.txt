@@ -34,7 +34,6 @@ target_sources(
           opengldetect.h
           ProcessItemModel.h
           OverlayWidget.h
-          processlauncherwidget.h
           ProfilingTargetDialog.h
           resource.h
           servicedeploymanager.h
@@ -77,8 +76,6 @@ target_sources(
           ProcessItemModel.cpp
           OverlayWidget.cpp
           OverlayWidget.ui
-          processlauncherwidget.cpp
-          processlauncherwidget.ui
           ProfilingTargetDialog.cpp
           ProfilingTargetDialog.ui
           servicedeploymanager.cpp

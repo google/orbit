@@ -95,7 +95,6 @@ QPushButton:disabled {
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
-            <widget class="ProcessLauncherWidget" name="ProcessesList" native="true"/>
             <widget class="OrbitDataViewPanel" name="SessionList" native="true">
              <property name="accessibleName">
               <string>PresetsDataView</string>
@@ -651,12 +650,6 @@ QPushButton:disabled {
    <class>OrbitGLWidget</class>
    <extends>QOpenGLWidget</extends>
    <header>orbitglwidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ProcessLauncherWidget</class>
-   <extends>QWidget</extends>
-   <header>processlauncherwidget.h</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>OrbitLiveFunctions</class>
