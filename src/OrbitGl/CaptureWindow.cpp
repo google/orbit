@@ -45,7 +45,7 @@ using orbit_accessibility::AccessibleWidgetBridge;
 
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:
-  AccessibleCaptureWindow(CaptureWindow* window) : window_(window) {}
+  explicit AccessibleCaptureWindow(CaptureWindow* window) : window_(window) {}
 
   int AccessibleChildCount() const override { return 1; }
 
