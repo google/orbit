@@ -7,20 +7,20 @@
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 
-static const char kErrorInvalidEnum[] =
+static const char* kErrorInvalidEnum =
     "An unacceptable value is specified for an enumerated argument";
-static const char kErrorInvalidValue[] = "A numeric argument is out of range";
-static const char kErrorInvalidOperation[] =
+static const char* kErrorInvalidValue = "A numeric argument is out of range";
+static const char* kErrorInvalidOperation =
     "The specified operation is not allowed in the current state";
-static const char kErrorInvalidFramebufferOperation[] = "The framebuffer object is not complete";
-static const char kErrorOutOfMemory[] = "There is not enough memory left to execute the command";
-static const char kErrorStackUnderflow[] =
+static const char* kErrorInvalidFramebufferOperation = "The framebuffer object is not complete";
+static const char* kErrorOutOfMemory = "There is not enough memory left to execute the command";
+static const char* kErrorStackUnderflow =
     "An attempt has been made to perform an operation that would cause an internal stack to "
     "underflow";
-static const char kErrorStackOverflow[] =
+static const char* kErrorStackOverflow =
     "An attempt has been made to perform an operation that would cause an internal stack to "
     "overflow";
-static const char kUnknownError[] = "Unknown error";
+static const char* kUnknownError = "Unknown error";
 
 static const char* GetGlError(GLenum error_code) {
   switch (error_code) {
