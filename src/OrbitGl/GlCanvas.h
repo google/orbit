@@ -116,7 +116,7 @@ class GlCanvas {
   virtual void Draw() {}
   virtual void DrawScreenSpace() {}
   virtual void RenderImGui() {}
-  virtual void RenderText(float) {}
+  virtual void RenderText(float /*layer*/) {}
 
   virtual void Hover(int /*X*/, int /*Y*/) {}
 
