@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_INTROSPECTION_WINDOW_H_
+#define ORBIT_GL_INTROSPECTION_WINDOW_H_
 
 #include <stdint.h>
 
@@ -31,3 +32,5 @@ class IntrospectionWindow : public CaptureWindow {
  private:
   std::unique_ptr<orbit_base::TracingListener> introspection_listener_;
 };
+
+#endif  // ORBIT_GL_INTROSPECTION_WINDOW_H_
