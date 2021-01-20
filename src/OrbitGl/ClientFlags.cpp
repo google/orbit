@@ -7,10 +7,6 @@
 #include <cstdint>
 #include <string>
 
-ABSL_FLAG(bool, enable_stale_features, false,
-          "Enable obsolete features that are not working or are not "
-          "implemented in the client's UI");
-
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
 ABSL_FLAG(bool, nodeploy, false, "Disable automatic deployment of OrbitService");
