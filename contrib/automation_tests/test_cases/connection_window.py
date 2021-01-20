@@ -14,7 +14,7 @@ from pywinauto.keyboard import send_keys
 from core.orbit_e2e import E2ETestCase, wait_for_condition
 from core.common_controls import DataViewPanel
 
-
+# TODO(b/177988872): Remove this flag. What used to be the ui beta, is now the only ui.
 flags.DEFINE_bool('enable_ui_beta', True, 'Expect Orbit to be started with the new UI')
 
 
