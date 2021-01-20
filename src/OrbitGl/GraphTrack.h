@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_GRAPH_TRACK_H
-#define ORBIT_GL_GRAPH_TRACK_H
+#ifndef ORBIT_GL_GRAPH_TRACK_H_
+#define ORBIT_GL_GRAPH_TRACK_H_
 
 #include <stdint.h>
 
@@ -35,9 +35,9 @@ class GraphTrack : public Track {
   [[nodiscard]] bool IsEmpty() const override { return values_.empty(); }
 
  protected:
-  void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, Color color);
-  void DrawLabel(GlCanvas* canvas, Vec2 target_pos, std::string text, Color text_color,
-                 Color font_color, float z);
+  void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
+  void DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
+                 const Color& text_color, const Color& font_color, float z);
   std::map<uint64_t, double> values_;
   double min_ = std::numeric_limits<double>::max();
   double max_ = std::numeric_limits<double>::lowest();
@@ -45,4 +45,4 @@ class GraphTrack : public Track {
   double inv_value_range_ = 0;
 };
 
-#endif
+#endif  // ORBIT_GL_GRAPH_TRACK_H_
