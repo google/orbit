@@ -23,7 +23,8 @@ class OrbitApp;
 // TODO(kuebler): The right output format need to be discussed and decided.
 class FramePointerValidatorClient {
  public:
-  explicit FramePointerValidatorClient(OrbitApp* core_app, std::shared_ptr<grpc::Channel> channel);
+  explicit FramePointerValidatorClient(OrbitApp* core_app,
+                                       const std::shared_ptr<grpc::Channel>& channel);
 
   FramePointerValidatorClient() = delete;
   FramePointerValidatorClient(const FramePointerValidatorClient&) = delete;
