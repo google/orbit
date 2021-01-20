@@ -265,20 +265,6 @@ QPushButton:disabled {
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="CallStackTab">
-        <attribute name="title">
-         <string>Callstack</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_8">
-         <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="CallStackView" native="true">
-           <property name="accessibleName">
-            <string>CallstackDataView</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="liveTab">
         <attribute name="title">
          <string>Live</string>

@@ -97,7 +97,6 @@
 #include "types.h"
 #include "ui_orbitmainwindow.h"
 
-ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
@@ -364,15 +363,9 @@ void OrbitMainWindow::SetupMainWindow(uint32_t font_size) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
   }
 
-  ui->CallStackView->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kCallstack),
-                                SelectionType::kExtended, FontType::kDefault);
   ui->TracepointsList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::kTracepoints), SelectionType::kExtended,
       FontType::kDefault);
-
-  if (!absl::GetFlag(FLAGS_enable_stale_features)) {
-    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CallStackTab));
-  }
 
   if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->tracepointsTab));
@@ -665,7 +658,6 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->selectionTopDownWidget->Deinitialize();
   ui->topDownWidget->Deinitialize();
   ui->TracepointsList->Deinitialize();
-  ui->CallStackView->Deinitialize();
   ui->liveFunctions->Deinitialize();
 
   ui->samplingReport->Deinitialize();
@@ -698,9 +690,6 @@ void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
 
 void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
   switch (a_Type) {
-    case DataViewType::kCallstack:
-      ui->CallStackView->Refresh();
-      break;
     case DataViewType::kFunctions:
       ui->FunctionsList->Refresh();
       break;
