@@ -29,8 +29,8 @@ using orbit_grpc_protos::FramePointerValidatorService;
 using orbit_grpc_protos::ValidateFramePointersRequest;
 using orbit_grpc_protos::ValidateFramePointersResponse;
 
-FramePointerValidatorClient::FramePointerValidatorClient(OrbitApp* app,
-                                                         std::shared_ptr<grpc::Channel> channel)
+FramePointerValidatorClient::FramePointerValidatorClient(
+    OrbitApp* app, const std::shared_ptr<grpc::Channel>& channel)
     : app_{app}, frame_pointer_validator_service_{FramePointerValidatorService::NewStub(channel)} {}
 
 void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleData*>& modules) {
@@ -40,7 +40,7 @@ void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleD
   }
 
   std::vector<std::string> dialogue_messages;
-  dialogue_messages.push_back("Validation complete.");
+  dialogue_messages.emplace_back("Validation complete.");
 
   for (const ModuleData* module : modules) {
     ValidateFramePointersRequest request;
