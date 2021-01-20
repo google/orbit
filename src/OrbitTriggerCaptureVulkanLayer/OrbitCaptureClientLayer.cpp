@@ -15,7 +15,7 @@
 #include "absl/synchronization/mutex.h"
 // clang-format off
 #include "vulkan/vk_layer.h" // IWYU pragma: keep
-#include "vk_layer_dispatch_table.h" // IWYU pragma: keep
+#include "vulkan/vk_layer_dispatch_table.h" // IWYU pragma: keep
 // clang-format on
 
 #undef VK_LAYER_EXPORT
