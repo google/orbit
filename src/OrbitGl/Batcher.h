@@ -103,9 +103,9 @@ class Batcher {
  public:
   explicit Batcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
       : batcher_id_(batcher_id), picking_manager_(picking_manager) {
-    constexpr float kSteps = 22;
+    constexpr int32_t kSteps = 22;
     const float angle = (kPiFloat * 2.f) / kSteps;
-    for (int i = 1; i <= kSteps; i++) {
+    for (int32_t i = 1; i <= kSteps; i++) {
       float new_x = sinf(angle * i);
       float new_y = cosf(angle * i);
       circle_points.emplace_back(Vec2(new_x, new_y));
