@@ -42,7 +42,7 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp*
   if (text_box == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
   TimerInfo timer_info = text_box->GetTimerInfo();
-  orbit_api::Event event = manual_inst_manager->ApiEventFromTimerInfo(timer_info);
+  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
 
   // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
   // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
@@ -121,7 +121,8 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) c
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
     return kSelectionColor;
-  } else if (!IsTimerActive(timer_info)) {
+  }
+  if (!IsTimerActive(timer_info)) {
     return kInactiveColor;
   }
 
