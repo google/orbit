@@ -286,7 +286,7 @@ enum orbit_api_color {
 
 inline void* orbit_api_get_lib_orbit() {
   static void* liborbit = dlopen("./liborbit.so", RTLD_LAZY);
-  if(liborbit == 0) {
+  if (liborbit == 0) {
     printf("%s", "ERROR. Could not find liborbit.so, Orbit API will be disabled.\n");
   }
   return liborbit;

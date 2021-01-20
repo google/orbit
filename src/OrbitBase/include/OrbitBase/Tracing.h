@@ -12,8 +12,8 @@
 
 #define ORBIT_API_INTERNAL_IMPL
 // IWYU pragma: no_include "/mnt/Orbit.h"
-#include "../../../OrbitAPI/include/OrbitAPI/Orbit.h"  // IWYU pragma: export
 #include "../../../OrbitAPI/include/OrbitAPI/EncodedEvent.h"  // IWYU pragma: export
+#include "../../../OrbitAPI/include/OrbitAPI/Orbit.h"         // IWYU pragma: export
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 

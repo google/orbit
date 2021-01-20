@@ -31,8 +31,7 @@ OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t slee
   Init();
 }
 
-void OrbitTest::Init() {
-}
+void OrbitTest::Init() {}
 
 OrbitTest::~OrbitTest() {
   m_ExitRequested = true;

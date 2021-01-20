@@ -7,7 +7,6 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/node_hash_map.h>
 #include <absl/meta/type_traits.h>
-#include "absl/strings/match.h"
 
 #include <algorithm>
 #include <utility>
@@ -15,6 +14,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/ModuleData.h"
+#include "absl/strings/match.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
@@ -64,10 +64,10 @@ ModuleData* ModuleManager::GetMutableModuleByPath(const std::string& path) {
   return &it->second;
 }
 
-std::vector<ModuleData*> ModuleManager::GetMutableModulesByName(const std::string& name){
+std::vector<ModuleData*> ModuleManager::GetMutableModulesByName(const std::string& name) {
   absl::MutexLock lock(&mutex_);
   std::vector<ModuleData*> result;
-  for(auto& pair : module_map_) {
+  for (auto& pair : module_map_) {
     LOG("%s : %s", name, pair.first);
     if (absl::StrContains(pair.first, name)) {
       result.push_back(&pair.second);

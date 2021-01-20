@@ -183,7 +183,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
   } else if (timer_info.type() == TimerInfo::kIntrospection) {
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     color = event.color == kOrbitColorAuto ? time_graph_->GetColor(event.name)
-                                               : ToColor(static_cast<uint64_t>(event.color));
+                                           : ToColor(static_cast<uint64_t>(event.color));
   } else {
     color = TimeGraph::GetThreadColor(timer_info.thread_id());
   }
