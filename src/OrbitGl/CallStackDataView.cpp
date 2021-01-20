@@ -92,9 +92,8 @@ std::string CallStackDataView::GetToolTip(int row, int /*column*/) {
     return absl::StrFormat(
         "Functions marked with %s are part of the selection in the sampling report above",
         CallStackDataView::kHighlightedFunctionString);
-  } else {
-    return "";
   }
+  return "";
 }
 
 const std::string CallStackDataView::kMenuActionLoadSymbols = "Load Symbols";
@@ -237,9 +236,8 @@ bool CallStackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& 
     green = 240;
     blue = 200;
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(int row) {
