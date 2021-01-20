@@ -25,7 +25,7 @@ namespace {
 
 class MockBatcher : public Batcher {
  public:
-  MockBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
+  explicit MockBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
       : Batcher(id, picking_manager) {}
 
   void ResetMockDrawCounts() {
@@ -173,7 +173,7 @@ TEST(Batcher, PickingSimpleElements) {
 }
 
 void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color, PickingManager& pm,
-                      std::shared_ptr<const Pickable> pickable) {
+                      const std::shared_ptr<const Pickable>& pickable) {
   PickingId id = MockRenderPickingColor(rendered_color);
   const PickingUserData* rendered_data = batcher.GetUserData(id);
   EXPECT_EQ(rendered_data, nullptr);
