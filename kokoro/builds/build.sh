@@ -34,7 +34,7 @@ source $(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)/upload_sy
 if [ -n "$1" ]; then
   # We are inside the docker container
   echo "build.sh is invoked from inside the docker container."
-  
+
   readonly REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../" >/dev/null 2>&1 && pwd )"
   readonly MOUNT_POINT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" >/dev/null 2>&1 && pwd )"
   readonly KEYSTORE_PATH="${MOUNT_POINT}/keystore"
@@ -49,7 +49,7 @@ if [ -n "$1" ]; then
     # Delete all unnecessary files from the src/-directory.
     # Kokoro would copy them otherwise before applying the artifacts regex
     echo "Delete all unnecessary files from the src/-directory."
-    
+
     set +e # This is allowed to fail when deleting
     if [ $CONAN_PROFILE == "coverage_clang9" ]; then
       # In the coverage_clang9 case, we spare the results at build/package and this
@@ -191,7 +191,7 @@ if [ -n "$1" ]; then
     done
   fi
 
-  # Package the Debian package, the signature and the ggp client into a zip for integration in the 
+  # Package the Debian package, the signature and the ggp client into a zip for integration in the
   # installer.
   if [ -f ${KEYSTORE_PATH}/74938_SigningPrivateGpg ] && [[ $CONAN_PROFILE == ggp_* ]]; then
     echo "Create a zip containing OrbitService for integration in the installer."
@@ -217,7 +217,7 @@ if [ -n "$1" ]; then
     test -f NOTICE.Chromium && cp -v NOTICE.Chromium Orbit/NOTICE.Chromium
     cp -v LICENSE Orbit/LICENSE.txt
     cp -av "${REPO_ROOT}/contrib/automation_tests" Orbit
-    cp -v "${REPO_ROOT}/src/Orbit.h" Orbit/
+    cp -v "${REPO_ROOT}/src/OrbitAPI/include/OrbitAPI/Orbit.h" Orbit/
     zip -r Orbit.zip Orbit/
     rm -rf Orbit/
     popd > /dev/null
