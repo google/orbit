@@ -47,7 +47,6 @@ target_sources(
          PickingManager.h
          PresetLoadState.h
          PresetsDataView.h
-         ProcessesDataView.h
          SamplingReport.h
          SamplingReportDataView.h
          SchedulerTrack.h
@@ -100,7 +99,6 @@ target_sources(
           ModulesDataView.cpp
           PickingManager.cpp
           PresetsDataView.cpp
-          ProcessesDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp

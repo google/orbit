@@ -60,7 +60,6 @@
 #include "OrbitClientServices/TracepointServiceClient.h"
 #include "PresetLoadState.h"
 #include "PresetsDataView.h"
-#include "ProcessesDataView.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
