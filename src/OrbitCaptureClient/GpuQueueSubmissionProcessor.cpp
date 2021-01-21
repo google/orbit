@@ -10,9 +10,9 @@ using orbit_client_protos::Color;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::GpuCommandBuffer;
+using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
-using orbit_grpc_protos::GpuDebugMarker;
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
     const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
@@ -331,11 +331,12 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
           submission_thread_id == begin_marker_thread_id) {
         begin_submission_first_command_buffer = ExtractFirstCommandBuffer(gpu_queue_submission);
       } else {
-        std::optional<GpuQueueSubmission> matching_begin_submission = FindMatchingGpuQueueSubmission(
-            begin_marker_thread_id, begin_marker_post_submission_cpu_timestamp);
+        std::optional<GpuQueueSubmission> matching_begin_submission =
+            FindMatchingGpuQueueSubmission(begin_marker_thread_id,
+                                           begin_marker_post_submission_cpu_timestamp);
         // Note that we receive submissions of a single queue in order (by CPU submission time). So
-        // if there is no matching "begin submission", the "begin" was submitted before the "end" and
-        // we lost the record of the "begin submission" (which should not happen).
+        // if there is no matching "begin submission", the "begin" was submitted before the "end"
+        // and we lost the record of the "begin submission" (which should not happen).
         CHECK(matching_begin_submission.has_value());
         begin_submission_first_command_buffer =
             ExtractFirstCommandBuffer(matching_begin_submission.value());
