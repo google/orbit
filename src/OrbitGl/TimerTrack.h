@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef TIMER_TRACK_H_
-#define TIMER_TRACK_H_
+#ifndef ORBIT_GL_TIMER_TRACK_H_
+#define ORBIT_GL_TIMER_TRACK_H_
 
 #include <stdint.h>
 
@@ -47,7 +47,6 @@ class TimerTrack : public Track {
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() const override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
-  [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
 
   [[nodiscard]] const TextBox* GetFirstAfterTime(uint64_t time, uint32_t depth) const;
   [[nodiscard]] const TextBox* GetFirstBeforeTime(uint64_t time, uint32_t depth) const;
@@ -100,7 +99,7 @@ class TimerTrack : public Track {
 
   [[nodiscard]] virtual std::string GetBoxTooltip(PickingId id) const;
   float GetHeight() const override;
-  float box_height_;
+  float box_height_ = 0.0f;
 
   OrbitApp* app_ = nullptr;
 };

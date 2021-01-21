@@ -23,7 +23,6 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 ABSL_DECLARE_FLAG(bool, show_return_values);
