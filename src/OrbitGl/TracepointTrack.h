@@ -22,13 +22,12 @@ class TracepointTrack : public EventTrack {
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                         float z_offset = 0) override;
 
-  void SetPos(float x, float y);
-
   void OnPick(int x, int y) override;
   void OnRelease() override;
-
-  std::string GetSampleTooltip(PickingId id) const;
   bool IsEmpty() const override;
+
+ private:
+  std::string GetTracepointTooltip(PickingId id) const;
 };
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_

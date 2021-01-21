@@ -66,8 +66,8 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_o
     y1 = y0 - size_[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
-    batcher->AddBox(box, picked_color, shared_from_this());
+    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
+    batcher->AddBox(picked_box, picked_color, shared_from_this());
   }
 
   canvas_ = canvas;
@@ -82,11 +82,8 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   const bool picking = picking_mode != PickingMode::kNone;
 
   const Color kWhite(255, 255, 255, 255);
-
   const Color kWhiteTransparent(255, 255, 255, 190);
-
   const Color kGrey(128, 128, 128, 255);
-
   const Color kGreenSelection(0, 255, 0, 255);
 
   CHECK(capture_data_ != nullptr);
@@ -122,14 +119,12 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                    pos_[1] - track_height + 1);
           Vec2 size(kPickingBoxWidth, track_height);
           auto user_data = std::make_unique<PickingUserData>(
-              nullptr, [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
+              nullptr, [&](PickingId id) -> std::string { return GetTracepointTooltip(id); });
           user_data->custom_data_ = &tracepoint;
           batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
         });
   }
 }
-
-void TracepointTrack::SetPos(float x, float y) { pos_ = Vec2(x, y); }
 
 void TracepointTrack::OnPick(int x, int y) {
   Vec2& mouse_pos = mouse_pos_[0];
@@ -140,7 +135,7 @@ void TracepointTrack::OnPick(int x, int y) {
 
 void TracepointTrack::OnRelease() { picked_ = false; }
 
-std::string TracepointTrack::GetSampleTooltip(PickingId id) const {
+std::string TracepointTrack::GetTracepointTooltip(PickingId id) const {
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
   CHECK(user_data && user_data->custom_data_);
 
