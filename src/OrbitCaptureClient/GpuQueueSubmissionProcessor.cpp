@@ -24,14 +24,14 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
       gpu_queue_submission.meta_info().pre_submission_cpu_timestamp();
   uint64_t post_submission_cpu_timestamp =
       gpu_queue_submission.meta_info().post_submission_cpu_timestamp();
-  std::optional<GpuJob> matching_gpu_job_option =
+  const GpuJob* matching_gpu_job =
       FindMatchingGpuJob(thread_id, pre_submission_cpu_timestamp, post_submission_cpu_timestamp);
 
   // If we haven't found the matching "GpuJob" or the submission contains "begin" markers (which
   // might have the "end" markers in a later submission), we save the "GpuSubmission" for later.
   // Note that as soon as all "begin" markers have been processed, the "GpuSubmission" will be
   // deleted again.
-  if (!matching_gpu_job_option.has_value() || gpu_queue_submission.num_begin_markers() > 0) {
+  if (matching_gpu_job == nullptr || gpu_queue_submission.num_begin_markers() > 0) {
     tid_to_post_submission_time_to_gpu_submission_[thread_id][post_submission_cpu_timestamp] =
         gpu_queue_submission;
   }
@@ -39,16 +39,16 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
     tid_to_post_submission_time_to_num_begin_markers_[thread_id][post_submission_cpu_timestamp] =
         gpu_queue_submission.num_begin_markers();
   }
-  if (!matching_gpu_job_option.has_value()) {
+  if (matching_gpu_job == nullptr) {
     return {};
   }
 
   std::vector<TimerInfo> result = ProcessGpuQueueSubmissionWithMatchingGpuJob(
-      gpu_queue_submission, matching_gpu_job_option.value(), string_intern_pool,
+      gpu_queue_submission, *matching_gpu_job, string_intern_pool,
       get_string_hash_and_send_to_listener_if_necessary);
 
   if (!HasUnprocessedBeginMarkers(thread_id, post_submission_cpu_timestamp)) {
-    DeleteSavedGpuJob(thread_id, matching_gpu_job_option->amdgpu_cs_ioctl_time_ns());
+    DeleteSavedGpuJob(thread_id, matching_gpu_job->amdgpu_cs_ioctl_time_ns());
   }
   return result;
 }
@@ -59,17 +59,17 @@ std::vector<orbit_client_protos::TimerInfo> GpuQueueSubmissionProcessor::Process
         get_string_hash_and_send_to_listener_if_necessary) {
   int32_t thread_id = gpu_job.tid();
   uint64_t amdgpu_cs_ioctl_time_ns = gpu_job.amdgpu_cs_ioctl_time_ns();
-  std::optional<GpuQueueSubmission> matching_gpu_submission =
+  const GpuQueueSubmission* matching_gpu_submission =
       FindMatchingGpuQueueSubmission(thread_id, amdgpu_cs_ioctl_time_ns);
 
   // If we haven't found the matching "GpuSubmission" or the submission contains "begin" markers
   // (which might have the "end" markers in a later submission), we save the "GpuJob" for later.
   // Note that as soon as all "begin" markers have been processed, the "GpuJob" will be deleted
   // again.
-  if (!matching_gpu_submission.has_value() || matching_gpu_submission->num_begin_markers() > 0) {
+  if (matching_gpu_submission == nullptr || matching_gpu_submission->num_begin_markers() > 0) {
     tid_to_submission_time_to_gpu_job_[thread_id][amdgpu_cs_ioctl_time_ns] = gpu_job;
   }
-  if (!matching_gpu_submission.has_value()) {
+  if (matching_gpu_submission == nullptr) {
     return {};
   }
 
@@ -86,13 +86,13 @@ std::vector<orbit_client_protos::TimerInfo> GpuQueueSubmissionProcessor::Process
   return result;
 }
 
-std::optional<GpuQueueSubmission> GpuQueueSubmissionProcessor::FindMatchingGpuQueueSubmission(
+const GpuQueueSubmission* GpuQueueSubmissionProcessor::FindMatchingGpuQueueSubmission(
     int32_t thread_id, uint64_t submit_time) {
   const auto& post_submission_time_to_gpu_submission_it =
       tid_to_post_submission_time_to_gpu_submission_.find(thread_id);
   if (post_submission_time_to_gpu_submission_it ==
       tid_to_post_submission_time_to_gpu_submission_.end()) {
-    return std::nullopt;
+    return nullptr;
   }
 
   const auto& post_submission_time_to_gpu_submission =
@@ -104,23 +104,23 @@ std::optional<GpuQueueSubmission> GpuQueueSubmissionProcessor::FindMatchingGpuQu
   auto lower_bound_gpu_submission_it =
       post_submission_time_to_gpu_submission.lower_bound(submit_time);
   if (lower_bound_gpu_submission_it == post_submission_time_to_gpu_submission.end()) {
-    return std::nullopt;
+    return nullptr;
   }
-  const GpuQueueSubmission& matching_gpu_submission = lower_bound_gpu_submission_it->second;
+  const GpuQueueSubmission* matching_gpu_submission = &lower_bound_gpu_submission_it->second;
 
-  if (matching_gpu_submission.meta_info().pre_submission_cpu_timestamp() > submit_time) {
-    return std::nullopt;
+  if (matching_gpu_submission->meta_info().pre_submission_cpu_timestamp() > submit_time) {
+    return nullptr;
   }
 
   return matching_gpu_submission;
 }
 
-std::optional<GpuJob> GpuQueueSubmissionProcessor::FindMatchingGpuJob(
+const GpuJob* GpuQueueSubmissionProcessor::FindMatchingGpuJob(
     int32_t thread_id, uint64_t pre_submission_cpu_timestamp,
     uint64_t post_submission_cpu_timestamp) {
   const auto& submission_time_to_gpu_job_it = tid_to_submission_time_to_gpu_job_.find(thread_id);
   if (submission_time_to_gpu_job_it == tid_to_submission_time_to_gpu_job_.end()) {
-    return std::nullopt;
+    return nullptr;
   }
 
   const auto& submission_time_to_gpu_job = submission_time_to_gpu_job_it->second;
@@ -129,7 +129,7 @@ std::optional<GpuJob> GpuQueueSubmissionProcessor::FindMatchingGpuJob(
   auto gpu_job_matching_pre_submission_it =
       submission_time_to_gpu_job.lower_bound(pre_submission_cpu_timestamp);
   if (gpu_job_matching_pre_submission_it == submission_time_to_gpu_job.end()) {
-    return std::nullopt;
+    return nullptr;
   }
 
   // Find the first Gpu job that has a timestamp greater to the "post submission" timestamp
@@ -137,15 +137,15 @@ std::optional<GpuJob> GpuQueueSubmissionProcessor::FindMatchingGpuJob(
   auto gpu_job_matching_post_submission_it =
       submission_time_to_gpu_job.upper_bound(post_submission_cpu_timestamp);
   if (gpu_job_matching_post_submission_it == submission_time_to_gpu_job.begin()) {
-    return std::nullopt;
+    return nullptr;
   }
   --gpu_job_matching_post_submission_it;
 
   if (&gpu_job_matching_pre_submission_it->second != &gpu_job_matching_post_submission_it->second) {
-    return std::nullopt;
+    return nullptr;
   }
 
-  return gpu_job_matching_pre_submission_it->second;
+  return &gpu_job_matching_pre_submission_it->second;
 }
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWithMatchingGpuJob(
@@ -302,6 +302,18 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
 
   static constexpr int32_t kUnknownThreadId = -1;
 
+  // GpuQueueSubmissions and GpuJobs will be saved if they contain "begin markers"
+  // and only ereased again, after all "begin markers" have been processed.
+  // The "begin markers" are likely in the same submission as their "end marker",
+  // thus will be erased after the last completed marker was processed.
+  // This would also erase the current "gpu_queue_submission" if we would do it
+  // right away. 
+  // To prevent this, we do our processing first, collect all "begin markers" to
+  // decrement, and decrement them at then very and.
+  std::vector<std::tuple<int32_t /*thread_id*/, uint64_t /*submit_time_ns*/,
+                         uint64_t /*post_submit_time_ns*/>>
+      begin_markers_to_decrement;
+
   for (const auto& completed_marker : gpu_queue_submission.completed_markers()) {
     CHECK(first_command_buffer != std::nullopt);
     TimerInfo marker_timer;
@@ -331,22 +343,21 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
           submission_thread_id == begin_marker_thread_id) {
         begin_submission_first_command_buffer = ExtractFirstCommandBuffer(gpu_queue_submission);
       } else {
-        std::optional<GpuQueueSubmission> matching_begin_submission =
-            FindMatchingGpuQueueSubmission(begin_marker_thread_id,
-                                           begin_marker_post_submission_cpu_timestamp);
+        const GpuQueueSubmission* matching_begin_submission = FindMatchingGpuQueueSubmission(
+            begin_marker_thread_id, begin_marker_post_submission_cpu_timestamp);
         // Note that we receive submissions of a single queue in order (by CPU submission time). So
         // if there is no matching "begin submission", the "begin" was submitted before the "end"
         // and we lost the record of the "begin submission" (which should not happen).
-        CHECK(matching_begin_submission.has_value());
+        CHECK(matching_begin_submission != nullptr);
         begin_submission_first_command_buffer =
-            ExtractFirstCommandBuffer(matching_begin_submission.value());
+            ExtractFirstCommandBuffer(*matching_begin_submission);
       }
       CHECK(begin_submission_first_command_buffer.has_value());
 
-      std::optional<GpuJob> matching_begin_job = FindMatchingGpuJob(
+      const GpuJob* matching_begin_job = FindMatchingGpuJob(
           begin_marker_thread_id, begin_marker_meta_info.pre_submission_cpu_timestamp(),
           begin_marker_post_submission_cpu_timestamp);
-      CHECK(matching_begin_job.has_value());
+      CHECK(matching_begin_job != nullptr);
 
       // Convert the GPU time to CPU time, based on the CPU time of the HW execution begin and the
       // GPU timestamp of the begin of the first command buffer. Note that we will assume that the
@@ -360,9 +371,12 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
         marker_timer.set_thread_id(kUnknownThreadId);
       }
 
-      DecrementUnprocessedBeginMarkers(begin_marker_thread_id,
-                                       matching_begin_job->amdgpu_cs_ioctl_time_ns(),
-                                       begin_marker_post_submission_cpu_timestamp);
+	  // Remember, it would be safe to decrement (and thus possible erease) the "begin marker"
+	  // here right away, as its begin submission might be the same as "gpu_queue_submission",
+	  // which we still use afterwards.
+      begin_markers_to_decrement.emplace_back(begin_marker_thread_id,
+                                              matching_begin_job->amdgpu_cs_ioctl_time_ns(),
+                                              begin_marker_post_submission_cpu_timestamp);
     } else {
       marker_timer.set_start(begin_capture_time_ns_);
       marker_timer.set_thread_id(kUnknownThreadId);
@@ -389,6 +403,11 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
     }
     marker_timer.set_user_data_key(text_key);
     result.push_back(marker_timer);
+  }
+
+  // Now we are done and can decrement the processed "begin markers".
+  for (auto [thread_id, submit_time_ns, post_submit_time_ns] : begin_markers_to_decrement) {
+    DecrementUnprocessedBeginMarkers(thread_id, submit_time_ns, post_submit_time_ns);
   }
   return result;
 }
