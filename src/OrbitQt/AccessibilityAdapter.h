@@ -40,11 +40,14 @@ class OrbitGlInterfaceWrapper : public QObject {
   Q_OBJECT;
 
  public:
-  explicit OrbitGlInterfaceWrapper(const orbit_gl::AccessibleInterface* iface) : iface_(iface) {}
-  [[nodiscard]] const orbit_gl::AccessibleInterface* GetInterface() const { return iface_; }
+  explicit OrbitGlInterfaceWrapper(const orbit_accessibility::AccessibleInterface* iface)
+      : iface_(iface) {}
+  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetInterface() const {
+    return iface_;
+  }
 
  private:
-  const orbit_gl::AccessibleInterface* iface_;
+  const orbit_accessibility::AccessibleInterface* iface_;
 };
 
 class AdapterRegistry {

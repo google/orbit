@@ -22,7 +22,7 @@ AccessibilityRect TimeGraphAccessibility::AccessibleLocalRect() const {
 }
 
 AccessibilityState TimeGraphAccessibility::AccessibleState() const {
-  return orbit_gl::AccessibilityState::Focusable;
+  return AccessibilityState::Focusable;
 }
 
 int TimeGraphAccessibility::AccessibleChildCount() const {
