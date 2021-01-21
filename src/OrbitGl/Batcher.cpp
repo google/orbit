@@ -266,6 +266,9 @@ const PickingUserData* Batcher::GetUserData(PickingId id) const {
       return user_data_[id.element_id].get();
     case PickingType::kPickable:
       return nullptr;
+    case PickingType::kCount:
+      UNREACHABLE();
+      return nullptr;
   }
 
   UNREACHABLE();

@@ -33,7 +33,7 @@ class Pickable {
   [[nodiscard]] virtual std::string GetTooltip() const { return ""; }
 };
 
-enum class PickingType { kInvalid = 0, kLine = 1, kBox = 2, kTriangle = 3, kPickable = 4 };
+enum class PickingType { kInvalid, kLine, kBox, kTriangle, kPickable, kCount };
 
 // Instances of batchers used to draw must be in 1:1 correspondence with
 // values in the following enum. Currently, two batchers are used, one to draw
@@ -45,7 +45,7 @@ enum class PickingType { kInvalid = 0, kLine = 1, kBox = 2, kTriangle = 3, kPick
 // in the bits remaining after encoding the batcher id, and the
 // PickingType, so adding more batchers or types has to be carefully
 // considered.
-enum class BatcherId { kTimeGraph, kUi };
+enum class BatcherId { kTimeGraph, kUi, kCount };
 
 struct PickingId {
   static constexpr uint32_t kElementIDBitSize = 28;
@@ -60,6 +60,10 @@ struct PickingId {
 
   static_assert(sizeof(Layout) == sizeof(uint32_t),
                 "Layout needs to have the size of a single uint32_t.");
+  static_assert(1 << kPickingTypeBitSize >= static_cast<int>(PickingType::kCount),
+                "PickingType cannot be encoded in the specified number of bits.");
+  static_assert(1 << kBatcherIDBitSize >= static_cast<int>(BatcherId::kCount),
+                "BatcherId cannot be encoded in the specified number of bits.");
 
   [[nodiscard]] inline static PickingId Create(PickingType type, uint32_t element_id,
                                                BatcherId batcher_id = BatcherId::kTimeGraph) {
