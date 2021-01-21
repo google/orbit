@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBITGL_TIMER_INFOS_ITERATOR_H_
-#define ORBITGL_TIMER_INFOS_ITERATOR_H_
+#ifndef ORBIT_GL_TIMER_INFOS_ITERATOR_H_
+#define ORBIT_GL_TIMER_INFOS_ITERATOR_H_
 
 #include <stdint.h>
 
@@ -52,4 +52,4 @@ class TimerInfosIterator {
   uint32_t timer_index_;
 };
 
-#endif  // ORBITGL_TIMER_INFOS_ITERATOR_H_
+#endif  // ORBIT_GL_TIMER_INFOS_ITERATOR_H_
