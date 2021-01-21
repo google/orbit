@@ -41,6 +41,7 @@
 #include <QTabBar>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolButton>
 #include <QToolTip>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -422,6 +423,7 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   // Create missing icons
   icon_start_capture_ = QIcon(":/actions/play_arrow");
   icon_stop_capture_ = QIcon(":/actions/stop");
+  icon_toolbar_extension_ = QIcon(":/actions/double_arrows");
 
   // Attach the filter panel to the toolbar
   toolbar->addWidget(CreateSpacer(toolbar));
@@ -431,6 +433,7 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   connect(filter_panel_action_, &FilterPanelWidgetAction::FilterFunctionsTextChanged, this,
           &OrbitMainWindow::OnFilterFunctionsTextChanged);
   toolbar->addAction(filter_panel_action_);
+  toolbar->findChild<QToolButton*>("qt_toolbar_ext_button")->setIcon(icon_toolbar_extension_);
 }
 
 void OrbitMainWindow::SetupHintFrame() {
