@@ -695,9 +695,6 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
     case DataViewType::kModules:
       ui->ModulesList->Refresh();
       break;
-    case DataViewType::kProcesses:
-      // TODO (177304549): This is still here from the old UI. Remove ui->HomeTab completely.
-      break;
     case DataViewType::kPresets:
       ui->SessionList->Refresh();
       break;
