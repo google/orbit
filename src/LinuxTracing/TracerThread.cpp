@@ -23,6 +23,7 @@
 #include "Function.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
+#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -34,6 +35,9 @@
 
 namespace orbit_linux_tracing {
 
+using orbit_base::GetAllPids;
+using orbit_base::GetAllTids;
+using orbit_base::GetTidsOfProcess;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
 using orbit_grpc_protos::SchedulingSlice;
