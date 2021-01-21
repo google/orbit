@@ -21,7 +21,7 @@ class TriangleToggle : public Pickable, public std::enable_shared_from_this<Tria
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph);
-  virtual ~TriangleToggle() = default;
+  ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;
   TriangleToggle(const TriangleToggle&) = delete;
@@ -54,4 +54,4 @@ class TriangleToggle : public Pickable, public std::enable_shared_from_this<Tria
   float size_ = 10.f;
 };
 
-#endif
+#endif  // ORBIT_GL_TRIANGLE_TOGGLE_H_

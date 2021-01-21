@@ -7,6 +7,8 @@
 #include <GteVector.h>
 #include <math.h>
 
+#include <utility>
+
 #include "Batcher.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -16,7 +18,7 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
                                TimeGraph* time_graph)
     : state_(initial_state),
       initial_state_(initial_state),
-      handler_(handler),
+      handler_(std::move(handler)),
       time_graph_(time_graph) {}
 
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
