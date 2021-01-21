@@ -85,13 +85,15 @@ class GpuQueueSubmissionProcessor {
   [[nodiscard]] static std::optional<orbit_grpc_protos::GpuCommandBuffer> ExtractFirstCommandBuffer(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
 
-  [[nodiscard]] const orbit_grpc_protos::GpuJob* FindMatchingGpuJob(
+  // Finds the GpuJob that is fully inside the given timestamps and happened on the given thread id.
+  // Returns `nullopt` if there is no such job.
+  [[nodiscard]] std::optional<orbit_grpc_protos::GpuJob> FindMatchingGpuJob(
       int32_t thread_id, uint64_t pre_submission_cpu_timestamp,
       uint64_t post_submission_cpu_timestamp);
 
   // Finds the GpuQueueSubmission that fully contains the given timestamp and happened on the given
-  // thread id. Returns `nullptr` if there is no such submission.
-  [[nodiscard]] const orbit_grpc_protos::GpuQueueSubmission* FindMatchingGpuQueueSubmission(
+  // thread id. Returns `nullopt` if there is no such submission.
+  [[nodiscard]] std::optional<orbit_grpc_protos::GpuQueueSubmission> FindMatchingGpuQueueSubmission(
       int32_t thread_id, uint64_t submit_time);
   [[nodiscard]] bool HasUnprocessedBeginMarkers(int32_t thread_id,
                                                 uint64_t post_submission_timestamp) const;
