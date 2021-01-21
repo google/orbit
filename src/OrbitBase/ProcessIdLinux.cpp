@@ -6,8 +6,8 @@
 #include <optional>
 #include <system_error>
 
-#include "OrbitBase/ProcessId.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ProcessId.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/numbers.h"
 
