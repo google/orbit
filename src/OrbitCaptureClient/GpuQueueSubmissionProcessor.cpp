@@ -301,7 +301,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       submission_meta_info.post_submission_cpu_timestamp();
 
   static constexpr int32_t kUnknownThreadId = -1;
-  
+
   for (const auto& completed_marker : gpu_queue_submission.completed_markers()) {
     CHECK(first_command_buffer != std::nullopt);
     TimerInfo marker_timer;
