@@ -268,7 +268,6 @@ const PickingUserData* Batcher::GetUserData(PickingId id) const {
       return nullptr;
     case PickingType::kCount:
       UNREACHABLE();
-      return nullptr;
   }
 
   UNREACHABLE();

@@ -68,6 +68,8 @@ struct PickingId {
   [[nodiscard]] inline static PickingId Create(PickingType type, uint32_t element_id,
                                                BatcherId batcher_id = BatcherId::kTimeGraph) {
     CHECK(element_id >> kElementIDBitSize == 0);
+    CHECK(type >= PickingType{} && type < PickingType::kCount);
+    CHECK(batcher_id >= BatcherId{} && batcher_id < BatcherId::kCount);
     PickingId result{};
     result.type = type;
     result.element_id = element_id;
@@ -77,10 +79,8 @@ struct PickingId {
 
   [[nodiscard]] inline static PickingId FromPixelValue(uint32_t value) {
     const Layout layout = absl::bit_cast<Layout, uint32_t>(value);
-    CHECK(layout.type >= static_cast<uint32_t>(PickingType::kInvalid) &&
-          layout.type <= static_cast<uint32_t>(PickingType::kPickable));
-    CHECK(layout.batcher_id >= static_cast<uint32_t>(BatcherId::kTimeGraph) &&
-          layout.batcher_id <= static_cast<uint32_t>(BatcherId::kUi));
+    CHECK(layout.type < static_cast<uint32_t>(PickingType::kCount));
+    CHECK(layout.batcher_id < static_cast<uint32_t>(BatcherId::kCount));
 
     PickingId id{};
     id.element_id = layout.element_id;
