@@ -175,6 +175,7 @@ class OrbitMainWindow : public QMainWindow {
   // Capture toolbar.
   QIcon icon_start_capture_;
   QIcon icon_stop_capture_;
+  QIcon icon_toolbar_extension_;
 
   QIcon icon_keyboard_arrow_left_;
   QIcon icon_keyboard_arrow_right_;
