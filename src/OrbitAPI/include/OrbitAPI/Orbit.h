@@ -281,6 +281,8 @@ enum orbit_api_color {
 
 #ifndef ORBIT_API_INTERNAL_IMPL
 
+#if __linux__
+
 #include <dlfcn.h>
 #include <stdio.h>
 
@@ -298,6 +300,14 @@ inline void* orbit_api_get_proc_address(const char* name) {
   printf("orbit_api_get_proc_address for %s : %p\n", name, address);
   return address;
 }
+
+#else
+
+inline void* orbit_api_get_proc_address(const char* name) {
+  return nullptr;
+}
+
+#endif  // __linux__
 
 #define ORBIT_GET_PROC_ADDRESS(name) name##_get_proc_address()
 #define ORBIT_GET_PROC_ADDRESS_DECL(name)                  \
@@ -333,18 +343,22 @@ inline void orbit_api_init() {
 }
 
 inline void orbit_api_deinit() {
+#if __linux__
   void* liborbit = orbit_api_get_lib_orbit();
   if (liborbit != 0) {
-    dlclose(orbit_api_get_lib_orbit());
+    dlclose(liborbit);
   }
+#endif
 }
 
 #define ORBIT_FUNCTION_OR_RETURN(var, function_name)        \
   static void* var = ORBIT_GET_PROC_ADDRESS(function_name); \
   if (var == 0) return
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 
 inline void orbit_api_start(const char* name, orbit_api_color color) {
   ORBIT_FUNCTION_OR_RETURN(func, orbit_api_start);
@@ -401,7 +415,9 @@ inline void orbit_api_track_double(const char* name, double value, orbit_api_col
   ((void (*)(const char*, double, orbit_api_color))func)(name, value, color);
 }
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 
 #else
 
