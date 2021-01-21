@@ -64,7 +64,7 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   for (const Vec2& point : points) {
     float x_rotated = cos_r * point[0] - sin_r * point[1];
     float y_rotated = sin_r * point[0] + cos_r * point[1];
-    result.push_back(Vec2(x_rotated, y_rotated));
+    result.emplace_back(x_rotated, y_rotated);
   }
   return result;
 }
@@ -189,9 +189,9 @@ void Track::SetPinned(bool value) {
   picking_enabled_ = !pinned_;
 }
 
-void Track::SetPos(float a_X, float a_Y) {
+void Track::SetPos(float x, float y) {
   if (!moving_) {
-    pos_ = Vec2(a_X, a_Y);
+    pos_ = Vec2(x, y);
   }
 }
 
@@ -205,7 +205,8 @@ Color Track::GetBackgroundColor() const {
   int32_t capture_process_id = capture_data_ ? capture_data_->process_id() : -1;
   if (GetType() == kSchedulerTrack) {
     return color_;
-  } else if (process_id_ != -1 && process_id_ != capture_process_id) {
+  }
+  if (process_id_ != -1 && process_id_ != capture_process_id) {
     const Color kExternalProcessColor(30, 30, 40, 255);
     return kExternalProcessColor;
   }
@@ -213,16 +214,16 @@ Color Track::GetBackgroundColor() const {
   return color_;
 }
 
-void Track::SetSize(float a_SizeX, float a_SizeY) { size_ = Vec2(a_SizeX, a_SizeY); }
+void Track::SetSize(float width, float height) { size_ = Vec2(width, height); }
 
 void Track::OnCollapseToggle(TriangleToggle::State /*state*/) { time_graph_->NeedsUpdate(); }
 
-void Track::OnPick(int a_X, int a_Y) {
+void Track::OnPick(int x, int y) {
   if (!picking_enabled_) return;
 
-  Vec2& mousePos = mouse_pos_[0];
-  canvas_->ScreenToWorld(a_X, a_Y, mousePos[0], mousePos[1]);
-  picking_offset_ = mousePos - pos_;
+  Vec2& mouse_pos = mouse_pos_[0];
+  canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
+  picking_offset_ = mouse_pos - pos_;
   mouse_pos_[1] = mouse_pos_[0];
   picked_ = true;
 }
@@ -235,12 +236,12 @@ void Track::OnRelease() {
   time_graph_->NeedsUpdate();
 }
 
-void Track::OnDrag(int a_X, int a_Y) {
+void Track::OnDrag(int x, int y) {
   if (!picking_enabled_) return;
 
   moving_ = true;
-  float x = 0.f;
-  canvas_->ScreenToWorld(a_X, a_Y, x, pos_[1]);
+  float world_x = 0.f;
+  canvas_->ScreenToWorld(x, y, world_x, pos_[1]);
   mouse_pos_[1] = pos_;
   pos_[1] -= picking_offset_[1];
   time_graph_->VerticallyMoveIntoView(*this);

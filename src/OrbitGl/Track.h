@@ -48,16 +48,18 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
 
   explicit Track(TimeGraph* time_graph, CaptureData* capture_data);
   ~Track() override = default;
+
   virtual void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
 
-  virtual void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode, float z_offset = 0);
+  virtual void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0);
+
   virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                 float z_offset = 0);
 
   // Pickable
-  void OnPick(int a_X, int a_Y) override;
+  void OnPick(int x, int y) override;
   void OnRelease() override;
-  void OnDrag(int a_X, int a_Y) override;
+  void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
   [[nodiscard]] virtual Type GetType() const = 0;
@@ -98,17 +100,17 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
-  void SetPos(float a_X, float a_Y);
+  void SetPos(float x, float y);
   void SetY(float y);
   [[nodiscard]] Vec2 GetPos() const { return pos_; }
-  void SetSize(float a_SizeX, float a_SizeY);
+  void SetSize(float width, float height);
   [[nodiscard]] Vec2 GetSize() const { return size_; }
-  void SetColor(Color a_Color) { color_ = a_Color; }
+  void SetColor(const Color& color) { color_ = color; }
   [[nodiscard]] Color GetBackgroundColor() const;
 
   [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
 
-  void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
+  void AddChild(const std::shared_ptr<Track>& track) { children_.emplace_back(track); }
   virtual void OnCollapseToggle(TriangleToggle::State state);
   [[nodiscard]] virtual bool IsCollapsible() const { return false; }
   [[nodiscard]] int32_t GetProcessId() const { return process_id_; }
