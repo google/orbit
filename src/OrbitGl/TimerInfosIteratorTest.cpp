@@ -91,11 +91,11 @@ TEST(TimerInfosIterator, Move) {
   EXPECT_EQ(1, it->function_id());
 
   // Now create a Copy
-  TimerInfosIterator it_copy1 = std::move(it);
+  TimerInfosIterator it_copy1 = it;
   EXPECT_EQ(1, it_copy1->function_id());
 
   // Create a copy using the copy-constructor
-  TimerInfosIterator it_copy2(std::move(it_copy1));
+  TimerInfosIterator it_copy2(it_copy1);
   EXPECT_EQ(1, it_copy2->function_id());
 }
 
