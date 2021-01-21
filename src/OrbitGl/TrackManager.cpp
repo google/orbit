@@ -57,7 +57,7 @@ void TrackManager::Clear() {
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
   std::vector<Track*> tracks;
-  for (auto track : all_tracks_) {
+  for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
   }
   return tracks;
@@ -200,8 +200,9 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   const CallstackData* callstack_data = capture_data_ ? capture_data_->GetCallstackData() : nullptr;
 
   for (auto& [tid, track] : thread_tracks_) {
-    if (tid == orbit_base::kAllProcessThreadsTid)
+    if (tid == orbit_base::kAllProcessThreadsTid) {
       continue;  // "kAllProcessThreadsTid" is handled separately.
+    }
     sorted_tracks.push_back(track.get());
     uint32_t num_events = callstack_data ? callstack_data->GetCallstackEventsOfTidCount(tid) : 0;
     num_events_by_track[track.get()] = num_events;
@@ -319,7 +320,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
   tracks_total_height_ = std::abs(current_y);
 }
 
-void TrackManager::AddTrack(std::shared_ptr<Track> track) {
+void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
   all_tracks_.push_back(track);
   sorting_invalidated_ = true;
 }

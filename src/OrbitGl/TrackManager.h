@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TRACK_MANAGER_H_
+#define ORBIT_GL_TRACK_MANAGER_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -61,7 +62,7 @@ class TrackManager {
   FrameTrack* GetOrCreateFrameTrack(uint64_t function_id,
                                     const orbit_client_protos::FunctionInfo& function);
 
-  void AddTrack(std::shared_ptr<Track> track);
+  void AddTrack(const std::shared_ptr<Track>& track);
   void RemoveFrameTrack(uint64_t function_address);
 
   void UpdateMovingTrackSorting();
@@ -88,14 +89,16 @@ class TrackManager {
   TimeGraph* time_graph_;
 
   std::vector<Track*> sorted_tracks_;
-  bool sorting_invalidated_;
+  bool sorting_invalidated_ = false;
   Timer last_thread_reorder_;
 
   std::string filter_;
   std::vector<Track*> visible_tracks_;
 
-  float tracks_total_height_;
+  float tracks_total_height_ = 0.0f;
   CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 };
+
+#endif  // ORBIT_GL_TRACK_MANAGER_H_
