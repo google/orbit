@@ -33,13 +33,7 @@ class Pickable {
   [[nodiscard]] virtual std::string GetTooltip() const { return ""; }
 };
 
-enum class PickingType : uint32_t {
-  kInvalid = 0,
-  kLine = 1,
-  kBox = 2,
-  kTriangle = 3,
-  kPickable = 4
-};
+enum class PickingType { kInvalid = 0, kLine = 1, kBox = 2, kTriangle = 3, kPickable = 4 };
 
 // Instances of batchers used to draw must be in 1:1 correspondence with
 // values in the following enum. Currently, two batchers are used, one to draw
@@ -51,19 +45,26 @@ enum class PickingType : uint32_t {
 // in the bits remaining after encoding the batcher id, and the
 // PickingType, so adding more batchers or types has to be carefully
 // considered.
-enum class BatcherId : uint32_t { kTimeGraph, kUi };
+enum class BatcherId { kTimeGraph, kUi };
 
 struct PickingId {
   static constexpr uint32_t kElementIDBitSize = 28;
   static constexpr uint32_t kPickingTypeBitSize = 3;
   static constexpr uint32_t kBatcherIDBitSize = 1;
 
-  static_assert(kElementIDBitSize + kPickingTypeBitSize + kBatcherIDBitSize == 32);
+  struct Layout {
+    uint32_t element_id : kElementIDBitSize;
+    uint32_t type : kPickingTypeBitSize;
+    uint32_t batcher_id : kBatcherIDBitSize;
+  };
+
+  static_assert(sizeof(Layout) == sizeof(uint32_t),
+                "Layout needs to have the size of a single uint32_t.");
 
   [[nodiscard]] inline static PickingId Create(PickingType type, uint32_t element_id,
                                                BatcherId batcher_id = BatcherId::kTimeGraph) {
     CHECK(element_id >> kElementIDBitSize == 0);
-    PickingId result;
+    PickingId result{};
     result.type = type;
     result.element_id = element_id;
     result.batcher_id = batcher_id;
@@ -71,21 +72,39 @@ struct PickingId {
   }
 
   [[nodiscard]] inline static PickingId FromPixelValue(uint32_t value) {
-    PickingId id = absl::bit_cast<PickingId, uint32_t>(value);
+    const Layout layout = absl::bit_cast<Layout, uint32_t>(value);
+    CHECK(layout.type >= static_cast<uint32_t>(PickingType::kInvalid) &&
+          layout.type <= static_cast<uint32_t>(PickingType::kPickable));
+    CHECK(layout.batcher_id >= static_cast<uint32_t>(BatcherId::kTimeGraph) &&
+          layout.batcher_id <= static_cast<uint32_t>(BatcherId::kUi));
+
+    PickingId id{};
+    id.element_id = layout.element_id;
+    id.type = static_cast<PickingType>(layout.type);
+    id.batcher_id = static_cast<BatcherId>(layout.batcher_id);
     return id;
+  }
+
+  [[nodiscard]] uint32_t ToPixelValue() const {
+    Layout layout{};
+    layout.element_id = element_id;
+    layout.type = static_cast<uint32_t>(type);
+    layout.batcher_id = static_cast<uint32_t>(batcher_id);
+
+    return absl::bit_cast<uint32_t>(layout);
   }
 
   [[nodiscard]] static Color ToColor(PickingType type, uint32_t element_id,
                                      BatcherId batcher_id = BatcherId::kTimeGraph) {
-    PickingId result_id = Create(type, element_id, batcher_id);
-    std::array<uint8_t, 4> color_values;
-    color_values = absl::bit_cast<std::array<uint8_t, 4>, PickingId>(result_id);
+    uint32_t pixel_value = Create(type, element_id, batcher_id).ToPixelValue();
+    std::array<uint8_t, 4> color_values{};
+    color_values = absl::bit_cast<std::array<uint8_t, 4>>(pixel_value);
     return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
   }
 
-  uint32_t element_id : kElementIDBitSize;
-  PickingType type : kPickingTypeBitSize;
-  BatcherId batcher_id : kBatcherIDBitSize;
+  uint32_t element_id;
+  PickingType type;
+  BatcherId batcher_id;
 };
 
 class PickingManager {

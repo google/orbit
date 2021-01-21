@@ -96,6 +96,6 @@ bool PickingManager::IsThisElementPicked(const Pickable* pickable) const {
 }
 
 Color PickingManager::ColorFromPickingID(PickingId id) const {
-  auto color_values = absl::bit_cast<std::array<uint8_t, 4>>(id);
+  auto color_values = absl::bit_cast<std::array<uint8_t, 4>>(id.ToPixelValue());
   return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
 }
