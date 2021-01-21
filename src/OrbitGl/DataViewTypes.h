@@ -10,7 +10,6 @@ enum class DataViewType {
   kFunctions,
   kLiveFunctions,
   kCallstack,
-  kProcesses,
   kModules,
   kSampling,
   kPresets,
