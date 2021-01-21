@@ -67,24 +67,6 @@ target_link_libraries(LinuxTracing PUBLIC
         CONAN_PKG::abseil
         CONAN_PKG::libunwindstack)
 
-add_executable(LinuxTracingTestDlopenPuppet)
-
-target_compile_options(LinuxTracingTestDlopenPuppet PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(LinuxTracingTestDlopenPuppet PRIVATE
-        TestPuppet.cpp)
-
-target_link_libraries(LinuxTracingTestDlopenPuppet PUBLIC
-        dl
-        OrbitBase)
-
-add_library(LinuxTracingTestPuppetLibrary SHARED)
-
-target_compile_options(LinuxTracingTestPuppetLibrary PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(LinuxTracingTestPuppetLibrary PRIVATE
-        TestPuppetLibrary.cpp)
-
 add_executable(LinuxTracingTests)
 
 target_compile_options(LinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
@@ -105,3 +87,32 @@ target_link_libraries(LinuxTracingTests PRIVATE
         GTest::Main)
 
 register_test(LinuxTracingTests)
+
+add_library(LinuxTracingIntegrationTestPuppetSharedObject SHARED)
+
+target_compile_options(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE
+        LinuxTracingIntegrationTestPuppetSharedObject.cpp)
+
+target_link_libraries(LinuxTracingIntegrationTestPuppetSharedObject PUBLIC
+        dl
+        OrbitBase)
+
+add_executable(LinuxTracingIntegrationTests)
+
+target_compile_options(LinuxTracingIntegrationTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(LinuxTracingIntegrationTests PRIVATE
+        LinuxTracingIntegrationTest.cpp
+        LinuxTracingIntegrationTestPuppet.cpp
+        LinuxTracingIntegrationTestPuppet.h)
+
+target_link_libraries(LinuxTracingIntegrationTests PRIVATE
+        LinuxTracing
+        OrbitBase
+        GTest::GTest
+        GTest::Main
+        CONAN_PKG::abseil)
+
+register_test(LinuxTracingIntegrationTests)

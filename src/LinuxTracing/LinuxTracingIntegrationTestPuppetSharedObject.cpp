@@ -6,11 +6,11 @@
 
 #include <cmath>
 
-// extern "C" to have unmangled name in the symbol table
-extern "C" double function_that_works_for_considerable_amount_of_time() {
+// extern "C" to have unmangled name in the symbol table.
+extern "C" double function_that_works_for_a_considerable_amount_of_time() {
   double result = 2;
 
-  for (size_t i = 0; i < 100'000'000; ++i) {
+  for (size_t i = 0; i < 10'000'000; ++i) {
     result = sqrt(result + 1.0);
   }
 
