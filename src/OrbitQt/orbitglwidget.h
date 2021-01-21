@@ -10,12 +10,25 @@
 // clang-format on
 
 #include <stdint.h>
+
+// Disable "qopenglfunctions.h is not compatible with GLEW, GLEW defines will be undefined" warning
+// to reduce spam in compilation output. This is a known quirk that doesn't cause any ill effect.
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-W#warnings"
+#endif
+
 #include <QOpenGLFunctions>
-#include <QOpenGLWidget>
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 #include <QEvent>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QObject>
+#include <QOpenGLWidget>
 #include <QString>
 #include <QWheelEvent>
 #include <QWidget>
