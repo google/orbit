@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,8 +6,8 @@
 #include <optional>
 #include <system_error>
 
+#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ProcessId.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/numbers.h"
 
@@ -15,9 +15,7 @@ namespace orbit_base {
 
 namespace fs = std::filesystem;
 
-namespace {
-
-std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
+static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
   if (!entry.is_directory()) {
     return std::nullopt;
   }
@@ -31,17 +29,16 @@ std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entr
     return std::nullopt;
   }
 
-  return static_cast<pid_t>(potential_pid);
+  return potential_pid;
 }
-
-}  // namespace
 
 std::vector<pid_t> GetAllPids() {
   fs::directory_iterator proc{"/proc"};
   std::vector<pid_t> pids;
 
   for (const auto& entry : proc) {
-    if (auto pid = ProcEntryToPid(entry); pid.has_value()) {
+    auto pid = ProcEntryToPid(entry);
+    if (pid.has_value()) {
       pids.emplace_back(pid.value());
     }
   }

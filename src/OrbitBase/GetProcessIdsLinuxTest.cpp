@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -11,7 +11,7 @@
 #include <mutex>
 #include <thread>
 
-#include "OrbitBase/ProcessId.h"
+#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"
 #include "gmock/gmock.h"
@@ -19,7 +19,7 @@
 
 namespace orbit_base {
 
-TEST(ProcessIdLinux, GetAllPids) {
+TEST(GetProcessIdsLinux, GetAllPids) {
   const auto pids = GetAllPids();
 
   // At least the test process needs to show up.
@@ -37,7 +37,7 @@ TEST(ProcessIdLinux, GetAllPids) {
   }
 }
 
-TEST(ProcessIdLinux, GetTidsOfProcess) {
+TEST(GetProcessIdsLinux, GetTidsOfProcess) {
   pid_t main_tid = syscall(SYS_gettid);
   pid_t thread_tid = -1;
   std::vector<pid_t> returned_tids{};
@@ -65,7 +65,7 @@ TEST(ProcessIdLinux, GetTidsOfProcess) {
   EXPECT_THAT(returned_tids, ::testing::UnorderedElementsAreArray(expected_tids));
 }
 
-TEST(ProcessIdLinux, GetAllTids) {
+TEST(GetProcessIdsLinux, GetAllTids) {
   pid_t main_tid = syscall(SYS_gettid);
   pid_t thread_tid = -1;
   std::vector<pid_t> returned_tids{};

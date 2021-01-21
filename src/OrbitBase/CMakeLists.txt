@@ -23,7 +23,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
-        include/OrbitBase/ProcessId.h
+        include/OrbitBase/GetProcessIds.h
         include/OrbitBase/Profiling.h
         include/OrbitBase/ReadFileToString.h
         include/OrbitBase/SafeStrerror.h
@@ -48,7 +48,7 @@ target_sources(OrbitBase PRIVATE
 else()
 target_sources(OrbitBase PRIVATE
         ExecutablePathLinux.cpp
-        ProcessIdLinux.cpp
+        GetProcessIdsLinux.cpp
         ThreadUtilsLinux.cpp)
 endif()
 
@@ -75,7 +75,7 @@ target_sources(OrbitBaseTests PRIVATE
 if (NOT WIN32)
 target_sources(OrbitBaseTests PRIVATE
         ExecutablePathLinuxTest.cpp
-        ProcessIdLinuxTest.cpp)
+        GetProcessIdsLinuxTest.cpp)
 endif()
 
 # Threadpool test contains some sleeps we couldn't work around - disable them on the CI
