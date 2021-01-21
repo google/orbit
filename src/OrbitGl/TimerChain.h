@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TIMER_CHAIN_
-#define ORBIT_GL_TIMER_CHAIN_
+#ifndef ORBIT_GL_TIMER_CHAIN_H_
+#define ORBIT_GL_TIMER_CHAIN_H_
 
 #include <algorithm>
 #include <atomic>
@@ -100,7 +100,10 @@ class TimerChain {
   friend class TimerBlock;
 
  public:
-  TimerChain() : num_blocks_(1), num_items_(0) { root_ = current_ = new TimerBlock(this, nullptr); }
+  TimerChain() : num_blocks_(1), num_items_(0) {
+    root_ = new TimerBlock(this, nullptr);
+    current_ = root_;
+  }
 
   ~TimerChain();
 
@@ -125,4 +128,4 @@ class TimerChain {
   uint64_t num_items_;
 };
 
-#endif
+#endif  // ORBIT_GL_TIMER_CHAIN_H_

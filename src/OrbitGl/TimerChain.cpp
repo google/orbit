@@ -49,7 +49,7 @@ TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
   TimerBlock* block = root_;
   while (block) {
     uint32_t size = block->size_;
-    if (size) {
+    if (size != 0) {
       TextBox* begin = &block->data_[0];
       TextBox* end = &block->data_[size - 1];
       if (begin <= element && end >= element) {
