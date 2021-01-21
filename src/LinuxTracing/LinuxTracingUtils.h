@@ -19,12 +19,6 @@ std::optional<std::string> ReadFile(std::string_view filename);
 
 std::string ReadMaps(pid_t pid);
 
-std::vector<pid_t> GetAllPids();
-
-std::vector<pid_t> GetTidsOfProcess(pid_t pid);
-
-std::vector<pid_t> GetAllTids();
-
 // The association between a character and a thread state is documented at
 // https://man7.org/linux/man-pages/man5/proc.5.html in the "/proc/[pid]/stat" section,
 // and at https://www.man7.org/linux/man-pages/man1/ps.1.html#PROCESS_STATE_CODES.

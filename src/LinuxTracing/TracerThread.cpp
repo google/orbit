@@ -25,6 +25,7 @@
 #include "LinuxTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitBase/ProcessId.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/Tracing.h"
 #include "PerfEventOpen.h"
@@ -38,6 +39,9 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
+using orbit_base::GetAllPids;
+using orbit_base::GetAllTids;
+using orbit_base::GetTidsOfProcess;
 
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
