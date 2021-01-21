@@ -61,7 +61,6 @@
 #include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "Path.h"
 #include "PresetsDataView.h"
-#include "ProcessesDataView.h"
 #include "SamplingReport.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
