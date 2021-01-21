@@ -16,6 +16,8 @@
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
 
+using orbit_grpc_protos::TracepointInfo;
+
 namespace {
 static const std::string kMenuActionSelect = "Hook";
 static const std::string kMenuActionUnselect = "Unhook";

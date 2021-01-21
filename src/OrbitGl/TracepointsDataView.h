@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_TRACEPOINTSDATAVIEW_H
-#define ORBIT_TRACEPOINTSDATAVIEW_H
+#ifndef ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_
+#define ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_
 
 #include <stdint.h>
 
@@ -13,8 +13,6 @@
 
 #include "DataView.h"
 #include "tracepoint.pb.h"
-
-using orbit_grpc_protos::TracepointInfo;
 
 class OrbitApp;
 
@@ -31,18 +29,18 @@ class TracepointsDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
 
-  void SetTracepoints(const std::vector<TracepointInfo>& tracepoints);
+  void SetTracepoints(const std::vector<orbit_grpc_protos::TracepointInfo>& tracepoints);
 
  private:
   void DoSort() override;
   void DoFilter() override;
 
   std::deque<std::string> m_FilterTokens;
-  std::deque<TracepointInfo> tracepoints_;
+  std::deque<orbit_grpc_protos::TracepointInfo> tracepoints_;
 
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };
 
-  const TracepointInfo& GetTracepoint(uint32_t row) const;
+  const orbit_grpc_protos::TracepointInfo& GetTracepoint(uint32_t row) const;
 };
 
-#endif  // ORBIT_TRACEPOINTSDATAVIEW_H
+#endif  // ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_
