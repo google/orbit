@@ -307,7 +307,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
   // The "begin markers" are likely in the same submission as their "end marker",
   // thus will be erased after the last completed marker was processed.
   // This would also erase the current "gpu_queue_submission" if we would do it
-  // right away. 
+  // right away.
   // To prevent this, we do our processing first, collect all "begin markers" to
   // decrement, and decrement them at then very and.
   std::vector<std::tuple<int32_t /*thread_id*/, uint64_t /*submit_time_ns*/,
@@ -371,9 +371,9 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
         marker_timer.set_thread_id(kUnknownThreadId);
       }
 
-	  // Remember, it would be safe to decrement (and thus possible erease) the "begin marker"
-	  // here right away, as its begin submission might be the same as "gpu_queue_submission",
-	  // which we still use afterwards.
+      // Remember, it would not be safe to decrement (and thus possible erese) the "begin marker"
+      // here right away, as its begin submission might be the same as "gpu_queue_submission",
+      // which we still use afterwards.
       begin_markers_to_decrement.emplace_back(begin_marker_thread_id,
                                               matching_begin_job->amdgpu_cs_ioctl_time_ns(),
                                               begin_marker_post_submission_cpu_timestamp);

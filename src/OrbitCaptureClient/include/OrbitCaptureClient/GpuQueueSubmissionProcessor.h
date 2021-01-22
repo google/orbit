@@ -6,6 +6,7 @@
 #define ORBIT_CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/node_hash_map.h>
 
 #include <algorithm>
 #include <functional>
@@ -86,15 +87,16 @@ class GpuQueueSubmissionProcessor {
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
 
   // Finds the GpuJob that is fully inside the given timestamps and happened on the given thread id.
-  // Returns `nullopt` if there is no such job.
+  // Returns `nullptr` if there is no such job.
   [[nodiscard]] const orbit_grpc_protos::GpuJob* FindMatchingGpuJob(
       int32_t thread_id, uint64_t pre_submission_cpu_timestamp,
       uint64_t post_submission_cpu_timestamp);
 
   // Finds the GpuQueueSubmission that fully contains the given timestamp and happened on the given
-  // thread id. Returns `nullopt` if there is no such submission.
-  [[nodiscard]]const orbit_grpc_protos::GpuQueueSubmission* FindMatchingGpuQueueSubmission(
+  // thread id. Returns `nullptr` if there is no such submission.
+  [[nodiscard]] const orbit_grpc_protos::GpuQueueSubmission* FindMatchingGpuQueueSubmission(
       int32_t thread_id, uint64_t submit_time);
+
   [[nodiscard]] bool HasUnprocessedBeginMarkers(int32_t thread_id,
                                                 uint64_t post_submission_timestamp) const;
 
@@ -105,9 +107,9 @@ class GpuQueueSubmissionProcessor {
 
   void DeleteSavedGpuSubmission(int32_t thread_id, uint64_t post_submission_timestamp);
 
-  absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuJob>>
+  absl::node_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuJob>>
       tid_to_submission_time_to_gpu_job_;
-  absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuQueueSubmission>>
+  absl::node_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuQueueSubmission>>
       tid_to_post_submission_time_to_gpu_submission_;
   absl::flat_hash_map<int32_t, absl::flat_hash_map<uint64_t, uint32_t>>
       tid_to_post_submission_time_to_num_begin_markers_;
