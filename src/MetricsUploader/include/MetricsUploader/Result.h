@@ -16,6 +16,7 @@ enum Result {
   kMetricsUploaderServiceNotStarted,
   kSdkConfigNotLoaded,
   kCannotMarshalLogEvent,
+  kUnknownEventTypeName,
   kCannotQueueLogEvent,
   kClientNotInitialized,
   kCannotUnmarshalLogEvent
