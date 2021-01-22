@@ -13,10 +13,12 @@ struct LinuxTracingIntegrationTestPuppetConstants {
   LinuxTracingIntegrationTestPuppetConstants() = delete;
 
   constexpr static uint64_t kSleepCount = 1000;
+  constexpr static const char* kNewThreadName = "Thread Name";
   constexpr static const char* kSharedObjectFileName =
       "libLinuxTracingIntegrationTestPuppetSharedObject.so";
 
   constexpr static const char* kSleepCommand = "sleep";
+  constexpr static const char* kPthreadSetnameNpCommand = "pthread_setname_np";
   constexpr static const char* kDlopenCommand = "dlopen";
 
   constexpr static const char* kDoneResponse = "DONE";
