@@ -244,7 +244,7 @@ void CaptureWindow::Hover(int x, int y) {
   uint8_t pixels[1 * 1 * 4] = {0, 0, 0, 0};
   glReadPixels(x, m_MainWindowHeight - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
 
-  auto pick_id = absl::bit_cast<PickingId>(pixels);
+  auto pick_id = PickingId::FromPixelValue(absl::bit_cast<uint32_t>(pixels));
   Batcher& batcher = GetBatcherById(pick_id.batcher_id);
 
   std::string tooltip;
