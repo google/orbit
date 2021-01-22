@@ -121,7 +121,7 @@ endif()
 
 find_package(Filesystem REQUIRED)
 
-if(NOT WIN32)
+if(NOT WIN32 AND WITH_VULKAN_LAYER)
   find_package(Vulkan REQUIRED)
   find_package(VulkanValidationLayers REQUIRED)
 endif()
@@ -140,11 +140,11 @@ else()
   add_subdirectory(src/OrbitCaptureGgpService)
   add_subdirectory(src/OrbitProducer)
   add_subdirectory(src/OrbitService)
-  add_subdirectory(src/OrbitTriggerCaptureVulkanLayer)
   add_subdirectory(src/ProducerSideChannel)
 endif()
 
 if(WITH_VULKAN_LAYER)
+  add_subdirectory(src/OrbitTriggerCaptureVulkanLayer)
   add_subdirectory(src/OrbitVulkanLayer)
 endif()
 
