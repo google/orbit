@@ -4,6 +4,7 @@
 
 #include <absl/strings/numbers.h>
 #include <absl/time/clock.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -17,6 +18,7 @@
 #include "LinuxTracingIntegrationTestPuppet.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {
@@ -363,6 +365,44 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
   EXPECT_GE(running_slice_count, PuppetConstants::kSleepCount);
   EXPECT_GE(runnable_slice_count, PuppetConstants::kSleepCount);
   EXPECT_GE(interruptible_sleep_slice_count, PuppetConstants::kSleepCount);
+}
+
+TEST(LinuxTracingIntegrationTest, ThreadNames) {
+  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  // We also collect the initial name of each thread of the target at the start of the capture:
+  // save the actual initial name so that we can later verify that it was received.
+  std::string initial_puppet_name = orbit_base::GetThreadName(fixture.GetPuppetPid());
+
+  fixture.StartTracing();
+  absl::SleepFor(kSleepAfterStartTracing);
+  fixture.WriteLineToPuppet(PuppetConstants::kPthreadSetnameNpCommand);
+  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
+  absl::SleepFor(kSleepBeforeStopTracing);
+  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+
+  std::vector<std::string> collected_event_names;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kThreadName) {
+      continue;
+    }
+
+    const orbit_grpc_protos::ThreadName& thread_name = event.thread_name();
+    if (thread_name.tid() != fixture.GetPuppetPid()) {
+      continue;
+    }
+
+    // We currently don't set the pid.
+    EXPECT_EQ(thread_name.pid(), 0);
+
+    collected_event_names.emplace_back(thread_name.name());
+  }
+
+  EXPECT_THAT(collected_event_names,
+              ::testing::ElementsAre(initial_puppet_name, PuppetConstants::kNewThreadName));
 }
 
 TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {

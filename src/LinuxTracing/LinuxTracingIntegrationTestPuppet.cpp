@@ -7,6 +7,7 @@
 #include <absl/base/casts.h>
 #include <absl/time/clock.h>
 #include <dlfcn.h>
+#include <pthread.h>
 #include <sched.h>
 #include <stddef.h>
 
@@ -28,6 +29,10 @@ static void SleepRepeatedly() {
   for (uint64_t i = 0; i < PuppetConstants::kSleepCount; ++i) {
     absl::SleepFor(absl::Microseconds(10));
   }
+}
+
+static void ChangeCurrentThreadName() {
+  pthread_setname_np(pthread_self(), PuppetConstants::kNewThreadName);
 }
 
 static void LoadSoWithDlopenAndCallFunction() {
@@ -60,6 +65,8 @@ int LinuxTracingIntegrationTestPuppetMain() {
     LOG("Puppet received command: %s", command);
     if (command == PuppetConstants::kSleepCommand) {
       SleepRepeatedly();
+    } else if (command == PuppetConstants::kPthreadSetnameNpCommand) {
+      ChangeCurrentThreadName();
     } else if (command == PuppetConstants::kDlopenCommand) {
       LoadSoWithDlopenAndCallFunction();
     } else {
