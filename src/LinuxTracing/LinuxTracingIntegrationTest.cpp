@@ -190,7 +190,7 @@ class BufferTracerListener : public TracerListener {
     events_.emplace_back(std::move(event));
   }
 
-  void OnModulesUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override {
+  void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_module_update_event() = std::move(module_update_event);
     events_.emplace_back(std::move(event));

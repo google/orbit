@@ -209,12 +209,12 @@ void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   // This Sort is important here since libunwindstack does binary search for module by pc.
   current_maps_->Sort();
 
-  orbit_grpc_protos::ModuleUpdateEvent modules_update_event;
-  modules_update_event.set_pid(event->pid());
-  modules_update_event.set_timestamp_ns(event->GetTimestamp());
-  *modules_update_event.mutable_module() = std::move(module_info);
+  orbit_grpc_protos::ModuleUpdateEvent module_update_event;
+  module_update_event.set_pid(event->pid());
+  module_update_event.set_timestamp_ns(event->GetTimestamp());
+  *module_update_event.mutable_module() = std::move(module_info);
 
-  listener_->OnModulesUpdate(std::move(modules_update_event));
+  listener_->OnModuleUpdate(std::move(module_update_event));
 }
 
 }  // namespace orbit_linux_tracing
