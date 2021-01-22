@@ -303,6 +303,68 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount);
 }
 
+TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
+  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  fixture.StartTracing();
+  absl::SleepFor(kSleepAfterStartTracing);
+  fixture.WriteLineToPuppet(PuppetConstants::kSleepCommand);
+  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
+  absl::SleepFor(kSleepBeforeStopTracing);
+  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+
+  uint64_t running_slice_count = 0;
+  uint64_t runnable_slice_count = 0;
+  uint64_t interruptible_sleep_slice_count = 0;
+  uint64_t last_end_timestamp_ns = 0;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kThreadStateSlice) {
+      continue;
+    }
+
+    const orbit_grpc_protos::ThreadStateSlice& thread_state_slice = event.thread_state_slice();
+    if (thread_state_slice.tid() != fixture.GetPuppetPid()) {
+      continue;
+    }
+
+    // We currently don't set the pid.
+    EXPECT_EQ(thread_state_slice.pid(), 0);
+
+    EXPECT_TRUE(
+        thread_state_slice.thread_state() == orbit_grpc_protos::ThreadStateSlice::kRunning ||
+        thread_state_slice.thread_state() == orbit_grpc_protos::ThreadStateSlice::kRunnable ||
+        thread_state_slice.thread_state() ==
+            orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep);
+    switch (thread_state_slice.thread_state()) {
+      case orbit_grpc_protos::ThreadStateSlice_ThreadState_kRunning:
+        ++running_slice_count;
+        break;
+      case orbit_grpc_protos::ThreadStateSlice_ThreadState_kRunnable:
+        ++runnable_slice_count;
+        break;
+      case orbit_grpc_protos::ThreadStateSlice_ThreadState_kInterruptibleSleep:
+        ++interruptible_sleep_slice_count;
+        break;
+      default:
+        break;
+    }
+
+    EXPECT_GT(thread_state_slice.duration_ns(), 0);
+    EXPECT_GT(thread_state_slice.end_timestamp_ns(), last_end_timestamp_ns);
+    last_end_timestamp_ns = thread_state_slice.end_timestamp_ns();
+  }
+
+  LOG("running_slice_count=%lu", running_slice_count);
+  LOG("runnable_slice_count=%lu", runnable_slice_count);
+  LOG("interruptible_sleep_slice_count=%lu", interruptible_sleep_slice_count);
+  EXPECT_GE(running_slice_count, PuppetConstants::kSleepCount);
+  EXPECT_GE(runnable_slice_count, PuppetConstants::kSleepCount);
+  EXPECT_GE(interruptible_sleep_slice_count, PuppetConstants::kSleepCount);
+}
+
 TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
   if (!CheckIsPerfEventParanoidAtMost(0)) {
     GTEST_SKIP();
