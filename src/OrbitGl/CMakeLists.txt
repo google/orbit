@@ -140,6 +140,8 @@ target_link_libraries(
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
+elseif(TARGET OpenGL::GL)
+  target_link_libraries(OrbitGl PUBLIC OpenGL::GL)
 endif()
 
 add_executable(OrbitGlTests)
