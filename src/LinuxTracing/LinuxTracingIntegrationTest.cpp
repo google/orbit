@@ -260,6 +260,49 @@ class LinuxTracingIntegrationTestFixture {
 
 using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
 
+constexpr absl::Duration kSleepAfterStartTracing = absl::Milliseconds(100);
+constexpr absl::Duration kSleepBeforeStopTracing = absl::Milliseconds(100);
+
+TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
+  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  fixture.StartTracing();
+  absl::SleepFor(kSleepAfterStartTracing);
+  fixture.WriteLineToPuppet(PuppetConstants::kSleepCommand);
+  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
+  absl::SleepFor(kSleepBeforeStopTracing);
+  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+
+  uint64_t scheduling_slice_count = 0;
+  uint64_t last_out_timestamp_ns = 0;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kSchedulingSlice) {
+      continue;
+    }
+
+    const orbit_grpc_protos::SchedulingSlice& scheduling_slice = event.scheduling_slice();
+    if (scheduling_slice.pid() != fixture.GetPuppetPid()) {
+      continue;
+    }
+
+    ++scheduling_slice_count;
+
+    // The puppet is not expected to spawn new threads.
+    EXPECT_EQ(scheduling_slice.tid(), scheduling_slice.pid());
+
+    EXPECT_GT(scheduling_slice.duration_ns(), 0);
+    // SchedulingSlices are expected to be in order of out_timestamp_ns across all CPUs.
+    EXPECT_GT(scheduling_slice.out_timestamp_ns(), last_out_timestamp_ns);
+    last_out_timestamp_ns = scheduling_slice.out_timestamp_ns();
+  }
+
+  LOG("scheduling_slice_count=%lu", scheduling_slice_count);
+  EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount);
+}
+
 TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
   if (!CheckIsPerfEventParanoidAtMost(0)) {
     GTEST_SKIP();
@@ -267,10 +310,10 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
   LinuxTracingIntegrationTestFixture fixture;
 
   fixture.StartTracing();
-  absl::SleepFor(absl::Milliseconds(100));
+  absl::SleepFor(kSleepAfterStartTracing);
   fixture.WriteLineToPuppet(PuppetConstants::kDlopenCommand);
   while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
-  absl::SleepFor(absl::Milliseconds(100));
+  absl::SleepFor(kSleepBeforeStopTracing);
   std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
 
   bool module_update_found = false;
