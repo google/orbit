@@ -36,7 +36,7 @@ class MockTracerListener : public TracerListener {
   MOCK_METHOD(void, OnThreadStateSlice, (orbit_grpc_protos::ThreadStateSlice), (override));
   MOCK_METHOD(void, OnAddressInfo, (orbit_grpc_protos::AddressInfo), (override));
   MOCK_METHOD(void, OnTracepointEvent, (orbit_grpc_protos::TracepointEvent), (override));
-  MOCK_METHOD(void, OnModulesUpdate, (orbit_grpc_protos::ModuleUpdateEvent), (override));
+  MOCK_METHOD(void, OnModuleUpdate, (orbit_grpc_protos::ModuleUpdateEvent), (override));
 };
 
 class GpuTracepointEventProcessorTest : public ::testing::Test {
