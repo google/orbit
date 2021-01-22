@@ -18,7 +18,7 @@ std::vector<pid_t> GetAllPids();
 // Get the thread ids of all the threads belonging to process 'pid'.
 std::vector<pid_t> GetTidsOfProcess(pid_t pid);
 
-// Get all thread ids of all currently running processes.
+// Get all thread ids of all the threads in all currently running processes.
 std::vector<pid_t> GetAllTids();
 #endif
 
