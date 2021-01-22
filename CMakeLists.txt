@@ -26,7 +26,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
-                           -Werror=defaulted-function-deleted
                            -Werror=float-conversion
                            -Werror=format=2
                            -Werror=ignored-attributes
@@ -37,6 +36,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
                            -Werror=unused-variable
                            -Werror=writable-strings
                            -Werror=sign-compare)
+
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8)
+    list(APPEND STRICT_COMPILE_FLAGS -Werror=defaulted-function-deleted)
+  endif()
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
