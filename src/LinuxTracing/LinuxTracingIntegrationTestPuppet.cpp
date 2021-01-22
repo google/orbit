@@ -30,7 +30,6 @@ static void SleepRepeatedly() {
   }
 }
 
-// Load the .so with dlopen and call the function in it.
 static void LoadSoWithDlopenAndCallFunction() {
   constexpr const char* kSoFileName = PuppetConstants::kSharedObjectFileName;
   constexpr const char* kFunctionName = "function_that_works_for_a_considerable_amount_of_time";
