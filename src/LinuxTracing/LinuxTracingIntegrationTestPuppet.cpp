@@ -5,7 +5,9 @@
 #include "LinuxTracingIntegrationTestPuppet.h"
 
 #include <absl/base/casts.h>
+#include <absl/time/clock.h>
 #include <dlfcn.h>
+#include <sched.h>
 #include <stddef.h>
 
 #include <filesystem>
@@ -21,6 +23,12 @@
 namespace orbit_linux_tracing {
 
 using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
+
+static void SleepRepeatedly() {
+  for (uint64_t i = 0; i < PuppetConstants::kSleepCount; ++i) {
+    absl::SleepFor(absl::Microseconds(10));
+  }
+}
 
 // Load the .so with dlopen and call the function in it.
 static void LoadSoWithDlopenAndCallFunction() {
@@ -51,7 +59,9 @@ int LinuxTracingIntegrationTestPuppetMain() {
     }
 
     LOG("Puppet received command: %s", command);
-    if (command == PuppetConstants::kDlopenCommand) {
+    if (command == PuppetConstants::kSleepCommand) {
+      SleepRepeatedly();
+    } else if (command == PuppetConstants::kDlopenCommand) {
       LoadSoWithDlopenAndCallFunction();
     } else {
       ERROR("Unknown command: %s", command);
