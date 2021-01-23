@@ -82,7 +82,12 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kSystemMemoryUsage:
       // TODO (http://b/179000848): Process the system memory usage information.
       break;
-    case ClientCaptureEvent::EVENT_NOT_SET:
+    case ClientCaptureEvent::kApiEvent: {
+      auto& api_event = event.api_event();
+      LOG("API EVENT RECEIVED!! %s", api_event.name());
+      break;
+    }
+    case CaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
   }
