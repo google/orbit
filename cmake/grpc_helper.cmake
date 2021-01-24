@@ -45,7 +45,7 @@ function(grpc_helper)
   target_link_libraries(${ARGV0} PUBLIC CONAN_PKG::grpc)
   target_include_directories(${ARGV0} PUBLIC ${bin_dir})
 
-  # include-what-you-use needs full source-code visibilty, which means
+  # include-what-you-use needs full source-code visibility, which means
   # we don't need to compile all the code, but we need to run all code
   # generators. The following snippet adds auto-generated grpc files
   # as build dependencies to the include-what-you-use target.

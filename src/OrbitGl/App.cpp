@@ -144,7 +144,7 @@ OrbitApp::~OrbitApp() {
   try {
     thread_pool_->ShutdownAndWait();
   } catch (const std::exception& e) {
-    FATAL("Exception occured in ThreadPool::ShutdownAndWait(): %s", e.what());
+    FATAL("Exception occurred in ThreadPool::ShutdownAndWait(): %s", e.what());
   }
 
 #ifdef _WIN32

@@ -36,7 +36,7 @@ class ElfFile {
   // address, they are calculated as offset from some virtual 0 where that
   // virtual zero can be different from the base address.
   //
-  // The way to calculate the virtual zero is to take base address and substract
+  // The way to calculate the virtual zero is to take base address and subtract
   // from it the minimum vaddr specified in PT_LOAD program headers.
   //
   // This method returns load bias for the elf-file if program headers are
