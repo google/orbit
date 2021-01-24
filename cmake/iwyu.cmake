@@ -78,7 +78,7 @@ fi
   endif()
 endif()
 
-# include-what-you-use needs full source-code visibilty, which means
+# include-what-you-use needs full source-code visibility, which means
 # we don't need to compile all the code, but we need to run all code
 # generators. The following functions takes care of Qt's UI files.
 # It calls the generator without compiling the related classes.

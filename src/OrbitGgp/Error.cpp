@@ -22,7 +22,7 @@ std::string ErrorCategory::message(int condition) const {
       return "Unable to parse JSON.";
   }
 
-  return absl::StrFormat("Unkown error condition: %i.", condition);
+  return absl::StrFormat("Unknown error condition: %i.", condition);
 }
 
 }  // namespace orbit_ggp
