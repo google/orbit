@@ -76,7 +76,7 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
                    this, &ConnectToStadiaWidget::OnSelectionChanged);
   QObject::connect(ui_->rememberCheckBox, &QCheckBox::toggled, this,
                    &ConnectToStadiaWidget::OnRememberCheckBoxToggled);
-  QObject::connect(ui_->refreshButton, &QPushButton::clicked,
+  QObject::connect(ui_->refreshButton, &QPushButton::clicked, this,
                    [this]() { emit InstanceReloadRequested(); });
 
   SetupStateMachine();

@@ -45,6 +45,9 @@ class ConnectToStadiaWidget : public QWidget {
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() { return grpc_channel_; }
   void Start(SshConnectionArtifacts* ssh_connection_artifacts,
              std::optional<StadiaConnection> connection = std::nullopt);
+  [[nodiscard]] std::optional<orbit_ggp::Instance> GetSelectedInstance() const {
+    return selected_instance_;
+  }
 
  public slots:
   void SetActive(bool value);
