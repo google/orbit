@@ -68,4 +68,34 @@ TEST(Future, MoveAfterResultSet) {
   ASSERT_TRUE(future2.IsFinished());
   EXPECT_EQ(future2.Get(), 42);
 }
+
+TEST(Future, RegisterContinuationOnInvalidFuture) {
+  orbit_base::Promise<void> promise{};
+  orbit_base::Future<void> future = promise.GetFuture();
+
+  auto future2 = std::move(future);
+  EXPECT_TRUE(future2.IsValid());
+  EXPECT_FALSE(future.IsValid());
+
+  EXPECT_EQ(future.RegisterContinuation([]() {}),
+            orbit_base::FutureRegisterContinuationResult::kFutureNotValid);
+}
+
+TEST(Future, RegisterContinuationOnValidButFinishedFuture) {
+  orbit_base::Promise<void> promise{};
+  orbit_base::Future<void> future = promise.GetFuture();
+
+  promise.MarkFinished();
+
+  EXPECT_EQ(future.RegisterContinuation([]() {}),
+            orbit_base::FutureRegisterContinuationResult::kFutureAlreadyCompleted);
+}
+
+TEST(Future, RegisterContinuationOnValidAndUnfinishedFuture) {
+  orbit_base::Promise<void> promise{};
+  orbit_base::Future<void> future = promise.GetFuture();
+
+  EXPECT_EQ(future.RegisterContinuation([]() {}),
+            orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered);
+}
 }  // namespace orbit_base

@@ -431,7 +431,8 @@ TEST(ThreadPool, FutureContinuation) {
     orbit_base::Future<void> future =
         thread_pool->Schedule([&]() { absl::MutexLock lock(&mutex); });
 
-    future.RegisterContinuation([&]() { called = true; });
+    auto const result = future.RegisterContinuation([&]() { called = true; });
+    EXPECT_EQ(result, orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered);
 
     EXPECT_TRUE(future.IsValid());
     EXPECT_FALSE(future.IsFinished());
