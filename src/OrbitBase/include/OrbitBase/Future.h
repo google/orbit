@@ -47,6 +47,12 @@ class FutureBase {
 
 namespace orbit_base {
 
+enum class FutureRegisterContinuationResult {
+  kSuccessfullyRegistered,
+  kFutureAlreadyCompleted,
+  kFutureNotValid
+};
+
 // A future type, similar to std::future but prepared to integrate with
 // Orbit-specific code like MainThreadExecutor and ThreadPool.
 //
@@ -90,11 +96,16 @@ class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
   // The continuation is potentially executed on a background thread,
   // which means you have to be aware of race-conditions while registering
   // the continuation and potential mutex deadlocks in the continuation.
-  void RegisterContinuation(std::function<void(const T&)> continuation) const {
-    if (!this->IsValid()) return;
+  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(
+      std::function<void(const T&)> continuation) const {
+    if (!this->IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
 
     absl::MutexLock lock{&this->shared_state_->mutex};
+    if (this->shared_state_->result.has_value()) {
+      return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
+    }
     this->shared_state_->continuations.emplace_back(std::move(continuation));
+    return FutureRegisterContinuationResult::kSuccessfullyRegistered;
   }
 
   void Wait() const {
@@ -129,11 +140,16 @@ class Future<void> : public orbit_base_internal::FutureBase<void> {
 
   // Check Future<T>::RegisterContinuation for a warning about this function.
   // TLDR: You probably want to use `Future<void>::Then` instead!
-  void RegisterContinuation(std::function<void()> continuation) const {
-    if (!IsValid()) return;
+  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(
+      std::function<void()> continuation) const {
+    if (!this->IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
 
-    absl::MutexLock lock{&shared_state_->mutex};
-    shared_state_->continuations.emplace_back(std::move(continuation));
+    absl::MutexLock lock{&this->shared_state_->mutex};
+    if (this->shared_state_->finished) {
+      return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
+    }
+    this->shared_state_->continuations.emplace_back(std::move(continuation));
+    return FutureRegisterContinuationResult::kSuccessfullyRegistered;
   }
 
   void Wait() const {

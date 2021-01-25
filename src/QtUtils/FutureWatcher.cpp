@@ -35,12 +35,12 @@ FutureWatcher::Reason FutureWatcher::WaitFor(
     timer.start(timeout.value());
   }
 
-  future.RegisterContinuation(
+  const orbit_base::FutureRegisterContinuationResult result = future.RegisterContinuation(
       [loop = QPointer{&loop}] { QMetaObject::invokeMethod(loop, &QEventLoop::quit); });
 
-  // Ensure that no race condition occured. The futured could have completed while we were setting
-  // the continuation.
-  if (future.IsFinished()) return Reason::kFutureCompleted;
+  if (result != orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered) {
+    return Reason::kFutureCompleted;
+  }
 
   loop.exec();
 
@@ -87,22 +87,23 @@ FutureWatcher::Reason FutureWatcher::WaitForAll(
       --shared_data->completion_counter;
       *indicator_iterator = true;
     } else {
-      future.RegisterContinuation([shared_data, indicator_iterator, loop = QPointer{&loop}]() {
-        absl::MutexLock lock{&shared_data->mutex};
+      const orbit_base::FutureRegisterContinuationResult result =
+          future.RegisterContinuation([shared_data, indicator_iterator, loop = QPointer{&loop}]() {
+            absl::MutexLock lock{&shared_data->mutex};
 
-        if (shared_data->completion_counter == 0) return;
+            if (shared_data->completion_counter == 0) return;
 
-        if (!*indicator_iterator) {
-          *indicator_iterator = true;
-          --shared_data->completion_counter;
-        }
+            if (!*indicator_iterator) {
+              *indicator_iterator = true;
+              --shared_data->completion_counter;
+            }
 
-        if (shared_data->completion_counter == 0) {
-          QMetaObject::invokeMethod(loop, &QEventLoop::quit);
-        }
-      });
+            if (shared_data->completion_counter == 0) {
+              QMetaObject::invokeMethod(loop, &QEventLoop::quit);
+            }
+          });
 
-      if (future.IsFinished()) {
+      if (result == orbit_base::FutureRegisterContinuationResult::kFutureAlreadyCompleted) {
         absl::MutexLock lock{&shared_data->mutex};
         if (!*indicator_iterator) {
           --shared_data->completion_counter;
