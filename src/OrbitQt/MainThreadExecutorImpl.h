@@ -15,8 +15,12 @@ namespace orbit_qt {
 // An implementation of MainThreadExecutor that integrates with Qt's event loop
 class MainThreadExecutorImpl : public QObject, public MainThreadExecutor {
   Q_OBJECT
- public:
   explicit MainThreadExecutorImpl(QObject* parent = nullptr) : QObject(parent) {}
+
+ public:
+  [[nodiscard]] static std::shared_ptr<MainThreadExecutorImpl> Create() {
+    return std::shared_ptr<MainThreadExecutorImpl>{new MainThreadExecutorImpl{}};
+  }
 
   using MainThreadExecutor::Schedule;
   void Schedule(std::unique_ptr<Action> action) override;

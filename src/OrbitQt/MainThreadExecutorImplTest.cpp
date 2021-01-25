@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <memory>
 
 #include "MainThreadExecutorImpl.h"
 
@@ -15,8 +16,8 @@ static int argc = 0;
 TEST(MainThreadExecutorImpl, Schedule) {
   QCoreApplication app{argc, nullptr};
 
-  MainThreadExecutorImpl executor{};
-  (void)executor.Schedule([]() { QCoreApplication::instance()->exit(42); });
+  auto executor = MainThreadExecutorImpl::Create();
+  (void)executor->Schedule([]() { QCoreApplication::exit(42); });
 
   EXPECT_EQ(app.exec(), 42);
 }
@@ -25,9 +26,9 @@ TEST(MainThreadExecutorImpl, Wait) {
   QCoreApplication app{argc, nullptr};
 
   bool called = false;
-  MainThreadExecutorImpl executor{};
-  orbit_base::Future<void> future = executor.Schedule([&called]() { called = true; });
-  EXPECT_EQ(executor.WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
+  auto executor = MainThreadExecutorImpl::Create();
+  orbit_base::Future<void> future = executor->Schedule([&called]() { called = true; });
+  EXPECT_EQ(executor->WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
 }
 
 }  // namespace orbit_qt

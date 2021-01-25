@@ -146,7 +146,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
                                  uint32_t font_size,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : QMainWindow(nullptr),
-      main_thread_executor_{std::make_unique<orbit_qt::MainThreadExecutorImpl>()},
+      main_thread_executor_{orbit_qt::MainThreadExecutorImpl::Create()},
       app_{OrbitApp::Create(main_thread_executor_.get(), metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
       target_configuration_(std::move(target_configuration)) {
