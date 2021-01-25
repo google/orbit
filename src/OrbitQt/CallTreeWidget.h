@@ -67,6 +67,7 @@ class CallTreeWidget : public QWidget {
   static const QString kActionSelect;
   static const QString kActionDeselect;
   static const QString kActionDisassembly;
+  static const QString kActionSourceCode;
   static const QString kActionCopySelection;
 
   class HighlightCustomFilterSortFilterProxyModel : public QSortFilterProxyModel {

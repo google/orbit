@@ -5,6 +5,7 @@
 #include "SamplingReportDataView.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -31,6 +32,8 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
+
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
     : DataView(DataViewType::kSampling, app), callstack_data_view_(nullptr) {}
@@ -200,18 +203,22 @@ const std::string SamplingReportDataView::kMenuActionSelect = "Hook";
 const std::string SamplingReportDataView::kMenuActionUnselect = "Unhook";
 const std::string SamplingReportDataView::kMenuActionLoadSymbols = "Load Symbols";
 const std::string SamplingReportDataView::kMenuActionDisassembly = "Go to Disassembly";
+const std::string SamplingReportDataView::kMenuActionSourceCode = "Go to Source code";
 
 std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
   bool enable_disassembly = false;
+  bool enable_source_code = false;
 
   if (app_->IsCaptureConnected(app_->GetCaptureData())) {
     absl::flat_hash_set<const FunctionInfo*> selected_functions =
         GetFunctionsFromIndices(selected_indices);
 
     enable_disassembly = !selected_functions.empty();
+    enable_source_code =
+        !selected_functions.empty() && absl::GetFlag(FLAGS_enable_source_code_view);
 
     for (const FunctionInfo* function : selected_functions) {
       enable_select |= !app_->IsFunctionSelected(*function);
@@ -232,6 +239,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
   if (enable_load) menu.emplace_back(kMenuActionLoadSymbols);
   if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
+  if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
@@ -260,6 +268,10 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
     int32_t pid = app_->GetCaptureData().process_id();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       app_->Disassemble(pid, *function);
+    }
+  } else if (action == kMenuActionSourceCode) {
+    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
+      app_->ShowSourceCode(*function);
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

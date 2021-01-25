@@ -4,6 +4,7 @@
 
 #include "CallStackDataView.h"
 
+#include <absl/flags/flag.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -21,6 +22,8 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
+
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 CallStackDataView::CallStackDataView(OrbitApp* app) : DataView(DataViewType::kCallstack, app) {}
 
@@ -103,6 +106,7 @@ const std::string CallStackDataView::kMenuActionDisassembly = "Go to Disassembly
 const std::string CallStackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallStackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
+const std::string CallStackDataView::kMenuActionSourceCode = "Go to Source code";
 
 std::vector<std::string> CallStackDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -110,6 +114,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
   bool enable_disassembly = false;
+  bool enable_source_code = false;
   for (int index : selected_indices) {
     CallStackDataViewFrame frame = GetFrameFromRow(index);
     const FunctionInfo* function = frame.function;
@@ -119,6 +124,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
       enable_select |= !app_->IsFunctionSelected(*function);
       enable_unselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
+      enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
     } else if (module != nullptr && !module->is_loaded()) {
       enable_load = true;
     }
@@ -129,6 +135,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
   if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
+  if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
@@ -165,6 +172,11 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
     const int32_t pid = app_->GetCaptureData().process_id();
     for (int i : item_indices) {
       app_->Disassemble(pid, *GetFrameFromRow(i).function);
+    }
+
+  } else if (action == kMenuActionSourceCode) {
+    for (int i : item_indices) {
+      app_->ShowSourceCode(*GetFrameFromRow(i).function);
     }
 
   } else {

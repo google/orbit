@@ -90,6 +90,7 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -548,6 +549,11 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                              capture_data.GetCallstackData()->GetCallstackEventsCount());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
+}
+
+void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function) {
+  // For now this is just a stub. This will change in a subsequent commit
+  LOG("The user requested to show source code for the function %s", function.pretty_name());
 }
 
 Timer GMainTimer;

@@ -128,6 +128,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void ListPresets();
   void RefreshCaptureView();
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
+  void ShowSourceCode(const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted(
       ProcessData&& process,

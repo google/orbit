@@ -64,6 +64,7 @@ class FunctionsDataView : public DataView {
   static const std::string kMenuActionEnableFrameTrack;
   static const std::string kMenuActionDisableFrameTrack;
   static const std::string kMenuActionDisassembly;
+  static const std::string kMenuActionSourceCode;
 
  private:
   static bool ShouldShowSelectedFunctionIcon(OrbitApp* app,

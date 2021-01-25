@@ -5,6 +5,7 @@
 #include "CallTreeWidget.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/match.h>
 #include <math.h>
 #include <stdint.h>
@@ -43,6 +44,8 @@
 #include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
+
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 CallTreeWidget::CallTreeWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
@@ -264,6 +267,7 @@ const QString CallTreeWidget::kActionLoadSymbols = QStringLiteral("&Load Symbols
 const QString CallTreeWidget::kActionSelect = QStringLiteral("&Hook");
 const QString CallTreeWidget::kActionDeselect = QStringLiteral("&Unhook");
 const QString CallTreeWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
+const QString CallTreeWidget::kActionSourceCode = QStringLiteral("Go to &Source Code");
 const QString CallTreeWidget::kActionCopySelection = QStringLiteral("Copy Selection");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
@@ -391,11 +395,13 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   bool enable_select = false;
   bool enable_deselect = false;
   bool enable_disassembly = false;
+  bool enable_source_code = false;
   if (app_->IsCaptureConnected(app_->GetCaptureData())) {
     for (const FunctionInfo* function : functions) {
       enable_select |= !app_->IsFunctionSelected(*function);
       enable_deselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
+      enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
     }
   }
 
@@ -413,6 +419,7 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   menu.addAction(kActionSelect)->setEnabled(enable_select);
   menu.addAction(kActionDeselect)->setEnabled(enable_deselect);
   menu.addAction(kActionDisassembly)->setEnabled(enable_disassembly);
+  menu.addAction(kActionSourceCode)->setEnabled(enable_source_code);
   menu.addSeparator();
   menu.addAction(kActionCopySelection)->setEnabled(enable_copy);
 
@@ -450,6 +457,10 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
   } else if (action->text() == kActionDisassembly) {
     for (const FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
+    }
+  } else if (action->text() == kActionSourceCode) {
+    for (const FunctionInfo* function : functions) {
+      app_->ShowSourceCode(*function);
     }
   } else if (action->text() == kActionCopySelection) {
     app_->SetClipboard(BuildStringFromIndices(
