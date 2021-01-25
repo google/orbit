@@ -55,7 +55,8 @@ class OrbitMainWindow : public QMainWindow {
  public:
   static constexpr int kEndSessionReturnCode = 1;
 
-  explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration, uint32_t font_size);
+  explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration, uint32_t font_size,
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }

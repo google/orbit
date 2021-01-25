@@ -39,6 +39,7 @@
 #include "Connections.h"
 #include "DeploymentConfigurations.h"
 #include "ImGuiOrbit.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/ScopedConnection.h"
@@ -84,6 +85,16 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
   std::optional<orbit_qt::TargetConfiguration> target_config;
 
+  ErrorMessageOr<orbit_metrics_uploader::MetricsUploader> metrics_uploader = ErrorMessage("");
+  if (absl::GetFlag(FLAGS_enable_metrics)) {
+    metrics_uploader = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
+    if (metrics_uploader.has_value()) {
+      LOG("MetricsUploader was initialized successfully");
+    } else {
+      ERROR("%s", metrics_uploader.error().message());
+    }
+  }
+
   while (true) {
     {
       orbit_qt::ProfilingTargetDialog target_dialog{&ssh_connection_artifacts,
@@ -110,7 +121,8 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
       constexpr uint32_t kDefaultFontSize = 14;
 
-      OrbitMainWindow w(std::move(target_config.value()), kDefaultFontSize);
+      OrbitMainWindow w(std::move(target_config.value()), kDefaultFontSize,
+                        metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr);
 
       // "resize" is required to make "showMaximized" work properly.
       w.resize(1280, 720);

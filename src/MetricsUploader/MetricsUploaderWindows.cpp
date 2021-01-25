@@ -58,43 +58,32 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
 
   metrics_uploader_client_dll = LoadLibraryA(client_name.c_str());
   if (nullptr != metrics_uploader_client_dll) {
-    LOG("Metrics uploader client library is loaded");
-
     auto start_uploader_client_addr = reinterpret_cast<Result (*)()>(
         GetProcAddress(metrics_uploader_client_dll, kStartUploaderClientFunctionName));
     if (nullptr == start_uploader_client_addr) {
-      std::string error_message =
-          absl::StrFormat("%s function not found", kStartUploaderClientFunctionName);
-      ERROR("%s", error_message);
       FreeLibrary(metrics_uploader_client_dll);
-      return ErrorMessage(error_message);
+      return ErrorMessage(
+          absl::StrFormat("%s function not found", kStartUploaderClientFunctionName));
     }
 
     auto send_log_event_addr = reinterpret_cast<Result (*)(const uint8_t*, int)>(
         GetProcAddress(metrics_uploader_client_dll, kSendLogEventFunctionName));
     if (nullptr == send_log_event_addr) {
-      std::string error_message =
-          absl::StrFormat("%s function not found", kSendLogEventFunctionName);
-      ERROR("%s", error_message);
       FreeLibrary(metrics_uploader_client_dll);
-      return ErrorMessage(error_message);
+      return ErrorMessage(absl::StrFormat("%s function not found", kSendLogEventFunctionName));
     }
 
     // set up connection and create a client
     Result result = start_uploader_client_addr();
     if (result != kNoError) {
-      std::string error_message = absl::StrFormat(
-          "Error while starting the metrics uploader client: %s", GetErrorMessage(result));
-      ERROR("%s", error_message);
       FreeLibrary(metrics_uploader_client_dll);
-      return ErrorMessage(error_message);
+      return ErrorMessage(absl::StrFormat("Error while starting the metrics uploader client: %s",
+                                          GetErrorMessage(result)));
     }
 
     return MetricsUploader(client_name, send_log_event_addr, metrics_uploader_client_dll);
   }
-  std::string error_message = "Metrics uploader client library is not found";
-  ERROR("%s", error_message);
-  return ErrorMessage(error_message);
+  return ErrorMessage("Metrics uploader client library is not found");
 }
 
 }  // namespace orbit_metrics_uploader
