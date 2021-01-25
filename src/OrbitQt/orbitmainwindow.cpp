@@ -143,10 +143,11 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
-                                 uint32_t font_size)
+                                 uint32_t font_size,
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : QMainWindow(nullptr),
       main_thread_executor_{std::make_unique<orbit_qt::MainThreadExecutorImpl>()},
-      app_{OrbitApp::Create(main_thread_executor_.get())},
+      app_{OrbitApp::Create(main_thread_executor_.get(), metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
       target_configuration_(std::move(target_configuration)) {
   SetupMainWindow(font_size);
