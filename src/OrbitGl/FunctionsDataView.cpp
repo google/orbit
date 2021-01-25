@@ -4,6 +4,7 @@
 
 #include "FunctionsDataView.h"
 
+#include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
@@ -29,6 +30,8 @@
 #endif
 
 using orbit_client_protos::FunctionInfo;
+
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 FunctionsDataView::FunctionsDataView(OrbitApp* app) : DataView(DataViewType::kFunctions, app) {}
 
@@ -185,6 +188,7 @@ const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
 const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
 const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
 const std::string FunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
+const std::string FunctionsDataView::kMenuActionSourceCode = "Go to Source code";
 
 std::vector<std::string> FunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -207,6 +211,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   if (enable_enable_frame_track) menu.emplace_back(kMenuActionEnableFrameTrack);
   if (enable_disable_frame_track) menu.emplace_back(kMenuActionDisableFrameTrack);
   menu.emplace_back(kMenuActionDisassembly);
+  if (absl::GetFlag(FLAGS_enable_source_code_view)) menu.emplace_back(kMenuActionSourceCode);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
@@ -248,6 +253,10 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
   } else if (action == kMenuActionDisassembly) {
     for (int i : item_indices) {
       app_->Disassemble(app_->GetTargetProcess()->pid(), *GetFunction(i));
+    }
+  } else if (action == kMenuActionSourceCode) {
+    for (int i : item_indices) {
+      app_->ShowSourceCode(*GetFunction(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

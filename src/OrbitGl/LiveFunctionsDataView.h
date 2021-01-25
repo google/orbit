@@ -79,6 +79,7 @@ class LiveFunctionsDataView : public DataView {
   static const std::string kMenuActionJumpToMin;
   static const std::string kMenuActionJumpToMax;
   static const std::string kMenuActionDisassembly;
+  static const std::string kMenuActionSourceCode;
   static const std::string kMenuActionIterate;
   static const std::string kMenuActionEnableFrameTrack;
   static const std::string kMenuActionDisableFrameTrack;

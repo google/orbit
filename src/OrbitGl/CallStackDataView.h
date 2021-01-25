@@ -85,6 +85,7 @@ class CallStackDataView : public DataView {
   static const std::string kMenuActionDisassembly;
   static const std::string kHighlightedFunctionString;
   static const std::string kHighlightedFunctionBlankString;
+  static const std::string kMenuActionSourceCode;
 
  private:
   absl::flat_hash_set<uint64_t> functions_to_highlight_;

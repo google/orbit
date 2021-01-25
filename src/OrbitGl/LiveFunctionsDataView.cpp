@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
@@ -34,6 +35,8 @@
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app)
     : DataView(DataViewType::kLiveFunctions, app),
@@ -196,12 +199,14 @@ const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disasse
 const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
 const std::string LiveFunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
 const std::string LiveFunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
+const std::string LiveFunctionsDataView::kMenuActionSourceCode = "Go to Source code";
 
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
   bool enable_disassembly = false;
+  bool enable_source_code = false;
   bool enable_iterator = false;
   bool enable_enable_frame_track = false;
   bool enable_disable_frame_track = false;
@@ -215,6 +220,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
       enable_select |= !app_->IsFunctionSelected(selected_function);
       enable_unselect |= app_->IsFunctionSelected(selected_function);
       enable_disassembly = true;
+      enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
     }
 
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
@@ -234,6 +240,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
   if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
+  if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
 
   if (enable_iterator) {
     menu.emplace_back(kMenuActionIterate);
@@ -280,6 +287,8 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       } else if (action == kMenuActionDisassembly) {
         int32_t pid = capture_data.process_id();
         app_->Disassemble(pid, selected_function);
+      } else if (action == kMenuActionSourceCode) {
+        app_->ShowSourceCode(selected_function);
       }
     }
   } else if (action == kMenuActionJumpToFirst) {
