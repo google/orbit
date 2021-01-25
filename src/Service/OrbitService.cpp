@@ -18,6 +18,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGrpcServer.h"
 #include "OrbitVersion/OrbitVersion.h"
+#include "ProducerSideChannel/ProducerSideChannel.h"
+#include "ProducerSideServer.h"
 
 namespace {
 
@@ -52,6 +54,7 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   LOG("Orbit Service is running in DEBUG!");
   LOG("**********************************");
 #endif
+
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
   LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server;
@@ -61,6 +64,17 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
     return;
   }
   LOG("gRPC server is running");
+
+  LOG("Starting producer-side server at %s",
+      orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
+  ProducerSideServer producer_side_server;
+  if (!producer_side_server.BuildAndStart(
+          orbit_producer_side_channel::kProducerSideUnixDomainSocketPath)) {
+    ERROR("Unable to start producer-side server");
+    return;
+  }
+  LOG("Producer-side server is running");
+  grpc_server->AddCaptureStartStopListener(&producer_side_server);
 
   // Make stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
@@ -83,6 +97,9 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
 
     std::this_thread::sleep_for(std::chrono::seconds{1});
   }
+
+  producer_side_server.ShutdownAndWait();
+  grpc_server->RemoveCaptureStartStopListener(&producer_side_server);
 
   grpc_server->Shutdown();
   grpc_server->Wait();
