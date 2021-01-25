@@ -121,6 +121,16 @@ class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
         &this->shared_state_->result));
   }
 
+  // This is syntactic sugar for MainThreadExecutor (or maybe other executors in the future).
+  // `invocable` will be executed by `executor` after this future has completed.
+  //
+  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
+  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
+  template <typename Executor, typename Invocable>
+  auto Then(Executor * executor, Invocable && invocable) const {
+    return executor->ScheduleAfter(*this, std::forward<Invocable>(invocable));
+  }
+
  private:
   friend orbit_base_internal::PromiseBase<T>;
 
@@ -167,6 +177,16 @@ class Future<void> : public orbit_base_internal::FutureBase<void> {
     absl::MutexLock lock{&this->shared_state_->mutex};
     shared_state_->mutex.Await(absl::Condition(
         +[](bool* finished) { return *finished; }, &shared_state_->finished));
+  }
+
+  // This is syntactic sugar for MainThreadExecutor (or maybe other executors in the future).
+  // `invocable` will be executed by `executor` after this future has completed.
+  //
+  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
+  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
+  template <typename Executor, typename Invocable>
+  auto Then(Executor* executor, Invocable&& invocable) const {
+    return executor->ScheduleAfter(*this, std::forward<Invocable>(invocable));
   }
 
  private:

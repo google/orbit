@@ -126,4 +126,19 @@ TEST(MainThreadExecutorImpl, Wait) {
   EXPECT_EQ(executor->WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
 }
 
+TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
+  QCoreApplication app{argc, nullptr};
+
+  auto executor = MainThreadExecutorImpl::Create();
+  const auto future = executor->Schedule([]() { return 42; });
+  const auto future2 = future.Then(executor.get(), [](int val) {
+    QCoreApplication::exit(val);
+    return val + 42;
+  });
+
+  EXPECT_EQ(app.exec(), 42);
+  EXPECT_TRUE(future2.IsFinished());
+  EXPECT_EQ(future2.Get(), 42 + 42);
+}
+
 }  // namespace orbit_qt
