@@ -47,3 +47,9 @@ TEST(MetricsUploader, CreateTwoMetricsUploaders) {
   auto metrics_uploader2 = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
   EXPECT_EQ(metrics_uploader2.has_value(), false);
 }
+
+TEST(MetricsUploader, CreateMetricsUploaderFromNonexistentClient) {
+  auto metrics_uploader =
+      MetricsUploader::CreateMetricsUploader("NonexistentMetricsUploaderClient");
+  EXPECT_EQ(metrics_uploader.has_value(), false);
+}
