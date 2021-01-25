@@ -31,17 +31,17 @@ static void SleepRepeatedly() {
   }
 }
 
-extern "C" __attribute__((noinline)) void InnerFunctionToInstrument() {
+extern "C" __attribute__((noinline)) double InnerFunctionToInstrument() {
   double result = 1;
   for (size_t i = 0; i < 1'000'000; ++i) {
     result = 1 / (2 + result);
   }
-  LOG("InnerFunctionToInstrument: %f", 1 + result);
+  return 1 + result;
 }
 
 extern "C" __attribute__((noinline)) void OuterFunctionToInstrument() {
   for (uint64_t i = 0; i < PuppetConstants::kInnerFunctionCallCount; ++i) {
-    InnerFunctionToInstrument();
+    LOG("InnerFunctionToInstrument returned: %f", InnerFunctionToInstrument());
   }
 }
 
