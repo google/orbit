@@ -109,6 +109,7 @@ target_sources(LinuxTracingIntegrationTests PRIVATE
         LinuxTracingIntegrationTestPuppet.h)
 
 target_link_libraries(LinuxTracingIntegrationTests PRIVATE
+        ElfUtils
         LinuxTracing
         OrbitBase
         GTest::GTest
