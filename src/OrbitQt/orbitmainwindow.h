@@ -163,7 +163,7 @@ class OrbitMainWindow : public QMainWindow {
   void LoadCaptureOptionsIntoApp();
 
  private:
-  std::unique_ptr<MainThreadExecutor> main_thread_executor_;
+  std::shared_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
   FilterPanelWidgetAction* filter_panel_action_ = nullptr;
