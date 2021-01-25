@@ -96,15 +96,20 @@ class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
   // The continuation is potentially executed on a background thread,
   // which means you have to be aware of race-conditions while registering
   // the continuation and potential mutex deadlocks in the continuation.
-  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(
-      std::function<void(const T&)> continuation) const {
+  template <typename Invocable>
+  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(Invocable && continuation)
+      const {
     if (!this->IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
 
     absl::MutexLock lock{&this->shared_state_->mutex};
     if (this->shared_state_->result.has_value()) {
       return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
     }
-    this->shared_state_->continuations.emplace_back(std::move(continuation));
+
+    // Executors based on orbit_base::Future/Promise may rely on the fact, that `continuation` is
+    // only moved, when `RegisterContinuation` return kSuccessfullyRegistered. So when changed that
+    // behaviour, please check those implementations.
+    this->shared_state_->continuations.emplace_back(std::forward<Invocable>(continuation));
     return FutureRegisterContinuationResult::kSuccessfullyRegistered;
   }
 
@@ -140,15 +145,20 @@ class Future<void> : public orbit_base_internal::FutureBase<void> {
 
   // Check Future<T>::RegisterContinuation for a warning about this function.
   // TLDR: You probably want to use `Future<void>::Then` instead!
+  template <typename Invocable>
   [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(
-      std::function<void()> continuation) const {
+      Invocable&& continuation) const {
     if (!this->IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
 
     absl::MutexLock lock{&this->shared_state_->mutex};
     if (this->shared_state_->finished) {
       return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
     }
-    this->shared_state_->continuations.emplace_back(std::move(continuation));
+
+    // Executors based on orbit_base::Future/Promise may rely on the fact, that `continuation` is
+    // only moved, when `RegisterContinuation` return kSuccessfullyRegistered. So when changed that
+    // behaviour, please check those implementations.
+    this->shared_state_->continuations.emplace_back(std::forward<Invocable>(continuation));
     return FutureRegisterContinuationResult::kSuccessfullyRegistered;
   }
 
