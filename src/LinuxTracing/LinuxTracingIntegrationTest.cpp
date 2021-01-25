@@ -13,9 +13,11 @@
 #include <array>
 #include <thread>
 
+#include "ElfUtils/ElfFile.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingIntegrationTestPuppet.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -26,7 +28,7 @@ namespace {
 
 [[nodiscard]] bool IsRunningAsRoot() { return geteuid() == 0; }
 
-[[nodiscard]] __attribute__((unused)) bool CheckIsRunningAsRoot() {
+[[nodiscard]] bool CheckIsRunningAsRoot() {
   if (IsRunningAsRoot()) {
     return true;
   }
@@ -222,11 +224,21 @@ class LinuxTracingIntegrationTestFixture {
 
   [[nodiscard]] std::string ReadLineFromPuppet() { return puppet_.ReadLine(); }
 
-  void StartTracing() {
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions BuildDefaultCaptureOptions() {
+    orbit_grpc_protos::CaptureOptions capture_options;
+    capture_options.set_trace_context_switches(true);
+    capture_options.set_pid(puppet_.GetChildPid());
+    capture_options.set_sampling_rate(1000.0);
+    capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
+    capture_options.set_trace_thread_state(true);
+    capture_options.set_trace_gpu_driver(true);
+    return capture_options;
+  }
+
+  void StartTracing(orbit_grpc_protos::CaptureOptions capture_options) {
     CHECK(!tracer_.has_value());
     CHECK(!listener_.has_value());
-    orbit_grpc_protos::CaptureOptions capture_options = BuildCaptureOptions();
-    tracer_.emplace(capture_options);
+    tracer_.emplace(std::move(capture_options));
     listener_.emplace();
     tracer_->SetListener(&*listener_);
     tracer_->Start();
@@ -243,18 +255,6 @@ class LinuxTracingIntegrationTestFixture {
   }
 
  private:
-  [[nodiscard]] orbit_grpc_protos::CaptureOptions BuildCaptureOptions() {
-    orbit_grpc_protos::CaptureOptions capture_options;
-    capture_options.set_trace_context_switches(true);
-    capture_options.set_pid(puppet_.GetChildPid());
-    capture_options.set_sampling_rate(1000.0);
-    capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
-    capture_options.set_trace_thread_state(true);
-    capture_options.set_trace_gpu_driver(true);
-    return capture_options;
-  }
-
- private:
   ChildProcess puppet_;
   std::optional<Tracer> tracer_ = std::nullopt;
   std::optional<BufferTracerListener> listener_ = std::nullopt;
@@ -262,8 +262,25 @@ class LinuxTracingIntegrationTestFixture {
 
 using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
 
-constexpr absl::Duration kSleepAfterStartTracing = absl::Milliseconds(100);
-constexpr absl::Duration kSleepBeforeStopTracing = absl::Milliseconds(100);
+[[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent> TraceAndGetEvents(
+    LinuxTracingIntegrationTestFixture* fixture, std::string_view command,
+    std::optional<orbit_grpc_protos::CaptureOptions> capture_options = std::nullopt) {
+  CHECK(fixture != nullptr);
+  if (!capture_options.has_value()) {
+    capture_options = fixture->BuildDefaultCaptureOptions();
+  }
+
+  fixture->StartTracing(capture_options.value());
+  constexpr absl::Duration kSleepAfterStartTracing = absl::Milliseconds(100);
+  absl::SleepFor(kSleepAfterStartTracing);
+
+  fixture->WriteLineToPuppet(command);
+  while (fixture->ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
+
+  constexpr absl::Duration kSleepBeforeStopTracing = absl::Milliseconds(100);
+  absl::SleepFor(kSleepBeforeStopTracing);
+  return fixture->StopTracingAndGetEvents();
+}
 
 TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   if (!CheckIsPerfEventParanoidAtMost(-1)) {
@@ -271,12 +288,8 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   }
   LinuxTracingIntegrationTestFixture fixture;
 
-  fixture.StartTracing();
-  absl::SleepFor(kSleepAfterStartTracing);
-  fixture.WriteLineToPuppet(PuppetConstants::kSleepCommand);
-  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
-  absl::SleepFor(kSleepBeforeStopTracing);
-  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
 
   uint64_t scheduling_slice_count = 0;
   uint64_t last_out_timestamp_ns = 0;
@@ -305,18 +318,116 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount);
 }
 
+TEST(LinuxTracingIntegrationTest, FunctionCalls) {
+  if (!CheckIsRunningAsRoot()) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+
+  // Find the offset in the ELF file of the functions to instrument and add those functions to the
+  // CaptureOptions.
+  auto error_or_executable_path = orbit_base::GetExecutablePath(fixture.GetPuppetPid());
+  CHECK(error_or_executable_path.has_value());
+  const std::filesystem::path& executable_path = error_or_executable_path.value();
+
+  auto error_or_elf_file = orbit_elf_utils::ElfFile::Create(executable_path.string());
+  CHECK(error_or_elf_file.has_value());
+  const std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
+
+  auto error_or_module = elf_file->LoadSymbols();
+  CHECK(error_or_module.has_value());
+  orbit_grpc_protos::ModuleSymbols module = error_or_module.value();
+
+  bool outer_function_symbol_found = false;
+  bool inner_function_symbol_found = false;
+  constexpr uint64_t kOuterFunctionId = 1;
+  constexpr uint64_t kInnerFunctionId = 2;
+  for (const orbit_grpc_protos::SymbolInfo& symbol : module.symbol_infos()) {
+    if (symbol.name() == PuppetConstants::kOuterFunctionName) {
+      CHECK(!outer_function_symbol_found);
+      outer_function_symbol_found = true;
+      orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
+      instrumented_function.set_file_path(executable_path);
+      instrumented_function.set_file_offset(symbol.address() - module.load_bias());
+      instrumented_function.set_function_id(kOuterFunctionId);
+      capture_options.mutable_instrumented_functions()->Add(std::move(instrumented_function));
+    }
+
+    if (symbol.name() == PuppetConstants::kInnerFunctionName) {
+      CHECK(!inner_function_symbol_found);
+      inner_function_symbol_found = true;
+      orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
+      instrumented_function.set_file_path(executable_path);
+      instrumented_function.set_file_offset(symbol.address() - module.load_bias());
+      instrumented_function.set_function_id(kInnerFunctionId);
+      capture_options.mutable_instrumented_functions()->Add(std::move(instrumented_function));
+    }
+  }
+  CHECK(outer_function_symbol_found);
+  CHECK(inner_function_symbol_found);
+
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  std::vector<orbit_grpc_protos::FunctionCall> function_calls;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kFunctionCall) {
+      continue;
+    }
+
+    const orbit_grpc_protos::FunctionCall& function_call = event.function_call();
+    ASSERT_EQ(function_call.pid(), fixture.GetPuppetPid());
+    ASSERT_EQ(function_call.tid(), fixture.GetPuppetPid());
+    function_calls.emplace_back(function_call);
+  }
+
+  // We expect an ordered sequence of kInnerFunctionCallCount calls to the "inner" function followed
+  // by one call to the "outer" function, repeated kOuterFunctionCallCount times.
+  ASSERT_EQ(function_calls.size(), PuppetConstants::kOuterFunctionCallCount +
+                                       PuppetConstants::kOuterFunctionCallCount *
+                                           PuppetConstants::kInnerFunctionCallCount);
+  size_t function_call_index = 0;
+  for (size_t outer_index = 0; outer_index < PuppetConstants::kOuterFunctionCallCount;
+       ++outer_index) {
+    uint64_t inner_calls_duration_ns_sum = 0;
+    for (size_t inner_index = 0; inner_index < PuppetConstants::kInnerFunctionCallCount;
+         ++inner_index) {
+      const orbit_grpc_protos::FunctionCall& function_call = function_calls[function_call_index];
+      EXPECT_EQ(function_call.function_id(), kInnerFunctionId);
+      EXPECT_GT(function_call.duration_ns(), 0);
+      inner_calls_duration_ns_sum += function_call.duration_ns();
+      if (function_call_index > 0) {
+        EXPECT_GT(function_call.end_timestamp_ns(),
+                  function_calls[function_call_index - 1].end_timestamp_ns());
+      }
+      EXPECT_EQ(function_call.depth(), 1);
+      ++function_call_index;
+    }
+
+    {
+      const orbit_grpc_protos::FunctionCall& function_call = function_calls[function_call_index];
+      EXPECT_EQ(function_call.function_id(), kOuterFunctionId);
+      EXPECT_GT(function_call.duration_ns(), inner_calls_duration_ns_sum);
+      if (function_call_index > 0) {
+        EXPECT_GT(function_call.end_timestamp_ns(),
+                  function_calls[function_call_index - 1].end_timestamp_ns());
+      }
+      EXPECT_EQ(function_call.depth(), 0);
+      ++function_call_index;
+    }
+  }
+}
+
 TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
   if (!CheckIsPerfEventParanoidAtMost(-1)) {
     GTEST_SKIP();
   }
   LinuxTracingIntegrationTestFixture fixture;
 
-  fixture.StartTracing();
-  absl::SleepFor(kSleepAfterStartTracing);
-  fixture.WriteLineToPuppet(PuppetConstants::kSleepCommand);
-  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
-  absl::SleepFor(kSleepBeforeStopTracing);
-  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
 
   uint64_t running_slice_count = 0;
   uint64_t runnable_slice_count = 0;
@@ -377,12 +488,8 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
   // save the actual initial name so that we can later verify that it was received.
   std::string initial_puppet_name = orbit_base::GetThreadName(fixture.GetPuppetPid());
 
-  fixture.StartTracing();
-  absl::SleepFor(kSleepAfterStartTracing);
-  fixture.WriteLineToPuppet(PuppetConstants::kPthreadSetnameNpCommand);
-  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
-  absl::SleepFor(kSleepBeforeStopTracing);
-  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kPthreadSetnameNpCommand);
 
   std::vector<std::string> collected_event_names;
   for (const auto& event : events) {
@@ -411,12 +518,8 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
   }
   LinuxTracingIntegrationTestFixture fixture;
 
-  fixture.StartTracing();
-  absl::SleepFor(kSleepAfterStartTracing);
-  fixture.WriteLineToPuppet(PuppetConstants::kDlopenCommand);
-  while (fixture.ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
-  absl::SleepFor(kSleepBeforeStopTracing);
-  std::vector<orbit_grpc_protos::CaptureEvent> events = fixture.StopTracingAndGetEvents();
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kDlopenCommand);
 
   bool module_update_found = false;
   for (const auto& event : events) {

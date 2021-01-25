@@ -31,6 +31,26 @@ static void SleepRepeatedly() {
   }
 }
 
+extern "C" __attribute__((noinline)) void InnerFunctionToInstrument() {
+  double result = 1;
+  for (size_t i = 0; i < 1'000'000; ++i) {
+    result = 1 / (2 + result);
+  }
+  LOG("InnerFunctionToInstrument: %f", 1 + result);
+}
+
+extern "C" __attribute__((noinline)) void OuterFunctionToInstrument() {
+  for (uint64_t i = 0; i < PuppetConstants::kInnerFunctionCallCount; ++i) {
+    InnerFunctionToInstrument();
+  }
+}
+
+static void CallOuterFunctionToInstrument() {
+  for (uint64_t i = 0; i < PuppetConstants::kOuterFunctionCallCount; ++i) {
+    OuterFunctionToInstrument();
+  }
+}
+
 static void ChangeCurrentThreadName() {
   pthread_setname_np(pthread_self(), PuppetConstants::kNewThreadName);
 }
@@ -65,6 +85,8 @@ int LinuxTracingIntegrationTestPuppetMain() {
     LOG("Puppet received command: %s", command);
     if (command == PuppetConstants::kSleepCommand) {
       SleepRepeatedly();
+    } else if (command == PuppetConstants::kCallOuterFunctionCommand) {
+      CallOuterFunctionToInstrument();
     } else if (command == PuppetConstants::kPthreadSetnameNpCommand) {
       ChangeCurrentThreadName();
     } else if (command == PuppetConstants::kDlopenCommand) {
