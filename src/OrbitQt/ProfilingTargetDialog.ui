@@ -342,7 +342,7 @@
            <string>StartOrbit</string>
           </property>
           <property name="text">
-           <string>OK</string>
+           <string>Start Session</string>
           </property>
          </widget>
         </item>
@@ -366,7 +366,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../icons/orbiticons.qrc"/>
+  <include location="../../icons/orbiticons.qrc"/>
  </resources>
  <connections/>
 </ui>

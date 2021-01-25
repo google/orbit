@@ -197,7 +197,6 @@ void ProfilingTargetDialog::SetupStadiaStates() {
 
   // PROPERTIES
   // STATE state_stadia_
-  state_stadia_.assignProperty(ui_->confirmButton, "text", "Confirm Process");
   state_stadia_.assignProperty(ui_->confirmButton, "enabled", false);
   state_stadia_.assignProperty(ui_->confirmButton, "toolTip",
                                "Please connect to an instance and select a process.");
@@ -216,6 +215,7 @@ void ProfilingTargetDialog::SetupStadiaStates() {
 
   // STATE state_stadia_process_selected_
   state_stadia_process_selected_.assignProperty(ui_->confirmButton, "enabled", true);
+  state_stadia_process_selected_.assignProperty(ui_->confirmButton, "toolTip", "");
 
   // TRANSITIONS (and entered/exit events)
   // STATE state_stadia_
@@ -264,7 +264,6 @@ void ProfilingTargetDialog::SetupLocalStates() {
 
   // PROPERTIES
   // STATE state_local_
-  state_local_.assignProperty(ui_->confirmButton, "text", "Confirm Process");
   state_local_.assignProperty(ui_->confirmButton, "enabled", false);
   state_local_.assignProperty(
       ui_->confirmButton, "toolTip",
@@ -287,6 +286,7 @@ void ProfilingTargetDialog::SetupLocalStates() {
 
   // STATE state_local_process_selected_
   state_local_process_selected_.assignProperty(ui_->confirmButton, "enabled", true);
+  state_local_process_selected_.assignProperty(ui_->confirmButton, "toolTip", "");
 
   // TRANSITIONS (and entered/exit events)
   // STATE state_local_
@@ -349,7 +349,6 @@ void ProfilingTargetDialog::SetupFileStates() {
 
   // PROPERTIES
   // STATE state_file_
-  state_file_.assignProperty(ui_->confirmButton, "text", "Load Capture");
   state_file_.assignProperty(ui_->confirmButton, "enabled", false);
   state_file_.assignProperty(ui_->confirmButton, "toolTip", "Please select a capture to load");
   state_file_.assignProperty(ui_->stadiaWidget, "active", false);
@@ -360,6 +359,7 @@ void ProfilingTargetDialog::SetupFileStates() {
 
   // STATE state_file_selected_
   state_file_selected_.assignProperty(ui_->confirmButton, "enabled", true);
+  state_file_selected_.assignProperty(ui_->confirmButton, "toolTip", "");
 
   // TRANSITIONS (and entered/exit events)
   // STATE state_file_
