@@ -22,6 +22,101 @@ TEST(MainThreadExecutorImpl, Schedule) {
   EXPECT_EQ(app.exec(), 42);
 }
 
+TEST(MainThreadExecutorImpl, ScheduleAfterAllVoid) {
+  QCoreApplication app{argc, nullptr};
+
+  bool called = false;
+  auto executor = MainThreadExecutorImpl::Create();
+  auto future = executor->Schedule([&called]() { called = true; });
+  (void)executor->ScheduleAfter(future, []() { QCoreApplication::exit(42); });
+
+  EXPECT_EQ(app.exec(), 42);
+  EXPECT_TRUE(called);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerBetweenJobs) {
+  QCoreApplication app{argc, nullptr};
+
+  auto executor = MainThreadExecutorImpl::Create();
+  auto future = executor->Schedule([]() { return 42; });
+  (void)executor->ScheduleAfter(future, [](int val) { QCoreApplication::exit(val); });
+
+  EXPECT_EQ(app.exec(), 42);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerAsFinalResultAndBetweenJobs) {
+  QCoreApplication app{argc, nullptr};
+
+  auto executor = MainThreadExecutorImpl::Create();
+  auto future = executor->Schedule([]() { return 42; });
+  auto future2 = executor->ScheduleAfter(future, [](int val) {
+    QCoreApplication::exit(val);
+    return val + 42;
+  });
+
+  EXPECT_EQ(app.exec(), 42);
+  EXPECT_TRUE(future2.IsFinished());
+  EXPECT_EQ(future2.Get(), 42 + 42);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerOnlyAsFinalResult) {
+  QCoreApplication app{argc, nullptr};
+
+  bool called = false;
+  auto executor = MainThreadExecutorImpl::Create();
+  auto future = executor->Schedule([&called]() { called = true; });
+  auto future2 = executor->ScheduleAfter(future, []() {
+    QCoreApplication::exit(42);
+    return 42 + 42;
+  });
+
+  EXPECT_EQ(app.exec(), 42);
+  EXPECT_TRUE(future2.IsFinished());
+  EXPECT_EQ(future2.Get(), 42 + 42);
+  EXPECT_TRUE(called);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterMultipleContinuations) {
+  QCoreApplication app{argc, nullptr};
+
+  auto executor = MainThreadExecutorImpl::Create();
+  auto future = executor->Schedule([]() { return 42; });
+  auto future2 = executor->ScheduleAfter(future, [](int val) {
+    EXPECT_EQ(val, 42);
+    return val + 42;
+  });
+  auto future3 = executor->ScheduleAfter(future2, [](int val) {
+    EXPECT_EQ(val, 2 * 42);
+    return val + 42;
+  });
+  auto future4 = executor->ScheduleAfter(future3, [](int val) {
+    EXPECT_EQ(val, 3 * 42);
+    QCoreApplication::exit(val + 42);
+  });
+
+  EXPECT_EQ(app.exec(), 4 * 42);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
+  QCoreApplication app{argc, nullptr};
+
+  orbit_base::Promise<void> promise;
+  orbit_base::Future<void> future = promise.GetFuture();
+
+  auto executor = MainThreadExecutorImpl::Create();
+
+  bool called = false;
+  auto future2 = executor->ScheduleAfter(future, [&called]() { called = true; });
+
+  QCoreApplication::processEvents();
+  EXPECT_FALSE(called);
+
+  executor.reset();
+  promise.MarkFinished();
+  QCoreApplication::processEvents();
+  EXPECT_FALSE(called);
+}
+
 TEST(MainThreadExecutorImpl, Wait) {
   QCoreApplication app{argc, nullptr};
 
