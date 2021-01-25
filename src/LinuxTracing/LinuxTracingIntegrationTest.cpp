@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/numbers.h>
 #include <absl/time/clock.h>
 #include <gmock/gmock.h>
@@ -14,6 +15,7 @@
 #include <thread>
 
 #include "ElfUtils/ElfFile.h"
+#include "ElfUtils/LinuxMap.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingIntegrationTestPuppet.h"
@@ -282,6 +284,44 @@ using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
   return fixture->StopTracingAndGetEvents();
 }
 
+std::filesystem::path GetExecutableBinaryPath(pid_t pid) {
+  auto error_or_executable_path = orbit_base::GetExecutablePath(pid);
+  CHECK(error_or_executable_path.has_value());
+  return error_or_executable_path.value();
+}
+
+orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid) {
+  const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
+
+  auto error_or_elf_file = orbit_elf_utils::ElfFile::Create(executable_path.string());
+  CHECK(error_or_elf_file.has_value());
+  const std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
+
+  auto error_or_module = elf_file->LoadSymbols();
+  CHECK(error_or_module.has_value());
+  return error_or_module.value();
+}
+
+orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
+  auto error_or_module_infos = orbit_elf_utils::ReadModules(pid);
+  CHECK(error_or_module_infos.has_value());
+  const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos = error_or_module_infos.value();
+
+  auto error_or_executable_path = orbit_base::GetExecutablePath(pid);
+  CHECK(error_or_executable_path.has_value());
+  const std::filesystem::path& executable_path = error_or_executable_path.value();
+
+  const orbit_grpc_protos::ModuleInfo* executable_module_info = nullptr;
+  for (const auto& module_info : module_infos) {
+    if (module_info.file_path() == executable_path) {
+      executable_module_info = &module_info;
+      break;
+    }
+  }
+  CHECK(executable_module_info != nullptr);
+  return *executable_module_info;
+}
+
 TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   if (!CheckIsPerfEventParanoidAtMost(-1)) {
     GTEST_SKIP();
@@ -328,29 +368,21 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
 
   // Find the offset in the ELF file of the functions to instrument and add those functions to the
   // CaptureOptions.
-  auto error_or_executable_path = orbit_base::GetExecutablePath(fixture.GetPuppetPid());
-  CHECK(error_or_executable_path.has_value());
-  const std::filesystem::path& executable_path = error_or_executable_path.value();
-
-  auto error_or_elf_file = orbit_elf_utils::ElfFile::Create(executable_path.string());
-  CHECK(error_or_elf_file.has_value());
-  const std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
-
-  auto error_or_module = elf_file->LoadSymbols();
-  CHECK(error_or_module.has_value());
-  orbit_grpc_protos::ModuleSymbols module = error_or_module.value();
+  const orbit_grpc_protos::ModuleSymbols& module_symbols =
+      GetExecutableBinaryModuleSymbols(fixture.GetPuppetPid());
+  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
 
   bool outer_function_symbol_found = false;
   bool inner_function_symbol_found = false;
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  for (const orbit_grpc_protos::SymbolInfo& symbol : module.symbol_infos()) {
+  for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
       CHECK(!outer_function_symbol_found);
       outer_function_symbol_found = true;
       orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
-      instrumented_function.set_file_offset(symbol.address() - module.load_bias());
+      instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(kOuterFunctionId);
       capture_options.mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
@@ -360,7 +392,7 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
       inner_function_symbol_found = true;
       orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
-      instrumented_function.set_file_offset(symbol.address() - module.load_bias());
+      instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(kInnerFunctionId);
       capture_options.mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
@@ -418,6 +450,141 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
       ++function_call_index;
     }
   }
+}
+
+TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
+  if (!CheckIsPerfEventParanoidAtMost(0)) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  const orbit_grpc_protos::ModuleInfo& module_info =
+      GetExecutableBinaryModuleInfo(fixture.GetPuppetPid());
+  const orbit_grpc_protos::ModuleSymbols& module_symbols =
+      GetExecutableBinaryModuleSymbols(fixture.GetPuppetPid());
+  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
+
+  uint64_t outer_function_virtual_address_start = 0;
+  uint64_t outer_function_virtual_address_end = 0;
+  uint64_t inner_function_virtual_address_start = 0;
+  uint64_t inner_function_virtual_address_end = 0;
+  for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
+    if (symbol.name() == PuppetConstants::kOuterFunctionName) {
+      CHECK(outer_function_virtual_address_start == 0 && outer_function_virtual_address_end == 0);
+      outer_function_virtual_address_start = module_info.address_start() + symbol.address();
+      outer_function_virtual_address_end = outer_function_virtual_address_start + symbol.size() - 1;
+    }
+
+    if (symbol.name() == PuppetConstants::kInnerFunctionName) {
+      CHECK(inner_function_virtual_address_start == 0 && inner_function_virtual_address_end == 0);
+      inner_function_virtual_address_start = module_info.address_start() + symbol.address();
+      inner_function_virtual_address_end = inner_function_virtual_address_start + symbol.size() - 1;
+    }
+  }
+  CHECK(outer_function_virtual_address_start != 0);
+  CHECK(outer_function_virtual_address_end != 0);
+  CHECK(inner_function_virtual_address_start != 0);
+  CHECK(inner_function_virtual_address_end != 0);
+
+  orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+  const double sampling_rate = capture_options.sampling_rate();
+
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  // Verify the AddressInfos.
+  absl::flat_hash_set<uint64_t> address_infos_received;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kAddressInfo) {
+      continue;
+    }
+
+    const orbit_grpc_protos::AddressInfo& address_info = event.address_info();
+    if (!(address_info.absolute_address() >= outer_function_virtual_address_start &&
+          address_info.absolute_address() <= outer_function_virtual_address_end) &&
+        !(address_info.absolute_address() >= inner_function_virtual_address_start &&
+          address_info.absolute_address() <= inner_function_virtual_address_end)) {
+      continue;
+    }
+    address_infos_received.emplace(address_info.absolute_address());
+
+    ASSERT_EQ(address_info.function_name_or_key_case(),
+              orbit_grpc_protos::AddressInfo::kFunctionName);
+    if (address_info.absolute_address() >= outer_function_virtual_address_start &&
+        address_info.absolute_address() <= outer_function_virtual_address_end) {
+      EXPECT_EQ(address_info.function_name(), PuppetConstants::kOuterFunctionName);
+      EXPECT_EQ(address_info.offset_in_function(),
+                address_info.absolute_address() - outer_function_virtual_address_start);
+    } else if (address_info.absolute_address() >= inner_function_virtual_address_start &&
+               address_info.absolute_address() <= inner_function_virtual_address_end) {
+      EXPECT_EQ(address_info.function_name(), PuppetConstants::kInnerFunctionName);
+      EXPECT_EQ(address_info.offset_in_function(),
+                address_info.absolute_address() - inner_function_virtual_address_start);
+    }
+
+    ASSERT_EQ(address_info.map_name_or_key_case(), orbit_grpc_protos::AddressInfo::kMapName);
+    EXPECT_EQ(address_info.map_name(), executable_path.string());
+  }
+
+  // Verify the CallstackSamples.
+  uint64_t previous_callstack_timestamp_ns = 0;
+  size_t matching_callstack_count = 0;
+  uint64_t first_matching_callstack_timestamp_ns = std::numeric_limits<uint64_t>::max();
+  uint64_t last_matching_callstack_timestamp_ns = 0;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kCallstackSample) {
+      continue;
+    }
+
+    const orbit_grpc_protos::CallstackSample& callstack_sample = event.callstack_sample();
+
+    // All CallstackSamples should be ordered by timestamp.
+    EXPECT_GT(callstack_sample.timestamp_ns(), previous_callstack_timestamp_ns);
+    previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
+
+    // We currently don't set the pid.
+    EXPECT_EQ(callstack_sample.pid(), 0);
+    // We are only sampling the puppet and the puppet is expected single-threaded.
+    ASSERT_EQ(callstack_sample.tid(), fixture.GetPuppetPid());
+
+    ASSERT_EQ(callstack_sample.callstack_or_key_case(),
+              orbit_grpc_protos::CallstackSample::kCallstack);
+    const orbit_grpc_protos::Callstack& callstack = callstack_sample.callstack();
+    for (int32_t pc_index = 0; pc_index < callstack.pcs_size(); ++pc_index) {
+      // We found one of the callstacks we are looking for: it contains the "inner" function's
+      // address and the caller address should match the "outer" function's address.
+      if (callstack.pcs(pc_index) >= inner_function_virtual_address_start &&
+          callstack.pcs(pc_index) <= inner_function_virtual_address_end) {
+        // Verify that we got the AddressInfo for this virtual address of the "inner" function.
+        EXPECT_TRUE(address_infos_received.contains(callstack.pcs(pc_index)));
+
+        // Verify that the caller of the "inner" function is the "outer" function.
+        ASSERT_LT(pc_index + 1, callstack.pcs_size());
+        ASSERT_TRUE(callstack.pcs(pc_index + 1) >= outer_function_virtual_address_start &&
+                    callstack.pcs(pc_index + 1) <= outer_function_virtual_address_end);
+
+        // Verify that we got the AddressInfo for this virtual address of the "outer" function.
+        EXPECT_TRUE(address_infos_received.contains(callstack.pcs(pc_index + 1)));
+
+        ++matching_callstack_count;
+        first_matching_callstack_timestamp_ns =
+            std::min(first_matching_callstack_timestamp_ns, callstack_sample.timestamp_ns());
+        last_matching_callstack_timestamp_ns =
+            std::max(last_matching_callstack_timestamp_ns, callstack_sample.timestamp_ns());
+        break;
+      }
+    }
+  }
+
+  ASSERT_GT(matching_callstack_count, 0);
+  CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
+  LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
+      (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
+  constexpr double kMinExpectedScheduledRelativeTime = 0.9;
+  const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
+      floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
+            sampling_rate * kMinExpectedScheduledRelativeTime));
+  EXPECT_GE(matching_callstack_count, min_expected_matching_callstack_count);
 }
 
 TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
