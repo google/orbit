@@ -179,6 +179,9 @@
             </item>
             <item>
              <widget class="QLabel" name="selectedFileLabel">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string/>
               </property>
@@ -335,6 +338,13 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="targetLabel">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="confirmButton">

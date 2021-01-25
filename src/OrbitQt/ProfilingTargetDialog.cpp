@@ -178,9 +178,10 @@ std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
 }
 
 void ProfilingTargetDialog::ProcessSelectionChanged(const QModelIndex& current) {
+  emit NoProcessSelected();
+
   if (!current.isValid()) {
     process_ = nullptr;
-    emit NoProcessSelected();
     return;
   }
 
@@ -203,6 +204,7 @@ void ProfilingTargetDialog::SetupStadiaStates() {
   state_stadia_.assignProperty(ui_->stadiaWidget, "active", true);
   state_stadia_.assignProperty(ui_->loadCaptureRadioButton, "checked", false);
   state_stadia_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
+  state_stadia_.assignProperty(ui_->targetLabel, "text", "");
 
   // STATE state_stadia_connecting_
   state_stadia_connecting_.assignProperty(ui_->processesFrame, "enabled", false);
@@ -254,6 +256,13 @@ void ProfilingTargetDialog::SetupStadiaStates() {
   // STATE s_s_process_selected
   state_stadia_process_selected_.addTransition(this, &ProfilingTargetDialog::NoProcessSelected,
                                                &state_stadia_no_process_selected_);
+  QObject::connect(&state_stadia_process_selected_, &QState::entered, [this] {
+    CHECK(process_ != nullptr);
+    QString process_name = QString::fromStdString(process_->name());
+    CHECK(ui_->stadiaWidget->GetSelectedInstance().has_value());
+    QString instance_name = ui_->stadiaWidget->GetSelectedInstance().value().display_name;
+    ui_->targetLabel->setText(QString("%1 @ %2").arg(process_name).arg(instance_name));
+  });
 }
 
 void ProfilingTargetDialog::SetupLocalStates() {
@@ -271,6 +280,7 @@ void ProfilingTargetDialog::SetupLocalStates() {
   state_local_.assignProperty(ui_->localProfilingRadioButton, "checked", true);
   state_local_.assignProperty(ui_->stadiaWidget, "active", false);
   state_local_.assignProperty(ui_->loadCaptureRadioButton, "checked", false);
+  state_local_.assignProperty(ui_->targetLabel, "text", "");
 
   // STATE state_local_connecting_
   state_local_connecting_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connecting...");
@@ -320,6 +330,11 @@ void ProfilingTargetDialog::SetupLocalStates() {
   // STATE state_local_process_selected_
   state_local_process_selected_.addTransition(this, &ProfilingTargetDialog::NoProcessSelected,
                                               &state_local_no_process_selected_);
+  QObject::connect(&state_local_process_selected_, &QState::entered, [this] {
+    CHECK(process_ != nullptr);
+    QString process_name = QString::fromStdString(process_->name());
+    ui_->targetLabel->setText(QString("%1 @ localhost").arg(process_name));
+  });
 }
 
 void ProfilingTargetDialog::StartFromExistingTarget(
@@ -356,6 +371,7 @@ void ProfilingTargetDialog::SetupFileStates() {
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
   state_file_.assignProperty(ui_->loadFromFileButton, "enabled", true);
   state_file_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
+  state_file_.assignProperty(ui_->targetLabel, "text", "");
 
   // STATE state_file_selected_
   state_file_selected_.assignProperty(ui_->confirmButton, "enabled", true);
@@ -370,14 +386,15 @@ void ProfilingTargetDialog::SetupFileStates() {
   state_file_.addTransition(this, &ProfilingTargetDialog::FileSelected, &state_file_selected_);
 
   // STATE state_file_no_selection_
-  QObject::connect(&state_file_no_selection_, &QState::entered, [this] {
+  QObject::connect(&state_file_no_selection_, &QState::entered, this, [this] {
     if (selected_file_path_.empty()) SelectFile();
   });
 
   // STATE state_file_selected_
-  QObject::connect(&state_file_selected_, &QState::entered, [this] {
-    ui_->selectedFileLabel->setText(
-        QString::fromStdString(selected_file_path_.filename().string()));
+  QObject::connect(&state_file_selected_, &QState::entered, this, [this] {
+    QString filename = QString::fromStdString(selected_file_path_.filename().string());
+    ui_->selectedFileLabel->setText(filename);
+    ui_->targetLabel->setText(filename);
   });
 }
 
