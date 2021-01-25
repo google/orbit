@@ -52,7 +52,8 @@ target_link_libraries(ServiceLib PUBLIC
         FramePointerValidator
         GrpcProtos
         LinuxTracing
-        OrbitVersion)
+        OrbitVersion
+        ProducerSideChannel)
 
 project(OrbitService)
 add_executable(OrbitService main.cpp)
