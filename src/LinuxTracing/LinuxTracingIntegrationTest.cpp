@@ -484,6 +484,75 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
       std::make_pair(inner_function_virtual_address_start, inner_function_virtual_address_end));
 }
 
+void VerifyCallstackSamplesWithOuterAndInnerFunction(
+    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
+    std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
+    const absl::flat_hash_set<uint64_t>* address_infos_received) {
+  uint64_t previous_callstack_timestamp_ns = 0;
+  size_t matching_callstack_count = 0;
+  uint64_t first_matching_callstack_timestamp_ns = std::numeric_limits<uint64_t>::max();
+  uint64_t last_matching_callstack_timestamp_ns = 0;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kCallstackSample) {
+      continue;
+    }
+
+    const orbit_grpc_protos::CallstackSample& callstack_sample = event.callstack_sample();
+
+    // All CallstackSamples should be ordered by timestamp.
+    EXPECT_GT(callstack_sample.timestamp_ns(), previous_callstack_timestamp_ns);
+    previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
+
+    // We currently don't set the pid.
+    EXPECT_EQ(callstack_sample.pid(), 0);
+    // We are only sampling the puppet and the puppet is expected single-threaded.
+    ASSERT_EQ(callstack_sample.tid(), pid);
+
+    ASSERT_EQ(callstack_sample.callstack_or_key_case(),
+              orbit_grpc_protos::CallstackSample::kCallstack);
+    const orbit_grpc_protos::Callstack& callstack = callstack_sample.callstack();
+    for (int32_t pc_index = 0; pc_index < callstack.pcs_size(); ++pc_index) {
+      // We found one of the callstacks we are looking for: it contains the "inner" function's
+      // address and the caller address should match the "outer" function's address.
+      if (callstack.pcs(pc_index) >= inner_function_virtual_address_range.first &&
+          callstack.pcs(pc_index) <= inner_function_virtual_address_range.second) {
+        if (address_infos_received != nullptr) {
+          // Verify that we got the AddressInfo for this virtual address of the "inner" function.
+          EXPECT_TRUE(address_infos_received->contains(callstack.pcs(pc_index)));
+        }
+
+        // Verify that the caller of the "inner" function is the "outer" function.
+        ASSERT_LT(pc_index + 1, callstack.pcs_size());
+        ASSERT_TRUE(callstack.pcs(pc_index + 1) >= outer_function_virtual_address_range.first &&
+                    callstack.pcs(pc_index + 1) <= outer_function_virtual_address_range.second);
+
+        if (address_infos_received != nullptr) {
+          // Verify that we got the AddressInfo for this virtual address of the "outer" function.
+          EXPECT_TRUE(address_infos_received->contains(callstack.pcs(pc_index + 1)));
+        }
+
+        ++matching_callstack_count;
+        first_matching_callstack_timestamp_ns =
+            std::min(first_matching_callstack_timestamp_ns, callstack_sample.timestamp_ns());
+        last_matching_callstack_timestamp_ns =
+            std::max(last_matching_callstack_timestamp_ns, callstack_sample.timestamp_ns());
+        break;
+      }
+    }
+  }
+
+  ASSERT_GT(matching_callstack_count, 0);
+  CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
+  LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
+      (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
+  constexpr double kMinExpectedScheduledRelativeTime = 0.9;
+  const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
+      floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
+            sampling_rate * kMinExpectedScheduledRelativeTime));
+  EXPECT_GE(matching_callstack_count, min_expected_matching_callstack_count);
+}
+
 TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   if (!CheckIsPerfEventParanoidAtMost(0)) {
     GTEST_SKIP();
@@ -534,65 +603,9 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
     EXPECT_EQ(address_info.map_name(), executable_path.string());
   }
 
-  // Verify the CallstackSamples.
-  uint64_t previous_callstack_timestamp_ns = 0;
-  size_t matching_callstack_count = 0;
-  uint64_t first_matching_callstack_timestamp_ns = std::numeric_limits<uint64_t>::max();
-  uint64_t last_matching_callstack_timestamp_ns = 0;
-  for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kCallstackSample) {
-      continue;
-    }
-
-    const orbit_grpc_protos::CallstackSample& callstack_sample = event.callstack_sample();
-
-    // All CallstackSamples should be ordered by timestamp.
-    EXPECT_GT(callstack_sample.timestamp_ns(), previous_callstack_timestamp_ns);
-    previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
-
-    // We currently don't set the pid.
-    EXPECT_EQ(callstack_sample.pid(), 0);
-    // We are only sampling the puppet and the puppet is expected single-threaded.
-    ASSERT_EQ(callstack_sample.tid(), fixture.GetPuppetPid());
-
-    ASSERT_EQ(callstack_sample.callstack_or_key_case(),
-              orbit_grpc_protos::CallstackSample::kCallstack);
-    const orbit_grpc_protos::Callstack& callstack = callstack_sample.callstack();
-    for (int32_t pc_index = 0; pc_index < callstack.pcs_size(); ++pc_index) {
-      // We found one of the callstacks we are looking for: it contains the "inner" function's
-      // address and the caller address should match the "outer" function's address.
-      if (callstack.pcs(pc_index) >= inner_function_virtual_address_range.first &&
-          callstack.pcs(pc_index) <= inner_function_virtual_address_range.second) {
-        // Verify that we got the AddressInfo for this virtual address of the "inner" function.
-        EXPECT_TRUE(address_infos_received.contains(callstack.pcs(pc_index)));
-
-        // Verify that the caller of the "inner" function is the "outer" function.
-        ASSERT_LT(pc_index + 1, callstack.pcs_size());
-        ASSERT_TRUE(callstack.pcs(pc_index + 1) >= outer_function_virtual_address_range.first &&
-                    callstack.pcs(pc_index + 1) <= outer_function_virtual_address_range.second);
-
-        // Verify that we got the AddressInfo for this virtual address of the "outer" function.
-        EXPECT_TRUE(address_infos_received.contains(callstack.pcs(pc_index + 1)));
-
-        ++matching_callstack_count;
-        first_matching_callstack_timestamp_ns =
-            std::min(first_matching_callstack_timestamp_ns, callstack_sample.timestamp_ns());
-        last_matching_callstack_timestamp_ns =
-            std::max(last_matching_callstack_timestamp_ns, callstack_sample.timestamp_ns());
-        break;
-      }
-    }
-  }
-
-  ASSERT_GT(matching_callstack_count, 0);
-  CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
-  LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
-      (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
-  constexpr double kMinExpectedScheduledRelativeTime = 0.9;
-  const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
-      floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
-            sampling_rate * kMinExpectedScheduledRelativeTime));
-  EXPECT_GE(matching_callstack_count, min_expected_matching_callstack_count);
+  VerifyCallstackSamplesWithOuterAndInnerFunction(
+      events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
+      inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
 
 TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
