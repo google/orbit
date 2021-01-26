@@ -4,8 +4,13 @@
 
 #include "OrbitBase/Logging.h"
 
-#include <absl/base/const_init.h>
-#include <absl/synchronization/mutex.h>
+#include <vector>
+
+#include "absl/base/const_init.h"
+#include "absl/debugging/stacktrace.h"
+#include "absl/debugging/symbolize.h"
+#include "absl/strings/str_format.h"
+#include "absl/synchronization/mutex.h"
 
 static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;
@@ -26,5 +31,19 @@ void LogToFile(const std::string& message) {
   if (log_file.is_open()) {
     log_file << message;
     log_file.flush();
+  }
+}
+
+void LogStacktrace() {
+  constexpr int kMaxDepth = 64;
+  std::vector<void*> raw_stack(kMaxDepth);
+  const int raw_stack_size = absl::GetStackTrace(&raw_stack[0], kMaxDepth, 1);
+  for (int i = 0; i < raw_stack_size; ++i) {
+    char tmp[1024];
+    const char* symbol = "(unknown)";
+    if (absl::Symbolize(raw_stack[i], tmp, sizeof(tmp))) {
+      symbol = tmp;
+    }
+    LOG("  %p: %s\n", raw_stack[i], symbol);
   }
 }
