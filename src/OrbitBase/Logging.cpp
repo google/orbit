@@ -4,7 +4,7 @@
 
 #include "OrbitBase/Logging.h"
 
-#include <vector>
+#include <array>
 
 #include "absl/base/const_init.h"
 #include "absl/debugging/stacktrace.h"
@@ -35,8 +35,8 @@ void LogToFile(const std::string& message) {
 }
 
 void LogStacktrace() {
-  constexpr int kMaxDepth = 64;
-  std::vector<void*> raw_stack(kMaxDepth);
+  constexpr size_t kMaxDepth = 64;
+  std::array<void*, kMaxDepth> raw_stack;
   const int raw_stack_size = absl::GetStackTrace(&raw_stack[0], kMaxDepth, 1);
   for (int i = 0; i < raw_stack_size; ++i) {
     char tmp[1024];
