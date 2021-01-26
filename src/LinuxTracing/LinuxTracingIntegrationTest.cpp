@@ -13,6 +13,7 @@
 
 #include <array>
 #include <thread>
+#include <utility>
 
 #include "ElfUtils/ElfFile.h"
 #include "ElfUtils/LinuxMap.h"
@@ -452,17 +453,10 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
   }
 }
 
-TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
-  if (!CheckIsPerfEventParanoidAtMost(0)) {
-    GTEST_SKIP();
-  }
-  LinuxTracingIntegrationTestFixture fixture;
-
-  const orbit_grpc_protos::ModuleInfo& module_info =
-      GetExecutableBinaryModuleInfo(fixture.GetPuppetPid());
-  const orbit_grpc_protos::ModuleSymbols& module_symbols =
-      GetExecutableBinaryModuleSymbols(fixture.GetPuppetPid());
-  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
+std::pair<std::pair<uint64_t, uint64_t>, std::pair<uint64_t, uint64_t>>
+GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
+  const orbit_grpc_protos::ModuleInfo& module_info = GetExecutableBinaryModuleInfo(pid);
+  const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
 
   uint64_t outer_function_virtual_address_start = 0;
   uint64_t outer_function_virtual_address_end = 0;
@@ -485,6 +479,20 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   CHECK(outer_function_virtual_address_end != 0);
   CHECK(inner_function_virtual_address_start != 0);
   CHECK(inner_function_virtual_address_end != 0);
+  return std::make_pair(
+      std::make_pair(outer_function_virtual_address_start, outer_function_virtual_address_end),
+      std::make_pair(inner_function_virtual_address_start, inner_function_virtual_address_end));
+}
+
+TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
+  if (!CheckIsPerfEventParanoidAtMost(0)) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
+  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   const double sampling_rate = capture_options.sampling_rate();
@@ -500,26 +508,26 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
     }
 
     const orbit_grpc_protos::AddressInfo& address_info = event.address_info();
-    if (!(address_info.absolute_address() >= outer_function_virtual_address_start &&
-          address_info.absolute_address() <= outer_function_virtual_address_end) &&
-        !(address_info.absolute_address() >= inner_function_virtual_address_start &&
-          address_info.absolute_address() <= inner_function_virtual_address_end)) {
+    if (!(address_info.absolute_address() >= outer_function_virtual_address_range.first &&
+          address_info.absolute_address() <= outer_function_virtual_address_range.second) &&
+        !(address_info.absolute_address() >= inner_function_virtual_address_range.first &&
+          address_info.absolute_address() <= inner_function_virtual_address_range.second)) {
       continue;
     }
     address_infos_received.emplace(address_info.absolute_address());
 
     ASSERT_EQ(address_info.function_name_or_key_case(),
               orbit_grpc_protos::AddressInfo::kFunctionName);
-    if (address_info.absolute_address() >= outer_function_virtual_address_start &&
-        address_info.absolute_address() <= outer_function_virtual_address_end) {
+    if (address_info.absolute_address() >= outer_function_virtual_address_range.first &&
+        address_info.absolute_address() <= outer_function_virtual_address_range.second) {
       EXPECT_EQ(address_info.function_name(), PuppetConstants::kOuterFunctionName);
       EXPECT_EQ(address_info.offset_in_function(),
-                address_info.absolute_address() - outer_function_virtual_address_start);
-    } else if (address_info.absolute_address() >= inner_function_virtual_address_start &&
-               address_info.absolute_address() <= inner_function_virtual_address_end) {
+                address_info.absolute_address() - outer_function_virtual_address_range.first);
+    } else if (address_info.absolute_address() >= inner_function_virtual_address_range.first &&
+               address_info.absolute_address() <= inner_function_virtual_address_range.second) {
       EXPECT_EQ(address_info.function_name(), PuppetConstants::kInnerFunctionName);
       EXPECT_EQ(address_info.offset_in_function(),
-                address_info.absolute_address() - inner_function_virtual_address_start);
+                address_info.absolute_address() - inner_function_virtual_address_range.first);
     }
 
     ASSERT_EQ(address_info.map_name_or_key_case(), orbit_grpc_protos::AddressInfo::kMapName);
@@ -553,15 +561,15 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
     for (int32_t pc_index = 0; pc_index < callstack.pcs_size(); ++pc_index) {
       // We found one of the callstacks we are looking for: it contains the "inner" function's
       // address and the caller address should match the "outer" function's address.
-      if (callstack.pcs(pc_index) >= inner_function_virtual_address_start &&
-          callstack.pcs(pc_index) <= inner_function_virtual_address_end) {
+      if (callstack.pcs(pc_index) >= inner_function_virtual_address_range.first &&
+          callstack.pcs(pc_index) <= inner_function_virtual_address_range.second) {
         // Verify that we got the AddressInfo for this virtual address of the "inner" function.
         EXPECT_TRUE(address_infos_received.contains(callstack.pcs(pc_index)));
 
         // Verify that the caller of the "inner" function is the "outer" function.
         ASSERT_LT(pc_index + 1, callstack.pcs_size());
-        ASSERT_TRUE(callstack.pcs(pc_index + 1) >= outer_function_virtual_address_start &&
-                    callstack.pcs(pc_index + 1) <= outer_function_virtual_address_end);
+        ASSERT_TRUE(callstack.pcs(pc_index + 1) >= outer_function_virtual_address_range.first &&
+                    callstack.pcs(pc_index + 1) <= outer_function_virtual_address_range.second);
 
         // Verify that we got the AddressInfo for this virtual address of the "outer" function.
         EXPECT_TRUE(address_infos_received.contains(callstack.pcs(pc_index + 1)));
