@@ -17,7 +17,7 @@ TEST(MainThreadExecutorImpl, Schedule) {
   QCoreApplication app{argc, nullptr};
 
   auto executor = MainThreadExecutorImpl::Create();
-  (void)executor->Schedule([]() { QCoreApplication::exit(42); });
+  executor->Schedule([]() { QCoreApplication::exit(42); });
 
   EXPECT_EQ(app.exec(), 42);
 }
@@ -28,7 +28,7 @@ TEST(MainThreadExecutorImpl, ScheduleAfterAllVoid) {
   bool called = false;
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([&called]() { called = true; });
-  (void)executor->ScheduleAfter(future, []() { QCoreApplication::exit(42); });
+  executor->ScheduleAfter(future, []() { QCoreApplication::exit(42); });
 
   EXPECT_EQ(app.exec(), 42);
   EXPECT_TRUE(called);
@@ -39,7 +39,7 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerBetweenJobs) {
 
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([]() { return 42; });
-  (void)executor->ScheduleAfter(future, [](int val) { QCoreApplication::exit(val); });
+  executor->ScheduleAfter(future, [](int val) { QCoreApplication::exit(val); });
 
   EXPECT_EQ(app.exec(), 42);
 }
