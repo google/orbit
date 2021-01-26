@@ -14,3 +14,5 @@ set_target_properties(SyntaxHighlighter PROPERTIES AUTOMOC ON)
 
 target_sources(SyntaxHighlighter PUBLIC include/SyntaxHighlighter/X86Assembly.h)
 target_sources(SyntaxHighlighter PRIVATE X86Assembly.cpp)
+target_sources(SyntaxHighlighter PUBLIC include/SyntaxHighlighter/Cpp.h)
+target_sources(SyntaxHighlighter PRIVATE Cpp.cpp)
