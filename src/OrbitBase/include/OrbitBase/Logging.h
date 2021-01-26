@@ -143,4 +143,6 @@ void LogToFile(const std::string& message);
 #pragma clang diagnostic pop
 #endif
 
+void LogStacktrace();
+
 #endif  // ORBIT_BASE_LOGGING_H_
