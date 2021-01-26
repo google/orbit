@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(CodeViewerDemo)
-add_executable(CodeViewerDemo main.cpp)
+add_executable(CodeViewerDemo main.cpp CodeExamples.h)
 
 target_compile_options(CodeViewerDemo PRIVATE ${STRICT_COMPILE_FLAGS})
 target_link_libraries(CodeViewerDemo PRIVATE CodeViewer Qt5::Gui SyntaxHighlighter)
