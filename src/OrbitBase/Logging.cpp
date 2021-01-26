@@ -36,13 +36,13 @@ void LogToFile(const std::string& message) {
 
 void LogStacktrace() {
   constexpr size_t kMaxDepth = 64;
-  std::array<void*, kMaxDepth> raw_stack;
+  std::array<void*, kMaxDepth> raw_stack = {};
   const int raw_stack_size = absl::GetStackTrace(&raw_stack[0], kMaxDepth, 1);
   for (int i = 0; i < raw_stack_size; ++i) {
-    char tmp[1024];
+    std::array<char, 1024> buf = {};
     const char* symbol = "(unknown)";
-    if (absl::Symbolize(raw_stack[i], tmp, sizeof(tmp))) {
-      symbol = tmp;
+    if (absl::Symbolize(raw_stack[i], buf.data(), buf.size())) {
+      symbol = buf.data();
     }
     LOG("  %p: %s\n", raw_stack[i], symbol);
   }
