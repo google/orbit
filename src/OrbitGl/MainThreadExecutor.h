@@ -42,8 +42,7 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
   virtual void Schedule(std::unique_ptr<Action> action) = 0;
 
   template <typename F>
-  [[nodiscard]] auto Schedule(F&& functor)
-      -> orbit_base::Future<std::decay_t<decltype(functor())>> {
+  auto Schedule(F&& functor) -> orbit_base::Future<std::decay_t<decltype(functor())>> {
     using ReturnType = std::decay_t<decltype(functor())>;
 
     orbit_base::Promise<ReturnType> promise;
@@ -72,7 +71,7 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
   //
   // Note: The continuation is only executed if `*this` is still alive when `future` completes.
   template <typename F>
-  [[nodiscard]] auto ScheduleAfter(const orbit_base::Future<void>& future, F&& functor)
+  auto ScheduleAfter(const orbit_base::Future<void>& future, F&& functor)
       -> orbit_base::Future<std::decay_t<decltype(functor())>> {
     CHECK(future.IsValid());
 
@@ -140,7 +139,7 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
   //
   // Note: The continuation is only executed if `*this` is still alive when `future` completes.
   template <typename T, typename F>
-  [[nodiscard]] auto ScheduleAfter(const orbit_base::Future<T>& future, F&& functor)
+  auto ScheduleAfter(const orbit_base::Future<T>& future, F&& functor)
       -> orbit_base::Future<std::decay_t<decltype(functor(std::declval<T>()))>> {
     CHECK(future.IsValid());
 

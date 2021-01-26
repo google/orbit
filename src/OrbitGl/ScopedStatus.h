@@ -67,7 +67,7 @@ class ScopedStatus final {
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->UpdateStatus(data_->status_id, message);
     } else {
-      (void)data_->main_thread_executor->Schedule(
+      data_->main_thread_executor->Schedule(
           [status_id = data_->status_id, status_listener = data_->status_listener, message] {
             status_listener->UpdateStatus(status_id, message);
           });
@@ -83,7 +83,7 @@ class ScopedStatus final {
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->ClearStatus(data_->status_id);
     } else {
-      (void)data_->main_thread_executor->Schedule(
+      data_->main_thread_executor->Schedule(
           [status_listener = data_->status_listener, status_id = data_->status_id] {
             status_listener->ClearStatus(status_id);
           });
