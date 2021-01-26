@@ -5,6 +5,8 @@
 #define ORBIT_API_INTERNAL_IMPL
 #include "OrbitAPI/Orbit.h"
 
+#include <absl/container/flat_hash_map.h>
+
 #include "OrbitAPI/EncodedEvent.h"
 #include "OrbitAPI/LockFreeApiEventProducer.h"
 #include "OrbitAPI/Stubs.h"
@@ -14,39 +16,32 @@
 constexpr const char* kNameNullPtr = nullptr;
 constexpr uint64_t kDataZero = 0;
 
-/*
-message ApiEvent {
-  enum Type {
-    kInvalid = 0;
-    kScopeStart = 1;
-    kScopeStop = 2;
-    kScopeStartAsync = 3;
-    kScopeStopAsync = 4;
-    kTrackInt = 5;
-    kTrackInt64 = 6;
-    kTrackUint = 7;
-    kTrackUint64 = 8;
-    kTrackFloat = 9;
-    kTrackDouble = 10;
-    kString = 11;
-  }
+using orbit_grpc_protos::ApiEvent;
 
-  Type type = 1;
-  int32 pid = 2;
-  int32 tid = 3;
-  uint64 timestamp_ns = 4;
-  int32 depth = 5;
-  string name = 6;
-  uint32 color = 7;
-  uint64 data = 8;
+ApiEvent::Type ApiEventTypeFromEncodedEventType(orbit_api::EventType encoded_event_type) {
+  static absl::flat_hash_map<orbit_api::EventType, ApiEvent::Type> type_map{
+      {orbit_api::kScopeStart, ApiEvent::kScopeStart},
+      {orbit_api::kScopeStop, ApiEvent::kScopeStop},
+      {orbit_api::kScopeStartAsync, ApiEvent::kScopeStartAsync},
+      {orbit_api::kScopeStopAsync, ApiEvent::kScopeStopAsync},
+      {orbit_api::kTrackInt, ApiEvent::kTrackInt},
+      {orbit_api::kTrackInt64, ApiEvent::kTrackInt64},
+      {orbit_api::kTrackUint, ApiEvent::kTrackUint},
+      {orbit_api::kTrackUint64, ApiEvent::kTrackUint64},
+      {orbit_api::kTrackFloat, ApiEvent::kTrackFloat},
+      {orbit_api::kTrackDouble, ApiEvent::kTrackDouble},
+      {orbit_api::kString, ApiEvent::kString}};
+  CHECK(type_map.count(encoded_event_type) > 0);
+  return type_map[encoded_event_type];
 }
-*/
 
 void EnqueueEncodedEvent(const orbit_api::EncodedEvent& event) {
   (void)event;
   static orbit_api::LockFreeApiEventProducer producer;
 
   orbit_grpc_protos::ApiEvent api_event;
+  api_event.set_type(
+      ApiEventTypeFromEncodedEventType(static_cast<orbit_api::EventType>(event.event.type)));
   api_event.set_pid(getpid());
   api_event.set_tid(orbit_base::GetCurrentThreadId());
   api_event.set_timestamp_ns(MonotonicTimestampNs());
@@ -64,25 +59,25 @@ extern "C" {
 
 void orbit_api_start(const char* name, orbit_api_color color) {
   orbit_api::EncodedEvent e(orbit_api::EventType::kScopeStart, name, kDataZero, color);
-  orbit_api::Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+  // orbit_api::Start(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
   EnqueueEncodedEvent(e);
 }
 
 void orbit_api_stop() {
   orbit_api::EncodedEvent e(orbit_api::EventType::kScopeStop);
-  orbit_api::Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+  // orbit_api::Stop(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
   EnqueueEncodedEvent(e);
 }
 
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
   orbit_api::EncodedEvent e(orbit_api::EventType::kScopeStartAsync, name, id, color);
-  orbit_api::StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+  // orbit_api::StartAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
   EnqueueEncodedEvent(e);
 }
 
 void orbit_api_stop_async(uint64_t id) {
   orbit_api::EncodedEvent e(orbit_api::EventType::kScopeStopAsync, kNameNullPtr, id);
-  orbit_api::StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+  // orbit_api::StopAsync(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
   EnqueueEncodedEvent(e);
 }
 
@@ -94,7 +89,8 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
     orbit_api::EncodedEvent e(orbit_api::EventType::kString, kNameNullPtr, id, color);
     std::strncpy(e.event.name, str, chunk_size);
     e.event.name[chunk_size] = 0;
-    orbit_api::TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+    EnqueueEncodedEvent(e);
+    // orbit_api::TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
     str += chunk_size;
   }
 }
@@ -102,7 +98,7 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
 static inline void TrackValue(orbit_api::EventType type, const char* name, uint64_t value,
                               orbit_api_color color) {
   orbit_api::EncodedEvent e(type, name, value, color);
-  orbit_api::TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
+  // orbit_api::TrackValue(e.args[0], e.args[1], e.args[2], e.args[3], e.args[4], e.args[5]);
   EnqueueEncodedEvent(e);
 }
 

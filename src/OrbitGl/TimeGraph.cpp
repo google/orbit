@@ -235,17 +235,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   capture_min_timestamp_ = std::min(capture_min_timestamp_, timer_info.start());
   capture_max_timestamp_ = std::max(capture_max_timestamp_, timer_info.end());
 
-  // Functions for manual instrumentation scopes and tracked values are those with orbit_type() !=
-  // FunctionInfo::kNone. All proper timers for these have timer_info.type() == TimerInfo::kNone. It
-  // is possible to add frame tracks for these special functions, as they are simply hooked
-  // functions, but in those cases the timer type is TimerInfo::kFrame. We need to exclude those
-  // frame track timers from the special processing here as they do not represent manual
-  // instrumentation scopes.
-  if (function != nullptr && function_utils::IsOrbitFunc(*function) &&
-      timer_info.type() == TimerInfo::kNone) {
-    ProcessOrbitFunctionTimer(function->orbit_type(), timer_info);
-  }
-
   // TODO (b/175869409): Change the way to create and get the tracks. Move this part to
   // TrackManager.
   switch (timer_info.type()) {
@@ -284,6 +273,18 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       track->OnTimer(timer_info);
       break;
     }
+    case TimerInfo::kApiEvent: {
+      // Functions for manual instrumentation scopes and tracked values are those with orbit_type()
+      // != FunctionInfo::kNone. All proper timers for these have timer_info.type() ==
+      // TimerInfo::kNone. It is possible to add frame tracks for these special functions, as they
+      // are simply hooked functions, but in those cases the timer type is TimerInfo::kFrame. We
+      // need to exclude those frame track timers from the special processing here as they do not
+      // represent manual instrumentation scopes.
+      if (timer_info.type() == TimerInfo::kApiEvent) {
+        ProcessApiEventTimer(timer_info);
+      }
+      break;
+    }
     default:
       UNREACHABLE();
   }
@@ -291,18 +292,31 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   NeedsUpdate();
 }
 
-void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
-                                          const TimerInfo& timer_info) {
-  switch (type) {
-    case FunctionInfo::kOrbitTrackValue:
-      ProcessValueTrackingTimer(timer_info);
+void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
+  orbit_api::Event api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+  switch (api_event.type) {
+    case orbit_api::kScopeStart:
+    case orbit_api::kScopeStop: {
+      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      track->OnTimer(timer_info);
       break;
-    case FunctionInfo::kOrbitTimerStartAsync:
-    case FunctionInfo::kOrbitTimerStopAsync:
+    }
+    case orbit_api::kScopeStartAsync:
+    case orbit_api::kScopeStopAsync:
       manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
       break;
-    default:
+
+    case orbit_api::kTrackInt:
+    case orbit_api::kTrackInt64:
+    case orbit_api::kTrackUint:
+    case orbit_api::kTrackUint64:
+    case orbit_api::kTrackFloat:
+    case orbit_api::kTrackDouble:
+    case orbit_api::kString:
+      ProcessValueTrackingTimer(timer_info);
       break;
+    default:
+      ERROR("Unhandled API event");
   }
 }
 

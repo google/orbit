@@ -172,9 +172,16 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
-  ProducerSideServer side_server;
-  side_server.BuildAndStart("/tmp/orbit-producer-side-socket");
-  grpc_server->AddCaptureStartStopListener(&side_server);
+  LOG("Starting producer-side server at %s",
+      orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
+  ProducerSideServer producer_side_server;
+  if (!producer_side_server.BuildAndStart(
+          orbit_producer_side_channel::kProducerSideUnixDomainSocketPath)) {
+    ERROR("Unable to start producer-side server");
+    return;
+  }
+  LOG("Producer-side server is running");
+  grpc_server->AddCaptureStartStopListener(&producer_side_server);
 
   // Make stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);

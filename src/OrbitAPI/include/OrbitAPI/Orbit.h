@@ -303,9 +303,7 @@ inline void* orbit_api_get_proc_address(const char* name) {
 
 #else
 
-inline void* orbit_api_get_proc_address(const char* name) {
-  return nullptr;
-}
+inline void* orbit_api_get_proc_address(const char* name) { return nullptr; }
 
 #endif  // __linux__
 

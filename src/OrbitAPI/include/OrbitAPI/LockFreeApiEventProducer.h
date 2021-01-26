@@ -21,6 +21,8 @@ class LockFreeApiEventProducer
     BuildAndStart(orbit_producer_side_channel::CreateProducerSideChannel());
   }
 
+  ~LockFreeApiEventProducer() { ShutdownAndWait(); }
+
   orbit_grpc_protos::CaptureEvent TranslateIntermediateEvent(
       orbit_grpc_protos::CaptureEvent&& intermediate_event) override {
     // TODO: if the intermediate type is a orbit_grpc_protos::CaptureEvent, we shouldn't need to

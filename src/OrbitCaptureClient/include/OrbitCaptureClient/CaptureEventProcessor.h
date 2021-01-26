@@ -11,6 +11,7 @@
 #include <functional>
 #include <string>
 
+#include "OrbitCaptureClient/ApiEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitCaptureClient/GpuQueueSubmissionProcessor.h"
 #include "capture.pb.h"
@@ -20,7 +21,7 @@
 class CaptureEventProcessor {
  public:
   explicit CaptureEventProcessor(CaptureListener* capture_listener)
-      : capture_listener_(capture_listener) {}
+      : capture_listener_(capture_listener), api_event_processor_(capture_listener) {}
 
   void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event);
 
@@ -58,6 +59,7 @@ class CaptureEventProcessor {
   uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
 
   GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
+  ApiEventProcessor api_event_processor_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_

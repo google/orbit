@@ -83,8 +83,7 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
       // TODO (http://b/179000848): Process the system memory usage information.
       break;
     case ClientCaptureEvent::kApiEvent: {
-      auto& api_event = event.api_event();
-      LOG("API EVENT RECEIVED!! %s", api_event.name());
+      api_event_processor_.ProcessApiEvent(event.api_event());
       break;
     }
     case CaptureEvent::EVENT_NOT_SET:

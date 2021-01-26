@@ -97,18 +97,17 @@ message IntrospectionScope {
 
 message ApiEvent {
   enum Type {
-    kInvalid = 0;
-    kScopeStart = 1;
-    kScopeStop = 2;
-    kScopeStartAsync = 3;
-    kScopeStopAsync = 4;
-    kTrackInt = 5;
-    kTrackInt64 = 6;
-    kTrackUint = 7;
-    kTrackUint64 = 8;
-    kTrackFloat = 9;
-    kTrackDouble = 10;
-    kString = 11;
+    kScopeStart = 0;
+    kScopeStop = 1;
+    kScopeStartAsync = 2;
+    kScopeStopAsync = 3;
+    kTrackInt = 4;
+    kTrackInt64 = 5;
+    kTrackUint = 6;
+    kTrackUint64 = 7;
+    kTrackFloat = 8;
+    kTrackDouble = 9;
+    kString = 10;
   }
 
   Type type = 1;
@@ -119,6 +118,7 @@ message ApiEvent {
   string name = 6;
   uint32 color = 7;
   uint64 data = 8;
+  uint64 event_id = 9;
 }
 
 message Callstack {

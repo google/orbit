@@ -43,21 +43,10 @@ orbit_api::Event ManualInstrumentationManager::ApiEventFromTimerInfo(
 
 void ManualInstrumentationManager::ProcessAsyncTimer(
     const orbit_client_protos::TimerInfo& timer_info) {
-  orbit_api::Event event = ApiEventFromTimerInfo(timer_info);
-  const uint64_t event_id = event.data;
-  if (event.type == orbit_api::kScopeStartAsync) {
-    async_timer_info_start_by_id_[event_id] = timer_info;
-  } else if (event.type == orbit_api::kScopeStopAsync) {
-    auto it = async_timer_info_start_by_id_.find(event_id);
-    if (it != async_timer_info_start_by_id_.end()) {
-      const TimerInfo& start_timer_info = it->second;
-      orbit_api::Event start_event = ApiEventFromTimerInfo(start_timer_info);
-
-      TimerInfo async_span = start_timer_info;
-      async_span.set_end(timer_info.end());
-      absl::MutexLock lock(&mutex_);
-      for (auto* listener : async_timer_info_listeners_) (*listener)(start_event.name, async_span);
-    }
+  orbit_api::Event start_event = ApiEventFromTimerInfo(timer_info);
+  absl::MutexLock lock(&mutex_);
+  for (auto* listener : async_timer_info_listeners_) {
+    (*listener)(start_event.name, timer_info);
   }
 }
 
