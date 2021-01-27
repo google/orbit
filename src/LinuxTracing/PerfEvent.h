@@ -354,6 +354,7 @@ class TracepointPerfEvent : public PerfEvent {
   std::unique_ptr<uint8_t[]> tracepoint_data;
 
   uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
+  [[nodiscard]] int32_t pid() const { return ring_buffer_record.sample_id.pid; }
 
   uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
 

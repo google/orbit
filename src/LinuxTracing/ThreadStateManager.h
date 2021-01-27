@@ -50,13 +50,14 @@ class ThreadStateManager {
                       orbit_grpc_protos::ThreadStateSlice::ThreadState state);
   void OnNewTask(uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
-      uint64_t timestamp_ns, pid_t tid);
+      pid_t pid, uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
-      uint64_t timestamp_ns, pid_t tid);
+      pid_t pid, uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
-      uint64_t timestamp_ns, pid_t tid, orbit_grpc_protos::ThreadStateSlice::ThreadState new_state);
+      pid_t pid, uint64_t timestamp_ns, pid_t tid,
+      orbit_grpc_protos::ThreadStateSlice::ThreadState new_state);
   [[nodiscard]] std::vector<orbit_grpc_protos::ThreadStateSlice> OnCaptureFinished(
-      uint64_t timestamp_ns);
+      pid_t pid, uint64_t timestamp_ns);
 
  private:
   struct OpenState {

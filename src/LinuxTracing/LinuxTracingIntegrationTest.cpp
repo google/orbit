@@ -273,7 +273,7 @@ using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
   }
 
   fixture->StartTracing(capture_options.value());
-  constexpr absl::Duration kSleepAfterStartTracing = absl::Milliseconds(100);
+  constexpr absl::Duration kSleepAfterStartTracing = absl::Milliseconds(300);
   absl::SleepFor(kSleepAfterStartTracing);
 
   fixture->WriteLineToPuppet(command);
@@ -543,7 +543,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
     previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
 
     // We currently don't set the pid.
-    EXPECT_EQ(callstack_sample.pid(), 0);
+    EXPECT_EQ(callstack_sample.pid(), fixture.GetPuppetPid());
     // We are only sampling the puppet and the puppet is expected single-threaded.
     ASSERT_EQ(callstack_sample.tid(), fixture.GetPuppetPid());
 
@@ -610,8 +610,7 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
       continue;
     }
 
-    // We currently don't set the pid.
-    EXPECT_EQ(thread_state_slice.pid(), 0);
+    EXPECT_EQ(thread_state_slice.pid(), fixture.GetPuppetPid());
 
     EXPECT_TRUE(
         thread_state_slice.thread_state() == orbit_grpc_protos::ThreadStateSlice::kRunning ||
@@ -669,8 +668,7 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
       continue;
     }
 
-    // We currently don't set the pid.
-    EXPECT_EQ(thread_name.pid(), 0);
+    EXPECT_EQ(thread_name.pid(), fixture.GetPuppetPid());
 
     collected_event_names.emplace_back(thread_name.name());
   }

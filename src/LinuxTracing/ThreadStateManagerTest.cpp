@@ -18,44 +18,50 @@ namespace orbit_linux_tracing {
 using orbit_grpc_protos::ThreadStateSlice;
 
 TEST(ThreadStateManager, OneThread) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
 
-  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(kPid, 300, kTid, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 300);
 
-  slice = manager.OnSchedWakeup(400, kTid);
+  slice = manager.OnSchedWakeup(kPid, 400, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 400);
 
-  slice = manager.OnSchedSwitchIn(500, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 500, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 500);
 
-  std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(600);
+  std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(kPid, 600);
   ASSERT_TRUE(!slices.empty());
   EXPECT_EQ(slices.size(), 1);
   slice = slices[0];
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -63,30 +69,34 @@ TEST(ThreadStateManager, OneThread) {
 }
 
 TEST(ThreadStateManager, NewTask) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnNewTask(100, kTid);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
 
-  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(kPid, 300, kTid, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 300);
 
-  std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(400);
+  std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(kPid, 400);
   ASSERT_TRUE(!slices.empty());
   EXPECT_EQ(slices.size(), 1);
   slice = slices[0];
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -94,6 +104,7 @@ TEST(ThreadStateManager, NewTask) {
 }
 
 TEST(ThreadStateManager, TwoThreads) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid1 = 42;
   constexpr pid_t kTid2 = 52;
   ThreadStateManager manager;
@@ -101,8 +112,9 @@ TEST(ThreadStateManager, TwoThreads) {
 
   manager.OnInitialState(100, kTid1, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(200, kTid1);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid1);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -110,42 +122,47 @@ TEST(ThreadStateManager, TwoThreads) {
 
   manager.OnNewTask(250, kTid2);
 
-  slice = manager.OnSchedSwitchOut(300, kTid1, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(kPid, 300, kTid1, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 300);
 
-  slice = manager.OnSchedSwitchIn(350, kTid2);
+  slice = manager.OnSchedSwitchIn(kPid, 350, kTid2);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid2);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 350);
 
-  slice = manager.OnSchedWakeup(400, kTid1);
+  slice = manager.OnSchedWakeup(kPid, 400, kTid1);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 400);
 
-  slice = manager.OnSchedSwitchOut(450, kTid2, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(kPid, 450, kTid2, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid2);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 450);
 
-  slice = manager.OnSchedSwitchIn(500, kTid1);
+  slice = manager.OnSchedSwitchIn(kPid, 500, kTid1);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 500);
 
-  std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(600);
+  std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(kPid, 600);
   ASSERT_TRUE(slices.size() >= 2);
   EXPECT_EQ(slices.size(), 2);
 
@@ -154,12 +171,14 @@ TEST(ThreadStateManager, TwoThreads) {
   }
 
   slice = slices[0];
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 600);
 
   slice = slices[1];
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid2);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 150);
@@ -167,14 +186,16 @@ TEST(ThreadStateManager, TwoThreads) {
 }
 
 TEST(ThreadStateManager, SwitchOutAfterInitialStateRunnable) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(kPid, 200, kTid, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -182,6 +203,7 @@ TEST(ThreadStateManager, SwitchOutAfterInitialStateRunnable) {
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
@@ -190,8 +212,9 @@ TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
 
   manager.OnNewTask(100, kTid);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -199,17 +222,19 @@ TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedWakeup(100, kTid);
+  slice = manager.OnSchedWakeup(kPid, 100, kTid);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -217,17 +242,19 @@ TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(100, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 100, kTid);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(kPid, 200, kTid, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -235,17 +262,19 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSwitchOut) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchOut(100, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(kPid, 100, kTid, ThreadStateSlice::kInterruptibleSleep);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedWakeup(200, kTid);
+  slice = manager.OnSchedWakeup(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -253,15 +282,17 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchOut) {
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  slice = manager.OnSchedWakeup(100, kTid);
+  slice = manager.OnSchedWakeup(kPid, 100, kTid);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -269,15 +300,17 @@ TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSwitchIn) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  slice = manager.OnSchedSwitchIn(100, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 100, kTid);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(kPid, 200, kTid, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -285,15 +318,17 @@ TEST(ThreadStateManager, UnknownInitialStateWithSwitchIn) {
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSwitchOut) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  slice = manager.OnSchedSwitchOut(100, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(kPid, 100, kTid, ThreadStateSlice::kInterruptibleSleep);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedWakeup(200, kTid);
+  slice = manager.OnSchedWakeup(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -301,17 +336,19 @@ TEST(ThreadStateManager, UnknownInitialStateWithSwitchOut) {
 }
 
 TEST(ThreadStateManager, NoStateChangeWithSchedWakeup) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedWakeup(150, kTid);
+  slice = manager.OnSchedWakeup(kPid, 150, kTid);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -319,24 +356,26 @@ TEST(ThreadStateManager, NoStateChangeWithSchedWakeup) {
 }
 
 TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
+  constexpr pid_t kPid = 1729;
   constexpr pid_t kTid = 42;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 200, kTid);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
 
-  slice = manager.OnSchedSwitchIn(250, kTid);
+  slice = manager.OnSchedSwitchIn(kPid, 250, kTid);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(kPid, 300, kTid, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
+  EXPECT_EQ(slice->pid(), kPid);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
   EXPECT_EQ(slice->duration_ns(), 100);

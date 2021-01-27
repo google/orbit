@@ -60,6 +60,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   }
 
   CallstackSample sample;
+  sample.set_pid(event->GetPid());
   sample.set_tid(event->GetTid());
   sample.set_timestamp_ns(event->GetTimestamp());
 

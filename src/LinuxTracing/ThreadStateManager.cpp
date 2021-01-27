@@ -43,7 +43,7 @@ void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid) {
   tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
 }
 
-std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns,
+std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(pid_t pid, uint64_t timestamp_ns,
                                                                   pid_t tid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
@@ -74,6 +74,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   }
 
   ThreadStateSlice slice;
+  slice.set_pid(pid);
   slice.set_tid(tid);
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
@@ -82,7 +83,8 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   return slice;
 }
 
-std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t timestamp_ns,
+std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(pid_t pid,
+                                                                    uint64_t timestamp_ns,
                                                                     pid_t tid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunning;
 
@@ -109,6 +111,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
   // the sched:sched_wakeup event.
 
   ThreadStateSlice slice;
+  slice.set_pid(pid);
   slice.set_tid(tid);
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
@@ -118,7 +121,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
 }
 
 std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
-    uint64_t timestamp_ns, pid_t tid, ThreadStateSlice::ThreadState new_state) {
+    pid_t pid, uint64_t timestamp_ns, pid_t tid, ThreadStateSlice::ThreadState new_state) {
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
     ERROR("Processed sched:sched_switch(out) but previous state of thread %d is unknown", tid);
@@ -150,6 +153,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
   }
 
   ThreadStateSlice slice;
+  slice.set_pid(pid);
   slice.set_tid(tid);
   slice.set_thread_state(adjusted_open_state_state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
@@ -161,10 +165,12 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
   return slice;
 }
 
-std::vector<ThreadStateSlice> ThreadStateManager::OnCaptureFinished(uint64_t timestamp_ns) {
+std::vector<ThreadStateSlice> ThreadStateManager::OnCaptureFinished(pid_t pid,
+                                                                    uint64_t timestamp_ns) {
   std::vector<ThreadStateSlice> slices;
   for (const auto& [tid, open_state] : tid_open_states_) {
     ThreadStateSlice slice;
+    slice.set_pid(pid);
     slice.set_tid(tid);
     slice.set_thread_state(open_state.state);
     slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);

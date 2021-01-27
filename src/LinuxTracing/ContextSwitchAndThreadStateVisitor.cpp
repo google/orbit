@@ -129,8 +129,8 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
   // Process the context switch out for thread state.
   if (event->GetPrevTid() != 0 && TidMatchesPidFilter(event->GetPrevTid())) {
     ThreadStateSlice::ThreadState new_state = GetThreadStateFromBits(event->GetPrevState());
-    std::optional<ThreadStateSlice> out_slice =
-        state_manager_.OnSchedSwitchOut(event->GetTimestamp(), event->GetPrevTid(), new_state);
+    std::optional<ThreadStateSlice> out_slice = state_manager_.OnSchedSwitchOut(
+        thread_state_pid_filter_, event->GetTimestamp(), event->GetPrevTid(), new_state);
     if (out_slice.has_value()) {
       CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
@@ -142,8 +142,8 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
 
   // Process the context switch in for thread state.
   if (event->GetNextTid() != 0 && TidMatchesPidFilter(event->GetNextTid())) {
-    std::optional<ThreadStateSlice> in_slice =
-        state_manager_.OnSchedSwitchIn(event->GetTimestamp(), event->GetNextTid());
+    std::optional<ThreadStateSlice> in_slice = state_manager_.OnSchedSwitchIn(
+        thread_state_pid_filter_, event->GetTimestamp(), event->GetNextTid());
     if (in_slice.has_value()) {
       CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
@@ -159,8 +159,8 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
     return;
   }
 
-  std::optional<ThreadStateSlice> state_slice =
-      state_manager_.OnSchedWakeup(event->GetTimestamp(), event->GetWokenTid());
+  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
+      thread_state_pid_filter_, event->GetTimestamp(), event->GetWokenTid());
   if (state_slice.has_value()) {
     CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
@@ -171,7 +171,8 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedWakeupPerfEvent* event) {
 }
 
 void ContextSwitchAndThreadStateVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
-  std::vector<ThreadStateSlice> state_slices = state_manager_.OnCaptureFinished(timestamp_ns);
+  std::vector<ThreadStateSlice> state_slices =
+      state_manager_.OnCaptureFinished(thread_state_pid_filter_, timestamp_ns);
   for (ThreadStateSlice& slice : state_slices) {
     CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(slice);
@@ -224,18 +225,18 @@ ContextSwitchAndThreadStateVisitor::GetThreadStateFromChar(char c) {
 // https://github.com/torvalds/linux/blob/master/fs/proc/array.c.
 ThreadStateSlice::ThreadState ContextSwitchAndThreadStateVisitor::GetThreadStateFromBits(
     uint64_t bits) {
-  if (__builtin_popcountl(bits & 0xFF) > 1) {
+  if (__builtin_popcountl(bits & 0xFFU) > 1) {
     ERROR("The thread state mask %#lx is a combination of states, reporting only the first",
-          bits & 0xFF);
+          bits & 0xFFU);
   }
-  if ((bits & 0x01) != 0) return ThreadStateSlice::kInterruptibleSleep;
-  if ((bits & 0x02) != 0) return ThreadStateSlice::kUninterruptibleSleep;
-  if ((bits & 0x04) != 0) return ThreadStateSlice::kStopped;
-  if ((bits & 0x08) != 0) return ThreadStateSlice::kTraced;
-  if ((bits & 0x10) != 0) return ThreadStateSlice::kDead;
-  if ((bits & 0x20) != 0) return ThreadStateSlice::kZombie;
-  if ((bits & 0x40) != 0) return ThreadStateSlice::kParked;
-  if ((bits & 0x80) != 0) return ThreadStateSlice::kIdle;
+  if ((bits & 0x01U) != 0) return ThreadStateSlice::kInterruptibleSleep;
+  if ((bits & 0x02U) != 0) return ThreadStateSlice::kUninterruptibleSleep;
+  if ((bits & 0x04U) != 0) return ThreadStateSlice::kStopped;
+  if ((bits & 0x08U) != 0) return ThreadStateSlice::kTraced;
+  if ((bits & 0x10U) != 0) return ThreadStateSlice::kDead;
+  if ((bits & 0x20U) != 0) return ThreadStateSlice::kZombie;
+  if ((bits & 0x40U) != 0) return ThreadStateSlice::kParked;
+  if ((bits & 0x80U) != 0) return ThreadStateSlice::kIdle;
   return ThreadStateSlice::kRunnable;
 }
 

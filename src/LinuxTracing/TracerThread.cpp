@@ -887,6 +887,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_task_newtask) {
     auto event = ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
     ThreadName thread_name;
+    thread_name.set_pid(event->pid());
     thread_name.set_tid(event->GetTid());
     thread_name.set_name(event->GetComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
@@ -899,6 +900,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_task_rename) {
     auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
     ThreadName thread_name;
+    thread_name.set_pid(event->pid());
     thread_name.set_tid(event->GetTid());
     thread_name.set_name(event->GetNewComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
@@ -1010,17 +1012,20 @@ void TracerThread::ProcessDeferredEvents() {
 
 void TracerThread::RetrieveThreadNamesSystemWide() {
   uint64_t timestamp_ns = MonotonicTimestampNs();
-  for (pid_t tid : GetAllTids()) {
-    std::string name = orbit_base::GetThreadName(tid);
-    if (name.empty()) {
-      continue;
-    }
+  for (pid_t pid : GetAllPids()) {
+    for (pid_t tid : GetTidsOfProcess(pid)) {
+      std::string name = orbit_base::GetThreadName(tid);
+      if (name.empty()) {
+        continue;
+      }
 
-    ThreadName thread_name;
-    thread_name.set_tid(tid);
-    thread_name.set_name(std::move(name));
-    thread_name.set_timestamp_ns(timestamp_ns);
-    listener_->OnThreadName(std::move(thread_name));
+      ThreadName thread_name;
+      thread_name.set_pid(pid);
+      thread_name.set_tid(tid);
+      thread_name.set_name(std::move(name));
+      thread_name.set_timestamp_ns(timestamp_ns);
+      listener_->OnThreadName(std::move(thread_name));
+    }
   }
 }
 
