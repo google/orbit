@@ -73,9 +73,19 @@ enum class FutureRegisterContinuationResult {
 //
 // Real-world examples should involved an executor like MainThreadExecutor or ThreadPool.
 // Check-out their tests and docs to learn how to use Future.
+//
+// The default constructor creates a completed future. This is handy as a return value.
 template <typename T>
 class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
  public:
+  // Constructs a completed future
+  template <typename... Args>
+  explicit Future(Args && ... args)
+      : orbit_base_internal::FutureBase<T>{
+            std::make_shared<orbit_base_internal::SharedState<T>>()} {
+    this->shared_state_->result.emplace(std::forward<Args>(args)...);
+  }
+
   [[nodiscard]] bool IsFinished() const {
     if (this->shared_state_.use_count() == 0) return false;
 
@@ -143,9 +153,18 @@ class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
 // notify the caller, when the asynchronous tasks completes.
 //
 // Unlike Future<T>, Future<void> has no `Get()` method since there is no return value.
+//
+// The default constructor creates a completed future. This is handy as a return value.
 template <>
 class Future<void> : public orbit_base_internal::FutureBase<void> {
  public:
+  // Constructs a completed future
+  explicit Future()
+      : orbit_base_internal::FutureBase<void>{
+            std::make_shared<orbit_base_internal::SharedState<void>>()} {
+    this->shared_state_->finished = true;
+  }
+
   [[nodiscard]] bool IsFinished() const {
     if (shared_state_.use_count() == 0) return false;
 
