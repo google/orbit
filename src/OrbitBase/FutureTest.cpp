@@ -98,4 +98,17 @@ TEST(Future, RegisterContinuationOnValidAndUnfinishedFuture) {
   EXPECT_EQ(future.RegisterContinuation([]() {}),
             orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered);
 }
+
+TEST(Future, CreateCompletedFuture) {
+  orbit_base::Future<void> future{};
+  EXPECT_TRUE(future.IsValid());
+  EXPECT_TRUE(future.IsFinished());
+}
+
+TEST(Future, CreateCompletedFutureWithInt) {
+  orbit_base::Future<int> future{42};
+  EXPECT_TRUE(future.IsValid());
+  EXPECT_TRUE(future.IsFinished());
+  EXPECT_EQ(future.Get(), 42);
+}
 }  // namespace orbit_base
