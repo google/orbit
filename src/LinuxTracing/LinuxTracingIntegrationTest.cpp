@@ -496,6 +496,46 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
       std::make_pair(inner_function_virtual_address_start, inner_function_virtual_address_end));
 }
 
+absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
+    const std::vector<orbit_grpc_protos::CaptureEvent>& events,
+    const std::filesystem::path& executable_path,
+    std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
+    std::pair<uint64_t, uint64_t> inner_function_virtual_address_range) {
+  absl::flat_hash_set<uint64_t> address_infos_received;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kAddressInfo) {
+      continue;
+    }
+
+    const orbit_grpc_protos::AddressInfo& address_info = event.address_info();
+    if (!(address_info.absolute_address() >= outer_function_virtual_address_range.first &&
+          address_info.absolute_address() <= outer_function_virtual_address_range.second) &&
+        !(address_info.absolute_address() >= inner_function_virtual_address_range.first &&
+          address_info.absolute_address() <= inner_function_virtual_address_range.second)) {
+      continue;
+    }
+    address_infos_received.emplace(address_info.absolute_address());
+
+    EXPECT_EQ(address_info.function_name_or_key_case(),
+              orbit_grpc_protos::AddressInfo::kFunctionName);
+    if (address_info.absolute_address() >= outer_function_virtual_address_range.first &&
+        address_info.absolute_address() <= outer_function_virtual_address_range.second) {
+      EXPECT_EQ(address_info.function_name(), PuppetConstants::kOuterFunctionName);
+      EXPECT_EQ(address_info.offset_in_function(),
+                address_info.absolute_address() - outer_function_virtual_address_range.first);
+    } else if (address_info.absolute_address() >= inner_function_virtual_address_range.first &&
+               address_info.absolute_address() <= inner_function_virtual_address_range.second) {
+      EXPECT_EQ(address_info.function_name(), PuppetConstants::kInnerFunctionName);
+      EXPECT_EQ(address_info.offset_in_function(),
+                address_info.absolute_address() - inner_function_virtual_address_range.first);
+    }
+
+    EXPECT_EQ(address_info.map_name_or_key_case(), orbit_grpc_protos::AddressInfo::kMapName);
+    EXPECT_EQ(address_info.map_name(), executable_path.string());
+  }
+  return address_infos_received;
+}
+
 void VerifyCallstackSamplesWithOuterAndInnerFunction(
     const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
@@ -581,39 +621,10 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
-  // Verify the AddressInfos.
-  absl::flat_hash_set<uint64_t> address_infos_received;
-  for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kAddressInfo) {
-      continue;
-    }
-
-    const orbit_grpc_protos::AddressInfo& address_info = event.address_info();
-    if (!(address_info.absolute_address() >= outer_function_virtual_address_range.first &&
-          address_info.absolute_address() <= outer_function_virtual_address_range.second) &&
-        !(address_info.absolute_address() >= inner_function_virtual_address_range.first &&
-          address_info.absolute_address() <= inner_function_virtual_address_range.second)) {
-      continue;
-    }
-    address_infos_received.emplace(address_info.absolute_address());
-
-    ASSERT_EQ(address_info.function_name_or_key_case(),
-              orbit_grpc_protos::AddressInfo::kFunctionName);
-    if (address_info.absolute_address() >= outer_function_virtual_address_range.first &&
-        address_info.absolute_address() <= outer_function_virtual_address_range.second) {
-      EXPECT_EQ(address_info.function_name(), PuppetConstants::kOuterFunctionName);
-      EXPECT_EQ(address_info.offset_in_function(),
-                address_info.absolute_address() - outer_function_virtual_address_range.first);
-    } else if (address_info.absolute_address() >= inner_function_virtual_address_range.first &&
-               address_info.absolute_address() <= inner_function_virtual_address_range.second) {
-      EXPECT_EQ(address_info.function_name(), PuppetConstants::kInnerFunctionName);
-      EXPECT_EQ(address_info.offset_in_function(),
-                address_info.absolute_address() - inner_function_virtual_address_range.first);
-    }
-
-    ASSERT_EQ(address_info.map_name_or_key_case(), orbit_grpc_protos::AddressInfo::kMapName);
-    EXPECT_EQ(address_info.map_name(), executable_path.string());
-  }
+  absl::flat_hash_set<uint64_t> address_infos_received =
+      VerifyAndGetAddressInfosWithOuterAndInnerFunction(events, executable_path,
+                                                        outer_function_virtual_address_range,
+                                                        inner_function_virtual_address_range);
 
   VerifyCallstackSamplesWithOuterAndInnerFunction(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
