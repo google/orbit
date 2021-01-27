@@ -12,7 +12,7 @@
 #include "Process.h"
 #include "gtest/gtest.h"
 
-constexpr int kTaskCommLength = 16;
+constexpr size_t kTaskCommLength = 16;
 
 namespace orbit_service {
 
@@ -23,7 +23,7 @@ TEST(Process, FromPid) {
   auto& process = potential_process.value();
 
   EXPECT_EQ(process.pid(), getpid());
-  EXPECT_EQ(process.name(), std::string_view{"OrbitServiceTests"}.substr(0, kTaskCommLength - 1));
+  EXPECT_EQ(process.name(), std::string_view{"ServiceTests"}.substr(0, kTaskCommLength - 1));
 }
 
 }  // namespace orbit_service
