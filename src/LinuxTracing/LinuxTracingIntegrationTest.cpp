@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/numbers.h>
+#include <absl/synchronization/mutex.h>
 #include <absl/time/clock.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -147,6 +148,10 @@ class BufferTracerListener : public TracerListener {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_scheduling_slice() = std::move(scheduling_slice);
     events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&one_scheduling_slice_received_mutex_};
+      one_scheduling_slice_received_ = true;
+    }
   }
 
   void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) override {
@@ -211,8 +216,18 @@ class BufferTracerListener : public TracerListener {
     return std::move(events_);
   }
 
+  void WaitForAtLeastOneSchedulingSlice() {
+    one_scheduling_slice_received_mutex_.LockWhen(absl::Condition(
+        +[](bool* one_scheduling_slice_received) { return *one_scheduling_slice_received; },
+        &one_scheduling_slice_received_));
+    one_scheduling_slice_received_mutex_.Unlock();
+  }
+
  private:
   std::vector<orbit_grpc_protos::CaptureEvent> events_;
+
+  bool one_scheduling_slice_received_ = false;
+  absl::Mutex one_scheduling_slice_received_mutex_;
 };
 
 // GTest's test fixtures seem to mess with the pipe logic in ChildProcess.
@@ -238,13 +253,20 @@ class LinuxTracingIntegrationTestFixture {
     return capture_options;
   }
 
-  void StartTracing(orbit_grpc_protos::CaptureOptions capture_options) {
+  void StartTracingAndWaitForTracingLoopStarted(orbit_grpc_protos::CaptureOptions capture_options) {
     CHECK(!tracer_.has_value());
     CHECK(!listener_.has_value());
+    // Needed for BufferTracerListener::WaitForAtLeastOneSchedulingSlice().
+    CHECK(capture_options.trace_context_switches());
     tracer_.emplace(std::move(capture_options));
     listener_.emplace();
     tracer_->SetListener(&*listener_);
     tracer_->Start();
+
+    // Waiting for the first SchedulingSlice (at least one of which is always expected as long as
+    // capture_options.trace_context_switches() is true) guarantees that the main loop in
+    // TracerThread has started, and hence that the capture has been fully set up.
+    listener_->WaitForAtLeastOneSchedulingSlice();
   }
 
   [[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent> StopTracingAndGetEvents() {
@@ -273,9 +295,7 @@ using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
     capture_options = fixture->BuildDefaultCaptureOptions();
   }
 
-  fixture->StartTracing(capture_options.value());
-  constexpr absl::Duration kSleepAfterStartTracing = absl::Milliseconds(100);
-  absl::SleepFor(kSleepAfterStartTracing);
+  fixture->StartTracingAndWaitForTracingLoopStarted(capture_options.value());
 
   fixture->WriteLineToPuppet(command);
   while (fixture->ReadLineFromPuppet() != PuppetConstants::kDoneResponse) continue;
