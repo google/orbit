@@ -145,6 +145,7 @@ if(WITH_VULKAN_LAYER)
   add_subdirectory(src/OrbitVulkanLayer)
 endif()
 
+add_subdirectory(src/CaptureFile)
 add_subdirectory(src/ClientProtos)
 add_subdirectory(src/ElfUtils)
 add_subdirectory(src/FramePointerValidator)
