@@ -546,7 +546,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
   CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
   LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
       (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
-  constexpr double kMinExpectedScheduledRelativeTime = 0.9;
+  constexpr double kMinExpectedScheduledRelativeTime = 0.67;
   const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
       floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
             sampling_rate * kMinExpectedScheduledRelativeTime));
