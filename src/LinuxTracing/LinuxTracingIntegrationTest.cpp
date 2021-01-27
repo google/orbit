@@ -631,6 +631,39 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
       inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
 
+TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
+  if (!CheckIsRunningAsRoot()) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
+  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
+
+  orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+  constexpr uint64_t kOuterFunctionId = 1;
+  constexpr uint64_t kInnerFunctionId = 2;
+  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
+                                           kOuterFunctionId, kInnerFunctionId);
+  const double sampling_rate = capture_options.sampling_rate();
+
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
+                                             kInnerFunctionId);
+
+  absl::flat_hash_set<uint64_t> address_infos_received =
+      VerifyAndGetAddressInfosWithOuterAndInnerFunction(events, executable_path,
+                                                        outer_function_virtual_address_range,
+                                                        inner_function_virtual_address_range);
+
+  VerifyCallstackSamplesWithOuterAndInnerFunction(
+      events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
+      inner_function_virtual_address_range, sampling_rate, &address_infos_received);
+}
+
 TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   if (!CheckIsPerfEventParanoidAtMost(0)) {
     GTEST_SKIP();
