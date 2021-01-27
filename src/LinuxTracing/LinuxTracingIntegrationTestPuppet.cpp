@@ -59,10 +59,20 @@ static void LoadSoWithDlopenAndCallFunction() {
   constexpr const char* kSoFileName = PuppetConstants::kSharedObjectFileName;
   constexpr const char* kFunctionName = "function_that_works_for_a_considerable_amount_of_time";
   // Setting rpath in CMake is a nightmare, so we are going to emulate "$ORIGIN/../lib" rpath here.
-  std::string library_path = (orbit_base::GetExecutableDir() / ".." / "lib" / kSoFileName).string();
-  void* handle = dlopen(library_path.c_str(), RTLD_NOW);
+  // But let's try the current directory, too.
+  std::vector<std::string> library_paths = {
+      (orbit_base::GetExecutableDir() / ".." / "lib" / kSoFileName).string(),
+      (orbit_base::GetExecutableDir() / kSoFileName).string()};
+  void* handle = nullptr;
+  for (const std::string& library_path : library_paths) {
+    handle = dlopen(library_path.c_str(), RTLD_NOW);
+    if (handle != nullptr) {
+      break;
+    }
+    ERROR("Unable to open \"%s\": %s", library_path, dlerror());
+  }
   if (handle == nullptr) {
-    FATAL("Unable to open \"%s\": %s", kSoFileName, dlerror());
+    FATAL("Unable to find \"%s\"", kSoFileName);
   }
 
   using function_type = double (*)();
