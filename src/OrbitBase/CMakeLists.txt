@@ -28,6 +28,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/GetProcessIds.h
         include/OrbitBase/Profiling.h
         include/OrbitBase/Promise.h
+        include/OrbitBase/PromiseHelpers.h
         include/OrbitBase/ReadFileToString.h
         include/OrbitBase/SafeStrerror.h
         include/OrbitBase/SharedState.h
@@ -75,6 +76,7 @@ target_sources(OrbitBaseTests PRIVATE
         OrbitApiTest.cpp
         ProfilingTest.cpp
         PromiseTest.cpp
+        PromiseHelpersTest.cpp
         ThreadUtilsTest.cpp
         TracingTest.cpp
         UniqueResourceTest.cpp
