@@ -359,24 +359,16 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount);
 }
 
-TEST(LinuxTracingIntegrationTest, FunctionCalls) {
-  if (!CheckIsRunningAsRoot()) {
-    GTEST_SKIP();
-  }
-  LinuxTracingIntegrationTestFixture fixture;
-
-  orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
-
-  // Find the offset in the ELF file of the functions to instrument and add those functions to the
-  // CaptureOptions.
-  const orbit_grpc_protos::ModuleSymbols& module_symbols =
-      GetExecutableBinaryModuleSymbols(fixture.GetPuppetPid());
-  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
+void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions* capture_options,
+                                              pid_t pid, uint64_t outer_function_id,
+                                              uint64_t inner_function_id) {
+  // Find the offset in the ELF file of the "outer" function and the "inner" function and add those
+  // functions to the CaptureOptions to be instrumented.
+  const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
+  const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
 
   bool outer_function_symbol_found = false;
   bool inner_function_symbol_found = false;
-  constexpr uint64_t kOuterFunctionId = 1;
-  constexpr uint64_t kInnerFunctionId = 2;
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
       CHECK(!outer_function_symbol_found);
@@ -384,8 +376,8 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
       orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
-      instrumented_function.set_function_id(kOuterFunctionId);
-      capture_options.mutable_instrumented_functions()->Add(std::move(instrumented_function));
+      instrumented_function.set_function_id(outer_function_id);
+      capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
@@ -394,16 +386,17 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
       orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
-      instrumented_function.set_function_id(kInnerFunctionId);
-      capture_options.mutable_instrumented_functions()->Add(std::move(instrumented_function));
+      instrumented_function.set_function_id(inner_function_id);
+      capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
   }
   CHECK(outer_function_symbol_found);
   CHECK(inner_function_symbol_found);
+}
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
-      TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
-
+void VerifyFunctionCallsOfOuterAndInnerFunction(
+    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    uint64_t outer_function_id, uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;
   for (const auto& event : events) {
     if (event.event_case() != orbit_grpc_protos::CaptureEvent::kFunctionCall) {
@@ -411,8 +404,8 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
     }
 
     const orbit_grpc_protos::FunctionCall& function_call = event.function_call();
-    ASSERT_EQ(function_call.pid(), fixture.GetPuppetPid());
-    ASSERT_EQ(function_call.tid(), fixture.GetPuppetPid());
+    ASSERT_EQ(function_call.pid(), pid);
+    ASSERT_EQ(function_call.tid(), pid);
     function_calls.emplace_back(function_call);
   }
 
@@ -428,7 +421,7 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
     for (size_t inner_index = 0; inner_index < PuppetConstants::kInnerFunctionCallCount;
          ++inner_index) {
       const orbit_grpc_protos::FunctionCall& function_call = function_calls[function_call_index];
-      EXPECT_EQ(function_call.function_id(), kInnerFunctionId);
+      EXPECT_EQ(function_call.function_id(), inner_function_id);
       EXPECT_GT(function_call.duration_ns(), 0);
       inner_calls_duration_ns_sum += function_call.duration_ns();
       if (function_call_index > 0) {
@@ -441,7 +434,7 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
 
     {
       const orbit_grpc_protos::FunctionCall& function_call = function_calls[function_call_index];
-      EXPECT_EQ(function_call.function_id(), kOuterFunctionId);
+      EXPECT_EQ(function_call.function_id(), outer_function_id);
       EXPECT_GT(function_call.duration_ns(), inner_calls_duration_ns_sum);
       if (function_call_index > 0) {
         EXPECT_GT(function_call.end_timestamp_ns(),
@@ -451,6 +444,25 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
       ++function_call_index;
     }
   }
+}
+
+TEST(LinuxTracingIntegrationTest, FunctionCalls) {
+  if (!CheckIsRunningAsRoot()) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+  constexpr uint64_t kOuterFunctionId = 1;
+  constexpr uint64_t kInnerFunctionId = 2;
+  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
+                                           kOuterFunctionId, kInnerFunctionId);
+
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
+                                             kInnerFunctionId);
 }
 
 std::pair<std::pair<uint64_t, uint64_t>, std::pair<uint64_t, uint64_t>>
