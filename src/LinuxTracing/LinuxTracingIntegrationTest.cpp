@@ -684,6 +684,12 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
       inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
 
+void VerifyNoAddressInfos(const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+  for (const auto& event : events) {
+    EXPECT_NE(event.event_case(), orbit_grpc_protos::CaptureEvent::kAddressInfo);
+  }
+}
+
 TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   if (!CheckIsPerfEventParanoidAtMost(0)) {
     GTEST_SKIP();
@@ -700,17 +706,44 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
-  for (const auto& event : events) {
-    // AddressInfos are not sent when unwinding with frame pointers as they are produced by
-    // libunwindstack.
-    EXPECT_NE(event.event_case(), orbit_grpc_protos::CaptureEvent::kAddressInfo);
-  }
+  // AddressInfos are not sent when unwinding with frame pointers as they are produced by
+  // libunwindstack.
+  VerifyNoAddressInfos(events);
 
   // Note that this test requires that the "inner" function of the puppet use frame pointers.
   VerifyCallstackSamplesWithOuterAndInnerFunction(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
-      inner_function_virtual_address_range, sampling_rate,
-      /*address_infos_received=*/nullptr);
+      inner_function_virtual_address_range, sampling_rate, /*address_infos_received=*/nullptr);
+}
+
+TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithFunctionCalls) {
+  if (!CheckIsRunningAsRoot()) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
+
+  orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+  capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
+  constexpr uint64_t kOuterFunctionId = 1;
+  constexpr uint64_t kInnerFunctionId = 2;
+  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
+                                           kOuterFunctionId, kInnerFunctionId);
+  const double sampling_rate = capture_options.sampling_rate();
+
+  std::vector<orbit_grpc_protos::CaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
+                                             kInnerFunctionId);
+
+  VerifyNoAddressInfos(events);
+
+  VerifyCallstackSamplesWithOuterAndInnerFunction(
+      events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
+      inner_function_virtual_address_range, sampling_rate, /*address_infos_received=*/nullptr);
 }
 
 TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {

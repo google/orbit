@@ -546,10 +546,12 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  // This takes an initial snapshot of the maps. Call it after OpenUprobes, as
-  // calling perf_event_open for uprobes (just calling it, it is not necessary
-  // to enable the file descriptor) causes a new [uprobes] map entry, and we
-  // want to catch it.
+  // This takes an initial snapshot of the maps. Note that, if at least one
+  // function is dynamically instrumented, the snapshot might or might not
+  // already contain the [uprobes] map entry. This depends on whether at least
+  // one of those functions has already been called after the corresponding
+  // uprobes file descriptor has been opened by OpenUserSpaceProbes (opening is
+  // enough, it doesn't need to have been enabled).
   InitUprobesEventVisitor();
 
   if (unwinding_method_ == CaptureOptions::kFramePointers ||
