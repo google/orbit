@@ -22,6 +22,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/Future.h
+        include/OrbitBase/FutureHelpers.h
         include/OrbitBase/JoinFutures.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MakeUniqueForOverwrite.h
@@ -71,6 +72,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitBaseTests PRIVATE
         ExecutablePathTest.cpp
         FutureTest.cpp
+        FutureHelpersTest.cpp
         JoinFuturesTest.cpp
         ReadFileToStringTest.cpp
         OrbitApiTest.cpp
