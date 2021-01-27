@@ -22,7 +22,7 @@ target_include_directories(OrbitProducer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(OrbitProducer PUBLIC
         GrpcProtos
         OrbitBase
-        OrbitServiceLib
+        ServiceLib
         concurrentqueue::concurrentqueue
         CONAN_PKG::abseil)
 
