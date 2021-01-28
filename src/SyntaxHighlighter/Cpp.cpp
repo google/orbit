@@ -45,15 +45,15 @@ const char* const kEndCommentRegex = "[\\s\\S]*\\*\\/";
 const char* const kNoEndCommentRegex = "([^\\*]|\\*+[^\\/\\*])*$";
 // A word who is followed with an open-parenthesis (
 const char* const kFunctionRegex = "(?<=[^\\(\\:\\.\\w\\>])[a-z_]\\w*(?=\\s*\\()";
-const char* const kPreprocessorRegex = "(^\\s*)#\\s*[a-z_]\\S*";
+const char* const kPreprocessorRegex = "(^\\s*)#\\s*[a-z_]\\w*";
 // Match with <word> after #include
-const char* const kIncludeFileRegex = "(?!#(\\\\s*)include)\\s<[^>]+>";
+const char* const kIncludeFileRegex = "(?<=#include)\\s*<[^>]+>";
 // Similar process to comments to match a multiline string
 const char* const kStringRegex = "\"([^\\\\\"]|\\\\.)*\"|\'[^\']*\'";
 const char* const kOpenStringRegex = "\"([^\\\\\"]|\\\\.)*\\\\$";
 const char* const kEndStringRegex = "([^\\\\\"]|\\\\.)*\"";
 const char* const kNoEndStringRegex = "([^\\\\\"]|\\\\.)*\\\\$";
-const char* const kCapitalizedRegex = "(?<=[\\s\\(])[A-Z][\\w\\*\\&]*";
+const char* const kCapitalizedRegex = "(?<=[\\s\\(<])[A-Z][\\w\\*\\&]*";
 const char* const kNoLowercaseRegex = "(?<=[\\s\\(])[A-Z][0-9A-Z\\_\\*\\&]*(?=[\\;\\,\\(\\s\\)])";
 }  // namespace
 }  // namespace C
