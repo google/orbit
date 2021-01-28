@@ -343,6 +343,58 @@ orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
   return *executable_module_info;
 }
 
+void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+  uint64_t previous_event_timestamp_ns = 0;
+  for (const auto& event : events) {
+    switch (event.event_case()) {
+      case orbit_grpc_protos::CaptureEvent::kSchedulingSlice:
+        EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();
+        break;
+      case orbit_grpc_protos::CaptureEvent::kInternedCallstack:
+        UNREACHABLE();
+      case orbit_grpc_protos::CaptureEvent::kCallstackSample:
+        EXPECT_GE(event.callstack_sample().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.callstack_sample().timestamp_ns();
+        break;
+      case orbit_grpc_protos::CaptureEvent::kFunctionCall:
+        EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::CaptureEvent::kIntrospectionScope:
+        UNREACHABLE();
+      case orbit_grpc_protos::CaptureEvent::kInternedString:
+        UNREACHABLE();
+      case orbit_grpc_protos::CaptureEvent::kGpuJob:
+        // Currently GpuJobs are not sent in order with the other events.
+        break;
+      case orbit_grpc_protos::CaptureEvent::kThreadName:
+        EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.thread_name().timestamp_ns();
+        break;
+      case orbit_grpc_protos::CaptureEvent::kThreadStateSlice:
+        EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::CaptureEvent::kAddressInfo:
+        // AddressInfos have no timestamp.
+        break;
+      case orbit_grpc_protos::CaptureEvent::kInternedTracepointInfo:
+        UNREACHABLE();
+      case orbit_grpc_protos::CaptureEvent::kTracepointEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::CaptureEvent::kGpuQueueSubmission:
+        UNREACHABLE();
+      case orbit_grpc_protos::CaptureEvent::kModuleUpdateEvent:
+        EXPECT_GE(event.module_update_event().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.module_update_event().timestamp_ns();
+        break;
+      case orbit_grpc_protos::CaptureEvent::EVENT_NOT_SET:
+        UNREACHABLE();
+    }
+  }
+}
+
 TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   if (!CheckIsPerfEventParanoidAtMost(-1)) {
     GTEST_SKIP();
@@ -351,6 +403,8 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
 
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
+
+  VerifyOrderOfAllEvents(events);
 
   uint64_t scheduling_slice_count = 0;
   uint64_t last_out_timestamp_ns = 0;
@@ -480,6 +534,8 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
 
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  VerifyOrderOfAllEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -641,6 +697,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
+  VerifyOrderOfAllEvents(events);
+
   absl::flat_hash_set<uint64_t> address_infos_received =
       VerifyAndGetAddressInfosWithOuterAndInnerFunction(events, executable_path,
                                                         outer_function_virtual_address_range,
@@ -670,6 +728,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
 
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  VerifyOrderOfAllEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -706,6 +766,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
+  VerifyOrderOfAllEvents(events);
+
   // AddressInfos are not sent when unwinding with frame pointers as they are produced by
   // libunwindstack.
   VerifyNoAddressInfos(events);
@@ -736,6 +798,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
+  VerifyOrderOfAllEvents(events);
+
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
 
@@ -754,6 +818,8 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
 
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
+
+  VerifyOrderOfAllEvents(events);
 
   uint64_t running_slice_count = 0;
   uint64_t runnable_slice_count = 0;
@@ -817,6 +883,8 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kPthreadSetnameNpCommand);
 
+  VerifyOrderOfAllEvents(events);
+
   std::vector<std::string> collected_event_names;
   for (const auto& event : events) {
     if (event.event_case() != orbit_grpc_protos::CaptureEvent::kThreadName) {
@@ -845,6 +913,8 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
 
   std::vector<orbit_grpc_protos::CaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kDlopenCommand);
+
+  VerifyOrderOfAllEvents(events);
 
   bool module_update_found = false;
   for (const auto& event : events) {
