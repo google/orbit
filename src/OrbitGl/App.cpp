@@ -1226,46 +1226,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       });
 }
 
-void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                           std::vector<uint64_t> function_hashes_to_hook,
-                           std::vector<uint64_t> frame_track_function_hashes) {
-  // This overload will be removed in a subsequent commit.
-
-  const auto future =
-      LoadSymbols(symbols_path, module_data->file_path())
-          .Then(main_thread_executor_,
-                [this, function_hashes_to_hook = std::move(function_hashes_to_hook),
-                 frame_track_function_hashes = std::move(frame_track_function_hashes),
-                 module_data](const ErrorMessageOr<void>& result) {
-                  if (result.has_error()) return;
-
-                  if (!function_hashes_to_hook.empty()) {
-                    const auto selection_result =
-                        SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
-                    if (!selection_result) {
-                      LOG("Warning, automated hooked incomplete: %s",
-                          selection_result.error().message());
-                    }
-                    LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
-                  }
-
-                  if (!frame_track_function_hashes.empty()) {
-                    const auto frame_track_result =
-                        EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
-                    if (!frame_track_result) {
-                      LOG("Warning, could not insert frame tracks: %s",
-                          frame_track_result.error().message());
-                    }
-                    LOG("Added frame tracks in module \"%s\"", module_data->file_path());
-                  }
-
-                  UpdateAfterSymbolLoading();
-                  FireRefreshCallbacks();
-                });
-
-  (void)main_thread_executor_->WaitFor(future);
-}
-
 OrbitApp::LoadPresetModuleResult OrbitApp::LoadPresetModule(
     const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
   ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
