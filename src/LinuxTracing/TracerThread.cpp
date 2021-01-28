@@ -430,6 +430,7 @@ void TracerThread::InitContextSwitchAndThreadStateVisitor() {
   ORBIT_SCOPE_FUNCTION;
   context_switch_and_thread_state_visitor_ = std::make_unique<ContextSwitchAndThreadStateVisitor>();
   context_switch_and_thread_state_visitor_->SetListener(listener_);
+  context_switch_and_thread_state_visitor_->SetProduceSchedulingSlices(trace_context_switches_);
   if (trace_thread_state_) {
     context_switch_and_thread_state_visitor_->SetThreadStatePidFilter(target_pid_);
   }

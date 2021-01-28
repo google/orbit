@@ -95,7 +95,7 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
   // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
 
   // Process the context switch out for scheduling slices.
-  if (event->GetPrevTid() != 0) {
+  if (produce_scheduling_slices_ && event->GetPrevTid() != 0) {
     // TracepointPerfEvent::ring_buffer_record.sample_id.pid (which doesn't come from the tracepoint
     // data, but from the generic field of the PERF_RECORD_SAMPLE) is the pid of the process that
     // the thread being switched out belongs to. But when the switch out is caused by the thread
@@ -120,7 +120,7 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
   }
 
   // Process the context switch in for scheduling slices.
-  if (event->GetNextTid() != 0) {
+  if (produce_scheduling_slices_ && event->GetNextTid() != 0) {
     std::optional<pid_t> next_pid = GetPidOfTid(event->GetNextTid());
     switch_manager_.ProcessContextSwitchIn(next_pid, event->GetNextTid(), event->GetCpu(),
                                            event->GetTimestamp());
