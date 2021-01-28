@@ -2,14 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/synchronization/mutex.h>
+#include <gtest/gtest.h>
 #include <unistd.h>
 
 #include <filesystem>
 #include <set>
 #include <thread>
-
-#include "absl/synchronization/mutex.h"
-#include "gtest/gtest.h"
 
 namespace orbit_user_space_instrumentation {
 

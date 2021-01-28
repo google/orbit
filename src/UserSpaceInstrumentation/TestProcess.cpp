@@ -4,6 +4,8 @@
 
 #include "TestProcess.h"
 
+#include <absl/time/clock.h>
+
 #include <chrono>
 #include <cstdio>
 #include <fstream>
@@ -11,7 +13,6 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
-#include "absl/time/clock.h"
 
 namespace orbit_user_space_instrumentation {
 

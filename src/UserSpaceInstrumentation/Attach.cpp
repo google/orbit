@@ -4,6 +4,7 @@
 
 #include "UserSpaceInstrumentation/Attach.h"
 
+#include <absl/strings/str_format.h>
 #include <errno.h>
 #include <stdint.h>
 #include <sys/ptrace.h>
@@ -18,7 +19,6 @@
 
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_format.h"
 
 namespace orbit_user_space_instrumentation {
 

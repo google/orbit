@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/time/clock.h>
+#include <gtest/gtest.h>
 #include <sys/types.h>
 
 #include <set>
 #include <vector>
 
-#include "TestProcess.h"
 #include "OrbitBase/GetProcessIds.h"
+#include "TestProcess.h"
 #include "UserSpaceInstrumentation/Attach.h"
-#include "absl/time/clock.h"
-#include "gtest/gtest.h"
 
 namespace orbit_user_space_instrumentation {
 
