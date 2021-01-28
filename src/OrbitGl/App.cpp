@@ -1590,8 +1590,25 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
         }
       }
       // (D) Load Modules again (and pass on functions to hook after loading)
-      LoadModules(modules_to_reload, std::move(function_hashes_to_hook_map),
-                  std::move(frame_track_function_hashes_map));
+      const auto future = LoadModules(modules_to_reload);
+
+      if (main_thread_executor_->WaitFor(future) != MainThreadExecutor::WaitResult::kCompleted) {
+        return;
+      }
+
+      for (const auto& [module_path, function_hashes] : function_hashes_to_hook_map) {
+        ModuleData* const module_data = GetMutableModuleByPath(module_path);
+        if (module_data == nullptr) continue;
+        SelectFunctionsFromHashes(module_data, function_hashes);
+        LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
+      }
+
+      for (const auto& [module_path, function_hashes] : frame_track_function_hashes_map) {
+        ModuleData* const module_data = GetMutableModuleByPath(module_path);
+        if (module_data == nullptr) continue;
+        EnableFrameTracksFromHashes(module_data, function_hashes);
+        LOG("Added frame tracks in module \"%s\"", module_data->file_path());
+      }
 
       // Refresh UI
       modules_data_view_->UpdateModules(process);
