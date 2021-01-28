@@ -47,6 +47,7 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -1347,49 +1348,44 @@ void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
-  std::vector<ModuleData*> modules_to_load;
-  std::vector<std::string> module_paths_not_found;  // file path of module
-  for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
-    ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
+  std::vector<orbit_base::Future<std::string>> load_module_results{};
+  load_module_results.reserve(preset_file->preset_info().path_to_module().size());
 
-    if (module_data == nullptr) {
-      module_paths_not_found.push_back(module_path);
-      continue;
-    }
-    if (module_data->is_loaded()) {
-      std::vector<uint64_t> function_hashes{preset_module.function_hashes().begin(),
-                                            preset_module.function_hashes().end()};
-      SelectFunctionsFromHashes(module_data, function_hashes);
-      std::vector<uint64_t> frame_track_hashes{preset_module.frame_track_function_hashes().begin(),
-                                               preset_module.frame_track_function_hashes().end()};
-      EnableFrameTracksFromHashes(module_data, frame_track_hashes);
-      continue;
-    }
-    modules_to_load.push_back(module_data);
+  // First we try to load all preset modules in parallel
+  for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
+    auto load_preset_result = LoadPresetModule(module_path, preset_module);
+
+    orbit_base::ImmediateExecutor immediate_executor{};
+    auto future = load_preset_result.Then(
+        &immediate_executor,
+        [module_path = module_path](const ErrorMessageOr<void>& result) -> std::string {
+          // We will return the module_path in case loading fails. We need the path for the error
+          // message.
+          if (result.has_error()) return module_path;
+          return {};
+        });
+
+    load_module_results.emplace_back(std::move(future));
   }
-  if (!module_paths_not_found.empty()) {
-    // Note that unloadable presets are disabled.
-    SendWarningToUi("Preset only partially loaded",
-                    absl::StrFormat("The following modules are not loaded:\n\"%s\"",
-                                    absl::StrJoin(module_paths_not_found, "\"\n\"")));
-  }
-  if (!modules_to_load.empty()) {
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
-    for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
-      function_hashes_to_hook_map[module_path] = std::vector<uint64_t>{};
-      for (const uint64_t function_hash : preset_module.function_hashes()) {
-        function_hashes_to_hook_map.at(module_path).push_back(function_hash);
-      }
-      frame_track_function_hashes_map[module_path] = std::vector<uint64_t>{};
-      for (const uint64_t function_hash : preset_module.frame_track_function_hashes()) {
-        frame_track_function_hashes_map.at(module_path).push_back(function_hash);
-      }
+
+  // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
+  // error message.
+  auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
+  results.Then(main_thread_executor_, [this](std::vector<std::string> module_paths_not_found) {
+    module_paths_not_found.erase(
+        std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
+                       [](const std::string& path) { return path.empty(); }),
+        module_paths_not_found.end());
+
+    if (!module_paths_not_found.empty()) {
+      // Note that unloadable presets are disabled.
+      SendWarningToUi("Preset only partially loaded",
+                      absl::StrFormat("The following modules were not loaded:\n\"%s\"",
+                                      absl::StrJoin(module_paths_not_found, "\"\n\"")));
     }
-    LoadModules(modules_to_load, std::move(function_hashes_to_hook_map),
-                std::move(frame_track_function_hashes_map));
-  }
-  FireRefreshCallbacks();
+
+    FireRefreshCallbacks();
+  });
 }
 
 void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
