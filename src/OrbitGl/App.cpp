@@ -1038,28 +1038,6 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModuleOn
       });
 }
 
-void OrbitApp::LoadModules(
-    const std::vector<ModuleData*>& modules,
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map) {
-  // This overload will be removed in a subsequent commit
-
-  std::vector<orbit_base::Future<void>> futures;
-  futures.reserve(modules.size());
-
-  for (const auto& module : modules) {
-    futures.push_back(LoadModule(module).Then(main_thread_executor_, [&, module]() {
-      const auto& select_functions = function_hashes_to_hook_map[module->file_path()];
-      (void)SelectFunctionsFromHashes(module, select_functions);
-
-      const auto& frame_tracks = frame_track_function_hashes_map[module->file_path()];
-      (void)EnableFrameTracksFromHashes(module, frame_tracks);
-    }));
-  }
-
-  (void)main_thread_executor_->WaitForAll(absl::MakeSpan(futures));
-}
-
 orbit_base::Future<void> OrbitApp::LoadModules(absl::Span<const ModuleData* const> modules) {
   std::vector<orbit_base::Future<void>> futures;
   futures.reserve(modules.size());

@@ -292,10 +292,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void NeedsRedraw();
   void RenderImGui();
 
-  void LoadModules(
-      const std::vector<ModuleData*>& modules,
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map);
   orbit_base::Future<void> LoadModule(const ModuleData* module);
   orbit_base::Future<void> LoadModule(const std::string& module_path, const std::string& build_id);
   orbit_base::Future<void> LoadModules(absl::Span<const ModuleData* const> modules);
