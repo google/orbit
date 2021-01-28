@@ -5,8 +5,11 @@
 #include <gtest/gtest.h>
 
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/Result.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/strings/ascii.h"
 
-using orbit_metrics_uploader::MetricsUploader;
+namespace orbit_metrics_uploader {
 
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSendEvent) {
   auto metrics_uploader =
@@ -53,3 +56,37 @@ TEST(MetricsUploader, CreateMetricsUploaderFromNonexistentClient) {
       MetricsUploader::CreateMetricsUploader("NonexistentMetricsUploaderClient");
   EXPECT_EQ(metrics_uploader.has_value(), false);
 }
+
+TEST(MetricsUploader, GenerateUUID) {
+  ErrorMessageOr<std::string> uuid_result = GenerateUUID();
+  ASSERT_TRUE(uuid_result.has_value());
+}
+
+TEST(MetricsUploader, CheckUUIDFormat) {
+  ErrorMessageOr<std::string> uuid_result = GenerateUUID();
+  ASSERT_TRUE(uuid_result.has_value());
+
+  const std::string& uuid{uuid_result.value()};
+
+  EXPECT_EQ(uuid.length(), 36);
+  EXPECT_EQ(uuid[8], '-');
+  EXPECT_EQ(uuid[13], '-');
+  EXPECT_EQ(uuid[18], '-');
+  EXPECT_EQ(uuid[23], '-');
+
+  EXPECT_EQ(uuid[14], '4');  // Version 4
+
+  EXPECT_EQ(absl::AsciiStrToLower(uuid), uuid);
+}
+
+TEST(MetricsUploader, CheckUUIDUniqueness) {
+  absl::flat_hash_set<std::string> hash_set;
+  for (int i = 0; i < 1000; ++i) {
+    ErrorMessageOr<std::string> uuid = GenerateUUID();
+    ASSERT_TRUE(uuid.has_value());
+    auto [unused_it, success] = hash_set.insert(uuid.value());
+    EXPECT_TRUE(success);
+  }
+}
+
+}  // namespace orbit_metrics_uploader

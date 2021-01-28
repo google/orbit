@@ -58,7 +58,7 @@ class MetricsUploader {
  private:
 #ifdef _WIN32
   HMODULE metrics_uploader_client_dll_;
-  explicit MetricsUploader(std::string client_name,
+  explicit MetricsUploader(std::string client_name, std::string session_uuid,
                            Result (*send_log_event_addr)(const uint8_t*, int),
                            HMODULE metrics_uploader_client_dll);
 #else
@@ -67,7 +67,10 @@ class MetricsUploader {
 
   Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
   std::string client_name_;
+  std::string session_uuid_;
 };
+
+[[nodiscard]] ErrorMessageOr<std::string> GenerateUUID();
 
 }  // namespace orbit_metrics_uploader
 
