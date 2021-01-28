@@ -85,10 +85,10 @@ void ContextSwitchAndThreadStateVisitor::ProcessInitialState(uint64_t timestamp_
 }
 
 void ContextSwitchAndThreadStateVisitor::visit(TaskNewtaskPerfEvent* event) {
-  if (!TidMatchesPidFilter(event->GetTid())) {
+  if (!TidMatchesPidFilter(event->GetNewTid())) {
     return;
   }
-  state_manager_.OnNewTask(event->GetTimestamp(), event->GetTid());
+  state_manager_.OnNewTask(event->GetTimestamp(), event->GetNewTid());
 }
 
 void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
@@ -101,7 +101,7 @@ void ContextSwitchAndThreadStateVisitor::visit(SchedSwitchPerfEvent* event) {
     // the thread being switched out belongs to. But when the switch out is caused by the thread
     // exiting, it has value -1. In such cases, use the association between tid and pid that we keep
     // internally to obtain the process id.
-    pid_t prev_pid = event->GetPid();
+    pid_t prev_pid = event->GetPrevPidOrMinusOne();
     if (prev_pid == -1) {
       if (std::optional<pid_t> fallback_prev_pid = GetPidOfTid(event->GetPrevTid());
           fallback_prev_pid.has_value()) {
