@@ -1366,54 +1366,31 @@ ErrorMessageOr<void> OrbitApp::EnableFrameTracksFromHashes(
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
-  std::vector<ModuleData*> modules_to_load;
-  std::vector<std::string> module_paths_not_found;  // file path of module
-  for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
-    ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
+  std::vector<std::string> module_paths_not_found;
+  std::vector<orbit_base::Future<void>> futures;
 
-    if (module_data == nullptr) {
-      module_paths_not_found.push_back(module_path);
-      continue;
-    }
-    if (module_data->is_loaded()) {
-      std::vector<uint64_t> function_hashes{preset_module.function_hashes().begin(),
-                                            preset_module.function_hashes().end()};
-      const auto selecting_result = SelectFunctionsFromHashes(module_data, function_hashes);
-      if (!selecting_result) {
-        LOG("Warning: %s", selecting_result.error().message());
+  for (const auto& module_pair : preset_file->preset_info().path_to_module()) {
+    auto future = main_thread_executor_->Schedule([this, module_pair, &module_paths_not_found]() {
+      const auto& [module_path, preset_module] = module_pair;
+      const auto result = LoadPresetModule(module_path, preset_module);
+
+      if (result == LoadPresetModuleResult::kModuleNotFound) {
+        module_paths_not_found.emplace_back(module_path);
       }
-      std::vector<uint64_t> frame_track_hashes{preset_module.frame_track_function_hashes().begin(),
-                                               preset_module.frame_track_function_hashes().end()};
-      const auto frame_track_result = EnableFrameTracksFromHashes(module_data, frame_track_hashes);
-      if (!frame_track_result) {
-        LOG("Warning: %s", frame_track_result.error().message());
-      }
-      continue;
-    }
-    modules_to_load.push_back(module_data);
+    });
+    futures.emplace_back(std::move(future));
   }
+
+  const auto result = main_thread_executor_->WaitForAll(absl::MakeSpan(futures));
+  if (result != MainThreadExecutor::WaitResult::kCompleted) return;
+
   if (!module_paths_not_found.empty()) {
     // Note that unloadable presets are disabled.
     SendWarningToUi("Preset only partially loaded",
                     absl::StrFormat("The following modules are not loaded:\n\"%s\"",
                                     absl::StrJoin(module_paths_not_found, "\"\n\"")));
   }
-  if (!modules_to_load.empty()) {
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
-    for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
-      function_hashes_to_hook_map[module_path] = std::vector<uint64_t>{};
-      for (const uint64_t function_hash : preset_module.function_hashes()) {
-        function_hashes_to_hook_map.at(module_path).push_back(function_hash);
-      }
-      frame_track_function_hashes_map[module_path] = std::vector<uint64_t>{};
-      for (const uint64_t function_hash : preset_module.frame_track_function_hashes()) {
-        frame_track_function_hashes_map.at(module_path).push_back(function_hash);
-      }
-    }
-    LoadModules(modules_to_load, std::move(function_hashes_to_hook_map),
-                std::move(frame_track_function_hashes_map));
-  }
+
   FireRefreshCallbacks();
 }
 
