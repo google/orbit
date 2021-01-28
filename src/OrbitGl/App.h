@@ -7,6 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/types/span.h>
 #include <grpc/impl/codegen/connectivity_state.h>
 #include <grpcpp/channel.h>
 
@@ -41,6 +42,7 @@
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
@@ -292,8 +294,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void LoadModules(
       const std::vector<ModuleData*>& modules,
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map = {},
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map = {});
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
+      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map);
+  orbit_base::Future<void> LoadModule(const ModuleData* module);
+  orbit_base::Future<void> LoadModule(const std::string& module_path, const std::string& build_id);
+  orbit_base::Future<void> LoadModules(absl::Span<const ModuleData* const> modules);
+
   // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
   // should not be necessary to have an argument here, since OrbitApp will always only have one
   // process associated)
@@ -473,7 +479,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
   std::map<std::string, std::string> file_mapping_;
 
-  absl::flat_hash_set<std::string> modules_currently_loading_;
+  absl::flat_hash_map<std::string, orbit_base::Future<void>> modules_currently_loading_;
 
   std::shared_ptr<StringManager> string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
