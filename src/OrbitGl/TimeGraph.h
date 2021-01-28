@@ -37,7 +37,7 @@ class OrbitApp;
 
 class TimeGraph {
  public:
-  explicit TimeGraph(uint32_t font_size, OrbitApp* app);
+  explicit TimeGraph(OrbitApp* app);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -117,7 +117,7 @@ class TimeGraph {
   void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
-    return lround((font_size_)*layout_.GetScale());
+    return lround(layout_.GetFontSize() * layout_.GetScale());
   }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
@@ -188,7 +188,6 @@ class TimeGraph {
                          const orbit_client_protos::TimerInfo& timer_info);
 
  private:
-  uint32_t font_size_;
   TextRenderer text_renderer_static_;
   TextRenderer* text_renderer_ = nullptr;
   GlCanvas* canvas_ = nullptr;

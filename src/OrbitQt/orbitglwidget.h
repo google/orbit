@@ -55,8 +55,7 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  void Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window,
-                  uint32_t font_size, OrbitApp* app);
+  void Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window, OrbitApp* app);
   void Deinitialize(OrbitMainWindow* main_window);
   void initializeGL() override;
   void resizeGL(int w, int h) override;

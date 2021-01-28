@@ -12,8 +12,7 @@
 
 using orbit_client_protos::TimerInfo;
 
-IntrospectionWindow::IntrospectionWindow(uint32_t font_size, OrbitApp* app)
-    : CaptureWindow(font_size, app) {}
+IntrospectionWindow::IntrospectionWindow(OrbitApp* app) : CaptureWindow(app) {}
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
 

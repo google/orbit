@@ -70,7 +70,7 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   app->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
   app->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
 
-  TimeGraph time_graph{14, app.get()};
+  TimeGraph time_graph{app.get()};
   GCurrentTimeGraph = &time_graph;
   app->ClearCapture();
 

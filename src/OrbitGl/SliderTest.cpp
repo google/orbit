@@ -14,10 +14,8 @@
 #include "GlSlider.h"
 
 class MockCanvas : public GlCanvas {
-  static constexpr uint32_t kFontSize = 14;
-
  public:
-  MockCanvas() : GlCanvas(kFontSize) {}
+  MockCanvas() : GlCanvas() {}
   MOCK_METHOD(int, GetWidth, (), (const, override));
   MOCK_METHOD(int, GetHeight, (), (const, override));
 };

@@ -31,12 +31,11 @@ class OrbitApp;
 
 class GlCanvas {
  public:
-  explicit GlCanvas(uint32_t font_size);
+  explicit GlCanvas();
   virtual ~GlCanvas();
 
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
-  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, uint32_t font_size,
-                                          OrbitApp* app);
+  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app);
 
   virtual void Initialize();
   virtual void Resize(int width, int height);
@@ -99,7 +98,6 @@ class GlCanvas {
   virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
-  [[nodiscard]] uint32_t GetInitialFontSize() const { return initial_font_size_; }
 
   virtual void UpdateWheelMomentum(float delta_time);
   virtual void OnTimer();
@@ -199,7 +197,6 @@ class GlCanvas {
   int hover_delay_ms_;
   bool is_hovering_;
   bool can_hover_;
-  uint32_t initial_font_size_;
 
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
