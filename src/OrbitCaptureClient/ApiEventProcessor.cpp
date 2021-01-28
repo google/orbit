@@ -76,8 +76,6 @@ void ApiEventProcessor::ProcessStopEvent(const ApiEvent& stop_event) {
   timer_info.add_registers(e.args[4]);
   timer_info.add_registers(e.args[5]);
 
-  static uint64_t count = 0;
-  LOG("API SCOPE EVENT %u", ++count);
   capture_listener_->OnTimer(timer_info);
   event_stack.pop_back();
 }
