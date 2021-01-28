@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
   orbit_code_viewer::Dialog dialog{};
 
   // Example file
-  const QString content = cpp_example;
+  const QString content = testing_example;
 
   dialog.SetSourceCode(content, std::make_unique<orbit_syntax_highlighter::Cpp>());
 
