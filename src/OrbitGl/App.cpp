@@ -1206,56 +1206,34 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
   });
 }
 
-ErrorMessageOr<void> OrbitApp::GetFunctionInfosFromHashes(
-    const ModuleData* module, const std::vector<uint64_t>& function_hashes,
-    std::vector<const FunctionInfo*>* function_infos) {
-  CHECK(module != nullptr);
-  const ProcessData* process = GetTargetProcess();
-  if (process == nullptr) {
-    return ErrorMessage(absl::StrFormat(
-        "Unable to get function infos for module \"%s\", because no process is selected",
-        module->file_path()));
-  }
-  if (!process->IsModuleLoaded(module->file_path())) {
-    return ErrorMessage(absl::StrFormat(
-        R"(Unable to get function infos for module "%s", because the module is not loaded by process "%s")",
-        module->file_path(), process->name()));
-  }
-
-  size_t count_missing = 0;
-  for (const uint64_t function_hash : function_hashes) {
-    const FunctionInfo* function = module->FindFunctionFromHash(function_hash);
-    if (function == nullptr) {
-      count_missing++;
-      continue;
-    }
-    function_infos->push_back(function);
-  }
-  if (count_missing != 0) {
-    return ErrorMessage(absl::StrFormat("* %d function infos missing from module \"%s\"\n",
-                                        count_missing, module->file_path()));
-  }
-  return outcome::success();
-}
-
 ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
     const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
-  std::vector<const FunctionInfo*> function_infos;
-  const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
-  for (const auto* function : function_infos) {
-    SelectFunction(*function);
+  for (const auto function_hash : function_hashes) {
+    const orbit_client_protos::FunctionInfo* const function_info =
+        module->FindFunctionFromHash(function_hash);
+    if (function_info == nullptr) {
+      LOG("Could not find function hash 0x%x in module %s", function_hash, module->file_path());
+      continue;
+    }
+    SelectFunction(*function_info);
   }
-  return error;
+
+  return outcome::success();
 }
 
 ErrorMessageOr<void> OrbitApp::EnableFrameTracksFromHashes(
     const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
-  std::vector<const FunctionInfo*> function_infos;
-  const auto& error = GetFunctionInfosFromHashes(module, function_hashes, &function_infos);
-  for (const auto* function : function_infos) {
-    data_manager_->EnableFrameTrack(*function);
+  for (const auto function_hash : function_hashes) {
+    const orbit_client_protos::FunctionInfo* const function_info =
+        module->FindFunctionFromHash(function_hash);
+    if (function_info == nullptr) {
+      LOG("Could not find function hash 0x%x in module %s", function_hash, module->file_path());
+      continue;
+    }
+    EnableFrameTrack(*function_info);
   }
-  return error;
+
+  return outcome::success();
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {

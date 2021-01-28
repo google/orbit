@@ -416,10 +416,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
-  ErrorMessageOr<void> GetFunctionInfosFromHashes(
-      const ModuleData* module, const std::vector<uint64_t>& function_hashes,
-      std::vector<const orbit_client_protos::FunctionInfo*>* function_infos);
-
   ErrorMessageOr<void> EnableFrameTracksFromHashes(const ModuleData* module,
                                                    const std::vector<uint64_t>& function_hashes);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
