@@ -60,12 +60,26 @@ TracingListener::~TracingListener() {
 
 }  // namespace orbit_base
 
+namespace {
+struct ScopeToggle {
+  ScopeToggle() = delete;
+  ScopeToggle(bool* value, bool initial_value) : toggle(value) { *toggle = initial_value; }
+  ~ScopeToggle() { *toggle = !*toggle; }
+  bool* toggle = nullptr;
+};
+}  // namespace
+
 void TracingListener::DeferScopeProcessing(const TracingScope& scope) {
+  // Prevent reentry to avoid feedback loop.
+  thread_local bool is_internal_update = false;
+  if (is_internal_update) return;
+
   // User callback is called from a worker thread to
   // minimize contention on the instrumented threads.
   absl::MutexLock lock(&global_tracing_mutex);
   if (!IsActive()) return;
   global_tracing_listener->thread_pool_->Schedule([scope]() {
+    ScopeToggle scope_toggle(&is_internal_update, true);
     absl::MutexLock lock(&global_tracing_mutex);
     if (!IsActive()) return;
     global_tracing_listener->user_callback_(scope);
