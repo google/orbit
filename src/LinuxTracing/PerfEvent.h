@@ -379,7 +379,9 @@ class TaskNewtaskPerfEvent : public TracepointPerfEvent {
   void Accept(PerfEventVisitor* visitor) override;
 
   // The tracepoint format calls this "pid" but it's effectively the thread id.
-  pid_t GetTid() const { return GetTypedTracepointData<task_newtask_tracepoint>().pid; }
+  // Note that ring_buffer_record.sample_id.pid and ring_buffer_record.sample_id.tid are NOT the pid
+  // and tid of the new process/thread, but the ones of the process/thread that created this one.
+  pid_t GetNewTid() const { return GetTypedTracepointData<task_newtask_tracepoint>().pid; }
 
   const char* GetComm() const { return GetTypedTracepointData<task_newtask_tracepoint>().comm; }
 };
@@ -390,7 +392,9 @@ class TaskRenamePerfEvent : public TracepointPerfEvent {
 
   void Accept(PerfEventVisitor* visitor) override;
 
-  pid_t GetTid() const { return GetTypedTracepointData<task_rename_tracepoint>().pid; }
+  // The tracepoint format calls this "pid" but it's effectively the thread id.
+  // This should match ring_buffer_record.sample_id.tid.
+  pid_t GetRenamedTid() const { return GetTypedTracepointData<task_rename_tracepoint>().pid; }
 
   const char* GetOldComm() const {
     return GetTypedTracepointData<task_rename_tracepoint>().oldcomm;
@@ -412,7 +416,7 @@ class SchedSwitchPerfEvent : public TracepointPerfEvent {
   // Note, though, that this value is -1 when the switch out is caused by the thread exiting.
   // This is not the case for GetPrevTid(), whose value is always correct as it comes directly from
   // the tracepoint data.
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+  pid_t GetPrevPidOrMinusOne() const { return ring_buffer_record.sample_id.pid; }
 
   const char* GetPrevComm() const {
     return GetTypedTracepointData<sched_switch_tracepoint>().prev_comm;

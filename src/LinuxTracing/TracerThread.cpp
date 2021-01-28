@@ -889,7 +889,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_task_newtask) {
     auto event = ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
     ThreadName thread_name;
-    thread_name.set_tid(event->GetTid());
+    thread_name.set_tid(event->GetNewTid());
     thread_name.set_name(event->GetComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
@@ -901,7 +901,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_task_rename) {
     auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
     ThreadName thread_name;
-    thread_name.set_tid(event->GetTid());
+    thread_name.set_tid(event->GetRenamedTid());
     thread_name.set_name(event->GetNewComm());
     thread_name.set_timestamp_ns(event->GetTimestamp());
     listener_->OnThreadName(std::move(thread_name));
