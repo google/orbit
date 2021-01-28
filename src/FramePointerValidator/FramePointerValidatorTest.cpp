@@ -16,10 +16,10 @@
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
+#include "FramePointerValidator/FramePointerValidator.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "FramePointerValidator/FramePointerValidator.h"
 #include "code_block.pb.h"
 #include "symbol.pb.h"
 

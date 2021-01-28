@@ -79,7 +79,7 @@ class unique_resource {
 
 template <typename Resource, typename Deleter>
 unique_resource(Resource, Deleter)
-    -> unique_resource<std::decay_t<Resource>, std::remove_cv_t<Deleter>>;
+    ->unique_resource<std::decay_t<Resource>, std::remove_cv_t<Deleter>>;
 
 }  // namespace orbit_base
 
