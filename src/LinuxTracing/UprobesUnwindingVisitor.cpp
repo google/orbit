@@ -157,8 +157,9 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
     if (uprobe_sp > last_uprobe_sp) {
       ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
       return;
-    } else if (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip &&
-               uprobe_cpu != last_uprobe_cpu) {
+    }
+    if (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip &&
+        uprobe_cpu != last_uprobe_cpu) {
       ERROR("Duplicate uprobe on thread migration");
       return;
     }
