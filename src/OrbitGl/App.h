@@ -407,8 +407,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook,
                           std::vector<uint64_t> frame_track_function_hashes,
                           std::string error_message_from_local);
-  ErrorMessageOr<void> SelectFunctionsFromHashes(const ModuleData* module,
-                                                 const std::vector<uint64_t>& function_hashes);
+  void SelectFunctionsFromHashes(const ModuleData* module,
+                                 const std::vector<uint64_t>& function_hashes);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::filesystem::path& filename);
@@ -416,12 +416,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
-  ErrorMessageOr<void> GetFunctionInfosFromHashes(
-      const ModuleData* module, const std::vector<uint64_t>& function_hashes,
-      std::vector<const orbit_client_protos::FunctionInfo*>* function_infos);
-
-  ErrorMessageOr<void> EnableFrameTracksFromHashes(const ModuleData* module,
-                                                   const std::vector<uint64_t>& function_hashes);
+  void EnableFrameTracksFromHashes(const ModuleData* module,
+                                   const std::vector<uint64_t>& function_hashes);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
 
