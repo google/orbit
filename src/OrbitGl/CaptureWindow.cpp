@@ -696,7 +696,7 @@ static std::string VariableToString(std::string_view name, const T& value) {
   return string_stream.str();
 }
 
-void CaptureWindow::RenderImGui() {
+void CaptureWindow::RenderImGuiDebugUI() {
   if (ImGui::CollapsingHeader("Layout Properties")) {
     if (time_graph_.GetLayout().DrawProperties()) {
       NeedsUpdate();

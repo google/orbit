@@ -288,7 +288,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
-  void RenderImGui();
+  void RenderImGuiDebugUI();
 
   void LoadModules(
       const std::vector<ModuleData*>& modules,

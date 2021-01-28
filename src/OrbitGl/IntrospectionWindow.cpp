@@ -58,8 +58,8 @@ void IntrospectionWindow::ToggleRecording() {
   }
 }
 
-void IntrospectionWindow::RenderImGui() {
-  CaptureWindow::RenderImGui();
+void IntrospectionWindow::RenderImGuiDebugUI() {
+  CaptureWindow::RenderImGuiDebugUI();
 
   if (ImGui::CollapsingHeader("IntrospectionWindow")) {
     IMGUI_VAR_TO_TEXT(IsIntrospecting());

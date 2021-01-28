@@ -19,7 +19,7 @@ class IntrospectionWindow : public CaptureWindow {
   explicit IntrospectionWindow(OrbitApp* app);
   ~IntrospectionWindow() override;
   void ToggleRecording() override;
-  void RenderImGui() override;
+  void RenderImGuiDebugUI() override;
 
   [[nodiscard]] bool IsIntrospecting() const;
   void StartIntrospection();
