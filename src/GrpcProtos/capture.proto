@@ -97,7 +97,7 @@ message InternedCallstack {
 }
 
 message CallstackSample {
-  int32 pid = 1;  // Note: pid is currently not set, the client doesn't need it.
+  int32 pid = 1;
   int32 tid = 2;
   oneof callstack_or_key {
     Callstack callstack = 3;

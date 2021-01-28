@@ -576,9 +576,9 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     EXPECT_GT(callstack_sample.timestamp_ns(), previous_callstack_timestamp_ns);
     previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
 
-    // We currently don't set the pid.
-    EXPECT_EQ(callstack_sample.pid(), 0);
-    // We are only sampling the puppet and the puppet is expected single-threaded.
+    // We are only sampling the puppet.
+    EXPECT_EQ(callstack_sample.pid(), pid);
+    // The puppet is expected single-threaded.
     ASSERT_EQ(callstack_sample.tid(), pid);
 
     ASSERT_EQ(callstack_sample.callstack_or_key_case(),

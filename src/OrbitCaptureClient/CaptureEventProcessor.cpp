@@ -121,6 +121,7 @@ void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callst
   CallstackEvent callstack_event;
   callstack_event.set_time(callstack_sample.timestamp_ns());
   callstack_event.set_callstack_hash(hash);
+  // Note: callstack_sample.pid() is available, but currently dropped.
   callstack_event.set_thread_id(callstack_sample.tid());
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(callstack_sample.timestamp_ns());
