@@ -13,13 +13,13 @@ ScopeTree::ScopeTree() {
   root_ = CreateNode(&kDefaultTimerInfo);
 }
 
-ScopeNode* ScopeTree::CreateNode(const TimerInfo* timer_info) {
+ScopeNode* ScopeTree::CreateNode(TimerInfo* timer_info) {
   nodes_.push_back(ScopeNode(timer_info, size_++));
   ScopeNode* node = nodes_.Last();
   return node;
 }
 
-void ScopeTree::Insert(const TimerInfo& timer_info) { root_->Insert(CreateNode(&timer_info)); }
+void ScopeTree::Insert(TimerInfo* timer_info) { root_->Insert(CreateNode(timer_info)); }
 
 void ScopeTree::Print() const {
   LOG("Printing %u nodes height=%u:", size_, Height());
