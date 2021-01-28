@@ -1299,6 +1299,25 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
   (void)future;
 }
 
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
+    const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
+  ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
+  if (module_data == nullptr) {
+    return {ErrorMessage{"Module not found"}};
+  }
+  auto handle_hooks_and_frame_tracks =
+      [this, module_data,
+       preset_module](const ErrorMessageOr<void>& result) -> ErrorMessageOr<void> {
+    if (result.has_error()) return result.error();
+    SelectFunctionsFromHashes(module_data, preset_module.function_hashes());
+    EnableFrameTracksFromHashes(module_data, preset_module.frame_track_function_hashes());
+    return outcome::success();
+  };
+
+  return LoadModule(module_data)
+      .Then(main_thread_executor_, std::move(handle_hooks_and_frame_tracks));
+}
+
 void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
                                          absl::Span<const uint64_t> function_hashes) {
   for (const auto function_hash : function_hashes) {
