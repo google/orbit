@@ -119,9 +119,7 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                                          ->GetServiceDeployManager();
       }
 
-      constexpr uint32_t kDefaultFontSize = 14;
-
-      OrbitMainWindow w(std::move(target_config.value()), kDefaultFontSize,
+      OrbitMainWindow w(std::move(target_config.value()),
                         metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr);
 
       // "resize" is required to make "showMaximized" work properly.

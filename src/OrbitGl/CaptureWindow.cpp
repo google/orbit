@@ -59,8 +59,7 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(uint32_t font_size, OrbitApp* app)
-    : GlCanvas(font_size), font_size_(font_size), time_graph_(font_size, app), app_{app} {
+CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), time_graph_(app), app_{app} {
   time_graph_.SetTextRenderer(&text_renderer_);
   time_graph_.SetCanvas(this);
   draw_help_ = true;
@@ -769,8 +768,8 @@ void CaptureWindow::RenderHelpUi() {
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   text_renderer_.AddText(GetHelpText(), world_x, world_y, GlCanvas::kZValueTextUi,
-                         Color(255, 255, 255, 255), font_size_, -1.f /*max_size*/,
-                         false /*right_justified*/, &text_bounding_box_pos,
+                         Color(255, 255, 255, 255), time_graph_.GetLayout().GetFontSize(),
+                         -1.f /*max_size*/, false /*right_justified*/, &text_bounding_box_pos,
                          &text_bounding_box_size);
 
   const Color kBoxColor(50, 50, 50, 230);
@@ -853,7 +852,7 @@ void CaptureWindow::RenderTimeBar() {
       std::string text = GetPrettyTime(absl::Microseconds(current_micros));
       float world_x = time_graph_.GetWorldFromUs(current_micros);
       text_renderer_.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTimeBar,
-                             Color(255, 255, 255, 255), font_size_);
+                             Color(255, 255, 255, 255), time_graph_.GetLayout().GetFontSize());
 
       // Lines from time bar are drawn in screen space.
       Vec2 pos = QtScreenToGlScreen(WorldToScreen(Vec2(world_x, world_y)));
@@ -884,7 +883,7 @@ void CaptureWindow::RenderSelectionOverlay() {
     float pos_x = pos[0] + size[0];
 
     text_renderer_.AddText(text.c_str(), pos_x, select_stop_[1], GlCanvas::kZValueTextUi,
-                           text_color, font_size_, size[0], true);
+                           text_color, time_graph_.GetLayout().GetFontSize(), size[0], true);
 
     const unsigned char g = 100;
     Color grey(g, g, g, 255);

@@ -16,7 +16,7 @@ class OrbitApp;
 
 class IntrospectionWindow : public CaptureWindow {
  public:
-  explicit IntrospectionWindow(uint32_t font_size, OrbitApp* app);
+  explicit IntrospectionWindow(OrbitApp* app);
   ~IntrospectionWindow() override;
   void ToggleRecording() override;
   void RenderImGui() override;

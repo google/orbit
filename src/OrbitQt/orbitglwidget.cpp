@@ -56,8 +56,8 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
 }
 
 void OrbitGLWidget::Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window,
-                               uint32_t font_size, OrbitApp* app) {
-  gl_canvas_ = GlCanvas::Create(canvas_type, font_size, app);
+                               OrbitApp* app) {
+  gl_canvas_ = GlCanvas::Create(canvas_type, app);
 
   if (main_window) {
     main_window->RegisterGlWidget(this);

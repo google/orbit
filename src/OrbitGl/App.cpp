@@ -576,7 +576,8 @@ void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {
   CHECK(debug_canvas_ == nullptr);
   debug_canvas_ = debug_canvas;
   debug_canvas_->EnableImGui();
-  Orbit_ImGui_Init(debug_canvas_->GetInitialFontSize());
+  constexpr uint32_t kImGuiFontSize = 12;
+  Orbit_ImGui_Init(kImGuiFontSize);
   debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
 }
 

@@ -23,7 +23,7 @@ class OrbitApp;
 
 class CaptureWindow : public GlCanvas {
  public:
-  explicit CaptureWindow(uint32_t font_size, OrbitApp* app);
+  explicit CaptureWindow(OrbitApp* app);
   ~CaptureWindow() override;
 
   void Initialize() override;
@@ -82,7 +82,6 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
 
  protected:
-  uint32_t font_size_;
   TimeGraph time_graph_;
   bool draw_help_;
   bool draw_filter_;

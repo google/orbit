@@ -41,8 +41,8 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-TimeGraph::TimeGraph(uint32_t font_size, OrbitApp* app)
-    : font_size_(font_size), accessibility_(this), batcher_(BatcherId::kTimeGraph), app_{app} {
+TimeGraph::TimeGraph(OrbitApp* app)
+    : accessibility_(this), batcher_(BatcherId::kTimeGraph), app_{app} {
   track_manager_ = std::make_unique<TrackManager>(this, app);
 
   async_timer_info_listener_ =
@@ -644,7 +644,7 @@ void TimeGraph::DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Col
   const Color kBlack(0, 0, 0, 255);
   float text_width = canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
       text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueTextUi, kBlack,
-      time.length(), font_size_, max_size);
+      time.length(), GetLayout().GetFontSize(), max_size);
 
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), GetTextBoxHeight());
   Vec2 white_box_position(pos[0], text_box_y);

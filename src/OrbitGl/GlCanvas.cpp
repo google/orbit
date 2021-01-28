@@ -54,7 +54,7 @@ unsigned GlCanvas::kMaxNumberRealZLayers = kNumberOriginalLayers + kExtraLayersF
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas(uint32_t font_size) : ui_batcher_(BatcherId::kUi, &picking_manager_) {
+GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
   screen_width_ = 0;
@@ -95,7 +95,6 @@ GlCanvas::GlCanvas(uint32_t font_size) : ui_batcher_(BatcherId::kUi, &picking_ma
   hover_delay_ms_ = 300;
   can_hover_ = false;
   is_hovering_ = false;
-  initial_font_size_ = font_size;
   ResetHoverTimer();
 }
 
@@ -105,21 +104,20 @@ GlCanvas::~GlCanvas() {
   }
 }
 
-std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, uint32_t font_size,
-                                           OrbitApp* app) {
+std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app) {
   switch (canvas_type) {
     case CanvasType::kCaptureWindow: {
-      auto main_capture_window = std::make_unique<CaptureWindow>(font_size, app);
+      auto main_capture_window = std::make_unique<CaptureWindow>(app);
       app->SetCaptureWindow(main_capture_window.get());
       return main_capture_window;
     }
     case CanvasType::kIntrospectionWindow: {
-      auto introspection_window = std::make_unique<IntrospectionWindow>(font_size, app);
+      auto introspection_window = std::make_unique<IntrospectionWindow>(app);
       app->SetIntrospectionWindow(introspection_window.get());
       return introspection_window;
     }
     case CanvasType::kDebug:
-      return std::make_unique<GlCanvas>(font_size);
+      return std::make_unique<GlCanvas>();
     default:
       UNREACHABLE();
   }

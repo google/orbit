@@ -55,7 +55,7 @@ class OrbitMainWindow : public QMainWindow {
  public:
   static constexpr int kEndSessionReturnCode = 1;
 
-  explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration, uint32_t font_size,
+  explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitMainWindow() override;
 
@@ -137,7 +137,7 @@ class OrbitMainWindow : public QMainWindow {
  private:
   void StartMainTimer();
   void SetupCaptureToolbar();
-  void SetupMainWindow(uint32_t font_size);
+  void SetupMainWindow();
   void SetupHintFrame();
   void SetupTargetLabel();
 
