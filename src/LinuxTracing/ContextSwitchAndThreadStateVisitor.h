@@ -43,6 +43,9 @@ class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
     thread_state_counter_ = thread_state_counter;
   }
 
+  void SetProduceSchedulingSlices(bool produce_scheduling_slices) {
+    produce_scheduling_slices_ = produce_scheduling_slices;
+  }
   void SetThreadStatePidFilter(pid_t pid) { thread_state_pid_filter_ = pid; }
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
@@ -62,6 +65,8 @@ class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
 
   TracerListener* listener_ = nullptr;
   std::atomic<uint64_t>* thread_state_counter_ = nullptr;
+
+  bool produce_scheduling_slices_ = false;
 
   bool TidMatchesPidFilter(pid_t tid);
   std::optional<pid_t> GetPidOfTid(pid_t tid);
