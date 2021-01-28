@@ -411,10 +411,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                    std::vector<uint64_t> function_hashes_to_hook,
                    std::vector<uint64_t> frame_track_function_hashes);
 
-  void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook,
-                          std::vector<uint64_t> frame_track_function_hashes,
-                          std::string error_message_from_local);
-
   ErrorMessageOr<void> SelectFunctionsFromHashes(const ModuleData* module,
                                                  const std::vector<uint64_t>& function_hashes);
 

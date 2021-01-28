@@ -1038,37 +1038,6 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModuleOn
       });
 }
 
-void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
-                                  std::vector<uint64_t> function_hashes_to_hook,
-                                  std::vector<uint64_t> frame_track_function_hashes,
-                                  std::string error_message_from_local) {
-  // This overload will be removed in a subsequent commit.
-
-  const auto future =
-      LoadModuleOnRemote(module_data->file_path())
-          .Then(main_thread_executor_,
-                [this, module_data, function_hashes_to_hook, frame_track_function_hashes,
-                 error_message_from_local](const ErrorMessageOr<std::string>& result) {
-                  if (!result) {
-                    SendErrorToUi(
-                        "Error loading symbols",
-                        absl::StrFormat(
-                            "Did not find symbols locally or on remote for module \"%s\": %s\n%s",
-                            module_data->file_path(), error_message_from_local,
-                            result.error().message()));
-                    main_thread_executor_->Schedule([this, module_data]() {
-                      modules_currently_loading_.erase(module_data->file_path());
-                    });
-                    return;
-                  }
-
-                  LoadSymbols(result.value(), module_data, function_hashes_to_hook,
-                              frame_track_function_hashes);
-                });
-
-  (void)main_thread_executor_->WaitFor(future);
-}
-
 void OrbitApp::LoadModules(
     const std::vector<ModuleData*>& modules,
     absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
