@@ -468,7 +468,7 @@ void OrbitApp::RefreshCaptureView() {
   DoZoom = true;  // TODO: remove global, review logic
 }
 
-void OrbitApp::RenderImGui() {
+void OrbitApp::RenderImGuiDebugUI() {
   CHECK(debug_canvas_ != nullptr);
   CHECK(capture_window_ != nullptr);
   ScopeImguiContext context(debug_canvas_->GetImGuiContext());
@@ -485,13 +485,13 @@ void OrbitApp::RenderImGui() {
 
   if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
     if (ImGui::BeginTabItem("CaptureWindow")) {
-      capture_window_->RenderImGui();
+      capture_window_->RenderImGuiDebugUI();
       ImGui::EndTabItem();
     }
 
     if (introspection_window_) {
       if (ImGui::BeginTabItem("Introspection")) {
-        introspection_window_->RenderImGui();
+        introspection_window_->RenderImGuiDebugUI();
         ImGui::EndTabItem();
       }
     }
@@ -576,9 +576,7 @@ void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {
   CHECK(debug_canvas_ == nullptr);
   debug_canvas_ = debug_canvas;
   debug_canvas_->EnableImGui();
-  constexpr uint32_t kImGuiFontSize = 12;
-  Orbit_ImGui_Init(kImGuiFontSize);
-  debug_canvas_->AddRenderCallback([this]() { RenderImGui(); });
+  debug_canvas_->AddRenderCallback([this]() { RenderImGuiDebugUI(); });
 }
 
 void OrbitApp::SetIntrospectionWindow(IntrospectionWindow* introspection_window) {
