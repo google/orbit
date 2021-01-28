@@ -1152,63 +1152,82 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(
   return FindModuleLocallyImpl(symbol_helper_, module_path, build_id);
 }
 
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
+    const std::filesystem::path& symbols_path, const std::string& module_file_path) {
+  auto scoped_status = CreateScopedStatus(absl::StrFormat(
+      R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
+
+  auto future = thread_pool_->Schedule(
+      [symbols_path]() { return SymbolHelper::LoadSymbolsFromFile(symbols_path); });
+
+  return future.Then(
+      main_thread_executor_,
+      [this, module_file_path, scoped_status = std::move(scoped_status)](
+          const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& module_symbols) mutable
+      -> ErrorMessageOr<void> {
+        if (!module_symbols) return module_symbols.error();
+
+        ModuleData* module_data = GetMutableModuleByPath(module_file_path);
+        module_data->AddSymbols(module_symbols.value());
+
+        std::string message =
+            absl::StrFormat(R"(Successfully loaded %d symbols for "%s")",
+                            module_symbols.value().symbol_infos_size(), module_data->file_path());
+        scoped_status.UpdateMessage(message);
+        LOG("%s", message);
+
+        const ProcessData* selected_process = GetTargetProcess();
+        if (selected_process != nullptr &&
+            selected_process->IsModuleLoaded(module_data->file_path())) {
+          functions_data_view_->AddFunctions(module_data->GetFunctions());
+          LOG("Added loaded function symbols for module \"%s\" to the functions tab",
+              module_data->file_path());
+        }
+
+        UpdateAfterSymbolLoading();
+        FireRefreshCallbacks();
+        return outcome::success();
+      });
+}
+
 void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
                            std::vector<uint64_t> function_hashes_to_hook,
                            std::vector<uint64_t> frame_track_function_hashes) {
-  auto scoped_status =
-      CreateScopedStatus(absl::StrFormat(R"(Loading symbols for "%s" from file "%s"...)",
-                                         module_data->file_path(), symbols_path.string()));
-  thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, module_data,
-                          function_hashes_to_hook = std::move(function_hashes_to_hook),
-                          frame_track_function_hashes =
-                              std::move(frame_track_function_hashes)]() mutable {
-    auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
-    CHECK(symbols_result);
-    module_data->AddSymbols(symbols_result.value());
+  // This overload will be removed in a subsequent commit.
 
-    std::string message =
-        absl::StrFormat(R"(Successfully loaded %d symbols for "%s")",
-                        symbols_result.value().symbol_infos_size(), module_data->file_path());
-    scoped_status.UpdateMessage(message);
-    LOG("%s", message);
+  const auto future =
+      LoadSymbols(symbols_path, module_data->file_path())
+          .Then(main_thread_executor_,
+                [this, function_hashes_to_hook = std::move(function_hashes_to_hook),
+                 frame_track_function_hashes = std::move(frame_track_function_hashes),
+                 module_data](const ErrorMessageOr<void>& result) {
+                  if (result.has_error()) return;
 
-    main_thread_executor_->Schedule(
-        [this, scoped_status = std::move(scoped_status), module_data,
-         function_hashes_to_hook = std::move(function_hashes_to_hook),
-         frame_track_function_hashes = std::move(frame_track_function_hashes)] {
-          modules_currently_loading_.erase(module_data->file_path());
+                  if (!function_hashes_to_hook.empty()) {
+                    const auto selection_result =
+                        SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
+                    if (!selection_result) {
+                      LOG("Warning, automated hooked incomplete: %s",
+                          selection_result.error().message());
+                    }
+                    LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
+                  }
 
-          const ProcessData* selected_process = GetTargetProcess();
-          if (selected_process != nullptr &&
-              selected_process->IsModuleLoaded(module_data->file_path())) {
-            functions_data_view_->AddFunctions(module_data->GetFunctions());
-            LOG("Added loaded function symbols for module \"%s\" to the functions tab",
-                module_data->file_path());
-          }
+                  if (!frame_track_function_hashes.empty()) {
+                    const auto frame_track_result =
+                        EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
+                    if (!frame_track_result) {
+                      LOG("Warning, could not insert frame tracks: %s",
+                          frame_track_result.error().message());
+                    }
+                    LOG("Added frame tracks in module \"%s\"", module_data->file_path());
+                  }
 
-          if (!function_hashes_to_hook.empty()) {
-            const auto selection_result =
-                SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
-            if (!selection_result) {
-              LOG("Warning, automated hooked incomplete: %s", selection_result.error().message());
-            }
-            LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
-          }
+                  UpdateAfterSymbolLoading();
+                  FireRefreshCallbacks();
+                });
 
-          if (!frame_track_function_hashes.empty()) {
-            const auto frame_track_result =
-                EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
-            if (!frame_track_result) {
-              LOG("Warning, could not insert frame tracks: %s",
-                  frame_track_result.error().message());
-            }
-            LOG("Added frame tracks in module \"%s\"", module_data->file_path());
-          }
-
-          UpdateAfterSymbolLoading();
-          FireRefreshCallbacks();
-        });
-  });
+  (void)main_thread_executor_->WaitFor(future);
 }
 
 ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(

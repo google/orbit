@@ -410,6 +410,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
                                                           const std::string& build_id);
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
+      const std::filesystem::path& symbols_path, const std::string& module_file_path);
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::filesystem::path& filename);
 
