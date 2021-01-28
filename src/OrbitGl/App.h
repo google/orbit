@@ -405,6 +405,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook,
                           std::vector<uint64_t> frame_track_function_hashes,
                           std::string error_message_from_local);
+
   ErrorMessageOr<void> SelectFunctionsFromHashes(const ModuleData* module,
                                                  const std::vector<uint64_t>& function_hashes);
 
@@ -412,6 +413,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                                                           const std::string& build_id);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
       const std::filesystem::path& symbols_path, const std::string& module_file_path);
+
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> LoadModuleOnRemote(
+      const std::string& module_file_path);
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::filesystem::path& filename);
 
