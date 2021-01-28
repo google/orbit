@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_metrics_uploader {
 
@@ -13,6 +14,10 @@ MetricsUploader& MetricsUploader::operator=(MetricsUploader&& other) = default;
 
 ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string) {
   return ErrorMessage("MetricsUploader is not implemented on Linux");
+}
+
+ErrorMessageOr<std::string> GenerateUUID() {
+  return ErrorMessage("UUID generation is not implemented on Linux");
 }
 
 }  // namespace orbit_metrics_uploader

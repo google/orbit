@@ -30,6 +30,10 @@ target_link_libraries(MetricsUploader PUBLIC OrbitBase
                                              OrbitVersion
                                              CONAN_PKG::abseil)
 
+if (WIN32)
+target_link_libraries(MetricsUploader PUBLIC rpcrt4.lib)
+endif()
+
 # generate protos for communication
 protobuf_generate(TARGET MetricsUploader PROTOS proto/orbit_log_event.proto)
 target_include_directories(MetricsUploader PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

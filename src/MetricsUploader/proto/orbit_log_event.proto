@@ -19,4 +19,5 @@ message OrbitLogEvent {
 
   string orbit_version = 2;
   int64 event_duration_milliseconds = 3;
+  string session_uuid = 4;
 }
