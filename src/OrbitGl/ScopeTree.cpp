@@ -22,7 +22,7 @@ ScopeNode* ScopeTree::CreateNode(const TimerInfo* timer_info) {
 void ScopeTree::Insert(const TimerInfo& timer_info) { root_->Insert(CreateNode(&timer_info)); }
 
 void ScopeTree::Print() const {
-  LOG("Printing %u nodes depth=%u:", size_, Depth());
+  LOG("Printing %u nodes height=%u:", size_, Height());
   root_->Print();
   LOG("");
 }
@@ -35,20 +35,21 @@ void ScopeNode::Print(const ScopeNode* node, uint64_t start_time, uint32_t depth
   }
 }
 
-void ScopeNode::FindDepth(const ScopeNode* node, size_t* max_depth, size_t current_depth) {
-  *max_depth = std::max(*max_depth, current_depth);
+void ScopeNode::FindHeight(const ScopeNode* node, size_t* height, size_t current_height) {
+  ORBIT_SCOPE_FUNCTION;
+  *height = std::max(*height, current_height);
   for (auto& pair : node->children_) {
-    FindDepth(pair.second, max_depth, current_depth + 1);
+    FindHeight(pair.second, height, current_height + 1);
   }
 }
 
-size_t ScopeNode::Depth() const {
-  size_t max_depth = 0;
-  FindDepth(this, &max_depth);
-  return max_depth;
+size_t ScopeNode::Height() const {
+  size_t max_height = 0;
+  FindHeight(this, &max_height);
+  return max_height;
 }
 
-ScopeNode* ScopeNode::GetFirstChildBeforeOrAtTime(uint64_t time) const {
+ScopeNode* ScopeNode::GetLastChildBeforeOrAtTime(uint64_t time) const {
   // Get first child before or exactly at "time".
   if (children_.empty()) return nullptr;
   auto next_node_it = children_.upper_bound(time);
@@ -60,7 +61,7 @@ ScopeNode* ScopeNode::FindDeepestParentForNode(const ScopeNode* node) {
   // Find the deepest node in our hierarchy that encloses the passed in node's scope.
   ScopeNode* deepest_node = this;
   for (ScopeNode* current_node = this; current_node != nullptr;) {
-    current_node = current_node->GetFirstChildBeforeOrAtTime(node->Start());
+    current_node = current_node->GetLastChildBeforeOrAtTime(node->Start());
     if (current_node != nullptr && current_node->End() >= node->End()) {
       deepest_node = current_node;
     }
@@ -71,11 +72,11 @@ ScopeNode* ScopeNode::FindDeepestParentForNode(const ScopeNode* node) {
 std::vector<ScopeNode*> ScopeNode::GetChildrenInRange(uint64_t start, uint64_t end) const {
   // Get children that are enclosed between start and end inclusively.
   if (children_.empty()) return {};
-  auto node_it = children_.upper_bound(end);
-  if (node_it == children_.begin()) return {};
+  auto node_it = children_.lower_bound(start);
+  if (node_it == children_.end()) return {};
   std::vector<ScopeNode*> nodes;
-  while (node_it != children_.begin()) {
-    ScopeNode* node = (--node_it)->second;
+  while (node_it != children_.end()) {
+    ScopeNode* node = (node_it++)->second;
     if (node->Start() >= start && node->End() <= end) {
       nodes.push_back(node);
     } else {
@@ -86,7 +87,7 @@ std::vector<ScopeNode*> ScopeNode::GetChildrenInRange(uint64_t start, uint64_t e
 }
 
 void ScopeNode::Insert(ScopeNode* node_to_insert) {
-  ORBIT_SCOPE("ScopeTree.Insert");
+  ORBIT_SCOPE_FUNCTION;
 
   ScopeNode* parent_node = FindDeepestParentForNode(node_to_insert);
 
