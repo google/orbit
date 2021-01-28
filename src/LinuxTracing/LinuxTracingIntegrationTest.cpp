@@ -828,8 +828,7 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
       continue;
     }
 
-    // We currently don't set the pid.
-    EXPECT_EQ(thread_name.pid(), 0);
+    EXPECT_EQ(thread_name.pid(), fixture.GetPuppetPid());
 
     collected_event_names.emplace_back(thread_name.name());
   }

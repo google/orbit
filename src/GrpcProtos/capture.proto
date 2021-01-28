@@ -191,7 +191,7 @@ message Color {
 }
 
 message ThreadName {
-  int32 pid = 1;  // Note that pid is currently not set.
+  int32 pid = 1;
   int32 tid = 2;
   string name = 3;
   uint64 timestamp_ns = 4;
