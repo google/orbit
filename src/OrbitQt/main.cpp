@@ -149,8 +149,6 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       target_config = w.ClearTargetConfiguration();
     }
 
-    Orbit_ImGui_Shutdown();
-
     if (application_return_code == 0) {
       // User closed window
       break;
