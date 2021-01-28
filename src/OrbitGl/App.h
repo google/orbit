@@ -318,6 +318,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void UpdateAfterSymbolLoading();
   void UpdateAfterCaptureCleared();
 
+  orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
+      const std::string& module_path, const orbit_client_protos::PresetModule& preset_module);
   void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   PresetLoadState GetPresetLoadState(
       const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const;
