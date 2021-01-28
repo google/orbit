@@ -70,6 +70,7 @@
 #include "capture_data.pb.h"
 #include "preset.pb.h"
 #include "services.pb.h"
+#include "symbol.pb.h"
 #include "tracepoint.pb.h"
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
@@ -406,6 +407,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
+  void AddSymbols(const std::filesystem::path& module_file_path,
+                  const orbit_grpc_protos::ModuleSymbols& symbols);
   void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
                    std::vector<uint64_t> function_hashes_to_hook,
                    std::vector<uint64_t> frame_track_function_hashes);
@@ -418,6 +421,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
                                                           const std::string& build_id);
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
+      const std::filesystem::path& symbols_path, const std::string& module_file_path);
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::filesystem::path& filename);
 
