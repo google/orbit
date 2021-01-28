@@ -1,10 +1,11 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "UserSpaceInstrumentation/Attach.h"
 
 #include <errno.h>
+#include <stdint.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
@@ -25,44 +26,45 @@ using orbit_base::GetTidsOfProcess;
 
 namespace {
 
-bool ThreadExistsInProcess(pid_t pid, pid_t tid) {
-  const auto process_tids = orbit_base::GetTidsOfProcess(pid);
-  return std::find(process_tids.begin(), process_tids.end(), tid) != process_tids.end();
-}
-
 // Attaches to the thread using ptrace.
 // Returns true if the thread was halted and false if the thread did not exist anymore.
-[[nodiscard]] ErrorMessageOr<bool> AttachAndStopThread(pid_t pid, pid_t tid) {
-  if (ptrace(PTRACE_ATTACH, tid, 0, 0) < 0) {
-    if (ThreadExistsInProcess(pid, tid)) {
-      return ErrorMessage(
-          absl::StrFormat("Can not attach to tid \"%d\": \"%s\"", tid, strerror(errno)));
-    } else {
+[[nodiscard]] ErrorMessageOr<bool> AttachAndStopThread(pid_t tid) {
+  if (ptrace(PTRACE_ATTACH, tid, nullptr, nullptr) == -1) {
+    // If tid has ended already we get ESRCH; if the thread was in 'exit state' we get EPERM.
+    // There are a bunch of other (non-relevant) cases. I haven't found documentation on this but it
+    // can be looked up in the function 'ptrace_attach' in 'ptrace.c' in the kernel sources.
+    if (errno == ESRCH || errno == EPERM) {
       return false;
+    } else {
+      return ErrorMessage(
+          absl::StrFormat("PTRACE_ATTACH failed for \"%d\": \"%s\"", tid, strerror(errno)));
     }
   }
   // Wait for the traced thread to stop. Timeout after one second.
-  int timeout = 1000;
+  int32_t timeout_ms = 1000;
   while (true) {
-    const int result_waitpid = waitpid(tid, nullptr, WNOHANG);
+    int stat_val = 0;
+    const int result_waitpid = waitpid(tid, &stat_val, WNOHANG);
     if (result_waitpid == -1) {
-      if (ThreadExistsInProcess(pid, tid)) {
-        return ErrorMessage(
-            absl::StrFormat("Can not attach to tid \"%d\": \"%s\"", tid, strerror(errno)));
-      } else {
-        return false;
-      }
+      return ErrorMessage(absl::StrFormat(
+          "Wait for thread to get traced failed for tid \"%d\": \"%s\"", tid, strerror(errno)));
     }
     if (result_waitpid > 0) {
-      // waitpid returns greater zero occationally for terminated threads. We catch this here so we
-      // don't count them as succefully halted.
-      // This is not understood. The check here is a workaround. Note that this case is extremely
-      // rare in practice - the thread needs to finish exactly when we attach to the process.
-      return ThreadExistsInProcess(pid, tid);
+      // Occasionally the thread is active during PTRACE_ATTACH but terminates before it gets
+      // descheduled. So waitpid returns on exit of the thread instead of the expected stop.
+      if (WIFEXITED(stat_val)) {
+        return false;
+      } else if (WIFSTOPPED(stat_val)) {
+        return true;
+      } else {
+        return ErrorMessage(absl::StrFormat(
+            "Wait for thread to get traced yielded unexpected result for tid \"%d\": \"%d\"", tid,
+            stat_val));
+      }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if (--timeout == 0) {
-      ptrace(PTRACE_DETACH, tid, nullptr, 0);
+    if (--timeout_ms == 0) {
+      ptrace(PTRACE_DETACH, tid, nullptr, nullptr);
       return ErrorMessage(
           absl::StrFormat("Waiting for the traced thread \"%d\" to stop timed out.", tid));
     }
@@ -81,7 +83,7 @@ bool ThreadExistsInProcess(pid_t pid, pid_t tid) {
       if (halted_tids.count(tid) == 1) {
         continue;
       }
-      OUTCOME_TRY(result, AttachAndStopThread(pid, tid));
+      OUTCOME_TRY(result, AttachAndStopThread(tid));
       if (result) {
         halted_tids.insert(tid);
       }
@@ -98,7 +100,7 @@ bool ThreadExistsInProcess(pid_t pid, pid_t tid) {
 void DetachAndContinueProcess(pid_t pid) {
   auto tids = GetTidsOfProcess(pid);
   for (auto tid : tids) {
-    ptrace(PTRACE_DETACH, tid, nullptr, 0);
+    ptrace(PTRACE_DETACH, tid, nullptr, nullptr);
   }
 }
 

@@ -5,22 +5,21 @@
 #include <unistd.h>
 
 #include <filesystem>
-#include <mutex>
 #include <set>
 #include <thread>
 
+#include "absl/synchronization/mutex.h"
 #include "gtest/gtest.h"
 
 namespace orbit_user_space_instrumentation {
 
-// DummyProcessForTest forks a new process in the constructor and starts a multi threaded dummy
-// load: A busy loop that spawns and joins threads. The spawned threads perform a busy wait for 15
-// ms. Four worker threads are kept active. When DummyProcessForTest goes out of scope the process
-// is ended.
-class DummyProcessForTest {
+// TestProcess forks a new process in the constructor and starts a multi threaded dummy load: A busy
+// loop that spawns and joins threads. The spawned threads perform a busy wait for 15 ms. Four
+// worker threads are kept active. When TestProcess goes out of scope the process is ended.
+class TestProcess {
  public:
-  DummyProcessForTest();
-  ~DummyProcessForTest();
+  TestProcess();
+  ~TestProcess();
 
   [[nodiscard]] pid_t pid() { return pid_; }
 
@@ -33,7 +32,7 @@ class DummyProcessForTest {
   void DummyWorkload();
 
   pid_t pid_;
-  std::mutex joinable_mutex_;
+  absl::Mutex joinable_threads_mutex_;
   std::set<std::thread::id> joinable_threads_;
   std::filesystem::path flag_file_run_child_;
   std::filesystem::path flag_file_child_started_;

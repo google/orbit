@@ -1,7 +1,8 @@
 // Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-#include "DummyProcessForTest.h"
+
+#include "TestProcess.h"
 
 #include <chrono>
 #include <cstdio>
@@ -22,12 +23,11 @@ namespace {
 void Touch(fs::path p) {
   std::ofstream ofs(p);
   ofs << "\n";
-  ofs.close();
 }
 
 }  // namespace
 
-DummyProcessForTest::DummyProcessForTest() {
+TestProcess::TestProcess() {
   flag_file_run_child_ = std::tmpnam(nullptr);
   flag_file_child_started_ = std::tmpnam(nullptr);
   Touch(flag_file_run_child_);
@@ -42,15 +42,15 @@ DummyProcessForTest::DummyProcessForTest() {
   }
 }
 
-DummyProcessForTest::~DummyProcessForTest() {
-  fs::remove(flag_file_child_started_);
+TestProcess::~TestProcess() {
   fs::remove(flag_file_run_child_);
   int status;
   waitpid(pid_, &status, 0);
   CHECK(WIFEXITED(status));
+  fs::remove(flag_file_child_started_);
 }
 
-void DummyProcessForTest::DummyWorker() {
+void TestProcess::DummyWorker() {
   constexpr auto kTimeToLiveMs = std::chrono::milliseconds(15);
   const auto deadline = std::chrono::system_clock::now() + kTimeToLiveMs;
   while (true) {
@@ -58,23 +58,23 @@ void DummyProcessForTest::DummyWorker() {
       break;
     }
   }
-  std::lock_guard<std::mutex> lock(joinable_mutex_);
+  absl::MutexLock lock{&joinable_threads_mutex_};
   joinable_threads_.emplace(std::this_thread::get_id());
 }
 
-void DummyProcessForTest::DummyWorkload() {
+void TestProcess::DummyWorkload() {
   size_t kNumThreads = 4;
   std::vector<std::thread> threads;
   while (fs::exists(flag_file_run_child_) || !threads.empty()) {
     // Spawn as many threads as there are missing.
     while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_)) {
-      threads.emplace_back(std::thread(&DummyProcessForTest::DummyWorker, this));
+      threads.emplace_back(std::thread(&TestProcess::DummyWorker, this));
     }
     Touch(flag_file_child_started_);
     // Join the finished threads.
     for (auto& t : threads) {
       const auto id = t.get_id();
-      std::lock_guard<std::mutex> lock(joinable_mutex_);
+      absl::MutexLock lock{&joinable_threads_mutex_};
       if (joinable_threads_.count(id) != 0) {
         joinable_threads_.erase(id);
         t.join();
