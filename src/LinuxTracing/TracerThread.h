@@ -19,7 +19,6 @@
 #include <optional>
 #include <vector>
 
-#include "ContextSwitchAndThreadStateVisitor.h"
 #include "ContextSwitchManager.h"
 #include "Function.h"
 #include "GpuTracepointEventProcessor.h"
@@ -30,6 +29,7 @@
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
+#include "SwitchesStatesNamesVisitor.h"
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 
@@ -77,7 +77,7 @@ class TracerThread {
       const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu);
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
-  void InitContextSwitchAndThreadStateVisitor();
+  void InitSwitchesStatesNamesVisitor();
   bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
@@ -156,7 +156,7 @@ class TracerThread {
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
-  std::unique_ptr<ContextSwitchAndThreadStateVisitor> context_switch_and_thread_state_visitor_;
+  std::unique_ptr<SwitchesStatesNamesVisitor> switches_states_names_visitor_;
   PerfEventProcessor event_processor_;
   std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 

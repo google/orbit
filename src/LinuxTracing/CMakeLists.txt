@@ -23,8 +23,6 @@ target_sources(LinuxTracing PUBLIC
         include/LinuxTracing/TracerListener.h)
 
 target_sources(LinuxTracing PRIVATE
-        ContextSwitchAndThreadStateVisitor.cpp
-        ContextSwitchAndThreadStateVisitor.h
         ContextSwitchManager.cpp
         ContextSwitchManager.h
         Function.h
@@ -50,6 +48,8 @@ target_sources(LinuxTracing PRIVATE
         PerfEventRingBuffer.cpp
         PerfEventRingBuffer.h
         PerfEventVisitor.h
+        SwitchesStatesNamesVisitor.cpp
+        SwitchesStatesNamesVisitor.h
         ThreadStateManager.cpp
         ThreadStateManager.h
         Tracer.cpp

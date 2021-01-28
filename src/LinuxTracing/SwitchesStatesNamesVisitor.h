@@ -35,7 +35,7 @@ namespace orbit_linux_tracing {
 // Also, we only process thread states of the process with pid specified with
 // SetThreadStatePidFilter (so that we can collect thread states only for the process we are
 // profiling). For this we also need the system-wide association between tids and pids.
-class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
+class SwitchesStatesNamesVisitor : public PerfEventVisitor {
  public:
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
