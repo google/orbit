@@ -993,66 +993,75 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModuleOnRemote(
+    const std::string& module_file_path) {
+  ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
+      "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
+
+  orbit_base::Future<ErrorMessageOr<std::string>> check_file_on_remote =
+      thread_pool_->Schedule([process_manager = GetProcessManager(), module_file_path]() {
+        return process_manager->FindDebugInfoFile(module_file_path);
+      });
+
+  auto download_file =
+      [this, module_file_path, scoped_status = std::move(scoped_status)](
+          ErrorMessageOr<std::string> result) mutable -> ErrorMessageOr<std::filesystem::path> {
+    if (!result) return result.error();
+
+    const std::string& debug_file_path = result.value();
+    LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
+
+    const std::filesystem::path local_debug_file_path =
+        symbol_helper_.GenerateCachedFileName(module_file_path);
+
+    scoped_status.UpdateMessage(
+        absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
+                        module_file_path, debug_file_path));
+    SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
+    auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path.string());
+
+    if (!scp_result) {
+      return ErrorMessage{absl::StrFormat("Could not copy debug info file from the remote: %s",
+                                          scp_result.error().message())};
+    }
+
+    return local_debug_file_path;
+  };
+
+  return check_file_on_remote.Then(main_thread_executor_, std::move(download_file));
+}
+
 void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
                                   std::vector<uint64_t> function_hashes_to_hook,
                                   std::vector<uint64_t> frame_track_function_hashes,
                                   std::string error_message_from_local) {
-  ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
-      "Searching for symbols on remote instance (module \"%s\")...", module_data->file_path()));
-  thread_pool_->Schedule(
-      [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
-       frame_track_function_hashes = std::move(frame_track_function_hashes),
-       scoped_status = std::move(scoped_status),
-       error_message_from_local = std::move(error_message_from_local),
-       main_thread_executor = main_thread_executor_->weak_from_this()]() mutable {
-        const auto result = GetProcessManager()->FindDebugInfoFile(module_data->file_path());
+  // This overload will be removed in a subsequent commit.
+  auto local_file_path = LoadModuleOnRemote(module_data->file_path());
 
-        if (!result) {
-          SendErrorToUi(
-              "Error loading symbols",
-              absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
-                              module_data->file_path(), error_message_from_local,
-                              result.error().message()));
+  auto load_symbols = [this, module_data,
+                       function_hashes_to_hook = std::move(function_hashes_to_hook),
+                       frame_track_function_hashes = std::move(frame_track_function_hashes),
+                       error_message_from_local = std::move(error_message_from_local),
+                       main_thread_executor = main_thread_executor_->weak_from_this()](
+                          const ErrorMessageOr<std::filesystem::path>& result) {
+    if (result.has_error()) {
+      SendErrorToUi(
+          "Error loading symbols",
+          absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
+                          module_data->file_path(), error_message_from_local,
+                          result.error().message()));
+      modules_currently_loading_.erase(module_data->file_path());
+      return;
+    }
 
-          TrySchedule(main_thread_executor, [this, module_data]() {
-            modules_currently_loading_.erase(module_data->file_path());
-          });
-          return;
-        }
+    LoadSymbols(result.value(), module_data, function_hashes_to_hook, frame_track_function_hashes);
+  };
 
-        const std::string& debug_file_path = result.value();
+  const auto future = local_file_path.Then(main_thread_executor_, std::move(load_symbols));
 
-        LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
-
-        TrySchedule(
-            main_thread_executor,
-            [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
-             frame_track_function_hashes = std::move(frame_track_function_hashes), debug_file_path,
-             scoped_status = std::move(scoped_status)]() mutable {
-              const std::filesystem::path local_debug_file_path =
-                  symbol_helper_.GenerateCachedFileName(module_data->file_path());
-
-              {
-                scoped_status.UpdateMessage(
-                    absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
-                                    module_data->file_path(), debug_file_path));
-                SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
-                auto scp_result =
-                    secure_copy_callback_(debug_file_path, local_debug_file_path.string());
-                if (!scp_result) {
-                  SendErrorToUi(
-                      "Error loading symbols",
-                      absl::StrFormat("Could not copy debug info file from the remote: %s",
-                                      scp_result.error().message()));
-                  modules_currently_loading_.erase(module_data->file_path());
-                  return;
-                }
-              }
-
-              LoadSymbols(local_debug_file_path, module_data, std::move(function_hashes_to_hook),
-                          std::move(frame_track_function_hashes));
-            });
-      });
+  // We discard this future and don't wait for it to complete, as this was the original
+  // behaviour of this function which needs to be preserved.
+  (void)future;
 }
 
 void OrbitApp::LoadModules(
