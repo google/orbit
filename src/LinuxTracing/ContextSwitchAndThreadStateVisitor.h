@@ -58,6 +58,8 @@ class ContextSwitchAndThreadStateVisitor : public PerfEventVisitor {
   void visit(SchedWakeupPerfEvent* event) override;
   void ProcessRemainingOpenStates(uint64_t timestamp_ns);
 
+  void visit(TaskRenamePerfEvent* event) override;
+
  private:
   static std::optional<orbit_grpc_protos::ThreadStateSlice::ThreadState> GetThreadStateFromChar(
       char c);

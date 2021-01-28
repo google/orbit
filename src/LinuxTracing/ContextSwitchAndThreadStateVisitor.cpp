@@ -16,6 +16,7 @@
 namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
 void ContextSwitchAndThreadStateVisitor::ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid) {
@@ -85,6 +86,14 @@ void ContextSwitchAndThreadStateVisitor::ProcessInitialState(uint64_t timestamp_
 }
 
 void ContextSwitchAndThreadStateVisitor::visit(TaskNewtaskPerfEvent* event) {
+  std::optional<pid_t> new_pid = GetPidOfTid(event->GetNewTid());
+  ThreadName thread_name;
+  thread_name.set_pid(new_pid.value_or(-1));
+  thread_name.set_tid(event->GetNewTid());
+  thread_name.set_name(event->GetComm());
+  thread_name.set_timestamp_ns(event->GetTimestamp());
+  listener_->OnThreadName(std::move(thread_name));
+
   if (!TidMatchesPidFilter(event->GetNewTid())) {
     return;
   }
@@ -179,6 +188,16 @@ void ContextSwitchAndThreadStateVisitor::ProcessRemainingOpenStates(uint64_t tim
       ++(*thread_state_counter_);
     }
   }
+}
+
+void ContextSwitchAndThreadStateVisitor::visit(TaskRenamePerfEvent* event) {
+  std::optional<pid_t> renamed_pid = GetPidOfTid(event->GetRenamedTid());
+  ThreadName thread_name;
+  thread_name.set_pid(renamed_pid.value_or(-1));
+  thread_name.set_tid(event->GetRenamedTid());
+  thread_name.set_name(event->GetNewComm());
+  thread_name.set_timestamp_ns(event->GetTimestamp());
+  listener_->OnThreadName(std::move(thread_name));
 }
 
 // Associates a ThreadStateSlice::ThreadState to a thread state character retrieved from

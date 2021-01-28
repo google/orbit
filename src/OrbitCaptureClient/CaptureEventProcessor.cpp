@@ -256,6 +256,7 @@ void CaptureEventProcessor::ProcessGpuQueueSubmission(
 }
 
 void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
+  // Note: thread_name.pid() is available, but currently dropped.
   capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
 }
 
