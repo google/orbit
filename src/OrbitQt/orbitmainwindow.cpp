@@ -938,7 +938,7 @@ void OrbitMainWindow::on_actionHelp_triggered() { app_->ToggleDrawHelp(); }
 
 void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {
-    introspection_widget_ = new OrbitGLWidget();
+    introspection_widget_ = std::make_unique<OrbitGLWidget>();
     introspection_widget_->setWindowFlags(Qt::WindowStaysOnTopHint);
     introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, 14,
                                       app_.get());
@@ -1116,7 +1116,7 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
         }
       }
     }
-  } else if (watched == introspection_widget_) {
+  } else if (watched == introspection_widget_.get()) {
     if (event->type() == QEvent::Close) {
       app_->StopIntrospection();
     }
@@ -1139,6 +1139,9 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
   } else {
     if (main_thread_executor_) {
       main_thread_executor_->AbortWaitingJobs();
+    }
+    if (introspection_widget_ != nullptr) {
+      introspection_widget_->close();
     }
     QMainWindow::closeEvent(event);
   }

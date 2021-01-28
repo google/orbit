@@ -169,7 +169,7 @@ class OrbitMainWindow : public QMainWindow {
   FilterPanelWidgetAction* filter_panel_action_ = nullptr;
   QTimer* m_MainTimer = nullptr;
   std::vector<OrbitGLWidget*> gl_widgets_;
-  OrbitGLWidget* introspection_widget_ = nullptr;
+  std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
   QLabel* target_label_ = nullptr;
 
