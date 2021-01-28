@@ -1297,6 +1297,44 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
   (void)main_thread_executor_->WaitFor(future);
 }
 
+OrbitApp::LoadPresetModuleResult OrbitApp::LoadPresetModule(
+    const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
+  ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
+  if (module_data == nullptr) {
+    return LoadPresetModuleResult::kModuleNotFound;
+  }
+
+  if (!module_data->is_loaded()) {
+    const auto result = main_thread_executor_->WaitFor(LoadModule(module_data));
+    if (result != MainThreadExecutor::WaitResult::kCompleted) return LoadPresetModuleResult::kAbort;
+  }
+
+  for (const uint64_t function_hash : preset_module.function_hashes()) {
+    const orbit_client_protos::FunctionInfo* const function_info =
+        module_data->FindFunctionFromHash(function_hash);
+    if (function_info == nullptr) {
+      LOG("Could not find function hash 0x%x in module %s", function_hash,
+          module_data->file_path());
+      continue;
+    }
+    SelectFunction(*function_info);
+  }
+  LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
+
+  for (const uint64_t function_hash : preset_module.frame_track_function_hashes()) {
+    const orbit_client_protos::FunctionInfo* const function_info =
+        module_data->FindFunctionFromHash(function_hash);
+    if (function_info == nullptr) {
+      LOG("Could not find function hash 0x%x in module %s", function_hash,
+          module_data->file_path());
+      continue;
+    }
+    EnableFrameTrack(*function_info);
+  }
+  LOG("Added frame tracks in module \"%s\"", module_data->file_path());
+  return LoadPresetModuleResult::kSuccess;
+}
+
 ErrorMessageOr<void> OrbitApp::SelectFunctionsFromHashes(
     const ModuleData* module, const std::vector<uint64_t>& function_hashes) {
   for (const auto function_hash : function_hashes) {
