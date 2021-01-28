@@ -406,8 +406,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
-  ErrorMessageOr<std::filesystem::path> FindSymbolsLocally(const std::filesystem::path& module_path,
-                                                           const std::string& build_id);
   void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
                    std::vector<uint64_t> function_hashes_to_hook,
                    std::vector<uint64_t> frame_track_function_hashes);
@@ -418,6 +416,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SelectFunctionsFromHashes(const ModuleData* module,
                                  const std::vector<uint64_t>& function_hashes);
 
+  ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
+                                                          const std::string& build_id);
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::filesystem::path& filename);
 
