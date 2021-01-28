@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
 void TimerBlock::Add(const TextBox& item) {
