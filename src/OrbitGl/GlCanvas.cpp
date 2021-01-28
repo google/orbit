@@ -100,7 +100,8 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
 
 GlCanvas::~GlCanvas() {
   if (imgui_context_ != nullptr) {
-    ImGui::DestroyContext(imgui_context_);
+    Orbit_ImGui_Shutdown();
+    ImGui::DestroyContext();
   }
 }
 
@@ -141,6 +142,8 @@ void GlCanvas::Initialize() {
 void GlCanvas::EnableImGui() {
   if (imgui_context_ == nullptr) {
     imgui_context_ = ImGui::CreateContext();
+    constexpr uint32_t kImGuiFontSize = 12;
+    Orbit_ImGui_Init(kImGuiFontSize);
   }
 }
 
