@@ -784,6 +784,8 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
+  auto timestamp_before_save = std::chrono::steady_clock::now();
+
   const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -793,8 +795,19 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   TimerInfosIterator timers_it_end(chains.end(), chains.end());
   const CaptureData& capture_data = GetCaptureData();
 
-  return capture_serializer::Save(file_name, capture_data, key_to_string_map, timers_it_begin,
-                                  timers_it_end);
+  OUTCOME_TRY(capture_serializer::Save(file_name, capture_data, key_to_string_map, timers_it_begin,
+                                       timers_it_end));
+
+  if (metrics_uploader_ == nullptr) return outcome::success();
+
+  auto timestamp_after_save = std::chrono::steady_clock::now();
+  auto save_duration = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_after_save -
+                                                                             timestamp_before_save);
+
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_SAVE_SUCCESS, save_duration);
+
+  return outcome::success();
 }
 
 void OrbitApp::OnLoadCapture(const std::string& file_name) {
@@ -1166,42 +1179,41 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
     scoped_status.UpdateMessage(message);
     LOG("%s", message);
 
-    main_thread_executor_->Schedule(
-        [this, scoped_status = std::move(scoped_status), module_data,
-         function_hashes_to_hook = std::move(function_hashes_to_hook),
-         frame_track_function_hashes = std::move(frame_track_function_hashes)] {
-          modules_currently_loading_.erase(module_data->file_path());
+    main_thread_executor_->Schedule([this, scoped_status = std::move(scoped_status), module_data,
+                                     function_hashes_to_hook = std::move(function_hashes_to_hook),
+                                     frame_track_function_hashes =
+                                         std::move(frame_track_function_hashes)] {
+      modules_currently_loading_.erase(module_data->file_path());
 
-          const ProcessData* selected_process = GetTargetProcess();
-          if (selected_process != nullptr &&
-              selected_process->IsModuleLoaded(module_data->file_path())) {
-            functions_data_view_->AddFunctions(module_data->GetFunctions());
-            LOG("Added loaded function symbols for module \"%s\" to the functions tab",
-                module_data->file_path());
-          }
+      const ProcessData* selected_process = GetTargetProcess();
+      if (selected_process != nullptr &&
+          selected_process->IsModuleLoaded(module_data->file_path())) {
+        functions_data_view_->AddFunctions(module_data->GetFunctions());
+        LOG("Added loaded function symbols for module \"%s\" to the functions tab",
+            module_data->file_path());
+      }
 
-          if (!function_hashes_to_hook.empty()) {
-            const auto selection_result =
-                SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
-            if (!selection_result) {
-              LOG("Warning, automated hooked incomplete: %s", selection_result.error().message());
-            }
-            LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
-          }
+      if (!function_hashes_to_hook.empty()) {
+        const auto selection_result =
+            SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
+        if (!selection_result) {
+          LOG("Warning, automated hooked incomplete: %s", selection_result.error().message());
+        }
+        LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
+      }
 
-          if (!frame_track_function_hashes.empty()) {
-            const auto frame_track_result =
-                EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
-            if (!frame_track_result) {
-              LOG("Warning, could not insert frame tracks: %s",
-                  frame_track_result.error().message());
-            }
-            LOG("Added frame tracks in module \"%s\"", module_data->file_path());
-          }
+      if (!frame_track_function_hashes.empty()) {
+        const auto frame_track_result =
+            EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
+        if (!frame_track_result) {
+          LOG("Warning, could not insert frame tracks: %s", frame_track_result.error().message());
+        }
+        LOG("Added frame tracks in module \"%s\"", module_data->file_path());
+      }
 
-          UpdateAfterSymbolLoading();
-          FireRefreshCallbacks();
-        });
+      UpdateAfterSymbolLoading();
+      FireRefreshCallbacks();
+    });
   });
 }
 

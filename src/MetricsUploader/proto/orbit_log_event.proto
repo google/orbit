@@ -14,6 +14,7 @@ message OrbitLogEvent {
     UNKNOWN_EVENT_TYPE = 0;
     ORBIT_INITIALIZED = 1;
     ORBIT_CAPTURE_DURATION = 2;
+    ORBIT_CAPTURE_SAVE_SUCCESS = 3;
   }
   LogEventType log_event_type = 1;
 
