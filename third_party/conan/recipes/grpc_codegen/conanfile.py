@@ -29,9 +29,9 @@ class grpcConan(ConanFile):
     _build_subfolder = "build_subfolder"
 
     build_requires = (
-        "abseil/20190808@orbitdeps/stable",
+        "abseil/20200923.3",
         "zlib/1.2.11",
-        "openssl/1.0.2t",
+        "openssl/1.1.1d@orbitdeps/stable",
         "protobuf/3.9.1@bincrafters/stable",
         "c-ares/1.15.0@conan/stable"
     )
@@ -45,8 +45,6 @@ class grpcConan(ConanFile):
             compiler_version = int(str(self.settings.compiler.version))
             if compiler_version < 14:
                 raise ConanInvalidConfiguration("gRPC can only be built with Visual Studio 2015 or higher.")
-
-        self.options["abseil"].cxx_standard = 17
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
