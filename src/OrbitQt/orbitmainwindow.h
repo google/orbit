@@ -56,7 +56,8 @@ class OrbitMainWindow : public QMainWindow {
   static constexpr int kEndSessionReturnCode = 1;
 
   explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
+                           const QStringList& command_line_flags = QStringList());
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }
@@ -172,6 +173,7 @@ class OrbitMainWindow : public QMainWindow {
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
   QLabel* target_label_ = nullptr;
+  QStringList command_line_flags_;
 
   // Capture toolbar.
   QIcon icon_start_capture_;
