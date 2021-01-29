@@ -68,7 +68,7 @@ class OrbitConan(ConanFile):
 
     def build_requirements(self):
         self.build_requires('protoc_installer/3.9.1@bincrafters/stable#0')
-        self.build_requires('grpc_codegen/1.27.3@orbitdeps/stable#ec39b3cf6031361be942257523c1839a')
+        self.build_requires('grpc_codegen/1.27.3@{}'.format(self._orbit_channel))
         self.build_requires('gtest/1.10.0#ef88ba8e54f5ffad7d706062d0731a40', force_host_context=True)
         self.build_requires('nodejs/13.6.0@{}#d07f6d3db886419fa9d0f65495ca23eb'.format(self._orbit_channel))
 
@@ -77,11 +77,11 @@ class OrbitConan(ConanFile):
             raise ConanInvalidConfiguration("When disabling system_qt, you also have to "
                                             "disable system mesa.")
 
-        self.requires("abseil/20190808@{}#0".format(self._orbit_channel))
+        self.requires("abseil/20200923.3")
         self.requires("bzip2/1.0.8@conan/stable#0")
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
         self.requires(
-            "grpc/1.27.3@{}#dc2368a2df63276188566e36a6b7868a".format(self._orbit_channel))
+            "grpc/1.27.3@{}".format(self._orbit_channel))
         self.requires("llvm_object/9.0.1-2@orbitdeps/stable#9fbb81e87811594e3ed6316e97675b86")
         self.requires("llvm_symbolize/9.0.1-2@orbitdeps/stable#d69c8f42cf46b0dc1827ad808fe04ffd")
         self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
@@ -130,7 +130,6 @@ class OrbitConan(ConanFile):
             raise ConanInvalidConfiguration(
                 "We don't actively support building the UI for 32bit platforms. Please remove this check in conanfile.py if you still want to do so!")
 
-        self.options["abseil"].cxx_standard = 17
         self.options["gtest"].no_main = True
         if self.options.with_orbitgl:
             self.options["glew"].system_mesa = self.options.system_mesa
