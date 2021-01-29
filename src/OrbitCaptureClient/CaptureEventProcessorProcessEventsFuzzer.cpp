@@ -37,9 +37,6 @@ class MyCaptureListener : public CaptureListener {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> /*selected_functions*/,
       TracepointInfoSet /*selected_tracepoints*/,
       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
-  void OnCaptureComplete() override {}
-  void OnCaptureCancelled() override {}
-  void OnCaptureFailed(ErrorMessage) override {}
   void OnTimer(const TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
   void OnUniqueCallStack(CallStack) override {}

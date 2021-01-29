@@ -70,9 +70,6 @@ class MockCaptureListener : public CaptureListener {
        TracepointInfoSet /*selected_tracepoints*/,
        absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
       (override));
-  MOCK_METHOD(void, OnCaptureComplete, (), (override));
-  MOCK_METHOD(void, OnCaptureCancelled, (), (override));
-  MOCK_METHOD(void, OnCaptureFailed, (ErrorMessage), (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));
@@ -88,26 +85,19 @@ class MockCaptureListener : public CaptureListener {
 TEST(CaptureDeserializer, LoadFileNotExists) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
-  ErrorMessage actual_error;
-  EXPECT_CALL(listener, OnCaptureFailed).Times(1).WillOnce(SaveArg<0>(&actual_error));
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
   ModuleManager module_manager;
-  capture_deserializer::Load("not_existing_test_file", &listener, &module_manager,
-                             &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
+      "not_existing_test_file", &listener, &module_manager, &cancellation_requested);
+  ASSERT_FALSE(result);
 
-  EXPECT_EQ("Error opening file \"not_existing_test_file\" for reading", actual_error.message());
+  EXPECT_EQ("Error opening file \"not_existing_test_file\" for reading", result.error().message());
 }
 
 TEST(CaptureDeserializer, LoadNoVersion) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
-  ErrorMessage actual_error;
-  EXPECT_CALL(listener, OnCaptureFailed).Times(1).WillOnce(SaveArg<0>(&actual_error));
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
   CaptureHeader header;
   header.set_version("");
 
@@ -119,25 +109,22 @@ TEST(CaptureDeserializer, LoadNoVersion) {
          << serialized_header;
 
   ModuleManager module_manager;
-  capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
-                             &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
+      stream, "file_name", &listener, &module_manager, &cancellation_requested);
+  ASSERT_FALSE(result);
 
   std::string expected_error_message =
       "Error parsing the capture from \"file_name\".\nNote: If the capture "
       "was taken with a previous Orbit version, it could be incompatible. "
       "Please check release notes for more information.";
 
-  EXPECT_EQ(expected_error_message, actual_error.message());
+  EXPECT_EQ(expected_error_message, result.error().message());
 }
 
 TEST(CaptureDeserializer, LoadOldVersion) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
-  ErrorMessage actual_error;
-  EXPECT_CALL(listener, OnCaptureFailed).Times(1).WillOnce(SaveArg<0>(&actual_error));
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
   CaptureHeader header;
   header.set_version("1.51");
 
@@ -149,20 +136,17 @@ TEST(CaptureDeserializer, LoadOldVersion) {
          << serialized_header;
 
   ModuleManager module_manager;
-  capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
-                             &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
+      stream, "file_name", &listener, &module_manager, &cancellation_requested);
+  ASSERT_FALSE(result);
 
-  EXPECT_THAT(actual_error.message(), HasSubstr("1.51"));
+  EXPECT_THAT(result.error().message(), HasSubstr("1.51"));
 }
 
 TEST(CaptureDeserializer, LoadNoCaptureInfo) {
   MockCaptureListener listener;
   std::atomic<bool> cancellation_requested = false;
-  ErrorMessage actual_error;
-  EXPECT_CALL(listener, OnCaptureFailed).Times(1);
   EXPECT_CALL(listener, OnCaptureStarted).Times(0);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
   CaptureHeader header;
   header.set_version(capture_deserializer::internal::kRequiredCaptureVersion);
 
@@ -174,8 +158,9 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
          << serialized_header;
 
   ModuleManager module_manager;
-  capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
-                             &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
+      stream, "file_name", &listener, &module_manager, &cancellation_requested);
+  EXPECT_FALSE(result);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
@@ -227,16 +212,16 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
         EXPECT_EQ(actual_function_info.pretty_name(), instrumented_function.pretty_name());
         EXPECT_EQ(actual_function_info.size(), instrumented_function.size());
       });
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
-  EXPECT_CALL(listener, OnCaptureFailed).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
 
   EXPECT_CALL(listener, OnAddressInfo).Times(0);
   EXPECT_CALL(listener, OnThreadName).Times(0);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
@@ -261,16 +246,16 @@ TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
 
   // There will be no call to OnCaptureStarted other then the one specified next.
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
-  EXPECT_CALL(listener, OnCaptureFailed).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
 
   EXPECT_CALL(listener, OnAddressInfo).Times(0);
   EXPECT_CALL(listener, OnThreadName).Times(0);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   const ModuleData* module = module_manager.GetModuleByPath(module_path);
   ASSERT_NE(module, nullptr);
@@ -310,11 +295,13 @@ TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {
       .WillOnce(SaveArg<0>(&actual_address_info_1))
       .WillOnce(SaveArg<0>(&actual_address_info_2));
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   EXPECT_EQ(actual_address_info_1.function_name(), address_info_1.function_name());
   EXPECT_EQ(actual_address_info_2.function_name(), address_info_2.function_name());
@@ -344,11 +331,13 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadNames) {
   EXPECT_CALL(listener, OnThreadName(2, "thread_b")).Times(1);
 
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoThreadStateSlices) {
@@ -381,11 +370,13 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadStateSlices) {
   }
 
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
@@ -406,11 +397,13 @@ TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
   EXPECT_CALL(listener, OnKeyAndString(2, "string_b")).Times(1);
 
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
@@ -490,11 +483,14 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
           DoAll(SaveArg<0>(&actual_callstack_event_2), InvokeWithoutArgs(check_hash_present_2)));
 
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
+
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);
   EXPECT_TRUE(hash_present_1_1);
@@ -581,11 +577,14 @@ TEST(CaptureDeserializer, LoadCaptureInfoTracepoints) {
           DoAll(SaveArg<0>(&actual_tracepoint_event_2), InvokeWithoutArgs(check_hash_present_2)));
 
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
+
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);
   EXPECT_TRUE(hash_present_1_1);
@@ -611,7 +610,6 @@ TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   CaptureInfo empty_capture_info;
   ErrorMessage actual_error;
   EXPECT_CALL(listener, OnCaptureStarted).Times(1);
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
   std::stringstream stream;
 
   TimerInfo timer_1;
@@ -647,8 +645,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(empty_capture_info, &listener, &module_manager,
-                                                  &coded_input, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(
+          empty_capture_info, &listener, &module_manager, &coded_input, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   EXPECT_EQ(timer_1.start(), actual_timer_1.start());
   EXPECT_EQ(timer_2.start(), actual_timer_2.start());
@@ -676,13 +677,13 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   EXPECT_CALL(listener, OnCaptureStarted)
       .Times(1)
       .WillOnce(SaveArg<3>(&actual_frame_track_function_ids));
-  EXPECT_CALL(listener, OnCaptureComplete).Times(1);
-  EXPECT_CALL(listener, OnCaptureFailed).Times(0);
-  EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   ASSERT_EQ(1, actual_frame_track_function_ids.size());
   EXPECT_TRUE(actual_frame_track_function_ids.contains(frame_track_function_id));

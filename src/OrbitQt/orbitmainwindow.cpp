@@ -69,10 +69,12 @@
 #include "LiveFunctionsDataView.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
@@ -106,6 +108,8 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
+
+using orbit_base::Future;
 
 extern QMenu* GContextMenu;
 
@@ -1072,7 +1076,42 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 }
 
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {
-  app_->OnLoadCapture(filepath);
+  auto loading_capture_dialog =
+      new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
+  loading_capture_dialog->setWindowTitle("Loading capture");
+  loading_capture_dialog->setModal(true);
+  loading_capture_dialog->setWindowFlags(
+      (loading_capture_dialog->windowFlags() | Qt::CustomizeWindowHint) &
+      ~Qt::WindowCloseButtonHint & ~Qt::WindowSystemMenuHint);
+  loading_capture_dialog->setFixedSize(loading_capture_dialog->size());
+
+  auto loading_capture_cancel_button = QPointer{new QPushButton{this}};
+  loading_capture_cancel_button->setText("Cancel");
+  QObject::connect(loading_capture_dialog, &QProgressDialog::canceled, this,
+                   [this]() { app_->OnLoadCaptureCancelRequested(); });
+  loading_capture_dialog->setCancelButton(loading_capture_cancel_button);
+  loading_capture_dialog->show();
+
+  app_->LoadCaptureFromFile(filepath).Then(
+      main_thread_executor_.get(),
+      [this, loading_capture_dialog](ErrorMessageOr<CaptureListener::CaptureOutcome> result) {
+        loading_capture_dialog->close();
+        if (!result.has_value()) {
+          QMessageBox::critical(this, "Error while loading capture",
+                                QString::fromStdString(result.error().message()));
+          on_actionEnd_Session_triggered();
+          return;
+        }
+
+        switch (result.value()) {
+          case CaptureListener::CaptureOutcome::kCancelled:
+            on_actionEnd_Session_triggered();
+            return;
+          case CaptureListener::CaptureOutcome::kComplete:
+            return;
+        }
+      });
+
   setWindowTitle(QString::fromStdString(filepath));
   UpdateCaptureStateDependentWidgets();
   FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);

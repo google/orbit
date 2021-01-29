@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
@@ -37,6 +38,8 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::TracepointInfo;
 
+using orbit_base::Future;
+
 static CaptureOptions::InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
     FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
@@ -49,7 +52,7 @@ static CaptureOptions::InstrumentedFunction::FunctionType InstrumentedFunctionTy
   }
 }
 
-ErrorMessageOr<void> CaptureClient::StartCapture(
+Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     ThreadPool* thread_pool, const ProcessData& process,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
@@ -57,9 +60,9 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
     bool collect_thread_state, bool enable_introspection) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
-    return ErrorMessage(
-        "Capture cannot be started, the previous capture is still "
-        "running/stopping.");
+    return {
+        ErrorMessage("Capture cannot be started, the previous capture is still "
+                     "running/stopping.")};
   }
 
   state_ = State::kStarting;
@@ -70,24 +73,24 @@ ErrorMessageOr<void> CaptureClient::StartCapture(
   // should be used here. (Even better: while taking a capture this should always be up to date)
   ProcessData process_copy = process;
 
-  thread_pool->Schedule([this, process = std::move(process_copy), &module_manager,
-                         selected_functions = std::move(selected_functions), selected_tracepoints,
-                         frame_track_function_ids = std::move(frame_track_function_ids),
-                         collect_thread_state, enable_introspection]() mutable {
-    Capture(std::move(process), module_manager, std::move(selected_functions),
-            std::move(selected_tracepoints), std::move(frame_track_function_ids),
-            collect_thread_state, enable_introspection);
-  });
+  auto capture_result = thread_pool->Schedule(
+      [this, process = std::move(process_copy), &module_manager,
+       selected_functions = std::move(selected_functions), selected_tracepoints,
+       frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
+       enable_introspection]() mutable {
+        return CaptureSync(std::move(process), module_manager, std::move(selected_functions),
+                           std::move(selected_tracepoints), std::move(frame_track_function_ids),
+                           collect_thread_state, enable_introspection);
+      });
 
-  return outcome::success();
+  return capture_result;
 }
 
-void CaptureClient::Capture(ProcessData&& process,
-                            const orbit_client_data::ModuleManager& module_manager,
-                            absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-                            TracepointInfoSet selected_tracepoints,
-                            absl::flat_hash_set<uint64_t> frame_track_function_ids,
-                            bool collect_thread_state, bool enable_introspection) {
+ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
+    ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
+    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+    TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
+    bool collect_thread_state, bool enable_introspection) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -151,8 +154,7 @@ void CaptureClient::Capture(ProcessData&& process,
     std::string error_string =
         absl::StrFormat("Error sending capture request.%s",
                         finish_result.has_error() ? ("\n" + finish_result.error().message()) : "");
-    capture_listener_->OnCaptureFailed(ErrorMessage{error_string});
-    return;
+    return ErrorMessage{error_string};
   }
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
 
@@ -184,21 +186,21 @@ void CaptureClient::Capture(ProcessData&& process,
   ErrorMessageOr<void> finish_result = FinishCapture();
   if (try_abort_) {
     LOG("TryCancel on Capture's gRPC context was called: Read on Capture's gRPC stream failed");
-    capture_listener_->OnCaptureCancelled();
-  } else if (writes_done_failed_) {
+    return CaptureListener::CaptureOutcome::kCancelled;
+  }
+
+  if (writes_done_failed_) {
     LOG("WritesDone on Capture's gRPC stream failed: stop reading and try to finish the gRPC call");
     std::string error_string = absl::StrFormat(
         "Unable to finish the capture in orderly manner, performing emergency stop.%s",
         finish_result.has_error() ? ("\n" + finish_result.error().message()) : "");
-    capture_listener_->OnCaptureFailed(ErrorMessage{error_string});
-  } else {
-    LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
-    if (finish_result.has_error()) {
-      capture_listener_->OnCaptureFailed(finish_result.error());
-    } else {
-      capture_listener_->OnCaptureComplete();
-    }
+    return ErrorMessage{error_string};
   }
+
+  LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
+  if (finish_result.has_error()) return finish_result.error();
+
+  return CaptureListener::CaptureOutcome::kComplete;
 }
 
 bool CaptureClient::StopCapture() {

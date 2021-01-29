@@ -53,6 +53,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionUtils.h"
@@ -101,6 +102,8 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
+
+using orbit_base::Future;
 
 namespace {
 PresetLoadState GetPresetLoadStateForProcess(
@@ -799,7 +802,8 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
                                   timers_it_end);
 }
 
-void OrbitApp::OnLoadCapture(const std::string& file_name) {
+Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
+    const std::string& file_name) {
   CHECK(open_capture_callback_);
   open_capture_callback_();
   if (capture_window_ != nullptr) {
@@ -807,13 +811,21 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   }
   ClearCapture();
   string_manager_->Clear();
-  thread_pool_->Schedule([this, file_name]() mutable {
+  auto load_future = thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancellation_requested_ = false;
-    capture_deserializer::Load(file_name, this, module_manager_.get(),
-                               &capture_loading_cancellation_requested_);
+
+    ErrorMessageOr<CaptureListener::CaptureOutcome> load_result = capture_deserializer::Load(
+        file_name, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+
+    if (load_result.has_value() && load_result.value() == CaptureOutcome::kComplete) {
+      OnCaptureComplete();
+    }
+    return load_result;
   });
 
   DoZoom = true;  // TODO: remove global, review logic
+
+  return load_future;
 }
 
 void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_requested_ = true; }
@@ -829,12 +841,12 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   refresh_callback_(type);
 }
 
-bool OrbitApp::StartCapture() {
+void OrbitApp::StartCapture() {
   const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please select a target process for the capture.");
-    return false;
+    return;
   }
 
   if (capture_window_ != nullptr) {
@@ -866,17 +878,25 @@ bool OrbitApp::StartCapture() {
   bool enable_introspection = absl::GetFlag(FLAGS_devmode);
 
   CHECK(capture_client_ != nullptr);
-  ErrorMessageOr<void> result = capture_client_->StartCapture(
+  Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), std::move(frame_track_function_ids), collect_thread_states,
       enable_introspection);
 
-  if (result.has_error()) {
-    SendErrorToUi("Error starting capture", result.error().message());
-    return false;
-  }
-
-  return true;
+  capture_result.Then(main_thread_executor_, [this](ErrorMessageOr<CaptureOutcome> capture_result) {
+    if (capture_result.has_error()) {
+      OnCaptureFailed(capture_result.error());
+      return;
+    }
+    switch (capture_result.value()) {
+      case CaptureListener::CaptureOutcome::kCancelled:
+        OnCaptureCancelled();
+        return;
+      case CaptureListener::CaptureOutcome::kComplete:
+        OnCaptureComplete();
+        return;
+    }
+  });
 }
 
 void OrbitApp::StopCapture() {
