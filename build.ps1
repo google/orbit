@@ -75,7 +75,7 @@ foreach ($profile in $profiles) {
     Throw "Error while running conan lock create."
   }
  
-  & $conan.Path install -if build_$profile\ --build outdated --lockfile=build_$profile\conan.lock "$PSScriptRoot"
+  & $conan.Path install -if build_$profile\ --build outdated --lockfile=build_$profile\conan.lock -u "$PSScriptRoot"
 
   if ($LastExitCode -ne 0) {
     Throw "Error while running conan install."
