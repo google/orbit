@@ -41,7 +41,7 @@ using orbit_grpc_protos::ProcessInfo;
 
 namespace capture_deserializer {
 
-void Load(const std::string& file_name, CaptureListener* capture_listener,
+bool Load(const std::string& file_name, CaptureListener* capture_listener,
           ModuleManager* module_manager, std::atomic<bool>* cancellation_requested) {
   SCOPED_TIMED_LOG("Loading capture from \"%s\"", file_name);
 
@@ -51,13 +51,13 @@ void Load(const std::string& file_name, CaptureListener* capture_listener,
     ERROR("Loading capture from \"%s\": %s", file_name, "file.fail()");
     capture_listener->OnCaptureFailed(
         ErrorMessage(absl::StrFormat("Error opening file \"%s\" for reading", file_name)));
-    return;
+    return false;
   }
 
   return Load(file, file_name, capture_listener, module_manager, cancellation_requested);
 }
 
-void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
+bool Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
           ModuleManager* module_manager, std::atomic<bool>* cancellation_requested) {
   google::protobuf::io::IstreamInputStream input_stream(&stream);
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
@@ -72,7 +72,7 @@ void Load(std::istream& stream, const std::string& file_name, CaptureListener* c
   if (!internal::ReadMessage(&header, &coded_input) || header.version().empty()) {
     ERROR("%s", error_message);
     capture_listener->OnCaptureFailed(ErrorMessage(std::move(error_message)));
-    return;
+    return false;
   }
   if (header.version() != internal::kRequiredCaptureVersion) {
     std::string incompatible_version_error_message = absl::StrFormat(
@@ -81,18 +81,18 @@ void Load(std::istream& stream, const std::string& file_name, CaptureListener* c
         file_name, header.version());
     ERROR("%s", incompatible_version_error_message);
     capture_listener->OnCaptureFailed(ErrorMessage(std::move(incompatible_version_error_message)));
-    return;
+    return false;
   }
 
   CaptureInfo capture_info;
   if (!internal::ReadMessage(&capture_info, &coded_input)) {
     ERROR("%s", error_message);
     capture_listener->OnCaptureFailed(ErrorMessage(std::move(error_message)));
-    return;
+    return false;
   }
 
-  internal::LoadCaptureInfo(capture_info, capture_listener, module_manager, &coded_input,
-                            cancellation_requested);
+  return internal::LoadCaptureInfo(capture_info, capture_listener, module_manager, &coded_input,
+                                   cancellation_requested);
 }
 
 namespace internal {
@@ -113,7 +113,7 @@ bool ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
+bool LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_listener,
                      ModuleManager* module_manager,
                      google::protobuf::io::CodedInputStream* coded_input,
                      std::atomic<bool>* cancellation_requested) {
@@ -130,7 +130,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   if (*cancellation_requested) {
     capture_listener->OnCaptureCancelled();
-    return;
+    return false;
   }
 
   std::vector<orbit_grpc_protos::ModuleInfo> modules;
@@ -153,7 +153,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   if (*cancellation_requested) {
     capture_listener->OnCaptureCancelled();
-    return;
+    return false;
   }
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions;
@@ -172,7 +172,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
 
   if (*cancellation_requested) {
     capture_listener->OnCaptureCancelled();
-    return;
+    return false;
   }
 
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
@@ -188,7 +188,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnAddressInfo(address_info);
   }
@@ -196,7 +196,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   for (const auto& thread_id_and_name : capture_info.thread_names()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnThreadName(thread_id_and_name.first, thread_id_and_name.second);
   }
@@ -205,7 +205,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
        capture_info.thread_state_slices()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnThreadStateSlice(thread_state_slice);
   }
@@ -214,14 +214,14 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnUniqueCallStack(std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnCallstackEvent(std::move(callstack_event));
   }
@@ -230,7 +230,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
        capture_info.tracepoint_infos()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     orbit_grpc_protos::TracepointInfo tracepoint_info_translated;
     tracepoint_info_translated.set_category(tracepoint_info.category());
@@ -243,7 +243,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
        capture_info.tracepoint_event_infos()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnTracepointEvent(std::move(tracepoint_event_info));
   }
@@ -251,7 +251,7 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   for (const auto& key_to_string : capture_info.key_to_string()) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnKeyAndString(key_to_string.first, key_to_string.second);
   }
@@ -261,12 +261,13 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
   while (internal::ReadMessage(&timer_info, coded_input)) {
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
-      return;
+      return false;
     }
     capture_listener->OnTimer(timer_info);
   }
 
   capture_listener->OnCaptureComplete();
+  return true;
 }
 
 }  // namespace internal

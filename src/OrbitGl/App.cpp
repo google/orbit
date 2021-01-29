@@ -820,8 +820,8 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   string_manager_->Clear();
   thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancellation_requested_ = false;
-    capture_deserializer::Load(file_name, this, module_manager_.get(),
-                               &capture_loading_cancellation_requested_);
+    (void)capture_deserializer::Load(file_name, this, module_manager_.get(),
+                                     &capture_loading_cancellation_requested_);
   });
 
   DoZoom = true;  // TODO: remove global, review logic

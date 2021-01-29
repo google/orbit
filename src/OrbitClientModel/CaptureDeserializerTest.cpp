@@ -94,8 +94,9 @@ TEST(CaptureDeserializer, LoadFileNotExists) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(0);
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
   ModuleManager module_manager;
-  capture_deserializer::Load("not_existing_test_file", &listener, &module_manager,
-                             &cancellation_requested);
+  bool success = capture_deserializer::Load("not_existing_test_file", &listener, &module_manager,
+                                            &cancellation_requested);
+  EXPECT_FALSE(success);
 
   EXPECT_EQ("Error opening file \"not_existing_test_file\" for reading", actual_error.message());
 }
@@ -119,8 +120,9 @@ TEST(CaptureDeserializer, LoadNoVersion) {
          << serialized_header;
 
   ModuleManager module_manager;
-  capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
-                             &cancellation_requested);
+  bool success = capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
+                                            &cancellation_requested);
+  EXPECT_FALSE(success);
 
   std::string expected_error_message =
       "Error parsing the capture from \"file_name\".\nNote: If the capture "
@@ -149,8 +151,9 @@ TEST(CaptureDeserializer, LoadOldVersion) {
          << serialized_header;
 
   ModuleManager module_manager;
-  capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
-                             &cancellation_requested);
+  bool success = capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
+                                            &cancellation_requested);
+  EXPECT_FALSE(success);
 
   EXPECT_THAT(actual_error.message(), HasSubstr("1.51"));
 }
@@ -174,8 +177,9 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
          << serialized_header;
 
   ModuleManager module_manager;
-  capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
-                             &cancellation_requested);
+  bool success = capture_deserializer::Load(stream, "file_name", &listener, &module_manager,
+                                            &cancellation_requested);
+  EXPECT_FALSE(success);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
@@ -235,8 +239,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   EXPECT_CALL(listener, OnThreadName).Times(0);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
@@ -269,8 +274,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
   EXPECT_CALL(listener, OnThreadName).Times(0);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 
   const ModuleData* module = module_manager.GetModuleByPath(module_path);
   ASSERT_NE(module, nullptr);
@@ -313,8 +319,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 
   EXPECT_EQ(actual_address_info_1.function_name(), address_info_1.function_name());
   EXPECT_EQ(actual_address_info_2.function_name(), address_info_2.function_name());
@@ -347,8 +354,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadNames) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoThreadStateSlices) {
@@ -384,8 +392,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadStateSlices) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
@@ -409,8 +418,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
@@ -493,8 +503,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
+
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);
   EXPECT_TRUE(hash_present_1_1);
@@ -584,8 +596,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoTracepoints) {
   EXPECT_CALL(listener, OnCaptureComplete).Times(1);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
+
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);
   EXPECT_TRUE(hash_present_1_1);
@@ -647,8 +661,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(empty_capture_info, &listener, &module_manager,
-                                                  &coded_input, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      empty_capture_info, &listener, &module_manager, &coded_input, &cancellation_requested);
+  EXPECT_TRUE(success);
 
   EXPECT_EQ(timer_1.start(), actual_timer_1.start());
   EXPECT_EQ(timer_2.start(), actual_timer_2.start());
@@ -681,8 +696,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   EXPECT_CALL(listener, OnCaptureCancelled).Times(0);
 
   ModuleManager module_manager;
-  capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
-                                                  &empty_stream, &cancellation_requested);
+  bool success = capture_deserializer::internal::LoadCaptureInfo(
+      capture_info, &listener, &module_manager, &empty_stream, &cancellation_requested);
+  EXPECT_TRUE(success);
 
   ASSERT_EQ(1, actual_frame_track_function_ids.size());
   EXPECT_TRUE(actual_frame_track_function_ids.contains(frame_track_function_id));
