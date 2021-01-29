@@ -38,7 +38,7 @@ class CaptureClient {
     CHECK(capture_listener_ != nullptr);
   }
 
-  [[nodiscard]] ErrorMessageOr<void> StartCapture(
+  orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> Capture(
       ThreadPool* thread_pool, const ProcessData& process,
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
@@ -67,11 +67,12 @@ class CaptureClient {
   bool AbortCaptureAndWait(int64_t max_wait_ms);
 
  private:
-  void Capture(ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
-               absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-               TracepointInfoSet selected_tracepoints,
-               absl::flat_hash_set<uint64_t> frame_track_function_ids, bool collect_thread_state,
-               bool enable_introspection);
+  ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
+      ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      TracepointInfoSet selected_tracepoints,
+      absl::flat_hash_set<uint64_t> frame_track_function_ids, bool collect_thread_state,
+      bool enable_introspection);
 
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 

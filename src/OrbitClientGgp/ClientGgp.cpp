@@ -19,9 +19,12 @@
 #include <type_traits>
 #include <vector>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
@@ -38,6 +41,7 @@
 
 ABSL_DECLARE_FLAG(bool, thread_state);
 
+using orbit_base::Future;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
@@ -91,14 +95,28 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   TracepointInfoSet selected_tracepoints;
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   bool enable_introspection = false;
-  ErrorMessageOr<void> result = capture_client_->StartCapture(
+  Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_, module_manager_, selected_functions_, selected_tracepoints,
       absl::flat_hash_set<uint64_t>{}, collect_thread_state, enable_introspection);
 
-  if (result.has_error()) {
-    ERROR("Error starting capture: %s", result.error().message());
-    return false;
-  }
+  orbit_base::ImmediateExecutor executer;
+  result.Then(&executer, [this](ErrorMessageOr<CaptureOutcome> result) {
+    if (!result.has_value()) {
+      ClearCapture();
+      ERROR("Capture failed: %s", result.error().message());
+      return;
+    }
+
+    switch (result.value()) {
+      case CaptureListener::CaptureOutcome::kCancelled:
+        ClearCapture();
+        return;
+      case CaptureListener::CaptureOutcome::kComplete:
+        PostprocessCaptureData();
+        return;
+    }
+  });
+
   return true;
 }
 
@@ -283,19 +301,12 @@ void ClientGgp::OnCaptureStarted(
   LOG("Capture started");
 }
 
-void ClientGgp::OnCaptureComplete() {
+void ClientGgp::PostprocessCaptureData() {
   LOG("Capture completed");
   GetMutableCaptureData().FilterBrokenCallstacks();
   GetMutableCaptureData().set_post_processed_sampling_data(
       orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
                                                           GetCaptureData()));
-}
-
-void ClientGgp::OnCaptureCancelled() { ClearCapture(); }
-
-void ClientGgp::OnCaptureFailed(ErrorMessage error_message) {
-  ClearCapture();
-  ERROR("Capture failed: %s", error_message.message());
 }
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {

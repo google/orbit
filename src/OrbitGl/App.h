@@ -94,13 +94,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
-  void OnLoadCapture(const std::string& file_name);
+  orbit_base::Future<ErrorMessageOr<CaptureOutcome>> LoadCaptureFromFile(
+      const std::string& file_name);
   void OnLoadCaptureCancelRequested();
 
   [[nodiscard]] CaptureClient::State GetCaptureState() const;
   [[nodiscard]] bool IsCapturing() const;
 
-  bool StartCapture();
+  void StartCapture();
   void StopCapture();
   void AbortCapture();
   void ClearCapture();
@@ -131,9 +132,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
-  void OnCaptureComplete() override;
-  void OnCaptureCancelled() override;
-  void OnCaptureFailed(ErrorMessage error_message) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallStack(CallStack callstack) override;
@@ -446,6 +444,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                                    absl::Span<const uint64_t> function_hashes);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
+
+  void OnCaptureFailed(ErrorMessage error_message);
+  void OnCaptureCancelled();
+  void OnCaptureComplete();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
 

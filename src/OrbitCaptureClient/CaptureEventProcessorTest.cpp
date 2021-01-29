@@ -69,9 +69,6 @@ class MockCaptureListener : public CaptureListener {
        TracepointInfoSet /*selected_tracepoints*/,
        absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
       (override));
-  MOCK_METHOD(void, OnCaptureComplete, (), (override));
-  MOCK_METHOD(void, OnCaptureCancelled, (), (override));
-  MOCK_METHOD(void, OnCaptureFailed, (ErrorMessage), (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));

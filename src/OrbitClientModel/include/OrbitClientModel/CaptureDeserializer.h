@@ -21,22 +21,21 @@
 
 namespace capture_deserializer {
 
-void Load(std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
-          orbit_client_data::ModuleManager* module_manager,
-          std::atomic<bool>* cancellation_requested);
-void Load(const std::string& file_name, CaptureListener* capture_listener,
-          orbit_client_data::ModuleManager* module_manager,
-          std::atomic<bool>* cancellation_requested);
+ErrorMessageOr<CaptureListener::CaptureOutcome> Load(
+    std::istream& stream, const std::string& file_name, CaptureListener* capture_listener,
+    orbit_client_data::ModuleManager* module_manager, std::atomic<bool>* cancellation_requested);
+ErrorMessageOr<CaptureListener::CaptureOutcome> Load(
+    const std::string& file_name, CaptureListener* capture_listener,
+    orbit_client_data::ModuleManager* module_manager, std::atomic<bool>* cancellation_requested);
 
 namespace internal {
 
 bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
-void LoadCaptureInfo(const orbit_client_protos::CaptureInfo& capture_info,
-                     CaptureListener* capture_listener,
-                     orbit_client_data::ModuleManager* module_manager,
-                     google::protobuf::io::CodedInputStream* coded_input,
-                     std::atomic<bool>* cancellation_requested);
+ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
+    const orbit_client_protos::CaptureInfo& capture_info, CaptureListener* capture_listener,
+    orbit_client_data::ModuleManager* module_manager,
+    google::protobuf::io::CodedInputStream* coded_input, std::atomic<bool>* cancellation_requested);
 
 inline const std::string kRequiredCaptureVersion = "1.59";
 

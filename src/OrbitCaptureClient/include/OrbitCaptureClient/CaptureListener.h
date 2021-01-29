@@ -15,6 +15,8 @@
 
 class CaptureListener {
  public:
+  enum class CaptureOutcome { kComplete, kCancelled };
+
   virtual ~CaptureListener() = default;
 
   // Called after capture started but before the first event arrived.
@@ -23,13 +25,6 @@ class CaptureListener {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids) = 0;
-  // Called when capture is complete.
-  virtual void OnCaptureComplete() = 0;
-
-  // Called when capture is cancelled (not stopped). Mostly relevant for capture loading.
-  virtual void OnCaptureCancelled() = 0;
-  // Called when an internal error occurred that makes the capture invalid.
-  virtual void OnCaptureFailed(ErrorMessage error_message) = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
