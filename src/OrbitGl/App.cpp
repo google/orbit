@@ -811,6 +811,8 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 }
 
 void OrbitApp::OnLoadCapture(const std::string& file_name) {
+  auto timestamp_before_load = std::chrono::steady_clock::now();
+
   CHECK(open_capture_callback_);
   open_capture_callback_();
   if (capture_window_ != nullptr) {
@@ -818,10 +820,19 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   }
   ClearCapture();
   string_manager_->Clear();
-  thread_pool_->Schedule([this, file_name]() mutable {
+  thread_pool_->Schedule([this, file_name, timestamp_before_load]() mutable {
     capture_loading_cancellation_requested_ = false;
-    (void)capture_deserializer::Load(file_name, this, module_manager_.get(),
-                                     &capture_loading_cancellation_requested_);
+    bool success = capture_deserializer::Load(file_name, this, module_manager_.get(),
+                                              &capture_loading_cancellation_requested_);
+    if (!success || metrics_uploader_ == nullptr) return;
+
+    auto timestamp_after_load = std::chrono::steady_clock::now();
+    auto load_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        timestamp_after_load - timestamp_before_load);
+
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_LOAD_SUCCESS,
+        load_duration);
   });
 
   DoZoom = true;  // TODO: remove global, review logic
