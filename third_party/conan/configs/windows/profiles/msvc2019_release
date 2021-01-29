@@ -7,6 +7,8 @@ arch_build=x86_64
 compiler=Visual Studio
 compiler.version=16
 build_type=Release
+abseil:compiler=Visual Studio
+abseil:compiler.cppstd=17
 [options]
 OrbitProfiler:system_qt=False
 [build_requires]
