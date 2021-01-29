@@ -706,9 +706,21 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
+  auto timestamp_before_save = std::chrono::steady_clock::now();
+
   OUTCOME_TRY(SavePreset(filename));
   ListPresets();
   Refresh(DataViewType::kPresets);
+
+  if (metrics_uploader_ == nullptr) return outcome::success();
+
+  auto timestamp_after_save = std::chrono::steady_clock::now();
+  auto save_duration = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_after_save -
+                                                                             timestamp_before_save);
+
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_SAVE_SUCCESS, save_duration);
+
   return outcome::success();
 }
 
