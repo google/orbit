@@ -56,6 +56,6 @@ for profile in ${profiles[@]}; do
     --build=outdated \
     --lockfile="$DIR/third_party/conan/lockfiles/base.lock" -u -pr $profile \
     --lockfile-out=build_$profile/conan.lock || exit $?
-  conan install -if build_$profile/ --build outdated --lockfile=build_$profile/conan.lock "$DIR" || exit $?
+  conan install -if build_$profile/ --build outdated --lockfile=build_$profile/conan.lock -u "$DIR" || exit $?
   conan build -bf build_$profile/ "$DIR" || exit $?
 done
