@@ -141,6 +141,7 @@ else()
   add_subdirectory(src/OrbitProducer)
   add_subdirectory(src/ProducerSideChannel)
   add_subdirectory(src/Service)
+  add_subdirectory(src/UserSpaceInstrumentation)
 endif()
 
 if(WITH_VULKAN_LAYER)
