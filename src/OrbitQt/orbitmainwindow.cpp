@@ -33,6 +33,7 @@
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QPointer>
+#include <QProcess>
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QSettings>
@@ -143,11 +144,13 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
+                                 const QStringList& command_line_flags)
     : QMainWindow(nullptr),
       main_thread_executor_{orbit_qt::MainThreadExecutorImpl::Create()},
       app_{OrbitApp::Create(main_thread_executor_.get(), metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
+      command_line_flags_(command_line_flags),
       target_configuration_(std::move(target_configuration)) {
   SetupMainWindow();
 
@@ -1062,7 +1065,10 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
     return;
   }
 
-  OpenCapture(file.toStdString());
+  QString orbit_executable =
+      QString::fromStdString(orbit_base::GetExecutablePath().generic_string());
+  QStringList arguments;
+  QProcess::startDetached(orbit_executable, arguments << file << command_line_flags_);
 }
 
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {

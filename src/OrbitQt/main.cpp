@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
@@ -75,7 +76,8 @@ using Context = orbit_ssh::Context;
 Q_DECLARE_METATYPE(std::error_code);
 
 void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
-                   const Context* ssh_context) {
+                   const Context* ssh_context, const QStringList& command_line_flags,
+                   const std::filesystem::path& capture_file_path = "") {
   qRegisterMetaType<std::error_code>();
 
   const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
@@ -95,15 +97,25 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
     }
   }
 
+  // If Orbit starts with loading a capture file, we skip ProfilingTargetDialog and create a
+  // FileTarget from capture_file_path. After creating the FileTarget, we reset
+  // skip_profiling_target_dialog as false such that if a user ends the previous session, Orbit
+  // will return to a ProfilingTargetDialog.
+  bool skip_profiling_target_dialog = !capture_file_path.empty();
   while (true) {
     {
-      orbit_qt::ProfilingTargetDialog target_dialog{&ssh_connection_artifacts,
-                                                    std::move(target_config)};
-      target_config = target_dialog.Exec();
+      if (skip_profiling_target_dialog) {
+        target_config = orbit_qt::FileTarget(capture_file_path);
+        skip_profiling_target_dialog = false;
+      } else {
+        orbit_qt::ProfilingTargetDialog target_dialog{&ssh_connection_artifacts,
+                                                      std::move(target_config)};
+        target_config = target_dialog.Exec();
 
-      if (!target_config.has_value()) {
-        // User closed dialog
-        break;
+        if (!target_config.has_value()) {
+          // User closed dialog
+          break;
+        }
       }
     }
 
@@ -120,7 +132,8 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       }
 
       OrbitMainWindow w(std::move(target_config.value()),
-                        metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr);
+                        metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr,
+                        command_line_flags);
 
       // "resize" is required to make "showMaximized" work properly.
       w.resize(1280, 720);
@@ -159,6 +172,21 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       UNREACHABLE();
     }
   }
+}
+
+// Extract command line flags by filtering the positional arguments out from the command line
+// arguments.
+static QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line_args,
+                                           const std::vector<char*>& positional_args) {
+  QStringList command_line_flags;
+  absl::flat_hash_set<std::string> positional_arg_set(positional_args.begin(),
+                                                      positional_args.end());
+  for (std::string command_line_arg : command_line_args) {
+    if (!positional_arg_set.contains(command_line_arg)) {
+      command_line_flags << QString::fromStdString(command_line_arg);
+    }
+  }
+  return command_line_flags;
 }
 
 static void StyleOrbit(QApplication& app) {
@@ -260,7 +288,16 @@ static bool DevModeEnabledViaEnvironmentVariable() {
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
-  absl::ParseCommandLine(argc, argv);
+  std::vector<char*> positional_args = absl::ParseCommandLine(argc, argv);
+
+  QString orbit_executable = QString(argv[0]);
+  std::vector<std::string> command_line_args;
+  if (argc > 1) {
+    command_line_args.assign(argv + 1, argv + argc);
+  }
+  QStringList command_line_flags = ExtractCommandLineFlags(command_line_args, positional_args);
+  // Skip program name in positional_args[0].
+  std::vector<std::string> capture_file_paths(positional_args.begin() + 1, positional_args.end());
 
   InitLogFile(Path::GetLogFilePath());
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
@@ -342,6 +379,14 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  RunUiInstance(deployment_configuration, &context.value());
+  // If more than one capture files are provided, start multiple Orbit instances.
+  for (size_t i = 1; i < capture_file_paths.size(); ++i) {
+    QStringList arguments;
+    arguments << QString::fromStdString(capture_file_paths[i]) << command_line_flags;
+    QProcess::startDetached(orbit_executable, arguments);
+  }
+
+  RunUiInstance(deployment_configuration, &context.value(), command_line_flags,
+                capture_file_paths.empty() ? "" : capture_file_paths[0]);
   return 0;
 }
