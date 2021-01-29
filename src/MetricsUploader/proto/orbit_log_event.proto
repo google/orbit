@@ -17,6 +17,7 @@ message OrbitLogEvent {
     ORBIT_CAPTURE_SAVE_SUCCESS = 3;
     ORBIT_CAPTURE_LOAD_SUCCESS = 4;
     ORBIT_PRESET_SAVE_SUCCESS = 5;
+    ORBIT_PRESET_LOAD_SUCCESS = 6;
   }
   LogEventType log_event_type = 1;
 

@@ -781,12 +781,24 @@ ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
+  auto timestamp_before_load = std::chrono::steady_clock::now();
+
   OUTCOME_TRY(preset_info, ReadPresetFromFile(filename));
 
   auto preset = std::make_shared<PresetFile>();
   preset->set_file_name(filename);
   preset->mutable_preset_info()->CopyFrom(preset_info);
   LoadPreset(preset);
+
+  if (metrics_uploader_ == nullptr) return outcome::success();
+
+  auto timestamp_after_load = std::chrono::steady_clock::now();
+  auto load_duration = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_after_load -
+                                                                             timestamp_before_load);
+
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_LOAD_SUCCESS, load_duration);
+
   return outcome::success();
 }
 
