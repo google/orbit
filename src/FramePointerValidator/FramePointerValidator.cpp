@@ -13,9 +13,9 @@
 #include <iterator>
 #include <utility>
 
+#include "FramePointerValidator/FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
-#include "FramePointerValidator/FunctionFramePointerValidator.h"
 
 using orbit_grpc_protos::CodeBlock;
 

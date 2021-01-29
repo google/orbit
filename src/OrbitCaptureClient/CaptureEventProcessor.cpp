@@ -162,7 +162,7 @@ void CaptureEventProcessor::ProcessIntrospectionScope(
   timer_info.set_end(introspection_scope.end_timestamp_ns());
   timer_info.set_depth(static_cast<uint8_t>(introspection_scope.depth()));
   timer_info.set_function_id(orbit_grpc_protos::kInvalidFunctionId);  // function id n/a, set to 0
-  timer_info.set_processor(-1);                    // cpu info not available, set to invalid value
+  timer_info.set_processor(-1);  // cpu info not available, set to invalid value
   timer_info.set_type(TimerInfo::kIntrospection);
   timer_info.mutable_registers()->CopyFrom(introspection_scope.registers());
 
