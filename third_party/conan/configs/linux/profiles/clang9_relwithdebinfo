@@ -13,6 +13,8 @@ compiler.version=9
 compiler.libcxx=libstdc++11
 compiler.fpo=False
 build_type=RelWithDebInfo
+abseil:compiler=clang
+abseil:compiler.cppstd=17
 [options]
 [build_requires]
 &: cmake_installer/3.16.3@conan/stable
