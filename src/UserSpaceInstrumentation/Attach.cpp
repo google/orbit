@@ -4,6 +4,7 @@
 
 #include "UserSpaceInstrumentation/Attach.h"
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
 #include <errno.h>
 #include <stdint.h>
@@ -13,6 +14,7 @@
 #include <chrono>
 #include <memory>
 #include <set>
+
 #include <string>
 #include <thread>
 #include <vector>
@@ -41,8 +43,8 @@ namespace {
         absl::StrFormat("PTRACE_ATTACH failed for %d: \"%s\"", tid, SafeStrerror(errno)));
   }
   // Wait for the traced thread to stop. Timeout after one second.
-  int32_t max_attempts = 1000;
-  while (true) {
+  constexpr int kMaxAttempts = 1000;
+  for (int i = 0; i < kMaxAttempts; i++) {
     int stat_val = 0;
     const int waitpid_result = waitpid(tid, &stat_val, WNOHANG);
     if (waitpid_result == -1) {
@@ -62,25 +64,21 @@ namespace {
           "Wait for thread to get traced yielded unexpected result for tid %d: %d", tid, stat_val));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if (--max_attempts == 0) {
-      ptrace(PTRACE_DETACH, tid, nullptr, nullptr);
-      return ErrorMessage(
-          absl::StrFormat("Waiting for the traced thread %d to stop timed out.", tid));
-    }
   }
 
-  UNREACHABLE();
+  ptrace(PTRACE_DETACH, tid, nullptr, nullptr);
+  return ErrorMessage(absl::StrFormat("Waiting for the traced thread %d to stop timed out.", tid));
 }
 
 }  // namespace
 
 [[nodiscard]] ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
   auto process_tids = GetTidsOfProcess(pid);
-  std::set<pid_t> halted_tids;
+  absl::flat_hash_set<pid_t> halted_tids;
   // Note that the process is still running - it can spawn and end threads at this point.
-  while (true) {
+  while (process_tids.size() != halted_tids.size()) {
     for (const auto tid : process_tids) {
-      if (halted_tids.count(tid) == 1) {
+      if (halted_tids.contains(tid)) {
         continue;
       }
       OUTCOME_TRY(result, AttachAndStopThread(tid));
@@ -88,11 +86,7 @@ namespace {
         halted_tids.insert(tid);
       }
     }
-    // Update the tids; if there are new ones run another round and stop them.
     process_tids = GetTidsOfProcess(pid);
-    if (process_tids.size() == halted_tids.size()) {
-      break;
-    }
   }
   return outcome::success();
 }

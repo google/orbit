@@ -72,9 +72,12 @@ void TestProcess::Worker() {
 void TestProcess::Workload() {
   size_t kNumThreads = 4;
   std::vector<std::thread> threads;
-  while (fs::exists(flag_file_run_child_) || !threads.empty()) {
+  std::error_code error;
+  while (fs::exists(flag_file_run_child_, error) || !threads.empty()) {
+    CHECK(!error);
     // Spawn as many threads as there are missing.
-    while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_)) {
+    while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_, error)) {
+      CHECK(!error);
       threads.emplace_back(std::thread(&TestProcess::Worker, this));
     }
     Touch(flag_file_child_started_);
