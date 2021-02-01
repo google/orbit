@@ -28,7 +28,7 @@ Future<void> JoinFutures(absl::Span<const Future<void>> futures) {
   }
 
   auto shared_state = std::make_shared<SharedStateJoin>();
-  absl::MutexLock lock{&shared_state->mutex};
+  shared_state->incompleted_futures = static_cast<int>(futures.size());
 
   for (const auto& future : futures) {
     CHECK(future.IsValid());
@@ -42,8 +42,16 @@ Future<void> JoinFutures(absl::Span<const Future<void>> futures) {
           }
         });
 
-    if (result == orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered) {
-      ++shared_state->incompleted_futures;
+    if (result != orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered) {
+      absl::MutexLock lock{&shared_state->mutex};
+      --shared_state->incompleted_futures;
+    }
+  }
+
+  {
+    absl::MutexLock lock{&shared_state->mutex};
+    if (shared_state->incompleted_futures == 0) {
+      shared_state->promise.MarkFinished();
     }
   }
 
