@@ -75,7 +75,7 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
   double normalized_start = start_us * inv_time_window;
   double normalized_width = width_us * inv_time_window;
 
-  WorldXInfo result;
+  WorldXInfo result{};
   result.world_x_start = static_cast<float>(world_start_x + normalized_start * world_width);
   result.world_x_width = static_cast<float>(normalized_width * world_width);
   result.is_visible_width = normalized_width * canvas_width > 1;
