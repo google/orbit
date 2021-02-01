@@ -34,6 +34,8 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
+bool ThreadTrack::render_with_nodes_ = true;
+
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
                          OrbitApp* app, const CaptureData* capture_data)
     : TimerTrack(time_graph, layout, app, capture_data) {
@@ -50,6 +52,205 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(app_, time_graph, layout,
                                                                     capture_data, thread_id_, this);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
+}
+
+void ThreadTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  UpdateDepth(timer_info.depth() + 1);
+
+  if (process_id_ == -1) {
+    process_id_ = timer_info.process_id();
+  }
+
+  TextBox text_box(Vec2(0, 0), Vec2(0, 0), "");
+  text_box.SetTimerInfo(timer_info);
+
+  std::shared_ptr<TimerChain> timer_chain = timers_[timer_info.depth()];
+  if (timer_chain == nullptr) {
+    timer_chain = std::make_shared<TimerChain>();
+    timers_[timer_info.depth()] = timer_chain;
+  }
+  timer_chain->push_back(text_box);
+  scope_tree_.Insert(timer_chain->Last());
+  ++num_timers_;
+  if (timer_info.start() < min_time_) min_time_ = timer_info.start();
+  if (timer_info.end() > max_time_) max_time_ = timer_info.end();
+}
+
+void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                                   float z_offset) {
+  UpdatePositionOfSubtracks();
+
+  if (!thread_state_track_->IsEmpty()) {
+    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+  }
+  if (!event_track_->IsEmpty()) {
+    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+  }
+  if (!tracepoint_track_->IsEmpty()) {
+    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+  }
+
+  UpdateBoxHeight();
+
+  Batcher* batcher = &time_graph_->GetBatcher();
+  GlCanvas* canvas = time_graph_->GetCanvas();
+
+  float world_start_x = canvas->GetWorldTopLeftX();
+  float world_width = canvas->GetWorldWidth();
+  double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
+  bool is_collapsed = collapse_toggle_->IsCollapsed();
+
+  std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
+  const TextBox* selected_textbox = app_->selected_text_box();
+  uint64_t highlighted_function_id = app_->GetFunctionIdToHighlight();
+
+  // We minimize overdraw when drawing lines for small events by discarding
+  // events that would just draw over an already drawn line. When zoomed in
+  // enough that all events are drawn as boxes, this has no effect. When zoomed
+  // out, many events will be discarded quickly.
+  uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
+  uint64_t pixel_delta_in_ticks = time_window_ns / canvas->GetWidth();
+  uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+
+  if (render_with_nodes_) {
+    ORBIT_SCOPE("Render with nodes");
+    for (auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
+      // We have to reset this when we go to the next depth, as otherwise we
+      // would miss drawing events that should be drawn.
+      uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
+      uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
+
+      for (auto it = ordered_nodes.lower_bound(min_tick);
+           it != ordered_nodes.end() && it->first < max_tick; ++it) {
+        ScopeNode* node = it->second;
+        TextBox& text_box = *node->GetTextBox();
+        text_box.GetTimerInfo().set_depth(node->Depth());
+
+        const TimerInfo& timer_info = text_box.GetTimerInfo();
+        // if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
+        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
+        // if (!TimerFilter(timer_info)) continue;
+        uint64_t function_id = timer_info.function_id();
+
+        UpdateDepth(timer_info.depth() + 1);
+        double start_us = time_graph_->GetUsFromTick(timer_info.start());
+        double end_us = time_graph_->GetUsFromTick(timer_info.end());
+        double elapsed_us = end_us - start_us;
+        double normalized_start = start_us * inv_time_window;
+        double normalized_length = elapsed_us * inv_time_window;
+        float world_timer_width = static_cast<float>(normalized_length * world_width);
+        float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
+        float world_timer_y = GetYFromTimer(timer_info);
+
+        bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
+        bool is_selected = &text_box == selected_textbox;
+        bool is_highlighted = !is_selected &&
+                              function_id != orbit_grpc_protos::kInvalidFunctionId &&
+                              function_id == highlighted_function_id;
+
+        Vec2 pos(world_timer_x, world_timer_y);
+        Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
+        float z = GlCanvas::kZValueBox + z_offset;
+        const Color kHighlightColor(100, 181, 246, 255);
+        Color color = is_highlighted ? kHighlightColor : GetTimerColor(timer_info, is_selected);
+        text_box.SetPos(pos);
+        text_box.SetSize(size);
+
+        auto user_data = std::make_unique<PickingUserData>(
+            &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+
+        if (is_visible_width) {
+          if (!is_collapsed) {
+            SetTimesliceText(timer_info, elapsed_us, world_start_x, z_offset, &text_box);
+          }
+          batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
+        } else {
+          batcher->AddVerticalLine(pos, size[1], z, color, std::move(user_data));
+          // For lines, we can ignore the entire pixel into which this event
+          // falls. We align this precisely on the pixel x-coordinate of the
+          // current line being drawn (in ticks). If pixel_delta_in_ticks is
+          // zero, we need to avoid dividing by zero, but we also wouldn't
+          // gain anything here.
+          if (pixel_delta_in_ticks != 0) {
+            min_ignore = min_timegraph_tick +
+                         ((timer_info.start() - min_timegraph_tick) / pixel_delta_in_ticks) *
+                             pixel_delta_in_ticks;
+            max_ignore = min_ignore + pixel_delta_in_ticks;
+          }
+        }
+      }
+    }
+
+  } else {
+    ORBIT_SCOPE("Render with chains");
+    for (auto& chain : chains_by_depth) {
+      if (!chain) continue;
+      for (auto& block : *chain) {
+        if (!block.Intersects(min_tick, max_tick)) continue;
+
+        // We have to reset this when we go to the next depth, as otherwise we
+        // would miss drawing events that should be drawn.
+        uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
+        uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
+
+        for (size_t k = 0; k < block.size(); ++k) {
+          TextBox& text_box = block[k];
+          const TimerInfo& timer_info = text_box.GetTimerInfo();
+          if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
+          if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
+          if (!TimerFilter(timer_info)) continue;
+          uint64_t function_id = timer_info.function_id();
+
+          UpdateDepth(timer_info.depth() + 1);
+          double start_us = time_graph_->GetUsFromTick(timer_info.start());
+          double end_us = time_graph_->GetUsFromTick(timer_info.end());
+          double elapsed_us = end_us - start_us;
+          double normalized_start = start_us * inv_time_window;
+          double normalized_length = elapsed_us * inv_time_window;
+          float world_timer_width = static_cast<float>(normalized_length * world_width);
+          float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
+          float world_timer_y = GetYFromTimer(timer_info);
+
+          bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
+          bool is_selected = &text_box == selected_textbox;
+          bool is_highlighted = !is_selected &&
+                                function_id != orbit_grpc_protos::kInvalidFunctionId &&
+                                function_id == highlighted_function_id;
+
+          Vec2 pos(world_timer_x, world_timer_y);
+          Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
+          float z = GlCanvas::kZValueBox + z_offset;
+          const Color kHighlightColor(100, 181, 246, 255);
+          Color color = is_highlighted ? kHighlightColor : GetTimerColor(timer_info, is_selected);
+          text_box.SetPos(pos);
+          text_box.SetSize(size);
+
+          auto user_data = std::make_unique<PickingUserData>(
+              &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+
+          if (is_visible_width) {
+            if (!is_collapsed) {
+              SetTimesliceText(timer_info, elapsed_us, world_start_x, z_offset, &text_box);
+            }
+            batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
+          } else {
+            batcher->AddVerticalLine(pos, size[1], z, color, std::move(user_data));
+            // For lines, we can ignore the entire pixel into which this event
+            // falls. We align this precisely on the pixel x-coordinate of the
+            // current line being drawn (in ticks). If pixel_delta_in_ticks is
+            // zero, we need to avoid dividing by zero, but we also wouldn't
+            // gain anything here.
+            if (pixel_delta_in_ticks != 0) {
+              min_ignore = min_timegraph_tick +
+                           ((timer_info.start() - min_timegraph_tick) / pixel_delta_in_ticks) *
+                               pixel_delta_in_ticks;
+              max_ignore = min_ignore + pixel_delta_in_ticks;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {

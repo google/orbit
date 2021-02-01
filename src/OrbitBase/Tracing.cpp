@@ -47,12 +47,13 @@ TracingListener::TracingListener(TracingTimerCallback callback) {
 }
 
 TracingListener::~TracingListener() {
+  // Deactivate listener.
+  absl::MutexLock lock(&global_tracing_mutex);
+
   // Purge deferred scopes.
   thread_pool_->Shutdown();
   thread_pool_->Wait();
 
-  // Deactivate listener.
-  absl::MutexLock lock(&global_tracing_mutex);
   CHECK(IsActive());
   active_ = false;
   global_tracing_listener = nullptr;

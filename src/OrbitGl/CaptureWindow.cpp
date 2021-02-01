@@ -751,6 +751,10 @@ void CaptureWindow::RenderImGuiDebugUI() {
       TextRenderer::SetDrawOutline(draw_text_outline);
       NeedsUpdate();
     }
+
+    if (ImGui::Checkbox("Render using nodes", &ThreadTrack::render_with_nodes_)) {
+      NeedsUpdate();
+    }
   }
 
   if (ImGui::CollapsingHeader("Capture Info")) {

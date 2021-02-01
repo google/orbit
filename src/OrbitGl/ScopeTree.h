@@ -23,6 +23,8 @@
 
 template <typename ScopeT>
 class ScopeNode {
+  friend class ScopeTree;
+
  public:
   ScopeNode() = default;
   ScopeNode(ScopeT* scope) : scope_(scope) {}
@@ -78,6 +80,10 @@ class ScopeTree {
   [[nodiscard]] const std::map<uint32_t, std::map<uint64_t /*start time*/, ScopeNodeT*>>&
   GetOrderedNodesByDepth() const {
     return ordered_nodes_by_depth_;
+  }
+
+  const std::map<uint32_t, std::map<uint64_t, ScopeNode*>>& GetOrderedNodesByDepth() {
+    return orderered_nodes_by_depth;
   }
 
  private:

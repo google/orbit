@@ -14,6 +14,7 @@
 #include "CallstackThreadBar.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "ScopeTree.h"
 #include "TextBox.h"
 #include "ThreadStateBar.h"
 #include "TimerTrack.h"
@@ -27,6 +28,7 @@ class ThreadTrack final : public TimerTrack {
  public:
   explicit ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
                        OrbitApp* app, const CaptureData* capture_data);
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void InitializeNameAndLabel(int32_t thread_id);
 
   [[nodiscard]] int32_t GetThreadId() const { return thread_id_; }
@@ -47,6 +49,7 @@ class ThreadTrack final : public TimerTrack {
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
+  static bool render_with_nodes_;
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
@@ -69,6 +72,7 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::ThreadStateBar> thread_state_bar_;
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_bar_;
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
+  ScopeTree scope_tree_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_
