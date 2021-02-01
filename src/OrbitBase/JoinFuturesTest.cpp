@@ -65,4 +65,21 @@ TEST(JoinFutures, JoinSpanWithDuplicateElements) {
   EXPECT_TRUE(joined_future.IsFinished());
 }
 
+TEST(JoinFutures, JoinSpanWithCompletedFutures) {
+  Promise<void> promise0{};
+  promise0.MarkFinished();
+  Future<void> future0 = promise0.GetFuture();
+
+  Promise<void> promise1{};
+  promise1.MarkFinished();
+  Future<void> future1 = promise1.GetFuture();
+
+  Promise<void> promise2{};
+  promise2.MarkFinished();
+  Future<void> future2 = promise2.GetFuture();
+
+  Future<void> joined_future = JoinFutures({future0, future1, future2});
+  EXPECT_TRUE(joined_future.IsValid());
+  EXPECT_TRUE(joined_future.IsFinished());
+}
 }  // namespace orbit_base
