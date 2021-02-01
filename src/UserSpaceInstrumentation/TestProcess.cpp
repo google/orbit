@@ -41,19 +41,19 @@ TestProcess::TestProcess() {
     exit(0);
   }
   std::error_code error;
-  while (!fs::exists(flag_file_child_started_, &error)) {
-    CHECK(!error)
+  while (!fs::exists(flag_file_child_started_, error)) {
+    CHECK(!error);
   };
 }
 
 TestProcess::~TestProcess() {
   std::error_code error;
-  fs::remove(flag_file_run_child_), &ec;
+  fs::remove(flag_file_run_child_, error);
   CHECK(!error);
   int status;
   waitpid(pid_, &status, 0);
   CHECK(WIFEXITED(status));
-  fs::remove(flag_file_child_started_, &error);
+  fs::remove(flag_file_child_started_, error);
   CHECK(!error);
 }
 
