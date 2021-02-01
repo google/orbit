@@ -14,10 +14,64 @@ message OrbitLogEvent {
     UNKNOWN_EVENT_TYPE = 0;
     ORBIT_INITIALIZED = 1;
     ORBIT_CAPTURE_DURATION = 2;
+    ORBIT_CAPTURE_SAVE = 3;
+    ORBIT_CAPTURE_LOAD = 4;
+    ORBIT_PRESET_SAVE = 5;
+    ORBIT_PRESET_LOAD = 6;
+    ORBIT_PRESET_DELETE = 7;
+    ORBIT_CAPTURE_START = 8;
+    ORBIT_ITERATOR_ADD = 9;
+    ORBIT_ITERATOR_REMOVE = 10;
+    ORBIT_TIME_GRAPH_SELECTION = 11;
+    ORBIT_SYMBOL_LOADING = 12;
+    ORBIT_RESERVED_INSTANCES = 13;
+    ORBIT_LOG_ERROR = 14;
+    ORBIT_TOTAL_TIME = 15;
+    ORBIT_CAPTURE_STOP = 16;
   }
   LogEventType log_event_type = 1;
 
   string orbit_version = 2;
   int64 event_duration_milliseconds = 3;
   string session_uuid = 4;
+
+  enum StatusCode {
+    SUCCESS = 0;
+    FAILURE = 1;
+  }
+  optional StatusCode status_code = 5;
+
+  optional OrbitCaptureStart capture_start = 6;
+
+  optional OrbitTimeGraphSelection time_graph_selection = 7;
+
+  optional int32 amount_reserved_instances = 8;
+
+  optional string log_error = 9;
+}
+
+message OrbitTimeGraphSelection {
+  int32 amount_millisecons = 0;
+  enum Type {
+    ALL_TRACKS = 0;
+    SINGLE_THREAD = 1;
+  }
+  Type type = 1;
+}
+
+message OrbitCaptureStart {
+  int32 amount_instrumented_functions = 0;
+  int32 amount_manually_instrumented_scopes = 1;
+  int32 amount_manually_instrumented_async_scopes = 2;
+  enum ManuallyInstrumentedVariableType {
+    INT32 = 0;
+    INT64 = 1;
+    UINT32 = 2;
+    UINT64 = 3;
+    FLOAT = 4;
+    DOUBLE = 5;
+  }
+  map<ManuallyInstrumentedVariableType, int32>
+      manually_instrumented_variables_amount = 3;
+  int32 amount_frame_tracks = 4;
 }
