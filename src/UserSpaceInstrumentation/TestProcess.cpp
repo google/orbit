@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
@@ -36,22 +37,27 @@ TestProcess::TestProcess() {
   CHECK(pid_ != -1);
   // Start the workload and have the parent wait for the startup to complete.
   if (pid_ == 0) {
-    DummyWorkload();
+    Workload();
     exit(0);
-  } else {
-    while (!fs::exists(flag_file_child_started_)) continue;
   }
+  std::error_code error;
+  while (!fs::exists(flag_file_child_started_, &error)) {
+    CHECK(!error)
+  };
 }
 
 TestProcess::~TestProcess() {
-  fs::remove(flag_file_run_child_);
+  std::error_code error;
+  fs::remove(flag_file_run_child_), &ec;
+  CHECK(!error);
   int status;
   waitpid(pid_, &status, 0);
   CHECK(WIFEXITED(status));
-  fs::remove(flag_file_child_started_);
+  fs::remove(flag_file_child_started_, &error);
+  CHECK(!error);
 }
 
-void TestProcess::DummyWorker() {
+void TestProcess::Worker() {
   constexpr auto kTimeToLiveMs = std::chrono::milliseconds(15);
   const auto deadline = std::chrono::system_clock::now() + kTimeToLiveMs;
   while (true) {
@@ -63,13 +69,13 @@ void TestProcess::DummyWorker() {
   joinable_threads_.emplace(std::this_thread::get_id());
 }
 
-void TestProcess::DummyWorkload() {
+void TestProcess::Workload() {
   size_t kNumThreads = 4;
   std::vector<std::thread> threads;
   while (fs::exists(flag_file_run_child_) || !threads.empty()) {
     // Spawn as many threads as there are missing.
     while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_)) {
-      threads.emplace_back(std::thread(&TestProcess::DummyWorker, this));
+      threads.emplace_back(std::thread(&TestProcess::Worker, this));
     }
     Touch(flag_file_child_started_);
     // Join the finished threads.

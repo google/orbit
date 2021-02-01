@@ -19,6 +19,7 @@
 
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -35,41 +36,40 @@ namespace {
     // can be looked up in the function 'ptrace_attach' in 'ptrace.c' in the kernel sources.
     if (errno == ESRCH || errno == EPERM) {
       return false;
-    } else {
-      return ErrorMessage(
-          absl::StrFormat("PTRACE_ATTACH failed for \"%d\": \"%s\"", tid, strerror(errno)));
     }
+    return ErrorMessage(
+        absl::StrFormat("PTRACE_ATTACH failed for %d: \"%s\"", tid, SafeStrerror(errno)));
   }
   // Wait for the traced thread to stop. Timeout after one second.
-  int32_t timeout_ms = 1000;
+  int32_t max_attempts = 1000;
   while (true) {
     int stat_val = 0;
-    const int result_waitpid = waitpid(tid, &stat_val, WNOHANG);
-    if (result_waitpid == -1) {
-      return ErrorMessage(absl::StrFormat(
-          "Wait for thread to get traced failed for tid \"%d\": \"%s\"", tid, strerror(errno)));
+    const int waitpid_result = waitpid(tid, &stat_val, WNOHANG);
+    if (waitpid_result == -1) {
+      return ErrorMessage(absl::StrFormat("Wait for thread to get traced failed for tid %d: \"%s\"",
+                                          tid, SafeStrerror(errno)));
     }
-    if (result_waitpid > 0) {
+    if (waitpid_result > 0) {
       // Occasionally the thread is active during PTRACE_ATTACH but terminates before it gets
       // descheduled. So waitpid returns on exit of the thread instead of the expected stop.
       if (WIFEXITED(stat_val)) {
         return false;
-      } else if (WIFSTOPPED(stat_val)) {
-        return true;
-      } else {
-        return ErrorMessage(absl::StrFormat(
-            "Wait for thread to get traced yielded unexpected result for tid \"%d\": \"%d\"", tid,
-            stat_val));
       }
+      if (WIFSTOPPED(stat_val)) {
+        return true;
+      }
+      return ErrorMessage(absl::StrFormat(
+          "Wait for thread to get traced yielded unexpected result for tid %d: %d", tid, stat_val));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if (--timeout_ms == 0) {
+    if (--max_attempts == 0) {
       ptrace(PTRACE_DETACH, tid, nullptr, nullptr);
       return ErrorMessage(
-          absl::StrFormat("Waiting for the traced thread \"%d\" to stop timed out.", tid));
+          absl::StrFormat("Waiting for the traced thread %d to stop timed out.", tid));
     }
   }
-  return true;
+
+  UNREACHABLE();
 }
 
 }  // namespace

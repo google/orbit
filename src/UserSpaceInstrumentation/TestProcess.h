@@ -12,23 +12,23 @@
 
 namespace orbit_user_space_instrumentation {
 
-// TestProcess forks a new process in the constructor and starts a multi threaded dummy load: A busy
-// loop that spawns and joins threads. The spawned threads perform a busy wait for 15 ms. Four
-// worker threads are kept active. When TestProcess goes out of scope the process is ended.
+// TestProcess forks a new process in the constructor and starts a multi threaded load: A busy loop
+// that spawns and joins threads. The spawned threads perform a busy wait for 15 ms. Four worker
+// threads are kept active. When TestProcess goes out of scope the process is ended.
 class TestProcess {
  public:
   TestProcess();
-  ~TestProcess();
+  virtual ~TestProcess();
 
   [[nodiscard]] pid_t pid() { return pid_; }
 
  private:
   // Busy wait for 15 ms.
-  void DummyWorker();
+  void Worker();
   // Busy loop that spawns and joins threads.
   // The spawned threads perform a busy wait for 15 ms. Four worker threads are kept active until
   // flag_file_run_child_ is deleted.
-  void DummyWorkload();
+  void Workload();
 
   pid_t pid_;
   absl::Mutex joinable_threads_mutex_;
