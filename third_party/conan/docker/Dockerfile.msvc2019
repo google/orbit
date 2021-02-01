@@ -18,6 +18,7 @@ RUN iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.or
     choco install --no-progress --yes --ignorepackagecodes jq --version=1.6; `
     choco install --no-progress --yes --ignorepackagecodes windows-sdk-8.1; `
     choco install --no-progress --yes --ignorepackagecodes zip --version=3.0; `
+    choco install --no-progress --yes --ignorepackagecodes cmake --version=3.18.4 --installargs 'ADD_CMAKE_TO_PATH=System'; `
     python -m pip install --quiet --upgrade pip; `
     python -m pip install win-unicode-console --quiet --upgrade --force-reinstall --no-cache; `
     python -m pip install conan==1.27.1 --quiet --upgrade --force-reinstall --no-cache; `
