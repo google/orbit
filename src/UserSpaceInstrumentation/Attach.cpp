@@ -97,11 +97,15 @@ namespace {
   return outcome::success();
 }
 
-void DetachAndContinueProcess(pid_t pid) {
+[[nodiscard]] ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
   auto tids = GetTidsOfProcess(pid);
   for (auto tid : tids) {
-    ptrace(PTRACE_DETACH, tid, nullptr, nullptr);
+    if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {
+      return ErrorMessage(absl::StrFormat("Error while detaching from thread %d: \"%s\"", tid,
+                                          SafeStrerror(errno)));
+    }
   }
+  return outcome::success();
 }
 
 }  // namespace orbit_user_space_instrumentation

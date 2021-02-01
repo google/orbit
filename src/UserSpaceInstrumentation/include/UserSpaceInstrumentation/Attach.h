@@ -13,7 +13,7 @@ namespace orbit_user_space_instrumentation {
 
 [[nodiscard]] ErrorMessageOr<void> AttachAndStopProcess(pid_t pid);
 
-void DetachAndContinueProcess(pid_t pid);
+[[nodiscard]] ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid);
 
 }  // namespace orbit_user_space_instrumentation
 

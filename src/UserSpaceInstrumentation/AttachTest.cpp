@@ -30,7 +30,8 @@ TEST(AttachTest, AttachAndStopProcess) {
   EXPECT_EQ(std::set<pid_t>(tids.begin(), tids.end()),
             std::set<pid_t>(tids_new.begin(), tids_new.end()));
 
-  DetachAndContinueProcess(pid);
+  const auto result_detach = DetachAndContinueProcess(pid);
+  ASSERT_TRUE(result_detach) << result_detach.error().message();
 }
 
 }  // namespace orbit_user_space_instrumentation
