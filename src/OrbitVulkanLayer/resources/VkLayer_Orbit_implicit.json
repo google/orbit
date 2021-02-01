@@ -10,6 +10,9 @@
         "disable_environment": {
             "DISABLE_ORBIT_VULKAN_LAYER": "1"
         },
+        "enable_environment": {
+            "ENABLE_ORBIT_VULKAN_LAYER": "1"
+        },
         "functions": {
             "vkGetInstanceProcAddr": "OrbitGetInstanceProcAddr",
             "vkGetDeviceProcAddr": "OrbitGetDeviceProcAddr"
