@@ -6,8 +6,6 @@ found in the LICENSE file.
 
 import logging
 
-from absl import flags
-
 from pywinauto.keyboard import send_keys
 
 from core.common_controls import DataViewPanel
@@ -19,11 +17,7 @@ from test_cases.live_tab import VerifyFunctionCallCount
 
 def _show_symbols_and_functions_tabs(top_window):
     logging.info("Showing symbols tab")
-    if flags.FLAGS.enable_ui_beta:
-        find_control(top_window, "TabItem", "Symbols").click_input()
-    else:
-        find_control(top_window, "TabItem", "Home").click_input()
-        find_control(top_window,"TabItem", "Functions").click_input()
+    find_control(top_window, "TabItem", "Symbols").click_input()
 
 
 class LoadSymbols(E2ETestCase):

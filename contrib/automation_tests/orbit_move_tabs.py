@@ -4,7 +4,7 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
-from absl import app, flags
+from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import ConnectToStadiaInstance, FilterAndSelectFirstProcess
@@ -12,7 +12,7 @@ from test_cases.main_window import MoveTab
 
 
 def main(argv):
-    tab_title = "Symbols" if flags.FLAGS.enable_ui_beta else "Functions"
+    tab_title = "Symbols"
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
