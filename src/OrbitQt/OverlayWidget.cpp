@@ -11,9 +11,8 @@
 
 namespace {
 
-// This color is used as a "background" for the overlay. The alpha value of 128 makes it
-// transparent
-const QColor kOverlayShadeColor{100, 100, 100, 128};
+// This color is used as a "background" for the overlay. The alpha value makes it transparent
+const QColor kOverlayShadeColor{100, 100, 100, 200};
 
 }  // namespace
 
