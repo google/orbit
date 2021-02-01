@@ -88,6 +88,7 @@ ProfilingTargetDialog::ProfilingTargetDialog(
   CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
+  ui_->processesTableOverlay->raise();
 
   state_machine_.setGlobalRestorePolicy(QStateMachine::RestoreProperties);
   SetupStadiaStates();

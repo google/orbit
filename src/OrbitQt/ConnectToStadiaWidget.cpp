@@ -57,6 +57,7 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
       s_deploying_(&state_machine_),
       s_connected_(&state_machine_) {
   ui_->setupUi(this);
+  ui_->instancesTableOverlay->raise();
 
   DetachRadioButton();
 
