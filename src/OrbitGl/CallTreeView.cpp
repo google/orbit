@@ -91,8 +91,8 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
                                         uint64_t callstack_sample_count,
                                         const CaptureData& capture_data) {
   CallTreeNode* current_thread_or_function = thread_node;
-  for (auto frame_it = resolved_callstack.GetFrames().crbegin();
-       frame_it != resolved_callstack.GetFrames().crend(); ++frame_it) {
+  for (auto frame_it = resolved_callstack.frames().crbegin();
+       frame_it != resolved_callstack.frames().crend(); ++frame_it) {
     uint64_t frame = *frame_it;
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
@@ -152,7 +152,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
     CallTreeView* bottom_up_view, const CallStack& resolved_callstack,
     uint64_t callstack_sample_count, const CaptureData& capture_data) {
   CallTreeNode* current_node = bottom_up_view;
-  for (uint64_t frame : resolved_callstack.GetFrames()) {
+  for (uint64_t frame : resolved_callstack.frames()) {
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
     CallTreeFunction* function_node =

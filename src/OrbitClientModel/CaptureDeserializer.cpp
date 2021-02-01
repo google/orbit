@@ -210,8 +210,10 @@ void LoadCaptureInfo(const CaptureInfo& capture_info, CaptureListener* capture_l
     capture_listener->OnThreadStateSlice(thread_state_slice);
   }
 
-  for (const CallstackInfo& callstack : capture_info.callstacks()) {
-    CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
+  for (const auto& callstack_it : capture_info.callstacks()) {
+    const CallstackInfo& callstack = callstack_it.second;
+    CallStack unique_callstack(callstack_it.first,
+                               {callstack.data().begin(), callstack.data().end()});
     if (*cancellation_requested) {
       capture_listener->OnCaptureCancelled();
       return;

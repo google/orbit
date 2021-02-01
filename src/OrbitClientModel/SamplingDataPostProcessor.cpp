@@ -56,7 +56,8 @@ class SamplingDataPostProcessor {
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks_;
+  absl::flat_hash_map<CallstackID, CallStack> unique_resolved_callstacks_;
+  absl::flat_hash_map<std::vector<uint64_t>, CallstackID> unique_resolved_callstacks_to_id_;
   absl::flat_hash_map<CallstackID, CallstackID> original_to_resolved_callstack_;
   absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack_;
   absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
@@ -79,12 +80,12 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
-        CHECK(callstack_data.HasCallStack(event.callstack_hash()));
+        CHECK(callstack_data.HasCallStack(event.callstack_id()));
 
         ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
         thread_sample_data->samples_count++;
-        thread_sample_data->callstack_count[event.callstack_hash()]++;
-        callstack_data.ForEachFrameInCallstack(event.callstack_hash(),
+        thread_sample_data->callstack_count[event.callstack_id()]++;
+        callstack_data.ForEachFrameInCallstack(event.callstack_id(),
                                                [&thread_sample_data](uint64_t address) {
                                                  thread_sample_data->raw_address_count[address]++;
                                                });
@@ -93,9 +94,9 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
           ThreadSampleData* all_thread_sample_data =
               &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
           all_thread_sample_data->samples_count++;
-          all_thread_sample_data->callstack_count[event.callstack_hash()]++;
+          all_thread_sample_data->callstack_count[event.callstack_id()]++;
           callstack_data.ForEachFrameInCallstack(
-              event.callstack_hash(), [&all_thread_sample_data](uint64_t address) {
+              event.callstack_id(), [&all_thread_sample_data](uint64_t address) {
                 all_thread_sample_data->raw_address_count[address]++;
               });
         }
@@ -112,14 +113,13 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       const uint32_t callstack_count = callstack_count_it.second;
 
       CallstackID resolved_callstack_id = original_to_resolved_callstack_[callstack_id];
-      std::shared_ptr<CallStack>& resolved_callstack =
-          unique_resolved_callstacks_[resolved_callstack_id];
+      const CallStack& resolved_callstack = unique_resolved_callstacks_[resolved_callstack_id];
 
       // exclusive stat
-      thread_sample_data->exclusive_count[resolved_callstack->GetFrame(0)] += callstack_count;
+      thread_sample_data->exclusive_count[resolved_callstack.GetFrame(0)] += callstack_count;
 
       std::set<uint64_t> unique_addresses;
-      for (uint64_t address : resolved_callstack->GetFrames()) {
+      for (uint64_t address : resolved_callstack.frames()) {
         unique_addresses.insert(address);
       }
 
@@ -168,7 +168,7 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
     // by the start address of the function (if known).
     std::vector<uint64_t> resolved_callstack_data;
 
-    for (uint64_t address : call_stack.GetFrames()) {
+    for (uint64_t address : call_stack.frames()) {
       if (exact_address_to_function_address_.find(address) ==
           exact_address_to_function_address_.end()) {
         MapAddressToFunctionAddress(address, capture_data);
@@ -176,19 +176,26 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
       uint64_t function_address = exact_address_to_function_address_.at(address);
 
       resolved_callstack_data.push_back(function_address);
-      function_address_to_callstack_[function_address].insert(call_stack.GetHash());
+      function_address_to_callstack_[function_address].insert(call_stack.id());
     }
 
-    CallStack resolved_callstack(std::move(resolved_callstack_data));
-
-    CallstackID resolved_callstack_id = resolved_callstack.GetHash();
-    if (unique_resolved_callstacks_.find(resolved_callstack_id) ==
-        unique_resolved_callstacks_.end()) {
-      unique_resolved_callstacks_[resolved_callstack_id] =
-          std::make_shared<CallStack>(resolved_callstack);
+    // Check if we already have this callstack
+    CallstackID resolved_callstack_id;
+    auto it = unique_resolved_callstacks_to_id_.find(resolved_callstack_data);
+    if (it == unique_resolved_callstacks_to_id_.end()) {
+      resolved_callstack_id = call_stack.id();
+      CHECK(!unique_resolved_callstacks_.contains(resolved_callstack_id));
+      unique_resolved_callstacks_.insert_or_assign(
+          resolved_callstack_id,
+          CallStack{resolved_callstack_id,
+                    {resolved_callstack_data.begin(), resolved_callstack_data.end()}});
+      unique_resolved_callstacks_to_id_.insert_or_assign(std::move(resolved_callstack_data),
+                                                         resolved_callstack_id);
+    } else {
+      resolved_callstack_id = it->second;
     }
 
-    original_to_resolved_callstack_[call_stack.GetHash()] = resolved_callstack_id;
+    original_to_resolved_callstack_[call_stack.id()] = resolved_callstack_id;
   });
 }
 

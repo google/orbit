@@ -45,7 +45,7 @@ const CallStack& PostProcessedSamplingData::GetResolvedCallstack(
   CHECK(resolved_callstack_id_it != original_to_resolved_callstack_.end());
   auto resolved_callstack_it = unique_resolved_callstacks_.find(resolved_callstack_id_it->second);
   CHECK(resolved_callstack_it != unique_resolved_callstacks_.end());
-  return *resolved_callstack_it->second;
+  return resolved_callstack_it->second;
 }
 
 std::multimap<int, CallstackID> PostProcessedSamplingData::GetCallstacksFromAddresses(

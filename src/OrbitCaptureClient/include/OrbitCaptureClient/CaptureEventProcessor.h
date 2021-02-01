@@ -53,8 +53,8 @@ class CaptureEventProcessor {
   CaptureListener* capture_listener_ = nullptr;
 
   absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
-  uint64_t GetCallstackHashAndSendToListenerIfNecessary(
-      const orbit_grpc_protos::Callstack& callstack);
+  void SendCallstackToListenerIfNecessary(uint64_t callstack_id,
+                                          const orbit_grpc_protos::Callstack& callstack);
   absl::flat_hash_set<uint64_t> string_hashes_seen_;
   uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
   absl::flat_hash_set<uint64_t> tracepoint_hashes_seen_;

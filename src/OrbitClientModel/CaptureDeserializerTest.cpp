@@ -422,31 +422,31 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   callstack_data_1.push_back(1);
   callstack_data_1.push_back(2);
   callstack_data_1.push_back(3);
-  CallStack callstack_1(std::move(callstack_data_1));
-  CallstackInfo* callstack_info_1 = capture_info.add_callstacks();
-  *callstack_info_1->mutable_data() = {callstack_1.GetFrames().begin(),
-                                       callstack_1.GetFrames().end()};
+  CallStack callstack_1(1, std::move(callstack_data_1));
+  CallstackInfo callstack_info_1;
+  *callstack_info_1.mutable_data() = {callstack_1.frames().begin(), callstack_1.frames().end()};
+  (*capture_info.mutable_callstacks())[1] = callstack_info_1;
   CallstackEvent* callstack_event_1_1 = capture_info.add_callstack_events();
   callstack_event_1_1->set_thread_id(1);
   callstack_event_1_1->set_time(1);
-  callstack_event_1_1->set_callstack_hash(callstack_1.GetHash());
+  callstack_event_1_1->set_callstack_id(callstack_1.id());
   CallstackEvent* callstack_event_1_2 = capture_info.add_callstack_events();
   callstack_event_1_2->set_thread_id(1);
   callstack_event_1_2->set_time(2);
-  callstack_event_1_2->set_callstack_hash(callstack_1.GetHash());
+  callstack_event_1_2->set_callstack_id(callstack_1.id());
 
   // Add one additional callstack with a different hash:
   std::vector<uint64_t> callstack_data_2;
   callstack_data_2.push_back(4);
   callstack_data_2.push_back(5);
-  CallStack callstack_2(std::move(callstack_data_2));
-  CallstackInfo* callstack_info_2 = capture_info.add_callstacks();
-  *callstack_info_2->mutable_data() = {callstack_2.GetFrames().begin(),
-                                       callstack_2.GetFrames().end()};
+  CallStack callstack_2(2, std::move(callstack_data_2));
+  CallstackInfo callstack_info_2;
+  *callstack_info_2.mutable_data() = {callstack_2.frames().begin(), callstack_2.frames().end()};
+  (*capture_info.mutable_callstacks())[2] = callstack_info_2;
   CallstackEvent* callstack_event_2 = capture_info.add_callstack_events();
   callstack_event_2->set_thread_id(2);
   callstack_event_2->set_time(3);
-  callstack_event_2->set_callstack_hash(callstack_2.GetHash());
+  callstack_event_2->set_callstack_id(callstack_2.id());
 
   std::atomic<bool> cancellation_requested = false;
   uint8_t empty_data = 0;

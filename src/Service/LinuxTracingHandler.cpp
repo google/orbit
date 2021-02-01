@@ -157,29 +157,25 @@ void LinuxTracingHandler::OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent mo
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-uint64_t LinuxTracingHandler::ComputeCallstackKey(const Callstack& callstack) {
-  uint64_t key = 17;
-  for (uint64_t pc : callstack.pcs()) {
-    key = 31 * key + pc;
-  }
-  return key;
-}
-
-uint64_t LinuxTracingHandler::InternCallstackIfNecessaryAndGetKey(Callstack callstack) {
-  uint64_t key = ComputeCallstackKey(callstack);
+uint64_t LinuxTracingHandler::InternCallstackIfNecessaryAndGetKey(const Callstack& callstack) {
+  std::vector<uint64_t> callstack_vector{callstack.pcs().begin(), callstack.pcs().end()};
+  uint64_t callstack_id = 0;
   {
-    absl::MutexLock lock{&callstack_keys_sent_mutex_};
-    if (callstack_keys_sent_.contains(key)) {
-      return key;
+    absl::MutexLock lock{&callstack_id_mutex_};
+    auto it = callstack_to_id_.find(callstack_vector);
+    if (it != callstack_to_id_.end()) {
+      return it->second;
     }
-    callstack_keys_sent_.emplace(key);
+
+    callstack_id = next_callstack_id_++;
+    callstack_to_id_.insert_or_assign(std::move(callstack_vector), callstack_id);
   }
 
   CaptureEvent event;
-  event.mutable_interned_callstack()->set_key(key);
-  *event.mutable_interned_callstack()->mutable_intern() = std::move(callstack);
+  event.mutable_interned_callstack()->set_key(callstack_id);
+  *event.mutable_interned_callstack()->mutable_intern() = callstack;
   capture_event_buffer_->AddEvent(std::move(event));
-  return key;
+  return callstack_id;
 }
 
 uint64_t LinuxTracingHandler::ComputeStringKey(const std::string& str) {

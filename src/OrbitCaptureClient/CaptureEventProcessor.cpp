@@ -110,17 +110,14 @@ void CaptureEventProcessor::ProcessInternedCallstack(InternedCallstack interned_
 }
 
 void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callstack_sample) {
-  Callstack callstack;
-  if (callstack_sample.callstack_or_key_case() == CallstackSample::kCallstackKey) {
-    callstack = callstack_intern_pool[callstack_sample.callstack_key()];
-  } else {
-    callstack = callstack_sample.callstack();
-  }
+  uint64_t callstack_id = callstack_sample.callstack_key();
+  Callstack callstack = callstack_intern_pool[callstack_id];
 
-  uint64_t hash = GetCallstackHashAndSendToListenerIfNecessary(callstack);
+  SendCallstackToListenerIfNecessary(callstack_id, callstack);
+
   CallstackEvent callstack_event;
   callstack_event.set_time(callstack_sample.timestamp_ns());
-  callstack_event.set_callstack_hash(hash);
+  callstack_event.set_callstack_id(callstack_sample.callstack_key());
   // Note: callstack_sample.pid() is available, but currently dropped.
   callstack_event.set_thread_id(callstack_sample.tid());
 
@@ -329,17 +326,13 @@ void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) 
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 
-uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
-    const Callstack& callstack) {
-  CallStack cs({callstack.pcs().begin(), callstack.pcs().end()});
-  // TODO: Compute the hash without creating the CallStack if not necessary.
-  uint64_t hash = cs.GetHash();
-
-  if (!callstack_hashes_seen_.contains(hash)) {
-    callstack_hashes_seen_.emplace(hash);
-    capture_listener_->OnUniqueCallStack(cs);
+void CaptureEventProcessor::SendCallstackToListenerIfNecessary(uint64_t callstack_id,
+                                                               const Callstack& callstack) {
+  if (!callstack_hashes_seen_.contains(callstack_id)) {
+    callstack_hashes_seen_.emplace(callstack_id);
+    capture_listener_->OnUniqueCallStack(
+        CallStack{callstack_id, {callstack.pcs().begin(), callstack.pcs().end()}});
   }
-  return hash;
 }
 
 void CaptureEventProcessor::ProcessInternedTracepointInfo(
