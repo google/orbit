@@ -5,8 +5,6 @@
 #ifndef ORBIT_CORE_CALLSTACK_H_
 #define ORBIT_CORE_CALLSTACK_H_
 
-#include <xxhash.h>
-
 #include <vector>
 
 #include "CallstackTypes.h"
@@ -14,18 +12,16 @@
 class CallStack {
  public:
   CallStack() = default;
-  explicit CallStack(std::vector<uint64_t>&& addresses) {
-    frames_ = std::move(addresses);
-    hash_ = XXH64(frames_.data(), frames_.size() * sizeof(uint64_t), 0xca1157ac);
-  };
+  explicit CallStack(CallstackID id, std::vector<uint64_t>&& addresses)
+      : id_{id}, frames_{std::move(addresses)} {};
 
-  CallstackID GetHash() const { return hash_; }
-  uint64_t GetFrame(size_t index) const { return frames_.at(index); }
-  const std::vector<uint64_t>& GetFrames() const { return frames_; };
-  size_t GetFramesCount() const { return frames_.size(); }
+  [[nodiscard]] CallstackID id() const { return id_; }
+  [[nodiscard]] uint64_t GetFrame(size_t index) const { return frames_.at(index); }
+  [[nodiscard]] const std::vector<uint64_t>& frames() const { return frames_; };
+  [[nodiscard]] size_t GetFramesCount() const { return frames_.size(); }
 
  private:
-  CallstackID hash_ = 0;
+  CallstackID id_ = 0;
   std::vector<uint64_t> frames_;
 };
 #endif  // ORBIT_CORE_CALLSTACK_H_

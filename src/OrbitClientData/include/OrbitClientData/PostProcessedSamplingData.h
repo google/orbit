@@ -63,7 +63,7 @@ class PostProcessedSamplingData {
   PostProcessedSamplingData() = default;
   PostProcessedSamplingData(
       absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data,
-      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks,
+      absl::flat_hash_map<CallstackID, CallStack> unique_resolved_callstacks,
       absl::flat_hash_map<CallstackID, CallstackID> original_to_resolved_callstack,
       absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack,
       absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
@@ -106,7 +106,7 @@ class PostProcessedSamplingData {
 
  private:
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_resolved_callstacks_;
+  absl::flat_hash_map<CallstackID, CallStack> unique_resolved_callstacks_;
   absl::flat_hash_map<CallstackID, CallstackID> original_to_resolved_callstack_;
   absl::flat_hash_map<uint64_t, std::set<CallstackID>> function_address_to_callstack_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;

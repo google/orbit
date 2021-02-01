@@ -142,8 +142,9 @@ CaptureInfo GenerateCaptureInfo(
   // Revisit sampling profiler data thread-safety.
   capture_data.GetCallstackData()->ForEachUniqueCallstack(
       [&capture_info](const CallStack& call_stack) {
-        CallstackInfo* callstack = capture_info.add_callstacks();
-        *callstack->mutable_data() = {call_stack.GetFrames().begin(), call_stack.GetFrames().end()};
+        CallstackInfo callstack;
+        *callstack.mutable_data() = {call_stack.frames().begin(), call_stack.frames().end()};
+        (*capture_info.mutable_callstacks())[call_stack.id()] = callstack;
       });
 
   capture_info.mutable_callstack_events()->Reserve(

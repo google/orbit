@@ -21,13 +21,11 @@
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
-#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "capture_data.pb.h"
-#include "gtest/gtest.h"
 #include "module.pb.h"
 #include "process.pb.h"
 #include "tracepoint.pb.h"
@@ -149,13 +147,13 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   addresses.push_back(1);
   addresses.push_back(2);
   addresses.push_back(3);
-  CallStack callstack(std::move(addresses));
+  CallStack callstack(1, std::move(addresses));
   capture_data.AddUniqueCallStack(callstack);
 
   CallstackEvent callstack_event;
   callstack_event.set_time(1);
   callstack_event.set_thread_id(123);
-  callstack_event.set_callstack_hash(callstack.GetHash());
+  callstack_event.set_callstack_id(callstack.id());
   capture_data.AddCallstackEvent(callstack_event);
 
   capture_data.AddUniqueTracepointEventInfo(1, selected_tracepoint_info);
@@ -213,16 +211,16 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(address_info.offset_in_function(), actual_address_info.offset_in_function());
 
   ASSERT_EQ(1, capture_info.callstacks_size());
-  const CallstackInfo& actual_callstack = capture_info.callstacks(0);
+  const CallstackInfo& actual_callstack = capture_info.callstacks().at(1);
   std::vector<uint64_t> actual_callstack_data{actual_callstack.data().begin(),
                                               actual_callstack.data().end()};
-  EXPECT_THAT(actual_callstack_data, ElementsAreArray(callstack.GetFrames()));
+  EXPECT_THAT(actual_callstack_data, ElementsAreArray(callstack.frames()));
 
   ASSERT_EQ(1, capture_info.callstack_events_size());
   const CallstackEvent& actual_callstack_event = capture_info.callstack_events(0);
   EXPECT_EQ(callstack_event.thread_id(), actual_callstack_event.thread_id());
   EXPECT_EQ(callstack_event.time(), actual_callstack_event.time());
-  EXPECT_EQ(callstack_event.callstack_hash(), actual_callstack_event.callstack_hash());
+  EXPECT_EQ(callstack_event.callstack_id(), actual_callstack_event.callstack_id());
 
   ASSERT_EQ(1, capture_info.tracepoint_infos_size());
   const orbit_client_protos::TracepointInfo& actual_tracepoint_info =

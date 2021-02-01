@@ -110,13 +110,20 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   EXPECT_EQ(actual_timer.type(), TimerInfo::kCoreActivity);
 }
 
+static InternedCallstack* AddAndInitializeInternedCallstack(CaptureEvent& event) {
+  InternedCallstack* interned_callstack = event.mutable_interned_callstack();
+  interned_callstack->set_key(1);
+  Callstack* callstack = interned_callstack->mutable_intern();
+  callstack->add_pcs(14);
+  callstack->add_pcs(15);
+  return interned_callstack;
+}
+
 static CallstackSample* AddAndInitializeCallstackSample(CaptureEvent& event) {
   CallstackSample* callstack_sample = event.mutable_callstack_sample();
   callstack_sample->set_pid(1);
   callstack_sample->set_tid(3);
-  Callstack* callstack = callstack_sample->mutable_callstack();
-  callstack->add_pcs(14);
-  callstack->add_pcs(15);
+  callstack_sample->set_callstack_key(1);
   return callstack_sample;
 }
 
@@ -126,7 +133,7 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
                                         const Callstack* expected_callstack) {
   EXPECT_EQ(actual_callstack_event.time(), expected_callstack_sample->timestamp_ns());
   EXPECT_EQ(actual_callstack_event.thread_id(), expected_callstack_sample->tid());
-  EXPECT_EQ(actual_callstack_event.callstack_hash(), actual_call_stack.GetHash());
+  EXPECT_EQ(actual_callstack_event.callstack_id(), actual_call_stack.id());
   ASSERT_EQ(actual_call_stack.GetFramesCount(), expected_callstack->pcs_size());
   for (size_t i = 0; i < actual_call_stack.GetFramesCount(); ++i) {
     EXPECT_EQ(actual_call_stack.GetFrame(i), expected_callstack->pcs(i));
@@ -136,6 +143,12 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
 TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
+
+  CaptureEvent interned_callstack_event;
+  InternedCallstack* interned_callstack =
+      AddAndInitializeInternedCallstack(interned_callstack_event);
+
+  event_processor.ProcessEvent(interned_callstack_event);
 
   CaptureEvent event;
   CallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
@@ -149,13 +162,17 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   event_processor.ProcessEvent(event);
 
   ExpectCallstackSamplesEqual(actual_callstack_event, actual_call_stack, callstack_sample,
-                              &callstack_sample->callstack());
+                              &interned_callstack->intern());
 }
 
 TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
   std::vector<CaptureEvent> events;
+
+  CaptureEvent event_interned_callstack;
+  InternedCallstack* interned_callstack =
+      AddAndInitializeInternedCallstack(event_interned_callstack);
 
   CaptureEvent event_1;
   CallstackSample* callstack_sample_1 = AddAndInitializeCallstackSample(event_1);
@@ -174,13 +191,14 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
       .WillOnce(SaveArg<0>(&actual_call_stack_event_1))
       .WillOnce(SaveArg<0>(&actual_call_stack_event_2));
 
+  event_processor.ProcessEvent(event_interned_callstack);
   event_processor.ProcessEvent(event_1);
   event_processor.ProcessEvent(event_2);
 
   ExpectCallstackSamplesEqual(actual_call_stack_event_1, actual_call_stack, callstack_sample_1,
-                              &callstack_sample_1->callstack());
+                              &interned_callstack->intern());
   ExpectCallstackSamplesEqual(actual_call_stack_event_2, actual_call_stack, callstack_sample_2,
-                              &callstack_sample_2->callstack());
+                              &interned_callstack->intern());
 }
 
 TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {

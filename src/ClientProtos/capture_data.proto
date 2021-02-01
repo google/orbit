@@ -56,7 +56,7 @@ message FunctionInfo {
 
 message CallstackEvent {
   uint64 time = 1;
-  uint64 callstack_hash = 2;
+  uint64 callstack_id = 2;
   int32 thread_id = 3;
 }
 
@@ -119,12 +119,12 @@ message UserDefinedCaptureInfo {
 }
 
 message CaptureInfo {
-  reserved 1, 2, 3;
+  reserved 1, 2, 3, 6;
   map<uint64, FunctionInfo> instrumented_functions = 16;
   map<int32, string> thread_names = 4;
   repeated ThreadStateSliceInfo thread_state_slices = 12;
   repeated LinuxAddressInfo address_infos = 5;
-  repeated CallstackInfo callstacks = 6;
+  map<uint64, CallstackInfo> callstacks = 17;
   repeated CallstackEvent callstack_events = 7;
   map<uint64, string> key_to_string = 8;
   // TODO(kuebler): consider removing this field completely.
