@@ -12,6 +12,8 @@ REPO_ROOT_WIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&
 # Path to script inside the docker container
 SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh"
 
+export CONAN_USE_ALWAYS_SHORT_PATHS=1
+
 if [ "$1" ]; then
   pip3 install conan==1.29.2
   export QT_QPA_PLATFORM=offscreen
