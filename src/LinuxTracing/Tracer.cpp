@@ -17,12 +17,11 @@ namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::CaptureOptions;
 
-void Tracer::Run(const CaptureOptions& capture_options, TracerListener* listener,
-                 const std::shared_ptr<std::atomic<bool>>& exit_requested) {
+void Tracer::Run() {
   pthread_setname_np(pthread_self(), "Tracer::Run");
-  TracerThread session{capture_options};
-  session.SetListener(listener);
-  session.Run(exit_requested);
+  TracerThread session{capture_options_};
+  session.SetListener(listener_);
+  session.Run(exit_requested_);
 }
 
 }  // namespace orbit_linux_tracing

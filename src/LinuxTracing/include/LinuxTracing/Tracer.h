@@ -31,11 +31,8 @@ class Tracer {
 
   void Start() {
     *exit_requested_ = false;
-    thread_ =
-        std::make_shared<std::thread>(&Tracer::Run, capture_options_, listener_, exit_requested_);
+    thread_ = std::make_shared<std::thread>(&Tracer::Run, this);
   }
-
-  bool IsTracing() { return thread_ != nullptr && thread_->joinable(); }
 
   void Stop() {
     *exit_requested_ = true;
@@ -56,9 +53,7 @@ class Tracer {
   std::shared_ptr<std::atomic<bool>> exit_requested_ = std::make_unique<std::atomic<bool>>(true);
   std::shared_ptr<std::thread> thread_;
 
-  static void Run(const orbit_grpc_protos::CaptureOptions& capture_options,
-                  TracerListener* listener,
-                  const std::shared_ptr<std::atomic<bool>>& exit_requested);
+  void Run();
 };
 
 }  // namespace orbit_linux_tracing
