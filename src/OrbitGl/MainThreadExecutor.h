@@ -42,6 +42,13 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
   // Schedules the action to be performed on the main thread.
   virtual void Schedule(std::unique_ptr<Action> action) = 0;
 
+  // Schedule schedules the function object `functor` to be executed
+  // on `*this`. The execution occures asynchronously, meaning this
+  // function call will only push the function object to a queue. It
+  // will be picked up by an event loop cycle.
+  //
+  // Note: The function object is only executed if `*this` is still alive when the event loop picks
+  // up the scheduled task.
   template <typename F>
   auto Schedule(F&& functor) -> orbit_base::Future<std::decay_t<decltype(functor())>> {
     using ReturnType = std::decay_t<decltype(functor())>;
