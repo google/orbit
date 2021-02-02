@@ -134,6 +134,9 @@ void GlCanvas::Initialize() {
       FATAL("Problem: glewInit failed, something is seriously wrong: %s",
             absl::bit_cast<const char*>(glewGetErrorString(err)));
     }
+    if (!glewIsSupported("GL_VERSION_2_0")) {
+      FATAL("Problem: OpenGL version supported by GLEW must be at least 2.0!");
+    }
     LOG("Using GLEW %s", absl::bit_cast<const char*>(glewGetString(GLEW_VERSION)));
     first_init = false;
   }
