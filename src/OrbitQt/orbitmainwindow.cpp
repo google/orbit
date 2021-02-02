@@ -685,6 +685,11 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->ModulesList->Deinitialize();
 
   delete ui;
+
+  // This explicitly destructs the main_thread_executor_ before all other members.
+  // That ensures that all scheduled main thread tasks will be destructed before
+  // we destruct all the resources these tasks might rely on.
+  main_thread_executor_.reset();
 }
 
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
