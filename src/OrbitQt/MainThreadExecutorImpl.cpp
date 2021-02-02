@@ -19,7 +19,7 @@ namespace orbit_qt {
 
 void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
   QMetaObject::invokeMethod(
-      QCoreApplication::instance(),
+      this,
       [action = std::move(action)]() {
         ORBIT_SCOPE("MainThreadExecutor Action");
         action->Execute();
