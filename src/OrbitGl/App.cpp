@@ -1671,7 +1671,7 @@ bool OrbitApp::IsCapturing() const {
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(status_listener_ != nullptr);
-  return ScopedStatus{GetMainThreadExecutor(), status_listener_, initial_message};
+  return ScopedStatus{GetMainThreadExecutor()->weak_from_this(), status_listener_, initial_message};
 }
 
 void OrbitApp::SelectTracepoint(const TracepointInfo& tracepoint) {
