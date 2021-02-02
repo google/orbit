@@ -36,10 +36,10 @@
 class ScopedStatus final {
  public:
   ScopedStatus() = default;
-  explicit ScopedStatus(MainThreadExecutor* main_thread_executor, StatusListener* status_listener,
-                        const std::string& status_message) {
+  explicit ScopedStatus(std::weak_ptr<MainThreadExecutor> main_thread_executor,
+                        StatusListener* status_listener, const std::string& status_message) {
     data_ = std::make_unique<Data>();
-    data_->main_thread_executor = main_thread_executor;
+    data_->main_thread_executor = std::move(main_thread_executor);
     data_->status_listener = status_listener;
     data_->main_thread_id = std::this_thread::get_id();
     data_->status_id = status_listener->AddStatus(status_message);
@@ -67,10 +67,9 @@ class ScopedStatus final {
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->UpdateStatus(data_->status_id, message);
     } else {
-      data_->main_thread_executor->Schedule(
-          [status_id = data_->status_id, status_listener = data_->status_listener, message] {
-            status_listener->UpdateStatus(status_id, message);
-          });
+      TrySchedule(data_->main_thread_executor,
+                  [status_id = data_->status_id, status_listener = data_->status_listener,
+                   message] { status_listener->UpdateStatus(status_id, message); });
     }
   }
 
@@ -83,10 +82,10 @@ class ScopedStatus final {
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->ClearStatus(data_->status_id);
     } else {
-      data_->main_thread_executor->Schedule(
-          [status_listener = data_->status_listener, status_id = data_->status_id] {
-            status_listener->ClearStatus(status_id);
-          });
+      TrySchedule(data_->main_thread_executor,
+                  [status_listener = data_->status_listener, status_id = data_->status_id] {
+                    status_listener->ClearStatus(status_id);
+                  });
     }
 
     data_.reset();
@@ -95,7 +94,7 @@ class ScopedStatus final {
   // Instances fo this class are going to be moved a lot so we want data to be
   // stored in easily movable form.
   struct Data {
-    MainThreadExecutor* main_thread_executor = nullptr;
+    std::weak_ptr<MainThreadExecutor> main_thread_executor;
     StatusListener* status_listener = nullptr;
     std::thread::id main_thread_id;
     uint64_t status_id = 0;
