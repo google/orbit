@@ -1157,7 +1157,15 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
                           frame_track_function_hashes =
                               std::move(frame_track_function_hashes)]() mutable {
     auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
-    CHECK(symbols_result);
+    if (!symbols_result) {
+      std::string error_message{absl::StrFormat("Unable to load symbols for %s from file %s: %s",
+                                                module_data->file_path(), symbols_path.string(),
+                                                symbols_result.error().message())};
+      ERROR("%s", error_message);
+      SendErrorToUi("Unexpected error while loading symbols", error_message);
+      return;
+    }
+
     module_data->AddSymbols(symbols_result.value());
 
     std::string message =
