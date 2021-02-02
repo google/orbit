@@ -145,6 +145,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
 
   void SetCaptureWindow(CaptureWindow* capture);
+  [[nodiscard]] const TimeGraph* GetTimeGraph() const {
+    CHECK(capture_window_ != nullptr);
+    return capture_window_->GetTimeGraph();
+  }
+  [[nodiscard]] TimeGraph* GetMutableTimeGraph() {
+    CHECK(capture_window_ != nullptr);
+    return capture_window_->GetTimeGraph();
+  }
   void SetDebugCanvas(GlCanvas* debug_canvas);
   void SetIntrospectionWindow(IntrospectionWindow* canvas);
   void StopIntrospection();

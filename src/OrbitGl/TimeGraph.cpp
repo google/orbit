@@ -39,8 +39,6 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-TimeGraph* GCurrentTimeGraph = nullptr;
-
 TimeGraph::TimeGraph(OrbitApp* app)
     : accessibility_(this), batcher_(BatcherId::kTimeGraph), app_{app} {
   track_manager_ = std::make_unique<TrackManager>(this, app);
@@ -67,6 +65,9 @@ void TimeGraph::SetCanvas(GlCanvas* canvas) {
 
 void TimeGraph::Clear() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  capture_data_ = nullptr;
+  track_manager_->SetCaptureData(nullptr);
 
   batcher_.StartNewFrame();
   capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
@@ -112,7 +113,7 @@ void TimeGraph::Zoom(uint64_t min, uint64_t max) {
 
 void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), timer_info.end()); }
 
-double TimeGraph::GetCaptureTimeSpanUs() {
+double TimeGraph::GetCaptureTimeSpanUs() const {
   return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
 }
 

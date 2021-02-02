@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <libfuzzer/libfuzzer_macro.h>
 
@@ -9,7 +10,6 @@
 #include <cstdint>
 #include <iosfwd>
 #include <memory>
-#include <string>
 #include <utility>
 
 #include "App.h"
@@ -21,8 +21,6 @@
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"
 #include "SamplingReport.h"
-#include "StringManager.h"
-#include "TimeGraph.h"
 #include "absl/flags/flag.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
@@ -38,13 +36,30 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 
+namespace {
+class MockMainThreadExecutor : public MainThreadExecutor {
+ public:
+  MOCK_METHOD(void, Schedule, (std::unique_ptr<Action> action), (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitFor,
+              (const orbit_base::Future<void>&, std::chrono::milliseconds), (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitFor, (const orbit_base::Future<void>&),
+              (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitForAll,
+              (absl::Span<orbit_base::Future<void>>, std::chrono::milliseconds), (override));
+  MOCK_METHOD(MainThreadExecutor::WaitResult, WaitForAll, (absl::Span<orbit_base::Future<void>>),
+              (override));
+  MOCK_METHOD(void, AbortWaitingJobs, (), (override));
+};
+
+}  // namespace
+
 DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& info) {
   std::string buffer{};
   {
     google::protobuf::io::StringOutputStream stream{&buffer};
     google::protobuf::io::CodedOutputStream coded_stream{&stream};
     orbit_client_protos::CaptureHeader capture_header{};
-    capture_header.set_version("1.55");
+    capture_header.set_version("1.59");
 
     capture_serializer::WriteMessage(&capture_header, &coded_stream);
     capture_serializer::WriteMessage(&info.capture_info(), &coded_stream);
@@ -53,7 +68,8 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     }
   }
 
-  std::unique_ptr<OrbitApp> app = OrbitApp::Create(nullptr);
+  MockMainThreadExecutor main_thread_executor;
+  std::unique_ptr<OrbitApp> app = OrbitApp::Create(&main_thread_executor);
 
   app->SetCaptureStartedCallback([]() {});
   app->SetCaptureStoppedCallback([]() {});
@@ -69,9 +85,10 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
       [](DataView* /*view*/, const std::shared_ptr<SamplingReport>& /*report*/) {});
   app->SetTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
   app->SetBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
+  app->SetSelectionTopDownViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
+  app->SetSelectionBottomUpViewCallback([](std::unique_ptr<CallTreeView> /*view*/) {});
+  app->SetTimerSelectedCallback([](const orbit_client_protos::TimerInfo* /*timer*/) {});
 
-  TimeGraph time_graph{app.get()};
-  GCurrentTimeGraph = &time_graph;
   app->ClearCapture();
 
   // NOLINTNEXTLINE

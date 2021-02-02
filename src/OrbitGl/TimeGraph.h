@@ -101,7 +101,7 @@ class TimeGraph {
       uint64_t function_address, uint64_t current_time,
       std::optional<int32_t> thread_id = std::nullopt) const;
   void SelectAndZoom(const TextBox* text_box);
-  [[nodiscard]] double GetCaptureTimeSpanUs();
+  [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
   void NeedsRedraw() { needs_redraw_ = true; }
   [[nodiscard]] bool IsRedrawNeeded() const { return needs_redraw_; }
@@ -240,7 +240,5 @@ class TimeGraph {
 
   OrbitApp* app_ = nullptr;
 };
-
-extern TimeGraph* GCurrentTimeGraph;
 
 #endif  // ORBIT_GL_TIME_GRAPH_H_

@@ -283,32 +283,32 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
+    auto first_box = app_->GetTimeGraph()->FindNextFunctionCall(
         function_id, std::numeric_limits<uint64_t>::lowest());
     if (first_box != nullptr) {
-      GCurrentTimeGraph->SelectAndZoom(first_box);
+      app_->GetMutableTimeGraph()->SelectAndZoom(first_box);
     }
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
+    auto last_box = app_->GetTimeGraph()->FindPreviousFunctionCall(
         function_id, std::numeric_limits<uint64_t>::max());
     if (last_box != nullptr) {
-      GCurrentTimeGraph->SelectAndZoom(last_box);
+      app_->GetMutableTimeGraph()->SelectAndZoom(last_box);
     }
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
     auto [min_box, _] = GetMinMax(function_id);
     if (min_box != nullptr) {
-      GCurrentTimeGraph->SelectAndZoom(min_box);
+      app_->GetMutableTimeGraph()->SelectAndZoom(min_box);
     }
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
     auto [_, max_box] = GetMinMax(function_id);
     if (max_box != nullptr) {
-      GCurrentTimeGraph->SelectAndZoom(max_box);
+      app_->GetMutableTimeGraph()->SelectAndZoom(max_box);
     }
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
@@ -420,7 +420,7 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(uint64_t function
   TextBox* min_box = nullptr;
   TextBox* max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+      app_->GetTimeGraph()->GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
     for (auto& block : *chain) {

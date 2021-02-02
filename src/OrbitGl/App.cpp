@@ -176,10 +176,10 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
         capture_data_ =
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
                         std::move(selected_tracepoints), std::move(frame_track_function_ids));
-        capture_window_->GetTimeGraph()->SetCaptureData(&capture_data_.value());
+        GetMutableTimeGraph()->SetCaptureData(&capture_data_.value());
 
         frame_track_online_processor_ =
-            FrameTrackOnlineProcessor(GetCaptureData(), GCurrentTimeGraph);
+            FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
         CHECK(capture_started_callback_);
         capture_started_callback_();
@@ -256,7 +256,7 @@ void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.function_id() == 0) {
-    GCurrentTimeGraph->ProcessTimer(timer_info, nullptr);
+    GetMutableTimeGraph()->ProcessTimer(timer_info, nullptr);
     return;
   }
 
@@ -264,7 +264,7 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   const FunctionInfo& func = capture_data.instrumented_functions().at(timer_info.function_id());
   uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
   capture_data.UpdateFunctionStats(func, elapsed_nanos);
-  GCurrentTimeGraph->ProcessTimer(timer_info, &func);
+  GetMutableTimeGraph()->ProcessTimer(timer_info, &func);
   frame_track_online_processor_.ProcessTimer(timer_info, func);
 }
 
@@ -558,7 +558,7 @@ void OrbitApp::MainTick() {
 
   if (DoZoom && HasCaptureData()) {
     // TODO (b/176077097): TrackManager has to manage sorting by their own.
-    GCurrentTimeGraph->GetTrackManager()->SortTracks();
+    GetMutableTimeGraph()->GetTrackManager()->SortTracks();
     capture_window_->ZoomAll();
     NeedsRedraw();
     DoZoom = false;
@@ -567,7 +567,6 @@ void OrbitApp::MainTick() {
 
 void OrbitApp::SetCaptureWindow(CaptureWindow* capture) {
   CHECK(capture_window_ == nullptr);
-  GCurrentTimeGraph = capture->GetTimeGraph();
   capture_window_ = capture;
   capture_window_->set_draw_help(false);
 }
@@ -691,7 +690,7 @@ void OrbitApp::ClearSelectionBottomUpView() {
 }
 
 std::string OrbitApp::GetCaptureTime() {
-  double time = GCurrentTimeGraph != nullptr ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0.0;
+  double time = GetTimeGraph()->GetCaptureTimeSpanUs();
   return GetPrettyTime(absl::Microseconds(time));
 }
 
@@ -786,8 +785,7 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
 
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllSerializableTimerChains();
+  std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllSerializableTimerChains();
 
   TimerInfosIterator timers_it_begin(chains.begin(), chains.end());
   TimerInfosIterator timers_it_end(chains.end(), chains.end());
@@ -883,9 +881,8 @@ void OrbitApp::StopCapture() {
   }
 
   if (metrics_uploader_ != nullptr) {
-    CHECK(GCurrentTimeGraph != nullptr);
     auto capture_time_us =
-        std::chrono::duration<double, std::micro>(GCurrentTimeGraph->GetCaptureTimeSpanUs());
+        std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
     auto capture_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
     metrics_uploader_->SendLogEvent(
         orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION, capture_time_ms);
@@ -909,16 +906,14 @@ void OrbitApp::AbortCapture() {
 
 void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
-  capture_window_->GetTimeGraph()->SetCaptureData(nullptr);
+  if (capture_window_ != nullptr) {
+    GetMutableTimeGraph()->Clear();
+  }
   capture_data_.reset();
   set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
   SelectTextBox(nullptr);
 
   UpdateAfterCaptureCleared();
-
-  if (GCurrentTimeGraph != nullptr) {
-    GCurrentTimeGraph->Clear();
-  }
 
   CHECK(capture_cleared_callback_);
   capture_cleared_callback_();
@@ -1617,7 +1612,7 @@ DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
 }
 
 void OrbitApp::FilterTracks(const std::string& filter) {
-  GCurrentTimeGraph->SetThreadFilter(filter);
+  GetMutableTimeGraph()->SetThreadFilter(filter);
 }
 
 void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
@@ -1729,7 +1724,7 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
     frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
-    GCurrentTimeGraph->RemoveFrameTrack(instrumented_function_id);
+    GetMutableTimeGraph()->RemoveFrameTrack(instrumented_function_id);
   }
 }
 
@@ -1738,14 +1733,14 @@ bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
 }
 
 bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const {
-  return GCurrentTimeGraph->HasFrameTrack(instrumented_function_id);
+  return GetTimeGraph()->HasFrameTrack(instrumented_function_id);
 }
 
 void OrbitApp::RefreshFrameTracks() {
   CHECK(HasCaptureData());
   CHECK(std::this_thread::get_id() == main_thread_id_);
   for (const auto& function_id : GetCaptureData().frame_track_function_ids()) {
-    GCurrentTimeGraph->RemoveFrameTrack(function_id);
+    GetMutableTimeGraph()->RemoveFrameTrack(function_id);
     AddFrameTrackTimers(function_id);
   }
 }
@@ -1760,8 +1755,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     return;
   }
 
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+  std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllThreadTrackTimerChains();
 
   std::vector<uint64_t> all_start_times;
 
@@ -1790,7 +1784,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     frame_timer.set_user_data_key(k);
     frame_timer.set_type(TimerInfo::kFrame);
 
-    GCurrentTimeGraph->ProcessTimer(frame_timer, function);
+    GetMutableTimeGraph()->ProcessTimer(frame_timer, function);
   }
 }
 
