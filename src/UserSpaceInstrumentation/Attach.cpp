@@ -14,7 +14,6 @@
 #include <chrono>
 #include <memory>
 #include <set>
-
 #include <string>
 #include <thread>
 #include <vector>
@@ -72,7 +71,7 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
+ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
   auto process_tids = GetTidsOfProcess(pid);
   absl::flat_hash_set<pid_t> halted_tids;
   // Note that the process is still running - it can spawn and end threads at this point.
@@ -81,8 +80,20 @@ namespace {
       if (halted_tids.contains(tid)) {
         continue;
       }
-      OUTCOME_TRY(result, AttachAndStopThread(tid));
-      if (result) {
+      auto result = AttachAndStopThread(tid);
+      if (!result) {
+        // Try to detach and return an error.
+        for (const auto t : halted_tids) {
+          if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {
+            return ErrorMessage(absl::StrFormat(
+                "Unable to attach to thread: %d. Also unable to clean up. We are still "
+                "attached to thread: %d",
+                tid, t));
+          }
+        }
+        return ErrorMessage(absl::StrFormat("Unable to attach to thread tid: %d", tid));
+      }
+      if (result.value()) {
         halted_tids.insert(tid);
       }
     }
@@ -91,7 +102,7 @@ namespace {
   return outcome::success();
 }
 
-[[nodiscard]] ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
+ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
   auto tids = GetTidsOfProcess(pid);
   for (auto tid : tids) {
     if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {

@@ -58,8 +58,8 @@ TestProcess::~TestProcess() {
 }
 
 void TestProcess::Worker() {
-  constexpr auto kTimeToLiveMs = std::chrono::milliseconds(15);
-  const auto deadline = std::chrono::system_clock::now() + kTimeToLiveMs;
+  constexpr auto kTimeToLive = std::chrono::milliseconds(15);
+  const auto deadline = std::chrono::system_clock::now() + kTimeToLive;
   while (true) {
     if (std::chrono::system_clock::now() > deadline) {
       break;
