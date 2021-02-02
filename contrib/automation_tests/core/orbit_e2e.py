@@ -150,7 +150,7 @@ class E2ETestSuite:
         self.top_window(True).set_focus()
 
 
-def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: int = 1):
+def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: int = 1, raise_exceptions: bool = False):
     """
     Wait until a condition is satisfied.
 
@@ -158,6 +158,8 @@ def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: i
         satisfied.
     :param max_seconds: Maximum time to wait for the condition to be satisfied
     :param interval: Sleep time in between calls to callable, in seconds
+    :param raise_exceptions: If true, exceptions are raised and cause the wait to fail. Usually should only be used
+        for debugging.
     """
     start = time.time()
     while time.time() - start < max_seconds:
@@ -165,7 +167,10 @@ def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: i
             if any_callable():
                 return
         except:
-            pass
+            if raise_exceptions:
+                raise
+            else:
+                pass
         time.sleep(interval)
     raise OrbitE2EError('Wait time exceeded')
 
