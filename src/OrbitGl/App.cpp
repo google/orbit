@@ -1008,7 +1008,8 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
       [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
        frame_track_function_hashes = std::move(frame_track_function_hashes),
        scoped_status = std::move(scoped_status),
-       error_message_from_local = std::move(error_message_from_local)]() mutable {
+       error_message_from_local = std::move(error_message_from_local),
+       main_thread_executor = main_thread_executor_->weak_from_this()]() mutable {
         const auto result = GetProcessManager()->FindDebugInfoFile(module_data->file_path());
 
         if (!result) {
@@ -1017,7 +1018,8 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
               absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
                               module_data->file_path(), error_message_from_local,
                               result.error().message()));
-          main_thread_executor_->Schedule([this, module_data]() {
+
+          TrySchedule(main_thread_executor, [this, module_data]() {
             modules_currently_loading_.erase(module_data->file_path());
           });
           return;
@@ -1027,7 +1029,8 @@ void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
 
         LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
 
-        main_thread_executor_->Schedule(
+        TrySchedule(
+            main_thread_executor,
             [this, module_data, function_hashes_to_hook = std::move(function_hashes_to_hook),
              frame_track_function_hashes = std::move(frame_track_function_hashes), debug_file_path,
              scoped_status = std::move(scoped_status)]() mutable {
@@ -1154,8 +1157,9 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
                                          module_data->file_path(), symbols_path.string()));
   thread_pool_->Schedule([this, scoped_status = std::move(scoped_status), symbols_path, module_data,
                           function_hashes_to_hook = std::move(function_hashes_to_hook),
-                          frame_track_function_hashes =
-                              std::move(frame_track_function_hashes)]() mutable {
+                          frame_track_function_hashes = std::move(frame_track_function_hashes),
+                          main_thread_executor =
+                              main_thread_executor_->weak_from_this()]() mutable {
     auto symbols_result = SymbolHelper::LoadSymbolsFromFile(symbols_path);
     if (!symbols_result) {
       std::string error_message{absl::StrFormat("Unable to load symbols for %s from file %s: %s",
@@ -1174,7 +1178,8 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
     scoped_status.UpdateMessage(message);
     LOG("%s", message);
 
-    main_thread_executor_->Schedule(
+    TrySchedule(
+        main_thread_executor,
         [this, scoped_status = std::move(scoped_status), module_data,
          function_hashes_to_hook = std::move(function_hashes_to_hook),
          frame_track_function_hashes = std::move(frame_track_function_hashes)] {
