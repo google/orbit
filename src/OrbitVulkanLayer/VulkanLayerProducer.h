@@ -32,7 +32,7 @@ class VulkanLayerProducer {
   // Returns true if the event was enqueued as the capture is in progress, false otherwise.
   // Callers can use the return value to check if the event was actually enqueued as the capture
   // is in progress.
-  virtual bool EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent&& capture_event) = 0;
+  virtual bool EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent&& capture_event) = 0;
 
   // This method enqueues an InternedString to be sent to OrbitService the first time the string
   // passed as argument is seen. In all cases, it returns the key corresponding to the string.

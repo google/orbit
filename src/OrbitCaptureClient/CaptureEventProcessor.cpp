@@ -23,63 +23,63 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
-using orbit_grpc_protos::CallstackSample;
-using orbit_grpc_protos::CaptureEvent;
+using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
+using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
-void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
+void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
   switch (event.event_case()) {
-    case CaptureEvent::kSchedulingSlice:
+    case ClientCaptureEvent::kSchedulingSlice:
       ProcessSchedulingSlice(event.scheduling_slice());
       break;
-    case CaptureEvent::kInternedCallstack:
+    case ClientCaptureEvent::kInternedCallstack:
       ProcessInternedCallstack(event.interned_callstack());
       break;
-    case CaptureEvent::kCallstackSample:
-      ProcessCallstackSample(event.callstack_sample());
+    case ClientCaptureEvent::kInternedCallstackSample:
+      ProcessCallstackSample(event.interned_callstack_sample());
       break;
-    case CaptureEvent::kFunctionCall:
+    case ClientCaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
       break;
-    case CaptureEvent::kIntrospectionScope:
+    case ClientCaptureEvent::kIntrospectionScope:
       ProcessIntrospectionScope(event.introspection_scope());
       break;
-    case CaptureEvent::kInternedString:
+    case ClientCaptureEvent::kInternedString:
       ProcessInternedString(event.interned_string());
       break;
-    case CaptureEvent::kGpuJob:
+    case ClientCaptureEvent::kGpuJob:
       ProcessGpuJob(event.gpu_job());
       break;
-    case CaptureEvent::kThreadName:
+    case ClientCaptureEvent::kThreadName:
       ProcessThreadName(event.thread_name());
       break;
-    case CaptureEvent::kThreadStateSlice:
+    case ClientCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSlice(event.thread_state_slice());
       break;
-    case CaptureEvent::kAddressInfo:
+    case ClientCaptureEvent::kAddressInfo:
       ProcessAddressInfo(event.address_info());
       break;
-    case CaptureEvent::kInternedTracepointInfo:
+    case ClientCaptureEvent::kInternedTracepointInfo:
       ProcessInternedTracepointInfo(event.interned_tracepoint_info());
       break;
-    case CaptureEvent::kTracepointEvent:
+    case ClientCaptureEvent::kTracepointEvent:
       ProcessTracepointEvent(event.tracepoint_event());
       break;
-    case CaptureEvent::kGpuQueueSubmission:
+    case ClientCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmission(event.gpu_queue_submission());
       break;
-    case CaptureEvent::kModuleUpdateEvent:
+    case ClientCaptureEvent::kModuleUpdateEvent:
       // TODO (http://b/168797897): Process module update events
       break;
-    case CaptureEvent::EVENT_NOT_SET:
+    case ClientCaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
   }
@@ -109,15 +109,16 @@ void CaptureEventProcessor::ProcessInternedCallstack(InternedCallstack interned_
                                 std::move(*interned_callstack.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callstack_sample) {
-  uint64_t callstack_id = callstack_sample.callstack_key();
+void CaptureEventProcessor::ProcessCallstackSample(
+    const InternedCallstackSample& callstack_sample) {
+  uint64_t callstack_id = callstack_sample.callstack_id();
   Callstack callstack = callstack_intern_pool[callstack_id];
 
   SendCallstackToListenerIfNecessary(callstack_id, callstack);
 
   CallstackEvent callstack_event;
   callstack_event.set_time(callstack_sample.timestamp_ns());
-  callstack_event.set_callstack_id(callstack_sample.callstack_key());
+  callstack_event.set_callstack_id(callstack_id);
   // Note: callstack_sample.pid() is available, but currently dropped.
   callstack_event.set_thread_id(callstack_sample.tid());
 

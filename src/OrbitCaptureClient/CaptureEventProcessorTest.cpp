@@ -32,8 +32,7 @@ using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
-using orbit_grpc_protos::CallstackSample;
-using orbit_grpc_protos::CaptureEvent;
+using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::Color;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuCommandBuffer;
@@ -44,6 +43,7 @@ using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
 using orbit_grpc_protos::InternedCallstack;
+using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
@@ -85,7 +85,7 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   SchedulingSlice* scheduling_slice = event.mutable_scheduling_slice();
   scheduling_slice->set_core(2);
   scheduling_slice->set_pid(42);
@@ -107,7 +107,7 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   EXPECT_EQ(actual_timer.type(), TimerInfo::kCoreActivity);
 }
 
-static InternedCallstack* AddAndInitializeInternedCallstack(CaptureEvent& event) {
+static InternedCallstack* AddAndInitializeInternedCallstack(ClientCaptureEvent& event) {
   InternedCallstack* interned_callstack = event.mutable_interned_callstack();
   interned_callstack->set_key(1);
   Callstack* callstack = interned_callstack->mutable_intern();
@@ -116,17 +116,17 @@ static InternedCallstack* AddAndInitializeInternedCallstack(CaptureEvent& event)
   return interned_callstack;
 }
 
-static CallstackSample* AddAndInitializeCallstackSample(CaptureEvent& event) {
-  CallstackSample* callstack_sample = event.mutable_callstack_sample();
+static InternedCallstackSample* AddAndInitializeCallstackSample(ClientCaptureEvent& event) {
+  InternedCallstackSample* callstack_sample = event.mutable_interned_callstack_sample();
   callstack_sample->set_pid(1);
   callstack_sample->set_tid(3);
-  callstack_sample->set_callstack_key(1);
+  callstack_sample->set_callstack_id(1);
   return callstack_sample;
 }
 
 static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_event,
                                         const CallStack& actual_call_stack,
-                                        const CallstackSample* expected_callstack_sample,
+                                        const InternedCallstackSample* expected_callstack_sample,
                                         const Callstack* expected_callstack) {
   EXPECT_EQ(actual_callstack_event.time(), expected_callstack_sample->timestamp_ns());
   EXPECT_EQ(actual_callstack_event.thread_id(), expected_callstack_sample->tid());
@@ -141,14 +141,14 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent interned_callstack_event;
+  ClientCaptureEvent interned_callstack_event;
   InternedCallstack* interned_callstack =
       AddAndInitializeInternedCallstack(interned_callstack_event);
 
   event_processor.ProcessEvent(interned_callstack_event);
 
-  CaptureEvent event;
-  CallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
+  ClientCaptureEvent event;
+  InternedCallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
   callstack_sample->set_timestamp_ns(100);
 
   CallStack actual_call_stack;
@@ -165,18 +165,18 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
 TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
-  std::vector<CaptureEvent> events;
+  std::vector<ClientCaptureEvent> events;
 
-  CaptureEvent event_interned_callstack;
+  ClientCaptureEvent event_interned_callstack;
   InternedCallstack* interned_callstack =
       AddAndInitializeInternedCallstack(event_interned_callstack);
 
-  CaptureEvent event_1;
-  CallstackSample* callstack_sample_1 = AddAndInitializeCallstackSample(event_1);
+  ClientCaptureEvent event_1;
+  InternedCallstackSample* callstack_sample_1 = AddAndInitializeCallstackSample(event_1);
   callstack_sample_1->set_timestamp_ns(100);
 
-  CaptureEvent event_2;
-  CallstackSample* callstack_sample_2 = AddAndInitializeCallstackSample(event_2);
+  ClientCaptureEvent event_2;
+  InternedCallstackSample* callstack_sample_2 = AddAndInitializeCallstackSample(event_2);
   callstack_sample_2->set_timestamp_ns(200);
 
   CallStack actual_call_stack;
@@ -202,18 +202,18 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent interned_callstack_event;
+  ClientCaptureEvent interned_callstack_event;
   InternedCallstack* interned_callstack = interned_callstack_event.mutable_interned_callstack();
   interned_callstack->set_key(2);
   Callstack* callstack_intern = interned_callstack->mutable_intern();
   callstack_intern->add_pcs(15);
   callstack_intern->add_pcs(16);
 
-  CaptureEvent callstack_event;
-  CallstackSample* callstack_sample = callstack_event.mutable_callstack_sample();
+  ClientCaptureEvent callstack_event;
+  InternedCallstackSample* callstack_sample = callstack_event.mutable_interned_callstack_sample();
   callstack_sample->set_pid(1);
   callstack_sample->set_tid(3);
-  callstack_sample->set_callstack_key(interned_callstack->key());
+  callstack_sample->set_callstack_id(interned_callstack->key());
   callstack_sample->set_timestamp_ns(100);
 
   CallStack actual_call_stack;
@@ -232,7 +232,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   FunctionCall* function_call = event.mutable_function_call();
   function_call->set_pid(42);
   function_call->set_tid(24);
@@ -267,7 +267,7 @@ TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   IntrospectionScope* introspection_scope = event.mutable_introspection_scope();
   introspection_scope->set_pid(42);
   introspection_scope->set_tid(24);
@@ -299,7 +299,7 @@ TEST(CaptureEventProcessor, CanHandleThreadNames) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   ThreadName* thread_name = event.mutable_thread_name();
   thread_name->set_pid(42);
   thread_name->set_tid(24);
@@ -315,7 +315,7 @@ TEST(CaptureEventProcessor, CanHandleAddressInfos) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   AddressInfo* address_info = event.mutable_address_info();
   address_info->set_absolute_address(42);
   address_info->set_function_name("Function");
@@ -337,17 +337,17 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent interned_function_name_event;
+  ClientCaptureEvent interned_function_name_event;
   InternedString* interned_function_name = interned_function_name_event.mutable_interned_string();
   interned_function_name->set_key(1);
   interned_function_name->set_intern("function");
 
-  CaptureEvent interned_map_name_event;
+  ClientCaptureEvent interned_map_name_event;
   InternedString* interned_map_name = interned_map_name_event.mutable_interned_string();
   interned_map_name->set_key(2);
   interned_map_name->set_intern("module");
 
-  CaptureEvent address_info_event;
+  ClientCaptureEvent address_info_event;
   AddressInfo* address_info = address_info_event.mutable_address_info();
   address_info->set_absolute_address(42);
   address_info->set_function_name_key(interned_function_name->key());
@@ -372,7 +372,7 @@ TEST(DISABLED_CaptureEventProcessor, CanHandleOneTracepointEvent) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   TracepointEvent* tracepoint_event = event.mutable_tracepoint_event();
   tracepoint_event->set_pid(1);
   tracepoint_event->set_tid(3);
@@ -406,7 +406,7 @@ TEST(DISABLED_CaptureEventProcessor, WillOnlyHandleUniqueTracepointEventsOnce) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event_1;
+  ClientCaptureEvent event_1;
   TracepointEvent* tracepoint_event_1 = event_1.mutable_tracepoint_event();
   tracepoint_event_1->set_pid(1);
   tracepoint_event_1->set_tid(3);
@@ -416,7 +416,7 @@ TEST(DISABLED_CaptureEventProcessor, WillOnlyHandleUniqueTracepointEventsOnce) {
   tracepoint_1->set_category("cat");
   tracepoint_1->set_name("name");
 
-  CaptureEvent event_2;
+  ClientCaptureEvent event_2;
   TracepointEvent* tracepoint_event_2 = event_2.mutable_tracepoint_event();
   tracepoint_event_2->set_pid(1);
   tracepoint_event_2->set_tid(3);
@@ -446,7 +446,7 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent interned_tracepoint_event;
+  ClientCaptureEvent interned_tracepoint_event;
   InternedTracepointInfo* interned_tracepoint =
       interned_tracepoint_event.mutable_interned_tracepoint_info();
   interned_tracepoint->set_key(2);
@@ -454,7 +454,7 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   tracepoint_intern->set_name("name");
   tracepoint_intern->set_category("category");
 
-  CaptureEvent tracepoint_event;
+  ClientCaptureEvent tracepoint_event;
   TracepointEvent* tracepoint = tracepoint_event.mutable_tracepoint_event();
   tracepoint->set_pid(1);
   tracepoint->set_tid(3);
@@ -486,7 +486,7 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
 constexpr int32_t kGpuPid = 1;
 constexpr int32_t kGpuTid = 2;
 
-GpuJob* CreateGpuJob(CaptureEvent* capture_event, uint64_t sw_queue, uint64_t hw_queue,
+GpuJob* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t sw_queue, uint64_t hw_queue,
                      uint64_t hw_execution_begin, uint64_t hw_execution_end) {
   GpuJob* gpu_job = capture_event->mutable_gpu_job();
   gpu_job->set_pid(kGpuPid);
@@ -506,7 +506,7 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   GpuJob* gpu_job = CreateGpuJob(&event, 10, 20, 30, 40);
 
   uint64_t actual_timeline_key;
@@ -641,15 +641,15 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent gpu_job_event;
+  ClientCaptureEvent gpu_job_event;
   GpuJob* gpu_job = CreateGpuJob(&gpu_job_event, 10, 20, 30, 40);
 
-  CaptureEvent marker_string_event;
+  ClientCaptureEvent marker_string_event;
   InternedString* marker_string = marker_string_event.mutable_interned_string();
   marker_string->set_key(42);
   marker_string->set_intern("marker");
 
-  CaptureEvent queue_submission_event;
+  ClientCaptureEvent queue_submission_event;
   GpuQueueSubmission* submission = queue_submission_event.mutable_gpu_queue_submission();
   GpuQueueSubmissionMetaInfo* meta_info = CreateGpuQueueSubmissionMetaInfo(submission, 9, 11);
 
@@ -713,15 +713,15 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent gpu_job_event;
+  ClientCaptureEvent gpu_job_event;
   GpuJob* gpu_job = CreateGpuJob(&gpu_job_event, 10, 20, 30, 40);
 
-  CaptureEvent marker_string_event;
+  ClientCaptureEvent marker_string_event;
   InternedString* marker_string = marker_string_event.mutable_interned_string();
   marker_string->set_key(42);
   marker_string->set_intern("marker");
 
-  CaptureEvent queue_submission_event;
+  ClientCaptureEvent queue_submission_event;
   GpuQueueSubmission* submission = queue_submission_event.mutable_gpu_queue_submission();
   GpuQueueSubmissionMetaInfo* meta_info = CreateGpuQueueSubmissionMetaInfo(submission, 9, 11);
 
@@ -790,17 +790,17 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent gpu_job_event_1;
+  ClientCaptureEvent gpu_job_event_1;
   GpuJob* gpu_job_1 = CreateGpuJob(&gpu_job_event_1, 10, 20, 30, 40);
-  CaptureEvent gpu_job_event_2;
+  ClientCaptureEvent gpu_job_event_2;
   GpuJob* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, 50, 60, 70, 80);
 
-  CaptureEvent marker_string_event;
+  ClientCaptureEvent marker_string_event;
   InternedString* marker_string = marker_string_event.mutable_interned_string();
   marker_string->set_key(42);
   marker_string->set_intern("marker");
 
-  CaptureEvent queue_submission_event_1;
+  ClientCaptureEvent queue_submission_event_1;
   GpuQueueSubmission* submission_1 = queue_submission_event_1.mutable_gpu_queue_submission();
   GpuQueueSubmissionMetaInfo* meta_info_1 = CreateGpuQueueSubmissionMetaInfo(submission_1, 9, 11);
   GpuSubmitInfo* submit_info_1 = submission_1->add_submit_infos();
@@ -808,7 +808,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   AddGpuCommandBufferToGpuSubmitInfo(submit_info_1, 120, 124);
   submission_1->set_num_begin_markers(1);
 
-  CaptureEvent queue_submission_event_2;
+  ClientCaptureEvent queue_submission_event_2;
   GpuQueueSubmission* submission_2 = queue_submission_event_2.mutable_gpu_queue_submission();
   CreateGpuQueueSubmissionMetaInfo(submission_2, 49, 51);
   GpuSubmitInfo* submit_info_2 = submission_2->add_submit_infos();
@@ -884,15 +884,15 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   CaptureEventProcessor event_processor(&listener);
 
   // The first job that actually contains the begin marker is not recorded.
-  CaptureEvent gpu_job_event_2;
+  ClientCaptureEvent gpu_job_event_2;
   GpuJob* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, 50, 60, 70, 80);
 
-  CaptureEvent marker_string_event;
+  ClientCaptureEvent marker_string_event;
   InternedString* marker_string = marker_string_event.mutable_interned_string();
   marker_string->set_key(42);
   marker_string->set_intern("marker");
 
-  CaptureEvent queue_submission_event_2;
+  ClientCaptureEvent queue_submission_event_2;
   GpuQueueSubmission* submission_2 = queue_submission_event_2.mutable_gpu_queue_submission();
   CreateGpuQueueSubmissionMetaInfo(submission_2, 49, 51);
   GpuSubmitInfo* submit_info_2 = submission_2->add_submit_infos();
@@ -951,7 +951,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  CaptureEvent running_event;
+  ClientCaptureEvent running_event;
   ThreadStateSlice* running_thread_state_slice = running_event.mutable_thread_state_slice();
   running_thread_state_slice->set_duration_ns(100);
   running_thread_state_slice->set_end_timestamp_ns(200);
@@ -959,7 +959,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   running_thread_state_slice->set_tid(24);
   running_thread_state_slice->set_thread_state(ThreadStateSlice::kRunning);
 
-  CaptureEvent runnable_event;
+  ClientCaptureEvent runnable_event;
   ThreadStateSlice* runnable_thread_state_slice = runnable_event.mutable_thread_state_slice();
   runnable_thread_state_slice->set_duration_ns(100);
   runnable_thread_state_slice->set_end_timestamp_ns(200);
@@ -967,7 +967,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   runnable_thread_state_slice->set_tid(24);
   runnable_thread_state_slice->set_thread_state(ThreadStateSlice::kRunnable);
 
-  CaptureEvent dead_event;
+  ClientCaptureEvent dead_event;
   ThreadStateSlice* dead_thread_state_slice = dead_event.mutable_thread_state_slice();
   dead_thread_state_slice->set_duration_ns(100);
   dead_thread_state_slice->set_end_timestamp_ns(200);
@@ -1017,8 +1017,8 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  std::vector<CaptureEvent> events;
-  CaptureEvent event_1;
+  std::vector<ClientCaptureEvent> events;
+  ClientCaptureEvent event_1;
   ThreadName* thread_name = event_1.mutable_thread_name();
   thread_name->set_pid(42);
   thread_name->set_tid(24);
@@ -1028,7 +1028,7 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
 
   EXPECT_CALL(listener, OnThreadName(thread_name->tid(), thread_name->name())).Times(1);
 
-  CaptureEvent event_2;
+  ClientCaptureEvent event_2;
   AddressInfo* address_info = event_2.mutable_address_info();
   address_info->set_absolute_address(42);
   address_info->set_function_name("Function");

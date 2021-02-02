@@ -30,7 +30,7 @@ using orbit_grpc_protos::CaptureResponse;
 
 namespace {
 
-using orbit_grpc_protos::CaptureEvent;
+using orbit_grpc_protos::ClientCaptureEvent;
 
 class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
  public:
@@ -40,7 +40,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
     sender_thread_ = std::thread{[this] { SenderThread(); }};
   }
 
-  void AddEvent(orbit_grpc_protos::CaptureEvent&& event) override {
+  void AddEvent(ClientCaptureEvent&& event) override {
     absl::MutexLock lock{&event_buffer_mutex_};
     if (stop_requested_) {
       return;
@@ -83,14 +83,14 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
       if (stop_requested_) {
         stopped = true;
       }
-      std::vector<CaptureEvent> buffered_events = std::move(event_buffer_);
+      std::vector<ClientCaptureEvent> buffered_events = std::move(event_buffer_);
       event_buffer_.clear();
       event_buffer_mutex_.Unlock();
       capture_event_sender_->SendEvents(std::move(buffered_events));
     }
   }
 
-  std::vector<orbit_grpc_protos::CaptureEvent> event_buffer_;
+  std::vector<ClientCaptureEvent> event_buffer_;
   absl::Mutex event_buffer_mutex_;
   CaptureEventSender* capture_event_sender_;
   std::thread sender_thread_;
@@ -117,7 +117,7 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
     LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 
-  void SendEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& events) override {
+  void SendEvents(std::vector<ClientCaptureEvent>&& events) override {
     ORBIT_SCOPE_FUNCTION;
     ORBIT_UINT64("Number of buffered events sent", events.size());
     if (events.empty()) {
@@ -127,7 +127,7 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
     constexpr uint64_t kMaxEventsPerResponse = 10'000;
     uint64_t number_of_bytes_sent = 0;
     CaptureResponse response;
-    for (CaptureEvent& event : events) {
+    for (ClientCaptureEvent& event : events) {
       // We buffer to avoid sending countless tiny messages, but we also want to
       // avoid huge messages, which would cause the capture on the client to jump
       // forward in time in few big steps and not look live anymore.

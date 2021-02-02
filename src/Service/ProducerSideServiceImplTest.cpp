@@ -110,7 +110,7 @@ class FakeProducer {
 
 class MockCaptureEventBuffer : public CaptureEventBuffer {
  public:
-  MOCK_METHOD(void, AddEvent, (orbit_grpc_protos::CaptureEvent && event), (override));
+  MOCK_METHOD(void, AddEvent, (orbit_grpc_protos::ClientCaptureEvent && event), (override));
 };
 
 class ProducerSideServiceImplTest : public ::testing::Test {

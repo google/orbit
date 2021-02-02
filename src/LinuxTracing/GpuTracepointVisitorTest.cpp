@@ -28,7 +28,7 @@ namespace {
 class MockTracerListener : public TracerListener {
  public:
   MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
-  MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::CallstackSample), (override));
+  MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::FullCallstackSample), (override));
   MOCK_METHOD(void, OnFunctionCall, (orbit_grpc_protos::FunctionCall), (override));
   MOCK_METHOD(void, OnIntrospectionScope, (orbit_grpc_protos::IntrospectionScope), (override));
   MOCK_METHOD(void, OnGpuJob, (orbit_grpc_protos::GpuJob gpu_job), (override));

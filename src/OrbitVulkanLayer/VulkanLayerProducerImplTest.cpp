@@ -170,7 +170,7 @@ TEST_F(VulkanLayerProducerImplTest, WorksWithNoListener) {
 TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent()));
+  EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
@@ -187,14 +187,14 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
   int32_t capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+                         const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  EXPECT_TRUE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent()));
-  EXPECT_TRUE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent()));
-  EXPECT_TRUE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent()));
+  EXPECT_TRUE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
+  EXPECT_TRUE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
+  EXPECT_TRUE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_EQ(capture_events_received_count, 3);
 
@@ -211,7 +211,7 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
 
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent()));
+  EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
@@ -227,15 +227,16 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
 
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent()));
+  EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
 }
 
 static void ExpectInternedStrings(
-    const std::vector<orbit_grpc_protos::CaptureEvent>& actual_events,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& actual_events,
     const std::vector<std::pair<std::string, uint64_t>>& expected_interns) {
   ASSERT_EQ(actual_events.size(), expected_interns.size());
   for (size_t i = 0; i < actual_events.size(); ++i) {
-    ASSERT_EQ(actual_events[i].event_case(), orbit_grpc_protos::CaptureEvent::kInternedString);
+    ASSERT_EQ(actual_events[i].event_case(),
+              orbit_grpc_protos::ProducerCaptureEvent::kInternedString);
     EXPECT_EQ(actual_events[i].interned_string().intern(), expected_interns[i].first);
     EXPECT_EQ(actual_events[i].interned_string().key(), expected_interns[i].second);
   }
@@ -251,11 +252,11 @@ TEST_F(VulkanLayerProducerImplTest, InternStringIfNecessaryAndGetKey) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events_received;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events_received;
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly(
-          [&events_received](const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+          [&events_received](const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
             events_received.insert(events_received.end(), events.begin(), events.end());
           });
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -314,11 +315,11 @@ TEST_F(VulkanLayerProducerImplTest, DontSendInternTwice) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events_received;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events_received;
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(1)
       .WillRepeatedly(
-          [&events_received](const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+          [&events_received](const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
             events_received.insert(events_received.end(), events.begin(), events.end());
           });
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -357,11 +358,11 @@ TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events_received;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events_received;
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly(
-          [&events_received](const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+          [&events_received](const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
             events_received.insert(events_received.end(), events.begin(), events.end());
           });
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -407,7 +408,7 @@ TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly(
-          [&events_received](const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+          [&events_received](const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
             events_received.insert(events_received.end(), events.begin(), events.end());
           });
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
@@ -486,11 +487,11 @@ TEST_F(VulkanLayerProducerImplTest, InternOnlyWhenCapturing) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events_received;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events_received;
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly(
-          [&events_received](const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+          [&events_received](const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
             events_received.insert(events_received.end(), events.begin(), events.end());
           });
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);

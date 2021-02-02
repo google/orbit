@@ -14,7 +14,7 @@ namespace orbit_service {
 class CaptureEventSender {
  public:
   virtual ~CaptureEventSender() = default;
-  virtual void SendEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& events) = 0;
+  virtual void SendEvents(std::vector<orbit_grpc_protos::ClientCaptureEvent>&& events) = 0;
 };
 
 }  // namespace orbit_service

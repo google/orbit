@@ -145,7 +145,7 @@ class ChildProcess {
 class BufferTracerListener : public TracerListener {
  public:
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_scheduling_slice() = std::move(scheduling_slice);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -157,9 +157,9 @@ class BufferTracerListener : public TracerListener {
     }
   }
 
-  void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) override {
-    orbit_grpc_protos::CaptureEvent event;
-    *event.mutable_callstack_sample() = std::move(callstack_sample);
+  void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_full_callstack_sample() = std::move(callstack_sample);
     {
       absl::MutexLock lock{&events_mutex_};
       events_.emplace_back(std::move(event));
@@ -167,7 +167,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_function_call() = std::move(function_call);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -176,7 +176,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_scope) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_introspection_scope() = std::move(introspection_scope);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -185,7 +185,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_gpu_job() = std::move(gpu_job);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -194,7 +194,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_thread_name() = std::move(thread_name);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -203,7 +203,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_thread_state_slice() = std::move(thread_state_slice);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -212,7 +212,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_address_info() = std::move(address_info);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -221,7 +221,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_tracepoint_event() = std::move(tracepoint_event);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -230,7 +230,7 @@ class BufferTracerListener : public TracerListener {
   }
 
   void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override {
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_module_update_event() = std::move(module_update_event);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -238,9 +238,9 @@ class BufferTracerListener : public TracerListener {
     }
   }
 
-  [[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent> GetAndClearEvents() {
+  [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> GetAndClearEvents() {
     absl::MutexLock lock{&events_mutex_};
-    std::vector<orbit_grpc_protos::CaptureEvent> events = std::move(events_);
+    std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = std::move(events_);
     events_.clear();
     return events;
   }
@@ -253,7 +253,7 @@ class BufferTracerListener : public TracerListener {
   }
 
  private:
-  std::vector<orbit_grpc_protos::CaptureEvent> events_;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events_;
   absl::Mutex events_mutex_;
 
   bool one_scheduling_slice_received_ = false;
@@ -299,12 +299,12 @@ class LinuxTracingIntegrationTestFixture {
     listener_->WaitForAtLeastOneSchedulingSlice();
   }
 
-  [[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent> StopTracingAndGetEvents() {
+  [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> StopTracingAndGetEvents() {
     CHECK(tracer_.has_value());
     CHECK(listener_.has_value());
     tracer_->Stop();
     tracer_.reset();
-    std::vector<orbit_grpc_protos::CaptureEvent> events = listener_->GetAndClearEvents();
+    std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = listener_->GetAndClearEvents();
     listener_.reset();
     return events;
   }
@@ -317,7 +317,7 @@ class LinuxTracingIntegrationTestFixture {
 
 using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
 
-[[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent> TraceAndGetEvents(
+[[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> TraceAndGetEvents(
     LinuxTracingIntegrationTestFixture* fixture, std::string_view command,
     std::optional<orbit_grpc_protos::CaptureOptions> capture_options = std::nullopt) {
   CHECK(fixture != nullptr);
@@ -373,54 +373,56 @@ orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
   return *executable_module_info;
 }
 
-void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   uint64_t previous_event_timestamp_ns = 0;
   for (const auto& event : events) {
     switch (event.event_case()) {
-      case orbit_grpc_protos::CaptureEvent::kSchedulingSlice:
+      case orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice:
         EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::kInternedCallstack:
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
         UNREACHABLE();
-      case orbit_grpc_protos::CaptureEvent::kCallstackSample:
-        EXPECT_GE(event.callstack_sample().timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.callstack_sample().timestamp_ns();
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstackSample:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullCallstackSample:
+        EXPECT_GE(event.full_callstack_sample().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.full_callstack_sample().timestamp_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::kFunctionCall:
+      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall:
         EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::kIntrospectionScope:
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionScope:
         UNREACHABLE();
-      case orbit_grpc_protos::CaptureEvent::kInternedString:
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
         UNREACHABLE();
-      case orbit_grpc_protos::CaptureEvent::kGpuJob:
+      case orbit_grpc_protos::ProducerCaptureEvent::kGpuJob:
         EXPECT_GE(event.gpu_job().dma_fence_signaled_time_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.gpu_job().dma_fence_signaled_time_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::kThreadName:
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadName:
         EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_name().timestamp_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::kThreadStateSlice:
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSlice:
         EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::kAddressInfo:
+      case orbit_grpc_protos::ProducerCaptureEvent::kAddressInfo:
         // AddressInfos have no timestamp.
         break;
-      case orbit_grpc_protos::CaptureEvent::kInternedTracepointInfo:
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedTracepointInfo:
         UNREACHABLE();
-      case orbit_grpc_protos::CaptureEvent::kTracepointEvent:
+      case orbit_grpc_protos::ProducerCaptureEvent::kTracepointEvent:
         UNREACHABLE();
-      case orbit_grpc_protos::CaptureEvent::kGpuQueueSubmission:
+      case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
         UNREACHABLE();
-      case orbit_grpc_protos::CaptureEvent::kModuleUpdateEvent:
+      case orbit_grpc_protos::ProducerCaptureEvent::kModuleUpdateEvent:
         EXPECT_GE(event.module_update_event().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.module_update_event().timestamp_ns();
         break;
-      case orbit_grpc_protos::CaptureEvent::EVENT_NOT_SET:
+      case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
     }
   }
@@ -432,7 +434,7 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   }
   LinuxTracingIntegrationTestFixture fixture;
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
 
   VerifyOrderOfAllEvents(events);
@@ -440,7 +442,7 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   uint64_t scheduling_slice_count = 0;
   uint64_t last_out_timestamp_ns = 0;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kSchedulingSlice) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice) {
       continue;
     }
 
@@ -500,11 +502,11 @@ void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions*
 }
 
 void VerifyFunctionCallsOfOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kFunctionCall) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall) {
       continue;
     }
 
@@ -563,7 +565,7 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
   AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
                                            kOuterFunctionId, kInnerFunctionId);
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
@@ -604,13 +606,13 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
 }
 
 absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::CaptureEvent>& events,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events,
     const std::filesystem::path& executable_path,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range) {
   absl::flat_hash_set<uint64_t> address_infos_received;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kAddressInfo) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kAddressInfo) {
       continue;
     }
 
@@ -644,7 +646,7 @@ absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received, bool unwound_with_frame_pointers) {
@@ -653,11 +655,11 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
   uint64_t first_matching_callstack_timestamp_ns = std::numeric_limits<uint64_t>::max();
   uint64_t last_matching_callstack_timestamp_ns = 0;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kCallstackSample) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kFullCallstackSample) {
       continue;
     }
 
-    const orbit_grpc_protos::CallstackSample& callstack_sample = event.callstack_sample();
+    const orbit_grpc_protos::FullCallstackSample& callstack_sample = event.full_callstack_sample();
 
     // All CallstackSamples should be ordered by timestamp.
     EXPECT_GT(callstack_sample.timestamp_ns(), previous_callstack_timestamp_ns);
@@ -668,8 +670,6 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     // The puppet is expected single-threaded.
     ASSERT_EQ(callstack_sample.tid(), pid);
 
-    ASSERT_EQ(callstack_sample.callstack_or_key_case(),
-              orbit_grpc_protos::CallstackSample::kCallstack);
     const orbit_grpc_protos::Callstack& callstack = callstack_sample.callstack();
     for (int32_t pc_index = 0; pc_index < callstack.pcs_size(); ++pc_index) {
       // We found one of the callstacks we are looking for: it contains the "inner" function's
@@ -721,7 +721,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
-    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received) {
@@ -731,7 +731,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunctionForFramePointerUnwinding(
-    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received) {
@@ -753,7 +753,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   const double sampling_rate = capture_options.sampling_rate();
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
@@ -785,7 +785,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
                                            kOuterFunctionId, kInnerFunctionId);
   const double sampling_rate = capture_options.sampling_rate();
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
@@ -803,9 +803,9 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
       inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
 
-void VerifyNoAddressInfos(const std::vector<orbit_grpc_protos::CaptureEvent>& events) {
+void VerifyNoAddressInfos(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   for (const auto& event : events) {
-    EXPECT_NE(event.event_case(), orbit_grpc_protos::CaptureEvent::kAddressInfo);
+    EXPECT_NE(event.event_case(), orbit_grpc_protos::ProducerCaptureEvent::kAddressInfo);
   }
 }
 
@@ -822,7 +822,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
   const double sampling_rate = capture_options.sampling_rate();
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
@@ -854,7 +854,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
                                            kOuterFunctionId, kInnerFunctionId);
   const double sampling_rate = capture_options.sampling_rate();
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
@@ -875,7 +875,7 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
   }
   LinuxTracingIntegrationTestFixture fixture;
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
 
   VerifyOrderOfAllEvents(events);
@@ -885,7 +885,7 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
   uint64_t interruptible_sleep_slice_count = 0;
   uint64_t last_end_timestamp_ns = 0;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kThreadStateSlice) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSlice) {
       continue;
     }
 
@@ -939,14 +939,14 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
   // save the actual initial name so that we can later verify that it was received.
   std::string initial_puppet_name = orbit_base::GetThreadName(fixture.GetPuppetPid());
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kPthreadSetnameNpCommand);
 
   VerifyOrderOfAllEvents(events);
 
   std::vector<std::string> collected_event_names;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kThreadName) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kThreadName) {
       continue;
     }
 
@@ -970,14 +970,14 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
   }
   LinuxTracingIntegrationTestFixture fixture;
 
-  std::vector<orbit_grpc_protos::CaptureEvent> events =
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kDlopenCommand);
 
   VerifyOrderOfAllEvents(events);
 
   bool module_update_found = false;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::CaptureEvent::kModuleUpdateEvent) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kModuleUpdateEvent) {
       continue;
     }
 

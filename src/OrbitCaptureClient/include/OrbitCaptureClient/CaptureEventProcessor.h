@@ -22,7 +22,7 @@ class CaptureEventProcessor {
   explicit CaptureEventProcessor(CaptureListener* capture_listener)
       : capture_listener_(capture_listener) {}
 
-  void ProcessEvent(const orbit_grpc_protos::CaptureEvent& event);
+  void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event);
 
   template <typename Iterable>
   void ProcessEvents(const Iterable& events) {
@@ -34,7 +34,7 @@ class CaptureEventProcessor {
  private:
   void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
   void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
-  void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
+  void ProcessCallstackSample(const orbit_grpc_protos::InternedCallstackSample& callstack_sample);
   void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
   void ProcessIntrospectionScope(const orbit_grpc_protos::IntrospectionScope& introspection_scope);
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
