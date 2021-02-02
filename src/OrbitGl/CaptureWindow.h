@@ -24,7 +24,6 @@ class OrbitApp;
 class CaptureWindow : public GlCanvas {
  public:
   explicit CaptureWindow(OrbitApp* app);
-  ~CaptureWindow() override;
 
   void Initialize() override;
   void ZoomAll();

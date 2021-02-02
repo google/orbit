@@ -35,9 +35,8 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
 uint64_t AbsDiff(uint64_t a, uint64_t b) {
   if (a > b) {
     return a - b;
-  } else {
-    return b - a;
   }
+  return b - a;
 }
 
 const TextBox* ClosestTo(uint64_t point, const TextBox* box_a, const TextBox* box_b) {
@@ -45,26 +44,27 @@ const TextBox* ClosestTo(uint64_t point, const TextBox* box_a, const TextBox* bo
   uint64_t b_diff = AbsDiff(point, box_b->GetTimerInfo().start());
   if (a_diff <= b_diff) {
     return box_a;
+  } else {
+    return box_b;
   }
-  return box_b;
 }
 
-const TextBox* SnapToClosestStart(uint64_t function_id) {
-  double min_us = GCurrentTimeGraph->GetMinTimeUs();
-  double max_us = GCurrentTimeGraph->GetMaxTimeUs();
+const TextBox* SnapToClosestStart(const TimeGraph* time_graph, uint64_t function_id) {
+  double min_us = time_graph->GetMinTimeUs();
+  double max_us = time_graph->GetMaxTimeUs();
   double center_us = 0.5 * max_us + 0.5 * min_us;
-  uint64_t center = GCurrentTimeGraph->GetTickFromUs(center_us);
+  uint64_t center = time_graph->GetTickFromUs(center_us);
 
   // First, we find the next function call (text box) that has its end timestamp
   // after center - 1 (we use center - 1 to make sure that center itself is
   // included in the timerange that we search). Note that FindNextFunctionCall
   // uses the end marker of the timer as a timestamp.
-  const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(function_id, center - 1);
+  const TextBox* box = time_graph->FindNextFunctionCall(function_id, center - 1);
 
   // If we cannot find a next function call, then the closest one is the first
   // call we find before center.
   if (!box) {
-    return GCurrentTimeGraph->FindPreviousFunctionCall(function_id, center);
+    return time_graph->FindPreviousFunctionCall(function_id, center);
   }
 
   // We have to consider the case where center falls to the right of the start
@@ -73,7 +73,7 @@ const TextBox* SnapToClosestStart(uint64_t function_id) {
   // using the start marker to measure the distance.
   if (box->GetTimerInfo().start() <= center) {
     const TextBox* next_box =
-        GCurrentTimeGraph->FindNextFunctionCall(function_id, box->GetTimerInfo().end());
+        time_graph->FindNextFunctionCall(function_id, box->GetTimerInfo().end());
     if (!next_box) {
       return box;
     }
@@ -84,7 +84,7 @@ const TextBox* SnapToClosestStart(uint64_t function_id) {
   // The center is to the left of 'box', so the closest box is either 'box' or
   // the next box to the left of the center.
   const TextBox* previous_box =
-      GCurrentTimeGraph->FindPreviousFunctionCall(function_id, box->GetTimerInfo().start());
+      time_graph->FindPreviousFunctionCall(function_id, box->GetTimerInfo().start());
 
   if (!previous_box) {
     return box;
@@ -98,10 +98,11 @@ const TextBox* SnapToClosestStart(uint64_t function_id) {
 void LiveFunctionsController::Move() {
   if (!current_textboxes_.empty()) {
     auto min_max = ComputeMinMaxTime(current_textboxes_);
-    GCurrentTimeGraph->HorizontallyMoveIntoView(TimeGraph::VisibilityType::kFullyVisible,
-                                                min_max.first, min_max.second, 0.5);
+    app_->GetMutableTimeGraph()->HorizontallyMoveIntoView(TimeGraph::VisibilityType::kFullyVisible,
+                                                          min_max.first, min_max.second, 0.5);
   }
-  GCurrentTimeGraph->SetIteratorOverlayData(current_textboxes_, iterator_id_to_function_id_);
+  app_->GetMutableTimeGraph()->SetIteratorOverlayData(current_textboxes_,
+                                                      iterator_id_to_function_id_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
@@ -112,7 +113,7 @@ bool LiveFunctionsController::OnAllNextButton() {
     uint64_t function_id = it.second;
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box =
-        GCurrentTimeGraph->FindNextFunctionCall(function_id, current_box->GetTimerInfo().end());
+        app_->GetTimeGraph()->FindNextFunctionCall(function_id, current_box->GetTimerInfo().end());
     if (box == nullptr) {
       return false;
     }
@@ -137,8 +138,8 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   for (auto it : iterator_id_to_function_id_) {
     uint64_t function_id = it.second;
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
-    const TextBox* box =
-        GCurrentTimeGraph->FindPreviousFunctionCall(function_id, current_box->GetTimerInfo().end());
+    const TextBox* box = app_->GetTimeGraph()->FindPreviousFunctionCall(
+        function_id, current_box->GetTimerInfo().end());
     if (box == nullptr) {
       return false;
     }
@@ -157,7 +158,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
+  const TextBox* text_box = app_->GetTimeGraph()->FindNextFunctionCall(
       iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (text_box != nullptr) {
@@ -167,7 +168,7 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
+  const TextBox* text_box = app_->GetTimeGraph()->FindPreviousFunctionCall(
       iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (text_box != nullptr) {
@@ -197,7 +198,7 @@ void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionIn
   // function, we search for the closest box to the current center of the
   // screen.
   if (!box || box->GetTimerInfo().function_id() != function_id) {
-    box = SnapToClosestStart(function_id);
+    box = SnapToClosestStart(app_->GetTimeGraph(), function_id);
   }
 
   iterator_id_to_function_id_.insert(std::make_pair(iterator_id, function_id));
@@ -217,12 +218,18 @@ uint64_t LiveFunctionsController::GetStartTime(uint64_t index) {
   return GetCaptureMin();
 }
 
-uint64_t LiveFunctionsController::GetCaptureMin() { return GCurrentTimeGraph->GetCaptureMin(); }
-uint64_t LiveFunctionsController::GetCaptureMax() { return GCurrentTimeGraph->GetCaptureMax(); }
+uint64_t LiveFunctionsController::GetCaptureMin() {
+  CHECK(app_ != nullptr);
+  return app_->GetTimeGraph()->GetCaptureMin();
+}
+uint64_t LiveFunctionsController::GetCaptureMax() {
+  CHECK(app_ != nullptr);
+  return app_->GetTimeGraph()->GetCaptureMax();
+}
 
 void LiveFunctionsController::Reset() {
   iterator_id_to_function_id_.clear();
   current_textboxes_.clear();
-  GCurrentTimeGraph->SetIteratorOverlayData({}, {});
+  app_->GetMutableTimeGraph()->SetIteratorOverlayData({}, {});
   id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
 }

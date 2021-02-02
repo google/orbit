@@ -91,10 +91,6 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), time_graph_(app), app_
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 }
 
-CaptureWindow::~CaptureWindow() {
-  if (GCurrentTimeGraph == &time_graph_) GCurrentTimeGraph = nullptr;
-}
-
 void CaptureWindow::OnTimer() { GlCanvas::OnTimer(); }
 
 void CaptureWindow::ZoomAll() {

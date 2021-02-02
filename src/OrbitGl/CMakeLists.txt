@@ -170,7 +170,9 @@ register_test(OrbitGlTests)
 
 add_fuzzer(CaptureDeserializerLoadFuzzer CaptureDeserializerLoadFuzzer.cpp)
 target_link_libraries(CaptureDeserializerLoadFuzzer
-                      PRIVATE OrbitGl CONAN_PKG::libprotobuf-mutator)
+                      PRIVATE OrbitGl
+                              CONAN_PKG::libprotobuf-mutator
+                              GTest::Main)
 
 add_fuzzer(ModuleListFuzzer
            ModuleListFuzzer.cpp)
