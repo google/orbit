@@ -10,7 +10,8 @@ import "capture.proto";
 
 message ReceiveCommandsAndSendEventsRequest {
   message BufferedCaptureEvents {
-    repeated CaptureEvent capture_events = 1;
+    reserved 1;
+    repeated ProducerCaptureEvent capture_events = 2;
   }
   message AllEventsSent {}
 

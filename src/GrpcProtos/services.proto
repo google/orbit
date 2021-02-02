@@ -17,7 +17,8 @@ message CaptureRequest {
 }
 
 message CaptureResponse {
-  repeated CaptureEvent capture_events = 1;
+  reserved 1;
+  repeated ClientCaptureEvent capture_events = 2;
 }
 
 service CaptureService {

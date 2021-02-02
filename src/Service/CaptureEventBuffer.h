@@ -15,7 +15,7 @@ namespace orbit_service {
 class CaptureEventBuffer {
  public:
   virtual ~CaptureEventBuffer() = default;
-  virtual void AddEvent(orbit_grpc_protos::CaptureEvent&& event) = 0;
+  virtual void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) = 0;
 };
 
 }  // namespace orbit_service

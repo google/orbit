@@ -27,7 +27,7 @@ namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
-using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
@@ -59,7 +59,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
     return;
   }
 
-  CallstackSample sample;
+  FullCallstackSample sample;
   sample.set_pid(event->GetPid());
   sample.set_tid(event->GetTid());
   sample.set_timestamp_ns(event->GetTimestamp());
@@ -112,7 +112,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  CallstackSample sample;
+  FullCallstackSample sample;
   sample.set_pid(event->GetPid());
   sample.set_tid(event->GetTid());
   sample.set_timestamp_ns(event->GetTimestamp());

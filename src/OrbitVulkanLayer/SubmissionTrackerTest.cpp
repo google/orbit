@@ -45,7 +45,7 @@ class MockVulkanLayerProducer : public VulkanLayerProducer {
  public:
   MOCK_METHOD(bool, IsCapturing, (), (override));
   MOCK_METHOD(uint64_t, InternStringIfNecessaryAndGetKey, (std::string), (override));
-  MOCK_METHOD(bool, EnqueueCaptureEvent, (orbit_grpc_protos::CaptureEvent && capture_event),
+  MOCK_METHOD(bool, EnqueueCaptureEvent, (orbit_grpc_protos::ProducerCaptureEvent && capture_event),
               (override));
 
   MOCK_METHOD(void, BringUp, (const std::shared_ptr<grpc::Channel>& channel), (override));
@@ -218,8 +218,8 @@ class SubmissionTrackerTest : public ::testing::Test {
           VkQueryResultFlags /*flags*/) -> VkResult { return VK_NOT_READY; };
 
   static void ExpectSingleCommandBufferSubmissionEq(
-      const orbit_grpc_protos::CaptureEvent& actual_capture_event, uint64_t test_pre_submit_time,
-      uint64_t test_post_submit_time, pid_t expected_tid,
+      const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event,
+      uint64_t test_pre_submit_time, uint64_t test_post_submit_time, pid_t expected_tid,
       uint64_t expected_command_buffer_begin_timestamp,
       uint64_t expected_command_buffer_end_timestamp) {
     EXPECT_TRUE(actual_capture_event.has_gpu_queue_submission());
@@ -467,9 +467,9 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -504,9 +504,9 @@ TEST_F(SubmissionTrackerTest,
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -564,9 +564,9 @@ TEST_F(SubmissionTrackerTest,
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -600,9 +600,9 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -676,9 +676,9 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   };
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(fake_reset_query_slots));
 
-  std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> actual_capture_events;
   auto fake_enqueue_capture_event =
-      [&actual_capture_events](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_events](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_events.emplace_back(std::move(capture_event));
         return true;
       };
@@ -855,9 +855,9 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -914,9 +914,9 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenBeginNotCaptured)
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -968,9 +968,9 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -1045,9 +1045,9 @@ TEST_F(SubmissionTrackerTest,
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -1122,9 +1122,9 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
       .Times(2)
       .WillOnce(SaveArg<1>(&actual_reset_slots_1))
       .WillOnce(SaveArg<1>(&actual_reset_slots_2));
-  std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> actual_capture_events;
   auto mock_enqueue_capture_event =
-      [&actual_capture_events](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_events](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_events.emplace_back(std::move(capture_event));
         return true;
       };
@@ -1171,14 +1171,16 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
               UnorderedElementsAre(kSlotIndex2, kSlotIndex4, kSlotIndex5, kSlotIndex6));
   ASSERT_EQ(actual_capture_events.size(), 2);
 
-  const orbit_grpc_protos::CaptureEvent& actual_capture_event_1 = actual_capture_events.at(0);
+  const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event_1 =
+      actual_capture_events.at(0);
   EXPECT_TRUE(actual_capture_event_1.has_gpu_queue_submission());
   const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission_1 =
       actual_capture_event_1.gpu_queue_submission();
   EXPECT_EQ(actual_queue_submission_1.num_begin_markers(), 1);
   EXPECT_EQ(actual_queue_submission_1.completed_markers_size(), 0);
 
-  const orbit_grpc_protos::CaptureEvent& actual_capture_event_2 = actual_capture_events.at(1);
+  const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event_2 =
+      actual_capture_events.at(1);
   EXPECT_TRUE(actual_capture_event_2.has_gpu_queue_submission());
   const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission_2 =
       actual_capture_event_2.gpu_queue_submission();
@@ -1202,9 +1204,9 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
       .Times(2)
       .WillOnce(SaveArg<1>(&actual_reset_slots_1))
       .WillOnce(SaveArg<1>(&actual_reset_slots_2));
-  std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> actual_capture_events;
   auto mock_enqueue_capture_event =
-      [&actual_capture_events](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_events](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_events.emplace_back(std::move(capture_event));
         return true;
       };
@@ -1246,14 +1248,16 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
   EXPECT_THAT(actual_reset_slots_2, UnorderedElementsAre(kSlotIndex2, kSlotIndex3, kSlotIndex4));
   ASSERT_EQ(actual_capture_events.size(), 2);
 
-  const orbit_grpc_protos::CaptureEvent& actual_capture_event_1 = actual_capture_events.at(0);
+  const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event_1 =
+      actual_capture_events.at(0);
   EXPECT_TRUE(actual_capture_event_1.has_gpu_queue_submission());
   const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission_1 =
       actual_capture_event_1.gpu_queue_submission();
   EXPECT_EQ(actual_queue_submission_1.num_begin_markers(), 0);
   EXPECT_EQ(actual_queue_submission_1.completed_markers_size(), 0);
 
-  const orbit_grpc_protos::CaptureEvent& actual_capture_event_2 = actual_capture_events.at(1);
+  const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event_2 =
+      actual_capture_events.at(1);
   EXPECT_TRUE(actual_capture_event_2.has_gpu_queue_submission());
   const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission_2 =
       actual_capture_event_2.gpu_queue_submission();
@@ -1276,9 +1280,9 @@ TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenEnd
       .Times(2)
       .WillOnce(SaveArg<1>(&actual_reset_slots_1))
       .WillOnce(SaveArg<1>(&actual_reset_slots_2));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -1359,9 +1363,9 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
       .Times(1)
       .WillOnce(SaveArg<1>(&actual_reset_slots));
-  orbit_grpc_protos::CaptureEvent actual_capture_event;
+  orbit_grpc_protos::ProducerCaptureEvent actual_capture_event;
   auto mock_enqueue_capture_event =
-      [&actual_capture_event](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_event](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_event = std::move(capture_event);
         return true;
       };
@@ -1430,9 +1434,9 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   };
   EXPECT_CALL(timer_query_pool_, ResetQuerySlots).WillRepeatedly(Invoke(mock_reset_query_slots));
 
-  std::vector<orbit_grpc_protos::CaptureEvent> actual_capture_events;
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> actual_capture_events;
   auto mock_enqueue_capture_event =
-      [&actual_capture_events](orbit_grpc_protos::CaptureEvent&& capture_event) {
+      [&actual_capture_events](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
         actual_capture_events.emplace_back(std::move(capture_event));
         return true;
       };
@@ -1484,14 +1488,16 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
                                    kSlotIndex6, kSlotIndex7));
   ASSERT_EQ(actual_capture_events.size(), 2);
 
-  const orbit_grpc_protos::CaptureEvent& actual_capture_event_1 = actual_capture_events.at(0);
+  const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event_1 =
+      actual_capture_events.at(0);
   EXPECT_TRUE(actual_capture_event_1.has_gpu_queue_submission());
   const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission_1 =
       actual_capture_event_1.gpu_queue_submission();
   EXPECT_EQ(actual_queue_submission_1.num_begin_markers(), 1);
   EXPECT_EQ(actual_queue_submission_1.completed_markers_size(), 0);
 
-  const orbit_grpc_protos::CaptureEvent& actual_capture_event_2 = actual_capture_events.at(1);
+  const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event_2 =
+      actual_capture_events.at(1);
   EXPECT_TRUE(actual_capture_event_2.has_gpu_queue_submission());
   const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission_2 =
       actual_capture_event_2.gpu_queue_submission();

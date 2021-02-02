@@ -15,6 +15,9 @@
 
 namespace orbit_service {
 
+using orbit_grpc_protos::ClientCaptureEvent;
+using orbit_grpc_protos::ProducerCaptureEvent;
+
 void ProducerSideServiceImpl::OnCaptureStartRequested(
     orbit_grpc_protos::CaptureOptions capture_options, CaptureEventBuffer* capture_event_buffer) {
   CHECK(capture_event_buffer != nullptr);
@@ -364,9 +367,61 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
         // capture_event_buffer_ can be nullptr if a producer sends events while not capturing.
         // Don't log an error in such a case as it could easily spam the logs.
         if (capture_event_buffer_ != nullptr) {
-          for (orbit_grpc_protos::CaptureEvent event :
+          for (const ProducerCaptureEvent& producer_event :
                request.buffered_capture_events().capture_events()) {
-            capture_event_buffer_->AddEvent(std::move(event));
+            ClientCaptureEvent client_event;
+            switch (producer_event.event_case()) {
+              case ProducerCaptureEvent::kInternedCallstack:
+                *client_event.mutable_interned_callstack() = producer_event.interned_callstack();
+                break;
+              case ProducerCaptureEvent::kSchedulingSlice:
+                *client_event.mutable_scheduling_slice() = producer_event.scheduling_slice();
+                break;
+              case ProducerCaptureEvent::kInternedCallstackSample:
+                *client_event.mutable_interned_callstack_sample() =
+                    producer_event.interned_callstack_sample();
+                break;
+              case ProducerCaptureEvent::kFullCallstackSample:
+                FATAL("This use-case is not yet supported");
+              case ProducerCaptureEvent::kFunctionCall:
+                *client_event.mutable_function_call() = producer_event.function_call();
+                break;
+              case ProducerCaptureEvent::kInternedString:
+                *client_event.mutable_interned_string() = producer_event.interned_string();
+                break;
+              case ProducerCaptureEvent::kGpuJob:
+                *client_event.mutable_gpu_job() = producer_event.gpu_job();
+                break;
+              case ProducerCaptureEvent::kGpuQueueSubmission:
+                *client_event.mutable_gpu_queue_submission() =
+                    producer_event.gpu_queue_submission();
+                break;
+              case ProducerCaptureEvent::kThreadName:
+                *client_event.mutable_thread_name() = producer_event.thread_name();
+                break;
+              case ProducerCaptureEvent::kThreadStateSlice:
+                *client_event.mutable_thread_state_slice() = producer_event.thread_state_slice();
+                break;
+              case ProducerCaptureEvent::kAddressInfo:
+                *client_event.mutable_address_info() = producer_event.address_info();
+                break;
+              case ProducerCaptureEvent::kInternedTracepointInfo:
+                *client_event.mutable_interned_tracepoint_info() =
+                    producer_event.interned_tracepoint_info();
+                break;
+              case ProducerCaptureEvent::kTracepointEvent:
+                *client_event.mutable_tracepoint_event() = producer_event.tracepoint_event();
+                break;
+              case ProducerCaptureEvent::kIntrospectionScope:
+                *client_event.mutable_introspection_scope() = producer_event.introspection_scope();
+                break;
+              case ProducerCaptureEvent::kModuleUpdateEvent:
+                *client_event.mutable_module_update_event() = producer_event.module_update_event();
+                break;
+              case ProducerCaptureEvent::EVENT_NOT_SET:
+                UNREACHABLE();
+            }
+            capture_event_buffer_->AddEvent(std::move(client_event));
           }
         }
       } break;

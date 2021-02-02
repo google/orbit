@@ -24,7 +24,7 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
 
   [[nodiscard]] bool IsCapturing() override { return lock_free_producer_.IsCapturing(); }
 
-  bool EnqueueCaptureEvent(orbit_grpc_protos::CaptureEvent&& capture_event) override {
+  bool EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent&& capture_event) override {
     return lock_free_producer_.EnqueueIntermediateEventIfCapturing(
         [&capture_event] { return capture_event; });
   }
@@ -35,7 +35,8 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
 
  private:
   class LockFreeBufferVulkanLayerProducer
-      : public orbit_producer::LockFreeBufferCaptureEventProducer<orbit_grpc_protos::CaptureEvent> {
+      : public orbit_producer::LockFreeBufferCaptureEventProducer<
+            orbit_grpc_protos::ProducerCaptureEvent> {
    public:
     explicit LockFreeBufferVulkanLayerProducer(VulkanLayerProducerImpl* outer) : outer_{outer} {}
 
@@ -63,8 +64,8 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
       outer_->ClearStringInternPool();
     }
 
-    orbit_grpc_protos::CaptureEvent TranslateIntermediateEvent(
-        orbit_grpc_protos::CaptureEvent&& intermediate_event) override {
+    orbit_grpc_protos::ProducerCaptureEvent TranslateIntermediateEvent(
+        orbit_grpc_protos::ProducerCaptureEvent&& intermediate_event) override {
       return std::move(intermediate_event);
     }
 

@@ -15,7 +15,7 @@ uint64_t VulkanLayerProducerImpl::InternStringIfNecessaryAndGetKey(std::string s
       return key;
     }
 
-    orbit_grpc_protos::CaptureEvent event;
+    orbit_grpc_protos::ProducerCaptureEvent event;
     event.mutable_interned_string()->set_key(key);
     event.mutable_interned_string()->set_intern(std::move(str));
     if (!EnqueueCaptureEvent(std::move(event))) {

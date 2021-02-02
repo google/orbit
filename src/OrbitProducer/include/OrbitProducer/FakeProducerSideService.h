@@ -32,7 +32,7 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
                 orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::EVENT_NOT_SET);
       switch (request.event_case()) {
         case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents: {
-          std::vector<orbit_grpc_protos::CaptureEvent> capture_events_received{
+          std::vector<orbit_grpc_protos::ProducerCaptureEvent> capture_events_received{
               request.buffered_capture_events().capture_events().begin(),
               request.buffered_capture_events().capture_events().end()};
           OnCaptureEventsReceived(capture_events_received);
@@ -88,7 +88,7 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   void ReAllowRpc() { rpc_allowed_ = true; }
 
   MOCK_METHOD(void, OnCaptureEventsReceived,
-              (const std::vector<orbit_grpc_protos::CaptureEvent>& events), ());
+              (const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events), ());
   MOCK_METHOD(void, OnAllEventsSentReceived, (), ());
 
  private:

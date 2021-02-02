@@ -18,11 +18,12 @@ namespace orbit_service {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
-using orbit_grpc_protos::CallstackSample;
-using orbit_grpc_protos::CaptureEvent;
 using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::ClientCaptureEvent;
+using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuJob;
+using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
@@ -68,30 +69,32 @@ void LinuxTracingHandler::Stop() {
 }
 
 void LinuxTracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_scheduling_slice() = std::move(scheduling_slice);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void LinuxTracingHandler::OnCallstackSample(CallstackSample callstack_sample) {
-  CHECK(callstack_sample.callstack_or_key_case() == CallstackSample::kCallstack);
-  callstack_sample.set_callstack_key(
+void LinuxTracingHandler::OnCallstackSample(FullCallstackSample callstack_sample) {
+  ClientCaptureEvent event;
+  InternedCallstackSample* interned_callstack_sample = event.mutable_interned_callstack_sample();
+  interned_callstack_sample->set_pid(callstack_sample.pid());
+  interned_callstack_sample->set_tid(callstack_sample.tid());
+  interned_callstack_sample->set_timestamp_ns(callstack_sample.timestamp_ns());
+  interned_callstack_sample->set_callstack_id(
       InternCallstackIfNecessaryAndGetKey(callstack_sample.callstack()));
 
-  CaptureEvent event;
-  *event.mutable_callstack_sample() = std::move(callstack_sample);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnFunctionCall(FunctionCall function_call) {
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_function_call() = std::move(function_call);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnIntrospectionScope(
     orbit_grpc_protos::IntrospectionScope introspection_scope) {
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_introspection_scope() = std::move(introspection_scope);
   capture_event_buffer_->AddEvent(std::move(event));
 }
@@ -101,19 +104,19 @@ void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
   gpu_job.set_timeline_key(
       InternStringIfNecessaryAndGetKey(std::move(*gpu_job.mutable_timeline())));
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_gpu_job() = std::move(gpu_job);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnThreadName(ThreadName thread_name) {
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_thread_name() = std::move(thread_name);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice) {
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_thread_state_slice() = std::move(thread_state_slice);
   capture_event_buffer_->AddEvent(std::move(event));
 }
@@ -134,7 +137,7 @@ void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
   address_info.set_map_name_key(
       InternStringIfNecessaryAndGetKey(std::move(*address_info.mutable_map_name())));
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_address_info() = std::move(address_info);
   capture_event_buffer_->AddEvent(std::move(event));
 }
@@ -145,13 +148,13 @@ void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent t
   tracepoint_event.set_tracepoint_info_key(
       InternTracepointInfoIfNecessaryAndGetKey(tracepoint_event.tracepoint_info()));
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_tracepoint_event() = std::move(tracepoint_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void LinuxTracingHandler::OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) {
-  orbit_grpc_protos::CaptureEvent event;
+  ClientCaptureEvent event;
   *event.mutable_module_update_event() = std::move(module_update_event);
 
   capture_event_buffer_->AddEvent(std::move(event));
@@ -171,7 +174,7 @@ uint64_t LinuxTracingHandler::InternCallstackIfNecessaryAndGetKey(const Callstac
     callstack_to_id_.insert_or_assign(std::move(callstack_vector), callstack_id);
   }
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   event.mutable_interned_callstack()->set_key(callstack_id);
   *event.mutable_interned_callstack()->mutable_intern() = callstack;
   capture_event_buffer_->AddEvent(std::move(event));
@@ -192,7 +195,7 @@ uint64_t LinuxTracingHandler::InternStringIfNecessaryAndGetKey(std::string str) 
     string_keys_sent_.emplace(key);
   }
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   event.mutable_interned_string()->set_key(key);
   event.mutable_interned_string()->set_intern(std::move(str));
   capture_event_buffer_->AddEvent(std::move(event));
@@ -211,7 +214,7 @@ uint64_t LinuxTracingHandler::InternTracepointInfoIfNecessaryAndGetKey(
     tracepoint_keys_sent_.emplace(key);
   }
 
-  CaptureEvent event;
+  ClientCaptureEvent event;
   event.mutable_interned_tracepoint_info()->set_key(key);
   event.mutable_interned_tracepoint_info()->mutable_intern()->set_name(tracepoint_info.name());
   event.mutable_interned_tracepoint_info()->mutable_intern()->set_category(

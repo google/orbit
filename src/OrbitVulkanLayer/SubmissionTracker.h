@@ -481,7 +481,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
     std::vector<uint32_t> query_slots_to_reset = {};
     for (const auto& completed_submission : completed_submissions) {
-      orbit_grpc_protos::CaptureEvent capture_event;
+      orbit_grpc_protos::ProducerCaptureEvent capture_event;
       orbit_grpc_protos::GpuQueueSubmission* submission_proto =
           capture_event.mutable_gpu_queue_submission();
       WriteMetaInfo(completed_submission.meta_information, submission_proto->mutable_meta_info());

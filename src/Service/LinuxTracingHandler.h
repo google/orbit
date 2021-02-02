@@ -38,7 +38,7 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
   void Stop();
 
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override;
-  void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) override;
+  void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) override;
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override;
   void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_call) override;
   void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override;

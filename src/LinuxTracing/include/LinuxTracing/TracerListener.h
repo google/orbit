@@ -13,7 +13,7 @@ class TracerListener {
  public:
   virtual ~TracerListener() = default;
   virtual void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) = 0;
-  virtual void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) = 0;
+  virtual void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) = 0;
   virtual void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) = 0;
   virtual void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_scope) = 0;
   virtual void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) = 0;
