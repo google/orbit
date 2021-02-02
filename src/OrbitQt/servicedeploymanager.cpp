@@ -24,7 +24,9 @@
 
 #include "Error.h"
 #include "EventLoop.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Promise.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
@@ -82,10 +84,11 @@ void DeferToBackgroundThreadAndWait(QObject* context, Func&& func) {
   QEventLoop waiting_loop;  // This event loop processes main thread events while we wait for the
                             // background thread to finish executing func();
 
-  QMetaObject::invokeMethod(context, [func = std::forward<Func>(func), &waiting_loop]() {
-    func();
-    QMetaObject::invokeMethod(&waiting_loop, &QEventLoop::quit);
-  });
+  QMetaObject::invokeMethod(
+      context, [func = std::forward<Func>(func), waiting_loop = QPointer{&waiting_loop}]() mutable {
+        func();
+        if (waiting_loop) QMetaObject::invokeMethod(waiting_loop, &QEventLoop::quit);
+      });
 
   waiting_loop.exec();
 }
@@ -280,12 +283,18 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
 
 ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocal(std::string source,
                                                            std::string destination) {
-  ErrorMessageOr<void> result = outcome::success();
+  orbit_base::Promise<ErrorMessageOr<void>> promise;
+  auto future = promise.GetFuture();
+
   DeferToBackgroundThreadAndWait(
-      this, [&, source = std::move(source), destination = std::move(destination)]() {
-        result = CopyFileToLocalImpl(source, destination);
+      this, [this, source = std::move(source), destination = std::move(destination),
+             promise = std::move(promise)]() mutable {
+        promise.SetResult(CopyFileToLocalImpl(source, destination));
       });
-  return result;
+
+  if (!future.IsFinished()) return ErrorMessage{"Copy operation was aborted."};
+
+  return future.Get();
 }
 
 ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocalImpl(std::string_view source,
