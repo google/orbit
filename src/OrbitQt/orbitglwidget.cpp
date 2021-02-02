@@ -34,6 +34,9 @@
 #define ORBIT_DEBUG_OPEN_GL 0
 
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
+  QSurfaceFormat requested_format = QSurfaceFormat::defaultFormat();
+  LOG("OpenGL version requested: %i.%i", requested_format.majorVersion(),
+      requested_format.minorVersion());
   gl_canvas_ = nullptr;
   debug_logger_ = nullptr;
   setFocusPolicy(Qt::WheelFocus);
