@@ -136,8 +136,11 @@ PresetLoadState GetPresetLoadStateForProcess(
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor,
+                   const orbit_crash_handler::CrashHandlerBase* crash_handler,
                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : main_thread_executor_(main_thread_executor), metrics_uploader_(metrics_uploader) {
+    : main_thread_executor_(main_thread_executor),
+      crash_handler_(crash_handler),
+      metrics_uploader_(metrics_uploader) {
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
@@ -313,8 +316,9 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 
 std::unique_ptr<OrbitApp> OrbitApp::Create(
     MainThreadExecutor* main_thread_executor,
+    const orbit_crash_handler::CrashHandlerBase* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  auto app = std::make_unique<OrbitApp>(main_thread_executor, metrics_uploader);
+  auto app = std::make_unique<OrbitApp>(main_thread_executor, crash_handler, metrics_uploader);
 
 #ifdef _WIN32
   oqpi::default_helpers::start_default_scheduler();
@@ -1283,6 +1287,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
               "Unable to load symbols for %s from file %s: %s", module_data->file_path(),
               symbols_path.string(), result.error().message())};
           ERROR("%s", error_message);
+          crash_handler_->DumpWithoutCrash();
           SendErrorToUi("Unexpected error while loading symbols", error_message);
           return;
         }

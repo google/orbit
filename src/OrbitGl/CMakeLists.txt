@@ -124,7 +124,8 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitGl
-  PUBLIC GrpcProtos
+  PUBLIC CrashHandler
+         GrpcProtos
          MetricsUploader
          OrbitAccessibility
          OrbitCore

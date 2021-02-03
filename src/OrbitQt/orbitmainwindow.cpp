@@ -148,11 +148,12 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
+                                 const orbit_crash_handler::CrashHandlerBase* crash_handler,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  const QStringList& command_line_flags)
     : QMainWindow(nullptr),
       main_thread_executor_{orbit_qt_utils::MainThreadExecutorImpl::Create()},
-      app_{OrbitApp::Create(main_thread_executor_.get(), metrics_uploader)},
+      app_{OrbitApp::Create(main_thread_executor_.get(), crash_handler, metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
       target_configuration_(std::move(target_configuration)) {
