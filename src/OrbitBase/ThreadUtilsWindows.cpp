@@ -68,4 +68,6 @@ void SetCurrentThreadName(const std::string& name) {
   }
 }
 
+uint32_t GetCurrentProcessId() { return ::GetCurrentProcessId(); }
+
 }  // namespace orbit_base

@@ -51,4 +51,6 @@ void SetCurrentThreadName(const std::string& thread_name) {
   }
 }
 
+pid_t GetCurrentProcessId() { return getpid(); }
+
 }  // namespace orbit_base
