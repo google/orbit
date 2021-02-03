@@ -141,4 +141,19 @@ TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
   EXPECT_EQ(future2.Get(), 42 + 42);
 }
 
+TEST(MainThreadExecutorImpl, TrySchedule) {
+  QCoreApplication app{argc, nullptr};
+
+  auto executor = MainThreadExecutorImpl::Create();
+  const auto result = TrySchedule(executor, []() { QCoreApplication::exit(42); });
+
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(app.exec(), 42);
+}
+
+TEST(MainThreadExecutorImpl, TryScheduleWithInvalidWeakPtr) {
+  const auto result = TrySchedule(std::weak_ptr<MainThreadExecutor>{}, []() {});
+  EXPECT_FALSE(result.has_value());
+}
+
 }  // namespace orbit_qt
