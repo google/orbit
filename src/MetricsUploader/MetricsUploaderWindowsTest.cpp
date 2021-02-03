@@ -23,6 +23,12 @@ TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSetup) {
   EXPECT_EQ(metrics_uploader.has_value(), false);
 }
 
+TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutShutdown) {
+  auto metrics_uploader =
+      MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutShutdown");
+  EXPECT_EQ(metrics_uploader.has_value(), false);
+}
+
 TEST(MetricsUploader, SetupMetricsUploaderWithError) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderSetupWithErrorClient");
