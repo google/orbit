@@ -14,7 +14,7 @@
 namespace orbit_metrics_uploader {
 
 constexpr const char* kSendLogEventFunctionName = "SendOrbitLogEvent";
-constexpr const char* kStartUploaderClientFunctionName = "StartUploaderClient";
+constexpr const char* kSetupConnectionFunctionName = "SetupConnection";
 
 MetricsUploader::MetricsUploader(std::string client_name, std::string session_uuid,
                                  Result (*send_log_event_addr)(const uint8_t*, int),
@@ -70,11 +70,11 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
     return ErrorMessage("Metrics uploader client library is not found");
   }
 
-  auto start_uploader_client_addr = reinterpret_cast<Result (*)()>(
-      GetProcAddress(metrics_uploader_client_dll, kStartUploaderClientFunctionName));
-  if (nullptr == start_uploader_client_addr) {
+  auto setup_connection_addr = reinterpret_cast<Result (*)()>(
+      GetProcAddress(metrics_uploader_client_dll, kSetupConnectionFunctionName));
+  if (nullptr == setup_connection_addr) {
     FreeLibrary(metrics_uploader_client_dll);
-    return ErrorMessage(absl::StrFormat("%s function not found", kStartUploaderClientFunctionName));
+    return ErrorMessage(absl::StrFormat("%s function not found", kSetupConnectionFunctionName));
   }
 
   auto send_log_event_addr = reinterpret_cast<Result (*)(const uint8_t*, int)>(
@@ -85,7 +85,7 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
   }
 
   // set up connection and create a client
-  Result result = start_uploader_client_addr();
+  Result result = setup_connection_addr();
   if (result != kNoError) {
     FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("Error while starting the metrics uploader client: %s",

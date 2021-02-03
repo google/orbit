@@ -13,7 +13,7 @@ using orbit_metrics_uploader::OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE;
 using orbit_metrics_uploader::Result;
 
 extern "C" {
-__declspec(dllexport) enum Result StartUploaderClient() { return Result::kNoError; }
+__declspec(dllexport) enum Result SetupConnection() { return Result::kNoError; }
 __declspec(dllexport) enum Result SendOrbitLogEvent(uint8_t* serialized_proto, int length) {
   OrbitLogEvent log_event;
   bool result = log_event.ParseFromArray(serialized_proto, length);
