@@ -8,6 +8,7 @@
 #include <string>
 
 #include "CoreUtils.h"
+#include "OrbitBase/Logging.h"
 #include "absl/flags/flag.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
@@ -60,7 +61,7 @@ std::filesystem::path Path::CreateOrGetOrbitAppDataDir() {
   return path;
 }
 
-std::filesystem::path Path::GetLogFilePathAndCreateDir() {
+std::filesystem::path Path::CreateOrGetLogDir() {
   std::filesystem::path logs_dir;
   if (!absl::GetFlag(FLAGS_log_dir).empty()) {
     logs_dir = absl::GetFlag(FLAGS_log_dir);
@@ -68,5 +69,9 @@ std::filesystem::path Path::GetLogFilePathAndCreateDir() {
     logs_dir = Path::CreateOrGetOrbitAppDataDir() / "logs";
   }
   std::filesystem::create_directory(logs_dir);
-  return logs_dir / "Orbit.log";
+  return logs_dir;
+}
+
+std::filesystem::path Path::GetLogFilePath() {
+  return Path::CreateOrGetLogDir() / GetLogFileName();
 }

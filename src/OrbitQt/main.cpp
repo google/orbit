@@ -262,7 +262,7 @@ int main(int argc, char* argv[]) {
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
-  InitLogFile(Path::GetLogFilePathAndCreateDir());
+  InitLogFile(Path::GetLogFilePath());
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
 
 #if __linux__
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]) {
   const std::string handler_path =
       QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
   const std::string crash_server_url = CrashServerOptions::GetUrl();
-  const std::vector<std::string> attachments = {Path::GetLogFilePathAndCreateDir().string()};
+  const std::vector<std::string> attachments = {Path::GetLogFilePath().string()};
 
   CrashHandler crash_handler(dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING

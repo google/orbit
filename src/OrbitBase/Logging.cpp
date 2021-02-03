@@ -6,14 +6,23 @@
 
 #include <array>
 
+#include "OrbitBase/ThreadUtils.h"
 #include "absl/base/const_init.h"
 #include "absl/debugging/stacktrace.h"
 #include "absl/debugging/symbolize.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 
 static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;
+
+std::string GetLogFileName() {
+  std::string timestamp_string =
+      absl::FormatTime(kLogFileNameTimeFormat, absl::Now(), absl::LocalTimeZone());
+  return absl::StrFormat(kLogFileNameDelimiter, timestamp_string,
+                         static_cast<uint32_t>(orbit_base::GetCurrentProcessId()));
+}
 
 void InitLogFile(const std::filesystem::path& path) {
   absl::MutexLock lock(&log_file_mutex);

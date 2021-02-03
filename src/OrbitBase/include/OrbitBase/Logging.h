@@ -5,6 +5,9 @@
 #ifndef ORBIT_BASE_LOGGING_H_
 #define ORBIT_BASE_LOGGING_H_
 
+#include <absl/strings/str_format.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
 #include <stdlib.h>
 
 #include <cstdio>
@@ -16,9 +19,6 @@
 #include <Windows.h>
 #endif
 
-#include "absl/strings/str_format.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -113,6 +113,9 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     absl::StrFormat(format, ##__VA_ARGS__)                                                     \
   }
 
+constexpr const char* kLogFileNameTimeFormat = "%Y_%m_%d_%H_%M_%S";
+constexpr absl::string_view kLogFileNameDelimiter = "Orbit-%s-%u.log";
+std::string GetLogFileName();
 extern std::ofstream log_file;
 void InitLogFile(const std::filesystem::path& path);
 void LogToFile(const std::string& message);
