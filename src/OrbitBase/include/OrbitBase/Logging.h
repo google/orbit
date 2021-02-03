@@ -19,6 +19,7 @@
 #include <Windows.h>
 #endif
 
+#include "OrbitBase/Result.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -113,9 +114,12 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     absl::StrFormat(format, ##__VA_ARGS__)                                                     \
   }
 
-constexpr const char* kLogFileNameTimeFormat = "%Y_%m_%d_%H_%M_%S";
-constexpr absl::string_view kLogFileNameDelimiter = "Orbit-%s-%u.log";
 std::string GetLogFileName();
+// This function tries to remove log files older than kLogFileLifetime even when an error is
+// returned. An error returns, for instance, if some log files to remove are used by other
+// applications. If so, both the file name and the error message will be recorded in the log file.
+ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir);
+
 extern std::ofstream log_file;
 void InitLogFile(const std::filesystem::path& path);
 void LogToFile(const std::string& message);

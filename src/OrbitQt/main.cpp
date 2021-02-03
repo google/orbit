@@ -264,6 +264,11 @@ int main(int argc, char* argv[]) {
 
   InitLogFile(Path::GetLogFilePath());
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
+  ErrorMessageOr<void> remove_old_log_result = TryRemoveOldLogFiles(Path::CreateOrGetLogDir());
+  if (remove_old_log_result.has_error()) {
+    LOG("Warning: Unable to remove some old log files:\n%s",
+        remove_old_log_result.error().message());
+  }
 
 #if __linux__
   QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);

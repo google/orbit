@@ -4,15 +4,18 @@
 
 #include "OrbitBase/Logging.h"
 
-#include <array>
+#include <absl/base/const_init.h>
+#include <absl/debugging/stacktrace.h>
+#include <absl/debugging/symbolize.h>
+#include <absl/strings/str_format.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
 
+#include <array>
+#include <system_error>
+
+#include "LoggingUtils.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "absl/base/const_init.h"
-#include "absl/debugging/stacktrace.h"
-#include "absl/debugging/symbolize.h"
-#include "absl/strings/str_format.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;
@@ -22,6 +25,12 @@ std::string GetLogFileName() {
       absl::FormatTime(kLogFileNameTimeFormat, absl::Now(), absl::LocalTimeZone());
   return absl::StrFormat(kLogFileNameDelimiter, timestamp_string,
                          static_cast<uint32_t>(orbit_base::GetCurrentProcessId()));
+}
+
+ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir) {
+  std::vector<std::filesystem::path> log_file_paths = ListFiles(log_dir);
+  std::vector<std::filesystem::path> old_files = FilterOldLogFiles(log_file_paths);
+  return RemoveFiles(old_files);
 }
 
 void InitLogFile(const std::filesystem::path& path) {
