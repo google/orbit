@@ -36,7 +36,6 @@
 namespace orbit_linux_tracing {
 
 using orbit_base::GetAllPids;
-using orbit_base::GetAllTids;
 using orbit_base::GetTidsOfProcess;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
