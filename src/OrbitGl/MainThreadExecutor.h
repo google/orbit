@@ -128,4 +128,13 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
   virtual void AbortWaitingJobs() = 0;
 };
 
+template <typename F>
+auto TrySchedule(const std::weak_ptr<MainThreadExecutor>& executor, F&& function_object)
+    -> std::optional<decltype(std::declval<MainThreadExecutor>().Schedule(function_object))> {
+  auto executor_ptr = executor.lock();
+  if (executor_ptr == nullptr) return std::nullopt;
+
+  return std::make_optional(executor_ptr->Schedule(std::forward<F>(function_object)));
+}
+
 #endif  // ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
