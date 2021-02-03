@@ -2,19 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CrashHandler.h"
-
-#include <base/files/file_path.h>
-#include <client/crash_report_database.h>
-#include <util/misc/capture_context.h>
+#include "CrashHandler/CrashHandler.h"
 
 #include <algorithm>
 #include <map>
 
+#include <base/files/file_path.h>
+#include <client/crash_report_database.h>
+#include <client/settings.h>
+#include <util/misc/capture_context.h>
+
 #include "CoreUtils.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "client/settings.h"
 
 namespace {
 template <typename StringType = base::FilePath::StringType>
@@ -30,6 +29,8 @@ struct StringTypeConverter<std::wstring> {
 };
 }  // namespace
 
+namespace orbit_crash_handler {
+
 CrashHandler::CrashHandler(const std::string& dump_path, const std::string& handler_path,
                            const std::string& crash_server_url,
                            const std::vector<std::string>& attachments) {
@@ -39,7 +40,6 @@ CrashHandler::CrashHandler(const std::string& dump_path, const std::string& hand
   // Creates a new CrashpadClient instance that directs crashes to crashpad
   // handler. Minidump files will be written to dump_path and sent to
   // crash_server.
-
   const base::FilePath dump_file_path(StringTypeConverter<>()(dump_path));
   const base::FilePath handler_file_path(StringTypeConverter<>()(handler_path));
 
@@ -84,3 +84,5 @@ void CrashHandler::DumpWithoutCrash() const {
   crashpad_client_.DumpWithoutCrash(&cpu_context);
 #endif
 }
+
+}  // namespace orbit_crash_handler
