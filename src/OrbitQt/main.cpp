@@ -53,8 +53,8 @@
 #include "servicedeploymanager.h"
 
 #ifdef ORBIT_CRASH_HANDLING
-#include "CrashHandler.h"
-#include "CrashOptions.h"
+#include "CrashHandler/CrashHandler.h"
+#include "CrashHandler/CrashOptions.h"
 #endif
 
 ABSL_DECLARE_FLAG(uint16_t, grpc_port);
@@ -340,10 +340,10 @@ int main(int argc, char* argv[]) {
 #endif
   const std::string handler_path =
       QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
-  const std::string crash_server_url = CrashServerOptions::GetUrl();
+  const std::string crash_server_url = orbit_crash_handler::GetServerUrl();
   const std::vector<std::string> attachments = {Path::GetLogFilePath().string()};
 
-  CrashHandler crash_handler(dump_path, handler_path, crash_server_url, attachments);
+  orbit_crash_handler::CrashHandler crash_handler(dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING
 
   StyleOrbit(app);
