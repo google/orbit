@@ -20,21 +20,19 @@
 namespace orbit_qt {
 namespace {
 
-// Must have created an OpenGl context before calling this.
+// Must have created an OpenGl context before calling this. Assumes that both
+// major and minor versions of the string are single digits.
 std::optional<OpenGlVersion> GetOpenGlVersionViaDirectCall() {
   std::string gl_version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-  std::vector<std::string> version_tokenized = absl::StrSplit(gl_version, '.');
-
-  if (version_tokenized.size() < 2) {
+  if (gl_version.size() < 3) {
     return std::nullopt;
   }
-
   int major_version;
-  if (!absl::SimpleAtoi(version_tokenized[0], &major_version)) {
+  if (!absl::SimpleAtoi(gl_version.substr(0, 1), &major_version)) {
     return std::nullopt;
   }
   int minor_version;
-  if (!absl::SimpleAtoi(version_tokenized[1], &minor_version)) {
+  if (!absl::SimpleAtoi(gl_version.substr(2, 1), &minor_version)) {
     return std::nullopt;
   }
   return OpenGlVersion{major_version, minor_version};
