@@ -44,6 +44,7 @@ target_sources(OrbitBase PRIVATE
         JoinFutures.cpp
         ReadFileToString.cpp
         Logging.cpp
+        LoggingUtils.cpp
         SafeStrerror.cpp
         ThreadPool.cpp
         Tracing.cpp)
@@ -74,6 +75,7 @@ target_sources(OrbitBaseTests PRIVATE
         FutureTest.cpp
         FutureHelpersTest.cpp
         JoinFuturesTest.cpp
+        LoggingUtilsTest.cpp
         ReadFileToStringTest.cpp
         OrbitApiTest.cpp
         ProfilingTest.cpp
