@@ -14,5 +14,6 @@ namespace Path {
 [[nodiscard]] std::filesystem::path CreateOrGetCaptureDir();
 [[nodiscard]] std::filesystem::path CreateOrGetDumpDir();
 [[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
-[[nodiscard]] std::filesystem::path GetLogFilePathAndCreateDir();
+[[nodiscard]] std::filesystem::path CreateOrGetLogDir();
+[[nodiscard]] std::filesystem::path GetLogFilePath();
 };  // namespace Path
