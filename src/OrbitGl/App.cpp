@@ -1445,8 +1445,23 @@ void OrbitApp::SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_funct
   NeedsRedraw();
 }
 
-[[nodiscard]] bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
-  return data_manager_->IsFunctionVisible(function_address);
+bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
+  if (data_manager_->IsFunctionVisible(function_address)) {
+    return true;
+  }
+
+  // Filtering for manually instrumented scopes is not yet supported. All "Orbit" functions
+  // are considered visible. Note: this code will change shortly as we will introduce
+  // a TimerInfo type for Orbit API events which will allow faster filtering.
+  const auto& instrumented_functions = GetCaptureData().instrumented_functions();
+  auto it = instrumented_functions.find(function_address);
+  if (it != instrumented_functions.end()) {
+    if (function_utils::IsOrbitFunc(it->second)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 uint64_t OrbitApp::highlighted_function_id() const {
