@@ -32,6 +32,8 @@ target_sources(ServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
+        ProducerEventProcessor.cpp
+        ProducerEventProcessor.h
         ProducerSideServer.cpp
         ProducerSideServer.h
         ProducerSideServiceImpl.cpp
