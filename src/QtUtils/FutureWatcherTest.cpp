@@ -117,11 +117,8 @@ TEST(FutureWatcher, WaitForWithThreadPoolAndTimeout) {
   EXPECT_TRUE(future.IsValid());
   EXPECT_FALSE(future.IsFinished());
 
-  // The lambda will be executed by the event loop, running inside of watcher.WaitFor.
-  QTimer::singleShot(std::chrono::milliseconds{20}, [&]() { mutex.Unlock(); });
-
   FutureWatcher watcher{};
-  const auto reason = watcher.WaitFor(std::move(future), std::chrono::milliseconds{5});
+  const auto reason = watcher.WaitFor(future, std::chrono::milliseconds{5});
 
   EXPECT_EQ(reason, FutureWatcher::Reason::kTimeout);
 
