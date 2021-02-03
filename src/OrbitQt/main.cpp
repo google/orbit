@@ -38,6 +38,7 @@
 
 #include "AccessibilityAdapter.h"
 #include "Connections.h"
+#include "CrashHandler/CrashHandlerBase.h"
 #include "DeploymentConfigurations.h"
 #include "ImGuiOrbit.h"
 #include "MetricsUploader/MetricsUploader.h"
@@ -77,6 +78,7 @@ Q_DECLARE_METATYPE(std::error_code);
 
 void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                    const Context* ssh_context, const QStringList& command_line_flags,
+                   const orbit_crash_handler::CrashHandlerBase* crash_handler,
                    const std::filesystem::path& capture_file_path = "") {
   qRegisterMetaType<std::error_code>();
 
@@ -131,7 +133,7 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                                          ->GetServiceDeployManager();
       }
 
-      OrbitMainWindow w(std::move(target_config.value()),
+      OrbitMainWindow w(std::move(target_config.value()), crash_handler,
                         metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr,
                         command_line_flags);
 
@@ -331,6 +333,7 @@ int main(int argc, char* argv[]) {
   QApplication::setApplicationDisplayName(display_name);
   QApplication::setApplicationVersion(version_string);
 
+  auto crash_handler = std::make_unique<orbit_crash_handler::CrashHandlerBase>();
 #ifdef ORBIT_CRASH_HANDLING
   const std::string dump_path = Path::CreateOrGetDumpDir().string();
 #ifdef _WIN32
@@ -343,7 +346,8 @@ int main(int argc, char* argv[]) {
   const std::string crash_server_url = orbit_crash_handler::GetServerUrl();
   const std::vector<std::string> attachments = {Path::GetLogFilePath().string()};
 
-  orbit_crash_handler::CrashHandler crash_handler(dump_path, handler_path, crash_server_url, attachments);
+  crash_handler = std::make_unique<orbit_crash_handler::CrashHandler>(
+      dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING
 
   StyleOrbit(app);
@@ -386,7 +390,7 @@ int main(int argc, char* argv[]) {
     QProcess::startDetached(orbit_executable, arguments);
   }
 
-  RunUiInstance(deployment_configuration, &context.value(), command_line_flags,
+  RunUiInstance(deployment_configuration, &context.value(), command_line_flags, crash_handler.get(),
                 capture_file_paths.empty() ? "" : capture_file_paths[0]);
   return 0;
 }
