@@ -60,12 +60,13 @@ class MetricsUploader {
   HMODULE metrics_uploader_client_dll_;
   explicit MetricsUploader(std::string client_name, std::string session_uuid,
                            Result (*send_log_event_addr)(const uint8_t*, int),
-                           HMODULE metrics_uploader_client_dll);
+                           Result (*shutdown_connection)(), HMODULE metrics_uploader_client_dll);
 #else
   MetricsUploader();
 #endif
 
   Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
+  Result (*shutdown_connection_addr_)() = nullptr;
   std::string client_name_;
   std::string session_uuid_;
 };

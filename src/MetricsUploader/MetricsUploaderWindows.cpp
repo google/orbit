@@ -15,22 +15,27 @@ namespace orbit_metrics_uploader {
 
 constexpr const char* kSendLogEventFunctionName = "SendOrbitLogEvent";
 constexpr const char* kSetupConnectionFunctionName = "SetupConnection";
+constexpr const char* kShutdownConnectionFunctionName = "ShutdownConnection";
 
 MetricsUploader::MetricsUploader(std::string client_name, std::string session_uuid,
                                  Result (*send_log_event_addr)(const uint8_t*, int),
+                                 Result (*shutdown_connection_addr)(),
                                  HMODULE metrics_uploader_client_dll)
     : client_name_(std::move(client_name)),
       session_uuid_(std::move(session_uuid)),
       send_log_event_addr_(send_log_event_addr),
+      shutdown_connection_addr_(shutdown_connection_addr),
       metrics_uploader_client_dll_(metrics_uploader_client_dll) {}
 
 MetricsUploader::MetricsUploader(MetricsUploader&& other)
     : client_name_(std::move(other.client_name_)),
       session_uuid_(std::move(other.session_uuid_)),
       metrics_uploader_client_dll_(other.metrics_uploader_client_dll_),
-      send_log_event_addr_(other.send_log_event_addr_) {
+      send_log_event_addr_(other.send_log_event_addr_),
+      shutdown_connection_addr_(other.shutdown_connection_addr_) {
   other.metrics_uploader_client_dll_ = nullptr;
   other.send_log_event_addr_ = nullptr;
+  other.shutdown_connection_addr_ = nullptr;
 }
 
 MetricsUploader& MetricsUploader::operator=(MetricsUploader&& other) {
@@ -46,10 +51,19 @@ MetricsUploader& MetricsUploader::operator=(MetricsUploader&& other) {
   send_log_event_addr_ = other.send_log_event_addr_;
   other.send_log_event_addr_ = nullptr;
 
+  shutdown_connection_addr_ = other.shutdown_connection_addr_;
+  other.shutdown_connection_addr_ = nullptr;
+
   return *this;
 }
 
 MetricsUploader::~MetricsUploader() {
+  if (nullptr != shutdown_connection_addr_) {
+    Result result = shutdown_connection_addr_();
+    if (result != kNoError) {
+      ERROR("Error while closing connection: %s", GetErrorMessage(result));
+    }
+  }
   if (nullptr != metrics_uploader_client_dll_) {
     FreeLibrary(metrics_uploader_client_dll_);
   }
@@ -77,6 +91,13 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
     return ErrorMessage(absl::StrFormat("%s function not found", kSetupConnectionFunctionName));
   }
 
+  auto shutdown_connection_addr = reinterpret_cast<Result (*)()>(
+      GetProcAddress(metrics_uploader_client_dll, kShutdownConnectionFunctionName));
+  if (nullptr == shutdown_connection_addr) {
+    FreeLibrary(metrics_uploader_client_dll);
+    return ErrorMessage(absl::StrFormat("%s function not found", kShutdownConnectionFunctionName));
+  }
+
   auto send_log_event_addr = reinterpret_cast<Result (*)(const uint8_t*, int)>(
       GetProcAddress(metrics_uploader_client_dll, kSendLogEventFunctionName));
   if (nullptr == send_log_event_addr) {
@@ -87,12 +108,16 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
   // set up connection and create a client
   Result result = setup_connection_addr();
   if (result != kNoError) {
+    Result result = shutdown_connection_addr();
+    if (result != kNoError) {
+      ERROR("Error while closing connection: %s", GetErrorMessage(result));
+    }
     FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("Error while starting the metrics uploader client: %s",
                                         GetErrorMessage(result)));
   }
 
-  return MetricsUploader(client_name, session_uuid, send_log_event_addr,
+  return MetricsUploader(client_name, session_uuid, send_log_event_addr, shutdown_connection_addr,
                          metrics_uploader_client_dll);
 }
 
