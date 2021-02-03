@@ -1450,9 +1450,9 @@ bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
     return true;
   }
 
-  // Filtering for manually instrumented scopes is not yet supported. All "Orbit" functions
-  // are considered visible. Note: this code will change shortly as we will introduce
-  // a TimerInfo type for Orbit API events which will allow faster filtering.
+  // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
+  // All "Orbit" functions are considered visible. Note: this code will change shortly as
+  // we will introduce a TimerInfo type for Orbit API events which will allow faster filtering.
   const auto& instrumented_functions = GetCaptureData().instrumented_functions();
   auto it = instrumented_functions.find(function_address);
   if (it != instrumented_functions.end()) {
