@@ -15,8 +15,12 @@
 namespace orbit_linux_tracing {
 
 void PerfEventQueue::PushEvent(std::unique_ptr<PerfEvent> event) {
-  int origin_fd = event->GetOriginFileDescriptor();
-  if (auto queue_it = queues_.find(origin_fd); queue_it != queues_.end()) {
+  int origin_fd = event->GetOrderedInFileDescriptor();
+  if (origin_fd == PerfEvent::kNotOrderedInAnyFileDescriptor) {
+    unordered_events_priority_queue_.push(std::move(event));
+
+  } else if (auto queue_it = ordered_queues_by_fd_.find(origin_fd);
+             queue_it != ordered_queues_by_fd_.end()) {
     const std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>& queue = queue_it->second;
 
     CHECK(!queue->empty());
@@ -25,41 +29,68 @@ void PerfEventQueue::PushEvent(std::unique_ptr<PerfEvent> event) {
     queue->push(std::move(event));
 
   } else {
-    queue_it =
-        queues_.emplace(origin_fd, std::make_unique<std::queue<std::unique_ptr<PerfEvent>>>())
-            .first;
+    queue_it = ordered_queues_by_fd_
+                   .emplace(origin_fd, std::make_unique<std::queue<std::unique_ptr<PerfEvent>>>())
+                   .first;
     const std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>& queue = queue_it->second;
 
     queue->push(std::move(event));
-    queues_heap_.emplace_back(queue.get());
-    MoveUpHeapBack();
+    ordered_queues_heap_.emplace_back(queue.get());
+    MoveUpBackOfOrderedQueuesHeap();
   }
 }
 
-bool PerfEventQueue::HasEvent() { return !queues_heap_.empty(); }
+bool PerfEventQueue::HasEvent() const {
+  return !ordered_queues_heap_.empty() || !unordered_events_priority_queue_.empty();
+}
 
-PerfEvent* PerfEventQueue::TopEvent() { return queues_heap_.front()->front().get(); }
+PerfEvent* PerfEventQueue::TopEvent() {
+  // As we effectively have two priority queues, get the older event between the two events at the
+  // top of the two queues.
+  PerfEvent* top_event = nullptr;
+  if (!unordered_events_priority_queue_.empty()) {
+    top_event = unordered_events_priority_queue_.top().get();
+  }
+  if (!ordered_queues_heap_.empty() &&
+      (top_event == nullptr ||
+       ordered_queues_heap_.front()->front()->GetTimestamp() < top_event->GetTimestamp())) {
+    top_event = ordered_queues_heap_.front()->front().get();
+  }
+  CHECK(top_event != nullptr);
+  return top_event;
+}
 
 std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
-  std::queue<std::unique_ptr<PerfEvent>>* top_queue = queues_heap_.front();
+  if (!unordered_events_priority_queue_.empty() &&
+      (ordered_queues_heap_.empty() || unordered_events_priority_queue_.top()->GetTimestamp() <
+                                           ordered_queues_heap_.front()->front()->GetTimestamp())) {
+    // The oldest event is at the top of the priority queue holding the events that cannot be
+    // assumed sorted in any ring buffer.
+    std::unique_ptr<PerfEvent> top_event =
+        std::move(const_cast<std::unique_ptr<PerfEvent>&>(unordered_events_priority_queue_.top()));
+    unordered_events_priority_queue_.pop();
+    return top_event;
+  }
+
+  std::queue<std::unique_ptr<PerfEvent>>* top_queue = ordered_queues_heap_.front();
   std::unique_ptr<PerfEvent> top_event = std::move(top_queue->front());
   top_queue->pop();
 
   if (top_queue->empty()) {
-    int top_fd = top_event->GetOriginFileDescriptor();
-    queues_.erase(top_fd);
-    std::swap(queues_heap_.front(), queues_heap_.back());
-    queues_heap_.pop_back();
-    MoveDownHeapFront();
+    int top_fd = top_event->GetOrderedInFileDescriptor();
+    ordered_queues_by_fd_.erase(top_fd);
+    std::swap(ordered_queues_heap_.front(), ordered_queues_heap_.back());
+    ordered_queues_heap_.pop_back();
+    MoveDownFrontOfOrderedQueuesHeap();
   } else {
-    MoveDownHeapFront();
+    MoveDownFrontOfOrderedQueuesHeap();
   }
 
   return top_event;
 }
 
-void PerfEventQueue::MoveDownHeapFront() {
-  if (queues_heap_.empty()) {
+void PerfEventQueue::MoveDownFrontOfOrderedQueuesHeap() {
+  if (ordered_queues_heap_.empty()) {
     return;
   }
 
@@ -69,16 +100,18 @@ void PerfEventQueue::MoveDownHeapFront() {
     new_index = current_index;
     size_t left_index = current_index * 2 + 1;
     size_t right_index = current_index * 2 + 2;
-    if (left_index < queues_heap_.size() && queues_heap_[left_index]->front()->GetTimestamp() <
-                                                queues_heap_[new_index]->front()->GetTimestamp()) {
+    if (left_index < ordered_queues_heap_.size() &&
+        ordered_queues_heap_[left_index]->front()->GetTimestamp() <
+            ordered_queues_heap_[new_index]->front()->GetTimestamp()) {
       new_index = left_index;
     }
-    if (right_index < queues_heap_.size() && queues_heap_[right_index]->front()->GetTimestamp() <
-                                                 queues_heap_[new_index]->front()->GetTimestamp()) {
+    if (right_index < ordered_queues_heap_.size() &&
+        ordered_queues_heap_[right_index]->front()->GetTimestamp() <
+            ordered_queues_heap_[new_index]->front()->GetTimestamp()) {
       new_index = right_index;
     }
     if (new_index != current_index) {
-      std::swap(queues_heap_[new_index], queues_heap_[current_index]);
+      std::swap(ordered_queues_heap_[new_index], ordered_queues_heap_[current_index]);
       current_index = new_index;
     } else {
       break;
@@ -86,19 +119,19 @@ void PerfEventQueue::MoveDownHeapFront() {
   }
 }
 
-void PerfEventQueue::MoveUpHeapBack() {
-  if (queues_heap_.empty()) {
+void PerfEventQueue::MoveUpBackOfOrderedQueuesHeap() {
+  if (ordered_queues_heap_.empty()) {
     return;
   }
 
-  size_t current_index = queues_heap_.size() - 1;
+  size_t current_index = ordered_queues_heap_.size() - 1;
   while (current_index > 0) {
     size_t parent_index = (current_index - 1) / 2;
-    if (queues_heap_[parent_index]->front()->GetTimestamp() <=
-        queues_heap_[current_index]->front()->GetTimestamp()) {
+    if (ordered_queues_heap_[parent_index]->front()->GetTimestamp() <=
+        ordered_queues_heap_[current_index]->front()->GetTimestamp()) {
       break;
     }
-    std::swap(queues_heap_[parent_index], queues_heap_[current_index]);
+    std::swap(ordered_queues_heap_[parent_index], ordered_queues_heap_[current_index]);
     current_index = parent_index;
   }
 }

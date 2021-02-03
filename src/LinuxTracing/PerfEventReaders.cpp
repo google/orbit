@@ -95,10 +95,7 @@ std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_bu
   int32_t pid = static_cast<int32_t>(sample_id.pid);
 
   // Consider moving this to MMAP2 event which has more information (like flags)
-  auto event = std::make_unique<MmapPerfEvent>(pid, timestamp, mmap_event, std::move(filename));
-  event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
-
-  return event;
+  return std::make_unique<MmapPerfEvent>(pid, timestamp, mmap_event, std::move(filename));
 }
 
 std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,

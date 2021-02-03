@@ -28,23 +28,42 @@ namespace orbit_linux_tracing {
 // In order to be able to add an event to a queue, we also need to maintain the association between
 // a queue and its ring buffer, which is what the map is for. We use the file descriptor used to
 // read from the ring buffer as identifier for a ring buffer.
+//
+// Some events, though, are known to come out of order even in relation to other events in the same
+// ring buffer (e.g., dma_fence_signaled). For those cases, use an additional single
+// std::priority_queue.
 class PerfEventQueue {
  public:
   void PushEvent(std::unique_ptr<PerfEvent> event);
-  [[nodiscard]] bool HasEvent();
+  [[nodiscard]] bool HasEvent() const;
   [[nodiscard]] PerfEvent* TopEvent();
   std::unique_ptr<PerfEvent> PopEvent();
 
  private:
-  // Floats down the element at the top of the heap to its correct place. Used when the key
-  // of the top element changes, or as part of the process of removing the top element.
-  void MoveDownHeapFront();
+  // Floats down the element at the top of the ordered_queues_heap_ to its correct place. Used when
+  // the key of the top element changes, or as part of the process of removing the top element.
+  void MoveDownFrontOfOrderedQueuesHeap();
   // Floats up an element that it is know should be further up in the heap. Used on insertion.
-  void MoveUpHeapBack();
+  void MoveUpBackOfOrderedQueuesHeap();
 
  private:
-  absl::flat_hash_map<int, std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>> queues_;
-  std::vector<std::queue<std::unique_ptr<PerfEvent>>*> queues_heap_;
+  // This vector holds the heap of the queues each of which holds events coming from the same ring
+  // buffer and assumes them already in order by timestamp.
+  std::vector<std::queue<std::unique_ptr<PerfEvent>>*> ordered_queues_heap_;
+  // This map keeps the association between a file descriptor and the ordered queue of events coming
+  // from the ring buffer corresponding to that file descriptor.
+  absl::flat_hash_map<int, std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
+      ordered_queues_by_fd_;
+
+  static constexpr auto kUnorderedEventsReverseTimestampCompare =
+      [](const std::unique_ptr<PerfEvent>& lhs, const std::unique_ptr<PerfEvent>& rhs) {
+        return lhs->GetTimestamp() > rhs->GetTimestamp();
+      };
+  // This priority queue holds all those events that cannot be assumed already sorted in a specific
+  // ring buffer.
+  std::priority_queue<std::unique_ptr<PerfEvent>, std::vector<std::unique_ptr<PerfEvent>>,
+                      decltype(kUnorderedEventsReverseTimestampCompare)>
+      unordered_events_priority_queue_{kUnorderedEventsReverseTimestampCompare};
 };
 
 }  // namespace orbit_linux_tracing
