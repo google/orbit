@@ -17,15 +17,15 @@ TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSendEvent) {
   EXPECT_EQ(metrics_uploader.has_value(), false);
 }
 
-TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutStart) {
+TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSetup) {
   auto metrics_uploader =
-      MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutStart");
+      MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutSetup");
   EXPECT_EQ(metrics_uploader.has_value(), false);
 }
 
-TEST(MetricsUploader, StartMetricsUploaderWithError) {
+TEST(MetricsUploader, SetupMetricsUploaderWithError) {
   auto metrics_uploader =
-      MetricsUploader::CreateMetricsUploader("MetricsUploaderStartWithErrorClient");
+      MetricsUploader::CreateMetricsUploader("MetricsUploaderSetupWithErrorClient");
   EXPECT_EQ(metrics_uploader.has_value(), false);
 }
 

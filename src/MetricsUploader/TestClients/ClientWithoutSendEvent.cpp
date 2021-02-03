@@ -7,5 +7,5 @@
 using orbit_metrics_uploader::Result;
 
 extern "C" {
-__declspec(dllexport) enum Result StartUploaderClient() { return Result::kNoError; }
+__declspec(dllexport) enum Result SetupConnection() { return Result::kNoError; }
 }  // extern "C"
