@@ -5,18 +5,25 @@
 #ifndef ORBIT_BASE_THREAD_UTILS_H_
 #define ORBIT_BASE_THREAD_UTILS_H_
 
+#ifdef _WIN32
+#include <stdint.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 #include <string>
 
 namespace orbit_base {
 
 #ifdef _WIN32
-#include <stdint.h>
 [[nodiscard]] uint32_t GetCurrentThreadId();
 [[nodiscard]] std::string GetThreadName(uint32_t tid);
+[[nodiscard]] uint32_t GetCurrentProcessId();
 #else
-#include <sys/types.h>
 [[nodiscard]] pid_t GetCurrentThreadId();
 [[nodiscard]] std::string GetThreadName(pid_t tid);
+[[nodiscard]] pid_t GetCurrentProcessId();
 #endif
 
 void SetCurrentThreadName(const std::string& thread_name);
