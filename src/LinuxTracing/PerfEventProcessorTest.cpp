@@ -46,7 +46,7 @@ std::unique_ptr<PerfEvent> MakeFakePerfEvent(int origin_fd, uint64_t timestamp_n
   // We use LostPerfEvent just because it's a simple one, but we could use any
   // as we only need to set the file descriptor and the timestamp.
   auto event = std::make_unique<LostPerfEvent>();
-  event->SetOriginFileDescriptor(origin_fd);
+  event->SetOrderedInFileDescriptor(origin_fd);
   event->ring_buffer_record.sample_id.time = timestamp_ns;
   return event;
 }

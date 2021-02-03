@@ -16,7 +16,7 @@ namespace {
 class TestEvent : public PerfEvent {
  public:
   explicit TestEvent(int origin_fd, uint64_t timestamp) : timestamp_(timestamp) {
-    SetOriginFileDescriptor(origin_fd);
+    SetOrderedInFileDescriptor(origin_fd);
   }
 
   uint64_t GetTimestamp() const override { return timestamp_; }
@@ -177,6 +177,78 @@ TEST(PerfEventQueue, FdWithOldestAndNewestEvent) {
 
   EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), 999);
   EXPECT_FALSE(event_queue.HasEvent());
+}
+
+TEST(PerfEventQueue, NotOrderedInAnyFileDescriptor) {
+  PerfEventQueue event_queue;
+  uint64_t current_oldest_timestamp = 0;
+
+  EXPECT_FALSE(event_queue.HasEvent());
+
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 104));
+  current_oldest_timestamp = 104;
+  EXPECT_TRUE(event_queue.HasEvent());
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 101));
+  current_oldest_timestamp = 101;
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 102));
+
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp);
+  current_oldest_timestamp = 102;
+  ASSERT_TRUE(event_queue.HasEvent());
+
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp);
+  current_oldest_timestamp = 104;
+  ASSERT_TRUE(event_queue.HasEvent());
+
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+  ASSERT_TRUE(event_queue.HasEvent());
+
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 103));
+  current_oldest_timestamp = 103;
+
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp);
+  current_oldest_timestamp = 104;
+  ASSERT_TRUE(event_queue.HasEvent());
+
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp);
+  ASSERT_FALSE(event_queue.HasEvent());
+
+  EXPECT_DEATH(event_queue.PopEvent(), "");
+}
+
+TEST(PerfEventQueue, OrderedFdsAndNotOrderedInAnyFileDescriptor) {
+  PerfEventQueue event_queue;
+
+  event_queue.PushEvent(MakeTestEvent(11, 103));
+  event_queue.PushEvent(MakeTestEvent(11, 105));
+  event_queue.PushEvent(MakeTestEvent(22, 102));
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 108));
+  event_queue.PushEvent(MakeTestEvent(11, 107));
+  event_queue.PushEvent(MakeTestEvent(22, 106));
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 101));
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, 104));
+  event_queue.PushEvent(MakeTestEvent(22, 109));
+
+  uint64_t current_oldest_timestamp = 101;
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), current_oldest_timestamp++);
+  EXPECT_FALSE(event_queue.HasEvent());
+  EXPECT_DEATH(event_queue.PopEvent(), "");
 }
 
 }  // namespace orbit_linux_tracing

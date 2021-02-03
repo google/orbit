@@ -739,7 +739,7 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
 
   // PERF_RECORD_FORK is used by SwitchesStatesNamesVisitor
   // to keep the association between tid and pid.
-  event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
+  event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }
 
@@ -753,7 +753,7 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
 
   // PERF_RECORD_EXIT is also used by SwitchesStatesNamesVisitor
   // to keep the association between tid and pid.
-  event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
+  event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }
 
@@ -769,6 +769,7 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
     return;
   }
 
+  event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }
 
@@ -814,7 +815,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     }
 
     event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
@@ -828,7 +829,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     }
 
     event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
@@ -854,7 +855,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     // in general they seem to produce valid callstacks.
 
     auto event = ConsumeStackSamplePerfEvent(ring_buffer, header);
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
 
@@ -866,7 +867,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     }
 
     auto event = ConsumeCallchainSamplePerfEvent(ring_buffer, header);
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
 
@@ -874,39 +875,41 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto event = ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
     // task:task_newtask is used by SwitchesStatesNamesVisitor
     // for thread names and thread states.
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
   } else if (is_task_rename) {
     auto event = ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
     // task:task_newtask is used by SwitchesStatesNamesVisitor for thread names.
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
 
   } else if (is_sched_switch) {
     auto event = ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sched_switch_count;
   } else if (is_sched_wakeup) {
     auto event = ConsumeTracepointPerfEvent<SchedWakeupPerfEvent>(ring_buffer, header);
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {
     auto event = ConsumeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(PerfEvent::kNotOrderedInAnyFileDescriptor);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
   } else if (is_amdgpu_sched_run_job_event) {
     auto event = ConsumeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(PerfEvent::kNotOrderedInAnyFileDescriptor);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
   } else if (is_dma_fence_signaled_event) {
     auto event = ConsumeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
-    event->SetOriginFileDescriptor(fd);
+    event->SetOrderedInFileDescriptor(PerfEvent::kNotOrderedInAnyFileDescriptor);
+    // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer,
+    // hence why kNotOrderedInAnyFileDescriptor. To be safe, do the same for the other GPU events.
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
 

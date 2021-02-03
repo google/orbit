@@ -37,11 +37,13 @@ class PerfEvent {
   virtual ~PerfEvent() = default;
   virtual uint64_t GetTimestamp() const = 0;
   virtual void Accept(PerfEventVisitor* visitor) = 0;
-  void SetOriginFileDescriptor(int fd) { origin_file_descriptor_ = fd; }
-  int GetOriginFileDescriptor() const { return origin_file_descriptor_; }
+
+  static constexpr int kNotOrderedInAnyFileDescriptor = -1;
+  void SetOrderedInFileDescriptor(int fd) { ordered_in_file_descriptor_ = fd; }
+  int GetOrderedInFileDescriptor() const { return ordered_in_file_descriptor_; }
 
  private:
-  int origin_file_descriptor_ = -1;
+  int ordered_in_file_descriptor_ = kNotOrderedInAnyFileDescriptor;
 };
 
 class ContextSwitchPerfEvent : public PerfEvent {
