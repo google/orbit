@@ -149,7 +149,7 @@ class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
 
 // Future<void> is a specialization of Future<T> for asynchronous tasks that return `void`.
 //
-// In this case the future won't be able to transer any return type to the caller, but it can
+// In this case the future won't be able to transfer any return type to the caller, but it can
 // notify the caller, when the asynchronous tasks completes.
 //
 // Unlike Future<T>, Future<void> has no `Get()` method since there is no return value.
