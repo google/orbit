@@ -13,13 +13,15 @@ namespace orbit_metrics_uploader {
 // should be in sync with the enum in the library itself.
 enum Result {
   kNoError,
-  kMetricsUploaderServiceNotStarted,
+  kCannotOpenConnection,
   kSdkConfigNotLoaded,
   kCannotMarshalLogEvent,
-  kUnknownEventTypeName,
+  kUnknownEventType,
   kCannotQueueLogEvent,
-  kClientNotInitialized,
-  kCannotUnmarshalLogEvent
+  kConnectionNotInitialized,
+  kCannotUnmarshalLogEvent,
+  kCannotCloseConnection,
+  kOtherError
 };
 
 std::string GetErrorMessage(Result result);

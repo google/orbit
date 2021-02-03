@@ -8,21 +8,27 @@ namespace orbit_metrics_uploader {
 
 std::string GetErrorMessage(Result result) {
   switch (result) {
-    case kMetricsUploaderServiceNotStarted:
-      return "Metrics uploader service was not started";
+    case kCannotOpenConnection:
+      return "Connection to metrics uploader wasn't opened";
     case kSdkConfigNotLoaded:
       return "SDK config was not loaded";
     case kCannotMarshalLogEvent:
       return "Can't marshall log event";
+    case kUnknownEventType:
+      return "Event type is unknown";
     case kCannotQueueLogEvent:
       return "Can't queue log event";
-    case kClientNotInitialized:
-      return "Uploader client wasn't initialized. StartUploaderClient() should be called before "
-             "sending log events.";
+    case kConnectionNotInitialized:
+      return "Connection wasn't initialized. SetupConnection() should be called before sending log "
+             "events.";
     case kCannotUnmarshalLogEvent:
       return "Can't unmarshal OrbitLogEvent proto";
-    default:
+    case kCannotCloseConnection:
+      return "Connection to metrics uploader wasn't closed";
+    case kNoError:
       return "No errors";
+    default:
+      return "Unexpected error occured. See metrics_uploader_client log for details";
   }
 }
 

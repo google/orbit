@@ -108,9 +108,11 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
   // set up connection and create a client
   Result result = setup_connection_addr();
   if (result != kNoError) {
-    Result result = shutdown_connection_addr();
-    if (result != kNoError) {
-      ERROR("Error while closing connection: %s", GetErrorMessage(result));
+    if (result != kCannotOpenConnection) {
+      Result shutdown_result = shutdown_connection_addr();
+      if (shutdown_result != kNoError) {
+        ERROR("Error while closing connection: %s", GetErrorMessage(shutdown_result));
+      }
     }
     FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("Error while starting the metrics uploader client: %s",
