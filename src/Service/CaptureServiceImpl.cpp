@@ -21,6 +21,7 @@
 #include "LinuxTracingHandler.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
+#include "ProducerEventProcessor.h"
 #include "capture.pb.h"
 
 namespace orbit_service {
@@ -199,6 +200,8 @@ grpc::Status CaptureServiceImpl::Capture(
 
   GrpcCaptureEventSender capture_event_sender{reader_writer};
   SenderThreadCaptureEventBuffer capture_event_buffer{&capture_event_sender};
+  std::unique_ptr<ProducerEventProcessor> producer_event_processor =
+      CreateProducerEventProcessor(&capture_event_buffer);
   LinuxTracingHandler tracing_handler{&capture_event_buffer};
 
   CaptureRequest request;
@@ -207,7 +210,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   tracing_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
-    listener->OnCaptureStartRequested(request.capture_options(), &capture_event_buffer);
+    listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor.get());
   }
 
   // The client asks for the capture to be stopped by calling WritesDone.

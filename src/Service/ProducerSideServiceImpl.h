@@ -12,6 +12,7 @@
 
 #include "CaptureEventBuffer.h"
 #include "CaptureStartStopListener.h"
+#include "ProducerEventProcessor.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 #include "capture.pb.h"
@@ -35,7 +36,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   // (but if it's called multiple times in a row, the command will only be sent once).
   // CaptureEvents received from producers will be added to capture_event_buffer.
   void OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
-                               CaptureEventBuffer* capture_event_buffer) override;
+                               ProducerEventProcessor* producer_event_processor) override;
 
   // This method causes the StopCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).
@@ -71,7 +72,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
       grpc::ServerContext* context,
       grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                                orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
-      bool* all_events_sent_received);
+      uint64_t producer_id, bool* all_events_sent_received);
 
  private:
   absl::flat_hash_set<grpc::ServerContext*> server_contexts_;
@@ -86,8 +87,10 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   } service_state_;
   absl::Mutex service_state_mutex_;
 
-  CaptureEventBuffer* capture_event_buffer_ = nullptr;
-  absl::Mutex capture_event_buffer_mutex_;
+  ProducerEventProcessor* producer_event_processor_ = nullptr;
+  absl::Mutex producer_event_processor_mutex_;
+
+  std::atomic<uint64_t> producer_id_counter_ = 1;
 
   uint64_t max_wait_for_all_events_sent_ms_ = 10'000;
 };

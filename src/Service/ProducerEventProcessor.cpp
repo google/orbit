@@ -36,6 +36,7 @@ using orbit_grpc_protos::TracepointEvent;
 template <typename T>
 class InternedCache final {
  public:
+  InternedCache() = delete;
   explicit InternedCache(std::atomic<uint64_t>* id_counter) : id_counter_{id_counter} {}
 
   // Return pair of <id, assigned>, where assigned is true if the entry was assigned a new id
@@ -61,6 +62,7 @@ class InternedCache final {
 
 class ProducerEventProcessorImpl : public ProducerEventProcessor {
  public:
+  ProducerEventProcessorImpl() = delete;
   explicit ProducerEventProcessorImpl(CaptureEventBuffer* capture_event_buffer)
       : capture_event_buffer_{capture_event_buffer},
         callstack_id_counter_{1},
