@@ -1823,6 +1823,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     // TID is meaningless for this timer (start and end can be on two different threads).
     constexpr const int32_t kUnusedThreadId = -1;
     frame_timer.set_thread_id(kUnusedThreadId);
+    frame_timer.set_function_id(instrumented_function_id);
     frame_timer.set_start(all_start_times[k]);
     frame_timer.set_end(all_start_times[k + 1]);
     // We use user_data_key to keep track of the frame number.
