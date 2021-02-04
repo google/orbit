@@ -111,7 +111,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
-    for (auto& block : *chain) {
+    auto chain_iterator = chain->begin();
+    TimerBlock* prev_block = nullptr;
+    while (chain_iterator != chain->end()) {
+      TimerBlock& block = *chain_iterator;
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       // We have to reset this when we go to the next depth, as otherwise we
@@ -137,8 +140,11 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         // Check if the previous timer overlaps with the current one, and if so draw the overlap
         // as triangles rather than as overlapping rectangles.
-        if (k > 0) {
-          const TimerInfo& prev_timer_info = block[k - 1].GetTimerInfo();
+        if (k > 0 || prev_block != nullptr) {
+          const TimerInfo& prev_timer_info =
+              (k > 0) ? block[k - 1].GetTimerInfo()
+                      : (*prev_block)[prev_block->size() - 1].GetTimerInfo();
+          CHECK(prev_timer_info.start() < timer_info.start());
           // We also compare the type, as for the Gpu timers, timers of different type but same
           // depth are drawn below each other (and thus do not overlap).
           if (prev_timer_info.end() > timer_info.start() &&
@@ -149,8 +155,12 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         // Check if the next timer overlaps with the current one, and if so draw the overlap
         // as triangles rather than as overlapping rectangles.
-        if (k + 1 < block.size()) {
-          const TimerInfo& next_timer_info = block[k + 1].GetTimerInfo();
+        if (auto next_chain_it = ++chain_iterator;
+            next_chain_it != chain->end() || k + 1 < block.size()) {
+          const TimerInfo& next_timer_info = (k + 1 < block.size())
+                                                 ? block[k + 1].GetTimerInfo()
+                                                 : (*next_chain_it)[0].GetTimerInfo();
+          CHECK(timer_info.start() < next_timer_info.start());
           // We also compare the type, as for the Gpu timers, timers of different type but same
           // depth are drawn below each other (and thus do not overlap).
           if (timer_info.end() > next_timer_info.start() &&
@@ -243,6 +253,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
             max_ignore = min_ignore + pixel_delta_in_ticks;
           }
         }
+
+        prev_block = &block;
       }
     }
   }
