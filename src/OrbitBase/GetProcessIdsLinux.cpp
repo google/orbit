@@ -65,13 +65,4 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
   return tids;
 }
 
-std::vector<pid_t> GetAllTids() {
-  std::vector<pid_t> all_tids;
-  for (pid_t pid : GetAllPids()) {
-    std::vector<pid_t> process_tids = GetTidsOfProcess(pid);
-    all_tids.insert(all_tids.end(), process_tids.begin(), process_tids.end());
-  }
-  return all_tids;
-}
-
 }  // namespace orbit_base
