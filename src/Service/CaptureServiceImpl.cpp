@@ -202,7 +202,7 @@ grpc::Status CaptureServiceImpl::Capture(
   SenderThreadCaptureEventBuffer capture_event_buffer{&capture_event_sender};
   std::unique_ptr<ProducerEventProcessor> producer_event_processor =
       CreateProducerEventProcessor(&capture_event_buffer);
-  LinuxTracingHandler tracing_handler{&capture_event_buffer};
+  LinuxTracingHandler tracing_handler{producer_event_processor.get()};
 
   CaptureRequest request;
   reader_writer->Read(&request);

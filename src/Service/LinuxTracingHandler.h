@@ -13,11 +13,11 @@
 #include <memory>
 #include <string>
 
-#include "CaptureEventBuffer.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
+#include "ProducerEventProcessor.h"
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
@@ -25,8 +25,8 @@ namespace orbit_service {
 
 class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
  public:
-  explicit LinuxTracingHandler(CaptureEventBuffer* capture_event_buffer)
-      : capture_event_buffer_{capture_event_buffer} {}
+  explicit LinuxTracingHandler(ProducerEventProcessor* producer_event_processor)
+      : producer_event_processor_{producer_event_processor} {}
 
   ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
@@ -49,28 +49,11 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
   void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override;
 
  private:
-  CaptureEventBuffer* capture_event_buffer_;
+  ProducerEventProcessor* producer_event_processor_;
   std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
   std::unique_ptr<orbit_base::TracingListener> orbit_tracing_listener_;
-
-  [[nodiscard]] uint64_t InternCallstackIfNecessaryAndGetKey(
-      const orbit_grpc_protos::Callstack& callstack);
-  [[nodiscard]] static uint64_t ComputeStringKey(const std::string& str);
-  [[nodiscard]] uint64_t InternStringIfNecessaryAndGetKey(std::string str);
-  [[nodiscard]] uint64_t InternTracepointInfoIfNecessaryAndGetKey(
-      const orbit_grpc_protos::TracepointInfo& tracepoint_info);
-
-  absl::flat_hash_set<uint64_t> addresses_seen_;
-  absl::Mutex addresses_seen_mutex_;
-  absl::flat_hash_map<std::vector<uint64_t>, uint64_t> callstack_to_id_;
-  uint64_t next_callstack_id_ = 1;
-  absl::Mutex callstack_id_mutex_;
-  absl::flat_hash_set<uint64_t> string_keys_sent_;
-  absl::Mutex string_keys_sent_mutex_;
-  absl::flat_hash_set<uint64_t> tracepoint_keys_sent_;
-  absl::Mutex tracepoint_keys_sent_mutex_;
 
   void SetupIntrospection();
 };
