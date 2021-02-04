@@ -65,7 +65,6 @@ namespace {
 struct WorldXInfo {
   float world_x_start;
   float world_x_width;
-  bool is_visible_width;
 };
 
 WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, float world_start_x,
@@ -178,10 +177,13 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           double text_x_start_us = start_or_prev_end_us - (.25 * left_overlap_width_us);
           double right_overlap_width_us = end_us - end_or_next_start_us;
           double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
+
+          bool is_visible_width =
+              (text_x_end_us - text_x_start_us) * inv_time_window * canvas->GetWidth() > 1;
           WorldXInfo world_x_info =
               ToWorldX(text_x_start_us, text_x_end_us, inv_time_window, world_start_x, world_width);
 
-          if (world_x_info.is_visible_width) {
+          if (is_visible_width) {
             Vec2 pos(world_x_info.world_x_start, world_timer_y);
             Vec2 size(world_x_info.world_x_width, GetTextBoxHeight(timer_info));
             text_box.SetPos(pos);
