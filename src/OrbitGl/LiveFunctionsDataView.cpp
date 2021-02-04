@@ -223,8 +223,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
       enable_enable_frame_track |= !app_->IsFrameTrackEnabled(selected_function);
       enable_disable_frame_track |= app_->IsFrameTrackEnabled(selected_function);
     } else {
-      enable_enable_frame_track |= !app_->HasFrameTrackInCaptureData(instrumented_function_id);
-      enable_disable_frame_track |= app_->HasFrameTrackInCaptureData(instrumented_function_id);
+      enable_enable_frame_track |= !capture_data.IsFrameTrackEnabled(instrumented_function_id);
+      enable_disable_frame_track |= capture_data.IsFrameTrackEnabled(instrumented_function_id);
     }
   }
 
