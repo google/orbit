@@ -17,6 +17,7 @@ using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullCallstackSample;
+using orbit_grpc_protos::FullTracepointEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
@@ -24,6 +25,7 @@ using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedString;
+using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::ModuleUpdateEvent;
@@ -31,7 +33,6 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
-using orbit_grpc_protos::TracepointEvent;
 
 template <typename T>
 class InternedCache final {
@@ -94,7 +95,9 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessSchedulingSlice(SchedulingSlice* scheduling_slice);
   void ProcessThreadName(ThreadName* thread_name);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
-  void ProcessTracepointEvent(uint64_t producer_id, TracepointEvent* tracepoint_event);
+  void ProcessFullTracepointEvent(FullTracepointEvent* tracepoint_event);
+  void ProcessInternedTracepointEvent(uint64_t producer_id,
+                                      InternedTracepointEvent* tracepoint_event);
 
   void SendStringAndKeyEvent(uint64_t key, std::string value);
 
@@ -299,31 +302,35 @@ void ProducerEventProcessorImpl::ProcessThreadStateSlice(ThreadStateSlice* threa
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessTracepointEvent(uint64_t producer_id,
-                                                        TracepointEvent* tracepoint_event) {
-  // TODO: Split TracepointEvent in two, one with key another one with string
-  if (tracepoint_event->tracepoint_info_or_key_case() == TracepointEvent::kTracepointInfo) {
-    auto [tracepoint_key, assigned] =
-        tracepoint_cache_.GetOrAssignId({tracepoint_event->tracepoint_info().category(),
-                                         tracepoint_event->tracepoint_info().name()});
-    if (assigned) {
-      ClientCaptureEvent event;
-      event.mutable_interned_tracepoint_info()->set_key(tracepoint_key);
-      *event.mutable_interned_tracepoint_info()->mutable_intern() =
-          tracepoint_event->tracepoint_info();
-      capture_event_buffer_->AddEvent(std::move(event));
-    }
-    tracepoint_event->set_tracepoint_info_key(tracepoint_key);
-  } else {
-    CHECK(tracepoint_event->tracepoint_info_or_key_case() == TracepointEvent::kTracepointInfoKey);
-    auto [tracepoint_key, assigned] = interned_tracepoint_id_cache_.GetOrAssignId(
-        {producer_id, tracepoint_event->tracepoint_info_key()});
-    CHECK(!assigned);
-    tracepoint_event->set_tracepoint_info_key(tracepoint_key);
+void ProducerEventProcessorImpl::ProcessFullTracepointEvent(FullTracepointEvent* tracepoint_event) {
+  auto [tracepoint_key, assigned] = tracepoint_cache_.GetOrAssignId(
+      {tracepoint_event->tracepoint_info().category(), tracepoint_event->tracepoint_info().name()});
+  if (assigned) {
+    ClientCaptureEvent event;
+    InternedTracepointInfo* interned_tracepoint_info = event.mutable_interned_tracepoint_info();
+    interned_tracepoint_info->set_key(tracepoint_key);
+    *interned_tracepoint_info->mutable_intern() = tracepoint_event->tracepoint_info();
+    capture_event_buffer_->AddEvent(std::move(event));
   }
 
   ClientCaptureEvent event;
-  *event.mutable_tracepoint_event() = std::move(*tracepoint_event);
+  InternedTracepointEvent* interned_tracepoint_event = event.mutable_interned_tracepoint_event();
+  interned_tracepoint_event->set_pid(tracepoint_event->pid());
+  interned_tracepoint_event->set_tid(tracepoint_event->tid());
+  interned_tracepoint_event->set_timestamp_ns(tracepoint_event->timestamp_ns());
+  interned_tracepoint_event->set_cpu(tracepoint_event->cpu());
+  interned_tracepoint_event->set_tracepoint_info_key(tracepoint_key);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessInternedTracepointEvent(
+    uint64_t producer_id, InternedTracepointEvent* tracepoint_event) {
+  auto [tracepoint_key, assigned] = interned_tracepoint_id_cache_.GetOrAssignId(
+      {producer_id, tracepoint_event->tracepoint_info_key()});
+  tracepoint_event->set_tracepoint_info_key(tracepoint_key);
+
+  ClientCaptureEvent event;
+  *event.mutable_interned_tracepoint_event() = std::move(*tracepoint_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -340,6 +347,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kFullCallstackSample:
       ProcessFullCallstackSample(event.mutable_full_callstack_sample());
+      break;
+    case ProducerCaptureEvent::kFullTracepointEvent:
+      ProcessFullTracepointEvent(event.mutable_full_tracepoint_event());
       break;
     case ProducerCaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.mutable_function_call());
@@ -362,11 +372,11 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kAddressInfo:
       ProcessAddressInfo(producer_id, event.mutable_address_info());
       break;
+    case ProducerCaptureEvent::kInternedTracepointEvent:
+      ProcessInternedTracepointEvent(producer_id, event.mutable_interned_tracepoint_event());
+      break;
     case ProducerCaptureEvent::kInternedTracepointInfo:
       ProcessInternedTracepointInfo(producer_id, event.mutable_interned_tracepoint_info());
-      break;
-    case ProducerCaptureEvent::kTracepointEvent:
-      ProcessTracepointEvent(producer_id, event.mutable_tracepoint_event());
       break;
     case ProducerCaptureEvent::kIntrospectionScope:
       ProcessIntrospectionScope(event.mutable_introspection_scope());

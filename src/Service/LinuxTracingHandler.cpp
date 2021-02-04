@@ -123,11 +123,10 @@ void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
-void LinuxTracingHandler::OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) {
-  CHECK(tracepoint_event.tracepoint_info_or_key_case() ==
-        orbit_grpc_protos::TracepointEvent::kTracepointInfo);
+void LinuxTracingHandler::OnTracepointEvent(
+    orbit_grpc_protos::FullTracepointEvent tracepoint_event) {
   ProducerCaptureEvent event;
-  *event.mutable_tracepoint_event() = std::move(tracepoint_event);
+  *event.mutable_full_tracepoint_event() = std::move(tracepoint_event);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

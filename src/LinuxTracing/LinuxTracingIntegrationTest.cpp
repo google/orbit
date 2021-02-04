@@ -220,9 +220,9 @@ class BufferTracerListener : public TracerListener {
     }
   }
 
-  void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override {
+  void OnTracepointEvent(orbit_grpc_protos::FullTracepointEvent tracepoint_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_tracepoint_event() = std::move(tracepoint_event);
+    *event.mutable_full_tracepoint_event() = std::move(tracepoint_event);
     {
       absl::MutexLock lock{&events_mutex_};
       events_.emplace_back(std::move(event));
@@ -389,6 +389,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.full_callstack_sample().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.full_callstack_sample().timestamp_ns();
         break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullTracepointEvent:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall:
         EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
@@ -414,7 +416,7 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedTracepointInfo:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kTracepointEvent:
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedTracepointEvent:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
         UNREACHABLE();

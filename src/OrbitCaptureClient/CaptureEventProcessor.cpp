@@ -70,8 +70,8 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kInternedTracepointInfo:
       ProcessInternedTracepointInfo(event.interned_tracepoint_info());
       break;
-    case ClientCaptureEvent::kTracepointEvent:
-      ProcessTracepointEvent(event.tracepoint_event());
+    case ClientCaptureEvent::kInternedTracepointEvent:
+      ProcessTracepointEvent(event.interned_tracepoint_event());
       break;
     case ClientCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmission(event.gpu_queue_submission());
@@ -342,32 +342,21 @@ void CaptureEventProcessor::SendCallstackToListenerIfNecessary(uint64_t callstac
 
 void CaptureEventProcessor::ProcessInternedTracepointInfo(
     orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info) {
-  if (tracepoint_intern_pool_.contains(interned_tracepoint_info.key())) {
-    ERROR("Overwriting InternedTracepointInfo with key %llu", interned_tracepoint_info.key());
-  }
-  tracepoint_intern_pool_.emplace(interned_tracepoint_info.key(),
-                                  std::move(*interned_tracepoint_info.mutable_intern()));
+  capture_listener_->OnUniqueTracepointInfo(interned_tracepoint_info.key(),
+                                            std::move(*interned_tracepoint_info.mutable_intern()));
 }
 void CaptureEventProcessor::ProcessTracepointEvent(
-    const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
-  CHECK(tracepoint_event.tracepoint_info_or_key_case() ==
-        orbit_grpc_protos::TracepointEvent::kTracepointInfoKey);
+    const orbit_grpc_protos::InternedTracepointEvent& tracepoint_event) {
+  uint64_t key = tracepoint_event.tracepoint_info_key();
 
-  const uint64_t& hash = tracepoint_event.tracepoint_info_key();
-
-  CHECK(tracepoint_intern_pool_.contains(hash));
-
-  const auto& tracepoint_info = tracepoint_intern_pool_[hash];
-
-  SendTracepointInfoToListenerIfNecessary(tracepoint_info, hash);
   orbit_client_protos::TracepointEventInfo tracepoint_event_info;
   tracepoint_event_info.set_pid(tracepoint_event.pid());
   tracepoint_event_info.set_tid(tracepoint_event.tid());
-  tracepoint_event_info.set_time(tracepoint_event.time());
+  tracepoint_event_info.set_time(tracepoint_event.timestamp_ns());
   tracepoint_event_info.set_cpu(tracepoint_event.cpu());
-  tracepoint_event_info.set_tracepoint_info_key(hash);
+  tracepoint_event_info.set_tracepoint_info_key(key);
 
-  gpu_queue_submission_processor_.UpdateBeginCaptureTime(tracepoint_event.time());
+  gpu_queue_submission_processor_.UpdateBeginCaptureTime(tracepoint_event.timestamp_ns());
 
   capture_listener_->OnTracepointEvent(std::move(tracepoint_event_info));
 }
@@ -379,12 +368,4 @@ uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const 
     capture_listener_->OnKeyAndString(hash, str);
   }
   return hash;
-}
-
-void CaptureEventProcessor::SendTracepointInfoToListenerIfNecessary(
-    const orbit_grpc_protos::TracepointInfo& tracepoint_info, const uint64_t& hash) {
-  if (!tracepoint_hashes_seen_.contains(hash)) {
-    tracepoint_hashes_seen_.emplace(hash);
-    capture_listener_->OnUniqueTracepointInfo(hash, tracepoint_info);
-  }
 }

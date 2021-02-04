@@ -120,15 +120,20 @@ message InternedTracepointInfo {
   TracepointInfo intern = 2;
 }
 
-message TracepointEvent {
+message InternedTracepointEvent {
   int32 pid = 1;
   int32 tid = 2;
-  uint64 time = 3;
+  uint64 timestamp_ns = 3;
   int32 cpu = 4;
-  oneof tracepoint_info_or_key {
-    TracepointInfo tracepoint_info = 5;
-    uint64 tracepoint_info_key = 6;
-  }
+  uint64 tracepoint_info_key = 5;
+}
+
+message FullTracepointEvent {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+  int32 cpu = 4;
+  TracepointInfo tracepoint_info = 5;
 }
 
 message GpuJob {
@@ -264,7 +269,7 @@ message ClientCaptureEvent {
     ThreadStateSlice thread_state_slice = 11;
     AddressInfo address_info = 8;
     InternedTracepointInfo interned_tracepoint_info = 9;
-    TracepointEvent tracepoint_event = 10;
+    InternedTracepointEvent interned_tracepoint_event = 10;
     IntrospectionScope introspection_scope = 12;
     ModuleUpdateEvent module_update_event = 15;
   }
@@ -284,8 +289,9 @@ message ProducerCaptureEvent {
     ThreadStateSlice thread_state_slice = 10;
     AddressInfo address_info = 11;
     InternedTracepointInfo interned_tracepoint_info = 12;
-    TracepointEvent tracepoint_event = 13;
-    IntrospectionScope introspection_scope = 14;
-    ModuleUpdateEvent module_update_event = 15;
+    InternedTracepointEvent interned_tracepoint_event = 13;
+    FullTracepointEvent full_tracepoint_event = 14;
+    IntrospectionScope introspection_scope = 15;
+    ModuleUpdateEvent module_update_event = 16;
   }
 }
