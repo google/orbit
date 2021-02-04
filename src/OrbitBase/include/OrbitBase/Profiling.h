@@ -14,7 +14,7 @@
 
 #ifdef _WIN32
 [[nodiscard]] inline uint64_t MonotonicTimestampNs() {
-  auto time_since_epoch = std::chrono::high_resolution_clock::now().time_since_epoch();
+  auto time_since_epoch = std::chrono::steady_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::nanoseconds>(time_since_epoch).count();
 }
 #else
