@@ -6,7 +6,7 @@
 #define ORBIT_BASE_PROFILING_H_
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <chrono>
 #else
 #include <stdint.h>
 #include <time.h>
@@ -14,9 +14,8 @@
 
 #ifdef _WIN32
 [[nodiscard]] inline uint64_t MonotonicTimestampNs() {
-  __int64 time;
-  GetSystemTimeAsFileTime((FILETIME*)&time);
-  return static_cast<uint64_t>(time) * 100;
+  auto time_since_epoch = std::chrono::steady_clock::now().time_since_epoch();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(time_since_epoch).count();
 }
 #else
 [[nodiscard]] inline uint64_t MonotonicTimestampNs() {
