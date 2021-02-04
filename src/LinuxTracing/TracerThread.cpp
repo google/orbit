@@ -922,10 +922,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
     auto event = ConsumeGenericTracepointPerfEvent(ring_buffer, header);
 
-    orbit_grpc_protos::TracepointEvent tracepoint_event;
+    orbit_grpc_protos::FullTracepointEvent tracepoint_event;
     tracepoint_event.set_pid(event->GetPid());
     tracepoint_event.set_tid(event->GetTid());
-    tracepoint_event.set_time(event->GetTimestamp());
+    tracepoint_event.set_timestamp_ns(event->GetTimestamp());
     tracepoint_event.set_cpu(event->GetCpu());
 
     orbit_grpc_protos::TracepointInfo* tracepoint = tracepoint_event.mutable_tracepoint_info();

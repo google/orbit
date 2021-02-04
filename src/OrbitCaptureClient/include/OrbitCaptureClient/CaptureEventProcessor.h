@@ -44,12 +44,11 @@ class CaptureEventProcessor {
   void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
-  void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
+  void ProcessTracepointEvent(const orbit_grpc_protos::InternedTracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
   absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;
-  absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> tracepoint_intern_pool_;
   CaptureListener* capture_listener_ = nullptr;
 
   absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
@@ -57,9 +56,6 @@ class CaptureEventProcessor {
                                           const orbit_grpc_protos::Callstack& callstack);
   absl::flat_hash_set<uint64_t> string_hashes_seen_;
   uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
-  absl::flat_hash_set<uint64_t> tracepoint_hashes_seen_;
-  void SendTracepointInfoToListenerIfNecessary(
-      const orbit_grpc_protos::TracepointInfo& tracepoint_info, const uint64_t& hash);
 
   GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
 };

@@ -45,12 +45,12 @@ using orbit_grpc_protos::GpuSubmitInfo;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedString;
+using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
-using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::TracepointInfo;
 
 using ::testing::_;
@@ -367,81 +367,6 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   EXPECT_EQ(actual_address_info.module_path(), interned_map_name->intern());
 }
 
-// TODO(b/174145461): Enable the test as soon as the bug is fixed.
-TEST(DISABLED_CaptureEventProcessor, CanHandleOneTracepointEvent) {
-  MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
-
-  ClientCaptureEvent event;
-  TracepointEvent* tracepoint_event = event.mutable_tracepoint_event();
-  tracepoint_event->set_pid(1);
-  tracepoint_event->set_tid(3);
-  tracepoint_event->set_time(100);
-  tracepoint_event->set_cpu(2);
-  TracepointInfo* tracepoint = tracepoint_event->mutable_tracepoint_info();
-  tracepoint->set_category("cat");
-  tracepoint->set_name("name");
-
-  uint64_t actual_key;
-  TracepointInfo actual_tracepoint_info;
-  EXPECT_CALL(listener, OnUniqueTracepointInfo)
-      .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_key), SaveArg<1>(&actual_tracepoint_info)));
-  TracepointEventInfo actual_tracepoint_event;
-  EXPECT_CALL(listener, OnTracepointEvent).Times(1).WillOnce(SaveArg<0>(&actual_tracepoint_event));
-
-  event_processor.ProcessEvent(event);
-
-  EXPECT_EQ(actual_key, actual_tracepoint_event.tracepoint_info_key());
-  EXPECT_EQ(actual_tracepoint_info.category(), tracepoint->category());
-  EXPECT_EQ(actual_tracepoint_info.name(), tracepoint->name());
-  EXPECT_EQ(actual_tracepoint_event.pid(), tracepoint_event->pid());
-  EXPECT_EQ(actual_tracepoint_event.tid(), tracepoint_event->tid());
-  EXPECT_EQ(actual_tracepoint_event.time(), tracepoint_event->time());
-  EXPECT_EQ(actual_tracepoint_event.cpu(), tracepoint_event->cpu());
-}
-
-// TODO(b/174145461): Enable the test as soon as the bug is fixed.
-TEST(DISABLED_CaptureEventProcessor, WillOnlyHandleUniqueTracepointEventsOnce) {
-  MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
-
-  ClientCaptureEvent event_1;
-  TracepointEvent* tracepoint_event_1 = event_1.mutable_tracepoint_event();
-  tracepoint_event_1->set_pid(1);
-  tracepoint_event_1->set_tid(3);
-  tracepoint_event_1->set_time(100);
-  tracepoint_event_1->set_cpu(2);
-  TracepointInfo* tracepoint_1 = tracepoint_event_1->mutable_tracepoint_info();
-  tracepoint_1->set_category("cat");
-  tracepoint_1->set_name("name");
-
-  ClientCaptureEvent event_2;
-  TracepointEvent* tracepoint_event_2 = event_2.mutable_tracepoint_event();
-  tracepoint_event_2->set_pid(1);
-  tracepoint_event_2->set_tid(3);
-  tracepoint_event_2->set_time(100);
-  tracepoint_event_2->set_cpu(2);
-  TracepointInfo* tracepoint_2 = tracepoint_event_1->mutable_tracepoint_info();
-  tracepoint_2->set_category("cat");
-  tracepoint_2->set_name("name");
-
-  uint64_t actual_key;
-  TracepointInfo actual_tracepoint_info;
-  EXPECT_CALL(listener, OnUniqueTracepointInfo)
-      .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_key), SaveArg<1>(&actual_tracepoint_info)));
-  TracepointEventInfo actual_tracepoint_event_1;
-  TracepointEventInfo actual_tracepoint_event_2;
-  EXPECT_CALL(listener, OnTracepointEvent)
-      .Times(2)
-      .WillOnce(SaveArg<0>(&actual_tracepoint_event_1))
-      .WillOnce(SaveArg<0>(&actual_tracepoint_event_2));
-
-  event_processor.ProcessEvent(event_1);
-  event_processor.ProcessEvent(event_2);
-}
-
 TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
@@ -455,10 +380,10 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   tracepoint_intern->set_category("category");
 
   ClientCaptureEvent tracepoint_event;
-  TracepointEvent* tracepoint = tracepoint_event.mutable_tracepoint_event();
+  InternedTracepointEvent* tracepoint = tracepoint_event.mutable_interned_tracepoint_event();
   tracepoint->set_pid(1);
   tracepoint->set_tid(3);
-  tracepoint->set_time(100);
+  tracepoint->set_timestamp_ns(100);
   tracepoint->set_cpu(2);
   tracepoint->set_tracepoint_info_key(interned_tracepoint->key());
 
@@ -479,7 +404,7 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   EXPECT_EQ(actual_tracepoint_info.name(), tracepoint_intern->name());
   EXPECT_EQ(actual_tracepoint_event.pid(), tracepoint->pid());
   EXPECT_EQ(actual_tracepoint_event.tid(), tracepoint->tid());
-  EXPECT_EQ(actual_tracepoint_event.time(), tracepoint->time());
+  EXPECT_EQ(actual_tracepoint_event.time(), tracepoint->timestamp_ns());
   EXPECT_EQ(actual_tracepoint_event.cpu(), tracepoint->cpu());
 }
 
