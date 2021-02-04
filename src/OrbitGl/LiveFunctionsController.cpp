@@ -44,9 +44,8 @@ const TextBox* ClosestTo(uint64_t point, const TextBox* box_a, const TextBox* bo
   uint64_t b_diff = AbsDiff(point, box_b->GetTimerInfo().start());
   if (a_diff <= b_diff) {
     return box_a;
-  } else {
-    return box_b;
   }
+  return box_b;
 }
 
 const TextBox* SnapToClosestStart(const TimeGraph* time_graph, uint64_t function_id) {
