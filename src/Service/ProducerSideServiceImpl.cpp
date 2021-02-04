@@ -348,7 +348,10 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
 
     switch (request.event_case()) {
       case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents: {
-        absl::MutexLock lock{&capture_event_buffer_mutex_};
+        // We use ReaderMutexLock because the mutex guards the value of capture_event_buffer_,
+        // it does not guard calls to AddEvent nor the internal state of the object implementing
+        // the interface. The interface implementation is by itself thread-safe.
+        absl::ReaderMutexLock lock{&capture_event_buffer_mutex_};
         // capture_event_buffer_ can be nullptr if a producer sends events while not capturing.
         // Don't log an error in such a case as it could easily spam the logs.
         if (capture_event_buffer_ != nullptr) {
