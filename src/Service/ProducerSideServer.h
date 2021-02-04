@@ -25,7 +25,7 @@ class ProducerSideServer final : public CaptureStartStopListener {
   void ShutdownAndWait();
 
   void OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
-                               CaptureEventBuffer* capture_event_buffer) override;
+                               ProducerEventProcessor* producer_event_processor) override;
   void OnCaptureStopRequested() override;
 
  private:

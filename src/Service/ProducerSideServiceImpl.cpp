@@ -19,12 +19,13 @@ using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
 void ProducerSideServiceImpl::OnCaptureStartRequested(
-    orbit_grpc_protos::CaptureOptions capture_options, CaptureEventBuffer* capture_event_buffer) {
-  CHECK(capture_event_buffer != nullptr);
+    orbit_grpc_protos::CaptureOptions capture_options,
+    ProducerEventProcessor* producer_event_processor) {
+  CHECK(producer_event_processor != nullptr);
   LOG("About to send StartCaptureCommand to CaptureEventProducers (if any)");
   {
-    absl::WriterMutexLock lock{&capture_event_buffer_mutex_};
-    capture_event_buffer_ = capture_event_buffer;
+    absl::WriterMutexLock lock{&producer_event_processor_mutex_};
+    producer_event_processor_ = producer_event_processor;
   }
   {
     absl::MutexLock lock{&service_state_mutex_};
@@ -62,8 +63,8 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
   }
 
   {
-    absl::WriterMutexLock lock{&capture_event_buffer_mutex_};
-    capture_event_buffer_ = nullptr;
+    absl::WriterMutexLock lock{&producer_event_processor_mutex_};
+    producer_event_processor_ = nullptr;
   }
 }
 
@@ -84,8 +85,8 @@ void ProducerSideServiceImpl::OnExitRequest() {
   }
 
   {
-    absl::WriterMutexLock lock{&capture_event_buffer_mutex_};
-    capture_event_buffer_ = nullptr;
+    absl::WriterMutexLock lock{&producer_event_processor_mutex_};
+    producer_event_processor_ = nullptr;
   }
 }
 
@@ -118,8 +119,12 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
 
   // This thread is responsible for reading from stream, and specifically for
   // receiving CaptureEvents and AllEventsSent messages.
-  std::thread receive_events_thread{&ProducerSideServiceImpl::ReceiveEventsThread, this, context,
-                                    stream, &all_events_sent_received};
+  std::thread receive_events_thread{&ProducerSideServiceImpl::ReceiveEventsThread,
+                                    this,
+                                    context,
+                                    stream,
+                                    producer_id_counter_++,
+                                    &all_events_sent_received};
   receive_events_thread.join();
 
   // When receive_events_thread exits because stream->Read(&request) fails,
@@ -348,7 +353,7 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
     grpc::ServerContext* /*context*/,
     grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                              orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
-    bool* all_events_sent_received) {
+    uint64_t producer_id, bool* all_events_sent_received) {
   orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
   while (stream->Read(&request)) {
     {
@@ -360,68 +365,16 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
 
     switch (request.event_case()) {
       case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents: {
-        // We use ReaderMutexLock because the mutex guards the value of capture_event_buffer_,
-        // it does not guard calls to AddEvent nor the internal state of the object implementing
+        // We use ReaderMutexLock because the mutex guards the value of producer_event_processor_,
+        // it does not guard calls to ProcessEvent nor the internal state of the object implementing
         // the interface. The interface implementation is by itself thread-safe.
-        absl::ReaderMutexLock lock{&capture_event_buffer_mutex_};
-        // capture_event_buffer_ can be nullptr if a producer sends events while not capturing.
+        absl::ReaderMutexLock lock{&producer_event_processor_mutex_};
+        // producer_event_processor_ can be nullptr if a producer sends events while not capturing.
         // Don't log an error in such a case as it could easily spam the logs.
-        if (capture_event_buffer_ != nullptr) {
-          for (const ProducerCaptureEvent& producer_event :
-               request.buffered_capture_events().capture_events()) {
-            ClientCaptureEvent client_event;
-            switch (producer_event.event_case()) {
-              case ProducerCaptureEvent::kInternedCallstack:
-                *client_event.mutable_interned_callstack() = producer_event.interned_callstack();
-                break;
-              case ProducerCaptureEvent::kSchedulingSlice:
-                *client_event.mutable_scheduling_slice() = producer_event.scheduling_slice();
-                break;
-              case ProducerCaptureEvent::kInternedCallstackSample:
-                *client_event.mutable_interned_callstack_sample() =
-                    producer_event.interned_callstack_sample();
-                break;
-              case ProducerCaptureEvent::kFullCallstackSample:
-                FATAL("This use-case is not yet supported");
-              case ProducerCaptureEvent::kFunctionCall:
-                *client_event.mutable_function_call() = producer_event.function_call();
-                break;
-              case ProducerCaptureEvent::kInternedString:
-                *client_event.mutable_interned_string() = producer_event.interned_string();
-                break;
-              case ProducerCaptureEvent::kGpuJob:
-                *client_event.mutable_gpu_job() = producer_event.gpu_job();
-                break;
-              case ProducerCaptureEvent::kGpuQueueSubmission:
-                *client_event.mutable_gpu_queue_submission() =
-                    producer_event.gpu_queue_submission();
-                break;
-              case ProducerCaptureEvent::kThreadName:
-                *client_event.mutable_thread_name() = producer_event.thread_name();
-                break;
-              case ProducerCaptureEvent::kThreadStateSlice:
-                *client_event.mutable_thread_state_slice() = producer_event.thread_state_slice();
-                break;
-              case ProducerCaptureEvent::kAddressInfo:
-                *client_event.mutable_address_info() = producer_event.address_info();
-                break;
-              case ProducerCaptureEvent::kInternedTracepointInfo:
-                *client_event.mutable_interned_tracepoint_info() =
-                    producer_event.interned_tracepoint_info();
-                break;
-              case ProducerCaptureEvent::kTracepointEvent:
-                *client_event.mutable_tracepoint_event() = producer_event.tracepoint_event();
-                break;
-              case ProducerCaptureEvent::kIntrospectionScope:
-                *client_event.mutable_introspection_scope() = producer_event.introspection_scope();
-                break;
-              case ProducerCaptureEvent::kModuleUpdateEvent:
-                *client_event.mutable_module_update_event() = producer_event.module_update_event();
-                break;
-              case ProducerCaptureEvent::EVENT_NOT_SET:
-                UNREACHABLE();
-            }
-            capture_event_buffer_->AddEvent(std::move(client_event));
+        if (producer_event_processor_ != nullptr) {
+          for (ProducerCaptureEvent& event :
+               *request.mutable_buffered_capture_events()->mutable_capture_events()) {
+            producer_event_processor_->ProcessEvent(producer_id, std::move(event));
           }
         }
       } break;

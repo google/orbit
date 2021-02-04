@@ -108,9 +108,10 @@ class FakeProducer {
   std::thread read_thread_;
 };
 
-class MockCaptureEventBuffer : public CaptureEventBuffer {
+class MockProducerEventProcessor : public ProducerEventProcessor {
  public:
-  MOCK_METHOD(void, AddEvent, (orbit_grpc_protos::ClientCaptureEvent && event), (override));
+  MOCK_METHOD(void, ProcessEvent, (uint64_t, orbit_grpc_protos::ProducerCaptureEvent event),
+              (override));
 };
 
 class ProducerSideServiceImplTest : public ::testing::Test {
@@ -177,21 +178,21 @@ MATCHER_P(CaptureOptionsEq, that, "") {
 }
 
 TEST_F(ProducerSideServiceImplTest, OneCapture) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   static constexpr uint64_t kSendAllEventsDelayMs = 25;
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
@@ -208,21 +209,21 @@ TEST_F(ProducerSideServiceImplTest, OneCapture) {
 }
 
 TEST_F(ProducerSideServiceImplTest, TwoCaptures) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
     fake_producer_->SendAllEventsSent();
@@ -240,18 +241,18 @@ TEST_F(ProducerSideServiceImplTest, TwoCaptures) {
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(1);
   fake_producer_->SendBufferedCaptureEvents(2);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   static constexpr uint64_t kSendAllEventsDelayMs = 25;
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
@@ -268,19 +269,19 @@ TEST_F(ProducerSideServiceImplTest, TwoCaptures) {
 }
 
 TEST_F(ProducerSideServiceImplTest, NoCaptureEvents) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(0);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(0);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   static constexpr uint64_t kSendAllEventsDelayMs = 25;
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
@@ -297,21 +298,21 @@ TEST_F(ProducerSideServiceImplTest, NoCaptureEvents) {
 }
 
 TEST_F(ProducerSideServiceImplTest, NoAllEventsSent) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   {
     ::testing::InSequence in_sequence;
@@ -327,24 +328,24 @@ TEST_F(ProducerSideServiceImplTest, NoAllEventsSent) {
 }
 
 TEST_F(ProducerSideServiceImplTest, RedundantAllEventsSent) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   fake_producer_->SendAllEventsSent();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   static constexpr uint64_t kSendAllEventsDelayMs = 25;
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
@@ -363,16 +364,16 @@ TEST_F(ProducerSideServiceImplTest, RedundantAllEventsSent) {
 }
 
 TEST_F(ProducerSideServiceImplTest, AllEventsSentBeforeStopCaptureCommand) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
@@ -380,18 +381,18 @@ TEST_F(ProducerSideServiceImplTest, AllEventsSentBeforeStopCaptureCommand) {
   fake_producer_->SendAllEventsSent();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   // As the producer has already sent AllEventsSent, this should be immediate.
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, 0, 5);
 }
 
 TEST_F(ProducerSideServiceImplTest, MultipleOnCaptureStartStop) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
@@ -399,17 +400,17 @@ TEST_F(ProducerSideServiceImplTest, MultipleOnCaptureStartStop) {
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(0);
   // This should *not* cause StartCaptureCommand to be sent again.
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   static constexpr uint64_t kSendAllEventsDelayMs = 25;
   ON_CALL(*fake_producer_, OnStopCaptureCommandReceived).WillByDefault([this] {
@@ -441,44 +442,44 @@ TEST_F(ProducerSideServiceImplTest, NoOnCaptureStartRequested) {
 }
 
 TEST_F(ProducerSideServiceImplTest, NoOnCaptureStopRequested) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(6);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(6);
   fake_producer_->SendBufferedCaptureEvents(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   EXPECT_CALL(*fake_producer_, OnStopCaptureCommandReceived).Times(0);
   EXPECT_CALL(*fake_producer_, OnCaptureFinishedCommandReceived).Times(0);
 }
 
 TEST_F(ProducerSideServiceImplTest, ProducerDisconnectsMidCapture) {
-  MockCaptureEventBuffer mock_buffer;
+  MockProducerEventProcessor mock_processor;
 
   EXPECT_CALL(*fake_producer_, OnStartCaptureCommandReceived(CaptureOptionsEq(kFakeCaptureOptions)))
       .Times(1);
-  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_buffer);
+  service_->OnCaptureStartRequested(kFakeCaptureOptions, &mock_processor);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_producer_);
 
-  EXPECT_CALL(mock_buffer, AddEvent).Times(3);
+  EXPECT_CALL(mock_processor, ProcessEvent).Times(3);
   fake_producer_->SendBufferedCaptureEvents(3);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   fake_producer_->FinishRpc();
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_buffer);
+  ::testing::Mock::VerifyAndClearExpectations(&mock_processor);
 
   // As the producer has disconnected, this should be immediate.
   ExpectDurationBetweenMs([this] { service_->OnCaptureStopRequested(); }, 0, 5);
