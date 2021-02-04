@@ -82,7 +82,7 @@ class ScopeTree {
     return ordered_nodes_by_depth_;
   }
 
-  const std::map<uint32_t, std::map<uint64_t, ScopeNode*>>& GetOrderedNodesByDepth() {
+  const absl::btree_map<uint32_t, absl::btree_map<uint64_t, ScopeNode*>>& GetOrderedNodesByDepth() {
     return orderered_nodes_by_depth;
   }
 
