@@ -239,6 +239,8 @@ void Batcher::AddCircle(Vec2 position, float radius, float z, Color color) {
     circle_points_scaled_by_radius.emplace_back(radius * point);
   }
 
+  position = Vec2(floorf(position[0]), floorf(position[1]));
+
   Vec3 prev_point(position[0], position[1] - radius, z);
   Vec3 point_0 = Vec3(position[0], position[1], z);
   for (size_t i = 0; i < circle_points_scaled_by_radius.size(); ++i) {

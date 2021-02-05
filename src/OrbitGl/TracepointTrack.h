@@ -9,25 +9,30 @@
 
 #include <string>
 
-#include "EventTrack.h"
-#include "PickingManager.h"
+#include "ThreadBar.h"
 
-class TracepointTrack : public EventTrack {
+namespace orbit_gl {
+
+class TracepointTrack : public ThreadBar {
  public:
-  explicit TracepointTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
-                           CaptureData* capture_data);
+  explicit TracepointTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
+                           int32_t thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                         float z_offset = 0) override;
 
-  void OnPick(int x, int y) override;
-  void OnRelease() override;
-  bool IsEmpty() const override;
+  [[nodiscard]] bool IsEmpty() const override;
+
+  void SetColor(const Color& color) { color_ = color; }
 
  private:
   std::string GetTracepointTooltip(PickingId id) const;
+
+  Color color_;
 };
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_TRACEPOINT_TRACK_H_

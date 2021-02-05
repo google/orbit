@@ -41,12 +41,13 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app
   InitializeNameAndLabel(thread_id);
 
   thread_state_track_ =
-      std::make_shared<ThreadStateTrack>(time_graph, thread_id, app_, capture_data);
+      std::make_shared<orbit_gl::ThreadStateTrack>(app_, time_graph, capture_data, thread_id_);
 
-  event_track_ = std::make_shared<EventTrack>(time_graph, app_, capture_data);
+  event_track_ = std::make_shared<orbit_gl::EventTrack>(app_, time_graph, capture_data, thread_id_);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<TracepointTrack>(time_graph, thread_id, app_, capture_data);
+  tracepoint_track_ =
+      std::make_shared<orbit_gl::TracepointTrack>(app_, time_graph, capture_data, thread_id_);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 
@@ -231,10 +232,10 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
 }
 
 void ThreadTrack::UpdateMinMaxTimestamps() {
-  if (!event_track_->IsEmpty()) {
-    min_time_ = std::min(min_time_.load(), event_track_->GetMinTime());
-    max_time_ = std::max(max_time_.load(), event_track_->GetMaxTime());
-  }
+  CHECK(capture_data_ != nullptr);
+
+  min_time_ = std::min(min_time_.load(), capture_data_->GetCallstackData()->min_time());
+  max_time_ = std::max(max_time_.load(), capture_data_->GetCallstackData()->max_time());
 }
 
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
