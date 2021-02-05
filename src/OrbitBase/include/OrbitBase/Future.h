@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 #include "OrbitBase/Logging.h"
@@ -79,8 +80,22 @@ template <typename T>
 class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
  public:
   // Constructs a completed future
+  /* explicit(false) */ Future(const T& val)
+      : orbit_base_internal::FutureBase<T>{
+            std::make_shared<orbit_base_internal::SharedState<T>>()} {
+    this->shared_state_->result.emplace(val);
+  }
+
+  // Constructs a completed future
+  /* explicit(false) */ Future(T && val)
+      : orbit_base_internal::FutureBase<T>{
+            std::make_shared<orbit_base_internal::SharedState<T>>()} {
+    this->shared_state_->result.emplace(std::move(val));
+  }
+
+  // Constructs a completed future
   template <typename... Args>
-  explicit Future(Args && ... args)
+  explicit Future(std::in_place_t, Args && ... args)
       : orbit_base_internal::FutureBase<T>{
             std::make_shared<orbit_base_internal::SharedState<T>>()} {
     this->shared_state_->result.emplace(std::forward<Args>(args)...);
