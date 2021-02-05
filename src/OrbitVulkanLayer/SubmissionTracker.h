@@ -304,7 +304,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
 
     QueueSubmission queue_submission;
-    queue_submission.meta_information.pre_submission_cpu_timestamp = MonotonicTimestampNs();
+    queue_submission.meta_information.pre_submission_cpu_timestamp =
+        orbit_base::CaptureTimestampNs();
     queue_submission.meta_information.thread_id = orbit_base::GetCurrentThreadId();
 
     for (uint32_t submit_index = 0; submit_index < submit_count; ++submit_index) {
@@ -365,7 +366,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     // debug marker, as they may span across different submissions.
     if (queue_submission_optional.has_value()) {
       queue_submission_optional->meta_information.post_submission_cpu_timestamp =
-          MonotonicTimestampNs();
+          orbit_base::CaptureTimestampNs();
     }
 
     std::vector<uint32_t> marker_slots_to_reset;

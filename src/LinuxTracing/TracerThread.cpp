@@ -588,7 +588,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     perf_event_enable(fd);
   }
 
-  effective_capture_start_timestamp_ns_ = MonotonicTimestampNs();
+  effective_capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
 
   // Get the initial thread names and notify the listener_.
   RetrieveThreadNamesSystemWide();
@@ -702,7 +702,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   event_processor_.ProcessAllEvents();
 
   if (trace_thread_state_) {
-    switches_states_names_visitor_->ProcessRemainingOpenStates(MonotonicTimestampNs());
+    switches_states_names_visitor_->ProcessRemainingOpenStates(orbit_base::CaptureTimestampNs());
   }
 
   // Stop recording.
@@ -989,7 +989,7 @@ void TracerThread::ProcessDeferredEvents() {
 }
 
 void TracerThread::RetrieveThreadNamesSystemWide() {
-  uint64_t timestamp_ns = MonotonicTimestampNs();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   for (pid_t pid : GetAllPids()) {
     for (pid_t tid : GetTidsOfProcess(pid)) {
       std::string name = orbit_base::GetThreadName(tid);
@@ -1017,7 +1017,7 @@ void TracerThread::RetrieveTidToPidAssociationSystemWide() {
 
 void TracerThread::RetrieveThreadStatesOfTarget() {
   for (pid_t tid : GetTidsOfProcess(target_pid_)) {
-    uint64_t timestamp_ns = MonotonicTimestampNs();
+    uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
     std::optional<char> state = GetThreadState(tid);
     if (!state.has_value()) {
       continue;
@@ -1057,7 +1057,7 @@ void TracerThread::Reset() {
 
 void TracerThread::PrintStatsIfTimerElapsed() {
   ORBIT_SCOPE_FUNCTION;
-  uint64_t timestamp_ns = MonotonicTimestampNs();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
     double actual_window_s =
         static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;

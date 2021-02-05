@@ -26,7 +26,7 @@ class Timer {
 
  private:
   [[nodiscard]] uint64_t EndOrNow() const { return end_ == 0 ? Now() : end_; }
-  [[nodiscard]] static uint64_t Now() { return MonotonicTimestampNs(); }
+  [[nodiscard]] static uint64_t Now() { return orbit_base::CaptureTimestampNs(); }
 
   uint64_t start_ = 0;
   uint64_t end_ = 0;

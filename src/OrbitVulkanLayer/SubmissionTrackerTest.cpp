@@ -482,11 +482,11 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
@@ -519,11 +519,11 @@ TEST_F(SubmissionTrackerTest,
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
   tracker_.CompleteSubmits(device_);
 
@@ -579,11 +579,11 @@ TEST_F(SubmissionTrackerTest,
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   producer_->StopCapture();
   tracker_.CompleteSubmits(device_);
 
@@ -615,12 +615,12 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t pid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   producer_->StopCapture();
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
@@ -884,11 +884,11 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
@@ -1006,11 +1006,11 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex3,
@@ -1083,11 +1083,11 @@ TEST_F(SubmissionTrackerTest,
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
@@ -1151,11 +1151,11 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  uint64_t pre_submit_time_1 = MonotonicTimestampNs();
+  uint64_t pre_submit_time_1 = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional_1 =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
-  uint64_t post_submit_time_1 = MonotonicTimestampNs();
+  uint64_t post_submit_time_1 = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
   tracker_.ResetCommandBuffer(command_buffer_);
   tracker_.MarkCommandBufferBegin(command_buffer_);
@@ -1397,11 +1397,11 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
-  uint64_t pre_submit_time = MonotonicTimestampNs();
+  uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
-  uint64_t post_submit_time = MonotonicTimestampNs();
+  uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   EXPECT_THAT(actual_reset_slots,
@@ -1466,11 +1466,11 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
                                 expected_color);  // timestamp 2
   tracker_.MarkDebugMarkerBegin(command_buffer_, text_inner.c_str(), expected_color);  // cut-off
   tracker_.MarkCommandBufferEnd(command_buffer_);  // timestamp 3
-  uint64_t pre_submit_time_1 = MonotonicTimestampNs();
+  uint64_t pre_submit_time_1 = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional_1 =
       tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
-  uint64_t post_submit_time_1 = MonotonicTimestampNs();
+  uint64_t post_submit_time_1 = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
 
   tracker_.ResetCommandBuffer(command_buffer_);

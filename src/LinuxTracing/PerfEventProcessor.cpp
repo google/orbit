@@ -39,7 +39,7 @@ void PerfEventProcessor::ProcessAllEvents() {
 
 void PerfEventProcessor::ProcessOldEvents() {
   CHECK(!visitors_.empty());
-  uint64_t current_timestamp_ns = MonotonicTimestampNs();
+  uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
   while (event_queue_.HasEvent()) {
     PerfEvent* event = event_queue_.TopEvent();

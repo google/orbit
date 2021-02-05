@@ -23,7 +23,7 @@ perf_event_attr generic_event_attr() {
   pe.size = sizeof(struct perf_event_attr);
   pe.sample_period = 1;
   pe.use_clockid = 1;
-  pe.clockid = kOrbitTimelineClock;
+  pe.clockid = orbit_base::kOrbitCaptureClock;
   pe.sample_id_all = 1;  // Also include timestamps for lost events.
   pe.disabled = 1;
   pe.sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
