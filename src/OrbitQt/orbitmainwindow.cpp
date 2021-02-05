@@ -482,6 +482,9 @@ void OrbitMainWindow::SetupTargetLabel() {
         "This discards any unsaved progress. Are you sure you want to continue?");
 
     if (reply == QMessageBox::Yes) {
+      if (app_->IsCapturing()) {
+        app_->AbortCapture();
+      }
       QApplication::exit(kEndSessionReturnCode);
     }
   });
