@@ -327,8 +327,10 @@ TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateInstanceWithNoInfo)
 
 TEST_F(VulkanLayerControllerTest,
        WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateInstance) {
-  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
+  std::unique_ptr<VulkanLayerControllerImpl> controller =
+      std::make_unique<VulkanLayerControllerImpl>();
+  const MockDispatchTable* dispatch_table = controller->dispatch_table();
+  const MockSubmissionTracker* submission_tracker = controller->submission_tracker();
   EXPECT_CALL(*dispatch_table, CreateInstanceDispatchTable).Times(1);
   EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer).Times(1);
 
@@ -354,16 +356,17 @@ TEST_F(VulkanLayerControllerTest,
   VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
                                    .pNext = &layer_create_info};
   VkInstance created_instance;
-  VkResult result = controller_.OnCreateInstance(&create_info, nullptr, &created_instance);
+  VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_EQ(layer_create_info.u.pLayerInfo, &layer_link_1);
 
   ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
   // There will be a call in the destructor.
-  VulkanLayerProducer* actual_producer;
+  auto actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
   EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_producer));
+  controller.reset();
   EXPECT_EQ(actual_producer, nullptr);
 }
 
