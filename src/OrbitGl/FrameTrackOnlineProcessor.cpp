@@ -44,6 +44,7 @@ void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInf
     // TID is meaningless for this timer (start and end can be on two different threads).
     constexpr const int32_t kUnusedThreadId = -1;
     frame_timer.set_thread_id(kUnusedThreadId);
+    frame_timer.set_function_id(function_id);
     frame_timer.set_start(previous_timestamp_ns);
     frame_timer.set_end(timer_info.start());
     // We use user_data_key to keep track of the frame number.
