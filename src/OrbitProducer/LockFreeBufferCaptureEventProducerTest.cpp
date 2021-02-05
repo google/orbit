@@ -87,7 +87,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEventIfCapturi
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
@@ -139,7 +139,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEvent) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
@@ -195,7 +195,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DuplicatedCommands) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
@@ -216,7 +216,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DuplicatedCommands) {
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
   // This should have no effect.
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
@@ -296,7 +296,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, ServiceDisconnects) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
@@ -336,7 +336,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DisconnectAndReconnect) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
@@ -376,7 +376,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DisconnectAndReconnect) {
   fake_service_->ReAllowRpc();
   std::this_thread::sleep_for(std::chrono::milliseconds{2 * kReconnectionDelayMs});
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 

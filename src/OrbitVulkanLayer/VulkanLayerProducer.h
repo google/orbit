@@ -41,7 +41,7 @@ class VulkanLayerProducer {
   class CaptureStatusListener {
    public:
     virtual ~CaptureStatusListener() = default;
-    virtual void OnCaptureStart() = 0;
+    virtual void OnCaptureStart(orbit_grpc_protos::CaptureOptions capture_options) = 0;
     virtual void OnCaptureStop() = 0;
     virtual void OnCaptureFinished() = 0;
   };

@@ -50,10 +50,11 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
     return grpc::Status::OK;
   }
 
-  void SendStartCaptureCommand() {
+  void SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions capture_options) {
     ASSERT_NE(stream_, nullptr);
     orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
-    command.mutable_start_capture_command();
+    *command.mutable_start_capture_command()->mutable_capture_options() =
+        std::move(capture_options);
     bool written = stream_->Write(command);
     EXPECT_TRUE(written);
   }

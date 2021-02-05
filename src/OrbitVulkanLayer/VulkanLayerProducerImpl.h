@@ -40,10 +40,10 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
     explicit LockFreeBufferVulkanLayerProducer(VulkanLayerProducerImpl* outer) : outer_{outer} {}
 
    protected:
-    void OnCaptureStart() override {
-      LockFreeBufferCaptureEventProducer::OnCaptureStart();
+    void OnCaptureStart(orbit_grpc_protos::CaptureOptions capture_options) override {
+      LockFreeBufferCaptureEventProducer::OnCaptureStart(capture_options);
       if (outer_->listener_ != nullptr) {
-        outer_->listener_->OnCaptureStart();
+        outer_->listener_->OnCaptureStart(std::move(capture_options));
       }
     }
 

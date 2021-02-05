@@ -56,7 +56,7 @@ class MockVulkanLayerProducer : public VulkanLayerProducer {
   void StartCapture() {
     is_capturing_ = true;
     ASSERT_NE(listener_, nullptr);
-    listener_->OnCaptureStart();
+    listener_->OnCaptureStart(orbit_grpc_protos::CaptureOptions{});
   }
 
   void StopCapture() {

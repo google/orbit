@@ -185,12 +185,12 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
           LOG("ProducerSideService sent StartCaptureCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
-            OnCaptureStart();
+            OnCaptureStart(response.start_capture_command().capture_options());
           } else if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
             OnCaptureFinished();
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
-            OnCaptureStart();
+            OnCaptureStart(response.start_capture_command().capture_options());
           }
         } break;
 
@@ -202,7 +202,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
           } else if (last_command_ ==
                      ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
-            OnCaptureStart();
+            OnCaptureStart(orbit_grpc_protos::CaptureOptions{});
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
             OnCaptureStop();
           }
