@@ -65,9 +65,12 @@ MetricsUploader::~MetricsUploader() {
       ERROR("Error while closing connection: %s", GetErrorMessage(result));
     }
   }
-  if (nullptr != metrics_uploader_client_dll_) {
-    FreeLibrary(metrics_uploader_client_dll_);
-  }
+  // Here FreeLibrary should be called. However, calling it on go-shared library leads to crash.
+  // This should be revisited as soon as the issue in golang is fixed.
+  //
+  // if (nullptr != metrics_uploader_client_dll_) {
+  //   FreeLibrary(metrics_uploader_client_dll_);
+  // }
 }
 
 ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string client_name) {
@@ -88,21 +91,24 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
   auto setup_connection_addr = reinterpret_cast<Result (*)(const char*)>(
       GetProcAddress(metrics_uploader_client_dll, kSetupConnectionFunctionName));
   if (nullptr == setup_connection_addr) {
-    FreeLibrary(metrics_uploader_client_dll);
+    // Here and below FreeLibrary should be called. However, calling it on go-shared library leads
+    // to crash. This should be revisited as soon as the issue in golang is fixed.
+    //
+    // FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("%s function not found", kSetupConnectionFunctionName));
   }
 
   auto shutdown_connection_addr = reinterpret_cast<Result (*)()>(
       GetProcAddress(metrics_uploader_client_dll, kShutdownConnectionFunctionName));
   if (nullptr == shutdown_connection_addr) {
-    FreeLibrary(metrics_uploader_client_dll);
+    // FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("%s function not found", kShutdownConnectionFunctionName));
   }
 
   auto send_log_event_addr = reinterpret_cast<Result (*)(const uint8_t*, int)>(
       GetProcAddress(metrics_uploader_client_dll, kSendLogEventFunctionName));
   if (nullptr == send_log_event_addr) {
-    FreeLibrary(metrics_uploader_client_dll);
+    // FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("%s function not found", kSendLogEventFunctionName));
   }
 
@@ -115,7 +121,7 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
         ERROR("Error while closing connection: %s", GetErrorMessage(shutdown_result));
       }
     }
-    FreeLibrary(metrics_uploader_client_dll);
+    // FreeLibrary(metrics_uploader_client_dll);
     return ErrorMessage(absl::StrFormat("Error while starting the metrics uploader client: %s",
                                         GetErrorMessage(result)));
   }
