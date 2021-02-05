@@ -541,7 +541,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
   }
 
-  void OnCaptureStart() override {}
+  void OnCaptureStart(orbit_grpc_protos::CaptureOptions /*capture_options*/) override {}
 
   void OnCaptureStop() override {}
 

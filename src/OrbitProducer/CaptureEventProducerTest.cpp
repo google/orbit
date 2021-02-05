@@ -39,7 +39,7 @@ class CaptureEventProducerImpl : public CaptureEventProducer {
 
   [[nodiscard]] bool NotifyAllEventsSent() { return CaptureEventProducer::NotifyAllEventsSent(); }
 
-  MOCK_METHOD(void, OnCaptureStart, (), (override));
+  MOCK_METHOD(void, OnCaptureStart, (orbit_grpc_protos::CaptureOptions), (override));
   MOCK_METHOD(void, OnCaptureStop, (), (override));
   MOCK_METHOD(void, OnCaptureFinished, (), (override));
 };
@@ -86,13 +86,24 @@ class CaptureEventProducerTest : public ::testing::Test {
 
 constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(25);
 
-}  // namespace
+const orbit_grpc_protos::CaptureOptions kFakeCaptureOptions = [] {
+  orbit_grpc_protos::CaptureOptions capture_options;
+  capture_options.set_pid(42);
+  capture_options.set_sampling_rate(1234.0);
+  return capture_options;
+}();
+
+MATCHER_P(CaptureOptionsEq, that, "") {
+  const orbit_grpc_protos::CaptureOptions& a = arg;
+  const orbit_grpc_protos::CaptureOptions& b = that;
+  return a.SerializeAsString() == b.SerializeAsString();
+}
 
 TEST_F(CaptureEventProducerTest, OnCaptureStartStopAndIsCapturing) {
   EXPECT_FALSE(producer_->IsCapturing());
 
-  EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -112,8 +123,8 @@ TEST_F(CaptureEventProducerTest, OnCaptureStartStopAndIsCapturing) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*producer_);
 
-  EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -147,8 +158,8 @@ TEST_F(CaptureEventProducerTest, SendCaptureEventsAndAllEventsSent) {
 TEST_F(CaptureEventProducerTest, DuplicatedCommands) {
   EXPECT_FALSE(producer_->IsCapturing());
 
-  EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -156,7 +167,7 @@ TEST_F(CaptureEventProducerTest, DuplicatedCommands) {
 
   EXPECT_CALL(*producer_, OnCaptureStart).Times(0);
   // This should have no effect.
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -196,7 +207,8 @@ TEST_F(CaptureEventProducerTest, SkippedCommands) {
 
   {
     ::testing::InSequence in_sequence;
-    EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(orbit_grpc_protos::CaptureOptions{})))
+        .Times(1);
     EXPECT_CALL(*producer_, OnCaptureStop).Times(1);
   }
   fake_service_->SendStopCaptureCommand();
@@ -208,9 +220,9 @@ TEST_F(CaptureEventProducerTest, SkippedCommands) {
   {
     ::testing::InSequence in_sequence;
     EXPECT_CALL(*producer_, OnCaptureFinished).Times(1);
-    EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
+    EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   }
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -229,8 +241,8 @@ TEST_F(CaptureEventProducerTest, SkippedCommands) {
 TEST_F(CaptureEventProducerTest, ServiceDisconnectCausesOnCaptureStopAndFinished) {
   EXPECT_FALSE(producer_->IsCapturing());
 
-  EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -250,8 +262,8 @@ TEST_F(CaptureEventProducerTest, ServiceDisconnectCausesOnCaptureStopAndFinished
 TEST_F(CaptureEventProducerTest, SendingMessagesFailsWhenDisconnected) {
   EXPECT_FALSE(producer_->IsCapturing());
 
-  EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -293,8 +305,8 @@ TEST_F(CaptureEventProducerTest, SendingMessagesFailsWhenDisconnected) {
 TEST_F(CaptureEventProducerTest, DisconnectAndReconnect) {
   EXPECT_FALSE(producer_->IsCapturing());
 
-  EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(*producer_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -344,7 +356,7 @@ TEST_F(CaptureEventProducerTest, DisconnectAndReconnect) {
   std::this_thread::sleep_for(std::chrono::milliseconds{2 * kReconnectionDelayMs});
 
   EXPECT_CALL(*producer_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -372,4 +384,5 @@ TEST_F(CaptureEventProducerTest, DisconnectAndReconnect) {
   EXPECT_FALSE(producer_->IsCapturing());
 }
 
+}  // namespace
 }  // namespace orbit_producer

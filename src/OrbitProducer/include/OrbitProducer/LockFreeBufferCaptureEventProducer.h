@@ -59,7 +59,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   }
 
  protected:
-  void OnCaptureStart() override {
+  void OnCaptureStart(orbit_grpc_protos::CaptureOptions /*capture_options*/) override {
     absl::MutexLock lock{&status_mutex_};
     status_ = ProducerStatus::kShouldSendEvents;
   }

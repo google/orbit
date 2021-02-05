@@ -14,7 +14,7 @@ namespace {
 
 class MockCaptureStatusListener : public VulkanLayerProducer::CaptureStatusListener {
  public:
-  MOCK_METHOD(void, OnCaptureStart, (), (override));
+  MOCK_METHOD(void, OnCaptureStart, (orbit_grpc_protos::CaptureOptions), (override));
   MOCK_METHOD(void, OnCaptureStop, (), (override));
   MOCK_METHOD(void, OnCaptureFinished, (), (override));
 };
@@ -82,13 +82,24 @@ const uint64_t VulkanLayerProducerImplTest::kExpectedInternedString3Key =
 
 constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(25);
 
-}  // namespace
+const orbit_grpc_protos::CaptureOptions kFakeCaptureOptions = [] {
+  orbit_grpc_protos::CaptureOptions capture_options;
+  capture_options.set_pid(42);
+  capture_options.set_sampling_rate(1234.0);
+  return capture_options;
+}();
+
+MATCHER_P(CaptureOptionsEq, that, "") {
+  const orbit_grpc_protos::CaptureOptions& a = arg;
+  const orbit_grpc_protos::CaptureOptions& b = that;
+  return a.SerializeAsString() == b.SerializeAsString();
+}
 
 TEST_F(VulkanLayerProducerImplTest, IsCapturingAndListener) {
   EXPECT_FALSE(producer_->IsCapturing());
 
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -110,8 +121,8 @@ TEST_F(VulkanLayerProducerImplTest, IsCapturingAndListener) {
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
 
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
-  fake_service_->SendStartCaptureCommand();
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -140,7 +151,7 @@ TEST_F(VulkanLayerProducerImplTest, WorksWithNoListener) {
 
   EXPECT_FALSE(producer_->IsCapturing());
 
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions{});
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(producer_->IsCapturing());
 
@@ -164,10 +175,10 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
 
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -231,10 +242,10 @@ static void ExpectInternedStrings(
 }
 
 TEST_F(VulkanLayerProducerImplTest, InternStringIfNecessaryAndGetKey) {
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -294,10 +305,10 @@ TEST_F(VulkanLayerProducerImplTest, InternStringIfNecessaryAndGetKey) {
 }
 
 TEST_F(VulkanLayerProducerImplTest, DontSendInternTwice) {
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -337,10 +348,10 @@ TEST_F(VulkanLayerProducerImplTest, DontSendInternTwice) {
 }
 
 TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -383,10 +394,10 @@ TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -427,10 +438,10 @@ TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
 }
 
 TEST_F(VulkanLayerProducerImplTest, InternOnlyWhenCapturing) {
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -466,10 +477,10 @@ TEST_F(VulkanLayerProducerImplTest, InternOnlyWhenCapturing) {
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
   ::testing::Mock::VerifyAndClearExpectations(&*fake_service_);
 
-  EXPECT_CALL(mock_listener_, OnCaptureStart).Times(1);
+  EXPECT_CALL(mock_listener_, OnCaptureStart(CaptureOptionsEq(kFakeCaptureOptions))).Times(1);
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(0);
   EXPECT_CALL(*fake_service_, OnAllEventsSentReceived).Times(0);
-  fake_service_->SendStartCaptureCommand();
+  fake_service_->SendStartCaptureCommand(kFakeCaptureOptions);
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
 
   ::testing::Mock::VerifyAndClearExpectations(&mock_listener_);
@@ -509,4 +520,5 @@ TEST_F(VulkanLayerProducerImplTest, InternOnlyWhenCapturing) {
   fake_service_->SendCaptureFinishedCommand();
 }
 
+}  // namespace
 }  // namespace orbit_vulkan_layer

@@ -13,6 +13,7 @@
 #include <thread>
 
 #include "absl/synchronization/mutex.h"
+#include "capture.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "producer_side_services.grpc.pb.h"
 #include "producer_side_services.pb.h"
@@ -44,7 +45,8 @@ class CaptureEventProducer {
   virtual void ShutdownAndWait();
 
   // Subclasses need to override this method to be notified of a request to start a capture.
-  virtual void OnCaptureStart() = 0;
+  // This is also the chance for the subclasses to read or store the CaptureOptions.
+  virtual void OnCaptureStart(orbit_grpc_protos::CaptureOptions capture_options) = 0;
   // Subclasses need to override this method to be notified of a request to stop the capture.
   virtual void OnCaptureStop() = 0;
   // Subclasses need to override this method to be notified that the current capture has finished.
