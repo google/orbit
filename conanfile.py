@@ -30,7 +30,6 @@ class OrbitConan(ConanFile):
                "with_crash_handling": [True, False],
                "with_orbitgl": [True, False],
                "run_tests": [True, False],
-               "with_vulkan_layer": [True, False],
                "build_target": "ANY"}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
@@ -39,7 +38,6 @@ class OrbitConan(ConanFile):
                        "crashdump_server": "",
                        "with_crash_handling": True,
                        "with_orbitgl": True,
-                       "with_vulkan_layer": False,
                        "run_tests": True,
                        "build_target": None}
     _orbit_channel = "orbitdeps/stable"
@@ -157,7 +155,6 @@ class OrbitConan(ConanFile):
         cmake = CMake(self)
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
         cmake.definitions["WITH_ORBITGL"] = "ON" if self.options.with_orbitgl else "OFF"
-        cmake.definitions["WITH_VULKAN_LAYER"] = "ON" if self.options.with_vulkan_layer else "OFF"
         if self.options.with_gui:
             if self.options.with_crash_handling:
                 cmake.definitions["WITH_CRASH_HANDLING"] = "ON"
