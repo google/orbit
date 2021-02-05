@@ -14,6 +14,7 @@
 #include "CaptureStartStopListener.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
+#include "capture.pb.h"
 #include "producer_side_services.grpc.pb.h"
 #include "producer_side_services.pb.h"
 
@@ -33,7 +34,8 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   // This method causes the StartCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).
   // CaptureEvents received from producers will be added to capture_event_buffer.
-  void OnCaptureStartRequested(CaptureEventBuffer* capture_event_buffer) override;
+  void OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
+                               CaptureEventBuffer* capture_event_buffer) override;
 
   // This method causes the StopCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).
@@ -78,6 +80,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   enum class CaptureStatus { kCaptureStarted, kCaptureStopping, kCaptureFinished };
   struct ServiceState {
     CaptureStatus capture_status = CaptureStatus::kCaptureFinished;
+    std::optional<orbit_grpc_protos::CaptureOptions> capture_options;
     int32_t producers_remaining = 0;
     bool exit_requested = false;
   } service_state_;

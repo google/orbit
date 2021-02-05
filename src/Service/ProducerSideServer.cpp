@@ -15,6 +15,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
+#include "capture.pb.h"
 
 namespace orbit_service {
 
@@ -51,8 +52,9 @@ void ProducerSideServer::ShutdownAndWait() {
   server_->Wait();
 }
 
-void ProducerSideServer::OnCaptureStartRequested(CaptureEventBuffer* capture_event_buffer) {
-  producer_side_service_.OnCaptureStartRequested(capture_event_buffer);
+void ProducerSideServer::OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
+                                                 CaptureEventBuffer* capture_event_buffer) {
+  producer_side_service_.OnCaptureStartRequested(std::move(capture_options), capture_event_buffer);
 }
 
 void ProducerSideServer::OnCaptureStopRequested() {

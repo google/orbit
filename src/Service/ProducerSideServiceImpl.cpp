@@ -4,7 +4,6 @@
 
 #include "ProducerSideServiceImpl.h"
 
-#include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 
@@ -16,7 +15,8 @@
 
 namespace orbit_service {
 
-void ProducerSideServiceImpl::OnCaptureStartRequested(CaptureEventBuffer* capture_event_buffer) {
+void ProducerSideServiceImpl::OnCaptureStartRequested(
+    orbit_grpc_protos::CaptureOptions capture_options, CaptureEventBuffer* capture_event_buffer) {
   CHECK(capture_event_buffer != nullptr);
   LOG("About to send StartCaptureCommand to CaptureEventProducers (if any)");
   {
@@ -26,6 +26,7 @@ void ProducerSideServiceImpl::OnCaptureStartRequested(CaptureEventBuffer* captur
   {
     absl::MutexLock lock{&service_state_mutex_};
     service_state_.capture_status = CaptureStatus::kCaptureStarted;
+    service_state_.capture_options = std::move(capture_options);
   }
 }
 
@@ -53,6 +54,7 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
     }
     LOG("About to send CaptureFinishedCommand to CaptureEventProducers (if any)");
     service_state_.capture_status = CaptureStatus::kCaptureFinished;
+    service_state_.capture_options = std::nullopt;
     service_state_.producers_remaining = 0;
   }
 
@@ -66,6 +68,7 @@ void ProducerSideServiceImpl::OnExitRequest() {
   {
     absl::MutexLock lock{&service_state_mutex_};
     service_state_.exit_requested = true;
+    service_state_.capture_options = std::nullopt;
   }
 
   LOG("Attempting to disconnect from CaptureEventProducers as exit was requested");
@@ -133,9 +136,10 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
 static bool SendStartCaptureCommand(
     grpc::ServerContext* context,
     grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
-                             orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream) {
+                             orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
+    orbit_grpc_protos::CaptureOptions capture_options) {
   orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
-  command.mutable_start_capture_command();
+  *command.mutable_start_capture_command()->mutable_capture_options() = std::move(capture_options);
   if (!stream->Write(command)) {
     ERROR("Sending StartCaptureCommand to CaptureEventProducer");
     LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
@@ -205,6 +209,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
     }
 
     CaptureStatus curr_capture_status;
+    std::optional<orbit_grpc_protos::CaptureOptions> curr_capture_options;
     {
       absl::MutexLock lock{&service_state_mutex_};
       if (service_state_.exit_requested) {
@@ -276,6 +281,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
         } break;
       }
       curr_capture_status = service_state_.capture_status;
+      curr_capture_options = service_state_.capture_options;
     }  // absl::MutexLock lock{&service_state_mutex_}
 
     // curr_capture_status now holds the new service_state_.capture_status. Send commands
@@ -283,13 +289,14 @@ void ProducerSideServiceImpl::SendCommandsThread(
     // in case this thread missed an intermediate change of service_state_.capture_status.
     switch (curr_capture_status) {
       case CaptureStatus::kCaptureStarted: {
+        CHECK(curr_capture_options.has_value());
         if (prev_capture_status == CaptureStatus::kCaptureFinished) {
-          if (!SendStartCaptureCommand(context, stream)) {
+          if (!SendStartCaptureCommand(context, stream, curr_capture_options.value())) {
             return;
           }
         } else if (prev_capture_status == CaptureStatus::kCaptureStopping) {
           if (!SendCaptureFinishedCommand(context, stream) ||
-              !SendStartCaptureCommand(context, stream)) {
+              !SendStartCaptureCommand(context, stream, curr_capture_options.value())) {
             return;
           }
         } else {
@@ -298,12 +305,13 @@ void ProducerSideServiceImpl::SendCommandsThread(
       } break;
 
       case CaptureStatus::kCaptureStopping: {
+        CHECK(curr_capture_options.has_value());
         if (prev_capture_status == CaptureStatus::kCaptureStarted) {
           if (!SendStopCaptureCommand(context, stream)) {
             return;
           }
         } else if (prev_capture_status == CaptureStatus::kCaptureFinished) {
-          if (!SendStartCaptureCommand(context, stream) ||
+          if (!SendStartCaptureCommand(context, stream, curr_capture_options.value()) ||
               !SendStopCaptureCommand(context, stream)) {
             return;
           }
@@ -313,6 +321,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
       } break;
 
       case CaptureStatus::kCaptureFinished:
+        CHECK(!curr_capture_options.has_value());
         if (prev_capture_status == CaptureStatus::kCaptureStopping) {
           if (!SendCaptureFinishedCommand(context, stream)) {
             return;

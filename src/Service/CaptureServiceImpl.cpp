@@ -205,9 +205,9 @@ grpc::Status CaptureServiceImpl::Capture(
   reader_writer->Read(&request);
   LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
 
-  tracing_handler.Start(std::move(*request.mutable_capture_options()));
+  tracing_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
-    listener->OnCaptureStartRequested(&capture_event_buffer);
+    listener->OnCaptureStartRequested(request.capture_options(), &capture_event_buffer);
   }
 
   // The client asks for the capture to be stopped by calling WritesDone.
