@@ -13,16 +13,23 @@
 #endif
 
 #ifdef _WIN32
+
 [[nodiscard]] inline uint64_t MonotonicTimestampNs() {
   auto time_since_epoch = std::chrono::steady_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::nanoseconds>(time_since_epoch).count();
 }
+
 #else
+
+// Linux clock associated with Orbit's main time domain.
+constexpr clockid_t kOrbitTimelineClock = CLOCK_MONOTONIC;
+
 [[nodiscard]] inline uint64_t MonotonicTimestampNs() {
   timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
+  clock_gettime(kOrbitTimelineClock, &ts);
   return 1000000000LL * ts.tv_sec + ts.tv_nsec;
 }
+
 #endif
 
 #endif  // ORBIT_BASE_PROFILING_H_
