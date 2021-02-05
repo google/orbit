@@ -8,13 +8,11 @@
 #include <functional>
 #include <memory>
 
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
-#include "PickingManager.h"
 
-class TimeGraph;
-class GlCanvas;
-
-class TriangleToggle : public Pickable, public std::enable_shared_from_this<TriangleToggle> {
+class TriangleToggle : public orbit_gl::CaptureViewElement,
+                       public std::enable_shared_from_this<TriangleToggle> {
  public:
   enum class State { kInactive, kExpanded, kCollapsed };
   enum class InitialStateUpdate { kKeepInitialState, kReplaceInitialState };
@@ -29,10 +27,9 @@ class TriangleToggle : public Pickable, public std::enable_shared_from_this<Tria
   TriangleToggle(TriangleToggle&&) = delete;
   TriangleToggle& operator=(TriangleToggle&&) = delete;
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0);
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
   // Pickable
-  void OnPick(int x, int y) override;
   void OnRelease() override;
 
   State GetState() const { return state_; }
@@ -42,15 +39,11 @@ class TriangleToggle : public Pickable, public std::enable_shared_from_this<Tria
   bool IsCollapsed() const { return state_ == State::kCollapsed; }
   bool IsExpanded() const { return state_ == State::kExpanded; }
   bool IsInactive() const { return state_ == State::kInactive; }
-  Vec2 GetPos() const { return pos_; }
-  void SetPos(const Vec2& pos) { pos_ = pos; }
 
  private:
   State state_ = State::kInactive;
   State initial_state_ = State::kInactive;
   StateChangeHandler handler_;
-  TimeGraph* time_graph_;
-  Vec2 pos_ = {0, 0};
   float size_ = 10.f;
 };
 

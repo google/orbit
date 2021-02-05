@@ -29,16 +29,17 @@
 
 using orbit_client_protos::CallstackEvent;
 
-EventTrack::EventTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data)
-    : Track(time_graph, capture_data), app_{app} {
-  mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
-  picked_ = false;
-  color_ = Color(0, 255, 0, 255);
-}
+namespace orbit_gl {
+
+EventTrack::EventTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
+                       ThreadID thread_id)
+    : ThreadBar(app, time_graph, capture_data, thread_id), color_{0, 255, 0, 255} {}
 
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
 
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  ThreadBar::Draw(canvas, picking_mode, z_offset);
+
   if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
     return;
   }
@@ -69,8 +70,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
   if (picked_) {
-    Vec2& from = mouse_pos_[0];
-    Vec2& to = mouse_pos_[1];
+    Vec2& from = mouse_pos_last_click_;
+    Vec2& to = mouse_pos_cur_;
 
     x0 = from[0];
     y0 = pos_[1];
@@ -81,12 +82,12 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
     Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
     batcher->AddBox(picked_box, picked_color, shared_from_this());
   }
-
-  canvas_ = canvas;
 }
 
 void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                                   float z_offset) {
+  ThreadBar::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent + z_offset;
@@ -147,30 +148,19 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   }
 }
 
-void EventTrack::OnPick(int x, int y) {
-  app_->set_selected_thread_id(thread_id_);
-  Vec2& mouse_pos = mouse_pos_[0];
-  canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
-  mouse_pos_[1] = mouse_pos_[0];
-  picked_ = true;
-}
-
 void EventTrack::OnRelease() {
-  if (picked_) {
-    SelectEvents();
-  }
-
-  picked_ = false;
+  CaptureViewElement::OnRelease();
+  SelectEvents();
 }
 
-void EventTrack::OnDrag(int x, int y) {
-  Vec2& to = mouse_pos_[1];
-  canvas_->ScreenToWorld(x, y, to[0], to[1]);
+void EventTrack::OnPick(int x, int y) {
+  CaptureViewElement::OnPick(x, y);
+  app_->set_selected_thread_id(thread_id_);
 }
 
 void EventTrack::SelectEvents() {
-  Vec2& from = mouse_pos_[0];
-  Vec2& to = mouse_pos_[1];
+  Vec2& from = mouse_pos_last_click_;
+  Vec2& to = mouse_pos_cur_;
 
   time_graph_->SelectEvents(from[0], to[0], thread_id_);
 }
@@ -182,16 +172,6 @@ bool EventTrack::IsEmpty() const {
           ? capture_data_->GetCallstackData()->GetCallstackEventsCount()
           : capture_data_->GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_);
   return callstack_count == 0;
-}
-
-[[nodiscard]] uint64_t EventTrack::GetMinTime() const {
-  CHECK(capture_data_ != nullptr);
-  return capture_data_->GetCallstackData()->min_time();
-}
-
-[[nodiscard]] uint64_t EventTrack::GetMaxTime() const {
-  CHECK(capture_data_ != nullptr);
-  return capture_data_->GetCallstackData()->max_time();
 }
 
 [[nodiscard]] std::string EventTrack::SafeGetFormattedFunctionName(uint64_t addr,
@@ -262,3 +242,5 @@ std::string EventTrack::GetSampleTooltip(PickingId id) const {
          "<br/><br/><i>To select samples, click the bar & drag across multiple "
          "samples</i>";
 }
+
+}  // namespace orbit_gl

@@ -24,13 +24,15 @@
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"
 
-TracepointTrack::TracepointTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
-                                 CaptureData* capture_data)
-    : EventTrack(time_graph, app, capture_data) {
-  thread_id_ = thread_id;
-}
+namespace orbit_gl {
+
+TracepointTrack::TracepointTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
+                                 int32_t thread_id)
+    : ThreadBar(app, time_graph, capture_data, thread_id), color_{255, 0, 0, 255} {}
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  ThreadBar::Draw(canvas, picking_mode, z_offset);
+
   if (IsEmpty()) {
     return;
   }
@@ -43,38 +45,12 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_o
   Color color = color_;
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
   batcher->AddBox(box, color, shared_from_this());
-
-  if (canvas->GetPickingManager().IsThisElementPicked(this)) {
-    color = Color(255, 255, 255, 255);
-  }
-
-  float x0 = pos_[0];
-  float y0 = pos_[1];
-  float x1 = x0 + size_[0];
-  float y1 = y0 - size_[1];
-
-  batcher->AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
-
-  if (picked_) {
-    Vec2& from = mouse_pos_[0];
-    Vec2& to = mouse_pos_[1];
-
-    x0 = from[0];
-    y0 = pos_[1];
-    x1 = to[0];
-    y1 = y0 - size_[1];
-
-    Color picked_color(0, 128, 255, 128);
-    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
-    batcher->AddBox(picked_box, picked_color, shared_from_this());
-  }
-
-  canvas_ = canvas;
 }
 
 void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                        PickingMode picking_mode, float z_offset) {
+  ThreadBar::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent + z_offset;
@@ -84,7 +60,6 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   const Color kWhite(255, 255, 255, 255);
   const Color kWhiteTransparent(255, 255, 255, 190);
   const Color kGrey(128, 128, 128, 255);
-  const Color kGreenSelection(0, 255, 0, 255);
 
   CHECK(capture_data_ != nullptr);
 
@@ -121,19 +96,10 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           auto user_data = std::make_unique<PickingUserData>(
               nullptr, [&](PickingId id) -> std::string { return GetTracepointTooltip(id); });
           user_data->custom_data_ = &tracepoint;
-          batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+          batcher->AddShadedBox(pos, size, z, kWhite, std::move(user_data));
         });
   }
 }
-
-void TracepointTrack::OnPick(int x, int y) {
-  Vec2& mouse_pos = mouse_pos_[0];
-  canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
-  mouse_pos_[1] = mouse_pos_[0];
-  picked_ = true;
-}
-
-void TracepointTrack::OnRelease() { picked_ = false; }
 
 std::string TracepointTrack::GetTracepointTooltip(PickingId id) const {
   auto user_data = time_graph_->GetBatcher().GetUserData(id);
@@ -173,3 +139,5 @@ bool TracepointTrack::IsEmpty() const {
   if (capture_data_ == nullptr) return true;
   return capture_data_->GetNumTracepointsForThreadId(thread_id_) == 0;
 }
+
+}  // namespace orbit_gl

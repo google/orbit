@@ -66,9 +66,9 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePositionOfSubtracks();
   void UpdateMinMaxTimestamps();
 
-  std::shared_ptr<ThreadStateTrack> thread_state_track_;
-  std::shared_ptr<EventTrack> event_track_;
-  std::shared_ptr<TracepointTrack> tracepoint_track_;
+  std::shared_ptr<orbit_gl::ThreadStateTrack> thread_state_track_;
+  std::shared_ptr<orbit_gl::EventTrack> event_track_;
+  std::shared_ptr<orbit_gl::TracepointTrack> tracepoint_track_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

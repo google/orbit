@@ -18,19 +18,12 @@
 #include "TimeGraphLayout.h"
 
 Track::Track(TimeGraph* time_graph, CaptureData* capture_data)
-    : time_graph_(time_graph),
+    : CaptureViewElement(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
           [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)),
       accessibility_(this, &time_graph->GetLayout()),
       capture_data_(capture_data) {
-  mouse_pos_[0] = mouse_pos_[1] = Vec2(0, 0);
-  pos_ = Vec2(0, 0);
-  size_ = Vec2(0, 0);
-  picking_offset_ = Vec2(0, 0);
-  picked_ = false;
-  moving_ = false;
-  canvas_ = nullptr;
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
   num_timers_ = 0;
@@ -90,6 +83,8 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
 }
 
 void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  CaptureViewElement::Draw(canvas, picking_mode, z_offset);
+
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -160,7 +155,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float button_offset = layout.GetCollapseButtonOffset();
   float toggle_y_pos = pos_[1] + half_label_height;
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
-  collapse_toggle_->SetPos(toggle_pos);
+  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
   collapse_toggle_->Draw(canvas, picking_mode, z_offset);
 
   // Draw label.
@@ -177,29 +172,12 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
         label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
         GetNumberOfPrioritizedTrailingCharacters(), font_size, label_width - label_offset_x);
   }
-
-  canvas_ = canvas;
 }
 
 void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/,
                              float /*z_offset*/) {}
 
-void Track::SetPinned(bool value) {
-  pinned_ = value;
-  picking_enabled_ = !pinned_;
-}
-
-void Track::SetPos(float x, float y) {
-  if (!moving_) {
-    pos_ = Vec2(x, y);
-  }
-}
-
-void Track::SetY(float y) {
-  if (!moving_) {
-    pos_[1] = y;
-  }
-}
+void Track::SetPinned(bool value) { pinned_ = value; }
 
 Color Track::GetBackgroundColor() const {
   int32_t capture_process_id = capture_data_ ? capture_data_->process_id() : -1;
@@ -214,36 +192,11 @@ Color Track::GetBackgroundColor() const {
   return color_;
 }
 
-void Track::SetSize(float width, float height) { size_ = Vec2(width, height); }
-
 void Track::OnCollapseToggle(TriangleToggle::State /*state*/) { time_graph_->NeedsUpdate(); }
 
-void Track::OnPick(int x, int y) {
-  if (!picking_enabled_) return;
-
-  Vec2& mouse_pos = mouse_pos_[0];
-  canvas_->ScreenToWorld(x, y, mouse_pos[0], mouse_pos[1]);
-  picking_offset_ = mouse_pos - pos_;
-  mouse_pos_[1] = mouse_pos_[0];
-  picked_ = true;
-}
-
-void Track::OnRelease() {
-  if (!picking_enabled_) return;
-
-  picked_ = false;
-  moving_ = false;
-  time_graph_->NeedsUpdate();
-}
-
 void Track::OnDrag(int x, int y) {
-  if (!picking_enabled_) return;
+  CaptureViewElement::OnDrag(x, y);
 
-  moving_ = true;
-  float world_x = 0.f;
-  canvas_->ScreenToWorld(x, y, world_x, pos_[1]);
-  mouse_pos_[1] = pos_;
-  pos_[1] -= picking_offset_[1];
+  pos_[1] = mouse_pos_cur_[1] - picking_offset_[1];
   time_graph_->VerticallyMoveIntoView(*this);
-  time_graph_->NeedsUpdate();
 }

@@ -16,12 +16,14 @@
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
                                TimeGraph* time_graph)
-    : state_(initial_state),
+    : CaptureViewElement(time_graph),
+      state_(initial_state),
       initial_state_(initial_state),
-      handler_(std::move(handler)),
-      time_graph_(time_graph) {}
+      handler_(std::move(handler)) {}
 
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  CaptureViewElement::Draw(canvas, picking_mode, z_offset);
+
   Batcher* batcher = canvas->GetBatcher();
   const float z = GlCanvas::kZValueTrack + z_offset;
 
@@ -57,16 +59,15 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_of
   }
 }
 
-void TriangleToggle::OnPick(int /*x*/, int /*y*/) {}
-
 void TriangleToggle::OnRelease() {
   if (IsInactive()) {
     return;
   }
 
+  CaptureViewElement::OnRelease();
+
   state_ = IsCollapsed() ? State::kExpanded : State::kCollapsed;
   handler_(state_);
-  time_graph_->NeedsUpdate();
 }
 
 void TriangleToggle::SetState(State state, InitialStateUpdate behavior) {

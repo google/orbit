@@ -8,40 +8,36 @@
 #include <GteVector.h>
 #include <stdint.h>
 
+#include <memory>
 #include <string>
 
 #include "CoreMath.h"
-#include "PickingManager.h"
-#include "Track.h"
+#include "ThreadBar.h"
 
-class OrbitApp;
+namespace orbit_gl {
 
 // This is a track dedicated to displaying thread states in different colors
 // and with the corresponding tooltips.
 // It is a thin sub-track of ThreadTrack, added above the callstack track (EventTrack).
 // The colors are determined only by the states, not by the color assigned to the thread.
 
-class ThreadStateTrack final : public Track {
+class ThreadStateTrack final : public ThreadBar {
  public:
-  explicit ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
-                            CaptureData* capture_data);
-  Type GetType() const override { return kThreadStateTrack; }
+  explicit ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
+                            ThreadID thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
                         float z_offset) override;
 
   void OnPick(int x, int y) override;
-  void OnDrag(int /*x*/, int /*y*/) override {}
-  void OnRelease() override { picked_ = false; };
-  float GetHeight() const override { return size_[1]; }
 
-  bool IsEmpty() const override;
+  [[nodiscard]] bool IsEmpty() const override;
 
  private:
   std::string GetThreadStateSliceTooltip(PickingId id) const;
-
-  OrbitApp* app_ = nullptr;
 };
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_THREAD_STATE_TRACK_H_

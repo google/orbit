@@ -8,22 +8,23 @@
 #include <GteVector.h>
 #include <stdint.h>
 
+#include <memory>
 #include <string>
 
 #include "CoreMath.h"
+#include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
-#include "PickingManager.h"
-#include "Track.h"
+#include "OrbitClientModel/CaptureData.h"
+#include "ThreadBar.h"
 
-class CallStack;
-class GlCanvas;
 class OrbitApp;
-class TimeGraph;
 
-class EventTrack : public Track {
+namespace orbit_gl {
+
+class EventTrack : public ThreadBar {
  public:
-  explicit EventTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data);
-  Type GetType() const override { return kEventTrack; }
+  explicit EventTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
+                      ThreadID thread_id);
 
   std::string GetTooltip() const override;
 
@@ -33,15 +34,10 @@ class EventTrack : public Track {
 
   void OnPick(int x, int y) override;
   void OnRelease() override;
-  void OnDrag(int x, int y) override;
-  bool Draggable() override { return true; }
-  float GetHeight() const override { return size_[1]; }
 
-  void SetThreadId(ThreadID thread_id) { thread_id_ = thread_id; }
-  void SetPos(float x, float y) { pos_ = Vec2(x, y); }
-  bool IsEmpty() const override;
-  [[nodiscard]] uint64_t GetMinTime() const override;
-  [[nodiscard]] uint64_t GetMaxTime() const override;
+  [[nodiscard]] bool IsEmpty() const override;
+
+  void SetColor(const Color& color) { color_ = color; }
 
  protected:
   void SelectEvents();
@@ -50,10 +46,11 @@ class EventTrack : public Track {
                                                       int max_line_length = 80, int max_lines = 20,
                                                       int bottom_n_lines = 5) const;
 
- private:
   [[nodiscard]] std::string GetSampleTooltip(PickingId id) const;
 
-  OrbitApp* app_ = nullptr;
+  Color color_;
 };
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_EVENT_TRACK_H_

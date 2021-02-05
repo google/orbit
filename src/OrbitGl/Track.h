@@ -17,9 +17,9 @@
 
 #include "Batcher.h"
 #include "BlockChain.h"
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "OrbitBase/Profiling.h"
-#include "PickingManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
@@ -28,10 +28,7 @@
 #include "TriangleToggle.h"
 #include "capture_data.pb.h"
 
-class GlCanvas;
-class TimeGraph;
-
-class Track : public Pickable, public std::enable_shared_from_this<Track> {
+class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_from_this<Track> {
  public:
   enum Type {
     kTimerTrack,
@@ -49,25 +46,22 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   explicit Track(TimeGraph* time_graph, CaptureData* capture_data);
   ~Track() override = default;
 
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
+                        float z_offset = 0) override;
+  void OnDrag(int x, int y) override;
+
   virtual void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
 
-  virtual void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0);
-
-  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                                float z_offset = 0);
-
-  // Pickable
-  void OnPick(int x, int y) override;
-  void OnRelease() override;
-  void OnDrag(int x, int y) override;
-  [[nodiscard]] bool Draggable() override { return true; }
-
   [[nodiscard]] virtual Type GetType() const = 0;
-  [[nodiscard]] virtual bool Movable() { return true; }
+  [[nodiscard]] virtual bool Movable() { return !pinned_; }
 
   [[nodiscard]] virtual float GetHeight() const { return 0.f; };
   [[nodiscard]] bool GetVisible() const { return visible_; }
   void SetVisible(bool value) { visible_ = value; }
+
+  void SetColor(const Color& color) { color_ = color; }
 
   [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
   [[nodiscard]] virtual uint64_t GetMinTime() const { return min_time_; }
@@ -88,27 +82,13 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] bool IsPinned() const { return pinned_; }
   void SetPinned(bool value);
 
-  [[nodiscard]] bool IsMoving() const { return moving_; }
-  [[nodiscard]] Vec2 GetMoveDelta() const {
-    return moving_ ? mouse_pos_[1] - mouse_pos_[0] : Vec2(0, 0);
-  }
+  [[nodiscard]] bool IsMoving() const { return picked_ && mouse_pos_last_click_ != mouse_pos_cur_; }
   void SetName(const std::string& name) { name_ = name; }
   [[nodiscard]] const std::string& GetName() const { return name_; }
   void SetLabel(const std::string& label) { label_ = label; }
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
-  void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
-  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
-
-  void SetPos(float x, float y);
-  void SetY(float y);
-  [[nodiscard]] Vec2 GetPos() const { return pos_; }
-  void SetSize(float width, float height);
-  [[nodiscard]] Vec2 GetSize() const { return size_; }
-  void SetColor(const Color& color) { color_ = color; }
   [[nodiscard]] Color GetBackgroundColor() const;
-
-  [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
 
   void AddChild(const std::shared_ptr<Track>& track) { children_.emplace_back(track); }
   virtual void OnCollapseToggle(TriangleToggle::State state);
@@ -130,14 +110,6 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
 
-  GlCanvas* canvas_;
-  TimeGraph* time_graph_;
-  Vec2 pos_;
-  Vec2 size_;
-  Vec2 mouse_pos_[2];
-  Vec2 picking_offset_;
-  bool picked_;
-  bool moving_;
   std::string name_;
   std::string label_;
   int num_prioritized_trailing_characters_;
@@ -149,7 +121,6 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   std::atomic<uint32_t> num_timers_;
   std::atomic<uint64_t> min_time_;
   std::atomic<uint64_t> max_time_;
-  bool picking_enabled_ = false;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
   std::shared_ptr<TriangleToggle> collapse_toggle_;

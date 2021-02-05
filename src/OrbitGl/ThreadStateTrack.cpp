@@ -20,12 +20,11 @@
 
 using orbit_client_protos::ThreadStateSliceInfo;
 
-ThreadStateTrack::ThreadStateTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
-                                   CaptureData* capture_data)
-    : Track{time_graph, capture_data}, app_{app} {
-  thread_id_ = thread_id;
-  picked_ = false;
-}
+namespace orbit_gl {
+
+ThreadStateTrack::ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
+                                   ThreadID thread_id)
+    : ThreadBar(app, time_graph, capture_data, thread_id) {}
 
 bool ThreadStateTrack::IsEmpty() const {
   if (capture_data_ == nullptr) return true;
@@ -33,6 +32,8 @@ bool ThreadStateTrack::IsEmpty() const {
 }
 
 void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  ThreadBar::Draw(canvas, picking_mode, z_offset);
+
   // Similarly to EventTrack::Draw, the thread state slices don't respond to clicks, but have a
   // tooltip. For picking, we want to draw the event bar over them if handling a click, and
   // underneath otherwise. This simulates "click-through" behavior.
@@ -156,7 +157,9 @@ std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
 }
 
 void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                        PickingMode /*picking_mode*/, float z_offset) {
+                                        PickingMode picking_mode, float z_offset) {
+  ThreadBar::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+
   Batcher* batcher = &time_graph_->GetBatcher();
   const GlCanvas* canvas = time_graph_->GetCanvas();
 
@@ -211,7 +214,9 @@ void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       });
 }
 
-void ThreadStateTrack::OnPick(int /*x*/, int /*y*/) {
+void ThreadStateTrack::OnPick(int x, int y) {
+  ThreadBar::OnPick(x, y);
   app_->set_selected_thread_id(thread_id_);
-  picked_ = true;
 }
+
+}  // namespace orbit_gl

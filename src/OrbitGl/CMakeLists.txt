@@ -19,6 +19,7 @@ target_sources(
          CallStackDataView.h
          CallTreeView.h
          CaptureWindow.h
+         CaptureViewElement.h
          CodeReport.h
          CoreMath.h
          DataView.h
@@ -53,6 +54,7 @@ target_sources(
          StatusListener.h
          TextBox.h
          TextRenderer.h
+         ThreadBar.h
          ThreadStateTrack.h
          ThreadTrack.h
          TimeGraph.h
@@ -77,6 +79,7 @@ target_sources(
           CallStackDataView.cpp
           CallTreeView.cpp
           CaptureWindow.cpp
+          CaptureViewElement.cpp
           DataManager.cpp
           DataView.cpp
           Disassembler.cpp

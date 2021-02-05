@@ -296,8 +296,11 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
     }
 
     const float z_offset = GlCanvas::kZOffsetPinnedTrack;
-    track->SetY(current_y + time_graph_->GetCanvas()->GetWorldTopLeftY() - layout.GetTopMargin() -
-                layout.GetSchedulerTrackOffset());
+    if (!track->IsMoving()) {
+      track->SetPos(track->GetPos()[0], current_y + time_graph_->GetCanvas()->GetWorldTopLeftY() -
+                                            layout.GetTopMargin() -
+                                            layout.GetSchedulerTrackOffset());
+    }
     track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
     const float height = (track->GetHeight() + layout.GetSpaceBetweenTracks());
     current_y -= height;
@@ -311,7 +314,9 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
     }
 
     const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
-    track->SetY(current_y);
+    if (!track->IsMoving()) {
+      track->SetPos(track->GetPos()[0], current_y);
+    }
     track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
     current_y -= (track->GetHeight() + layout.GetSpaceBetweenTracks());
   }
