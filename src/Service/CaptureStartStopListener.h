@@ -6,16 +6,19 @@
 #define ORBIT_SERVICE_CAPTURE_START_STOP_LISTENER_H_
 
 #include "CaptureEventBuffer.h"
+#include "capture.pb.h"
 
 namespace orbit_service {
 
 // This interface is used to propagate requests received by CaptureServiceImpl to start and stop
-// the capture, together with the CaptureEventBuffer where to add the generated CaptureEvents.
+// the capture, together with the CaptureOptions and the CaptureEventBuffer where to add the
+// generated CaptureEvents.
 class CaptureStartStopListener {
  public:
   virtual ~CaptureStartStopListener() = default;
 
-  virtual void OnCaptureStartRequested(CaptureEventBuffer* capture_event_buffer) = 0;
+  virtual void OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
+                                       CaptureEventBuffer* capture_event_buffer) = 0;
 
   // This is to be assumed blocking until the capture stop has been fully processed by the listener.
   virtual void OnCaptureStopRequested() = 0;

@@ -12,6 +12,7 @@
 #include "CaptureStartStopListener.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerSideServiceImpl.h"
+#include "capture.pb.h"
 #include "grpcpp/grpcpp.h"
 
 namespace orbit_service {
@@ -23,7 +24,8 @@ class ProducerSideServer final : public CaptureStartStopListener {
   bool BuildAndStart(std::string_view unix_domain_socket_path);
   void ShutdownAndWait();
 
-  void OnCaptureStartRequested(CaptureEventBuffer* capture_event_buffer) override;
+  void OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
+                               CaptureEventBuffer* capture_event_buffer) override;
   void OnCaptureStopRequested() override;
 
  private:

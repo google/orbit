@@ -21,7 +21,9 @@ message ReceiveCommandsAndSendEventsRequest {
 }
 
 message ReceiveCommandsAndSendEventsResponse {
-  message StartCaptureCommand {}
+  message StartCaptureCommand {
+    CaptureOptions capture_options = 1;
+  }
   message StopCaptureCommand {}
   message CaptureFinishedCommand {}
 
