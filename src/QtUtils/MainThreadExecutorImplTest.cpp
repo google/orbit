@@ -7,6 +7,8 @@
 #include <QCoreApplication>
 #include <memory>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 
 namespace orbit_qt_utils {
@@ -152,6 +154,116 @@ TEST(MainThreadExecutorImpl, TrySchedule) {
 TEST(MainThreadExecutorImpl, TryScheduleWithInvalidWeakPtr) {
   const auto result = TrySchedule(std::weak_ptr<MainThreadExecutor>{}, []() {});
   EXPECT_FALSE(result.has_value());
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessShortCircuitOnErrorVoid) {
+  auto executor = MainThreadExecutorImpl::Create();
+  bool called = false;
+  orbit_base::Promise<ErrorMessageOr<void>> promise{};
+  auto future = promise.GetFuture();
+  auto chained_future = executor->ScheduleAfterIfSuccess(future, [&called]() { called = true; });
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  constexpr const char* const kErrorMessage{"Error"};
+  promise.SetResult(ErrorMessage{kErrorMessage});
+  QCoreApplication::processEvents();
+  EXPECT_FALSE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+  EXPECT_TRUE(chained_future.Get().has_error());
+  EXPECT_EQ(chained_future.Get().error().message(), kErrorMessage);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessShortCircuitOnErrorInt) {
+  auto executor = MainThreadExecutorImpl::Create();
+  bool called = false;
+  orbit_base::Promise<ErrorMessageOr<int>> promise{};
+  auto future = promise.GetFuture();
+  auto chained_future = executor->ScheduleAfterIfSuccess(future, [&called](int value) {
+    EXPECT_EQ(value, 42);
+    called = true;
+    return 1 + value;
+  });
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  constexpr const char* const kErrorMessage{"Error"};
+  promise.SetResult(ErrorMessage{kErrorMessage});
+  QCoreApplication::processEvents();
+  EXPECT_FALSE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+  EXPECT_TRUE(chained_future.Get().has_error());
+  EXPECT_EQ(chained_future.Get().error().message(), kErrorMessage);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessCallOnSuccessVoid) {
+  auto executor = MainThreadExecutorImpl::Create();
+  bool called = false;
+  orbit_base::Promise<ErrorMessageOr<void>> promise{};
+  auto future = promise.GetFuture();
+  auto chained_future = executor->ScheduleAfterIfSuccess(future, [&called]() { called = true; });
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  promise.SetResult(outcome::success());
+  QCoreApplication::processEvents();
+  EXPECT_TRUE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+  EXPECT_FALSE(chained_future.Get().has_error());
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessCallOnSuccessInt) {
+  auto executor = MainThreadExecutorImpl::Create();
+  bool called = false;
+  orbit_base::Promise<ErrorMessageOr<int>> promise{};
+  auto future = promise.GetFuture();
+  auto chained_future = executor->ScheduleAfterIfSuccess(future, [&called](int value) {
+    EXPECT_EQ(value, 42);
+    called = true;
+    return 1 + value;
+  });
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  promise.SetResult(42);
+  QCoreApplication::processEvents();
+  EXPECT_TRUE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+  EXPECT_FALSE(chained_future.Get().has_error());
+  EXPECT_EQ(chained_future.Get().value(), 43);
+}
+
+TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessTwice) {
+  auto executor = MainThreadExecutorImpl::Create();
+
+  bool first_called = false;
+  orbit_base::Promise<ErrorMessageOr<int>> promise{};
+  auto future = promise.GetFuture();
+  auto first_chained_future = executor->ScheduleAfterIfSuccess(future, [&first_called](int value) {
+    EXPECT_EQ(value, 42);
+    first_called = true;
+    return std::to_string(value);
+  });
+  EXPECT_FALSE(first_called);
+  EXPECT_FALSE(first_chained_future.IsFinished());
+
+  bool second_called = false;
+  auto second_chained_future = executor->ScheduleAfterIfSuccess(
+      first_chained_future, [&first_called, &second_called](const std::string& number) {
+        EXPECT_TRUE(first_called);
+        EXPECT_EQ(number, "42");
+        second_called = true;
+        return std::string{"The number is "} + number;
+      });
+  EXPECT_FALSE(second_called);
+  EXPECT_FALSE(second_chained_future.IsFinished());
+
+  promise.SetResult(42);
+  QCoreApplication::processEvents();
+  QCoreApplication::processEvents();
+  EXPECT_TRUE(second_chained_future.IsFinished());
+  EXPECT_FALSE(second_chained_future.Get().has_error());
+  EXPECT_EQ(second_chained_future.Get().value(), "The number is 42");
 }
 
 }  // namespace orbit_qt_utils
