@@ -16,11 +16,7 @@
 
 namespace orbit_qt_utils {
 
-static int argc = 0;
-
 TEST(FutureWatcher, WaitFor) {
-  QCoreApplication app{argc, nullptr};
-
   orbit_base::Promise<void> promise{};
   orbit_base::Future<void> future = promise.GetFuture();
 
@@ -34,8 +30,6 @@ TEST(FutureWatcher, WaitFor) {
 }
 
 TEST(FutureWatcher, WaitForWithTimeout) {
-  QCoreApplication app{argc, nullptr};
-
   orbit_base::Promise<void> promise{};
   orbit_base::Future<void> future = promise.GetFuture();
 
@@ -49,8 +43,6 @@ TEST(FutureWatcher, WaitForWithTimeout) {
 }
 
 TEST(FutureWatcher, WaitForWithAbort) {
-  QCoreApplication app{argc, nullptr};
-
   orbit_base::Promise<void> promise{};
   orbit_base::Future<void> future = promise.GetFuture();
 
@@ -70,8 +62,6 @@ TEST(FutureWatcher, WaitForWithAbort) {
 
 TEST(FutureWatcher, WaitForWithThreadPool) {
   // One background job which is supposed to succeed. (No timeout, no abort)
-
-  QCoreApplication app{argc, nullptr};
 
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
@@ -101,8 +91,6 @@ TEST(FutureWatcher, WaitForWithThreadPool) {
 TEST(FutureWatcher, WaitForWithThreadPoolAndTimeout) {
   // One background job which is supposed to time out.
 
-  QCoreApplication app{argc, nullptr};
-
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
@@ -128,8 +116,6 @@ TEST(FutureWatcher, WaitForWithThreadPoolAndTimeout) {
 
 TEST(FutureWatcher, WaitForAllWithThreadPool) {
   // Multiple background jobs which are all supposed to succeed.
-
-  QCoreApplication app{argc, nullptr};
 
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
@@ -162,8 +148,6 @@ TEST(FutureWatcher, WaitForAllWithThreadPool) {
 
 TEST(FutureWatcher, WaitForAllWithThreadPoolAndTimeout) {
   // Multiple background jobs which are all supposed to time out.
-
-  QCoreApplication app{argc, nullptr};
 
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
@@ -204,8 +188,6 @@ TEST(FutureWatcher, WaitForAllWithThreadPoolAndTimeout) {
 }
 
 TEST(FutureWatcher, WaitForAllWithEmptyList) {
-  QCoreApplication app{argc, nullptr};
-
   FutureWatcher watcher{};
   const auto reason = watcher.WaitForAll({}, std::nullopt);
 
