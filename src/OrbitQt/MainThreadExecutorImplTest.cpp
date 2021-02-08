@@ -28,6 +28,16 @@ TEST(MainThreadExecutorImpl, ScheduleAfterAllVoid) {
   EXPECT_TRUE(called);
 }
 
+TEST(MainThreadExecutorImpl, ScheduleAfterCleansUpWaitingContinuations) {
+  bool called = false;
+  auto executor = MainThreadExecutorImpl::Create();
+  auto future = executor->Schedule([&called]() { called = true; });
+  executor->ScheduleAfter(future, []() { QCoreApplication::exit(42); });
+
+  QCoreApplication::exec();
+  EXPECT_EQ(executor->GetNumberOfWaitingContinuations(), 0);
+}
+
 TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerBetweenJobs) {
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([]() { return 42; });
@@ -89,13 +99,23 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
 
   auto executor = MainThreadExecutorImpl::Create();
 
+  bool destructor_called = false;
+  const auto deleter = [&destructor_called](const int* ptr) {
+    destructor_called = true;
+    delete ptr;  // NOLINT
+  };
+  std::unique_ptr<int, decltype(deleter)> unique_resource{new int{}, deleter};
+
   bool called = false;
-  auto future2 = executor->ScheduleAfter(future, [&called]() { called = true; });
+  auto future2 = executor->ScheduleAfter(
+      future, [&called, unique_resource = std::move(unique_resource)]() { called = true; });
 
   QCoreApplication::processEvents();
   EXPECT_FALSE(called);
+  EXPECT_FALSE(destructor_called);
 
   executor.reset();
+  EXPECT_TRUE(destructor_called);
   promise.MarkFinished();
   QCoreApplication::processEvents();
   EXPECT_FALSE(called);
