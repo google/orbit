@@ -28,6 +28,7 @@
 #include <QStyleOptionProgressBar>
 #include <QTreeView>
 #include <algorithm>
+#include <list>
 #include <optional>
 #include <set>
 #include <utility>
@@ -170,28 +171,87 @@ void CallTreeWidget::ResizeColumnsIfNecessary() {
   column_resizing_state_ = ColumnResizingState::kDone;
 }
 
-static std::string BuildStringFromIndices(const QModelIndexList& indices) {
-  std::string buffer;
+static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelIndexList& indices) {
+  // The order of the `QModelIndex`es in `indices` reflects the order of selection, not the order in
+  // the tree. In other words, the order of the rows in the selection model is not the order in
+  // which the rows are displayed.
+  // To recover the desired order, for each `QModelIndex` in indices compute the list of
+  // `QModelIndex::row`s from the root `QModelIndex` down to that `QModelIndex`.
+  // The lexicographic order of these lists gives the order in the tree.
+  struct ItemWithAncestorRows {
+    enum ExpandedState { kLeaf = 0, kExpanded, kCollapsed };
+
+    std::string data;
+    bool is_first_in_row = false;
+    ExpandedState expanded_state = kLeaf;
+    std::list<int> ancestor_rows;
+  };
+  std::vector<ItemWithAncestorRows> items;
+
   std::optional<QModelIndex> prev_index;
-  // Note: indices are sorted by row in order of selection and then by column in ascending order.
+  // Note: the indices vector is sorted by row in order of selection and then by column in ascending
+  // order.
   for (const QModelIndex& index : indices) {
-    if (prev_index.has_value()) {
-      // row() is the position among siblings: also compare parent().
-      if (index.row() != prev_index->row() || index.parent() != prev_index->parent()) {
-        buffer += "\n";
-      } else {
-        buffer += ", ";
-      }
+    ItemWithAncestorRows item;
+    item.data = index.data().toString().toStdString();
+
+    // row() is the position among siblings: also compare parent().
+    item.is_first_in_row = !prev_index.has_value() || index.row() != prev_index->row() ||
+                           index.parent() != prev_index->parent();
+
+    if (index.model()->rowCount(index) == 0) {
+      item.expanded_state = ItemWithAncestorRows::kLeaf;
+    } else if (tree_view->isExpanded(index)) {
+      item.expanded_state = ItemWithAncestorRows::kExpanded;
+    } else {
+      item.expanded_state = ItemWithAncestorRows::kCollapsed;
     }
-    buffer += index.data().toString().toStdString();
+
+    for (QModelIndex temp_index = index; temp_index.isValid(); temp_index = temp_index.parent()) {
+      item.ancestor_rows.emplace_front(temp_index.row());
+    }
+
+    items.emplace_back(std::move(item));
     prev_index = index;
+  }
+
+  // Use stable_sort to maintain the order in the same row (i.e., across columns).
+  std::stable_sort(items.begin(), items.end(),
+                   [](const ItemWithAncestorRows& lhs, const ItemWithAncestorRows& rhs) {
+                     return lhs.ancestor_rows < rhs.ancestor_rows;
+                   });
+  std::string buffer;
+  for (size_t i = 0; i < items.size(); ++i) {
+    const ItemWithAncestorRows& item = items[i];
+    if (item.is_first_in_row) {
+      if (i > 0) {
+        buffer.push_back('\n');
+      }
+
+      buffer.append(2 * (item.ancestor_rows.size() - 1), ' ');
+
+      switch (item.expanded_state) {
+        case ItemWithAncestorRows::kLeaf:
+          buffer.append("  ");
+          break;
+        case ItemWithAncestorRows::kExpanded:
+          buffer.append("- ");
+          break;
+        case ItemWithAncestorRows::kCollapsed:
+          buffer.append("+ ");
+          break;
+      }
+    } else {
+      buffer.append(", ");
+    }
+    buffer.append(item.data);
   }
   return buffer;
 }
 
 void CallTreeWidget::onCopyKeySequencePressed() {
-  app_->SetClipboard(
-      BuildStringFromIndices(ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
+  app_->SetClipboard(BuildStringFromIndices(
+      ui_->callTreeTreeView, ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
 }
 
 const QString CallTreeWidget::kActionExpandRecursively = QStringLiteral("&Expand recursively");
@@ -392,8 +452,8 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
     }
   } else if (action->text() == kActionCopySelection) {
-    app_->SetClipboard(
-        BuildStringFromIndices(ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
+    app_->SetClipboard(BuildStringFromIndices(
+        ui_->callTreeTreeView, ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
   }
 }
 
