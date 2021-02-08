@@ -70,7 +70,7 @@ class Promise : public orbit_base_internal::PromiseBase<T> {
   void SetResult(T result) {
     absl::MutexLock lock{&this->shared_state_->mutex};
 
-    for (const auto& continuation : this->shared_state_->continuations) {
+    for (auto& continuation : this->shared_state_->continuations) {
       continuation(result);
     }
 
@@ -92,7 +92,7 @@ class Promise<void> : public orbit_base_internal::PromiseBase<void> {
   void MarkFinished() {
     absl::MutexLock lock{&this->shared_state_->mutex};
 
-    for (const auto& continuation : this->shared_state_->continuations) {
+    for (auto& continuation : this->shared_state_->continuations) {
       continuation();
     }
 
