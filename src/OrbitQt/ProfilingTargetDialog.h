@@ -52,8 +52,7 @@ class ProfilingTargetDialog : public QDialog {
   void ProcessSelected();
   void NoProcessSelected();
   void StadiaIsConnected();
-  void LocalIsConnected();
-  void TryConnectToLocal();
+  void ProcessListUpdated();
 
  private:
   std::unique_ptr<Ui::ProfilingTargetDialog> ui_;

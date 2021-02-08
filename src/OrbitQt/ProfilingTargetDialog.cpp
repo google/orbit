@@ -54,7 +54,6 @@ ABSL_DECLARE_FLAG(bool, local);
 
 namespace {
 constexpr int kProcessesRowHeight = 19;
-constexpr std::chrono::duration kLocalTryConnectTimeout = std::chrono::milliseconds{1000};
 }  // namespace
 
 namespace orbit_qt {
@@ -285,6 +284,10 @@ void ProfilingTargetDialog::SetupLocalStates() {
 
   // STATE state_local_connecting_
   state_local_connecting_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connecting...");
+  state_local_connecting_.assignProperty(
+      ui_->localProfilingStatusMessage, "toolTip",
+      "Orbit is trying to connect to a local OrbitService. Please make sure OrbitService is "
+      "running on the local machine.");
 
   // STATE state_local_connected_
   state_local_connected_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connected");
@@ -306,11 +309,9 @@ void ProfilingTargetDialog::SetupLocalStates() {
   state_local_.addTransition(ui_->loadCaptureRadioButton, &QRadioButton::clicked,
                              &state_file_history_);
 
-  // STATE s_l_connecting
-  state_local_connecting_.addTransition(this, &ProfilingTargetDialog::LocalIsConnected,
+  // STATE state_local_connecting_
+  state_local_connecting_.addTransition(this, &ProfilingTargetDialog::ProcessListUpdated,
                                         &state_local_connected_);
-  state_local_connecting_.addTransition(this, &ProfilingTargetDialog::TryConnectToLocal,
-                                        &state_local_connecting_);
   QObject::connect(&state_local_connecting_, &QState::entered, this,
                    &ProfilingTargetDialog::ConnectToLocal);
 
@@ -454,6 +455,7 @@ void ProfilingTargetDialog::OnProcessListUpdate(
   QMetaObject::invokeMethod(this, [this, process_list = std::move(process_list)]() {
     bool had_processes_before = process_model_.HasProcesses();
     process_model_.SetProcesses(process_list);
+    emit ProcessListUpdated();
 
     // In case there is a selection already, do not change anything
     if (ui_->processesTableView->selectionModel()->hasSelection()) return;
@@ -481,21 +483,13 @@ void ProfilingTargetDialog::OnProcessListUpdate(
 }
 
 void ProfilingTargetDialog::ConnectToLocal() {
-  process_model_.Clear();
   if (local_grpc_channel_ == nullptr) {
     local_grpc_channel_ =
         grpc::CreateCustomChannel(absl::StrFormat("127.0.0.1:%d", local_grpc_port_),
                                   grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
   }
 
-  if (local_grpc_channel_->GetState(true) != GRPC_CHANNEL_READY) {
-    LOG("Local grpc connection not ready, Trying to connect to local OrbitService again in %d ms.",
-        kLocalTryConnectTimeout.count());
-    QTimer::singleShot(kLocalTryConnectTimeout, this, [this] { emit TryConnectToLocal(); });
-    return;
-  }
-
-  emit LocalIsConnected();
+  SetupLocalProcessManager();
 }
 
 void ProfilingTargetDialog::SetupLocalProcessManager() { SetupProcessManager(local_grpc_channel_); }
@@ -508,6 +502,7 @@ void ProfilingTargetDialog::SetTargetAndInitialState(StadiaTarget target) {
   state_stadia_history_.setDefaultState(&state_stadia_connected_);
   state_machine_.setInitialState(&state_stadia_);
 }
+
 void ProfilingTargetDialog::SetTargetAndInitialState(LocalTarget target) {
   local_grpc_channel_ = target.GetConnection()->GetGrpcChannel();
   process_manager_ = std::move(target.process_manager_);
@@ -517,6 +512,7 @@ void ProfilingTargetDialog::SetTargetAndInitialState(LocalTarget target) {
   state_local_history_.setDefaultState(&state_local_connected_);
   state_machine_.setInitialState(&state_local_);
 }
+
 void ProfilingTargetDialog::SetTargetAndInitialState(FileTarget target) {
   selected_file_path_ = target.GetCaptureFilePath();
   state_file_.setInitialState(&state_file_selected_);
