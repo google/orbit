@@ -58,6 +58,25 @@ class ImmediateExecutor {
     orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
     return resulting_future;
   }
+
+  template <typename T, typename F>
+  auto ScheduleAfterIfSuccess(const Future<ErrorMessageOr<T>>& future, F&& invocable) {
+    CHECK(future.IsValid());
+
+    using ResultType = typename ContinuationReturnType<T, F>::Type;
+    using ReturnType = typename EnsureWrappedInErrorMessageOr<ResultType>::Type;
+    orbit_base::Promise<ReturnType> promise{};
+    orbit_base::Future<ReturnType> resulting_future = promise.GetFuture();
+
+    auto continuation = [invocable = std::forward<F>(invocable),
+                         promise = std::move(promise)](const ErrorMessageOr<T>& result) mutable {
+      HandleErrorAndSetResultInPromise<ReturnType> helper{&promise};
+      helper.Call(invocable, result);
+    };
+
+    orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
+    return resulting_future;
+  }
 };
 }  // namespace orbit_base
 
