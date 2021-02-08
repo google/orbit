@@ -505,8 +505,7 @@ GpuJob* CreateGpuJob(CaptureEvent* capture_event, uint64_t sw_queue, uint64_t hw
   return gpu_job;
 }
 
-// TODO(b/174210467): Enable the test as soon as the bug is fixed.
-TEST(DISABLED_CaptureEventProcessor, CanHandleGpuJobs) {
+TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
