@@ -32,8 +32,6 @@ struct PickingUserData {
 
   explicit PickingUserData(TextBox* text_box = nullptr, TooltipCallback generate_tooltip = nullptr)
       : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
-
-  explicit PickingUserData(const PickingUserData& other) = default;
 };
 
 struct LineBuffer {
