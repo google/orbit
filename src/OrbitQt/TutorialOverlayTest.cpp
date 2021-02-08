@@ -17,13 +17,10 @@
 #include "TutorialOverlay.h"
 #include "gtest/gtest.h"
 
-static int argc = 0;
-
 // TODO: These tests use the actual Tutorial UI and can be broken
 // by updating this UI... it should use a dedicated unit testing UI
 
 TEST(TutorialOverlay, StepExists) {
-  QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
 
   // Check if StepExists works, and implicitely check if the UI file
@@ -35,7 +32,6 @@ TEST(TutorialOverlay, StepExists) {
 }
 
 TEST(TutorialOverlay, SetupSections) {
-  QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
 
   overlay->AddSection("unitTest", "Unit Testing", {"unitTest1", "unitTest2"});
@@ -45,7 +41,6 @@ TEST(TutorialOverlay, SetupSections) {
 }
 
 TEST(TutorialOverlay, callbackSuccess) {
-  QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
 
   std::map<std::string, int> init_count{std::make_pair<std::string, int>("unitTest1", 0),
@@ -93,7 +88,6 @@ TEST(TutorialOverlay, callbackSuccess) {
 }
 
 TEST(TutorialOverlay, CallbackFail) {
-  QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
 
   TutorialOverlay::StepSetup setup{
@@ -111,7 +105,6 @@ TEST(TutorialOverlay, CallbackFail) {
 }
 
 TEST(TutorialOverlay, SignalsAndSlots) {
-  QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
 
   bool shown = false, hidden = false;
@@ -158,7 +151,6 @@ TEST(TutorialOverlay, SignalsAndSlots) {
 }
 
 TEST(TutorialOverlay, FailTests) {
-  QApplication app(argc, nullptr);
   auto overlay = std::make_unique<TutorialOverlay>(nullptr);
   EXPECT_DEATH({ overlay->SetupStep("xx_invalid_step_name_xx", {}); }, "Check failed");
   EXPECT_DEATH({ overlay->AddSection("test", "Unit Testing", {"xx_invalid_step_name_xx"}); },

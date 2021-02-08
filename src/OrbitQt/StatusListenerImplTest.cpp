@@ -12,10 +12,8 @@
 #include "StatusListenerImpl.h"
 #include "gtest/gtest.h"
 
-static int argc = 0;
 
 TEST(StatusListenerImpl, ShowAndClearOneMessage) {
-  QApplication app(argc, nullptr);
   auto status_bar = std::make_unique<QStatusBar>(nullptr);
   auto status_listener = StatusListenerImpl::Create(status_bar.get());
 
@@ -32,7 +30,6 @@ TEST(StatusListenerImpl, ShowAndUpdate) {
   constexpr const char* message3 = "message 3";
   constexpr const char* updated_message = "updated message";
 
-  QApplication app(argc, nullptr);
   auto status_bar = std::make_unique<QStatusBar>(nullptr);
   auto status_listener = StatusListenerImpl::Create(status_bar.get());
 
@@ -67,7 +64,6 @@ TEST(StatusListenerImpl, CheckOrder) {
   constexpr const char* message4 = "message 4";
   constexpr const char* message5 = "message 5";
 
-  QApplication app(argc, nullptr);
   auto status_bar = std::make_unique<QStatusBar>(nullptr);
   auto status_listener = StatusListenerImpl::Create(status_bar.get());
 
@@ -115,7 +111,6 @@ TEST(StatusListenerImpl, CheckOrder) {
 TEST(StatusListenerImpl, UpdateStatusInvalidId) {
   EXPECT_DEATH(
       {
-        QApplication app(argc, nullptr);
         auto status_bar = std::make_unique<QStatusBar>(nullptr);
         auto status_listener = StatusListenerImpl::Create(status_bar.get());
 
@@ -127,7 +122,6 @@ TEST(StatusListenerImpl, UpdateStatusInvalidId) {
 TEST(StatusListenerImpl, ClearStatusInvalidId) {
   EXPECT_DEATH(
       {
-        QApplication app(argc, nullptr);
         auto status_bar = std::make_unique<QStatusBar>(nullptr);
         auto status_listener = StatusListenerImpl::Create(status_bar.get());
 

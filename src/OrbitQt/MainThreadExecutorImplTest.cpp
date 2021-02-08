@@ -11,42 +11,32 @@
 
 namespace orbit_qt {
 
-static int argc = 0;
-
 TEST(MainThreadExecutorImpl, Schedule) {
-  QCoreApplication app{argc, nullptr};
-
   auto executor = MainThreadExecutorImpl::Create();
   executor->Schedule([]() { QCoreApplication::exit(42); });
 
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
 TEST(MainThreadExecutorImpl, ScheduleAfterAllVoid) {
-  QCoreApplication app{argc, nullptr};
-
   bool called = false;
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([&called]() { called = true; });
   executor->ScheduleAfter(future, []() { QCoreApplication::exit(42); });
 
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
   EXPECT_TRUE(called);
 }
 
 TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerBetweenJobs) {
-  QCoreApplication app{argc, nullptr};
-
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([]() { return 42; });
   executor->ScheduleAfter(future, [](int val) { QCoreApplication::exit(val); });
 
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
 TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerAsFinalResultAndBetweenJobs) {
-  QCoreApplication app{argc, nullptr};
-
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([]() { return 42; });
   auto future2 = executor->ScheduleAfter(future, [](int val) {
@@ -54,14 +44,12 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerAsFinalResultAndBetweenJobs
     return val + 42;
   });
 
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
   EXPECT_TRUE(future2.IsFinished());
   EXPECT_EQ(future2.Get(), 42 + 42);
 }
 
 TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerOnlyAsFinalResult) {
-  QCoreApplication app{argc, nullptr};
-
   bool called = false;
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([&called]() { called = true; });
@@ -70,15 +58,13 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerOnlyAsFinalResult) {
     return 42 + 42;
   });
 
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
   EXPECT_TRUE(future2.IsFinished());
   EXPECT_EQ(future2.Get(), 42 + 42);
   EXPECT_TRUE(called);
 }
 
 TEST(MainThreadExecutorImpl, ScheduleAfterMultipleContinuations) {
-  QCoreApplication app{argc, nullptr};
-
   auto executor = MainThreadExecutorImpl::Create();
   auto future = executor->Schedule([]() { return 42; });
   auto future2 = executor->ScheduleAfter(future, [](int val) {
@@ -94,12 +80,10 @@ TEST(MainThreadExecutorImpl, ScheduleAfterMultipleContinuations) {
     QCoreApplication::exit(val + 42);
   });
 
-  EXPECT_EQ(app.exec(), 4 * 42);
+  EXPECT_EQ(QCoreApplication::exec(), 4 * 42);
 }
 
 TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
-  QCoreApplication app{argc, nullptr};
-
   orbit_base::Promise<void> promise;
   orbit_base::Future<void> future = promise.GetFuture();
 
@@ -118,8 +102,6 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
 }
 
 TEST(MainThreadExecutorImpl, Wait) {
-  QCoreApplication app{argc, nullptr};
-
   bool called = false;
   auto executor = MainThreadExecutorImpl::Create();
   orbit_base::Future<void> future = executor->Schedule([&called]() { called = true; });
@@ -127,8 +109,6 @@ TEST(MainThreadExecutorImpl, Wait) {
 }
 
 TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
-  QCoreApplication app{argc, nullptr};
-
   auto executor = MainThreadExecutorImpl::Create();
   const auto future = executor->Schedule([]() { return 42; });
   const auto future2 = future.Then(executor.get(), [](int val) {
@@ -136,19 +116,17 @@ TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
     return val + 42;
   });
 
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
   EXPECT_TRUE(future2.IsFinished());
   EXPECT_EQ(future2.Get(), 42 + 42);
 }
 
 TEST(MainThreadExecutorImpl, TrySchedule) {
-  QCoreApplication app{argc, nullptr};
-
   auto executor = MainThreadExecutorImpl::Create();
   const auto result = TrySchedule(executor, []() { QCoreApplication::exit(42); });
 
   EXPECT_TRUE(result.has_value());
-  EXPECT_EQ(app.exec(), 42);
+  EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
 TEST(MainThreadExecutorImpl, TryScheduleWithInvalidWeakPtr) {

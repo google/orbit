@@ -187,7 +187,7 @@ target_link_libraries(
           Qt5::Widgets
           Qt5::Core
           Qt5::Test
-          GTest::Main)
+          GTest::QtGuiMain)
 
 set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
