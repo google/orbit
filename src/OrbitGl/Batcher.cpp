@@ -14,39 +14,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 
-namespace {
-void GetTriangleGradientColors(const Color& color, std::array<Color, 3>* colors,
-                               ShadingDirection shading_direction) {
-  const float kGradientCoeff = 0.94f;
-  Vec3 dark = Vec3(color[0], color[1], color[2]) * kGradientCoeff;
-  Color dark_color = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
-                           static_cast<uint8_t>(dark[2]), color[3]);
-
-  switch (shading_direction) {
-    case ShadingDirection::kLeftToRight:
-      (*colors)[0] = dark_color;
-      (*colors)[1] = dark_color;
-      (*colors)[2] = color;
-      break;
-    case ShadingDirection::kRightToLeft:
-      (*colors)[0] = dark_color;
-      (*colors)[1] = color;
-      (*colors)[2] = color;
-      break;
-    case ShadingDirection::kTopToBottom:
-      (*colors)[0] = color;
-      (*colors)[1] = dark_color;
-      (*colors)[2] = color;
-      break;
-    case ShadingDirection::kBottomToTop:
-      (*colors)[0] = dark_color;
-      (*colors)[1] = color;
-      (*colors)[2] = dark_color;
-      break;
-  }
-}
-}  // namespace
-
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
@@ -254,19 +221,29 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                           std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 3> colors;
-  colors[0] = color;
-  colors[1] = color;
-  colors[2] = color;
+  colors.fill(color);
   AddTriangle(triangle, colors, picking_color, std::move(user_data));
 }
 
-void Batcher::AddShadedTriangle(const Triangle& triangle, const Color& color,
-                                std::unique_ptr<PickingUserData> user_data,
-                                ShadingDirection shading_direction) {
-  std::array<Color, 3> colors;
-  GetTriangleGradientColors(color, &colors, shading_direction);
+void Batcher::AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left,
+                                 const Vec3& bottom_right, const Vec3& top_right,
+                                 const Color& color, std::unique_ptr<PickingUserData> user_data,
+                                 ShadingDirection shading_direction) {
+  std::array<Color, 4> colors;  // top_left, bottom_left, bottom_right, top_right.
+  GetBoxGradientColors(color, &colors, shading_direction);  // left points will be "darker".
   Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
-  AddTriangle(triangle, colors, picking_color, std::move(user_data));
+  Triangle triangle_1{top_left, bottom_left, top_right};
+  std::array<Color, 3> colors_1;
+  colors_1[0] = colors[0];
+  colors_1[1] = colors[1];
+  colors_1[2] = colors[2];
+  AddTriangle(triangle_1, colors_1, picking_color, std::make_unique<PickingUserData>(*user_data));
+  Triangle triangle_2{bottom_left, bottom_right, top_right};
+  std::array<Color, 3> colors_2;
+  colors_2[0] = colors[1];
+  colors_2[1] = colors[2];
+  colors_2[2] = colors[3];
+  AddTriangle(triangle_2, colors_2, picking_color, std::move(user_data));
 }
 
 void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,

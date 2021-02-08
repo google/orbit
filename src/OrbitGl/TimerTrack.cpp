@@ -111,7 +111,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
     auto chain_iterator = chain->begin();
-    TimerBlock* prev_block = nullptr;
+    const TimerInfo* prev_timer_info = nullptr;
     while (chain_iterator != chain->end()) {
       TimerBlock& block = *chain_iterator;
       if (!block.Intersects(min_tick, max_tick)) continue;
@@ -139,16 +139,17 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         // Check if the previous timer overlaps with the current one, and if so draw the overlap
         // as triangles rather than as overlapping rectangles.
-        if (k > 0 || prev_block != nullptr) {
-          const TimerInfo& prev_timer_info =
-              (k > 0) ? block[k - 1].GetTimerInfo()
-                      : (*prev_block)[prev_block->size() - 1].GetTimerInfo();
-          CHECK(prev_timer_info.start() < timer_info.start());
-          // We also compare the type, as for the Gpu timers, timers of different type but same
-          // depth are drawn below each other (and thus do not overlap).
-          if (prev_timer_info.end() > timer_info.start() &&
-              prev_timer_info.type() == timer_info.type()) {
-            start_or_prev_end_us = time_graph_->GetUsFromTick(prev_timer_info.end());
+        if (prev_timer_info != nullptr) {
+          CHECK(prev_timer_info->start() < timer_info.start());
+          // Note, that for timers that are completely inside the previous one, we will keep drawing
+          // them above each other, as a proper solution would require us to keep a list of all
+          // prev. intersecting timers. Further, we also compare the type, as for the Gpu timers,
+          // timers of different type but same depth are drawn below each other (and thus do not
+          // overlap).
+          if (prev_timer_info->end() > timer_info.start() &&
+              prev_timer_info->end() <= timer_info.end() &&
+              prev_timer_info->type() == timer_info.type()) {
+            start_or_prev_end_us = time_graph_->GetUsFromTick(prev_timer_info->end());
           }
         }
 
@@ -160,9 +161,12 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                                  ? block[k + 1].GetTimerInfo()
                                                  : (*next_chain_it)[0].GetTimerInfo();
           CHECK(timer_info.start() < next_timer_info.start());
-          // We also compare the type, as for the Gpu timers, timers of different type but same
-          // depth are drawn below each other (and thus do not overlap).
+          // Note, that for timers that are completely inside the next one, we will keep drawing
+          // them above each other, as a proper solution would require us to keep a list of all
+          // upcoming intersecting timers. We also compare the type, as for the Gpu timers, timers
+          // of different type but same depth are drawn below each other (and thus do not overlap).
           if (timer_info.end() > next_timer_info.start() &&
+              timer_info.end() <= next_timer_info.end() &&
               next_timer_info.type() == timer_info.type()) {
             end_or_next_start_us = time_graph_->GetUsFromTick(next_timer_info.start());
           }
@@ -220,18 +224,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           Vec3 bottom_right(
               world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
               world_timer_y, z);
-
-          Triangle left_triangle(top_left, bottom_left, top_right);
-          auto user_data_left = std::make_unique<PickingUserData>(
-              &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
-          batcher->AddShadedTriangle(left_triangle, color, std::move(user_data_left),
-                                     ShadingDirection::kLeftToRight);
-
-          Triangle triangle(bottom_left, top_right, bottom_right);
-          auto user_data_right = std::make_unique<PickingUserData>(
-              &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
-          batcher->AddShadedTriangle(triangle, color, std::move(user_data_right),
-                                     ShadingDirection::kRightToLeft);
+          batcher->AddShadedTrapezium(
+              top_left, bottom_left, bottom_right, top_right, color,
+              std::make_unique<PickingUserData>(
+                  &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); }));
 
         } else {
           auto user_data = std::make_unique<PickingUserData>(
@@ -256,7 +252,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           }
         }
 
-        prev_block = &block;
+        prev_timer_info = &timer_info;
       }
     }
   }

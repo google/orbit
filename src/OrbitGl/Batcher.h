@@ -32,6 +32,8 @@ struct PickingUserData {
 
   explicit PickingUserData(TextBox* text_box = nullptr, TooltipCallback generate_tooltip = nullptr)
       : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
+
+  explicit PickingUserData(const PickingUserData& other) = default;
 };
 
 struct LineBuffer {
@@ -149,9 +151,10 @@ class Batcher {
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddShadedTriangle(const Triangle& triangle, const Color& color,
-                         std::unique_ptr<PickingUserData> user_data = nullptr,
-                         ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
+  void AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left, const Vec3& bottom_right,
+                          const Vec3& top_right, const Color& color,
+                          std::unique_ptr<PickingUserData> user_data = nullptr,
+                          ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
 
