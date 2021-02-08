@@ -17,7 +17,6 @@
 #include "TimeGraph.h"
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::TimerInfo;
 
 namespace {
 
@@ -209,7 +208,7 @@ void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionIn
   Move();
 }
 
-uint64_t LiveFunctionsController::GetStartTime(uint64_t index) {
+uint64_t LiveFunctionsController::GetStartTime(uint64_t index) const {
   const auto& it = current_textboxes_.find(index);
   if (it != current_textboxes_.end()) {
     return it->second->GetTimerInfo().start();
@@ -217,11 +216,11 @@ uint64_t LiveFunctionsController::GetStartTime(uint64_t index) {
   return GetCaptureMin();
 }
 
-uint64_t LiveFunctionsController::GetCaptureMin() {
+uint64_t LiveFunctionsController::GetCaptureMin() const {
   CHECK(app_ != nullptr);
   return app_->GetTimeGraph()->GetCaptureMin();
 }
-uint64_t LiveFunctionsController::GetCaptureMax() {
+uint64_t LiveFunctionsController::GetCaptureMax() const {
   CHECK(app_ != nullptr);
   return app_->GetTimeGraph()->GetCaptureMax();
 }

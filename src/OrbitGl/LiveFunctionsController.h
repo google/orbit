@@ -38,9 +38,9 @@ class LiveFunctionsController {
     add_iterator_callback_ = std::move(callback);
   }
 
-  uint64_t GetCaptureMin();
-  uint64_t GetCaptureMax();
-  uint64_t GetStartTime(uint64_t index);
+  [[nodiscard]] uint64_t GetCaptureMin() const;
+  [[nodiscard]] uint64_t GetCaptureMax() const;
+  [[nodiscard]] uint64_t GetStartTime(uint64_t index) const;
 
   void AddIterator(uint64_t instrumented_function_id,
                    const orbit_client_protos::FunctionInfo* function);
