@@ -268,12 +268,8 @@ chmod -v 4775 /opt/developer/tools/OrbitService
             self.run("dpkg --contents {}.deb".format(basedir))
             shutil.rmtree(basedir)
 
-        self.copy("*", src="bin/dri", dst="bin/dri", symlinks=True)
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
-        self.copy("*", src="bin/icons", dst="bin/icons", symlinks=True)
-        self.copy("*", src="bin/resources", dst="bin/resources", symlinks=True)
-        self.copy("*", src="bin/translations", dst="bin/translations", symlinks=True)
         self.copy("*.pdb", src="bin/", dst="bin")
         self.copy("Orbit", src="bin/", dst="bin")
         self.copy("Orbit.exe", src="bin/", dst="bin")
@@ -291,6 +287,10 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("LICENSE")
         self.copy("libOrbitVulkanLayer.so", src="lib/", dst="lib")
         self.copy("VkLayer_Orbit_implicit.json", src="lib/", dst="lib")
+
+        if not self.options.system_qt:
+            orbit_executable = "Orbit.exe" if self.settings.os == "Windows" else "Orbit"
+            self.run("windeployqt --pdb {}".format(orbit_executable), cwd=os.path.join(self.package_folder, "bin"), run_environment=True)
 
     def deploy(self):
         self.copy("*", src="bin", dst="bin")
