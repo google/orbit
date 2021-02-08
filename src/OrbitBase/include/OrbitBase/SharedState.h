@@ -23,6 +23,8 @@ struct SharedState {
   absl::Mutex mutex;
   std::optional<T> result;
   std::vector<orbit_base::AnyInvocable<void(const T&)>> continuations;
+
+  [[nodiscard]] bool IsFinished() const { return result.has_value(); }
 };
 
 template <>
@@ -30,6 +32,8 @@ struct SharedState<void> {
   absl::Mutex mutex;
   bool finished = false;
   std::vector<orbit_base::AnyInvocable<void()>> continuations;
+
+  [[nodiscard]] bool IsFinished() const { return finished; }
 };
 
 }  // namespace orbit_base_internal
