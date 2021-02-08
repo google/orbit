@@ -20,7 +20,7 @@ set_target_properties(QtUtils PROPERTIES AUTOMOC ON)
 add_executable(QtUtilsTests)
 target_compile_options(QtUtilsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(QtUtilsTests PRIVATE FutureWatcherTest.cpp)
-target_link_libraries(QtUtilsTests PRIVATE QtUtils GTest::Main)
+target_link_libraries(QtUtilsTests PRIVATE QtUtils GTest::QtCoreMain)
 
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
   register_test(QtUtilsTests PROPERTIES DISABLED TRUE)
