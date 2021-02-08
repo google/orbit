@@ -24,35 +24,171 @@ namespace orbit_base_internal {
 template <typename T>
 class PromiseBase;
 
-// FutureBase<T> is an internal base class for Future<T>. Check out Future<T> below for more
-// information.
-template <typename T>
-class FutureBase {
+enum class FutureRegisterContinuationResult {
+  kSuccessfullyRegistered,
+  kFutureAlreadyCompleted,
+  kFutureNotValid
+};
+
+// `orbit_base_internal::InternalFutureBase<T, Derived>` is an internal base class for
+// `orbit_base_internal::InternalFuture<T, Derived>`. It contains all the methods which apply to all
+// `T`.
+//
+// `orbit_base_internal::InternalFuture<T, Derived>` has a specialization for `T = void` which is
+// necessary since `InternalFuture<void>` has a different API surface. (No Get() method etc.)
+//
+// orbit_base::Future<T> is the public facing type. It has a specialization for `T =
+// ErrorMessageOr<U>` to allow `ScheduleAfterIfSuccess` and a specialization for `T = void` which is
+// not declared `nodiscard`.
+//
+// Whenever you add methods to this inheritance hierarchy, try to implement your methods as low as
+// possible to avoid code duplication.
+template <typename T, typename Derived>
+class InternalFutureBase {
  public:
-  FutureBase(const FutureBase&) = default;
-  FutureBase& operator=(const FutureBase&) = default;
-  FutureBase(FutureBase&&) = default;
-  FutureBase& operator=(FutureBase&&) = default;
-  ~FutureBase() noexcept = default;
+  InternalFutureBase(const InternalFutureBase&) = default;
+  InternalFutureBase& operator=(const InternalFutureBase&) = default;
+  InternalFutureBase(InternalFutureBase&&) noexcept = default;
+  InternalFutureBase& operator=(InternalFutureBase&&) noexcept = default;
+  ~InternalFutureBase() noexcept = default;
 
   [[nodiscard]] bool IsValid() const { return shared_state_.use_count() > 0; }
 
+  // Consider this an internal method which only brings functionality to
+  // properly designed waiting code like orbit_qt_utils::FutureWatcher.
+  //
+  // The continuation is potentially executed on a background thread,
+  // which means you have to be aware of race-conditions while registering
+  // the continuation and potential mutex deadlocks in the continuation.
+  template <typename Invocable>
+  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(
+      Invocable&& continuation) const {
+    if (!IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
+
+    absl::MutexLock lock{&this->shared_state_->mutex};
+    if (this->shared_state_->IsFinished()) {
+      return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
+    }
+
+    // Executors based on orbit_base::Future/Promise may rely on the fact, that `continuation` is
+    // only moved, when `RegisterContinuation` return kSuccessfullyRegistered. So when changed that
+    // behaviour, please check those implementations.
+    this->shared_state_->continuations.emplace_back(std::forward<Invocable>(continuation));
+    return FutureRegisterContinuationResult::kSuccessfullyRegistered;
+  }
+
+  [[nodiscard]] bool IsFinished() const {
+    if (this->shared_state_.use_count() == 0) return false;
+
+    absl::MutexLock lock{&this->shared_state_->mutex};
+    return this->shared_state_->IsFinished();
+  }
+
+  void Wait() const {
+    CHECK(IsValid());
+    absl::MutexLock lock{&this->shared_state_->mutex};
+    this->shared_state_->mutex.Await(absl::Condition(
+        +[](const std::shared_ptr<SharedState<T>>* shared_state) {
+          return shared_state->get()->IsFinished();
+        },
+        &this->shared_state_));
+  }
+
  protected:
-  explicit FutureBase(std::shared_ptr<SharedState<T>> shared_state)
+  explicit InternalFutureBase(std::shared_ptr<SharedState<T>> shared_state)
       : shared_state_{std::move(shared_state)} {}
 
   std::shared_ptr<SharedState<T>> shared_state_;
+
+  // We use the CRTP-pattern to be able to get a pointer to the public facing type
+  // `orbit_base::Future`.
+  [[nodiscard]] const Derived& self() const { return *static_cast<const Derived*>(this); }
+  [[nodiscard]] Derived& self() { return *static_cast<Derived*>(this); }
+};
+
+template <typename T, typename Derived>
+class InternalFuture : public orbit_base_internal::InternalFutureBase<T, Derived> {
+ public:
+  // Constructs a completed future
+  /* explicit(false) */ InternalFuture(const T& val)
+      : InternalFutureBase<T, Derived>{std::make_shared<SharedState<T>>()} {
+    this->shared_state_->result.emplace(val);
+  }
+
+  // Constructs a completed future
+  /* explicit(false) */ InternalFuture(T&& val)
+      : InternalFutureBase<T, Derived>{std::make_shared<SharedState<T>>()} {
+    this->shared_state_->result.emplace(std::move(val));
+  }
+
+  // Constructs a completed future
+  template <typename... Args>
+  explicit InternalFuture(std::in_place_t, Args&&... args)
+      : InternalFutureBase<T, Derived>{std::make_shared<SharedState<T>>()} {
+    this->shared_state_->result.emplace(std::forward<Args>(args)...);
+  }
+
+  const T& Get() const {
+    this->Wait();
+
+    absl::MutexLock lock{&this->shared_state_->mutex};
+    return this->shared_state_->result.value();
+  }
+
+  // This is syntactic sugar for MainThreadExecutor (or maybe other executors in the future).
+  // `invocable` will be executed by `executor` after this future has completed.
+  //
+  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
+  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
+  template <typename Executor, typename Invocable>
+  auto Then(Executor* executor, Invocable&& invocable) const {
+    return executor->ScheduleAfter(this->self(), std::forward<Invocable>(invocable));
+  }
+
+ private:
+  using orbit_base_internal::InternalFutureBase<T, Derived>::InternalFutureBase;
+};
+
+// InternalFuture<void> is a specialization of InternalFuture<T> for asynchronous tasks that return
+// `void`.
+//
+// In this case the future won't be able to transfer any return type to the caller, but it can
+// notify the caller, when the asynchronous tasks completes.
+//
+// Unlike InternalFuture<T>, InternalFuture<void> has no `Get()` method since there is no return
+// value.
+//
+// The default constructor creates a completed future. This is handy as a return value.
+template <typename Derived>
+class InternalFuture<void, Derived>
+    : public orbit_base_internal::InternalFutureBase<void, Derived> {
+ public:
+  // Constructs a completed future
+  explicit InternalFuture()
+      : orbit_base_internal::InternalFutureBase<void, Derived>{
+            std::make_shared<orbit_base_internal::SharedState<void>>()} {
+    this->shared_state_->finished = true;
+  }
+
+  // This is syntactic sugar for MainThreadExecutor (or maybe other executors in the future).
+  // `invocable` will be executed by `executor` after this future has completed.
+  //
+  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
+  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
+  template <typename Executor, typename Invocable>
+  auto Then(Executor* executor, Invocable&& invocable) const {
+    return executor->ScheduleAfter(*this->self(), std::forward<Invocable>(invocable));
+  }
+
+ private:
+  using orbit_base_internal::InternalFutureBase<void, Derived>::InternalFutureBase;
 };
 
 }  // namespace orbit_base_internal
 
 namespace orbit_base {
 
-enum class FutureRegisterContinuationResult {
-  kSuccessfullyRegistered,
-  kFutureAlreadyCompleted,
-  kFutureNotValid
-};
+using FutureRegisterContinuationResult = orbit_base_internal::FutureRegisterContinuationResult;
 
 // A future type, similar to std::future but prepared to integrate with
 // Orbit-specific code like MainThreadExecutor and ThreadPool.
@@ -77,157 +213,23 @@ enum class FutureRegisterContinuationResult {
 //
 // The default constructor creates a completed future. This is handy as a return value.
 template <typename T>
-class [[nodiscard]] Future : public orbit_base_internal::FutureBase<T> {
- public:
-  // Constructs a completed future
-  /* explicit(false) */ Future(const T& val)
-      : orbit_base_internal::FutureBase<T>{
-            std::make_shared<orbit_base_internal::SharedState<T>>()} {
-    this->shared_state_->result.emplace(val);
-  }
-
-  // Constructs a completed future
-  /* explicit(false) */ Future(T && val)
-      : orbit_base_internal::FutureBase<T>{
-            std::make_shared<orbit_base_internal::SharedState<T>>()} {
-    this->shared_state_->result.emplace(std::move(val));
-  }
-
-  // Constructs a completed future
-  template <typename... Args>
-  explicit Future(std::in_place_t, Args && ... args)
-      : orbit_base_internal::FutureBase<T>{
-            std::make_shared<orbit_base_internal::SharedState<T>>()} {
-    this->shared_state_->result.emplace(std::forward<Args>(args)...);
-  }
-
-  [[nodiscard]] bool IsFinished() const {
-    if (this->shared_state_.use_count() == 0) return false;
-
-    absl::MutexLock lock{&this->shared_state_->mutex};
-    return this->shared_state_->result.has_value();
-  }
-
-  const T& Get() const {
-    Wait();
-
-    absl::MutexLock lock{&this->shared_state_->mutex};
-    return this->shared_state_->result.value();
-  }
-
-  // Consider this an internal method which only brings functionality to
-  // properly designed waiting code like orbit_qt_utils::FutureWatcher.
-
-  // The continuation is potentially executed on a background thread,
-  // which means you have to be aware of race-conditions while registering
-  // the continuation and potential mutex deadlocks in the continuation.
-  template <typename Invocable>
-  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(Invocable && continuation)
-      const {
-    if (!this->IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
-
-    absl::MutexLock lock{&this->shared_state_->mutex};
-    if (this->shared_state_->result.has_value()) {
-      return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
-    }
-
-    // Executors based on orbit_base::Future/Promise may rely on the fact, that `continuation` is
-    // only moved, when `RegisterContinuation` return kSuccessfullyRegistered. So when changed that
-    // behaviour, please check those implementations.
-    this->shared_state_->continuations.emplace_back(std::forward<Invocable>(continuation));
-    return FutureRegisterContinuationResult::kSuccessfullyRegistered;
-  }
-
-  void Wait() const {
-    CHECK(this->IsValid());
-    absl::MutexLock lock{&this->shared_state_->mutex};
-    this->shared_state_->mutex.Await(absl::Condition(
-        +[](std::optional<T>* result) { return result->has_value(); },
-        &this->shared_state_->result));
-  }
-
-  // This is syntactic sugar for MainThreadExecutor (or maybe other executors in the future).
-  // `invocable` will be executed by `executor` after this future has completed.
-  //
-  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
-  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
-  template <typename Executor, typename Invocable>
-  auto Then(Executor * executor, Invocable && invocable) const {
-    return executor->ScheduleAfter(*this, std::forward<Invocable>(invocable));
-  }
-
- private:
+class [[nodiscard]] Future : public orbit_base_internal::InternalFuture<T, Future<T>> {
   friend orbit_base_internal::PromiseBase<T>;
 
-  using orbit_base_internal::FutureBase<T>::FutureBase;
+ public:
+  using orbit_base_internal::InternalFuture<T, Future>::InternalFuture;
 };
 
-// Future<void> is a specialization of Future<T> for asynchronous tasks that return `void`.
-//
-// In this case the future won't be able to transfer any return type to the caller, but it can
-// notify the caller, when the asynchronous tasks completes.
-//
-// Unlike Future<T>, Future<void> has no `Get()` method since there is no return value.
-//
-// The default constructor creates a completed future. This is handy as a return value.
+// This specialization is necessary due to nodiscard. The syntactic differences of `void` compared
+// to a regular `T` is handled in `orbit_base_internal::Future<void>`, not here!
 template <>
-class Future<void> : public orbit_base_internal::FutureBase<void> {
- public:
-  // Constructs a completed future
-  explicit Future()
-      : orbit_base_internal::FutureBase<void>{
-            std::make_shared<orbit_base_internal::SharedState<void>>()} {
-    this->shared_state_->finished = true;
-  }
-
-  [[nodiscard]] bool IsFinished() const {
-    if (shared_state_.use_count() == 0) return false;
-
-    absl::MutexLock lock{&shared_state_->mutex};
-    return shared_state_->finished;
-  }
-
-  // Check Future<T>::RegisterContinuation for a warning about this function.
-  // TLDR: You probably want to use `Future<void>::Then` instead!
-  template <typename Invocable>
-  [[nodiscard]] FutureRegisterContinuationResult RegisterContinuation(
-      Invocable&& continuation) const {
-    if (!this->IsValid()) return FutureRegisterContinuationResult::kFutureNotValid;
-
-    absl::MutexLock lock{&this->shared_state_->mutex};
-    if (this->shared_state_->finished) {
-      return FutureRegisterContinuationResult::kFutureAlreadyCompleted;
-    }
-
-    // Executors based on orbit_base::Future/Promise may rely on the fact, that `continuation` is
-    // only moved, when `RegisterContinuation` return kSuccessfullyRegistered. So when changed that
-    // behaviour, please check those implementations.
-    this->shared_state_->continuations.emplace_back(std::forward<Invocable>(continuation));
-    return FutureRegisterContinuationResult::kSuccessfullyRegistered;
-  }
-
-  void Wait() const {
-    CHECK(IsValid());
-    absl::MutexLock lock{&this->shared_state_->mutex};
-    shared_state_->mutex.Await(absl::Condition(
-        +[](bool* finished) { return *finished; }, &shared_state_->finished));
-  }
-
-  // This is syntactic sugar for MainThreadExecutor (or maybe other executors in the future).
-  // `invocable` will be executed by `executor` after this future has completed.
-  //
-  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
-  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
-  template <typename Executor, typename Invocable>
-  auto Then(Executor* executor, Invocable&& invocable) const {
-    return executor->ScheduleAfter(*this, std::forward<Invocable>(invocable));
-  }
-
- private:
+class Future<void> : public orbit_base_internal::InternalFuture<void, Future<void>> {
   friend orbit_base_internal::PromiseBase<void>;
 
-  using orbit_base_internal::FutureBase<void>::FutureBase;
+ public:
+  using orbit_base_internal::InternalFuture<void, Future>::InternalFuture;
 };
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FUTURE_H_
