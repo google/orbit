@@ -21,6 +21,7 @@ target_include_directories(OrbitBase PRIVATE
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/AnyInvocable.h
+        include/OrbitBase/AnyMovable.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/Future.h
         include/OrbitBase/FutureHelpers.h
@@ -73,6 +74,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitBaseTests PRIVATE
         AnyInvocableTest.cpp
+        AnyMovableTest.cpp
         ExecutablePathTest.cpp
         FutureTest.cpp
         FutureHelpersTest.cpp
