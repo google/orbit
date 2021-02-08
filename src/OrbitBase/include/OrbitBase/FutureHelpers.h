@@ -14,8 +14,8 @@
 namespace orbit_base {
 
 template <typename T, typename Invocable>
-void RegisterContinuationOrCallDirectly(const Future<T>& future, Invocable continuation) {
-  const auto result = future.RegisterContinuation(continuation);
+void RegisterContinuationOrCallDirectly(const Future<T>& future, Invocable&& continuation) {
+  const auto result = future.RegisterContinuation(std::forward<Invocable>(continuation));
 
   if (result == FutureRegisterContinuationResult::kFutureAlreadyCompleted) {
     continuation(future.Get());
@@ -23,8 +23,8 @@ void RegisterContinuationOrCallDirectly(const Future<T>& future, Invocable conti
 }
 
 template <typename Invocable>
-void RegisterContinuationOrCallDirectly(const Future<void>& future, Invocable continuation) {
-  const auto result = future.RegisterContinuation(continuation);
+void RegisterContinuationOrCallDirectly(const Future<void>& future, Invocable&& continuation) {
+  const auto result = future.RegisterContinuation(std::forward<Invocable>(continuation));
 
   if (result == FutureRegisterContinuationResult::kFutureAlreadyCompleted) {
     continuation();
