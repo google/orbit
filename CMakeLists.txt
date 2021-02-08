@@ -82,21 +82,12 @@ if (NOT WIN32)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
-include(cmake/fuzzing.cmake)
-include(cmake/strip.cmake)
-include(cmake/tests.cmake)
-include(cmake/iwyu.cmake)
-enable_testing()
 
 find_package(Threads REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
-
-include("cmake/protobuf.cmake")
-include("cmake/grpc_helper.cmake")
-
 
 if(WITH_ORBITGL)
   find_package(OpenGL REQUIRED)
@@ -125,6 +116,14 @@ if(NOT WIN32 AND WITH_VULKAN_LAYER)
   find_package(Vulkan REQUIRED)
   find_package(VulkanValidationLayers REQUIRED)
 endif()
+
+include("cmake/protobuf.cmake")
+include("cmake/grpc_helper.cmake")
+include("cmake/fuzzing.cmake")
+include("cmake/strip.cmake")
+include("cmake/tests.cmake")
+include("cmake/iwyu.cmake")
+enable_testing()
 
 # Set preprocessor defines These are only necessary for windows, but we will
 # define them on all platforms, to keep the builds similar as possible.
