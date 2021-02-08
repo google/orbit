@@ -76,6 +76,7 @@ target_sources(OrbitBaseTests PRIVATE
         ExecutablePathTest.cpp
         FutureTest.cpp
         FutureHelpersTest.cpp
+        ImmediateExecutorTest.cpp
         JoinFuturesTest.cpp
         LoggingUtilsTest.cpp
         ReadFileToStringTest.cpp
