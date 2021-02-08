@@ -41,11 +41,11 @@ class PerfEventProcessor {
   }
 
  private:
-  // Do not process events that are more recent than 0.1 seconds. There could be
-  // events coming out of order as they are read from different perf_event_open
-  // ring buffers and this ensure that all events are processed in the correct
+  // Do not process events that are more recent than kProcessingDelayMs. Events
+  // come out of order as they are read from different perf_event_open ring
+  // buffers and this ensures that all events are processed in the correct
   // order.
-  static constexpr uint64_t kProcessingDelayMs = 100;
+  static constexpr uint64_t kProcessingDelayMs = 333;
   uint64_t last_processed_timestamp_ns_ = 0;
   std::atomic<uint64_t>* discarded_out_of_order_counter_ = nullptr;
 

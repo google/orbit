@@ -39,7 +39,7 @@ class PerfEventProcessorTest : public ::testing::Test {
   MockVisitor mock_visitor_;
   std::atomic<uint64_t> discarded_out_of_order_counter_ = 0;
 
-  static constexpr uint64_t kDelayBeforeProcessOldEventsMs = 100;
+  static constexpr uint64_t kDelayBeforeProcessOldEventsMs = 333;
 };
 
 std::unique_ptr<PerfEvent> MakeFakePerfEvent(int origin_fd, uint64_t timestamp_ns) {
