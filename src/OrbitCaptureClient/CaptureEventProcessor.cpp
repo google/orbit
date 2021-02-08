@@ -184,6 +184,7 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   }
   uint64_t timeline_hash = GetStringHashAndSendToListenerIfNecessary(timeline);
 
+  int32_t process_id = gpu_job.pid();
   int32_t thread_id = gpu_job.tid();
   uint64_t amdgpu_cs_ioctl_time_ns = gpu_job.amdgpu_cs_ioctl_time_ns();
 
@@ -191,6 +192,7 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t sw_queue_key = GetStringHashAndSendToListenerIfNecessary(sw_queue);
 
   TimerInfo timer_user_to_sched;
+  timer_user_to_sched.set_process_id(process_id);
   timer_user_to_sched.set_thread_id(thread_id);
   timer_user_to_sched.set_start(amdgpu_cs_ioctl_time_ns);
   timer_user_to_sched.set_end(gpu_job.amdgpu_sched_run_job_time_ns());
@@ -208,6 +210,7 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t hw_queue_key = GetStringHashAndSendToListenerIfNecessary(hw_queue);
 
   TimerInfo timer_sched_to_start;
+  timer_sched_to_start.set_process_id(process_id);
   timer_sched_to_start.set_thread_id(thread_id);
   timer_sched_to_start.set_start(gpu_job.amdgpu_sched_run_job_time_ns());
   timer_sched_to_start.set_end(gpu_job.gpu_hardware_start_time_ns());
@@ -222,6 +225,7 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t hw_execution_key = GetStringHashAndSendToListenerIfNecessary(hw_execution);
 
   TimerInfo timer_start_to_finish;
+  timer_start_to_finish.set_process_id(process_id);
   timer_start_to_finish.set_thread_id(thread_id);
   timer_start_to_finish.set_start(gpu_job.gpu_hardware_start_time_ns());
   timer_start_to_finish.set_end(gpu_job.dma_fence_signaled_time_ns());
