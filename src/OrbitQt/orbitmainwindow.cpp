@@ -1197,7 +1197,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
-  target_label_->setStyleSheet(kTargetLabelColorFileTarget.arg(kTargetLabelColorFileTarget));
+  target_label_->setStyleSheet(kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorFileTarget));
   target_label_->setText(QString::fromStdString(target.GetCaptureFilePath().filename().string()));
 }
 
