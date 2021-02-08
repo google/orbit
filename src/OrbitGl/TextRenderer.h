@@ -70,6 +70,10 @@ class TextRenderer {
 
  private:
   texture_atlas_t* texture_atlas_;
+  // Indicates when a change to the texture atlas occurred so that we have to reupload the
+  // texture data. Only freetype-gl's texture_font_load_glyph modifies the texture atlas,
+  // so we need to set this to true when and only when we call that function.
+  bool texture_atlas_changed_;
   std::unordered_map<float, vertex_buffer_t*> vertex_buffers_by_layer_;
   std::map<uint32_t, texture_font_t*> fonts_by_size_;
   GlCanvas* canvas_;
