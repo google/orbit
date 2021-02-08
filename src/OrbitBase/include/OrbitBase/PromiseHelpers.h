@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_base {
 
@@ -109,6 +110,22 @@ struct ContinuationReturnType {
 template <typename Invocable>
 struct ContinuationReturnType<void, Invocable> {
   using Type = std::decay_t<decltype(std::declval<Invocable>()())>;
+};
+
+// This type trait helps to wrap a type into a ErrorMessageOr-wrapper, but won't do that if the type
+// is already a ErrorMessageOr.
+//
+// Examples:
+// EnsureWrappedInErrorMessageOr<int>::Type == ErrorMessageOr<int>
+// EnsureWrappedInErrorMessageOr<ErrorMessageOr<int>>::Type == ErrorMessageOr<int>
+template <typename T>
+struct EnsureWrappedInErrorMessageOr {
+  using Type = ErrorMessageOr<T>;
+};
+
+template <typename T>
+struct EnsureWrappedInErrorMessageOr<ErrorMessageOr<T>> {
+  using Type = ErrorMessageOr<T>;
 };
 
 }  // namespace orbit_base

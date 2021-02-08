@@ -17,6 +17,7 @@
 #include "OrbitBase/Action.h"
 #include "OrbitBase/AnyMovable.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/PromiseHelpers.h"
 
@@ -116,6 +117,58 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
       helper.Call(continuation);
     }
 
+    return resulting_future;
+  }
+
+  // ScheduleAfterIfSuccess schedules the continuation `functor` to be executed
+  // on `*this` after `future` has completed, and only if `future` returns a non-error result.
+  //
+  // Note: The continuation is only executed if `*this` is still alive when `future` completes.
+  template <typename T, typename F>
+  auto ScheduleAfterIfSuccess(const orbit_base::Future<ErrorMessageOr<T>>& future, F&& functor) {
+    CHECK(future.IsValid());
+
+    using ContinuationReturnType = typename orbit_base::ContinuationReturnType<T, F>::Type;
+    using PromiseReturnType =
+        typename orbit_base::EnsureWrappedInErrorMessageOr<ContinuationReturnType>::Type;
+
+    orbit_base::Promise<PromiseReturnType> promise{};
+    orbit_base::Future<PromiseReturnType> resulting_future = promise.GetFuture();
+
+    waiting_continuations_.emplace_front(std::forward<F>(functor));
+    auto function_reference = waiting_continuations_.begin();
+
+    auto continuation = [this, function_reference, executor_weak_ptr = weak_from_this(),
+                         promise = std::move(promise)](const ErrorMessageOr<T>& argument) mutable {
+      auto executor = executor_weak_ptr.lock();
+      if (executor == nullptr) return;
+
+      // If the future returns a non-success ErrorMessageOr-type, we will short-circuit and won't
+      // call the continutation. But we still have to schedule an action, that destroys the
+      // continuation in the executor's context (think main thread). The continuation's destructor
+      // might do things that need synchronization and can't happen in a different context (like a
+      // thread pool), i.e. when the continuation owns a ScopedStatus.
+      if (argument.has_error()) {
+        promise.SetResult(argument.error());
+        executor->Schedule(CreateAction(
+            [this, function_reference]() { waiting_continuations_.erase(function_reference); }));
+        return;
+      }
+
+      auto sucess_function_wrapper = [this, function_reference, promise = std::move(promise),
+                                      argument]() mutable {
+        auto functor = orbit_base::any_movable_cast<std::decay_t<F>>(&*function_reference);
+        CHECK(functor != nullptr);
+
+        orbit_base::HandleErrorAndSetResultInPromise<PromiseReturnType> helper{&promise};
+        helper.Call(*functor, argument);
+
+        waiting_continuations_.erase(function_reference);
+      };
+      executor->Schedule(CreateAction(std::move(sucess_function_wrapper)));
+    };
+
+    orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
     return resulting_future;
   }
 
