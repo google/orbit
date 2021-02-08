@@ -76,18 +76,4 @@ TEST(GetResultFromFutureAndCallContinuation, CallWithResult) {
   EXPECT_TRUE(called);
 }
 
-TEST(CopyableFunctionObjectContainer, IsCopyable) {
-  CopyableFunctionObjectContainer container{[]() { return 42; }};
-
-  auto copy = container;
-  EXPECT_EQ(copy(), 42);
-}
-
-TEST(CopyableFunctionObjectContainer, IsCopyableWithMoveOnlyElement) {
-  CopyableFunctionObjectContainer container{[ptr = std::make_unique<int>(42)]() { return *ptr; }};
-
-  auto copy = container;
-  EXPECT_EQ(copy(), 42);
-}
-
 }  // namespace orbit_base

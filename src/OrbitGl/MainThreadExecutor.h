@@ -76,26 +76,19 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
 
     using ReturnType = typename orbit_base::ContinuationReturnType<T, F>::Type;
 
-    // Since std::function is copyable, promise and functor also need to be copyable.
-    // That's why we wrap both in shared_ptr-based wrappers. That's not ideal.
-    // std::function in SharedState should be replaced by absl::any_invocable as soon as it is
-    // released.
-    auto promise = std::make_shared<orbit_base::Promise<ReturnType>>();
-    orbit_base::Future<ReturnType> resulting_future = promise->GetFuture();
-    orbit_base::CopyableFunctionObjectContainer copyable_function{std::forward<F>(functor)};
+    orbit_base::Promise<ReturnType> promise{};
+    orbit_base::Future<ReturnType> resulting_future = promise.GetFuture();
 
-    auto continuation = [copyable_function = std::move(copyable_function),
-                         executor_weak_ptr = weak_from_this(),
+    auto continuation = [functor = std::forward<F>(functor), executor_weak_ptr = weak_from_this(),
                          promise = std::move(promise)](auto&&... argument) mutable {
       auto executor = executor_weak_ptr.lock();
       if (executor == nullptr) return;
 
       auto function_wrapper =
-          [copyable_function = std::move(copyable_function), promise = std::move(promise),
+          [functor = std::move(functor), promise = std::move(promise),
            argument = std::make_tuple(std::forward<decltype(argument)>(argument)...)]() mutable {
-            orbit_base::CallTaskAndSetResultInPromise<ReturnType> helper{promise.get()};
-            std::apply([&](auto... args) { helper.Call(copyable_function, args...); },
-                       std::move(argument));
+            orbit_base::CallTaskAndSetResultInPromise<ReturnType> helper{&promise};
+            std::apply([&](auto... args) { helper.Call(functor, args...); }, std::move(argument));
           };
       executor->Schedule(CreateAction(std::move(function_wrapper)));
     };
