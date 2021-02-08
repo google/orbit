@@ -15,10 +15,6 @@
 #include "gtest/gtest.h"
 
 TEST(EventLoop, exec) {
-  int argc = 0;
-
-  QApplication app{argc, nullptr};
-
   // Case 1: The event loop finishes successfully
   {
     orbit_qt::EventLoop loop{};
