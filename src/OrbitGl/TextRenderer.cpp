@@ -33,7 +33,11 @@ struct vertex_t {
 
 bool TextRenderer::draw_outline_ = false;
 
-TextRenderer::TextRenderer() : texture_atlas_(nullptr), canvas_(nullptr), initialized_(false) {}
+TextRenderer::TextRenderer()
+    : texture_atlas_(nullptr),
+      texture_atlas_changed_(false),
+      canvas_(nullptr),
+      initialized_(false) {}
 
 TextRenderer::~TextRenderer() {
   for (const auto& pair : fonts_by_size_) {
@@ -68,6 +72,19 @@ void TextRenderer::Init() {
   pen_.y = 0;
 
   glGenTextures(1, &texture_atlas_->id);
+  glBindTexture(GL_TEXTURE_2D, texture_atlas_->id);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, static_cast<GLsizei>(texture_atlas_->width),
+               static_cast<GLsizei>(texture_atlas_->height), 0, GL_RED, GL_UNSIGNED_BYTE,
+               texture_atlas_->data);
+  texture_atlas_changed_ = false;
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   const auto vert_shader_file_name = (exe_dir / "shaders" / "v3f-t2f-c4f.vert").string();
   const auto frag_shader_file_name = (exe_dir / "shaders" / "v3f-t2f-c4f.frag").string();
@@ -111,13 +128,19 @@ void TextRenderer::RenderLayer(Batcher* /*batcher*/, float layer) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBindTexture(GL_TEXTURE_2D, texture_atlas_->id);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, static_cast<GLsizei>(texture_atlas_->width),
-               static_cast<GLsizei>(texture_atlas_->height), 0, GL_RED, GL_UNSIGNED_BYTE,
-               texture_atlas_->data);
+  if (texture_atlas_changed_) {
+    ORBIT_SCOPE("glTexSubImage2D");
+    // Whenever the font texture atlas has changed, we need to update the texture data by
+    // uploading the pixels via glTexSubImage2D. We do not need to call glTexImage2D as
+    // we have already called that in Init() (and hence texture memory is already allocated).
+    // While in theory we would only need to update the area of the atlas that was actually
+    // modified (which happens when a glyph is loaded), but there is no immediate way to
+    // know about this here.
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, static_cast<GLsizei>(texture_atlas_->width),
+                    static_cast<GLsizei>(texture_atlas_->height), GL_RED, GL_UNSIGNED_BYTE,
+                    texture_atlas_->data);
+    texture_atlas_changed_ = false;
+  }
 
   // Get current projection matrix
   GLfloat matrix[16];
@@ -131,7 +154,10 @@ void TextRenderer::RenderLayer(Batcher* /*batcher*/, float layer) {
     glUniformMatrix4fv(glGetUniformLocation(shader_, "model"), 1, 0, model_.data);
     glUniformMatrix4fv(glGetUniformLocation(shader_, "view"), 1, 0, view_.data);
     glUniformMatrix4fv(glGetUniformLocation(shader_, "projection"), 1, 0, projection_.data);
-    vertex_buffer_render(buffer, GL_TRIANGLES);
+    {
+      ORBIT_SCOPE("vertex_buffer_render");
+      vertex_buffer_render(buffer, GL_TRIANGLES);
+    }
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -193,6 +219,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
 
     if (!texture_font_find_glyph(font, text + i)) {
       texture_font_load_glyph(font, text + i);
+      texture_atlas_changed_ = true;
     }
 
     texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
@@ -291,6 +318,7 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
   for (i = 0; i < text_length; ++i) {
     if (!texture_font_find_glyph(font, text + i)) {
       texture_font_load_glyph(font, text + i);
+      texture_atlas_changed_ = true;
     }
 
     texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
@@ -382,6 +410,7 @@ int TextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_siz
   for (std::size_t i = 0; i < strlen(text); ++i) {
     if (!texture_font_find_glyph(font, text + i)) {
       texture_font_load_glyph(font, text + i);
+      texture_atlas_changed_ = true;
     }
 
     texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
