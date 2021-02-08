@@ -60,51 +60,6 @@ struct GetResultFromFutureAndCallContinuation<void> {
   }
 };
 
-// CopyableFunctionObjectContainer can hold any function object.
-// If the function object type is copyable, it will hold the function object by value. If it is
-// only movable, the function object will be moved into a shared_ptr.
-//
-// You can use this work-around to wrap a move-only function object in a std::function, which
-// requires copyability.
-template <typename FunctionObject,
-          typename = typename std::is_copy_constructible<FunctionObject>::type>
-class CopyableFunctionObjectContainer {
-  FunctionObject function_object_;
-
- public:
-  explicit CopyableFunctionObjectContainer(FunctionObject&& obj)
-      : function_object_{std::move(obj)} {}
-
-  template <typename... Args>
-  decltype(auto) operator()(Args&&... args) {
-    return function_object_(std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  decltype(auto) operator()(Args&&... args) const {
-    return function_object_(std::forward<Args>(args)...);
-  }
-};
-
-template <typename FunctionObject>
-class CopyableFunctionObjectContainer<FunctionObject, std::false_type> {
-  std::shared_ptr<FunctionObject> function_object_;
-
- public:
-  explicit CopyableFunctionObjectContainer(FunctionObject&& obj)
-      : function_object_{std::make_shared<FunctionObject>(std::move(obj))} {}
-
-  template <typename... Args>
-  decltype(auto) operator()(Args&&... args) {
-    return (*function_object_)(std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  decltype(auto) operator()(Args&&... args) const {
-    return static_cast<const FunctionObject&>(*function_object_)(std::forward<Args>(args)...);
-  }
-};
-
 // Determines the return type of the call "Invocable(T)". If `T` is `void` it returns the return
 // type of the call `Invocable()`.
 template <typename T, typename Invocable>
