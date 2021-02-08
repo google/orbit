@@ -230,6 +230,37 @@ class Future<void> : public orbit_base_internal::InternalFuture<void, Future<voi
   using orbit_base_internal::InternalFuture<void, Future>::InternalFuture;
 };
 
+// This specialization for ErrorMessageOr<T> adds an additional public member function
+// `ThenIfSuccess` which allows to schedule a continuation in case the `ErrorMessageOr<T>` comes
+// back successful.
+//
+// Check out the docs and implementation of your executor's `ScheduleAfterIfSuccess` method which is
+// actually doing the work. `ThenIfSuccess` is only syntactic sugar around
+// `AnyExecutor::ScheduleAfterIfSuccess`.
+template <typename T>
+class [[nodiscard]] Future<ErrorMessageOr<T>>
+    : public orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future<ErrorMessageOr<T>>> {
+  friend orbit_base_internal::PromiseBase<ErrorMessageOr<T>>;
+
+ public:
+  using orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future>::InternalFuture;
+
+  /* explicit(false) */ Future(ErrorMessage error_message)
+      : orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future>{
+            ErrorMessageOr<T>{std::move(error_message)}} {}
+
+  // This is syntactic sugar for MainThreadExecutor::ScheduleAfterIfSuccess.
+  // `invocable` will be executed by `executor` after this future has successfully completed.
+  // If it completes unsuccessful the returned future short-circuits and returns the error message
+  // immediately, without invoking the continuation.
+  //
+  // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
+  // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
+  template <typename Executor, typename Invocable>
+  auto ThenIfSuccess(Executor * executor, Invocable && invocable) const {
+    return executor->ScheduleAfterIfSuccess(*this, std::forward<Invocable>(invocable));
+  }
+};
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FUTURE_H_
