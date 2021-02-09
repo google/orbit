@@ -114,6 +114,12 @@ void TimeGraph::Zoom(uint64_t min, uint64_t max) {
 void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), timer_info.end()); }
 
 double TimeGraph::GetCaptureTimeSpanUs() const {
+  // Do we have an empty capture?
+  if (capture_max_timestamp_ == 0 &&
+      capture_min_timestamp_ == std::numeric_limits<uint64_t>::max()) {
+    return 0.0;
+  }
+  CHECK(capture_min_timestamp_ <= capture_max_timestamp_);
   return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
 }
 
