@@ -1743,7 +1743,11 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
-  CHECK(HasCaptureData());
+  // Ignore this call if there is no capture data
+  if (!HasCaptureData()) {
+    return;
+  }
+
   std::optional<uint64_t> instrumented_function_id =
       GetCaptureData().FindInstrumentedFunctionIdSlow(function);
   // If the function is not instrumented - ignore it. This happens when user
