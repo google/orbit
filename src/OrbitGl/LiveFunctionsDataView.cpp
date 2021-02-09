@@ -98,8 +98,10 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 }
 
-std::optional<int> LiveFunctionsDataView::GetSelectedIndex() {
-  return GetRowFromFunctionId(selected_function_id_);
+std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
+  std::optional<int> visible_selected_index = GetRowFromFunctionId(selected_function_id_);
+  if (!visible_selected_index.has_value()) return {};
+  return {visible_selected_index.value()};
 }
 
 void LiveFunctionsDataView::UpdateSelectedFunctionId() {

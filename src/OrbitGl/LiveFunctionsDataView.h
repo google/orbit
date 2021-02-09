@@ -30,7 +30,9 @@ class LiveFunctionsDataView : public DataView {
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
-  std::optional<int> GetSelectedIndex() override;
+  // As we allow single selection on Live tab, this method returns either an empty vector or a
+  // single-value vector.
+  std::vector<int> GetVisibleSelectedIndices() override;
   void UpdateSelectedFunctionId();
 
   void OnSelect(std::optional<int> row) override;

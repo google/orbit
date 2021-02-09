@@ -77,11 +77,6 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
   }
 }
 
-std::optional<int> DataView::GetSelectedIndex() {
-  if (selected_indices_.empty()) return std::nullopt;
-  return *selected_indices_.begin();
-}
-
 std::vector<int> DataView::GetVisibleSelectedIndices() {
   std::vector<int> visible_selected_indices;
   for (size_t row = 0; row < indices_.size(); ++row) {
