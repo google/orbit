@@ -427,7 +427,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::string& module_file_path);
 
   void SelectFunctionsFromHashes(const ModuleData* module,
-                                 const std::vector<uint64_t>& function_hashes);
+                                 absl::Span<const uint64_t> function_hashes);
 
   ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
                                                           const std::string& build_id);
@@ -441,7 +441,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
   void EnableFrameTracksFromHashes(const ModuleData* module,
-                                   const std::vector<uint64_t>& function_hashes);
+                                   absl::Span<const uint64_t> function_hashes);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
 
