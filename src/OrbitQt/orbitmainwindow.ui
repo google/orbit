@@ -130,7 +130,6 @@ QPushButton:disabled {
             <string>CaptureToolBar</string>
            </property>
            <addaction name="actionToggle_Capture"/>
-           <addaction name="actionClear_Capture"/>
            <addaction name="actionCaptureOptions"/>
            <addaction name="actionOpen_Capture"/>
            <addaction name="actionSave_Capture"/>
@@ -378,18 +377,6 @@ QPushButton:disabled {
    </property>
    <property name="toolTip">
     <string>Toggle Capture</string>
-   </property>
-  </action>
-  <action name="actionClear_Capture">
-   <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
-     <normaloff>:/actions/clear</normaloff>:/actions/clear</iconset>
-   </property>
-   <property name="text">
-    <string>Clear Capture</string>
-   </property>
-   <property name="toolTip">
-    <string>Clear Capture</string>
    </property>
   </action>
   <action name="actionCaptureOptions">

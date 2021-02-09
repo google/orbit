@@ -547,7 +547,6 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
       capture_state == CaptureClient::State::kStarted ||
       (capture_state == CaptureClient::State::kStopped && is_target_process_running));
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
-  ui->actionClear_Capture->setEnabled(!is_capturing && has_data);
   ui->actionCaptureOptions->setEnabled(!is_capturing);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
   ui->actionSave_Capture->setEnabled(!is_capturing && has_data);
@@ -888,8 +887,6 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
 }
 
 void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(); }
-
-void OrbitMainWindow::on_actionClear_Capture_triggered() { app_->ClearCapture(); }
 
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 
