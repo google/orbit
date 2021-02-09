@@ -266,40 +266,6 @@ void OrbitMainWindow::SetupMainWindow() {
   app_->SetCaptureFailedCallback(capture_finished_callback);
   app_->SetCaptureClearedCallback([this] { OnCaptureCleared(); });
 
-  auto loading_capture_dialog =
-      new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
-  loading_capture_dialog->setWindowTitle("Loading capture");
-  loading_capture_dialog->setModal(true);
-  loading_capture_dialog->setWindowFlags(
-      (loading_capture_dialog->windowFlags() | Qt::CustomizeWindowHint) &
-      ~Qt::WindowCloseButtonHint & ~Qt::WindowSystemMenuHint);
-  loading_capture_dialog->setFixedSize(loading_capture_dialog->size());
-
-  auto loading_capture_cancel_button = QPointer{new QPushButton{this}};
-  loading_capture_cancel_button->setText("Cancel");
-  QObject::connect(loading_capture_cancel_button, &QPushButton::clicked, this,
-                   [this, loading_capture_dialog]() {
-                     app_->OnLoadCaptureCancelRequested();
-                     loading_capture_dialog->close();
-                   });
-  loading_capture_dialog->setCancelButton(loading_capture_cancel_button);
-
-  loading_capture_dialog->close();
-
-  app_->SetOpenCaptureCallback([this, loading_capture_dialog] {
-    setWindowTitle({});
-    loading_capture_dialog->show();
-  });
-  app_->SetOpenCaptureFailedCallback([this, loading_capture_dialog] {
-    setWindowTitle({});
-    loading_capture_dialog->close();
-    UpdateCaptureStateDependentWidgets();
-  });
-  app_->SetOpenCaptureFinishedCallback([this, loading_capture_dialog] {
-    loading_capture_dialog->close();
-    UpdateCaptureStateDependentWidgets();
-  });
-
   app_->SetRefreshCallback([this](DataViewType type) {
     if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
       this->ui->liveFunctions->OnDataChanged();
@@ -1108,6 +1074,7 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
             on_actionEnd_Session_triggered();
             return;
           case CaptureListener::CaptureOutcome::kComplete:
+            UpdateCaptureStateDependentWidgets();
             return;
         }
       });
