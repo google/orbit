@@ -246,17 +246,18 @@ message ThreadStateSlice {
   uint64 end_timestamp_ns = 5;
 }
 
-message AddressInfo {
+message InternedAddressInfo {
   uint64 absolute_address = 1;
-  oneof function_name_or_key {
-    string function_name = 2;
-    uint64 function_name_key = 3;
-  }
-  uint64 offset_in_function = 4;
-  oneof map_name_or_key {
-    string map_name = 5;
-    uint64 map_name_key = 6;
-  }
+  uint64 offset_in_function = 2;
+  uint64 function_name_key = 3;
+  uint64 module_name_key = 4;
+}
+
+message FullAddressInfo {
+  uint64 absolute_address = 1;
+  uint64 offset_in_function = 2;
+  string function_name = 3;
+  string module_name = 4;
 }
 
 message ModuleUpdateEvent {
@@ -277,7 +278,7 @@ message ClientCaptureEvent {
     GpuQueueSubmission gpu_queue_submission = 13;
     ThreadName thread_name = 7;
     ThreadStateSlice thread_state_slice = 11;
-    AddressInfo address_info = 8;
+    InternedAddressInfo interned_address_info = 8;
     InternedTracepointInfo interned_tracepoint_info = 9;
     InternedTracepointEvent interned_tracepoint_event = 10;
     IntrospectionScope introspection_scope = 12;
@@ -297,7 +298,7 @@ message ProducerCaptureEvent {
     GpuQueueSubmission gpu_queue_submission = 8;
     ThreadName thread_name = 9;
     ThreadStateSlice thread_state_slice = 10;
-    AddressInfo address_info = 11;
+    FullAddressInfo full_address_info = 11;
     InternedTracepointInfo interned_tracepoint_info = 12;
     InternedTracepointEvent interned_tracepoint_event = 13;
     FullTracepointEvent full_tracepoint_event = 14;

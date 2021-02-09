@@ -14,9 +14,9 @@
 
 namespace orbit_service {
 
-using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FullGpuJobEvent;
 using orbit_grpc_protos::FunctionCall;
@@ -111,12 +111,9 @@ void LinuxTracingHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
-void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
-  CHECK(address_info.function_name_or_key_case() == AddressInfo::kFunctionName);
-  CHECK(address_info.map_name_or_key_case() == AddressInfo::kMapName);
-
+void LinuxTracingHandler::OnAddressInfo(FullAddressInfo full_address_info) {
   ProducerCaptureEvent event;
-  *event.mutable_address_info() = std::move(address_info);
+  *event.mutable_full_address_info() = std::move(full_address_info);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

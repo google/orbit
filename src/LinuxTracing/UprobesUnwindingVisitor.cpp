@@ -25,8 +25,8 @@
 
 namespace orbit_linux_tracing {
 
-using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 
@@ -66,11 +66,11 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 
   Callstack* callstack = sample.mutable_callstack();
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_callstack) {
-    AddressInfo address_info;
+    FullAddressInfo address_info;
     address_info.set_absolute_address(libunwindstack_frame.pc);
     address_info.set_function_name(libunwindstack_frame.function_name);
     address_info.set_offset_in_function(libunwindstack_frame.function_offset);
-    address_info.set_map_name(libunwindstack_frame.map_name);
+    address_info.set_module_name(libunwindstack_frame.map_name);
     listener_->OnAddressInfo(std::move(address_info));
 
     callstack->add_pcs(libunwindstack_frame.pc);

@@ -19,7 +19,7 @@ class TracerListener {
   virtual void OnGpuJob(orbit_grpc_protos::FullGpuJobEvent gpu_job_event) = 0;
   virtual void OnThreadName(orbit_grpc_protos::ThreadName thread_name) = 0;
   virtual void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) = 0;
-  virtual void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) = 0;
+  virtual void OnAddressInfo(orbit_grpc_protos::FullAddressInfo full_address_info) = 0;
   virtual void OnTracepointEvent(orbit_grpc_protos::FullTracepointEvent tracepoint_event) = 0;
   virtual void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) = 0;
 };
