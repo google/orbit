@@ -335,26 +335,31 @@ TEST(CaptureEventProcessor, CanHandleAddressInfos) {
   EXPECT_EQ(actual_address_info.module_path(), address_info->map_name());
 }
 
+static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, std::string str) {
+  ClientCaptureEvent capture_event;
+  InternedString* interned_string = capture_event.mutable_interned_string();
+  interned_string->set_key(key);
+  interned_string->set_intern(std::move(str));
+  return capture_event;
+}
+
 TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  ClientCaptureEvent interned_function_name_event;
-  InternedString* interned_function_name = interned_function_name_event.mutable_interned_string();
-  interned_function_name->set_key(1);
-  interned_function_name->set_intern("function");
+  constexpr uint64_t kFunctionNameKey = 1;
+  ClientCaptureEvent interned_function_name_event =
+      CreateInternedStringEvent(kFunctionNameKey, "function");
 
-  ClientCaptureEvent interned_map_name_event;
-  InternedString* interned_map_name = interned_map_name_event.mutable_interned_string();
-  interned_map_name->set_key(2);
-  interned_map_name->set_intern("module");
+  constexpr uint64_t kModuleNameKey = 2;
+  ClientCaptureEvent interned_map_name_event = CreateInternedStringEvent(kModuleNameKey, "module");
 
   ClientCaptureEvent address_info_event;
   AddressInfo* address_info = address_info_event.mutable_address_info();
   address_info->set_absolute_address(42);
-  address_info->set_function_name_key(interned_function_name->key());
+  address_info->set_function_name_key(kFunctionNameKey);
   address_info->set_offset_in_function(14);
-  address_info->set_map_name_key(interned_map_name->key());
+  address_info->set_map_name_key(kModuleNameKey);
 
   LinuxAddressInfo actual_address_info;
   EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
@@ -364,9 +369,9 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   event_processor.ProcessEvent(address_info_event);
 
   EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
-  EXPECT_EQ(actual_address_info.function_name(), interned_function_name->intern());
+  EXPECT_EQ(actual_address_info.function_name(), "function");
   EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
-  EXPECT_EQ(actual_address_info.module_path(), interned_map_name->intern());
+  EXPECT_EQ(actual_address_info.module_path(), "module");
 }
 
 TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
@@ -412,14 +417,6 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
 
 constexpr int32_t kGpuPid = 1;
 constexpr int32_t kGpuTid = 2;
-
-static ClientCaptureEvent CreateKeyAndStringEvent(uint64_t key, std::string str) {
-  ClientCaptureEvent capture_event;
-  InternedString* interned_string = capture_event.mutable_interned_string();
-  interned_string->set_key(key);
-  interned_string->set_intern(str);
-  return capture_event;
-}
 
 static InternedGpuJobEvent* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t timeline_key,
                                          uint64_t sw_queue, uint64_t hw_queue,
@@ -577,12 +574,12 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   CaptureEventProcessor event_processor(&listener);
 
   ClientCaptureEvent timeline_key_and_string =
-      CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
+      CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
   ClientCaptureEvent gpu_job_event;
   InternedGpuJobEvent* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
 
-  ClientCaptureEvent marker_string_event = CreateKeyAndStringEvent(42, "marker");
+  ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event;
   GpuQueueSubmission* submission = queue_submission_event.mutable_gpu_queue_submission();
@@ -648,12 +645,12 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   CaptureEventProcessor event_processor(&listener);
 
   ClientCaptureEvent timeline_key_and_string =
-      CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
+      CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
   ClientCaptureEvent gpu_job_event;
   InternedGpuJobEvent* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
 
-  ClientCaptureEvent marker_string_event = CreateKeyAndStringEvent(42, "marker");
+  ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event;
   GpuQueueSubmission* submission = queue_submission_event.mutable_gpu_queue_submission();
@@ -721,17 +718,14 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  ClientCaptureEvent timeline_string = CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
+  ClientCaptureEvent timeline_string = CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
   ClientCaptureEvent gpu_job_event_1;
   InternedGpuJobEvent* gpu_job_1 = CreateGpuJob(&gpu_job_event_1, kTimelineKey, 10, 20, 30, 40);
   ClientCaptureEvent gpu_job_event_2;
   InternedGpuJobEvent* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
 
-  ClientCaptureEvent marker_string_event;
-  InternedString* marker_string = marker_string_event.mutable_interned_string();
-  marker_string->set_key(42);
-  marker_string->set_intern("marker");
+  ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event_1;
   GpuQueueSubmission* submission_1 = queue_submission_event_1.mutable_gpu_queue_submission();
@@ -815,12 +809,12 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   CaptureEventProcessor event_processor(&listener);
 
   ClientCaptureEvent timeline_key_and_string =
-      CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
+      CreateInternedStringEvent(kTimelineKey, kTimelineString);
   // The first job that actually contains the begin marker is not recorded.
   ClientCaptureEvent gpu_job_event_2;
   InternedGpuJobEvent* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
 
-  ClientCaptureEvent marker_string_event = CreateKeyAndStringEvent(42, "marker");
+  ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event_2;
   GpuQueueSubmission* submission_2 = queue_submission_event_2.mutable_gpu_queue_submission();
