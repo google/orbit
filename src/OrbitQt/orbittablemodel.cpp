@@ -100,11 +100,13 @@ void OrbitTableModel::OnFilter(const QString& filter) {
 }
 
 void OrbitTableModel::OnRowSelected(std::optional<int> row) {
-  if (!row.has_value() || static_cast<int>(data_view_->GetNumElements()) > row.value()) {
-    data_view_->OnSelect(row);
+  std::vector<int> rows;
+  if (row.has_value()) rows.push_back(row.value());
+  if (rows.empty() || static_cast<int>(data_view_->GetNumElements()) > rows[0]) {
+    data_view_->OnSelect(rows);
   }
 }
 
 void OrbitTableModel::OnMultiRowsSelected(const std::vector<int>& rows) {
-  data_view_->OnMultiSelect(rows);
+  data_view_->OnSelect(rows);
 }

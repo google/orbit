@@ -108,13 +108,13 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
   selected_function_id_ = app_->highlighted_function_id();
 }
 
-void LiveFunctionsDataView::OnSelect(std::optional<int> row) {
+void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   app_->DeselectTextBox();
 
-  if (!row.has_value()) {
+  if (rows.empty()) {
     app_->set_highlighted_function_id(orbit_grpc_protos::kInvalidFunctionId);
   } else {
-    app_->set_highlighted_function_id(GetInstrumentedFunctionId(row.value()));
+    app_->set_highlighted_function_id(GetInstrumentedFunctionId(rows[0]));
   }
 
   if (refresh_mode_ != RefreshMode::kOnFilter && refresh_mode_ != RefreshMode::kOnSort) {
