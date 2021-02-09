@@ -52,6 +52,8 @@ TEST(GetThreadState, LinuxTracingTestsMainAndAnother) {
   pid_t thread_tid = -1;
   std::optional<char> thread_state_holding_mutex;
   std::optional<char> main_state_waiting_mutex;
+
+  mutex.Lock();
   std::thread thread{[&] {
     // Make sure /proc/<pid>/stat is parsed correctly
     // even when the thread name contains spaces and parentheses.
@@ -62,28 +64,29 @@ TEST(GetThreadState, LinuxTracingTestsMainAndAnother) {
       thread_state_holding_mutex = GetThreadState(thread_tid);
       main_state_waiting_mutex = GetThreadState(main_tid);
     }
-    // Give the main thread the time to read this thread's state before exiting.
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // Let the main thread read this thread's state while this thread is in the sleep_for and verify
+    // that in such a case the state is also 'S'.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }};
 
-  {
-    absl::MutexLock lock{&mutex};
-    mutex.Await(absl::Condition(
-        +[](pid_t* tid) { return *tid != -1; }, &thread_tid));
-  }
+  mutex.Await(absl::Condition(
+      +[](pid_t* tid) { return *tid != -1; }, &thread_tid));
+  mutex.Unlock();
+
   ASSERT_TRUE(thread_state_holding_mutex.has_value());
   EXPECT_EQ('R', thread_state_holding_mutex.value());
   ASSERT_TRUE(main_state_waiting_mutex.has_value());
   EXPECT_EQ('S', main_state_waiting_mutex.value());  // Interruptible sleep
 
   // Make sure `thread` has had the time to call sleep_for.
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  std::optional<char> thread_state_sleeping = GetThreadState(thread_tid);
-  ASSERT_TRUE(thread_state_sleeping.has_value());
-  EXPECT_EQ('S', thread_state_sleeping.value());
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  std::optional<char> thread_state_in_sleep_for = GetThreadState(thread_tid);
+  ASSERT_TRUE(thread_state_in_sleep_for.has_value());
+  EXPECT_EQ('S', thread_state_in_sleep_for.value());
 
   thread.join();
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  // Make sure the kernel has had the time to clean up `thread` from the /proc filesystem.
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
   std::optional<char> thread_state_exited = GetThreadState(thread_tid);
   EXPECT_FALSE(thread_state_exited.has_value());
 }
