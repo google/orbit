@@ -147,7 +147,10 @@ class BufferTracerListener : public TracerListener {
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_scheduling_slice() = std::move(scheduling_slice);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
     {
       absl::MutexLock lock{&one_scheduling_slice_received_mutex_};
       one_scheduling_slice_received_ = true;
@@ -157,63 +160,89 @@ class BufferTracerListener : public TracerListener {
   void OnCallstackSample(orbit_grpc_protos::CallstackSample callstack_sample) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_callstack_sample() = std::move(callstack_sample);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_function_call() = std::move(function_call);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_scope) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_introspection_scope() = std::move(introspection_scope);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_gpu_job() = std::move(gpu_job);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_thread_name() = std::move(thread_name);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_thread_state_slice() = std::move(thread_state_slice);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_address_info() = std::move(address_info);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnTracepointEvent(orbit_grpc_protos::TracepointEvent tracepoint_event) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_tracepoint_event() = std::move(tracepoint_event);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
   void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override {
     orbit_grpc_protos::CaptureEvent event;
     *event.mutable_module_update_event() = std::move(module_update_event);
-    events_.emplace_back(std::move(event));
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
   }
 
-  [[nodiscard]] const std::vector<orbit_grpc_protos::CaptureEvent>& GetEvents() const {
-    return events_;
-  }
-
-  [[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent>&& GetEvents() {
-    return std::move(events_);
+  [[nodiscard]] std::vector<orbit_grpc_protos::CaptureEvent> GetAndClearEvents() {
+    absl::MutexLock lock{&events_mutex_};
+    std::vector<orbit_grpc_protos::CaptureEvent> events = std::move(events_);
+    events_.clear();
+    return events;
   }
 
   void WaitForAtLeastOneSchedulingSlice() {
@@ -225,6 +254,7 @@ class BufferTracerListener : public TracerListener {
 
  private:
   std::vector<orbit_grpc_protos::CaptureEvent> events_;
+  absl::Mutex events_mutex_;
 
   bool one_scheduling_slice_received_ = false;
   absl::Mutex one_scheduling_slice_received_mutex_;
@@ -274,7 +304,7 @@ class LinuxTracingIntegrationTestFixture {
     CHECK(listener_.has_value());
     tracer_->Stop();
     tracer_.reset();
-    std::vector<orbit_grpc_protos::CaptureEvent> events = std::move(listener_->GetEvents());
+    std::vector<orbit_grpc_protos::CaptureEvent> events = listener_->GetAndClearEvents();
     listener_.reset();
     return events;
   }
