@@ -1300,7 +1300,7 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
 }
 
 void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
-                                         const std::vector<uint64_t>& function_hashes) {
+                                         absl::Span<const uint64_t> function_hashes) {
   for (const auto function_hash : function_hashes) {
     const orbit_client_protos::FunctionInfo* const function_info =
         module->FindFunctionFromHash(function_hash);
@@ -1314,7 +1314,7 @@ void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
 }
 
 void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
-                                           const std::vector<uint64_t>& function_hashes) {
+                                           absl::Span<const uint64_t> function_hashes) {
   for (const auto function_hash : function_hashes) {
     const orbit_client_protos::FunctionInfo* const function_info =
         module->FindFunctionFromHash(function_hash);
