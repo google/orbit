@@ -55,7 +55,12 @@ class FilterAndSelectFirstProcess(E2ETestCase):
     """
     def _execute(self, process_filter):
         filter_edit = self.find_control('Edit', 'FilterProcesses')
-        process_list = self.find_control('Table', 'ProcessList')
+        while (True):
+            try:
+                process_list = self.find_control('Table', 'ProcessList')
+                break
+            except KeyError:
+                logging.info('Find ProcessList failed. Try again.')        
 
         logging.info('Waiting for process list to be populated')
         wait_for_condition(lambda: process_list.item_count() > 0, 30)
