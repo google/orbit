@@ -227,9 +227,6 @@ void OrbitApp::OnCaptureComplete() {
         CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
 
-        CHECK(open_capture_finished_callback_);
-        open_capture_finished_callback_();
-
         FireRefreshCallbacks();
       });
 }
@@ -240,9 +237,6 @@ void OrbitApp::OnCaptureCancelled() {
     CHECK(capture_failed_callback_);
     capture_failed_callback_();
 
-    CHECK(open_capture_failed_callback_);
-    open_capture_failed_callback_();
-
     ClearCapture();
   });
 }
@@ -252,9 +246,6 @@ void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
     ORBIT_SCOPE("OnCaptureFailed");
     CHECK(capture_failed_callback_);
     capture_failed_callback_();
-
-    CHECK(open_capture_failed_callback_);
-    open_capture_failed_callback_();
 
     ClearCapture();
     SendErrorToUi("Error in capture", error_message.message());
@@ -804,8 +795,6 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
     const std::string& file_name) {
-  CHECK(open_capture_callback_);
-  open_capture_callback_();
   if (capture_window_ != nullptr) {
     capture_window_->set_draw_help(false);
   }

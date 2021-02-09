@@ -75,9 +75,6 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   app->SetCaptureStoppedCallback([]() {});
   app->SetCaptureFailedCallback([]() {});
   app->SetCaptureClearedCallback([]() {});
-  app->SetOpenCaptureCallback([]() {});
-  app->SetOpenCaptureFailedCallback([]() {});
-  app->SetOpenCaptureFinishedCallback([]() {});
   app->SetSelectLiveTabCallback([]() {});
   app->SetErrorMessageCallback([](const std::string& /*title*/, const std::string& /*text*/) {});
   app->SetRefreshCallback([](DataViewType /*type*/) {});

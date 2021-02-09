@@ -207,18 +207,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     capture_cleared_callback_ = std::move(callback);
   }
 
-  using OpenCaptureCallback = std::function<void()>;
-  void SetOpenCaptureCallback(OpenCaptureCallback callback) {
-    open_capture_callback_ = std::move(callback);
-  }
-  using OpenCaptureFailedCallback = std::function<void()>;
-  void SetOpenCaptureFailedCallback(OpenCaptureFailedCallback callback) {
-    open_capture_failed_callback_ = std::move(callback);
-  }
-  using OpenCaptureFinishedCallback = std::function<void()>;
-  void SetOpenCaptureFinishedCallback(OpenCaptureFinishedCallback callback) {
-    open_capture_finished_callback_ = std::move(callback);
-  }
   using SelectLiveTabCallback = std::function<void()>;
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
@@ -456,9 +444,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   CaptureStoppedCallback capture_stopped_callback_;
   CaptureFailedCallback capture_failed_callback_;
   CaptureClearedCallback capture_cleared_callback_;
-  OpenCaptureCallback open_capture_callback_;
-  OpenCaptureFailedCallback open_capture_failed_callback_;
-  OpenCaptureFinishedCallback open_capture_finished_callback_;
   SelectLiveTabCallback select_live_tab_callback_;
   DisassemblyCallback disassembly_callback_;
   ErrorMessageCallback error_message_callback_;
