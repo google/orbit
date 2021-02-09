@@ -21,11 +21,11 @@ using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 
-using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuQueueSubmission;
+using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedGpuJobEvent;
@@ -64,8 +64,8 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSlice(event.thread_state_slice());
       break;
-    case ClientCaptureEvent::kAddressInfo:
-      ProcessAddressInfo(event.address_info());
+    case ClientCaptureEvent::kInternedAddressInfo:
+      ProcessInternedAddressInfo(event.interned_address_info());
       break;
     case ClientCaptureEvent::kInternedTracepointInfo:
       ProcessInternedTracepointInfo(event.interned_tracepoint_info());
@@ -303,26 +303,18 @@ void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thre
   capture_listener_->OnThreadStateSlice(std::move(slice_info));
 }
 
-void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) {
-  std::string function_name;
-  if (address_info.function_name_or_key_case() == AddressInfo::kFunctionNameKey) {
-    function_name = string_intern_pool_[address_info.function_name_key()];
-  } else {
-    function_name = address_info.function_name();
-  }
-
-  std::string map_name;
-  if (address_info.map_name_or_key_case() == AddressInfo::kMapNameKey) {
-    map_name = string_intern_pool_[address_info.map_name_key()];
-  } else {
-    map_name = address_info.map_name();
-  }
+void CaptureEventProcessor::ProcessInternedAddressInfo(
+    const InternedAddressInfo& interned_address_info) {
+  CHECK(string_intern_pool_.contains(interned_address_info.function_name_key()));
+  CHECK(string_intern_pool_.contains(interned_address_info.module_name_key()));
+  std::string function_name = string_intern_pool_.at(interned_address_info.function_name_key());
+  std::string module_name = string_intern_pool_.at(interned_address_info.module_name_key());
 
   LinuxAddressInfo linux_address_info;
-  linux_address_info.set_absolute_address(address_info.absolute_address());
-  linux_address_info.set_module_path(map_name);
+  linux_address_info.set_absolute_address(interned_address_info.absolute_address());
+  linux_address_info.set_module_path(module_name);
   linux_address_info.set_function_name(function_name);
-  linux_address_info.set_offset_in_function(address_info.offset_in_function());
+  linux_address_info.set_offset_in_function(interned_address_info.offset_in_function());
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 

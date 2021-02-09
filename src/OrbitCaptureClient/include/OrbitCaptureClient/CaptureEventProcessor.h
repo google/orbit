@@ -41,7 +41,8 @@ class CaptureEventProcessor {
   void ProcessInternedGpuJobEvent(const orbit_grpc_protos::InternedGpuJobEvent& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
-  void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
+  void ProcessInternedAddressInfo(
+      const orbit_grpc_protos::InternedAddressInfo& interned_address_info);
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::InternedTracepointEvent& tracepoint_event);

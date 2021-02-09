@@ -30,7 +30,6 @@ using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
-using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::Color;
@@ -41,6 +40,7 @@ using orbit_grpc_protos::GpuDebugMarkerBeginInfo;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
+using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedGpuJobEvent;
@@ -313,28 +313,6 @@ TEST(CaptureEventProcessor, CanHandleThreadNames) {
   event_processor.ProcessEvent(event);
 }
 
-TEST(CaptureEventProcessor, CanHandleAddressInfos) {
-  MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
-
-  ClientCaptureEvent event;
-  AddressInfo* address_info = event.mutable_address_info();
-  address_info->set_absolute_address(42);
-  address_info->set_function_name("Function");
-  address_info->set_offset_in_function(14);
-  address_info->set_map_name("module");
-
-  LinuxAddressInfo actual_address_info;
-  EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
-
-  event_processor.ProcessEvent(event);
-
-  EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
-  EXPECT_EQ(actual_address_info.function_name(), address_info->function_name());
-  EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
-  EXPECT_EQ(actual_address_info.module_path(), address_info->map_name());
-}
-
 static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, std::string str) {
   ClientCaptureEvent capture_event;
   InternedString* interned_string = capture_event.mutable_interned_string();
@@ -355,11 +333,14 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   ClientCaptureEvent interned_map_name_event = CreateInternedStringEvent(kModuleNameKey, "module");
 
   ClientCaptureEvent address_info_event;
-  AddressInfo* address_info = address_info_event.mutable_address_info();
+  InternedAddressInfo* address_info = address_info_event.mutable_interned_address_info();
   address_info->set_absolute_address(42);
   address_info->set_function_name_key(kFunctionNameKey);
   address_info->set_offset_in_function(14);
-  address_info->set_map_name_key(kModuleNameKey);
+  address_info->set_module_name_key(kModuleNameKey);
+
+  EXPECT_CALL(listener, OnKeyAndString(kModuleNameKey, "module")).Times(1);
+  EXPECT_CALL(listener, OnKeyAndString(kFunctionNameKey, "function")).Times(1);
 
   LinuxAddressInfo actual_address_info;
   EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
@@ -662,6 +643,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   AddGpuDebugMarkerToGpuQueueSubmission(submission, meta_info, 42, 116, 121);
   submission->set_num_begin_markers(1);
 
+  EXPECT_CALL(listener, OnKeyAndString(kTimelineKey, kTimelineString)).Times(1);
   EXPECT_CALL(listener, OnTimer).Times(0);
 
   event_processor.ProcessEvent(timeline_key_and_string);
@@ -684,7 +666,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));
 
   uint64_t actual_marker_key = 0;
-  EXPECT_CALL(listener, OnKeyAndString(_, "marker"))
+  EXPECT_CALL(listener, OnKeyAndString(42, "marker"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
@@ -948,14 +930,23 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   thread_name->set_timestamp_ns(100);
   events.push_back(event_1);
 
+  constexpr uint64_t kFunctionKey = 11;
+  constexpr const char* kFunctionName = "Function";
+  constexpr uint64_t kModuleKey = 12;
+  constexpr const char* kModuleName = "module";
+  events.push_back(CreateInternedStringEvent(kFunctionKey, kFunctionName));
+  events.push_back(CreateInternedStringEvent(kModuleKey, kModuleName));
+
+  EXPECT_CALL(listener, OnKeyAndString(kFunctionKey, kFunctionName)).Times(1);
+  EXPECT_CALL(listener, OnKeyAndString(kModuleKey, kModuleName)).Times(1);
   EXPECT_CALL(listener, OnThreadName(thread_name->tid(), thread_name->name())).Times(1);
 
   ClientCaptureEvent event_2;
-  AddressInfo* address_info = event_2.mutable_address_info();
+  InternedAddressInfo* address_info = event_2.mutable_interned_address_info();
   address_info->set_absolute_address(42);
-  address_info->set_function_name("Function");
+  address_info->set_function_name_key(kFunctionKey);
   address_info->set_offset_in_function(14);
-  address_info->set_map_name("module");
+  address_info->set_module_name_key(kModuleKey);
   events.push_back(event_2);
 
   LinuxAddressInfo actual_address_info;
@@ -964,7 +955,7 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   event_processor.ProcessEvents(events);
 
   EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
-  EXPECT_EQ(actual_address_info.function_name(), address_info->function_name());
+  EXPECT_EQ(actual_address_info.function_name(), kFunctionName);
   EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
-  EXPECT_EQ(actual_address_info.module_path(), address_info->map_name());
+  EXPECT_EQ(actual_address_info.module_path(), kModuleName);
 }

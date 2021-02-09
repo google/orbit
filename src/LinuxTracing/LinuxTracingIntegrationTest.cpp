@@ -211,9 +211,9 @@ class BufferTracerListener : public TracerListener {
     }
   }
 
-  void OnAddressInfo(orbit_grpc_protos::AddressInfo address_info) override {
+  void OnAddressInfo(orbit_grpc_protos::FullAddressInfo address_info) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_address_info() = std::move(address_info);
+    *event.mutable_full_address_info() = std::move(address_info);
     {
       absl::MutexLock lock{&events_mutex_};
       events_.emplace_back(std::move(event));
@@ -412,7 +412,7 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
         break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kAddressInfo:
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo:
         // AddressInfos have no timestamp.
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedTracepointInfo:
@@ -615,11 +615,11 @@ absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range) {
   absl::flat_hash_set<uint64_t> address_infos_received;
   for (const auto& event : events) {
-    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kAddressInfo) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo) {
       continue;
     }
 
-    const orbit_grpc_protos::AddressInfo& address_info = event.address_info();
+    const orbit_grpc_protos::FullAddressInfo& address_info = event.full_address_info();
     if (!(address_info.absolute_address() >= outer_function_virtual_address_range.first &&
           address_info.absolute_address() <= outer_function_virtual_address_range.second) &&
         !(address_info.absolute_address() >= inner_function_virtual_address_range.first &&
@@ -628,8 +628,6 @@ absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
     }
     address_infos_received.emplace(address_info.absolute_address());
 
-    EXPECT_EQ(address_info.function_name_or_key_case(),
-              orbit_grpc_protos::AddressInfo::kFunctionName);
     if (address_info.absolute_address() >= outer_function_virtual_address_range.first &&
         address_info.absolute_address() <= outer_function_virtual_address_range.second) {
       EXPECT_EQ(address_info.function_name(), PuppetConstants::kOuterFunctionName);
@@ -642,8 +640,7 @@ absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
                 address_info.absolute_address() - inner_function_virtual_address_range.first);
     }
 
-    EXPECT_EQ(address_info.map_name_or_key_case(), orbit_grpc_protos::AddressInfo::kMapName);
-    EXPECT_EQ(address_info.map_name(), executable_path.string());
+    EXPECT_EQ(address_info.module_name(), executable_path.string());
   }
   return address_infos_received;
 }
@@ -808,7 +805,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
 
 void VerifyNoAddressInfos(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   for (const auto& event : events) {
-    EXPECT_NE(event.event_case(), orbit_grpc_protos::ProducerCaptureEvent::kAddressInfo);
+    EXPECT_NE(event.event_case(), orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo);
   }
 }
 

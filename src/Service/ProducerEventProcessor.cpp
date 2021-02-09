@@ -13,15 +13,16 @@ namespace orbit_service {
 
 namespace {
 
-using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::ClientCaptureEvent;
+using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FullGpuJobEvent;
 using orbit_grpc_protos::FullTracepointEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuQueueSubmission;
+using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::InternedGpuJobEvent;
@@ -80,7 +81,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) override;
 
  private:
-  void ProcessAddressInfo(uint64_t producer_id, AddressInfo* address_info);
+  void ProcessFullAddressInfo(FullAddressInfo* full_address_info);
   void ProcessFullCallstackSample(FullCallstackSample* callstack_sample);
   void ProcessFunctionCall(FunctionCall* function_call);
   void ProcessFullGpuJobEvent(FullGpuJobEvent* full_gpu_job_event);
@@ -121,39 +122,26 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   InternedCache<std::pair<uint64_t, uint64_t>> interned_tracepoint_id_cache_;
 };
 
-void ProducerEventProcessorImpl::ProcessAddressInfo(uint64_t producer_id,
-                                                    AddressInfo* address_info) {
-  // TODO: Split address info into 2 separate messages, one with strings another one with keys.
-  if (address_info->function_name_or_key_case() == AddressInfo::kFunctionName) {
-    auto [function_name_key, assigned] = string_cache_.GetOrAssignId(address_info->function_name());
-    if (assigned) {
-      SendStringAndKeyEvent(function_name_key, address_info->function_name());
-    }
-    address_info->set_function_name_key(function_name_key);
-  } else {
-    CHECK(address_info->function_name_or_key_case() == AddressInfo::kFunctionNameKey);
-    auto [function_name_key, assigned] =
-        interned_string_id_cache_.GetOrAssignId({producer_id, address_info->function_name_key()});
-    CHECK(!assigned);
-    address_info->set_function_name_key(function_name_key);
+void ProducerEventProcessorImpl::ProcessFullAddressInfo(FullAddressInfo* full_address_info) {
+  auto [function_name_key, function_key_assigned] =
+      string_cache_.GetOrAssignId(full_address_info->function_name());
+  if (function_key_assigned) {
+    SendStringAndKeyEvent(function_name_key, full_address_info->function_name());
   }
 
-  if (address_info->map_name_or_key_case() == AddressInfo::kMapName) {
-    auto [module_name_key, assigned] = string_cache_.GetOrAssignId(address_info->map_name());
-    if (assigned) {
-      SendStringAndKeyEvent(module_name_key, address_info->map_name());
-    }
-    address_info->set_map_name_key(module_name_key);
-  } else {
-    CHECK(address_info->map_name_or_key_case() == AddressInfo::kMapNameKey);
-    auto [module_name_key, assigned] =
-        interned_string_id_cache_.GetOrAssignId({producer_id, address_info->map_name_key()});
-    CHECK(!assigned);
-    address_info->set_map_name_key(module_name_key);
+  auto [module_name_key, module_key_assigned] =
+      string_cache_.GetOrAssignId(full_address_info->module_name());
+  if (module_key_assigned) {
+    SendStringAndKeyEvent(module_name_key, full_address_info->module_name());
   }
 
   ClientCaptureEvent event;
-  *event.mutable_address_info() = std::move(*address_info);
+  InternedAddressInfo* interned_address_info = event.mutable_interned_address_info();
+  interned_address_info->set_absolute_address(full_address_info->absolute_address());
+  interned_address_info->set_offset_in_function(full_address_info->offset_in_function());
+  interned_address_info->set_function_name_key(function_name_key);
+  interned_address_info->set_module_name_key(module_name_key);
+
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -374,8 +362,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSlice(event.mutable_thread_state_slice());
       break;
-    case ProducerCaptureEvent::kAddressInfo:
-      ProcessAddressInfo(producer_id, event.mutable_address_info());
+    case ProducerCaptureEvent::kFullAddressInfo:
+      ProcessFullAddressInfo(event.mutable_full_address_info());
       break;
     case ProducerCaptureEvent::kInternedTracepointEvent:
       ProcessInternedTracepointEvent(producer_id, event.mutable_interned_tracepoint_event());
