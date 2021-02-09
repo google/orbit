@@ -136,20 +136,30 @@ message FullTracepointEvent {
   TracepointInfo tracepoint_info = 5;
 }
 
-message GpuJob {
+message FullGpuJobEvent {
   int32 pid = 1;
   int32 tid = 2;
   uint32 context = 3;
   uint32 seqno = 4;
-  oneof timeline_or_key {
-    string timeline = 5;
-    uint64 timeline_key = 6;
-  }
-  int32 depth = 7;
-  uint64 amdgpu_cs_ioctl_time_ns = 8;
-  uint64 amdgpu_sched_run_job_time_ns = 9;
-  uint64 gpu_hardware_start_time_ns = 10;
-  uint64 dma_fence_signaled_time_ns = 11;
+  int32 depth = 5;
+  uint64 amdgpu_cs_ioctl_time_ns = 6;
+  uint64 amdgpu_sched_run_job_time_ns = 7;
+  uint64 gpu_hardware_start_time_ns = 8;
+  uint64 dma_fence_signaled_time_ns = 9;
+  string timeline = 10;
+}
+
+message InternedGpuJobEvent {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint32 context = 3;
+  uint32 seqno = 4;
+  int32 depth = 5;
+  uint64 amdgpu_cs_ioctl_time_ns = 6;
+  uint64 amdgpu_sched_run_job_time_ns = 7;
+  uint64 gpu_hardware_start_time_ns = 8;
+  uint64 dma_fence_signaled_time_ns = 9;
+  uint64 timeline_key = 10;
 }
 
 message GpuQueueSubmission {
@@ -263,7 +273,7 @@ message ClientCaptureEvent {
     InternedCallstackSample interned_callstack_sample = 16;
     FunctionCall function_call = 4;
     InternedString interned_string = 5;
-    GpuJob gpu_job = 6;
+    InternedGpuJobEvent interned_gpu_job_event = 6;
     GpuQueueSubmission gpu_queue_submission = 13;
     ThreadName thread_name = 7;
     ThreadStateSlice thread_state_slice = 11;
@@ -283,7 +293,7 @@ message ProducerCaptureEvent {
     FullCallstackSample full_callstack_sample = 4;
     FunctionCall function_call = 5;
     InternedString interned_string = 6;
-    GpuJob gpu_job = 7;
+    FullGpuJobEvent full_gpu_job_event = 7;
     GpuQueueSubmission gpu_queue_submission = 8;
     ThreadName thread_name = 9;
     ThreadStateSlice thread_state_slice = 10;

@@ -4,8 +4,6 @@
 
 #include "LinuxTracingHandler.h"
 
-#include <absl/container/flat_hash_set.h>
-#include <absl/strings/str_cat.h>
 #include <absl/synchronization/mutex.h>
 #include <unistd.h>
 
@@ -20,8 +18,8 @@ using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::FullCallstackSample;
+using orbit_grpc_protos::FullGpuJobEvent;
 using orbit_grpc_protos::FunctionCall;
-using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::ProducerCaptureEvent;
@@ -95,10 +93,9 @@ void LinuxTracingHandler::OnIntrospectionScope(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
-void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
-  CHECK(gpu_job.timeline_or_key_case() == GpuJob::kTimeline);
+void LinuxTracingHandler::OnGpuJob(FullGpuJobEvent full_gpu_job_event) {
   ProducerCaptureEvent event;
-  *event.mutable_gpu_job() = std::move(gpu_job);
+  *event.mutable_full_gpu_job_event() = std::move(full_gpu_job_event);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

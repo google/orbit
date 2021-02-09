@@ -11,8 +11,8 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::GpuCommandBuffer;
 using orbit_grpc_protos::GpuDebugMarker;
-using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
+using orbit_grpc_protos::InternedGpuJobEvent;
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
     const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
@@ -24,7 +24,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
       gpu_queue_submission.meta_info().pre_submission_cpu_timestamp();
   uint64_t post_submission_cpu_timestamp =
       gpu_queue_submission.meta_info().post_submission_cpu_timestamp();
-  const GpuJob* matching_gpu_job =
+  const InternedGpuJobEvent* matching_gpu_job =
       FindMatchingGpuJob(thread_id, pre_submission_cpu_timestamp, post_submission_cpu_timestamp);
 
   // If we haven't found the matching "GpuJob" or the submission contains "begin" markers (which
@@ -53,7 +53,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
   return result;
 }
 std::vector<orbit_client_protos::TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuJob(
-    const orbit_grpc_protos::GpuJob& gpu_job,
+    const InternedGpuJobEvent& gpu_job,
     const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
     const std::function<uint64_t(const std::string& str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
@@ -115,7 +115,7 @@ const GpuQueueSubmission* GpuQueueSubmissionProcessor::FindMatchingGpuQueueSubmi
   return matching_gpu_submission;
 }
 
-const GpuJob* GpuQueueSubmissionProcessor::FindMatchingGpuJob(
+const InternedGpuJobEvent* GpuQueueSubmissionProcessor::FindMatchingGpuJob(
     int32_t thread_id, uint64_t pre_submission_cpu_timestamp,
     uint64_t post_submission_cpu_timestamp) {
   const auto& submission_time_to_gpu_job_it = tid_to_submission_time_to_gpu_job_.find(thread_id);
@@ -149,32 +149,27 @@ const GpuJob* GpuQueueSubmissionProcessor::FindMatchingGpuJob(
 }
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWithMatchingGpuJob(
-    const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
+    const GpuQueueSubmission& gpu_queue_submission, const InternedGpuJobEvent& matching_gpu_job,
     const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
     const std::function<uint64_t(const std::string& str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
   std::vector<TimerInfo> result;
-  std::string timeline;
-  if (matching_gpu_job.timeline_or_key_case() == GpuJob::kTimelineKey) {
-    CHECK(string_intern_pool.contains(matching_gpu_job.timeline_key()));
-    timeline = string_intern_pool.at(matching_gpu_job.timeline_key());
-  } else {
-    timeline = matching_gpu_job.timeline();
-  }
-  uint64_t timeline_hash = get_string_hash_and_send_to_listener_if_necessary(timeline);
+  uint64_t timeline_key = matching_gpu_job.timeline_key();
+  CHECK(string_intern_pool.contains(timeline_key));
+  std::string timeline = string_intern_pool.at(timeline_key);
 
   std::optional<GpuCommandBuffer> first_command_buffer =
       ExtractFirstCommandBuffer(gpu_queue_submission);
 
   std::vector<TimerInfo> command_buffer_timers =
       ProcessGpuCommandBuffers(gpu_queue_submission, matching_gpu_job, first_command_buffer,
-                               timeline_hash, get_string_hash_and_send_to_listener_if_necessary);
+                               timeline_key, get_string_hash_and_send_to_listener_if_necessary);
 
   result.insert(result.end(), command_buffer_timers.begin(), command_buffer_timers.end());
 
   std::vector<TimerInfo> debug_marker_timers =
       ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer, timeline,
-                             string_intern_pool, get_string_hash_and_send_to_listener_if_necessary);
+                             get_string_hash_and_send_to_listener_if_necessary);
 
   result.insert(result.end(), debug_marker_timers.begin(), debug_marker_timers.end());
 
@@ -239,7 +234,7 @@ void GpuQueueSubmissionProcessor::DeleteSavedGpuSubmission(int32_t thread_id,
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
     const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
-    const orbit_grpc_protos::GpuJob& matching_gpu_job,
+    const orbit_grpc_protos::InternedGpuJobEvent& matching_gpu_job,
     const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
     uint64_t timeline_hash,
     const std::function<uint64_t(const std::string& str)>&
@@ -280,9 +275,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
 }
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
-    const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
+    const GpuQueueSubmission& gpu_queue_submission, const InternedGpuJobEvent& matching_gpu_job,
     const std::optional<GpuCommandBuffer>& first_command_buffer, const std::string& timeline,
-    const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
     const std::function<uint64_t(const std::string& str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
   if (gpu_queue_submission.completed_markers_size() == 0) {
@@ -354,7 +348,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       }
       CHECK(begin_submission_first_command_buffer.has_value());
 
-      const GpuJob* matching_begin_job = FindMatchingGpuJob(
+      const InternedGpuJobEvent* matching_begin_job = FindMatchingGpuJob(
           begin_marker_thread_id, begin_marker_meta_info.pre_submission_cpu_timestamp(),
           begin_marker_post_submission_cpu_timestamp);
       CHECK(matching_begin_job != nullptr);
@@ -390,10 +384,6 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
                          first_command_buffer->begin_gpu_timestamp_ns() +
                          matching_gpu_job.gpu_hardware_start_time_ns());
 
-    CHECK(string_intern_pool.contains(completed_marker.text_key()));
-    const std::string& text = string_intern_pool.at(completed_marker.text_key());
-    uint64_t text_key = get_string_hash_and_send_to_listener_if_necessary(text);
-
     if (completed_marker.has_color()) {
       Color* color = marker_timer.mutable_color();
       color->set_red(static_cast<uint32_t>(completed_marker.color().red() * 255.f));
@@ -401,7 +391,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       color->set_blue(static_cast<uint32_t>(completed_marker.color().blue() * 255.f));
       color->set_alpha(static_cast<uint32_t>(completed_marker.color().alpha() * 255.f));
     }
-    marker_timer.set_user_data_key(text_key);
+    marker_timer.set_user_data_key(completed_marker.text_key());
     result.push_back(marker_timer);
   }
 

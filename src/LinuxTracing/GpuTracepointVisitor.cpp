@@ -19,7 +19,7 @@
 
 namespace orbit_linux_tracing {
 
-using orbit_grpc_protos::GpuJob;
+using orbit_grpc_protos::FullGpuJobEvent;
 
 int GpuTracepointVisitor::ComputeDepthForGpuJob(const std::string& timeline,
                                                 uint64_t start_timestamp, uint64_t end_timestamp) {
@@ -90,19 +90,19 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
 
   int depth =
       ComputeDepthForGpuJob(timeline, cs_it->second.timestamp_ns, dma_it->second.timestamp_ns);
-  GpuJob gpu_job;
-  gpu_job.set_tid(tid);
-  gpu_job.set_context(cs_it->second.context);
-  gpu_job.set_seqno(cs_it->second.seqno);
-  gpu_job.set_timeline(cs_it->second.timeline);
-  gpu_job.set_depth(depth);
-  gpu_job.set_amdgpu_cs_ioctl_time_ns(cs_it->second.timestamp_ns);
-  gpu_job.set_amdgpu_sched_run_job_time_ns(sched_it->second.timestamp_ns);
-  gpu_job.set_gpu_hardware_start_time_ns(hw_start_time);
-  gpu_job.set_dma_fence_signaled_time_ns(dma_it->second.timestamp_ns);
+  FullGpuJobEvent gpu_job_event;
+  gpu_job_event.set_tid(tid);
+  gpu_job_event.set_context(cs_it->second.context);
+  gpu_job_event.set_seqno(cs_it->second.seqno);
+  gpu_job_event.set_depth(depth);
+  gpu_job_event.set_amdgpu_cs_ioctl_time_ns(cs_it->second.timestamp_ns);
+  gpu_job_event.set_amdgpu_sched_run_job_time_ns(sched_it->second.timestamp_ns);
+  gpu_job_event.set_gpu_hardware_start_time_ns(hw_start_time);
+  gpu_job_event.set_dma_fence_signaled_time_ns(dma_it->second.timestamp_ns);
+  gpu_job_event.set_timeline(cs_it->second.timeline);
 
   CHECK(listener_ != nullptr);
-  listener_->OnGpuJob(std::move(gpu_job));
+  listener_->OnGpuJob(std::move(gpu_job_event));
 
   // We need to update the timestamp when the last GPU job so far seen
   // finishes on this timeline.
