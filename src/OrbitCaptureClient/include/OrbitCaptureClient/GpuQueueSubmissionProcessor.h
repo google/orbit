@@ -45,7 +45,7 @@ class GpuQueueSubmissionProcessor {
   // `TimerInfo`s. Otherwise, it returns an empty vector and stores the `GpuJob for later
   // processing.
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuJob(
-      const orbit_grpc_protos::GpuJob& gpu_job,
+      const orbit_grpc_protos::InternedGpuJobEvent& gpu_job,
       const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
       const std::function<uint64_t(const std::string& str)>&
           get_string_hash_and_send_to_listener_if_necessary);
@@ -61,14 +61,14 @@ class GpuQueueSubmissionProcessor {
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo>
   ProcessGpuQueueSubmissionWithMatchingGpuJob(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
-      const orbit_grpc_protos::GpuJob& matching_gpu_job,
+      const orbit_grpc_protos::InternedGpuJobEvent& matching_gpu_job,
       const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
       const std::function<uint64_t(const std::string& str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuCommandBuffers(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
-      const orbit_grpc_protos::GpuJob& matching_gpu_job,
+      const orbit_grpc_protos::InternedGpuJobEvent& matching_gpu_job,
       const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
       uint64_t timeline_hash,
       const std::function<uint64_t(const std::string& str)>&
@@ -76,10 +76,9 @@ class GpuQueueSubmissionProcessor {
 
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuDebugMarkers(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
-      const orbit_grpc_protos::GpuJob& matching_gpu_job,
+      const orbit_grpc_protos::InternedGpuJobEvent& matching_gpu_job,
       const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
       const std::string& timeline,
-      const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
       const std::function<uint64_t(const std::string& str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
@@ -88,7 +87,7 @@ class GpuQueueSubmissionProcessor {
 
   // Finds the GpuJob that is fully inside the given timestamps and happened on the given thread id.
   // Returns `nullptr` if there is no such job.
-  [[nodiscard]] const orbit_grpc_protos::GpuJob* FindMatchingGpuJob(
+  [[nodiscard]] const orbit_grpc_protos::InternedGpuJobEvent* FindMatchingGpuJob(
       int32_t thread_id, uint64_t pre_submission_cpu_timestamp,
       uint64_t post_submission_cpu_timestamp);
 
@@ -107,7 +106,7 @@ class GpuQueueSubmissionProcessor {
 
   void DeleteSavedGpuSubmission(int32_t thread_id, uint64_t post_submission_timestamp);
 
-  absl::node_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuJob>>
+  absl::node_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::InternedGpuJobEvent>>
       tid_to_submission_time_to_gpu_job_;
   absl::node_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuQueueSubmission>>
       tid_to_post_submission_time_to_gpu_submission_;

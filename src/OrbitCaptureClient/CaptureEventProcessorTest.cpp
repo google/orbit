@@ -38,12 +38,12 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuCommandBuffer;
 using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuDebugMarkerBeginInfo;
-using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
+using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
@@ -80,6 +80,8 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
 };
+
+}  // namespace
 
 TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   MockCaptureListener listener;
@@ -411,14 +413,23 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
 constexpr int32_t kGpuPid = 1;
 constexpr int32_t kGpuTid = 2;
 
-GpuJob* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t sw_queue, uint64_t hw_queue,
-                     uint64_t hw_execution_begin, uint64_t hw_execution_end) {
-  GpuJob* gpu_job = capture_event->mutable_gpu_job();
+static ClientCaptureEvent CreateKeyAndStringEvent(uint64_t key, std::string str) {
+  ClientCaptureEvent capture_event;
+  InternedString* interned_string = capture_event.mutable_interned_string();
+  interned_string->set_key(key);
+  interned_string->set_intern(str);
+  return capture_event;
+}
+
+static InternedGpuJobEvent* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t timeline_key,
+                                         uint64_t sw_queue, uint64_t hw_queue,
+                                         uint64_t hw_execution_begin, uint64_t hw_execution_end) {
+  InternedGpuJobEvent* gpu_job = capture_event->mutable_interned_gpu_job_event();
   gpu_job->set_pid(kGpuPid);
   gpu_job->set_tid(kGpuTid);
   gpu_job->set_context(3);
   gpu_job->set_seqno(4);
-  gpu_job->set_timeline("timeline");
+  gpu_job->set_timeline_key(timeline_key);
   gpu_job->set_depth(3);
   gpu_job->set_amdgpu_cs_ioctl_time_ns(sw_queue);
   gpu_job->set_amdgpu_sched_run_job_time_ns(hw_queue);
@@ -427,20 +438,19 @@ GpuJob* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t sw_queue, uint6
   return gpu_job;
 }
 
+constexpr uint64_t kTimelineKey = 17;
+constexpr const char* kTimelineString = "timeline";
+
 TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
   ClientCaptureEvent event;
-  GpuJob* gpu_job = CreateGpuJob(&event, 10, 20, 30, 40);
+  InternedGpuJobEvent* gpu_job = CreateGpuJob(&event, kTimelineKey, 10, 20, 30, 40);
 
-  uint64_t actual_timeline_key;
   uint64_t actual_sw_queue_key;
   uint64_t actual_hw_queue_key;
   uint64_t actual_hw_execution_key;
-  EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))
-      .Times(1)
-      .WillOnce(SaveArg<0>(&actual_timeline_key));
   EXPECT_CALL(listener, OnKeyAndString(_, "sw queue"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_sw_queue_key));
@@ -467,7 +477,7 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   EXPECT_EQ(sw_queue_timer.start(), gpu_job->amdgpu_cs_ioctl_time_ns());
   EXPECT_EQ(sw_queue_timer.end(), gpu_job->amdgpu_sched_run_job_time_ns());
   EXPECT_EQ(sw_queue_timer.type(), TimerInfo::kGpuActivity);
-  EXPECT_EQ(sw_queue_timer.timeline_hash(), actual_timeline_key);
+  EXPECT_EQ(sw_queue_timer.timeline_hash(), kTimelineKey);
   EXPECT_EQ(sw_queue_timer.user_data_key(), actual_sw_queue_key);
 
   EXPECT_EQ(hw_queue_timer.process_id(), gpu_job->pid());
@@ -476,7 +486,7 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   EXPECT_EQ(hw_queue_timer.start(), gpu_job->amdgpu_sched_run_job_time_ns());
   EXPECT_EQ(hw_queue_timer.end(), gpu_job->gpu_hardware_start_time_ns());
   EXPECT_EQ(hw_queue_timer.type(), TimerInfo::kGpuActivity);
-  EXPECT_EQ(hw_queue_timer.timeline_hash(), actual_timeline_key);
+  EXPECT_EQ(hw_queue_timer.timeline_hash(), kTimelineKey);
   EXPECT_EQ(hw_queue_timer.user_data_key(), actual_hw_queue_key);
 
   EXPECT_EQ(hw_excecution_timer.process_id(), gpu_job->pid());
@@ -485,7 +495,7 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   EXPECT_EQ(hw_excecution_timer.start(), gpu_job->gpu_hardware_start_time_ns());
   EXPECT_EQ(hw_excecution_timer.end(), gpu_job->dma_fence_signaled_time_ns());
   EXPECT_EQ(hw_excecution_timer.type(), TimerInfo::kGpuActivity);
-  EXPECT_EQ(hw_excecution_timer.timeline_hash(), actual_timeline_key);
+  EXPECT_EQ(hw_excecution_timer.timeline_hash(), kTimelineKey);
   EXPECT_EQ(hw_excecution_timer.user_data_key(), actual_hw_execution_key);
 }
 
@@ -534,7 +544,7 @@ void AddGpuDebugMarkerToGpuQueueSubmission(GpuQueueSubmission* submission,
   begin_marker->set_gpu_timestamp_ns(begin_gpu_timestamp);
 }
 
-void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const GpuJob& gpu_job,
+void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const InternedGpuJobEvent& gpu_job,
                                 uint64_t cpu_begin, uint64_t cpu_end, uint64_t timeline_key,
                                 uint64_t command_buffer_key) {
   EXPECT_EQ(actual_timer.thread_id(), gpu_job.tid());
@@ -566,13 +576,13 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  ClientCaptureEvent gpu_job_event;
-  GpuJob* gpu_job = CreateGpuJob(&gpu_job_event, 10, 20, 30, 40);
+  ClientCaptureEvent timeline_key_and_string =
+      CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
 
-  ClientCaptureEvent marker_string_event;
-  InternedString* marker_string = marker_string_event.mutable_interned_string();
-  marker_string->set_key(42);
-  marker_string->set_intern("marker");
+  ClientCaptureEvent gpu_job_event;
+  InternedGpuJobEvent* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
+
+  ClientCaptureEvent marker_string_event = CreateKeyAndStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event;
   GpuQueueSubmission* submission = queue_submission_event.mutable_gpu_queue_submission();
@@ -584,18 +594,16 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   AddGpuDebugMarkerToGpuQueueSubmission(submission, meta_info, 42, 116, 121);
   submission->set_num_begin_markers(1);
 
-  uint64_t actual_timeline_key;
-  EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))
-      .Times(1)
-      .WillOnce(SaveArg<0>(&actual_timeline_key));
+  EXPECT_CALL(listener, OnKeyAndString(kTimelineKey, kTimelineString)).Times(1);
+
   EXPECT_CALL(listener, OnKeyAndString(_, "sw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw execution")).Times(1);
 
   EXPECT_CALL(listener, OnTimer).Times(3);
 
+  event_processor.ProcessEvent(timeline_key_and_string);
   event_processor.ProcessEvent(gpu_job_event);
-  event_processor.ProcessEvent(marker_string_event);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -622,12 +630,13 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
       .WillOnce(SaveArg<0>(&command_buffer_timer_2))
       .WillOnce(SaveArg<0>(&debug_marker_timer));
 
+  event_processor.ProcessEvent(marker_string_event);
   event_processor.ProcessEvent(queue_submission_event);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job, 30, 34, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job, 30, 34, kTimelineKey,
                              actual_command_buffer_key);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job, 35, 39, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job, 35, 39, kTimelineKey,
                              actual_command_buffer_key);
 
   ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 36, gpu_job->tid(), 1,
@@ -638,13 +647,13 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
-  ClientCaptureEvent gpu_job_event;
-  GpuJob* gpu_job = CreateGpuJob(&gpu_job_event, 10, 20, 30, 40);
+  ClientCaptureEvent timeline_key_and_string =
+      CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
 
-  ClientCaptureEvent marker_string_event;
-  InternedString* marker_string = marker_string_event.mutable_interned_string();
-  marker_string->set_key(42);
-  marker_string->set_intern("marker");
+  ClientCaptureEvent gpu_job_event;
+  InternedGpuJobEvent* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
+
+  ClientCaptureEvent marker_string_event = CreateKeyAndStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event;
   GpuQueueSubmission* submission = queue_submission_event.mutable_gpu_queue_submission();
@@ -658,15 +667,11 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
 
   EXPECT_CALL(listener, OnTimer).Times(0);
 
-  event_processor.ProcessEvent(marker_string_event);
+  event_processor.ProcessEvent(timeline_key_and_string);
   event_processor.ProcessEvent(queue_submission_event);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
-  uint64_t actual_timeline_key;
-  EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))
-      .Times(1)
-      .WillOnce(SaveArg<0>(&actual_timeline_key));
   EXPECT_CALL(listener, OnKeyAndString(_, "sw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw execution")).Times(1);
@@ -681,7 +686,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));
 
-  uint64_t actual_marker_key;
+  uint64_t actual_marker_key = 0;
   EXPECT_CALL(listener, OnKeyAndString(_, "marker"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
@@ -699,12 +704,13 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
       .WillOnce(SaveArg<0>(&command_buffer_timer_2))
       .WillOnce(SaveArg<0>(&debug_marker_timer));
 
+  event_processor.ProcessEvent(marker_string_event);
   event_processor.ProcessEvent(gpu_job_event);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job, 30, 34, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job, 30, 34, kTimelineKey,
                              actual_command_buffer_key);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job, 35, 39, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job, 35, 39, kTimelineKey,
                              actual_command_buffer_key);
 
   ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 36, gpu_job->tid(), 1,
@@ -715,10 +721,12 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
+  ClientCaptureEvent timeline_string = CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
+
   ClientCaptureEvent gpu_job_event_1;
-  GpuJob* gpu_job_1 = CreateGpuJob(&gpu_job_event_1, 10, 20, 30, 40);
+  InternedGpuJobEvent* gpu_job_1 = CreateGpuJob(&gpu_job_event_1, kTimelineKey, 10, 20, 30, 40);
   ClientCaptureEvent gpu_job_event_2;
-  GpuJob* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, 50, 60, 70, 80);
+  InternedGpuJobEvent* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
 
   ClientCaptureEvent marker_string_event;
   InternedString* marker_string = marker_string_event.mutable_interned_string();
@@ -740,19 +748,16 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   AddGpuCommandBufferToGpuSubmitInfo(submit_info_2, 145, 154);
   AddGpuDebugMarkerToGpuQueueSubmission(submission_2, meta_info_1, 42, 116, 153);
 
-  uint64_t actual_timeline_key;
-  EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))
-      .Times(1)
-      .WillOnce(SaveArg<0>(&actual_timeline_key));
+  EXPECT_CALL(listener, OnKeyAndString(kTimelineKey, kTimelineString)).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "sw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw execution")).Times(1);
 
   EXPECT_CALL(listener, OnTimer).Times(6);
 
+  event_processor.ProcessEvent(timeline_string);
   event_processor.ProcessEvent(gpu_job_event_1);
   event_processor.ProcessEvent(gpu_job_event_2);
-  event_processor.ProcessEvent(marker_string_event);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -772,10 +777,10 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job_1, 30, 34, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job_1, 30, 34, kTimelineKey,
                              actual_command_buffer_key);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job_1, 35, 39, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job_1, 35, 39, kTimelineKey,
                              actual_command_buffer_key);
 
   TimerInfo command_buffer_timer_3;
@@ -794,10 +799,11 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
+  event_processor.ProcessEvent(marker_string_event);
   event_processor.ProcessEvent(queue_submission_event_2);
   testing::Mock::VerifyAndClearExpectations(&listener);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, kTimelineKey,
                              actual_command_buffer_key);
 
   ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 78, gpu_job_2->tid(), 1,
@@ -808,14 +814,13 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
+  ClientCaptureEvent timeline_key_and_string =
+      CreateKeyAndStringEvent(kTimelineKey, kTimelineString);
   // The first job that actually contains the begin marker is not recorded.
   ClientCaptureEvent gpu_job_event_2;
-  GpuJob* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, 50, 60, 70, 80);
+  InternedGpuJobEvent* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
 
-  ClientCaptureEvent marker_string_event;
-  InternedString* marker_string = marker_string_event.mutable_interned_string();
-  marker_string->set_key(42);
-  marker_string->set_intern("marker");
+  ClientCaptureEvent marker_string_event = CreateKeyAndStringEvent(42, "marker");
 
   ClientCaptureEvent queue_submission_event_2;
   GpuQueueSubmission* submission_2 = queue_submission_event_2.mutable_gpu_queue_submission();
@@ -824,18 +829,15 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   AddGpuCommandBufferToGpuSubmitInfo(submit_info_2, 145, 154);
   AddGpuDebugMarkerToGpuQueueSubmission(submission_2, nullptr, 42, 116, 153);
 
-  uint64_t actual_timeline_key;
-  EXPECT_CALL(listener, OnKeyAndString(_, "timeline"))
-      .Times(1)
-      .WillOnce(SaveArg<0>(&actual_timeline_key));
+  EXPECT_CALL(listener, OnKeyAndString(kTimelineKey, kTimelineString)).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "sw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw queue")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(_, "hw execution")).Times(1);
 
   EXPECT_CALL(listener, OnTimer).Times(3);
 
+  event_processor.ProcessEvent(timeline_key_and_string);
   event_processor.ProcessEvent(gpu_job_event_2);
-  event_processor.ProcessEvent(marker_string_event);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -860,10 +862,11 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
+  event_processor.ProcessEvent(marker_string_event);
   event_processor.ProcessEvent(queue_submission_event_2);
   testing::Mock::VerifyAndClearExpectations(&listener);
 
-  ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, actual_timeline_key,
+  ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, kTimelineKey,
                              actual_command_buffer_key);
 
   // We expect the begin timestamp to be approximated by the first known timestamp. Also as we don't
@@ -971,5 +974,3 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
   EXPECT_EQ(actual_address_info.module_path(), address_info->map_name());
 }
-
-}  // namespace

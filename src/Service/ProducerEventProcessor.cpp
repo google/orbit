@@ -17,13 +17,14 @@ using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullCallstackSample;
+using orbit_grpc_protos::FullGpuJobEvent;
 using orbit_grpc_protos::FullTracepointEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuDebugMarker;
-using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
+using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
@@ -82,7 +83,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessAddressInfo(uint64_t producer_id, AddressInfo* address_info);
   void ProcessFullCallstackSample(FullCallstackSample* callstack_sample);
   void ProcessFunctionCall(FunctionCall* function_call);
-  void ProcessGpuJob(uint64_t producer, GpuJob* gpu_job);
+  void ProcessFullGpuJobEvent(FullGpuJobEvent* full_gpu_job_event);
   void ProcessGpuQueueSubmission(uint64_t producer_id, GpuQueueSubmission* gpu_queue_submission);
   void ProcessInternedCallstack(uint64_t producer_id, InternedCallstack* interned_callstack);
   void ProcessInternedCallstackSample(uint64_t producer_id,
@@ -162,24 +163,28 @@ void ProducerEventProcessorImpl::ProcessFunctionCall(FunctionCall* function_call
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessGpuJob(uint64_t producer_id, GpuJob* gpu_job) {
-  // TODO: Split GpuJob into 2 separate messages, one with string and another one with the key
-  if (gpu_job->timeline_or_key_case() == GpuJob::kTimeline) {
-    auto [timeline_key, assigned] = string_cache_.GetOrAssignId(gpu_job->timeline());
-    if (assigned) {
-      SendStringAndKeyEvent(timeline_key, gpu_job->timeline());
-    }
-    gpu_job->set_timeline_key(timeline_key);
-  } else {  // gpu_job->timeline_or_key_case() == GpuJob::kTimelineKey
-    CHECK(gpu_job->timeline_or_key_case() == GpuJob::kTimelineKey);
-    auto [timeline_key, assigned] =
-        interned_string_id_cache_.GetOrAssignId({producer_id, gpu_job->timeline_key()});
-    CHECK(!assigned);
-    gpu_job->set_timeline_key(timeline_key);
+void ProducerEventProcessorImpl::ProcessFullGpuJobEvent(FullGpuJobEvent* full_gpu_job_event) {
+  auto [timeline_key, assigned] = string_cache_.GetOrAssignId(full_gpu_job_event->timeline());
+  if (assigned) {
+    SendStringAndKeyEvent(timeline_key, full_gpu_job_event->timeline());
   }
 
   ClientCaptureEvent event;
-  *event.mutable_gpu_job() = std::move(*gpu_job);
+  InternedGpuJobEvent* interned_gpu_job_event = event.mutable_interned_gpu_job_event();
+  interned_gpu_job_event->set_pid(full_gpu_job_event->pid());
+  interned_gpu_job_event->set_tid(full_gpu_job_event->tid());
+  interned_gpu_job_event->set_context(full_gpu_job_event->context());
+  interned_gpu_job_event->set_seqno(full_gpu_job_event->seqno());
+  interned_gpu_job_event->set_depth(full_gpu_job_event->depth());
+  interned_gpu_job_event->set_amdgpu_cs_ioctl_time_ns(
+      full_gpu_job_event->amdgpu_cs_ioctl_time_ns());
+  interned_gpu_job_event->set_amdgpu_sched_run_job_time_ns(
+      full_gpu_job_event->amdgpu_sched_run_job_time_ns());
+  interned_gpu_job_event->set_gpu_hardware_start_time_ns(
+      full_gpu_job_event->gpu_hardware_start_time_ns());
+  interned_gpu_job_event->set_dma_fence_signaled_time_ns(
+      full_gpu_job_event->dma_fence_signaled_time_ns());
+  interned_gpu_job_event->set_timeline_key(timeline_key);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -357,8 +362,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kInternedString:
       ProcessInternedString(producer_id, event.mutable_interned_string());
       break;
-    case ProducerCaptureEvent::kGpuJob:
-      ProcessGpuJob(producer_id, event.mutable_gpu_job());
+    case ProducerCaptureEvent::kFullGpuJobEvent:
+      ProcessFullGpuJobEvent(event.mutable_full_gpu_job_event());
       break;
     case ProducerCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmission(producer_id, event.mutable_gpu_queue_submission());

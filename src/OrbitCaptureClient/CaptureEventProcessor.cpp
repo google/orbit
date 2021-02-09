@@ -25,10 +25,10 @@ using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FunctionCall;
-using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedCallstackSample;
+using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
@@ -55,8 +55,8 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kInternedString:
       ProcessInternedString(event.interned_string());
       break;
-    case ClientCaptureEvent::kGpuJob:
-      ProcessGpuJob(event.gpu_job());
+    case ClientCaptureEvent::kInternedGpuJobEvent:
+      ProcessInternedGpuJobEvent(event.interned_gpu_job_event());
       break;
     case ClientCaptureEvent::kThreadName:
       ProcessThreadName(event.thread_name());
@@ -173,17 +173,12 @@ void CaptureEventProcessor::ProcessInternedString(InternedString interned_string
   if (string_intern_pool_.contains(interned_string.key())) {
     ERROR("Overwriting InternedString with key %llu", interned_string.key());
   }
+  capture_listener_->OnKeyAndString(interned_string.key(), interned_string.intern());
   string_intern_pool_.emplace(interned_string.key(), std::move(*interned_string.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
-  std::string timeline;
-  if (gpu_job.timeline_or_key_case() == GpuJob::kTimelineKey) {
-    timeline = string_intern_pool_[gpu_job.timeline_key()];
-  } else {
-    timeline = gpu_job.timeline();
-  }
-  uint64_t timeline_hash = GetStringHashAndSendToListenerIfNecessary(timeline);
+void CaptureEventProcessor::ProcessInternedGpuJobEvent(const InternedGpuJobEvent& gpu_job) {
+  uint64_t timeline_key = gpu_job.timeline_key();
 
   int32_t process_id = gpu_job.pid();
   int32_t thread_id = gpu_job.tid();
@@ -199,13 +194,13 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   timer_user_to_sched.set_end(gpu_job.amdgpu_sched_run_job_time_ns());
   timer_user_to_sched.set_depth(gpu_job.depth());
   timer_user_to_sched.set_user_data_key(sw_queue_key);
-  timer_user_to_sched.set_timeline_hash(timeline_hash);
+  timer_user_to_sched.set_timeline_hash(timeline_key);
   timer_user_to_sched.set_processor(-1);
   timer_user_to_sched.set_type(TimerInfo::kGpuActivity);
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(gpu_job.amdgpu_cs_ioctl_time_ns());
 
-  capture_listener_->OnTimer(std::move(timer_user_to_sched));
+  capture_listener_->OnTimer(timer_user_to_sched);
 
   constexpr const char* hw_queue = "hw queue";
   uint64_t hw_queue_key = GetStringHashAndSendToListenerIfNecessary(hw_queue);
@@ -217,10 +212,10 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   timer_sched_to_start.set_end(gpu_job.gpu_hardware_start_time_ns());
   timer_sched_to_start.set_depth(gpu_job.depth());
   timer_sched_to_start.set_user_data_key(hw_queue_key);
-  timer_sched_to_start.set_timeline_hash(timeline_hash);
+  timer_sched_to_start.set_timeline_hash(timeline_key);
   timer_sched_to_start.set_processor(-1);
   timer_sched_to_start.set_type(TimerInfo::kGpuActivity);
-  capture_listener_->OnTimer(std::move(timer_sched_to_start));
+  capture_listener_->OnTimer(timer_sched_to_start);
 
   constexpr const char* hw_execution = "hw execution";
   uint64_t hw_execution_key = GetStringHashAndSendToListenerIfNecessary(hw_execution);
@@ -232,10 +227,10 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   timer_start_to_finish.set_end(gpu_job.dma_fence_signaled_time_ns());
   timer_start_to_finish.set_depth(gpu_job.depth());
   timer_start_to_finish.set_user_data_key(hw_execution_key);
-  timer_start_to_finish.set_timeline_hash(timeline_hash);
+  timer_start_to_finish.set_timeline_hash(timeline_key);
   timer_start_to_finish.set_processor(-1);
   timer_start_to_finish.set_type(TimerInfo::kGpuActivity);
-  capture_listener_->OnTimer(std::move(timer_start_to_finish));
+  capture_listener_->OnTimer(timer_start_to_finish);
 
   std::vector<TimerInfo> vulkan_related_timers = gpu_queue_submission_processor_.ProcessGpuJob(
       gpu_job, string_intern_pool_,
@@ -363,8 +358,8 @@ void CaptureEventProcessor::ProcessTracepointEvent(
 
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
   uint64_t hash = StringHash(str);
-  if (!string_hashes_seen_.contains(hash)) {
-    string_hashes_seen_.emplace(hash);
+  if (!string_intern_pool_.contains(hash)) {
+    string_intern_pool_.emplace(hash, str);
     capture_listener_->OnKeyAndString(hash, str);
   }
   return hash;

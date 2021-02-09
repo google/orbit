@@ -184,9 +184,9 @@ class BufferTracerListener : public TracerListener {
     }
   }
 
-  void OnGpuJob(orbit_grpc_protos::GpuJob gpu_job) override {
+  void OnGpuJob(orbit_grpc_protos::FullGpuJobEvent full_gpu_job_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_gpu_job() = std::move(gpu_job);
+    *event.mutable_full_gpu_job_event() = std::move(full_gpu_job_event);
     {
       absl::MutexLock lock{&events_mutex_};
       events_.emplace_back(std::move(event));
@@ -399,9 +399,10 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kGpuJob:
-        EXPECT_GE(event.gpu_job().dma_fence_signaled_time_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.gpu_job().dma_fence_signaled_time_ns();
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullGpuJobEvent:
+        EXPECT_GE(event.full_gpu_job_event().dma_fence_signaled_time_ns(),
+                  previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.full_gpu_job_event().dma_fence_signaled_time_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadName:
         EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
