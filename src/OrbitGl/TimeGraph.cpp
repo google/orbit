@@ -119,6 +119,7 @@ double TimeGraph::GetCaptureTimeSpanUs() const {
       capture_min_timestamp_ == std::numeric_limits<uint64_t>::max()) {
     return 0.0;
   }
+  CHECK(capture_min_timestamp_ <= capture_max_timestamp_);
   return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
 }
 
