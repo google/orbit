@@ -164,32 +164,31 @@ void OrbitTreeView::DoReselection(RefreshMode refresh_mode) {
   QModelIndex index;
   // Don't re-trigger row selection callback when re-selecting.
   is_internal_refresh_ = true;
-  if (is_multi_selection_) {
-    std::vector<int> visible_selected_indices = model_->GetDataView()->GetVisibleSelectedIndices();
-    for (int row : visible_selected_indices) {
-      index = model_->CreateIndex(row, 0);
-      selection->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-    }
-    if (model_->GetDataView()->GetType() == DataViewType::kSampling &&
-        (refresh_mode == RefreshMode::kOnFilter || refresh_mode == RefreshMode::kOnSort)) {
-      // Propagate the re-selection caused by filtering and sorting to the dataview such that the
-      // callstack view will be updated accordingly.
-      OnMultiRowsSelected(visible_selected_indices);
-    }
-  } else {
-    std::optional<int> selected_index = model_->GetSelectedIndex();
-    if (selected_index.has_value()) {
-      index = model_->CreateIndex(selected_index.value(), 0);
-      selection->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-    }
-    if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions &&
-        (refresh_mode == RefreshMode::kOnFilter || refresh_mode == RefreshMode::kOnSort)) {
-      // Propagate the re-selection caused by filtering and sorting to the dataview such that the
-      // function highlighting in capture window will be updated accordingly.
-      OnRowSelected(selected_index);
-    }
+  std::vector<int> visible_selected_indices = model_->GetVisibleSelectedIndices();
+  selection->clearSelection();
+  for (int row : visible_selected_indices) {
+    index = model_->CreateIndex(row, 0);
+    selection->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
   }
   is_internal_refresh_ = false;
+
+  // Propagate the re-selection caused by filtering and sorting for the SamplingReportDataView and
+  // LiveFunctionsDataView.
+  if (refresh_mode == RefreshMode::kOnFilter || refresh_mode == RefreshMode::kOnSort) {
+    if (model_->GetDataView()->GetType() == DataViewType::kSampling) {
+      // Propagate the re-selection to the dataview such that the callstack view will be updated
+      // accordingly.
+      OnMultiRowsSelected(visible_selected_indices);
+    }
+    if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions) {
+      // Propagate the re-selection to the dataview such that the
+      // function highlighting in capture window will be updated accordingly.
+      std::optional<int> visible_selected_index =
+          visible_selected_indices.empty() ? std::nullopt
+                                           : std::optional<int>(visible_selected_indices[0]);
+      OnRowSelected(visible_selected_index);
+    }
+  }
 }
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
