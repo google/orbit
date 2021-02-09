@@ -333,7 +333,7 @@ QPushButton:disabled {
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionReport_Missing_Feature">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/feedback</normaloff>:/actions/feedback</iconset>
    </property>
    <property name="text">
@@ -342,7 +342,7 @@ QPushButton:disabled {
   </action>
   <action name="actionReport_Bug">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/bug_report</normaloff>:/actions/bug_report</iconset>
    </property>
    <property name="text">
@@ -351,7 +351,7 @@ QPushButton:disabled {
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/info</normaloff>:/actions/info</iconset>
    </property>
    <property name="text">
@@ -360,7 +360,7 @@ QPushButton:disabled {
   </action>
   <action name="actionOpen_Preset">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/bookmarks</normaloff>:/actions/bookmarks</iconset>
    </property>
    <property name="text">
@@ -369,7 +369,7 @@ QPushButton:disabled {
   </action>
   <action name="actionToggle_Capture">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/play_arrow</normaloff>:/actions/play_arrow</iconset>
    </property>
    <property name="text">
@@ -381,7 +381,7 @@ QPushButton:disabled {
   </action>
   <action name="actionCaptureOptions">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/settings</normaloff>:/actions/settings</iconset>
    </property>
    <property name="text">
@@ -393,7 +393,7 @@ QPushButton:disabled {
   </action>
   <action name="actionFilter_Tracks">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/filter_list</normaloff>:/actions/filter_list</iconset>
    </property>
    <property name="text">
@@ -405,7 +405,7 @@ QPushButton:disabled {
   </action>
   <action name="actionFilter_Functions">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/search</normaloff>:/actions/search</iconset>
    </property>
    <property name="text">
@@ -417,7 +417,7 @@ QPushButton:disabled {
   </action>
   <action name="actionHelp">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/help</normaloff>:/actions/help</iconset>
    </property>
    <property name="text">
@@ -429,7 +429,7 @@ QPushButton:disabled {
   </action>
   <action name="actionIntrospection">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/info</normaloff>:/actions/info</iconset>
    </property>
    <property name="text">
@@ -441,7 +441,7 @@ QPushButton:disabled {
   </action>
   <action name="actionEnd_Session">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/arrow_back</normaloff>:/actions/arrow_back</iconset>
    </property>
    <property name="text">
@@ -450,7 +450,7 @@ QPushButton:disabled {
   </action>
   <action name="actionQuit">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/exit_to_app</normaloff>:/actions/exit_to_app</iconset>
    </property>
    <property name="text">
@@ -467,7 +467,7 @@ QPushButton:disabled {
   </action>
   <action name="actionSave_Preset_As">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/bookmark_border</normaloff>:/actions/bookmark_border</iconset>
    </property>
    <property name="text">
@@ -476,7 +476,7 @@ QPushButton:disabled {
   </action>
   <action name="actionOpen_Capture">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/folder</normaloff>:/actions/folder</iconset>
    </property>
    <property name="text">
@@ -485,7 +485,7 @@ QPushButton:disabled {
   </action>
   <action name="actionSave_Capture">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/save_alt</normaloff>:/actions/save_alt</iconset>
    </property>
    <property name="text">
@@ -524,7 +524,7 @@ QPushButton:disabled {
   </action>
   <action name="actionOpenUserDataDirectory">
    <property name="icon">
-    <iconset resource="../icons/orbiticons.qrc">
+    <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/folder</normaloff>:/actions/folder</iconset>
    </property>
    <property name="text">
@@ -561,8 +561,8 @@ QPushButton:disabled {
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../icons/orbiticons.qrc"/>
-  <include location="../images/orbitimages.qrc"/>
+  <include location="../../icons/orbiticons.qrc"/>
+  <include location="../../images/orbitimages.qrc"/>
  </resources>
  <connections/>
  <slots>
