@@ -25,7 +25,7 @@ class Client : public QObject {
   static outcome::result<QPointer<Client>> Create(QObject* parent);
 
   void GetInstancesAsync(const std::function<void(outcome::result<QVector<Instance>>)>& callback,
-	                     int retry = 3);
+                         int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
                        const std::function<void(outcome::result<SshInfo>)>& callback);
 
