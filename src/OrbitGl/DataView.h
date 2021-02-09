@@ -41,7 +41,6 @@ class DataView {
 
   explicit DataView(DataViewType type, OrbitApp* app)
       : update_period_ms_(-1),
-        selected_index_(std::nullopt),
         refresh_mode_(RefreshMode::kOther),
         type_(type),
         app_{app} {}
@@ -71,7 +70,7 @@ class DataView {
   virtual void OnContextMenu(const std::string& action, int menu_index,
                              const std::vector<int>& item_indices);
   virtual void OnSelect(std::optional<int> /*index*/) {}
-  [[nodiscard]] virtual std::optional<int> GetSelectedIndex() { return selected_index_; }
+  [[nodiscard]] virtual std::optional<int> GetSelectedIndex();
   virtual void OnMultiSelect(const std::vector<int>& /*indices*/) {}
   [[nodiscard]] virtual std::vector<int> GetVisibleSelectedIndices();
   virtual void OnDoubleClicked(int /*index*/) {}
@@ -107,7 +106,6 @@ class DataView {
   int sorting_column_ = 0;
   std::string filter_;
   int update_period_ms_;
-  std::optional<int> selected_index_;
   absl::flat_hash_set<int> selected_indices_;
   RefreshMode refresh_mode_;
   DataViewType type_;
