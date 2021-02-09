@@ -1114,6 +1114,14 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModule(const ModuleData* 
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModule(const std::string& module_path,
                                                               const std::string& build_id) {
+  const ModuleData* module_data = GetModuleByPath(module_path);
+
+  if (module_data == nullptr) {
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
+  }
+
+  if (module_data->is_loaded()) return {outcome::success()};
+
   const auto it = modules_currently_loading_.find(module_path);
   if (it != modules_currently_loading_.end()) {
     return it->second;
