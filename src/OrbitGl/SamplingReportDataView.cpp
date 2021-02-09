@@ -266,7 +266,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   }
 }
 
-void SamplingReportDataView::OnMultiSelect(const std::vector<int>& indices) {
+void SamplingReportDataView::OnSelect(const std::vector<int>& indices) {
   absl::flat_hash_set<uint64_t> addresses;
   for (int index : indices) {
     addresses.insert(GetSampledFunction(index).absolute_address);

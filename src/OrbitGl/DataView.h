@@ -69,8 +69,7 @@ class DataView {
   void OnSort(int column, std::optional<SortingOrder> new_order);
   virtual void OnContextMenu(const std::string& action, int menu_index,
                              const std::vector<int>& item_indices);
-  virtual void OnSelect(std::optional<int> /*index*/) {}
-  virtual void OnMultiSelect(const std::vector<int>& /*indices*/) {}
+  virtual void OnSelect(const std::vector<int>& /*indices*/) {}
   // This method returns the intersection of selected indices and visible indices. The returned
   // value contains 0 or 1 index for a DataView with single selection, and contains 0 or
   // multiple indices for a DataView with multi-selection.

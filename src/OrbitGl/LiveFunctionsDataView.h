@@ -35,7 +35,7 @@ class LiveFunctionsDataView : public DataView {
   std::vector<int> GetVisibleSelectedIndices() override;
   void UpdateSelectedFunctionId();
 
-  void OnSelect(std::optional<int> row) override;
+  void OnSelect(const std::vector<int>& rows) override;
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
