@@ -57,7 +57,6 @@ target_sources(
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
-          MainThreadExecutorImpl.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
           main.cpp
@@ -164,8 +163,6 @@ target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.cpp
                 AccessibilityAdapterTest.cpp
                 EventLoopTest.cpp
-                MainThreadExecutorImplTest.cpp
-                MainThreadExecutorImpl.cpp
                 ProcessItemModelTest.cpp
                 ProcessItemModel.cpp
                 StatusListenerImplTest.cpp

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
 #include <QCoreApplication>
 #include <QMetaObject>
@@ -15,7 +15,7 @@
 #include "OrbitBase/Tracing.h"
 #include "QtUtils/FutureWatcher.h"
 
-namespace orbit_qt {
+namespace orbit_qt_utils {
 
 void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
   QMetaObject::invokeMethod(
@@ -81,4 +81,4 @@ MainThreadExecutor::WaitResult MainThreadExecutorImpl::WaitForAll(
   return MapToWaitResult(result);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_qt_utils
