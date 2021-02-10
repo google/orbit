@@ -111,6 +111,20 @@ texture_font_t* TextRenderer::GetFont(uint32_t size) {
   return fonts_by_size_[size];
 }
 
+// Always use this method when you need to get a glyph, we need to make sure we know when the
+// texture atlas has been updated. One way to ensure that is to check if we can find the glyph
+// already and, if not, load it explicitly (in which case the texture atlas is updated). Note that
+// texture_font_get_glyph internally may load the glyph if it does not find it. We do not want
+// that as in that case, we do not know that the atlas has actually changed.
+texture_glyph_t* TextRenderer::MaybeLoadAndGetGlyph(texture_font_t* font, const char* character) {
+  if (!texture_font_find_glyph(font, character)) {
+    texture_font_load_glyph(font, character);
+    texture_atlas_changed_ = true;
+  }
+
+  return texture_font_get_glyph(font, character);
+}
+
 void TextRenderer::RenderLayer(Batcher* /*batcher*/, float layer) {
   ORBIT_SCOPE_FUNCTION;
   if (vertex_buffers_by_layer_.count(layer) == 0) return;
@@ -217,12 +231,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       continue;
     }
 
-    if (!texture_font_find_glyph(font, text + i)) {
-      texture_font_load_glyph(font, text + i);
-      texture_atlas_changed_ = true;
-    }
-
-    texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
+    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
@@ -316,12 +325,7 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
   texture_font_t* font = GetFont(font_size);
   size_t i;
   for (i = 0; i < text_length; ++i) {
-    if (!texture_font_find_glyph(font, text + i)) {
-      texture_font_load_glyph(font, text + i);
-      texture_atlas_changed_ = true;
-    }
-
-    texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
+    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       float kerning = 0.0f;
       if (i > 0) {
@@ -386,7 +390,8 @@ int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size
 
   std::size_t len = strlen(text);
   for (std::size_t i = 0; i < len; ++i) {
-    texture_glyph_t* glyph = texture_font_get_glyph(GetFont(font_size), text + i);
+    texture_font_t* font = GetFont(font_size);
+    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       float kerning = 0.0f;
       if (i > 0) {
@@ -408,12 +413,7 @@ int TextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_siz
   int max_height = 0.f;
   texture_font_t* font = GetFont(font_size);
   for (std::size_t i = 0; i < strlen(text); ++i) {
-    if (!texture_font_find_glyph(font, text + i)) {
-      texture_font_load_glyph(font, text + i);
-      texture_atlas_changed_ = true;
-    }
-
-    texture_glyph_t* glyph = texture_font_get_glyph(font, text + i);
+    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       max_height = std::max(max_height, glyph->offset_y);
     }

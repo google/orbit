@@ -65,6 +65,7 @@ class TextRenderer {
   [[nodiscard]] int GetStringWidthScreenSpace(const char* text, uint32_t font_size);
   [[nodiscard]] int GetStringHeightScreenSpace(const char* text, uint32_t font_size);
   [[nodiscard]] texture_font_t* GetFont(uint32_t size);
+  [[nodiscard]] texture_glyph_t* MaybeLoadAndGetGlyph(texture_font_t* self, const char* character);
 
   void DrawOutline(Batcher* batcher, vertex_buffer_t* buffer);
 
