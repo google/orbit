@@ -76,4 +76,136 @@ TEST(GetResultFromFutureAndCallContinuation, CallWithResult) {
   EXPECT_TRUE(called);
 }
 
+TEST(HandleErrorAndSetResultInPromise, SuccessVoidInVoidOut) {
+  ErrorMessageOr<void> in{outcome::success()};
+
+  const auto invocable = []() -> void {};
+
+  Promise<ErrorMessageOr<void>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<void>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  EXPECT_TRUE(future.Get().has_value());
+}
+
+TEST(HandleErrorAndSetResultInPromise, SuccessVoidInIntOut) {
+  ErrorMessageOr<void> in{outcome::success()};
+
+  const auto invocable = []() -> int { return 42; };
+
+  Promise<ErrorMessageOr<int>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<int>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  ASSERT_TRUE(future.Get().has_value());
+  EXPECT_EQ(future.Get().value(), 42);
+}
+
+TEST(HandleErrorAndSetResultInPromise, SuccessIntInVoidOut) {
+  ErrorMessageOr<int> in{42};
+
+  const auto invocable = [](int value) { EXPECT_EQ(value, 42); };
+
+  Promise<ErrorMessageOr<void>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<void>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  EXPECT_TRUE(future.Get().has_value());
+}
+
+TEST(HandleErrorAndSetResultInPromise, SuccessIntInIntOut) {
+  ErrorMessageOr<int> in{42};
+
+  const auto invocable = [](int value) -> int {
+    EXPECT_EQ(value, 42);
+    return 42;
+  };
+
+  Promise<ErrorMessageOr<int>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<int>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  ASSERT_TRUE(future.Get().has_value());
+  EXPECT_EQ(future.Get().value(), 42);
+}
+
+TEST(HandleErrorAndSetResultInPromise, FailureVoidInVoidOut) {
+  ErrorMessageOr<void> in{ErrorMessage{"Error"}};
+
+  const auto invocable = []() -> void { FAIL(); };
+
+  Promise<ErrorMessageOr<void>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<void>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  ASSERT_TRUE(future.Get().has_error());
+  EXPECT_EQ(future.Get().error().message(), "Error");
+}
+
+TEST(HandleErrorAndSetResultInPromise, FailureVoidInIntOut) {
+  ErrorMessageOr<void> in{ErrorMessage{"Error"}};
+
+  bool called = false;
+  const auto invocable = [&called]() -> int {
+    called = true;
+    return 42;
+  };
+
+  Promise<ErrorMessageOr<int>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<int>> helper{&promise};
+  helper.Call(invocable, in);
+  EXPECT_FALSE(called);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  ASSERT_TRUE(future.Get().has_error());
+  EXPECT_EQ(future.Get().error().message(), "Error");
+}
+
+TEST(HandleErrorAndSetResultInPromise, FailureIntInVoidOut) {
+  ErrorMessageOr<int> in{ErrorMessage{"Error"}};
+
+  const auto invocable = [](int value) {
+    EXPECT_EQ(value, 42);
+    FAIL();
+  };
+
+  Promise<ErrorMessageOr<void>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<void>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  ASSERT_TRUE(future.Get().has_error());
+  EXPECT_EQ(future.Get().error().message(), "Error");
+}
+
+TEST(HandleErrorAndSetResultInPromise, FailureIntInIntOut) {
+  ErrorMessageOr<int> in{ErrorMessage{"Error"}};
+
+  const auto invocable = [](int value) -> int {
+    EXPECT_EQ(value, 42);
+    return 42;
+  };
+
+  Promise<ErrorMessageOr<int>> promise;
+  HandleErrorAndSetResultInPromise<ErrorMessageOr<int>> helper{&promise};
+  helper.Call(invocable, in);
+
+  auto future = promise.GetFuture();
+  ASSERT_TRUE(future.IsFinished());
+  ASSERT_TRUE(future.Get().has_error());
+  EXPECT_EQ(future.Get().error().message(), "Error");
+}
+
 }  // namespace orbit_base
