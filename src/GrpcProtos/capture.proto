@@ -299,10 +299,8 @@ message ProducerCaptureEvent {
     ThreadName thread_name = 9;
     ThreadStateSlice thread_state_slice = 10;
     FullAddressInfo full_address_info = 11;
-    InternedTracepointInfo interned_tracepoint_info = 12;
-    InternedTracepointEvent interned_tracepoint_event = 13;
-    FullTracepointEvent full_tracepoint_event = 14;
-    IntrospectionScope introspection_scope = 15;
-    ModuleUpdateEvent module_update_event = 16;
+    FullTracepointEvent full_tracepoint_event = 12;
+    IntrospectionScope introspection_scope = 13;
+    ModuleUpdateEvent module_update_event = 14;
   }
 }

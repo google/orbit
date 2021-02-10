@@ -70,6 +70,7 @@ target_compile_options(ServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(ServiceTests PRIVATE
         ProcessListTest.cpp
         ProcessTest.cpp
+        ProducerEventProcessorTest.cpp
         ProducerSideServiceImplTest.cpp
         ServiceUtilsTest.cpp)
 
