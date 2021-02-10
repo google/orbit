@@ -15,6 +15,9 @@ namespace orbit_base {
 // Calls `invocable` and sets the return value as the result in the given promise.
 // It also works when `invocable` returns `void`. In this case `MarkFinished` is called on the
 // promise.
+//
+// The main benefit of this is the specialization for `T = void`, which requires different syntax.
+// Don't use it if you don't need that particular feature.
 template <typename T>
 struct CallTaskAndSetResultInPromise {
   orbit_base::Promise<T>* promise;
@@ -33,6 +36,42 @@ struct CallTaskAndSetResultInPromise<void> {
   void Call(Invocable&& invocable, Args&&... args) {
     invocable(std::forward<Args>(args)...);
     promise->MarkFinished();
+  }
+};
+
+// Calls `invocable` if the given ErrorMessageOr does not hold an error. The return value of
+// `invocable` is set as the result in the given promise. The value in ErrorMessageOr<T> is passed
+// as a parameter to `invocable`. If it is of type void, `invocable` is called without any
+// arguments.
+//
+// The main benefit of this is the specialization for `T = void`, which requires different syntax.
+// Don't use it if you don't need that particular feature.
+template <typename R>
+struct HandleErrorAndSetResultInPromise {
+  orbit_base::Promise<R>* promise;
+
+  template <typename Invocable, typename T>
+  void Call(Invocable&& invocable, const ErrorMessageOr<T>& input) {
+    if (input.has_error()) {
+      promise->SetResult(input.error());
+      return;
+    }
+
+    if constexpr (std::is_same_v<T, void>) {
+      if constexpr (std::is_same_v<decltype(invocable()), void>) {
+        invocable();
+        promise->SetResult(outcome::success());
+      } else {
+        promise->SetResult(invocable());
+      }
+    } else {
+      if constexpr (std::is_same_v<decltype(invocable(input.value())), void>) {
+        invocable(input.value());
+        promise->SetResult(outcome::success());
+      } else {
+        promise->SetResult(invocable(input.value()));
+      }
+    }
   }
 };
 
