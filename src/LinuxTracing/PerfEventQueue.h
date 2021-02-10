@@ -42,28 +42,28 @@ class PerfEventQueue {
  private:
   // Floats down the element at the top of the ordered_queues_heap_ to its correct place. Used when
   // the key of the top element changes, or as part of the process of removing the top element.
-  void MoveDownFrontOfOrderedQueuesHeap();
+  void MoveDownFrontOfHeapOfQueues();
   // Floats up an element that it is know should be further up in the heap. Used on insertion.
-  void MoveUpBackOfOrderedQueuesHeap();
+  void MoveUpBackOfHeapOfQueues();
 
  private:
   // This vector holds the heap of the queues each of which holds events coming from the same ring
   // buffer and assumes them already in order by timestamp.
-  std::vector<std::queue<std::unique_ptr<PerfEvent>>*> ordered_queues_heap_;
+  std::vector<std::queue<std::unique_ptr<PerfEvent>>*> heap_of_queues_of_events_ordered_by_fd_;
   // This map keeps the association between a file descriptor and the ordered queue of events coming
   // from the ring buffer corresponding to that file descriptor.
   absl::flat_hash_map<int, std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
-      ordered_queues_by_fd_;
+      queues_of_events_ordered_by_fd_;
 
-  static constexpr auto kUnorderedEventsReverseTimestampCompare =
+  static constexpr auto kPerfEventReverseTimestampCompare =
       [](const std::unique_ptr<PerfEvent>& lhs, const std::unique_ptr<PerfEvent>& rhs) {
         return lhs->GetTimestamp() > rhs->GetTimestamp();
       };
   // This priority queue holds all those events that cannot be assumed already sorted in a specific
-  // ring buffer.
+  // ring buffer. All such events are simply sorted by the priority queue by increasing timestamp.
   std::priority_queue<std::unique_ptr<PerfEvent>, std::vector<std::unique_ptr<PerfEvent>>,
-                      decltype(kUnorderedEventsReverseTimestampCompare)>
-      unordered_events_priority_queue_{kUnorderedEventsReverseTimestampCompare};
+                      decltype(kPerfEventReverseTimestampCompare)>
+      priority_queue_of_events_not_ordered_by_fd_{kPerfEventReverseTimestampCompare};
 };
 
 }  // namespace orbit_linux_tracing
