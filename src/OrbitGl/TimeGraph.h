@@ -52,7 +52,6 @@ class TimeGraph {
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_client_protos::FunctionInfo* function);
-  void UpdateMaxTimeStamp(uint64_t time);
 
   // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
