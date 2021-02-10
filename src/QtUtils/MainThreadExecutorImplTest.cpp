@@ -7,9 +7,9 @@
 #include <QCoreApplication>
 #include <memory>
 
-#include "MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
-namespace orbit_qt {
+namespace orbit_qt_utils {
 
 TEST(MainThreadExecutorImpl, Schedule) {
   auto executor = MainThreadExecutorImpl::Create();
@@ -154,4 +154,4 @@ TEST(MainThreadExecutorImpl, TryScheduleWithInvalidWeakPtr) {
   EXPECT_FALSE(result.has_value());
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_qt_utils

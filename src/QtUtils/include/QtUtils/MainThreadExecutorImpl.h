@@ -10,7 +10,7 @@
 
 #include "MainThreadExecutor.h"
 
-namespace orbit_qt {
+namespace orbit_qt_utils {
 
 // An implementation of MainThreadExecutor that integrates with Qt's event loop
 class MainThreadExecutorImpl : public QObject, public MainThreadExecutor {
@@ -40,6 +40,6 @@ class MainThreadExecutorImpl : public QObject, public MainThreadExecutor {
   void AbortRequested();
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_qt_utils
 
 #endif  // ORBIT_QT_MAIN_THREAD_EXECUTOR_IMPL_H_

@@ -67,7 +67,6 @@
 #include "GlCanvas.h"
 #include "LiveFunctionsController.h"
 #include "LiveFunctionsDataView.h"
-#include "MainThreadExecutorImpl.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
@@ -82,6 +81,7 @@
 #include "OrbitGgp/Instance.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -151,7 +151,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  const QStringList& command_line_flags)
     : QMainWindow(nullptr),
-      main_thread_executor_{orbit_qt::MainThreadExecutorImpl::Create()},
+      main_thread_executor_{orbit_qt_utils::MainThreadExecutorImpl::Create()},
       app_{OrbitApp::Create(main_thread_executor_.get(), metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
