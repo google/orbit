@@ -13,10 +13,12 @@
 # usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR
 
 # Settings:
-# grep inverted matching list for directories in BUILD_DIR that are not used
-BUILD_SUB_DIR_FILTER="bin\|CMakeFiles\|licenses\|lib\|Testing\|testresults\|third_party"
+# grep inverted matching list for directories in BUILD_DIR/src that are not used
+BUILD_SRC_DIR_FILTER="ClientProtos\|CodeViewerDemo\|GrpcProtos"
 # grep inverted matching list for files in BUILD_DIR/bin/ that are not used
 BIN_FILE_FILTER="\.debug\|crashpad_handler"
+# grep inverted matching list for files in BUILD_DIR/lib/ that are not used
+LIB_FILE_FILTER="VkLayer_Orbit_implicit.json"
 # grep inverted matching list for source files that are not used
 SOURCE_FILE_FILTER="Test.cpp\|Tests.cpp\|Fuzzer.cpp"
 # ------------------------------------
@@ -71,7 +73,7 @@ fi
 
 OUTPUT_DIR=$BUILD_DIR/coverage
 
-LIBS=$BUILD_DIR/lib/*
+LIBS=$(ls $BUILD_DIR/lib/* | grep -v "$LIB_FILE_FILTER")
 BINS=$(find $BUILD_DIR/bin/ -maxdepth 1 -type f | grep -v "$BIN_FILE_FILTER")
 FORMATTED_BINARY_FILES=$(echo $LIBS $BINS | sed "s/ / -object=/g")
 SUM_FUNCTIONS_COUNT=0
@@ -81,10 +83,10 @@ SUM_LINES_COVERED=0
 SUM_REGIONS_COUNT=0
 SUM_REGIONS_COVERED=0
 
-for BUILD_SUB_DIR in $(ls -d $BUILD_DIR/*/ | grep -v "$BUILD_SUB_DIR_FILTER")
+for COMPONENT_DIR in $(ls -d $BUILD_DIR/src/*/ | grep -v "$BUILD_SRC_DIR_FILTER")
 do
-  COMPONENT=$(basename $BUILD_SUB_DIR)
-  if ls $BUILD_DIR/$COMPONENT/*.profraw 1> /dev/null 2>&1; then
+  COMPONENT=$(basename $COMPONENT_DIR)
+  if ls $COMPONENT_DIR/*.profraw 1> /dev/null 2>&1; then
     echo "$COMPONENT: preprocessing"
   else 
     echo "$COMPONENT: skipping (No Unit Tests)"
@@ -94,7 +96,7 @@ do
 
   llvm-profdata-9 merge -sparse \
     -o $BUILD_DIR/$COMPONENT.profdata \
-    $BUILD_DIR/$COMPONENT/*.profraw 
+    $COMPONENT_DIR/*.profraw 
 
   SOURCE_FILES=$(find $SOURCE_DIR/$COMPONENT -regex ".*\.\(h\|cpp\)" | grep -v "$SOURCE_FILE_FILTER")
 
@@ -104,7 +106,7 @@ do
     -output-dir=$OUTPUT_DIR/coverage_$COMPONENT \
     -instr-profile=$BUILD_DIR/$COMPONENT.profdata \
     $FORMATTED_BINARY_FILES \
-    $SOURCE_FILES >/dev/null 2>&1
+    $SOURCE_FILES
 
   echo "$COMPONENT: generating json summary"
   JSON=$(llvm-cov-9 export -summary-only \
