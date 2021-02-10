@@ -232,7 +232,8 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
 }
 
 void ThreadTrack::UpdateMinMaxTimestamps() {
-  CHECK(capture_data_ != nullptr);
+  // Tracks in the introspection window don't have capture data.
+  if (capture_data_ == nullptr) return;
 
   min_time_ = std::min(min_time_.load(), capture_data_->GetCallstackData()->min_time());
   max_time_ = std::max(max_time_.load(), capture_data_->GetCallstackData()->max_time());
