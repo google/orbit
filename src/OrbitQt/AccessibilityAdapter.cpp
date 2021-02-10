@@ -190,6 +190,10 @@ int AccessibilityAdapter::indexOfChild(const QAccessibleInterface* child) const 
 QAccessibleInterface* AccessibilityAdapter::childAt(int x, int y) const {
   for (int i = 0; i < childCount(); ++i) {
     QAccessibleInterface* child_iface = child(i);
+    if (child_iface == nullptr) {
+      continue;
+    }
+
     QRect rect = child_iface->rect();
     if (x >= rect.x() && x < rect.x() + rect.width() && y >= rect.y() &&
         y < rect.y() + rect.height()) {

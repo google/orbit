@@ -24,7 +24,8 @@ namespace orbit_gl {
 class EventTrack : public ThreadBar {
  public:
   explicit EventTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                      const CaptureData* capture_data, ThreadID thread_id);
+                      const CaptureData* capture_data, ThreadID thread_id,
+                      CaptureViewElement* parent);
 
   std::string GetTooltip() const override;
 

@@ -27,8 +27,10 @@
 namespace orbit_gl {
 
 TracepointTrack::TracepointTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                                 const CaptureData* capture_data, int32_t thread_id)
-    : ThreadBar(app, time_graph, layout, capture_data, thread_id), color_{255, 0, 0, 255} {}
+                                 const CaptureData* capture_data, int32_t thread_id,
+                                 CaptureViewElement* parent)
+    : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "Tracepoints"),
+      color_{255, 0, 0, 255} {}
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ThreadBar::Draw(canvas, picking_mode, z_offset);

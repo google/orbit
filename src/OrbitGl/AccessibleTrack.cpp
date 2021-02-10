@@ -17,25 +17,33 @@
 #include "Track.h"
 
 using orbit_accessibility::AccessibilityRect;
+using orbit_accessibility::AccessibilityRole;
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;
 
 namespace orbit_gl {
 
-int AccessibleTrackContent::AccessibleChildCount() const { return 0; }
+int AccessibleTrackContent::AccessibleChildCount() const {
+  return static_cast<int>(track_->GetVisibleChildren().size());
+}
 
-const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int /*index*/) const {
-  return nullptr;
+const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int index) const {
+  if (index < 0) {
+    return nullptr;
+  }
+
+  auto children = track_->GetVisibleChildren();
+  if (static_cast<size_t>(index) >= children.size()) {
+    return nullptr;
+  }
+  return children[index]->GetOrCreateAccessibleInterface();
 }
 
 const AccessibleInterface* AccessibleTrackContent::AccessibleParent() const {
   return track_->GetOrCreateAccessibleInterface();
 }
 
-std::string AccessibleTrackContent::AccessibleName() const {
-  CHECK(track_ != nullptr);
-  return track_->GetName() + "_content";
-}
+std::string AccessibleTrackContent::AccessibleName() const { return "Content"; }
 
 AccessibilityRect AccessibleTrackContent::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
@@ -136,7 +144,7 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
 AccessibilityState AccessibleTrack::AccessibleState() const {
   CHECK(track_ != nullptr);
 
-  using State = orbit_accessibility::AccessibilityState;
+  using State = AccessibilityState;
 
   State result = State::Normal | State::Focusable | State::Movable;
   if (track_->IsTrackSelected()) {
