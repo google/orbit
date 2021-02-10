@@ -440,12 +440,6 @@ void TimeGraph::SetCaptureData(CaptureData* capture_data) {
   track_manager_->SetCaptureData(capture_data);
 }
 
-void TimeGraph::UpdateMaxTimeStamp(uint64_t time) {
-  if (time > capture_max_timestamp_) {
-    capture_max_timestamp_ = time;
-  }
-};
-
 float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
@@ -552,7 +546,10 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   text_renderer_static_.Clear();
 
   if (capture_data_) {
-    UpdateMaxTimeStamp(capture_data_->GetCallstackData()->max_time());
+    capture_min_timestamp_ =
+        std::min(capture_min_timestamp_, capture_data_->GetCallstackData()->min_time());
+    capture_max_timestamp_ =
+        std::max(capture_max_timestamp_, capture_data_->GetCallstackData()->max_time());
   }
 
   time_window_us_ = max_time_us_ - min_time_us_;
