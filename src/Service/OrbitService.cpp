@@ -6,6 +6,7 @@
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/strip.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -16,13 +17,71 @@
 #include <string>
 #include <thread>
 
+#include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitGrpcServer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 #include "ProducerSideServer.h"
 
 namespace orbit_service {
+
+static void PrintInstanceVersions() {
+  {
+    constexpr const char* kKernelVersionCommand = "uname -a";
+    std::optional<std::string> version = orbit_base::ExecuteCommand(kKernelVersionCommand);
+    if (version.has_value()) {
+      LOG("%s: %s", kKernelVersionCommand, absl::StripSuffix(version.value(), "\n"));
+    } else {
+      ERROR("Could not execute \"%s\"", kKernelVersionCommand);
+    }
+  }
+
+  {
+    constexpr const char* kVersionFilePath = "/usr/local/cloudcast/VERSION";
+    ErrorMessageOr<std::string> version = orbit_base::ReadFileToString(kVersionFilePath);
+    if (version.has_value()) {
+      LOG("%s:\n%s", kVersionFilePath, absl::StripSuffix(version.value(), "\n"));
+    } else {
+      ERROR("%s", version.error().message());
+    }
+  }
+
+  {
+    constexpr const char* kBaseVersionFilePath = "/usr/local/cloudcast/BASE_VERSION";
+    ErrorMessageOr<std::string> version = orbit_base::ReadFileToString(kBaseVersionFilePath);
+    if (version.has_value()) {
+      LOG("%s:\n%s", kBaseVersionFilePath, absl::StripSuffix(version.value(), "\n"));
+    } else {
+      ERROR("%s", version.error().message());
+    }
+  }
+
+  {
+    constexpr const char* kInstanceVersionFilePath = "/usr/local/cloudcast/INSTANCE_VERSION";
+    ErrorMessageOr<std::string> version = orbit_base::ReadFileToString(kInstanceVersionFilePath);
+    if (version.has_value()) {
+      LOG("%s:\n%s", kInstanceVersionFilePath, absl::StripSuffix(version.value(), "\n"));
+    } else {
+      ERROR("%s", version.error().message());
+    }
+  }
+
+  {
+    constexpr const char* kDriverVersionCommand = "/usr/local/cloudcast/bin/gpuinfo driver-version";
+    std::optional<std::string> version = orbit_base::ExecuteCommand(kDriverVersionCommand);
+    std::string stripped_version;
+    if (version.has_value()) {
+      stripped_version = absl::StripSuffix(version.value(), "\n");
+    }
+    if (!stripped_version.empty()) {
+      LOG("%s: %s", kDriverVersionCommand, stripped_version);
+    } else {
+      ERROR("Could not execute \"%s\"", kDriverVersionCommand);
+    }
+  }
+}
 
 static std::string ReadStdIn() {
   int tmp = fgetc(stdin);
@@ -82,6 +141,7 @@ static std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
 }
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
+  PrintInstanceVersions();
   LOG("Running Orbit Service version %s", orbit_core::GetVersion());
 #ifndef NDEBUG
   LOG("**********************************");
