@@ -123,7 +123,7 @@ void OrbitSamplingReport::OnCurrentThreadTabChanged(int current_tab_index) {
   for (QModelIndex& index : index_list) {
     row_list.push_back(index.row());
   }
-  treeView->GetTreeView()->GetModel()->OnMultiRowsSelected(row_list);
+  treeView->GetTreeView()->GetModel()->OnRowsSelected(row_list);
   RefreshCallstackView();
 }
 
