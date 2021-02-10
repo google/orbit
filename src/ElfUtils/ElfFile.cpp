@@ -175,40 +175,34 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() {
 template <typename ElfT>
 ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
-
-  uint64_t min_vaddr = UINT64_MAX;
-  bool pt_load_found = false;
   llvm::Expected<typename ElfT::PhdrRange> range = elf_file->program_headers();
 
   if (!range) {
-    std::string error = absl::StrFormat(
-        "Unable to get load bias of ELF file: \"%s\". No program headers "
-        "found.",
-        file_path_.string());
-    ERROR("%s", error.c_str());
+    std::string error =
+        absl::StrFormat("Unable to get load bias of ELF file: \"%s\". No program headers found.",
+                        file_path_.string());
+    ERROR("%s", error);
     return ErrorMessage(std::move(error));
   }
 
+  // Find the executable segment and calculate the load bias based on that segment.
   for (const typename ElfT::Phdr& phdr : range.get()) {
     if (phdr.p_type != llvm::ELF::PT_LOAD) {
       continue;
     }
-    pt_load_found = true;
 
-    if (min_vaddr > phdr.p_vaddr) {
-      min_vaddr = phdr.p_vaddr;
+    if ((phdr.p_flags & llvm::ELF::PF_X) == 0) {
+      continue;
     }
+
+    return phdr.p_vaddr - phdr.p_offset;
   }
 
-  if (!pt_load_found) {
-    std::string error = absl::StrFormat(
-        "Unable to get load bias of ELF file: \"%s\". No PT_LOAD program "
-        "headers found.",
-        file_path_.string());
-    ERROR("%s", error.c_str());
-    return ErrorMessage(std::move(error));
-  }
-  return min_vaddr;
+  std::string error = absl::StrFormat(
+      "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
+      file_path_.string());
+  ERROR("%s", error);
+  return ErrorMessage(std::move(error));
 }
 
 template <typename ElfT>
