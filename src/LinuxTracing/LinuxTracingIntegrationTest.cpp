@@ -415,10 +415,6 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
       case orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo:
         // AddressInfos have no timestamp.
         break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kInternedTracepointInfo:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kInternedTracepointEvent:
-        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kModuleUpdateEvent:
