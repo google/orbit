@@ -106,13 +106,17 @@ outcome::result<QPointer<Client>> Client::Create(QObject* parent) {
 }
 
 void Client::GetInstancesAsync(
-    const std::function<void(outcome::result<QVector<Instance>>)>& callback) {
+    const std::function<void(outcome::result<QVector<Instance>>)>& callback, int retry) {
   CHECK(callback);
 
   RunProcessWithTimeout("ggp", {"instance", "list", "-s"}, this,
-                        [callback](outcome::result<QByteArray> result) {
+                        [this, callback, retry](outcome::result<QByteArray> result) {
                           if (!result) {
-                            callback(result.error());
+                            if (retry < 1) {
+                              callback(result.error());
+                            } else {
+                              GetInstancesAsync(callback, retry - 1);
+                            }
                           } else {
                             callback(Instance::GetListFromJson(result.value()));
                           }
