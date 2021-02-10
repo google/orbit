@@ -23,6 +23,7 @@
 #include <thread>
 #include <vector>
 
+#include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 
@@ -86,21 +87,6 @@ std::optional<char> GetThreadState(pid_t tid) {
   return fields_excl_pid_comm[kStateIndexExclPidComm][0];
 }
 
-std::optional<std::string> ExecuteCommand(const std::string& cmd) {
-  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"), pclose};
-  if (!pipe) {
-    ERROR("Could not open pipe for \"%s\"", cmd.c_str());
-    return std::optional<std::string>{};
-  }
-
-  std::array<char, 128> buffer;
-  std::string result;
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-    result += buffer.data();
-  }
-  return result;
-}
-
 int GetNumCores() {
   int hw_conc = static_cast<int>(std::thread::hardware_concurrency());
   // Some compilers do not support std::thread::hardware_concurrency().
@@ -108,7 +94,7 @@ int GetNumCores() {
     return hw_conc;
   }
 
-  std::optional<std::string> nproc_str = ExecuteCommand("nproc");
+  std::optional<std::string> nproc_str = orbit_base::ExecuteCommand("nproc");
   if (nproc_str.has_value() && !nproc_str.value().empty()) {
     return std::stoi(nproc_str.value());
   }

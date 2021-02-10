@@ -24,8 +24,6 @@ std::string ReadMaps(pid_t pid);
 // and at https://www.man7.org/linux/man-pages/man1/ps.1.html#PROCESS_STATE_CODES.
 std::optional<char> GetThreadState(pid_t tid);
 
-std::optional<std::string> ExecuteCommand(const std::string& cmd);
-
 int GetNumCores();
 
 std::optional<std::string> ExtractCpusetFromCgroup(const std::string& cgroup_content);
