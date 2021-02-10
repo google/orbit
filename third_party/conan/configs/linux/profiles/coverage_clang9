@@ -1,5 +1,8 @@
 include(clang9_relwithdebinfo)
 
+[options]
+OrbitProfiler:with_vulkan_layer=True
+
 [env]
 CFLAGS=$C_FLAGS -fprofile-instr-generate="%m.profraw" -fcoverage-mapping
 CXXFLAGS=$CXX_FLAGS -fprofile-instr-generate="%m.profraw" -fcoverage-mapping
