@@ -22,6 +22,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/AnyInvocable.h
         include/OrbitBase/ExecutablePath.h
+        include/OrbitBase/ExecuteCommand.h
         include/OrbitBase/Future.h
         include/OrbitBase/FutureHelpers.h
         include/OrbitBase/JoinFutures.h
@@ -57,6 +58,7 @@ target_sources(OrbitBase PRIVATE
 else()
 target_sources(OrbitBase PRIVATE
         ExecutablePathLinux.cpp
+        ExecuteCommandLinux.cpp
         GetProcessIdsLinux.cpp
         ThreadUtilsLinux.cpp)
 endif()
@@ -92,6 +94,7 @@ target_sources(OrbitBaseTests PRIVATE
 if (NOT WIN32)
 target_sources(OrbitBaseTests PRIVATE
         ExecutablePathLinuxTest.cpp
+        ExecuteCommandLinuxTest.cpp
         GetProcessIdsLinuxTest.cpp)
 endif()
 
