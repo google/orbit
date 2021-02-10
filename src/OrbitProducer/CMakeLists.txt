@@ -10,6 +10,7 @@ target_compile_options(OrbitProducer PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitProducer PUBLIC
         include/OrbitProducer/CaptureEventProducer.h
         include/OrbitProducer/FakeProducerSideService.h
+        include/OrbitProducer/LockFreeBufferBulkedCaptureEventProducer.h
         include/OrbitProducer/LockFreeBufferCaptureEventProducer.h)
 
 target_sources(OrbitProducer PRIVATE

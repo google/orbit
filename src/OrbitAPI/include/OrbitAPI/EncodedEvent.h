@@ -40,6 +40,7 @@ struct Event {
 };
 
 union EncodedEvent {
+  EncodedEvent() = default;
   EncodedEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
                orbit_api_color color = kOrbitColorAuto) {
     static_assert(sizeof(EncodedEvent) == 48, "orbit_api::EncodedEvent should be 48 bytes.");
@@ -65,6 +66,19 @@ union EncodedEvent {
   }
   Event event;
   uint64_t args[6];
+};
+
+struct ApiEvent {
+  ApiEvent() = default;
+  ApiEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
+           orbit_api_color color = kOrbitColorAuto)
+      : event(type, name, data, color) {
+    static_assert(sizeof(ApiEvent) == 64, "orbit_api::ApiEvent should be 48 bytes.");
+  }
+  EncodedEvent event;
+  int32_t pid = 0;
+  int32_t tid = 0;
+  uint64_t timestamp_ns = 0;
 };
 
 template <typename Dest, typename Source>

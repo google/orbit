@@ -99,7 +99,7 @@ ScopeNode* ScopeNode::FindDeepestParentForNode(const ScopeNode* node) {
 }
 
 std::vector<ScopeNode*> ScopeNode::GetChildrenInRange(uint64_t start, uint64_t end) const {
-  // Get children that are enclosed between start and end inclusively.
+  // Get children that are enclosed by start and end inclusively.
   if (children_.empty()) return {};
   auto node_it = children_.lower_bound(start);
   if (node_it == children_.end()) return {};
@@ -120,7 +120,8 @@ void ScopeNode::Insert(ScopeNode* node_to_insert) {
 
   ScopeNode* parent_node = FindDeepestParentForNode(node_to_insert);
 
-  // Set depth only on the node to insert, descendants' depth will be updated by the ScopeTree.
+  // Set depth only on the node to insert, the depth of descendants will be updated by the ScopeTree
+  // as it also needs to update a secondary data structure. See ScopeTree::UpdateDepthInSubtree.
   node_to_insert->SetDepth(parent_node->Depth() + 1);
 
   // Find all children encompassed by the node about to be inserted.

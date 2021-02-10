@@ -96,29 +96,8 @@ message IntrospectionScope {
 }
 
 message ApiEvent {
-  enum Type {
-    kScopeStart = 0;
-    kScopeStop = 1;
-    kScopeStartAsync = 2;
-    kScopeStopAsync = 3;
-    kTrackInt = 4;
-    kTrackInt64 = 5;
-    kTrackUint = 6;
-    kTrackUint64 = 7;
-    kTrackFloat = 8;
-    kTrackDouble = 9;
-    kString = 10;
-  }
-
-  Type type = 1;
-  int32 pid = 2;
-  int32 tid = 3;
-  uint64 timestamp_ns = 4;
-  int32 depth = 5;
-  string name = 6;
-  uint32 color = 7;
-  uint64 data = 8;
-  uint64 event_id = 9;
+  uint64 num_raw_events = 1;
+  bytes raw_data = 2;
 }
 
 message Callstack {

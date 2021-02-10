@@ -70,10 +70,21 @@ void ThreadTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
     timers_[timer_info.depth()] = timer_chain;
   }
   timer_chain->push_back(text_box);
-  scope_tree_.Insert(timer_chain->Last());
+
+  {
+    absl::MutexLock lock(&mutex_);
+    scope_tree_.Insert(timer_chain->Last());
+  }
+
   ++num_timers_;
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();
   if (timer_info.end() > max_time_) max_time_ = timer_info.end();
+}
+
+float ThreadTrack::GetYFromDepth(uint32_t depth) const {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
+         box_height_ * static_cast<float>(depth + 1);
 }
 
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
@@ -112,6 +123,8 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
   uint64_t pixel_delta_in_ticks = time_window_ns / canvas->GetWidth();
   uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
+  absl::MutexLock lock(&mutex_);
+
   if (render_with_nodes_) {
     ORBIT_SCOPE("Render with nodes");
     for (auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
@@ -119,12 +132,13 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
       // would miss drawing events that should be drawn.
       uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
       uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
+      auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
+      if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
+      float world_timer_y = GetYFromDepth(depth - 1);
 
-      for (auto it = ordered_nodes.lower_bound(min_tick);
-           it != ordered_nodes.end() && it->first < max_tick; ++it) {
+      for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
         ScopeNode* node = it->second;
         TextBox& text_box = *node->GetTextBox();
-        text_box.GetTimerInfo().set_depth(node->Depth());
 
         const TimerInfo& timer_info = text_box.GetTimerInfo();
         // if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
@@ -132,7 +146,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
         // if (!TimerFilter(timer_info)) continue;
         uint64_t function_id = timer_info.function_id();
 
-        UpdateDepth(timer_info.depth() + 1);
+        UpdateDepth(depth);
         double start_us = time_graph_->GetUsFromTick(timer_info.start());
         double end_us = time_graph_->GetUsFromTick(timer_info.end());
         double elapsed_us = end_us - start_us;
@@ -140,7 +154,6 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
         double normalized_length = elapsed_us * inv_time_window;
         float world_timer_width = static_cast<float>(normalized_length * world_width);
         float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
-        float world_timer_y = GetYFromTimer(timer_info);
 
         bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
         bool is_selected = &text_box == selected_textbox;
