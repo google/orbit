@@ -95,6 +95,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
 
+  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
+
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
@@ -114,6 +116,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   std::atomic<uint64_t> max_time_;
   Type type_ = kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
+
+  TimeGraphLayout* layout_;
 
   const CaptureData* capture_data_ = nullptr;
 };

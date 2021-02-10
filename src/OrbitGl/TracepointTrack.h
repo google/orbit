@@ -16,7 +16,8 @@ namespace orbit_gl {
 class TracepointTrack : public ThreadBar {
  public:
   explicit TracepointTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                           const CaptureData* capture_data, int32_t thread_id);
+                           const CaptureData* capture_data, int32_t thread_id,
+                           CaptureViewElement* parent);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 

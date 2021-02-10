@@ -11,7 +11,8 @@ target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitGl
-  PUBLIC AccessibleTimeGraph.h
+  PUBLIC AccessibleThreadBar.h
+         AccessibleTimeGraph.h
          AccessibleTrack.h
          App.h
          AsyncTrack.h
@@ -74,7 +75,8 @@ target_sources(
 
 target_sources(
   OrbitGl
-  PRIVATE AccessibleTimeGraph.cpp
+  PRIVATE AccessibleThreadBar.cpp
+          AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
           App.cpp
           AsyncTrack.cpp
@@ -115,6 +117,7 @@ target_sources(
           TimerChain.cpp
           TimerInfosIterator.cpp
           TimerTrack.cpp
+          ThreadBar.cpp
           ThreadStateTrack.cpp
           ThreadTrack.cpp
           Track.cpp

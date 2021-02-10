@@ -23,7 +23,7 @@ Track::Track(TimeGraph* time_graph, TimeGraphLayout* layout, const CaptureData* 
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
           [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout)),
-      accessibility_(this, layout),
+      layout_(layout),
       capture_data_(capture_data) {
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
@@ -84,7 +84,7 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibleInterface() {
-  return std::make_unique<orbit_gl::AccessibleTrack>(this, &time_graph_->GetLayout());
+  return std::make_unique<orbit_gl::AccessibleTrack>(this, layout_);
 }
 
 void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {

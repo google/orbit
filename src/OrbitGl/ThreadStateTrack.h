@@ -24,7 +24,8 @@ namespace orbit_gl {
 class ThreadStateTrack final : public ThreadBar {
  public:
   explicit ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                            const CaptureData* capture_data, ThreadID thread_id);
+                            const CaptureData* capture_data, ThreadID thread_id,
+                            CaptureViewElement* parent);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
