@@ -190,12 +190,11 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   return pos_[1] - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
 }
 
-// When track is collapsed, only draw "hardware execution" timers and the root "debug markers".
+// When track is collapsed, only draw "hardware execution" timers and "debug markers".
 bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
     std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
-    return gpu_stage == kHwExecutionString ||
-           (timer_info.type() == TimerInfo::kGpuDebugMarker && timer_info.depth() == 0);
+    return gpu_stage == kHwExecutionString || timer_info.type() == TimerInfo::kGpuDebugMarker;
   }
   return true;
 }

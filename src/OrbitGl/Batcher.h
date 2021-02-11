@@ -149,10 +149,6 @@ class Batcher {
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left, const Vec3& bottom_right,
-                          const Vec3& top_right, const Color& color,
-                          std::unique_ptr<PickingUserData> user_data = nullptr,
-                          ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
 
@@ -187,9 +183,6 @@ class Batcher {
   void AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
-                   std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
-                   const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
   BatcherId batcher_id_;
