@@ -14,6 +14,14 @@ CaptureViewElement::CaptureViewElement(TimeGraph* time_graph, TimeGraphLayout* l
   CHECK(layout != nullptr);
 }
 
+orbit_accessibility::AccessibleInterface* CaptureViewElement::GetOrCreateAccessibleInterface() {
+  if (accessible_interface_ == nullptr) {
+    accessible_interface_ = CreateAccessibleInterface();
+  }
+
+  return accessible_interface_.get();
+}
+
 void CaptureViewElement::OnPick(int x, int y) {
   canvas_->ScreenToWorld(x, y, mouse_pos_last_click_[0], mouse_pos_last_click_[1]);
   picking_offset_ = mouse_pos_last_click_ - pos_;

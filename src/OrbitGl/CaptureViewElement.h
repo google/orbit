@@ -6,6 +6,7 @@
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 
 #include "Batcher.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "TimeGraphLayout.h"
 
@@ -25,7 +26,6 @@ class CaptureViewElement : public Pickable {
   virtual void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                                 PickingMode /*picking_mode*/, float /*z_offset*/ = 0){};
 
-  void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
   [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
@@ -35,6 +35,11 @@ class CaptureViewElement : public Pickable {
   void SetSize(float width, float height) { size_ = Vec2(width, height); }
   [[nodiscard]] Vec2 GetSize() const { return size_; }
 
+  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
+  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
+    return accessible_interface_.get();
+  }
+
   // Pickable
   void OnPick(int x, int y) override;
   void OnRelease() override;
@@ -43,6 +48,10 @@ class CaptureViewElement : public Pickable {
 
  protected:
   TimeGraphLayout* layout_;
+  virtual std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() {
+    return {};
+  };
+
   GlCanvas* canvas_ = nullptr;
   TimeGraph* time_graph_;
   Vec2 pos_ = Vec2(0, 0);
@@ -52,6 +61,8 @@ class CaptureViewElement : public Pickable {
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
+
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessible_interface_;
 };
 }  // namespace orbit_gl
 
