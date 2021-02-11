@@ -12,7 +12,6 @@ abseil:compiler.cppstd=17
 [options]
 OrbitProfiler:system_qt=False
 OrbitProfiler:with_gui=False
-OrbitProfiler:with_orbitgl=False
 [build_requires]
 &: cmake_installer/3.16.3@conan/stable
 [env]

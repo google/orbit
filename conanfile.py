@@ -28,7 +28,6 @@ class OrbitConan(ConanFile):
                "fPIC": [True, False],
                "crashdump_server": "ANY",
                "with_crash_handling": [True, False],
-               "with_orbitgl": [True, False],
                "run_tests": [True, False],
                "with_vulkan_layer": [True, False],
                "build_target": "ANY"}
@@ -38,7 +37,6 @@ class OrbitConan(ConanFile):
                        "fPIC": True,
                        "crashdump_server": "",
                        "with_crash_handling": True,
-                       "with_orbitgl": True,
                        "with_vulkan_layer": False,
                        "run_tests": True,
                        "build_target": None}
@@ -58,8 +56,6 @@ class OrbitConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-        if self.options.with_gui and not self.options.with_orbitgl:
-            raise ConanInvalidConfiguration("When enable GUI (with_gui), OrbitGL (with_orbitgl) needs also to be enabled")
         if not self.options.with_gui:
             del self.options.with_crash_handling
             del self.options.crashdump_server
@@ -98,20 +94,17 @@ class OrbitConan(ConanFile):
             self.requires(
                 "crashpad/20200624@{}#8c19cb575eb819de0b050cf7d1f317b6".format(self._orbit_channel))
 
-        if self.options.with_orbitgl:
+        if self.options.with_gui:
             self.requires("freetype/2.10.0@bincrafters/stable#0")
             self.requires(
                 "freetype-gl/8d9a97a@{}#2836d28f3d91c308ec9652c2054015db".format(self._orbit_channel))
             self.requires("glew/2.1.0@{}#0".format(self._orbit_channel))
             self.requires("imgui/1.69@bincrafters/stable#0")
             self.requires("libpng/1.6.37@bincrafters/stable#0")
+            self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 
-        if self.options.with_orbitgl:
             if not self.options.system_mesa:
                 self.requires("libxi/1.7.10@bincrafters/stable#0")
-
-        if self.options.with_gui:
-            self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 
             if not self.options.system_qt:
                 self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
@@ -131,7 +124,7 @@ class OrbitConan(ConanFile):
                 "We don't actively support building the UI for 32bit platforms. Please remove this check in conanfile.py if you still want to do so!")
 
         self.options["gtest"].no_main = True
-        if self.options.with_orbitgl:
+        if self.options.with_gui:
             self.options["glew"].system_mesa = self.options.system_mesa
 
             if not self.options.system_qt:
@@ -156,7 +149,6 @@ class OrbitConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
-        cmake.definitions["WITH_ORBITGL"] = "ON" if self.options.with_orbitgl else "OFF"
         cmake.definitions["WITH_VULKAN_LAYER"] = "ON" if self.options.with_vulkan_layer else "OFF"
         if self.options.with_gui:
             if self.options.with_crash_handling:
