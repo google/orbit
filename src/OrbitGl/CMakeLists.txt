@@ -170,9 +170,3 @@ target_link_libraries(
           GTest::Main)
 
 register_test(OrbitGlTests)
-
-add_fuzzer(ModuleListFuzzer
-           ModuleListFuzzer.cpp)
-target_link_libraries(ModuleListFuzzer
-                      PRIVATE OrbitGl CONAN_PKG::libprotobuf-mutator)
-
