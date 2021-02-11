@@ -23,6 +23,7 @@ def main(argv):
         SelectTrack(track_index=5),
         DeselectTrack(),
         SelectTrack(track_index=0, expect_failure=True),   # Scheduler track cannot be selected
+        MoveTrack(track_index=0, new_index=2, expected_new_index=0),    # Scheduler track cannot be dragged
         MoveTrack(track_index=5, new_index=0),
         MoveTrack(track_index=0, new_index=3),
         MoveTrack(track_index=3, new_index=5),
