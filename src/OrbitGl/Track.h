@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "AccessibleTrack.h"
 #include "Batcher.h"
 #include "BlockChain.h"
 #include "CaptureViewElement.h"
@@ -24,7 +25,6 @@
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
-#include "TrackAccessibility.h"
 #include "TriangleToggle.h"
 #include "capture_data.pb.h"
 

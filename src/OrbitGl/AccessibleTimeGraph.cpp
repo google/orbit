@@ -6,10 +6,10 @@
 
 #include <vector>
 
+#include "AccessibleTrack.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
 #include "Track.h"
-#include "TrackAccessibility.h"
 #include "TrackManager.h"
 
 using orbit_accessibility::AccessibilityRect;
