@@ -48,8 +48,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                        float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) override;
   void OnDrag(int x, int y) override;
 
   virtual void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }

@@ -37,8 +37,8 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp*
   SetLabel(name);
 }
 
-[[nodiscard]] std::string AsyncTrack::GetBoxTooltip(PickingId id) const {
-  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+[[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+  const TextBox* text_box = batcher.GetTextBox(id);
   if (text_box == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
   TimerInfo timer_info = text_box->GetTimerInfo();

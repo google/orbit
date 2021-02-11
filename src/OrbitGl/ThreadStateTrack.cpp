@@ -42,10 +42,10 @@ void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_
   thread_state_bar_z += z_offset;
 
   // Draw a transparent track just for clicking.
-  Batcher* batcher = canvas->GetBatcher();
+  Batcher* ui_batcher = canvas->GetBatcher();
   Box box(pos_, Vec2(size_[0], -size_[1]), thread_state_bar_z);
   static const Color kTransparent{0, 0, 0, 0};
-  batcher->AddBox(box, kTransparent, shared_from_this());
+  ui_batcher->AddBox(box, kTransparent, shared_from_this());
 }
 
 static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
@@ -139,8 +139,8 @@ static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState s
   }
 }
 
-std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
-  auto user_data = time_graph_->GetBatcher().GetUserData(id);
+std::string ThreadStateTrack::GetThreadStateSliceTooltip(Batcher* batcher, PickingId id) const {
+  auto user_data = batcher->GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
   }
@@ -156,11 +156,10 @@ std::string ThreadStateTrack::GetThreadStateSliceTooltip(PickingId id) const {
       GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
-void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+void ThreadStateTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                         PickingMode picking_mode, float z_offset) {
-  ThreadBar::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+  ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  Batcher* batcher = &time_graph_->GetBatcher();
   const GlCanvas* canvas = time_graph_->GetCanvas();
 
   const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
@@ -189,8 +188,9 @@ void ThreadStateTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         const Color color = GetThreadStateColor(slice.thread_state());
 
-        auto user_data = std::make_unique<PickingUserData>(
-            nullptr, [&](PickingId id) { return GetThreadStateSliceTooltip(id); });
+        auto user_data = std::make_unique<PickingUserData>(nullptr, [&, batcher](PickingId id) {
+          return GetThreadStateSliceTooltip(batcher, id);
+        });
         user_data->custom_data_ = &slice;
 
         if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {

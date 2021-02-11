@@ -98,8 +98,8 @@ const TextBox* ThreadTrack::GetRight(const TextBox* text_box) const {
   return nullptr;
 }
 
-std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
-  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+  const TextBox* text_box = batcher.GetTextBox(id);
   if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }
@@ -270,21 +270,21 @@ void ThreadTrack::OnPick(int x, int y) {
   app_->set_selected_thread_id(thread_id_);
 }
 
-void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                                   float z_offset) {
+void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                   PickingMode picking_mode, float z_offset) {
   UpdatePositionOfSubtracks();
 
   if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    thread_state_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
   if (!event_track_->IsEmpty()) {
-    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    event_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
   if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    tracepoint_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
 
-  TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+  TimerTrack::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 }
 
 void ThreadTrack::SetTrackColor(Color color) {

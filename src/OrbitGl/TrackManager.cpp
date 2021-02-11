@@ -282,7 +282,8 @@ int TrackManager::FindMovingTrackIndex() {
   return -1;
 }
 
-void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
+void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                PickingMode picking_mode) {
   TimeGraphLayout layout = time_graph_->GetLayout();
 
   // Make sure track tab fits in the viewport.
@@ -301,7 +302,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
                                             layout.GetTopMargin() -
                                             layout.GetSchedulerTrackOffset());
     }
-    track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
     const float height = (track->GetHeight() + layout.GetSpaceBetweenTracks());
     current_y -= height;
     pinned_tracks_height += height;
@@ -317,7 +318,7 @@ void TrackManager::UpdateTracks(uint64_t min_tick, uint64_t max_tick, PickingMod
     if (!track->IsMoving()) {
       track->SetPos(track->GetPos()[0], current_y);
     }
-    track->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
     current_y -= (track->GetHeight() + layout.GetSpaceBetweenTracks());
   }
 

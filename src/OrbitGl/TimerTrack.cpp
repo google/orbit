@@ -196,12 +196,13 @@ void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
         world_timer_y, z);
     batcher->AddShadedTrapezium(
         top_left, bottom_left, bottom_right, top_right, color,
-        std::make_unique<PickingUserData>(current_text_box,
-                                          [&](PickingId id) { return this->GetBoxTooltip(id); }));
+        std::make_unique<PickingUserData>(current_text_box, [&, batcher](PickingId id) {
+          return this->GetBoxTooltip(*batcher, id);
+        }));
 
   } else {
     auto user_data = std::make_unique<PickingUserData>(
-        current_text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+        current_text_box, [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
 
     WorldXInfo world_x_info =
         ToWorldX(start_us, end_us, inv_time_window, world_start_x, world_width);
@@ -223,11 +224,10 @@ void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
   }
 }
 
-void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                   PickingMode /*picking_mode*/, float z_offset) {
   UpdateBoxHeight();
 
-  Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
 
   float world_start_x = canvas->GetWorldTopLeftX();
@@ -405,7 +405,9 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() 
 
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
-std::string TimerTrack::GetBoxTooltip(PickingId /*id*/) const { return ""; }
+std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
+  return "";
+}
 
 float TimerTrack::GetHeaderHeight() const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();

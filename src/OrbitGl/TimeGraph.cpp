@@ -538,6 +538,7 @@ void TimeGraph::NeedsUpdate() {
   needs_redraw_ = true;
 }
 
+// UpdatePrimitives updates all the drawable track timers in the timegraph's batcher
 void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(app_->GetStringManager() != nullptr);
@@ -560,7 +561,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
 
   track_manager_->SortTracks();
   track_manager_->UpdateMovingTrackSorting();
-  track_manager_->UpdateTracks(min_tick, max_tick, picking_mode);
+  track_manager_->UpdateTracks(&batcher_, min_tick, max_tick, picking_mode);
 
   needs_update_primitives_ = false;
 }

@@ -40,8 +40,8 @@ class TimerTrack : public Track {
   [[nodiscard]] std::string GetTooltip() const override;
 
   // Track
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode /*picking_mode*/,
-                        float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode /*picking_mode*/, float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return kTimerTrack; }
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() const override;
@@ -104,7 +104,7 @@ class TimerTrack : public Track {
   mutable absl::Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
 
-  [[nodiscard]] virtual std::string GetBoxTooltip(PickingId id) const;
+  [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   float GetHeight() const override;
   float box_height_ = 0.0f;
 
