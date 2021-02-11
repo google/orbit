@@ -189,9 +189,7 @@ void Track::SetPinned(bool value) { pinned_ = value; }
 
 Color Track::GetBackgroundColor() const {
   int32_t capture_process_id = capture_data_ ? capture_data_->process_id() : -1;
-  if (GetType() == kSchedulerTrack) {
-    return color_;
-  }
+
   if (process_id_ != -1 && process_id_ != capture_process_id) {
     const Color kExternalProcessColor(30, 30, 40, 255);
     return kExternalProcessColor;
