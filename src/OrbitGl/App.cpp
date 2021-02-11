@@ -533,7 +533,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     Disassembler disasm;
     disasm.AddLine(absl::StrFormat("asm: /* %s */", function_utils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
-    if (!sampling_report_) {
+    if (!HasCaptureData() || !GetCaptureData().has_post_processed_sampling_data()) {
       DisassemblyReport empty_report(disasm);
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
@@ -1658,12 +1658,14 @@ void OrbitApp::UpdateAfterCaptureCleared() {
   PostProcessedSamplingData empty_post_processed_sampling_data;
   absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> empty_unique_callstacks;
 
-  SetSamplingReport(empty_post_processed_sampling_data, empty_unique_callstacks);
+  if (sampling_report_ != nullptr) {
+    SetSamplingReport(empty_post_processed_sampling_data, empty_unique_callstacks);
+  }
   ClearTopDownView();
   ClearSelectionTopDownView();
   ClearBottomUpView();
   ClearSelectionBottomUpView();
-  if (selection_report_) {
+  if (selection_report_ != nullptr) {
     SetSelectionReport(std::move(empty_post_processed_sampling_data), empty_unique_callstacks,
                        false);
   }
