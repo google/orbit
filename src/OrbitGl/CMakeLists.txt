@@ -12,6 +12,7 @@ target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   OrbitGl
   PUBLIC AccessibleTimeGraph.h
+         AccessibleTrack.h
          App.h
          AsyncTrack.h
          Batcher.h
@@ -66,7 +67,6 @@ target_sources(
          TimerInfosIterator.h
          TimerTrack.h
          Track.h
-         TrackAccessibility.h
          TrackManager.h
          TriangleToggle.h
          TracepointsDataView.h
@@ -75,6 +75,7 @@ target_sources(
 target_sources(
   OrbitGl
   PRIVATE AccessibleTimeGraph.cpp
+          AccessibleTrack.cpp
           App.cpp
           AsyncTrack.cpp
           Batcher.cpp
@@ -117,7 +118,6 @@ target_sources(
           ThreadStateTrack.cpp
           ThreadTrack.cpp
           Track.cpp
-          TrackAccessibility.cpp
           TrackManager.cpp
           TriangleToggle.cpp
           TracepointsDataView.cpp

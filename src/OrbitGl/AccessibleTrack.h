@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TRACK_ACCESSIBILITY_H_
-#define ORBIT_GL_TRACK_ACCESSIBILITY_H_
+#ifndef ORBIT_GL_ACCESSIBLE_TRACK_H_
+#define ORBIT_GL_ACCESSIBLE_TRACK_H_
 
 #include <string>
 
