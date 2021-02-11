@@ -61,6 +61,27 @@ void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetT
 
 float TimerTrack::GetTextBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
 
+namespace {
+struct WorldXInfo {
+  float world_x_start;
+  float world_x_width;
+};
+
+WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, float world_start_x,
+                    float world_width) {
+  double width_us = end_us - start_us;
+
+  double normalized_start = start_us * inv_time_window;
+  double normalized_width = width_us * inv_time_window;
+
+  WorldXInfo result{};
+  result.world_x_start = static_cast<float>(world_start_x + normalized_start * world_width);
+  result.world_x_width = static_cast<float>(normalized_width * world_width);
+  return result;
+}
+
+}  // namespace
+
 void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                   PickingMode /*picking_mode*/, float z_offset) {
   UpdateBoxHeight();
@@ -72,6 +93,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
   bool is_collapsed = collapse_toggle_->IsCollapsed();
+
+  float z = GlCanvas::kZValueBox + z_offset;
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
   const TextBox* selected_textbox = app_->selected_text_box();
@@ -87,7 +110,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
-    for (auto& block : *chain) {
+    auto chain_iterator = chain->begin();
+    const TimerInfo* prev_timer_info = nullptr;
+    while (chain_iterator != chain->end()) {
+      TimerBlock& block = *chain_iterator;
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       // We have to reset this when we go to the next depth, as otherwise we
@@ -101,42 +127,118 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
         if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
         if (!TimerFilter(timer_info)) continue;
-        uint64_t function_id = timer_info.function_id();
 
         UpdateDepth(timer_info.depth() + 1);
         double start_us = time_graph_->GetUsFromTick(timer_info.start());
+        double start_or_prev_end_us = start_us;
         double end_us = time_graph_->GetUsFromTick(timer_info.end());
-        double elapsed_us = end_us - start_us;
-        double normalized_start = start_us * inv_time_window;
-        double normalized_length = elapsed_us * inv_time_window;
-        float world_timer_width = static_cast<float>(normalized_length * world_width);
-        float world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
-        float world_timer_y = GetYFromTimer(timer_info);
+        double end_or_next_start_us = end_us;
 
-        bool is_visible_width = normalized_length * canvas->GetWidth() > 1;
+        float world_timer_y = GetYFromTimer(timer_info);
+        float box_height = GetTextBoxHeight(timer_info);
+
+        // Check if the previous timer overlaps with the current one, and if so draw the overlap
+        // as triangles rather than as overlapping rectangles.
+        if (prev_timer_info != nullptr) {
+          CHECK(prev_timer_info->start() < timer_info.start());
+          // Note, that for timers that are completely inside the previous one, we will keep drawing
+          // them above each other, as a proper solution would require us to keep a list of all
+          // prev. intersecting timers. Further, we also compare the type, as for the Gpu timers,
+          // timers of different type but same depth are drawn below each other (and thus do not
+          // overlap).
+          if (prev_timer_info->end() > timer_info.start() &&
+              prev_timer_info->end() <= timer_info.end() &&
+              prev_timer_info->type() == timer_info.type()) {
+            start_or_prev_end_us = time_graph_->GetUsFromTick(prev_timer_info->end());
+          }
+        }
+
+        // Check if the next timer overlaps with the current one, and if so draw the overlap
+        // as triangles rather than as overlapping rectangles.
+        if (auto next_chain_it = ++chain_iterator;
+            next_chain_it != chain->end() || k + 1 < block.size()) {
+          const TimerInfo& next_timer_info = (k + 1 < block.size())
+                                                 ? block[k + 1].GetTimerInfo()
+                                                 : (*next_chain_it)[0].GetTimerInfo();
+          CHECK(timer_info.start() < next_timer_info.start());
+          // Note, that for timers that are completely inside the next one, we will keep drawing
+          // them above each other, as a proper solution would require us to keep a list of all
+          // upcoming intersecting timers. We also compare the type, as for the Gpu timers, timers
+          // of different type but same depth are drawn below each other (and thus do not overlap).
+          if (timer_info.end() > next_timer_info.start() &&
+              timer_info.end() <= next_timer_info.end() &&
+              next_timer_info.type() == timer_info.type()) {
+            end_or_next_start_us = time_graph_->GetUsFromTick(next_timer_info.start());
+          }
+        }
+
+        double elapsed_us = end_us - start_us;
+
+        // Draw the Timer's text if it is not collapsed.
+        if (!is_collapsed) {
+          // For overlaps, let us make the textbox just a bit wider:
+          double left_overlap_width_us = start_or_prev_end_us - start_us;
+          double text_x_start_us = start_or_prev_end_us - (.25 * left_overlap_width_us);
+          double right_overlap_width_us = end_us - end_or_next_start_us;
+          double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
+
+          bool is_visible_width =
+              (text_x_end_us - text_x_start_us) * inv_time_window * canvas->GetWidth() > 1;
+          WorldXInfo world_x_info =
+              ToWorldX(text_x_start_us, text_x_end_us, inv_time_window, world_start_x, world_width);
+
+          if (is_visible_width) {
+            Vec2 pos(world_x_info.world_x_start, world_timer_y);
+            Vec2 size(world_x_info.world_x_width, GetTextBoxHeight(timer_info));
+            text_box.SetPos(pos);
+            text_box.SetSize(size);
+
+            SetTimesliceText(timer_info, elapsed_us, world_start_x, z_offset, &text_box);
+          }
+        }
+
+        uint64_t function_id = timer_info.function_id();
+
         bool is_selected = &text_box == selected_textbox;
         bool is_highlighted = !is_selected &&
                               function_id != orbit_grpc_protos::kInvalidFunctionId &&
                               function_id == highlighted_function_id;
 
-        Vec2 pos(world_timer_x, world_timer_y);
-        Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
-        float z = GlCanvas::kZValueBox + z_offset;
-        const Color kHighlightColor(100, 181, 246, 255);
+        static const Color kHighlightColor(100, 181, 246, 255);
         Color color = is_highlighted ? kHighlightColor : GetTimerColor(timer_info, is_selected);
-        text_box.SetPos(pos);
-        text_box.SetSize(size);
 
-        auto user_data = std::make_unique<PickingUserData>(
-            &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+        bool is_visible_width = elapsed_us * inv_time_window * canvas->GetWidth() > 1;
 
         if (is_visible_width) {
-          if (!is_collapsed) {
-            SetTimesliceText(timer_info, elapsed_us, world_start_x, z_offset, &text_box);
-          }
-          batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
+          WorldXInfo world_x_info_left_overlap =
+              ToWorldX(start_us, start_or_prev_end_us, inv_time_window, world_start_x, world_width);
+
+          WorldXInfo world_x_info_right_overlap =
+              ToWorldX(end_or_next_start_us, end_us, inv_time_window, world_start_x, world_width);
+
+          Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y + box_height, z);
+          Vec3 bottom_left(
+              world_x_info_left_overlap.world_x_start + world_x_info_left_overlap.world_x_width,
+              world_timer_y, z);
+          Vec3 top_right(world_x_info_right_overlap.world_x_start, world_timer_y + box_height, z);
+          Vec3 bottom_right(
+              world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
+              world_timer_y, z);
+          batcher->AddShadedTrapezium(
+              top_left, bottom_left, bottom_right, top_right, color,
+              std::make_unique<PickingUserData>(
+                  &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); }));
+
         } else {
-          batcher->AddVerticalLine(pos, size[1], z, color, std::move(user_data));
+          auto user_data = std::make_unique<PickingUserData>(
+              &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+
+          WorldXInfo world_x_info =
+              ToWorldX(start_us, end_us, inv_time_window, world_start_x, world_width);
+
+          Vec2 pos(world_x_info.world_x_start, world_timer_y);
+          batcher->AddVerticalLine(pos, GetTextBoxHeight(timer_info), z, color,
+                                   std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks). If pixel_delta_in_ticks is
@@ -149,6 +251,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
             max_ignore = min_ignore + pixel_delta_in_ticks;
           }
         }
+
+        prev_timer_info = &timer_info;
       }
     }
   }

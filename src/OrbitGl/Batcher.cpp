@@ -220,15 +220,38 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                           std::unique_ptr<PickingUserData> user_data) {
+  std::array<Color, 3> colors;
+  colors.fill(color);
+  AddTriangle(triangle, colors, picking_color, std::move(user_data));
+}
+
+// Draw a shaded trapezium with two sides parallel to the x-axis or y-axis.
+void Batcher::AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left,
+                                 const Vec3& bottom_right, const Vec3& top_right,
+                                 const Color& color, std::unique_ptr<PickingUserData> user_data,
+                                 ShadingDirection shading_direction) {
+  std::array<Color, 4> colors;  // top_left, bottom_left, bottom_right, top_right.
+  GetBoxGradientColors(color, &colors, shading_direction);
+  Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
+  Triangle triangle_1{top_left, bottom_left, top_right};
+  std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
+  AddTriangle(triangle_1, colors_1, picking_color, std::make_unique<PickingUserData>(*user_data));
+  Triangle triangle_2{bottom_left, bottom_right, top_right};
+  std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
+  AddTriangle(triangle_2, colors_2, picking_color, std::move(user_data));
+}
+
+void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+                          const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
-  for (size_t v = 0; v < 3; ++v) {
-    rounded_tri.vertices[v][0] = floorf(rounded_tri.vertices[v][0]);
-    rounded_tri.vertices[v][1] = floorf(rounded_tri.vertices[v][1]);
+  for (auto& vertice : rounded_tri.vertices) {
+    vertice[0] = floorf(vertice[0]);
+    vertice[1] = floorf(vertice[1]);
   }
   float layer_z_value = rounded_tri.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
   buffer.triangle_buffer.triangles_.push_back(rounded_tri);
-  buffer.triangle_buffer.colors_.push_back_n(color, 3);
+  buffer.triangle_buffer.colors_.push_back(colors);
   buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
   user_data_.push_back(std::move(user_data));
 }
