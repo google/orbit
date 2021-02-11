@@ -46,3 +46,9 @@ target_link_libraries(
         GTest::Main)
 
 register_test(OrbitClientModelTests)
+
+add_fuzzer(CaptureDeserializerLoadFuzzer CaptureDeserializerLoadFuzzer.cpp)
+target_link_libraries(CaptureDeserializerLoadFuzzer
+                      PRIVATE OrbitClientModel
+                              CONAN_PKG::libprotobuf-mutator
+                              GTest::GTest)
