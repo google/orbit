@@ -1265,4 +1265,37 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
   }
 }
 
+TEST(ProducerEventProcessor, TwoInternedStringsSameProducerSameKey) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+
+  ProducerCaptureEvent event1 = CreateInternedStringEvent(kKey1, "string1");
+  ProducerCaptureEvent event2 = CreateInternedStringEvent(kKey1, "string2");
+
+  producer_event_processor->ProcessEvent(1, event1);
+  EXPECT_DEATH(producer_event_processor->ProcessEvent(1, event2), "");
+}
+
+TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+
+  ProducerCaptureEvent event1;
+  {
+    InternedCallstack* callstack = event1.mutable_interned_callstack();
+    callstack->set_key(kKey1);
+    callstack->mutable_intern()->add_pcs(1);
+  }
+
+  ProducerCaptureEvent event2;
+  {
+    InternedCallstack* callstack = event2.mutable_interned_callstack();
+    callstack->set_key(kKey1);
+    callstack->mutable_intern()->add_pcs(2);
+  }
+
+  producer_event_processor->ProcessEvent(1, event1);
+  EXPECT_DEATH(producer_event_processor->ProcessEvent(1, event2), "");
+}
+
 }  // namespace orbit_service
