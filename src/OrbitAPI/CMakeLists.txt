@@ -23,12 +23,10 @@ target_include_directories(OrbitAPI PRIVATE
 target_sources(OrbitAPI PUBLIC
         include/OrbitAPI/EncodedEvent.h
         include/OrbitAPI/LockFreeApiEventProducer.h
-        include/OrbitAPI/Orbit.h
-        include/OrbitAPI/Stubs.h)
+        include/OrbitAPI/Orbit.h)
 
 target_sources(OrbitAPI PRIVATE
-        Orbit.cpp
-        Stubs.cpp)
+        Orbit.cpp)
 
 target_link_libraries(OrbitAPI PUBLIC
         GrpcProtos

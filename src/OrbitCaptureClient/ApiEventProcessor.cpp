@@ -41,7 +41,7 @@ void ApiEventProcessor::ProcessApiEvent(const ApiEvent& event_buffer) {
 
   for (size_t i = 0; i < event_buffer.num_raw_events(); ++i) {
     const orbit_api::ApiEvent& api_event = raw_event_buffer[i];
-    orbit_api::EventType event_type = static_cast<orbit_api::EventType>(api_event.event.event.type);
+    orbit_api::EventType event_type = api_event.Type();
 
     CheckThreadMonotonicity(api_event);
 
@@ -99,7 +99,7 @@ void ApiEventProcessor::ProcessStopEvent(const orbit_api::ApiEvent& stop_event) 
   timer_info.set_depth(event_stack.size() - 1);
   timer_info.set_type(TimerInfo::kApiEvent);
 
-  const orbit_api::EncodedEvent& e = start_event.event;
+  const orbit_api::EncodedEvent& e = start_event.encoded_event;
   timer_info.mutable_registers()->Reserve(6);
   timer_info.add_registers(e.args[0]);
   timer_info.add_registers(e.args[1]);
@@ -113,11 +113,11 @@ void ApiEventProcessor::ProcessStopEvent(const orbit_api::ApiEvent& stop_event) 
 }
 
 void ApiEventProcessor::ProcessAsyncStartEvent(const orbit_api::ApiEvent& start_event) {
-  const uint64_t event_id = start_event.event.event.data;
+  const uint64_t event_id = start_event.encoded_event.event.data;
   asynchronous_events_by_id_[event_id] = start_event;
 }
 void ApiEventProcessor::ProcessAsyncStopEvent(const orbit_api::ApiEvent& stop_event) {
-  const uint64_t event_id = stop_event.event.event.data;
+  const uint64_t event_id = stop_event.encoded_event.event.data;
   if (asynchronous_events_by_id_.count(event_id) == 0) {
     return;
   }
@@ -131,7 +131,7 @@ void ApiEventProcessor::ProcessAsyncStopEvent(const orbit_api::ApiEvent& stop_ev
   timer_info.set_thread_id(stop_event.tid);
   timer_info.set_type(TimerInfo::kApiEvent);
 
-  const orbit_api::EncodedEvent& e = start_event.event;
+  const orbit_api::EncodedEvent& e = start_event.encoded_event;
   timer_info.mutable_registers()->Reserve(6);
   timer_info.add_registers(e.args[0]);
   timer_info.add_registers(e.args[1]);
@@ -152,7 +152,7 @@ void ApiEventProcessor::ProcessTrackingEvent(const orbit_api::ApiEvent& api_even
   timer_info.set_thread_id(api_event.tid);
   timer_info.set_type(TimerInfo::kApiEvent);
 
-  const orbit_api::EncodedEvent& e = api_event.event;
+  const orbit_api::EncodedEvent& e = api_event.encoded_event;
   timer_info.mutable_registers()->Reserve(6);
   timer_info.add_registers(e.args[0]);
   timer_info.add_registers(e.args[1]);

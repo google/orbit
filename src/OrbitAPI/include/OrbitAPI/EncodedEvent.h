@@ -39,6 +39,8 @@ struct Event {
   uint64_t data;                   // 8
 };
 
+// EncodedEvent is used for encoding an Orbit API event into the 6 integer register of the LInux
+// x64 ABI. This is useful for the version of the manual instrumentation API that relies on uprobes.
 union EncodedEvent {
   EncodedEvent() = default;
   EncodedEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
@@ -64,21 +66,27 @@ union EncodedEvent {
     args[4] = a4;
     args[5] = a5;
   }
+  orbit_api::EventType Type() const { return static_cast<orbit_api::EventType>(event.type); }
+
   Event event;
   uint64_t args[6];
 };
 
+// ApiEvent is used for the version of manual instrumentation API that relies on the side channel.
+// It reuses existing EncodedEvent logic but adds information otherwise retrieved through uprobes.
 struct ApiEvent {
   ApiEvent() = default;
-  ApiEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
-           orbit_api_color color = kOrbitColorAuto)
-      : event(type, name, data, color) {
-    static_assert(sizeof(ApiEvent) == 64, "orbit_api::ApiEvent should be 48 bytes.");
+  ApiEvent(int32_t pid, int32_t tid, uint64_t timestamp_ns, orbit_api::EventType type,
+           const char* name = nullptr, uint64_t data = 0, orbit_api_color color = kOrbitColorAuto)
+      : encoded_event(type, name, data, color), pid(pid), tid(tid), timestamp_ns(timestamp_ns) {
+    static_assert(sizeof(ApiEvent) == 64, "orbit_api::ApiEvent should be 64 bytes.");
   }
-  EncodedEvent event;
-  int32_t pid = 0;
-  int32_t tid = 0;
-  uint64_t timestamp_ns = 0;
+  orbit_api::EventType Type() const { return encoded_event.Type(); }
+
+  EncodedEvent encoded_event;
+  int32_t pid;
+  int32_t tid;
+  uint64_t timestamp_ns;
 };
 
 template <typename Dest, typename Source>
