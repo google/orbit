@@ -33,7 +33,10 @@ class SamplingReportDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnSelect(const std::vector<int>& indices) override;
+  void OnRefresh(const std::vector<int>& visible_selected_indices,
+                 const RefreshMode& mode) override;
 
+  void UpdateSelectedAddressesAndTid(const std::vector<int>& indices);
   void LinkDataView(DataView* data_view) override;
   void SetSamplingReport(class SamplingReport* sampling_report) {
     sampling_report_ = sampling_report;

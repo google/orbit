@@ -141,24 +141,15 @@ void OrbitTreeView::Refresh(RefreshMode refresh_mode) {
     return;
   }
 
-  if (model_->GetDataView()->GetType() == DataViewType::kLiveFunctions) {
+  if (model_->GetDataView()->ResetOnRefresh()) {
+    reset();
+  } else {
     model_->layoutAboutToBeChanged();
     model_->layoutChanged();
-    // Don't continue the following re-selecting procedure for the live view unless the
-    // refresh is caused by filtering or sorting.
-    if (refresh_mode == RefreshMode::kOther) {
-      return;
-    }
-  } else {
-    reset();
+    // Skip the following re-selection unless the refresh is caused by filtering or sorting.
+    if (refresh_mode == RefreshMode::kOther) return;
   }
 
-  model_->GetDataView()->SetRefreshMode(refresh_mode);
-  DoReselection(refresh_mode);
-  model_->GetDataView()->SetRefreshMode(RefreshMode::kOther);
-}
-
-void OrbitTreeView::DoReselection(RefreshMode refresh_mode) {
   // Re-select previous selection
   QItemSelectionModel* selection = selectionModel();
   QModelIndex index;
@@ -172,13 +163,7 @@ void OrbitTreeView::DoReselection(RefreshMode refresh_mode) {
   }
   is_internal_refresh_ = false;
 
-  // Propagate the re-selection caused by filtering and sorting for the SamplingReportDataView and
-  // LiveFunctionsDataView, such that the callstack view and the function highlighting in capture
-  // window will be updated accordingly.
-  if (refresh_mode != RefreshMode::kOnFilter && refresh_mode != RefreshMode::kOnSort) return;
-  DataViewType type = model_->GetDataView()->GetType();
-  if (type != DataViewType::kSampling && type != DataViewType::kLiveFunctions) return;
-  OnRowsSelected(visible_selected_indices);
+  model_->GetDataView()->OnRefresh(visible_selected_indices, refresh_mode);
 }
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
