@@ -24,7 +24,7 @@ class PickableMock : public Pickable {
     picked_ = false;
   }
 
-  bool Draggable() override { return true; }
+  bool Draggable() const override { return true; }
 
   bool picked_ = false;
   bool dragging_ = false;

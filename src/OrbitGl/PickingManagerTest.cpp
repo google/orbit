@@ -11,7 +11,7 @@
 #include "CoreUtils.h"
 
 class UndraggableMock : public PickableMock {
-  bool Draggable() override { return false; }
+  bool Draggable() const override { return false; }
 };
 
 TEST(PickingManager, PickableMock) {

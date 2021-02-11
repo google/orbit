@@ -29,7 +29,7 @@ class Pickable {
   virtual void OnPick(int x, int y) = 0;
   virtual void OnDrag(int /*x*/, int /*y*/) {}
   virtual void OnRelease() {}
-  [[nodiscard]] virtual bool Draggable() { return false; }
+  [[nodiscard]] virtual bool Draggable() const { return false; }
   [[nodiscard]] virtual std::string GetTooltip() const { return ""; }
 };
 

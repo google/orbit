@@ -20,7 +20,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
  public:
   ~GlSlider() override = default;
 
-  [[nodiscard]] bool Draggable() override { return true; }
+  [[nodiscard]] bool Draggable() const override { return true; }
   virtual void Draw(GlCanvas* canvas) = 0;
 
   void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }

@@ -37,7 +37,7 @@ class CaptureViewElement : public Pickable {
   void OnPick(int x, int y) override;
   void OnRelease() override;
   void OnDrag(int x, int y) override;
-  [[nodiscard]] bool Draggable() override { return true; }
+  [[nodiscard]] bool Draggable() const override { return true; }
 
  protected:
   GlCanvas* canvas_ = nullptr;

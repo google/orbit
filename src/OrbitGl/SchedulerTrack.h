@@ -32,6 +32,8 @@ class SchedulerTrack final : public TimerTrack {
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;
 
+  [[nodiscard]] bool Draggable() const override { return false; }
+
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
