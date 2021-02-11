@@ -40,10 +40,7 @@ class DataView {
   };
 
   explicit DataView(DataViewType type, OrbitApp* app)
-      : update_period_ms_(-1),
-        refresh_mode_(RefreshMode::kOther),
-        type_(type),
-        app_{app} {}
+      : update_period_ms_(-1), type_(type), app_{app} {}
 
   virtual ~DataView() = default;
 
@@ -64,7 +61,8 @@ class DataView {
   // Filter callback set from UI layer.
   using FilterCallback = std::function<void(const std::string&)>;
   void SetUiFilterCallback(FilterCallback callback) { filter_callback_ = std::move(callback); }
-  void SetRefreshMode(RefreshMode mode) { refresh_mode_ = mode; }
+  virtual void OnRefresh(const std::vector<int>& /*visible_selected_indices*/,
+                         const RefreshMode& /*mode*/) {}
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
   virtual void OnContextMenu(const std::string& action, int menu_index,
@@ -95,6 +93,7 @@ class DataView {
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
   DataViewType GetType() const { return type_; }
+  [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
  protected:
   void InitSortingOrders();
@@ -108,7 +107,6 @@ class DataView {
   std::string filter_;
   int update_period_ms_;
   absl::flat_hash_set<int> selected_indices_;
-  RefreshMode refresh_mode_;
   DataViewType type_;
 
   static const std::string kMenuActionCopySelection;

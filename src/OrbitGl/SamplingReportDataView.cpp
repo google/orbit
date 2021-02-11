@@ -266,19 +266,27 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   }
 }
 
-void SamplingReportDataView::OnSelect(const std::vector<int>& indices) {
+void SamplingReportDataView::UpdateSelectedAddressesAndTid(const std::vector<int>& indices) {
   absl::flat_hash_set<uint64_t> addresses;
   for (int index : indices) {
     addresses.insert(GetSampledFunction(index).absolute_address);
   }
   sampling_report_->OnSelectAddresses(addresses, tid_);
+}
 
-  if (refresh_mode_ != RefreshMode::kOnFilter && refresh_mode_ != RefreshMode::kOnSort) {
-    selected_indices_.clear();
-    for (int row : indices) {
-      selected_indices_.insert(indices_[row]);
-    }
+void SamplingReportDataView::OnSelect(const std::vector<int>& indices) {
+  UpdateSelectedAddressesAndTid(indices);
+
+  selected_indices_.clear();
+  for (int row : indices) {
+    selected_indices_.insert(indices_[row]);
   }
+}
+
+void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_indices,
+                                       const RefreshMode& mode) {
+  if (mode != RefreshMode::kOnFilter && mode != RefreshMode::kOnSort) return;
+  UpdateSelectedAddressesAndTid(visible_selected_indices);
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {

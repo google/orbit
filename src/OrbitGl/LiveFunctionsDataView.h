@@ -33,6 +33,7 @@ class LiveFunctionsDataView : public DataView {
   // As we allow single selection on Live tab, this method returns either an empty vector or a
   // single-value vector.
   std::vector<int> GetVisibleSelectedIndices() override;
+  void UpdateHighlightedFunctionId(const std::vector<int>& rows);
   void UpdateSelectedFunctionId();
 
   void OnSelect(const std::vector<int>& rows) override;
@@ -40,6 +41,9 @@ class LiveFunctionsDataView : public DataView {
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void OnTimer() override;
+  void OnRefresh(const std::vector<int>& visible_selected_indices,
+                 const RefreshMode& mode) override;
+  [[nodiscard]] bool ResetOnRefresh() const override { return false; }
   std::optional<int> GetRowFromFunctionId(uint64_t function_id);
 
  protected:

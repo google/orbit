@@ -104,22 +104,22 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
   return {visible_selected_index.value()};
 }
 
-void LiveFunctionsDataView::UpdateSelectedFunctionId() {
-  selected_function_id_ = app_->highlighted_function_id();
-}
-
-void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
+void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
   app_->DeselectTextBox();
-
   if (rows.empty()) {
     app_->set_highlighted_function_id(orbit_grpc_protos::kInvalidFunctionId);
   } else {
     app_->set_highlighted_function_id(GetInstrumentedFunctionId(rows[0]));
   }
+}
 
-  if (refresh_mode_ != RefreshMode::kOnFilter && refresh_mode_ != RefreshMode::kOnSort) {
-    UpdateSelectedFunctionId();
-  }
+void LiveFunctionsDataView::UpdateSelectedFunctionId() {
+  selected_function_id_ = app_->highlighted_function_id();
+}
+
+void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
+  UpdateHighlightedFunctionId(rows);
+  UpdateSelectedFunctionId();
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                            \
@@ -405,6 +405,12 @@ void LiveFunctionsDataView::OnTimer() {
   if (app_->IsCapturing()) {
     OnSort(sorting_column_, {});
   }
+}
+
+void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_indices,
+                                      const RefreshMode& mode) {
+  if (mode != RefreshMode::kOnFilter && mode != RefreshMode::kOnSort) return;
+  UpdateHighlightedFunctionId(visible_selected_indices);
 }
 
 uint64_t LiveFunctionsDataView::GetInstrumentedFunctionId(uint32_t row) const {
