@@ -86,6 +86,10 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
+  // TODO(b/179976268): When a sample falls on the first (push rbp) or second (mov rbp,rsp)
+  //  instruction of the current function, frame-pointer unwinding skips the caller's frame,
+  //  because rbp hasn't yet been updated to rsp. Drop the sample in this case?
+
   if (!return_address_manager_.PatchCallchain(event->GetTid(), event->GetCallchain(),
                                               event->GetCallchainSize(), current_maps_.get())) {
     return;
