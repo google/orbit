@@ -30,7 +30,9 @@ int TimeGraphAccessibility::AccessibleChildCount() const {
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) const {
-  return time_graph_->GetTrackManager()->GetVisibleTracks()[index]->AccessibilityInterface();
+  return time_graph_->GetTrackManager()
+      ->GetVisibleTracks()[index]
+      ->GetOrCreateAccessibleInterface();
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {

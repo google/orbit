@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "AccessibleThreadBar.h"
 #include "AccessibleTimeGraph.h"
 #include "CoreMath.h"
 #include "GlCanvas.h"
@@ -28,7 +29,7 @@ const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int /*index*/
 }
 
 const AccessibleInterface* AccessibleTrackContent::AccessibleParent() const {
-  return track_->AccessibilityInterface();
+  return track_->GetOrCreateAccessibleInterface();
 }
 
 std::string AccessibleTrackContent::AccessibleName() const {
@@ -58,7 +59,7 @@ const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*index*/) co
 }
 
 const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
-  return track_->AccessibilityInterface();
+  return track_->GetOrCreateAccessibleInterface();
 }
 
 std::string AccessibleTrackTab::AccessibleName() const {

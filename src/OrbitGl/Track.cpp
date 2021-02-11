@@ -9,6 +9,7 @@
 
 #include <limits>
 
+#include "AccessibleTrack.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -80,6 +81,10 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
     batcher->AddTriangle(triangle, color, shared_from_this());
   }
+}
+
+std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibleInterface() {
+  return std::make_unique<orbit_gl::AccessibleTrack>(this, &time_graph_->GetLayout());
 }
 
 void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
