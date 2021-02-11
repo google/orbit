@@ -54,7 +54,6 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(WITH_ORBITGL "Setting this option will enable the OrbitGL component." ON)
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
 option(WITH_VULKAN_LAYER "Setting this option will enable the Vulkan layer for advanced GPU information." OFF)
@@ -88,15 +87,10 @@ find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
-
-if(WITH_ORBITGL)
-  find_package(OpenGL REQUIRED)
-endif()
-
 find_package(oqpi REQUIRED)
-find_package(stb REQUIRED)
 
 if(WITH_GUI)
+  find_package(OpenGL REQUIRED)
   find_package(
     Qt5 CONFIG REQUIRED
     COMPONENTS Core
@@ -108,6 +102,7 @@ if(WITH_GUI)
                WebSockets
                WebChannel)
   find_package(qtpropertybrowser REQUIRED)
+  find_package(stb REQUIRED)
 endif()
 
 find_package(Filesystem REQUIRED)
@@ -163,14 +158,11 @@ add_subdirectory(src/OrbitCore)
 add_subdirectory(src/OrbitTest)
 add_subdirectory(src/OrbitVersion)
 
-if(WITH_ORBITGL)
-  add_subdirectory(src/OrbitGl)
-endif()
-
 if(WITH_GUI)
   add_subdirectory(src/CodeViewer)
   add_subdirectory(src/CodeViewerDemo)
   add_subdirectory(src/OrbitGgp)
+  add_subdirectory(src/OrbitGl)
   add_subdirectory(src/OrbitSsh)
   add_subdirectory(src/OrbitSshQt)
   add_subdirectory(src/OrbitQt)
