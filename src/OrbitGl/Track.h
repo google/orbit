@@ -32,13 +32,11 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   enum Type {
     kTimerTrack,
     kThreadTrack,
-    kEventTrack,
     kFrameTrack,
     kGraphTrack,
     kGpuTrack,
     kSchedulerTrack,
     kAsyncTrack,
-    kThreadStateTrack,
     kUnknown,
   };
 
@@ -85,7 +83,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   void SetLabel(const std::string& label) { label_ = label; }
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
-  [[nodiscard]] Color GetBackgroundColor() const;
+  [[nodiscard]] virtual Color GetBackgroundColor() const;
 
   virtual void OnCollapseToggle(TriangleToggle::State state);
   [[nodiscard]] virtual bool IsCollapsible() const { return false; }
