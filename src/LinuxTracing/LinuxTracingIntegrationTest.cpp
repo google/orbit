@@ -647,7 +647,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
-    const absl::flat_hash_set<uint64_t>* address_infos_received) {
+    const absl::flat_hash_set<uint64_t>* address_infos_received, bool unwound_with_frame_pointers) {
   uint64_t previous_callstack_timestamp_ns = 0;
   size_t matching_callstack_count = 0;
   uint64_t first_matching_callstack_timestamp_ns = std::numeric_limits<uint64_t>::max();
@@ -676,6 +676,14 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
       // address and the caller address should match the "outer" function's address.
       if (callstack.pcs(pc_index) >= inner_function_virtual_address_range.first &&
           callstack.pcs(pc_index) <= inner_function_virtual_address_range.second) {
+        // Frame-pointer unwinding skips the second innermost frame if the sample fell on `push rbp`
+        // (which is one byte) or `mov rbp,rsp`. Disregard such samples. See b/179376436#comment4.
+        if (pc_index == 0 && unwound_with_frame_pointers &&
+            (callstack.pcs(pc_index) == inner_function_virtual_address_range.first ||
+             callstack.pcs(pc_index) == inner_function_virtual_address_range.first + 1)) {
+          continue;
+        }
+
         if (address_infos_received != nullptr) {
           // Verify that we got the AddressInfo for this virtual address of the "inner" function.
           EXPECT_TRUE(address_infos_received->contains(callstack.pcs(pc_index)));
@@ -712,6 +720,26 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
   EXPECT_GE(matching_callstack_count, min_expected_matching_callstack_count);
 }
 
+void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
+    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
+    std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
+    const absl::flat_hash_set<uint64_t>* address_infos_received) {
+  VerifyCallstackSamplesWithOuterAndInnerFunction(
+      events, pid, outer_function_virtual_address_range, inner_function_virtual_address_range,
+      sampling_rate, address_infos_received, /*unwound_with_frame_pointers=*/false);
+}
+
+void VerifyCallstackSamplesWithOuterAndInnerFunctionForFramePointerUnwinding(
+    const std::vector<orbit_grpc_protos::CaptureEvent>& events, pid_t pid,
+    std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
+    std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
+    const absl::flat_hash_set<uint64_t>* address_infos_received) {
+  VerifyCallstackSamplesWithOuterAndInnerFunction(
+      events, pid, outer_function_virtual_address_range, inner_function_virtual_address_range,
+      sampling_rate, address_infos_received, /*unwound_with_frame_pointers=*/true);
+}
+
 TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   if (!CheckIsPerfEventParanoidAtMost(0)) {
     GTEST_SKIP();
@@ -735,7 +763,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
                                                         outer_function_virtual_address_range,
                                                         inner_function_virtual_address_range);
 
-  VerifyCallstackSamplesWithOuterAndInnerFunction(
+  VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
       inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
@@ -770,7 +798,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
                                                         outer_function_virtual_address_range,
                                                         inner_function_virtual_address_range);
 
-  VerifyCallstackSamplesWithOuterAndInnerFunction(
+  VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
       inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
@@ -804,7 +832,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   VerifyNoAddressInfos(events);
 
   // Note that this test requires that the "inner" function of the puppet use frame pointers.
-  VerifyCallstackSamplesWithOuterAndInnerFunction(
+  VerifyCallstackSamplesWithOuterAndInnerFunctionForFramePointerUnwinding(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
       inner_function_virtual_address_range, sampling_rate, /*address_infos_received=*/nullptr);
 }
@@ -836,7 +864,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
 
   VerifyNoAddressInfos(events);
 
-  VerifyCallstackSamplesWithOuterAndInnerFunction(
+  VerifyCallstackSamplesWithOuterAndInnerFunctionForFramePointerUnwinding(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
       inner_function_virtual_address_range, sampling_rate, /*address_infos_received=*/nullptr);
 }
