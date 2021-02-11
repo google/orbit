@@ -198,6 +198,10 @@ class CaptureData {
 
   [[nodiscard]] const ProcessData* process() const { return &process_; }
 
+  [[nodiscard]] bool has_post_processed_sampling_data() const {
+    return post_processed_sampling_data_.has_value();
+  }
+
   [[nodiscard]] const PostProcessedSamplingData& post_processed_sampling_data() const {
     CHECK(post_processed_sampling_data_.has_value());
     return post_processed_sampling_data_.value();
