@@ -157,9 +157,13 @@ bool ThreadTrack::IsTrackSelected() const {
   return ToColor(static_cast<uint64_t>(event.color));
 }
 
-Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
+                                 bool is_highlighted) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
+  if (is_highlighted) {
+    return TimerTrack::kHighlightColor;
+  }
   if (is_selected) {
     return kSelectionColor;
   }

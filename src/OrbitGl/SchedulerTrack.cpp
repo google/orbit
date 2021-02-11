@@ -54,7 +54,11 @@ bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return is_same_tid_as_selected || (app_->selected_thread_id() == -1 && is_same_pid_as_target);
 }
 
-Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
+                                    bool is_highlighted) const {
+  if (is_highlighted) {
+    return TimerTrack::kHighlightColor;
+  }
   if (is_selected) {
     return kSelectionColor;
   }

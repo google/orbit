@@ -115,9 +115,13 @@ void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
       layout_->CalculateZoomedFontSize(), max_size);
 }
 
-Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
+                                bool is_highlighted) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
+  if (is_highlighted) {
+    return TimerTrack::kHighlightColor;
+  }
   if (is_selected) {
     return kSelectionColor;
   }

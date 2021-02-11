@@ -102,7 +102,7 @@ float FrameTrack::GetTextBoxHeight(const TimerInfo& timer_info) const {
 }
 
 Color FrameTrack::GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
-                                bool /*is_selected*/) const {
+                                bool /*is_selected*/, bool /*is_highlighted*/) const {
   Vec4 min_color(76.f, 175.f, 80.f, 255.f);
   Vec4 max_color(63.f, 81.f, 181.f, 255.f);
   Vec4 warn_color(244.f, 67.f, 54.f, 255.f);

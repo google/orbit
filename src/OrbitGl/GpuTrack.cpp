@@ -104,9 +104,13 @@ bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return is_same_tid_as_selected || no_thread_selected;
 }
 
-Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
+                              bool is_highlighted) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
+  if (is_highlighted) {
+    return TimerTrack::kHighlightColor;
+  }
   if (is_selected) {
     return kSelectionColor;
   }
