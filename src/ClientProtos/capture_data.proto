@@ -175,4 +175,5 @@ message Color {
 message CaptureDeserializerFuzzerInfo {
   CaptureInfo capture_info = 1;
   repeated TimerInfo timers = 2;
+  string filename = 3;
 }
