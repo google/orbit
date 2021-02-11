@@ -28,6 +28,8 @@
 namespace orbit_service {
 
 static void PrintInstanceVersions() {
+  return;  // For investigation of b/179977813.
+
   {
     constexpr const char* kKernelVersionCommand = "uname -a";
     std::optional<std::string> version = orbit_base::ExecuteCommand(kKernelVersionCommand);
