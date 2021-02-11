@@ -251,6 +251,13 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
+    // In order to draw overlaps correctly, we need for every text box to be drawn (current),
+    // its previous and next text box. In order to avoid looking ahead for the next text (which is
+    // error-prone), we are doing just one traversal of the text boxes, while keeping track of the
+    // previous two timers and will draw the previous one, thus the currents iteration value being
+    // the "next" textbox.
+    // Note: This will require us to draw the last timer after the traversal of the text boxes.
+    // Also note: The draw method will take care of nullptr's being passed into.
     TextBox* prev_text_box = nullptr;
     TextBox* current_text_box = nullptr;
     TextBox* next_text_box = nullptr;
@@ -263,6 +270,8 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       for (size_t k = 0; k < block.size(); ++k) {
+        // Remember that the current index (k) points to the "next" text box and we want to draw
+        // the text box from the previous iteration ("current").
         next_text_box = &block[k];
 
         DrawTimer(prev_text_box, current_text_box, next_text_box, min_tick, max_tick, z_offset,
@@ -274,6 +283,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         current_text_box = next_text_box;
       }
     }
+    // We still need to draw the last timer.
     next_text_box = nullptr;
     DrawTimer(prev_text_box, current_text_box, next_text_box, min_tick, max_tick, z_offset, batcher,
               canvas, world_start_x, world_width, inv_time_window, is_collapsed, z,
