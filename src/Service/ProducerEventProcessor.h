@@ -22,10 +22,9 @@ class ProducerEventProcessor {
 
   virtual void ProcessEvent(uint64_t producer_id,
                             orbit_grpc_protos::ProducerCaptureEvent event) = 0;
-};
 
-std::unique_ptr<ProducerEventProcessor> CreateProducerEventProcessor(
-    CaptureEventBuffer* capture_event_buffer);
+  static std::unique_ptr<ProducerEventProcessor> Create(CaptureEventBuffer* capture_event_buffer);
+};
 
 }  // namespace orbit_service
 

@@ -118,7 +118,7 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
                                    &receive_events_thread_exited};
 
   // This thread is responsible for reading from stream, and specifically for
-  // receiving CaptureEvents and AllEventsSent messages.
+  // receiving ProducerCaptureEvents and AllEventsSent messages.
   std::thread receive_events_thread{&ProducerSideServiceImpl::ReceiveEventsThread,
                                     this,
                                     context,

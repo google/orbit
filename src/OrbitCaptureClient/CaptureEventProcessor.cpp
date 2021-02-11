@@ -21,14 +21,14 @@ using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FunctionCall;
+using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
-using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
-using orbit_grpc_protos::InternedCallstackSample;
-using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
@@ -43,8 +43,8 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kInternedCallstack:
       ProcessInternedCallstack(event.interned_callstack());
       break;
-    case ClientCaptureEvent::kInternedCallstackSample:
-      ProcessCallstackSample(event.interned_callstack_sample());
+    case ClientCaptureEvent::kCallstackSample:
+      ProcessCallstackSample(event.callstack_sample());
       break;
     case ClientCaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
@@ -55,8 +55,8 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kInternedString:
       ProcessInternedString(event.interned_string());
       break;
-    case ClientCaptureEvent::kInternedGpuJobEvent:
-      ProcessInternedGpuJobEvent(event.interned_gpu_job_event());
+    case ClientCaptureEvent::kGpuJob:
+      ProcessGpuJob(event.gpu_job());
       break;
     case ClientCaptureEvent::kThreadName:
       ProcessThreadName(event.thread_name());
@@ -64,14 +64,14 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSlice(event.thread_state_slice());
       break;
-    case ClientCaptureEvent::kInternedAddressInfo:
-      ProcessInternedAddressInfo(event.interned_address_info());
+    case ClientCaptureEvent::kAddressInfo:
+      ProcessAddressInfo(event.address_info());
       break;
     case ClientCaptureEvent::kInternedTracepointInfo:
       ProcessInternedTracepointInfo(event.interned_tracepoint_info());
       break;
-    case ClientCaptureEvent::kInternedTracepointEvent:
-      ProcessTracepointEvent(event.interned_tracepoint_event());
+    case ClientCaptureEvent::kTracepointEvent:
+      ProcessTracepointEvent(event.tracepoint_event());
       break;
     case ClientCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmission(event.gpu_queue_submission());
@@ -109,8 +109,7 @@ void CaptureEventProcessor::ProcessInternedCallstack(InternedCallstack interned_
                                 std::move(*interned_callstack.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessCallstackSample(
-    const InternedCallstackSample& callstack_sample) {
+void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callstack_sample) {
   uint64_t callstack_id = callstack_sample.callstack_id();
   Callstack callstack = callstack_intern_pool[callstack_id];
 
@@ -177,7 +176,7 @@ void CaptureEventProcessor::ProcessInternedString(InternedString interned_string
   string_intern_pool_.emplace(interned_string.key(), std::move(*interned_string.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessInternedGpuJobEvent(const InternedGpuJobEvent& gpu_job) {
+void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t timeline_key = gpu_job.timeline_key();
 
   int32_t process_id = gpu_job.pid();
@@ -303,18 +302,17 @@ void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thre
   capture_listener_->OnThreadStateSlice(std::move(slice_info));
 }
 
-void CaptureEventProcessor::ProcessInternedAddressInfo(
-    const InternedAddressInfo& interned_address_info) {
-  CHECK(string_intern_pool_.contains(interned_address_info.function_name_key()));
-  CHECK(string_intern_pool_.contains(interned_address_info.module_name_key()));
-  std::string function_name = string_intern_pool_.at(interned_address_info.function_name_key());
-  std::string module_name = string_intern_pool_.at(interned_address_info.module_name_key());
+void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) {
+  CHECK(string_intern_pool_.contains(address_info.function_name_key()));
+  CHECK(string_intern_pool_.contains(address_info.module_name_key()));
+  std::string function_name = string_intern_pool_.at(address_info.function_name_key());
+  std::string module_name = string_intern_pool_.at(address_info.module_name_key());
 
   LinuxAddressInfo linux_address_info;
-  linux_address_info.set_absolute_address(interned_address_info.absolute_address());
+  linux_address_info.set_absolute_address(address_info.absolute_address());
   linux_address_info.set_module_path(module_name);
   linux_address_info.set_function_name(function_name);
-  linux_address_info.set_offset_in_function(interned_address_info.offset_in_function());
+  linux_address_info.set_offset_in_function(address_info.offset_in_function());
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 
@@ -333,7 +331,7 @@ void CaptureEventProcessor::ProcessInternedTracepointInfo(
                                             std::move(*interned_tracepoint_info.mutable_intern()));
 }
 void CaptureEventProcessor::ProcessTracepointEvent(
-    const orbit_grpc_protos::InternedTracepointEvent& tracepoint_event) {
+    const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
   uint64_t key = tracepoint_event.tracepoint_info_key();
 
   orbit_client_protos::TracepointEventInfo tracepoint_event_info;

@@ -15,12 +15,12 @@
 namespace orbit_service {
 
 using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
-using orbit_grpc_protos::FullGpuJobEvent;
+using orbit_grpc_protos::FullGpuJob;
 using orbit_grpc_protos::FunctionCall;
-using orbit_grpc_protos::InternedCallstackSample;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
@@ -93,9 +93,9 @@ void LinuxTracingHandler::OnIntrospectionScope(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
-void LinuxTracingHandler::OnGpuJob(FullGpuJobEvent full_gpu_job_event) {
+void LinuxTracingHandler::OnGpuJob(FullGpuJob full_gpu_job) {
   ProducerCaptureEvent event;
-  *event.mutable_full_gpu_job_event() = std::move(full_gpu_job_event);
+  *event.mutable_full_gpu_job() = std::move(full_gpu_job);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

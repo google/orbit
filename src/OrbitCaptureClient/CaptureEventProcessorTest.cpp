@@ -30,27 +30,28 @@ using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
+
+using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::Color;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuCommandBuffer;
 using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuDebugMarkerBeginInfo;
+using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
-using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
-using orbit_grpc_protos::InternedCallstackSample;
-using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
-using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::TracepointInfo;
 
 using ::testing::_;
@@ -118,8 +119,8 @@ static InternedCallstack* AddAndInitializeInternedCallstack(ClientCaptureEvent& 
   return interned_callstack;
 }
 
-static InternedCallstackSample* AddAndInitializeCallstackSample(ClientCaptureEvent& event) {
-  InternedCallstackSample* callstack_sample = event.mutable_interned_callstack_sample();
+static CallstackSample* AddAndInitializeCallstackSample(ClientCaptureEvent& event) {
+  CallstackSample* callstack_sample = event.mutable_callstack_sample();
   callstack_sample->set_pid(1);
   callstack_sample->set_tid(3);
   callstack_sample->set_callstack_id(1);
@@ -128,7 +129,7 @@ static InternedCallstackSample* AddAndInitializeCallstackSample(ClientCaptureEve
 
 static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_event,
                                         const CallStack& actual_call_stack,
-                                        const InternedCallstackSample* expected_callstack_sample,
+                                        const CallstackSample* expected_callstack_sample,
                                         const Callstack* expected_callstack) {
   EXPECT_EQ(actual_callstack_event.time(), expected_callstack_sample->timestamp_ns());
   EXPECT_EQ(actual_callstack_event.thread_id(), expected_callstack_sample->tid());
@@ -150,7 +151,7 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   event_processor.ProcessEvent(interned_callstack_event);
 
   ClientCaptureEvent event;
-  InternedCallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
+  CallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
   callstack_sample->set_timestamp_ns(100);
 
   CallStack actual_call_stack;
@@ -174,11 +175,11 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
       AddAndInitializeInternedCallstack(event_interned_callstack);
 
   ClientCaptureEvent event_1;
-  InternedCallstackSample* callstack_sample_1 = AddAndInitializeCallstackSample(event_1);
+  CallstackSample* callstack_sample_1 = AddAndInitializeCallstackSample(event_1);
   callstack_sample_1->set_timestamp_ns(100);
 
   ClientCaptureEvent event_2;
-  InternedCallstackSample* callstack_sample_2 = AddAndInitializeCallstackSample(event_2);
+  CallstackSample* callstack_sample_2 = AddAndInitializeCallstackSample(event_2);
   callstack_sample_2->set_timestamp_ns(200);
 
   CallStack actual_call_stack;
@@ -212,7 +213,7 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   callstack_intern->add_pcs(16);
 
   ClientCaptureEvent callstack_event;
-  InternedCallstackSample* callstack_sample = callstack_event.mutable_interned_callstack_sample();
+  CallstackSample* callstack_sample = callstack_event.mutable_callstack_sample();
   callstack_sample->set_pid(1);
   callstack_sample->set_tid(3);
   callstack_sample->set_callstack_id(interned_callstack->key());
@@ -333,7 +334,7 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   ClientCaptureEvent interned_map_name_event = CreateInternedStringEvent(kModuleNameKey, "module");
 
   ClientCaptureEvent address_info_event;
-  InternedAddressInfo* address_info = address_info_event.mutable_interned_address_info();
+  AddressInfo* address_info = address_info_event.mutable_address_info();
   address_info->set_absolute_address(42);
   address_info->set_function_name_key(kFunctionNameKey);
   address_info->set_offset_in_function(14);
@@ -368,7 +369,7 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   tracepoint_intern->set_category("category");
 
   ClientCaptureEvent tracepoint_event;
-  InternedTracepointEvent* tracepoint = tracepoint_event.mutable_interned_tracepoint_event();
+  TracepointEvent* tracepoint = tracepoint_event.mutable_tracepoint_event();
   tracepoint->set_pid(1);
   tracepoint->set_tid(3);
   tracepoint->set_timestamp_ns(100);
@@ -396,13 +397,13 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   EXPECT_EQ(actual_tracepoint_event.cpu(), tracepoint->cpu());
 }
 
-constexpr int32_t kGpuPid = 1;
-constexpr int32_t kGpuTid = 2;
+static constexpr int32_t kGpuPid = 1;
+static constexpr int32_t kGpuTid = 2;
 
-static InternedGpuJobEvent* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t timeline_key,
-                                         uint64_t sw_queue, uint64_t hw_queue,
-                                         uint64_t hw_execution_begin, uint64_t hw_execution_end) {
-  InternedGpuJobEvent* gpu_job = capture_event->mutable_interned_gpu_job_event();
+static GpuJob* CreateGpuJob(ClientCaptureEvent* capture_event, uint64_t timeline_key,
+                            uint64_t sw_queue, uint64_t hw_queue, uint64_t hw_execution_begin,
+                            uint64_t hw_execution_end) {
+  GpuJob* gpu_job = capture_event->mutable_gpu_job();
   gpu_job->set_pid(kGpuPid);
   gpu_job->set_tid(kGpuTid);
   gpu_job->set_context(3);
@@ -416,15 +417,15 @@ static InternedGpuJobEvent* CreateGpuJob(ClientCaptureEvent* capture_event, uint
   return gpu_job;
 }
 
-constexpr uint64_t kTimelineKey = 17;
-constexpr const char* kTimelineString = "timeline";
+static constexpr uint64_t kTimelineKey = 17;
+static constexpr const char* kTimelineString = "timeline";
 
 TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   MockCaptureListener listener;
   CaptureEventProcessor event_processor(&listener);
 
   ClientCaptureEvent event;
-  InternedGpuJobEvent* gpu_job = CreateGpuJob(&event, kTimelineKey, 10, 20, 30, 40);
+  GpuJob* gpu_job = CreateGpuJob(&event, kTimelineKey, 10, 20, 30, 40);
 
   uint64_t actual_sw_queue_key;
   uint64_t actual_hw_queue_key;
@@ -522,7 +523,7 @@ void AddGpuDebugMarkerToGpuQueueSubmission(GpuQueueSubmission* submission,
   begin_marker->set_gpu_timestamp_ns(begin_gpu_timestamp);
 }
 
-void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const InternedGpuJobEvent& gpu_job,
+void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const GpuJob& gpu_job,
                                 uint64_t cpu_begin, uint64_t cpu_end, uint64_t timeline_key,
                                 uint64_t command_buffer_key) {
   EXPECT_EQ(actual_timer.thread_id(), gpu_job.tid());
@@ -558,7 +559,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
   ClientCaptureEvent gpu_job_event;
-  InternedGpuJobEvent* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
+  GpuJob* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
 
   ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
@@ -629,7 +630,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
   ClientCaptureEvent gpu_job_event;
-  InternedGpuJobEvent* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
+  GpuJob* gpu_job = CreateGpuJob(&gpu_job_event, kTimelineKey, 10, 20, 30, 40);
 
   ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
@@ -703,9 +704,9 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   ClientCaptureEvent timeline_string = CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
   ClientCaptureEvent gpu_job_event_1;
-  InternedGpuJobEvent* gpu_job_1 = CreateGpuJob(&gpu_job_event_1, kTimelineKey, 10, 20, 30, 40);
+  GpuJob* gpu_job_1 = CreateGpuJob(&gpu_job_event_1, kTimelineKey, 10, 20, 30, 40);
   ClientCaptureEvent gpu_job_event_2;
-  InternedGpuJobEvent* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
+  GpuJob* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
 
   ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
@@ -794,7 +795,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
   // The first job that actually contains the begin marker is not recorded.
   ClientCaptureEvent gpu_job_event_2;
-  InternedGpuJobEvent* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
+  GpuJob* gpu_job_2 = CreateGpuJob(&gpu_job_event_2, kTimelineKey, 50, 60, 70, 80);
 
   ClientCaptureEvent marker_string_event = CreateInternedStringEvent(42, "marker");
 
@@ -942,7 +943,7 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   EXPECT_CALL(listener, OnThreadName(thread_name->tid(), thread_name->name())).Times(1);
 
   ClientCaptureEvent event_2;
-  InternedAddressInfo* address_info = event_2.mutable_interned_address_info();
+  AddressInfo* address_info = event_2.mutable_address_info();
   address_info->set_absolute_address(42);
   address_info->set_function_name_key(kFunctionKey);
   address_info->set_offset_in_function(14);

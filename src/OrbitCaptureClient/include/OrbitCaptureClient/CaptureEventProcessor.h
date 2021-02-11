@@ -34,18 +34,17 @@ class CaptureEventProcessor {
  private:
   void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
   void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
-  void ProcessCallstackSample(const orbit_grpc_protos::InternedCallstackSample& callstack_sample);
+  void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
   void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
   void ProcessIntrospectionScope(const orbit_grpc_protos::IntrospectionScope& introspection_scope);
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
-  void ProcessInternedGpuJobEvent(const orbit_grpc_protos::InternedGpuJobEvent& gpu_job);
+  void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
-  void ProcessInternedAddressInfo(
-      const orbit_grpc_protos::InternedAddressInfo& interned_address_info);
+  void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
-  void ProcessTracepointEvent(const orbit_grpc_protos::InternedTracepointEvent& tracepoint_event);
+  void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <GrpcProtos/Constants.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
@@ -13,29 +14,29 @@ namespace orbit_service {
 
 namespace {
 
+using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
-using orbit_grpc_protos::FullGpuJobEvent;
+using orbit_grpc_protos::FullGpuJob;
 using orbit_grpc_protos::FullTracepointEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuCommandBuffer;
 using orbit_grpc_protos::GpuDebugMarker;
+using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuSubmitInfo;
-using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
-using orbit_grpc_protos::InternedCallstackSample;
-using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
-using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleUpdateEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::TracepointInfo;
 
 using ::testing::SaveArg;
@@ -90,7 +91,7 @@ constexpr float kBlue2 = 2.4f;
 
 TEST(ProducerEventProcessor, OneSchedulingSliceEvent) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event;
   SchedulingSlice* scheduling_slice = event.mutable_scheduling_slice();
@@ -116,7 +117,7 @@ TEST(ProducerEventProcessor, OneSchedulingSliceEvent) {
 
 TEST(ProducerEventProcessor, OneInternedCallstack) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event;
   InternedCallstack* interned_callstack = event.mutable_interned_callstack();
@@ -136,7 +137,7 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
 
   // We do not expect resulting id to be the same, but we also do not
   // enforce sequential ids in the test. 0 value is reserved.
-  EXPECT_NE(actual_interned_callstack.key(), 0);
+  EXPECT_NE(actual_interned_callstack.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(actual_interned_callstack.intern().pcs_size(), 3);
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[1], 2);
@@ -145,7 +146,7 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
 
 TEST(ProducerEventProcessor, TwoInternedCallstacskDifferentProducersSameKey) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   InternedCallstack* interned_callstack1 = event1.mutable_interned_callstack();
@@ -179,13 +180,13 @@ TEST(ProducerEventProcessor, TwoInternedCallstacskDifferentProducersSameKey) {
 
   EXPECT_NE(actual_interned_callstack1.key(), actual_interned_callstack2.key());
 
-  EXPECT_NE(actual_interned_callstack1.key(), 0);
+  EXPECT_NE(actual_interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(actual_interned_callstack1.intern().pcs_size(), 3);
   EXPECT_EQ(actual_interned_callstack1.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack1.intern().pcs()[1], 2);
   EXPECT_EQ(actual_interned_callstack1.intern().pcs()[2], 3);
 
-  EXPECT_NE(actual_interned_callstack2.key(), 0);
+  EXPECT_NE(actual_interned_callstack2.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(actual_interned_callstack2.intern().pcs_size(), 3);
   EXPECT_EQ(actual_interned_callstack2.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack2.intern().pcs()[1], 2);
@@ -194,7 +195,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacskDifferentProducersSameKey) {
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   constexpr uint64_t kProducer1CallstackKey = kKey1;
   constexpr uint64_t kProducer2CallstackKey = kKey2;
@@ -213,7 +214,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   interned_callstack2->mutable_intern()->CopyFrom(*callstack1);
 
   ClientCaptureEvent client_capture_event;
-  // We expect only one call here because we have similar callstacks.
+  // We expect only one call here because we have same callstacks.
   EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
   producer_event_processor->ProcessEvent(1, event1);
   producer_event_processor->ProcessEvent(2, event2);
@@ -221,7 +222,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kInternedCallstack);
   const InternedCallstack& actual_interned_callstack = client_capture_event.interned_callstack();
 
-  EXPECT_NE(actual_interned_callstack.key(), 0);
+  EXPECT_NE(actual_interned_callstack.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(actual_interned_callstack.intern().pcs_size(), 3);
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[1], 2);
@@ -232,16 +233,14 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   testing::Mock::VerifyAndClearExpectations(&buffer);
 
   ProducerCaptureEvent callstack_sample_event1;
-  InternedCallstackSample* callstack_sample1 =
-      callstack_sample_event1.mutable_interned_callstack_sample();
+  CallstackSample* callstack_sample1 = callstack_sample_event1.mutable_callstack_sample();
   callstack_sample1->set_pid(kPid1);
   callstack_sample1->set_tid(kTid1);
   callstack_sample1->set_timestamp_ns(kTimestampNs1);
   callstack_sample1->set_callstack_id(kProducer1CallstackKey);
 
   ProducerCaptureEvent callstack_sample_event2;
-  InternedCallstackSample* callstack_sample2 =
-      callstack_sample_event2.mutable_interned_callstack_sample();
+  CallstackSample* callstack_sample2 = callstack_sample_event2.mutable_callstack_sample();
   callstack_sample2->set_pid(kPid2);
   callstack_sample2->set_tid(kTid2);
   callstack_sample2->set_timestamp_ns(kTimestampNs2);
@@ -256,11 +255,11 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   producer_event_processor->ProcessEvent(1, callstack_sample_event1);
   producer_event_processor->ProcessEvent(2, callstack_sample_event2);
 
-  ASSERT_EQ(sample_capture_event1.event_case(), ClientCaptureEvent::kInternedCallstackSample);
-  ASSERT_EQ(sample_capture_event2.event_case(), ClientCaptureEvent::kInternedCallstackSample);
+  ASSERT_EQ(sample_capture_event1.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(sample_capture_event2.event_case(), ClientCaptureEvent::kCallstackSample);
 
-  const InternedCallstackSample& sample1 = sample_capture_event1.interned_callstack_sample();
-  const InternedCallstackSample& sample2 = sample_capture_event2.interned_callstack_sample();
+  const CallstackSample& sample1 = sample_capture_event1.callstack_sample();
+  const CallstackSample& sample2 = sample_capture_event2.callstack_sample();
 
   EXPECT_EQ(sample1.pid(), kPid1);
   EXPECT_EQ(sample1.tid(), kTid1);
@@ -283,7 +282,7 @@ static ProducerCaptureEvent CreateInternedStringEvent(uint64_t key, const std::s
 
 TEST(ProducerEventProcessor, OneInternedString) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event = CreateInternedStringEvent(kKey1, "string");
 
@@ -297,13 +296,13 @@ TEST(ProducerEventProcessor, OneInternedString) {
 
   // We do not expect resulting id to be the same, but we also do not
   // enforce sequential ids in the test. 0 value is reserved.
-  EXPECT_NE(actual_interned_string.key(), 0);
+  EXPECT_NE(actual_interned_string.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(actual_interned_string.intern(), "string");
 }
 
 TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameKey) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1 = CreateInternedStringEvent(kKey1, "string1");
   ProducerCaptureEvent event2 = CreateInternedStringEvent(kKey1, "string2");
@@ -324,16 +323,16 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameKey) {
 
   EXPECT_NE(actual_interned_string1.key(), actual_interned_string2.key());
 
-  EXPECT_NE(actual_interned_string1.key(), 0);
+  EXPECT_NE(actual_interned_string1.key(), orbit_grpc_protos::kInvalidInternId);
   EXPECT_EQ(actual_interned_string1.intern(), "string1");
 
-  EXPECT_NE(actual_interned_string1.key(), 0);
+  EXPECT_NE(actual_interned_string1.key(), orbit_grpc_protos::kInvalidInternId);
   EXPECT_EQ(actual_interned_string2.intern(), "string2");
 }
 
 TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   constexpr uint64_t kProducer1StringKey = kKey1;
   constexpr uint64_t kProducer2StringKey = kKey2;
@@ -350,7 +349,7 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kInternedString);
   const InternedString& actual_interned_string = client_capture_event.interned_string();
 
-  EXPECT_NE(actual_interned_string.key(), 0);
+  EXPECT_NE(actual_interned_string.key(), orbit_grpc_protos::kInvalidInternId);
   EXPECT_EQ(actual_interned_string.intern(), "string");
 
   // Now check that the both producer's strings are still tracked by
@@ -417,7 +416,7 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
 
 TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   FullCallstackSample* full_callstack_sample1 = event1.mutable_full_callstack_sample();
@@ -457,11 +456,11 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
 
   ASSERT_EQ(interned_callstack_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
   ASSERT_EQ(interned_callstack_event2.event_case(), ClientCaptureEvent::kInternedCallstack);
-  ASSERT_EQ(callstack_sameple_event1.event_case(), ClientCaptureEvent::kInternedCallstackSample);
-  ASSERT_EQ(callstack_sameple_event2.event_case(), ClientCaptureEvent::kInternedCallstackSample);
+  ASSERT_EQ(callstack_sameple_event1.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sameple_event2.event_case(), ClientCaptureEvent::kCallstackSample);
 
   const InternedCallstack& interned_callstack1 = interned_callstack_event1.interned_callstack();
-  EXPECT_NE(interned_callstack1.key(), 0);
+  EXPECT_NE(interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(interned_callstack1.intern().pcs_size(), 4);
   EXPECT_EQ(interned_callstack1.intern().pcs(0), 1);
   EXPECT_EQ(interned_callstack1.intern().pcs(1), 2);
@@ -469,22 +468,20 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   EXPECT_EQ(interned_callstack1.intern().pcs(3), 4);
 
   const InternedCallstack& interned_callstack2 = interned_callstack_event2.interned_callstack();
-  EXPECT_NE(interned_callstack2.key(), 0);
+  EXPECT_NE(interned_callstack2.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(interned_callstack2.intern().pcs_size(), 4);
   EXPECT_EQ(interned_callstack2.intern().pcs(0), 5);
   EXPECT_EQ(interned_callstack2.intern().pcs(1), 6);
   EXPECT_EQ(interned_callstack2.intern().pcs(2), 7);
   EXPECT_EQ(interned_callstack2.intern().pcs(3), 8);
 
-  const InternedCallstackSample& callstack_sample1 =
-      callstack_sameple_event1.interned_callstack_sample();
+  const CallstackSample& callstack_sample1 = callstack_sameple_event1.callstack_sample();
   EXPECT_EQ(callstack_sample1.pid(), kPid1);
   EXPECT_EQ(callstack_sample1.tid(), kTid1);
   EXPECT_EQ(callstack_sample1.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(callstack_sample1.callstack_id(), interned_callstack1.key());
 
-  const InternedCallstackSample& callstack_sample2 =
-      callstack_sameple_event2.interned_callstack_sample();
+  const CallstackSample& callstack_sample2 = callstack_sameple_event2.callstack_sample();
   EXPECT_EQ(callstack_sample2.pid(), kPid2);
   EXPECT_EQ(callstack_sample2.tid(), kTid2);
   EXPECT_EQ(callstack_sample2.timestamp_ns(), kTimestampNs2);
@@ -493,7 +490,7 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
 
 TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   FullCallstackSample* full_callstack_sample1 = event1.mutable_full_callstack_sample();
@@ -530,26 +527,24 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   producer_event_processor->ProcessEvent(1, event2);
 
   ASSERT_EQ(interned_callstack_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
-  ASSERT_EQ(callstack_sameple_event1.event_case(), ClientCaptureEvent::kInternedCallstackSample);
-  ASSERT_EQ(callstack_sameple_event2.event_case(), ClientCaptureEvent::kInternedCallstackSample);
+  ASSERT_EQ(callstack_sameple_event1.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sameple_event2.event_case(), ClientCaptureEvent::kCallstackSample);
 
   const InternedCallstack& interned_callstack1 = interned_callstack_event1.interned_callstack();
-  EXPECT_NE(interned_callstack1.key(), 0);
+  EXPECT_NE(interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(interned_callstack1.intern().pcs_size(), 4);
   EXPECT_EQ(interned_callstack1.intern().pcs(0), 1);
   EXPECT_EQ(interned_callstack1.intern().pcs(1), 2);
   EXPECT_EQ(interned_callstack1.intern().pcs(2), 3);
   EXPECT_EQ(interned_callstack1.intern().pcs(3), 4);
 
-  const InternedCallstackSample& callstack_sample1 =
-      callstack_sameple_event1.interned_callstack_sample();
+  const CallstackSample& callstack_sample1 = callstack_sameple_event1.callstack_sample();
   EXPECT_EQ(callstack_sample1.pid(), kPid1);
   EXPECT_EQ(callstack_sample1.tid(), kTid1);
   EXPECT_EQ(callstack_sample1.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(callstack_sample1.callstack_id(), interned_callstack1.key());
 
-  const InternedCallstackSample& callstack_sample2 =
-      callstack_sameple_event2.interned_callstack_sample();
+  const CallstackSample& callstack_sample2 = callstack_sameple_event2.callstack_sample();
   EXPECT_EQ(callstack_sample2.pid(), kPid2);
   EXPECT_EQ(callstack_sample2.tid(), kTid2);
   EXPECT_EQ(callstack_sample2.timestamp_ns(), kTimestampNs2);
@@ -558,7 +553,7 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
 
 TEST(ProducerEventProcessor, FullTracepointEventsDifferentTracepoints) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   FullTracepointEvent* full_tracepoint_event1 = event1.mutable_full_tracepoint_event();
@@ -577,15 +572,15 @@ TEST(ProducerEventProcessor, FullTracepointEventsDifferentTracepoints) {
   full_tracepoint_event2->mutable_tracepoint_info()->set_name("name2");
 
   ClientCaptureEvent interned_tracepoint_info_event1;
-  ClientCaptureEvent tracepoint_event1;
+  ClientCaptureEvent client_tracepoint_event1;
   ClientCaptureEvent interned_tracepoint_info_event2;
-  ClientCaptureEvent tracepoint_event2;
+  ClientCaptureEvent client_tracepoint_event2;
   EXPECT_CALL(buffer, AddEvent)
       .Times(4)
       .WillOnce(SaveArg<0>(&interned_tracepoint_info_event1))
-      .WillOnce(SaveArg<0>(&tracepoint_event1))
+      .WillOnce(SaveArg<0>(&client_tracepoint_event1))
       .WillOnce(SaveArg<0>(&interned_tracepoint_info_event2))
-      .WillOnce(SaveArg<0>(&tracepoint_event2));
+      .WillOnce(SaveArg<0>(&client_tracepoint_event2));
 
   producer_event_processor->ProcessEvent(1, event1);
   producer_event_processor->ProcessEvent(1, event2);
@@ -594,39 +589,37 @@ TEST(ProducerEventProcessor, FullTracepointEventsDifferentTracepoints) {
             ClientCaptureEvent::kInternedTracepointInfo);
   ASSERT_EQ(interned_tracepoint_info_event2.event_case(),
             ClientCaptureEvent::kInternedTracepointInfo);
-  ASSERT_EQ(tracepoint_event1.event_case(), ClientCaptureEvent::kInternedTracepointEvent);
-  ASSERT_EQ(tracepoint_event2.event_case(), ClientCaptureEvent::kInternedTracepointEvent);
+  ASSERT_EQ(client_tracepoint_event1.event_case(), ClientCaptureEvent::kTracepointEvent);
+  ASSERT_EQ(client_tracepoint_event2.event_case(), ClientCaptureEvent::kTracepointEvent);
 
   const InternedTracepointInfo& interned_tracepoint_info1 =
       interned_tracepoint_info_event1.interned_tracepoint_info();
-  EXPECT_NE(interned_tracepoint_info1.key(), 0);
+  EXPECT_NE(interned_tracepoint_info1.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(interned_tracepoint_info1.intern().name(), "name1");
   EXPECT_EQ(interned_tracepoint_info1.intern().category(), "category1");
 
   const InternedTracepointInfo& interned_tracepoint_info2 =
       interned_tracepoint_info_event2.interned_tracepoint_info();
-  EXPECT_NE(interned_tracepoint_info2.key(), 0);
+  EXPECT_NE(interned_tracepoint_info2.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(interned_tracepoint_info2.intern().name(), "name2");
   EXPECT_EQ(interned_tracepoint_info2.intern().category(), "category2");
 
-  const InternedTracepointEvent& interned_tracepoint_event1 =
-      tracepoint_event1.interned_tracepoint_event();
-  EXPECT_EQ(interned_tracepoint_event1.pid(), kPid1);
-  EXPECT_EQ(interned_tracepoint_event1.tid(), kTid1);
-  EXPECT_EQ(interned_tracepoint_event1.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(interned_tracepoint_event1.tracepoint_info_key(), interned_tracepoint_info1.key());
+  const TracepointEvent& tracepoint_event1 = client_tracepoint_event1.tracepoint_event();
+  EXPECT_EQ(tracepoint_event1.pid(), kPid1);
+  EXPECT_EQ(tracepoint_event1.tid(), kTid1);
+  EXPECT_EQ(tracepoint_event1.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(tracepoint_event1.tracepoint_info_key(), interned_tracepoint_info1.key());
 
-  const InternedTracepointEvent& interned_tracepoint_event2 =
-      tracepoint_event2.interned_tracepoint_event();
-  EXPECT_EQ(interned_tracepoint_event2.pid(), kPid2);
-  EXPECT_EQ(interned_tracepoint_event2.tid(), kTid2);
-  EXPECT_EQ(interned_tracepoint_event2.timestamp_ns(), kTimestampNs2);
-  EXPECT_EQ(interned_tracepoint_event2.tracepoint_info_key(), interned_tracepoint_info2.key());
+  const TracepointEvent& tracepoint_event2 = client_tracepoint_event2.tracepoint_event();
+  EXPECT_EQ(tracepoint_event2.pid(), kPid2);
+  EXPECT_EQ(tracepoint_event2.tid(), kTid2);
+  EXPECT_EQ(tracepoint_event2.timestamp_ns(), kTimestampNs2);
+  EXPECT_EQ(tracepoint_event2.tracepoint_info_key(), interned_tracepoint_info2.key());
 }
 
 TEST(ProducerEventProcessor, FullTracepointEventsSameTracepoint) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   FullTracepointEvent* full_tracepoint_event1 = event1.mutable_full_tracepoint_event();
@@ -645,46 +638,44 @@ TEST(ProducerEventProcessor, FullTracepointEventsSameTracepoint) {
   full_tracepoint_event2->mutable_tracepoint_info()->set_name("name1");
 
   ClientCaptureEvent interned_tracepoint_info_event1;
-  ClientCaptureEvent tracepoint_event1;
-  ClientCaptureEvent tracepoint_event2;
+  ClientCaptureEvent client_tracepoint_event1;
+  ClientCaptureEvent client_tracepoint_event2;
   EXPECT_CALL(buffer, AddEvent)
       .Times(3)
       .WillOnce(SaveArg<0>(&interned_tracepoint_info_event1))
-      .WillOnce(SaveArg<0>(&tracepoint_event1))
-      .WillOnce(SaveArg<0>(&tracepoint_event2));
+      .WillOnce(SaveArg<0>(&client_tracepoint_event1))
+      .WillOnce(SaveArg<0>(&client_tracepoint_event2));
 
   producer_event_processor->ProcessEvent(1, event1);
   producer_event_processor->ProcessEvent(1, event2);
 
   ASSERT_EQ(interned_tracepoint_info_event1.event_case(),
             ClientCaptureEvent::kInternedTracepointInfo);
-  ASSERT_EQ(tracepoint_event1.event_case(), ClientCaptureEvent::kInternedTracepointEvent);
-  ASSERT_EQ(tracepoint_event2.event_case(), ClientCaptureEvent::kInternedTracepointEvent);
+  ASSERT_EQ(client_tracepoint_event1.event_case(), ClientCaptureEvent::kTracepointEvent);
+  ASSERT_EQ(client_tracepoint_event2.event_case(), ClientCaptureEvent::kTracepointEvent);
 
   const InternedTracepointInfo& interned_tracepoint_info1 =
       interned_tracepoint_info_event1.interned_tracepoint_info();
-  EXPECT_NE(interned_tracepoint_info1.key(), 0);
+  EXPECT_NE(interned_tracepoint_info1.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(interned_tracepoint_info1.intern().name(), "name1");
   EXPECT_EQ(interned_tracepoint_info1.intern().category(), "category1");
 
-  const InternedTracepointEvent& interned_tracepoint_event1 =
-      tracepoint_event1.interned_tracepoint_event();
-  EXPECT_EQ(interned_tracepoint_event1.pid(), kPid1);
-  EXPECT_EQ(interned_tracepoint_event1.tid(), kTid1);
-  EXPECT_EQ(interned_tracepoint_event1.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(interned_tracepoint_event1.tracepoint_info_key(), interned_tracepoint_info1.key());
+  const TracepointEvent& tracepoint_event1 = client_tracepoint_event1.tracepoint_event();
+  EXPECT_EQ(tracepoint_event1.pid(), kPid1);
+  EXPECT_EQ(tracepoint_event1.tid(), kTid1);
+  EXPECT_EQ(tracepoint_event1.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(tracepoint_event1.tracepoint_info_key(), interned_tracepoint_info1.key());
 
-  const InternedTracepointEvent& interned_tracepoint_event2 =
-      tracepoint_event2.interned_tracepoint_event();
-  EXPECT_EQ(interned_tracepoint_event2.pid(), kPid2);
-  EXPECT_EQ(interned_tracepoint_event2.tid(), kTid2);
-  EXPECT_EQ(interned_tracepoint_event2.timestamp_ns(), kTimestampNs2);
-  EXPECT_EQ(interned_tracepoint_event2.tracepoint_info_key(), interned_tracepoint_info1.key());
+  const TracepointEvent& tracepoint_event2 = client_tracepoint_event2.tracepoint_event();
+  EXPECT_EQ(tracepoint_event2.pid(), kPid2);
+  EXPECT_EQ(tracepoint_event2.tid(), kTid2);
+  EXPECT_EQ(tracepoint_event2.timestamp_ns(), kTimestampNs2);
+  EXPECT_EQ(tracepoint_event2.tracepoint_info_key(), interned_tracepoint_info1.key());
 }
 
 TEST(ProducerEventProcessor, FunctionCallSmoke) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   {
@@ -760,38 +751,38 @@ TEST(ProducerEventProcessor, FunctionCallSmoke) {
   }
 }
 
-TEST(ProducerEventProcessor, FullGpuJobEventDifferentTimelines) {
+TEST(ProducerEventProcessor, FullGpuJobDifferentTimelines) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   {
-    FullGpuJobEvent* gpu_job_event = event1.mutable_full_gpu_job_event();
-    gpu_job_event->set_pid(kPid1);
-    gpu_job_event->set_tid(kTid1);
-    gpu_job_event->set_context(kGpuJobContext1);
-    gpu_job_event->set_seqno(kSeqNo1);
-    gpu_job_event->set_depth(kDepth1);
-    gpu_job_event->set_amdgpu_cs_ioctl_time_ns(kTimestampNs1);
-    gpu_job_event->set_amdgpu_sched_run_job_time_ns(kTimestampNs1 + 1);
-    gpu_job_event->set_gpu_hardware_start_time_ns(kTimestampNs1 + 2);
-    gpu_job_event->set_dma_fence_signaled_time_ns(kTimestampNs1 + 3);
-    gpu_job_event->set_timeline("timeline1");
+    FullGpuJob* gpu_job = event1.mutable_full_gpu_job();
+    gpu_job->set_pid(kPid1);
+    gpu_job->set_tid(kTid1);
+    gpu_job->set_context(kGpuJobContext1);
+    gpu_job->set_seqno(kSeqNo1);
+    gpu_job->set_depth(kDepth1);
+    gpu_job->set_amdgpu_cs_ioctl_time_ns(kTimestampNs1);
+    gpu_job->set_amdgpu_sched_run_job_time_ns(kTimestampNs1 + 1);
+    gpu_job->set_gpu_hardware_start_time_ns(kTimestampNs1 + 2);
+    gpu_job->set_dma_fence_signaled_time_ns(kTimestampNs1 + 3);
+    gpu_job->set_timeline("timeline1");
   }
 
   ProducerCaptureEvent event2;
   {
-    FullGpuJobEvent* gpu_job_event = event2.mutable_full_gpu_job_event();
-    gpu_job_event->set_pid(kPid2);
-    gpu_job_event->set_tid(kTid2);
-    gpu_job_event->set_context(kGpuJobContext2);
-    gpu_job_event->set_seqno(kSeqNo2);
-    gpu_job_event->set_depth(kDepth2);
-    gpu_job_event->set_amdgpu_cs_ioctl_time_ns(kTimestampNs2);
-    gpu_job_event->set_amdgpu_sched_run_job_time_ns(kTimestampNs2 + 1);
-    gpu_job_event->set_gpu_hardware_start_time_ns(kTimestampNs2 + 2);
-    gpu_job_event->set_dma_fence_signaled_time_ns(kTimestampNs2 + 3);
-    gpu_job_event->set_timeline("timeline2");
+    FullGpuJob* gpu_job = event2.mutable_full_gpu_job();
+    gpu_job->set_pid(kPid2);
+    gpu_job->set_tid(kTid2);
+    gpu_job->set_context(kGpuJobContext2);
+    gpu_job->set_seqno(kSeqNo2);
+    gpu_job->set_depth(kDepth2);
+    gpu_job->set_amdgpu_cs_ioctl_time_ns(kTimestampNs2);
+    gpu_job->set_amdgpu_sched_run_job_time_ns(kTimestampNs2 + 1);
+    gpu_job->set_gpu_hardware_start_time_ns(kTimestampNs2 + 2);
+    gpu_job->set_dma_fence_signaled_time_ns(kTimestampNs2 + 3);
+    gpu_job->set_timeline("timeline2");
   }
 
   ClientCaptureEvent interned_string1;
@@ -811,82 +802,82 @@ TEST(ProducerEventProcessor, FullGpuJobEventDifferentTimelines) {
 
   ASSERT_EQ(interned_string1.event_case(), ClientCaptureEvent::kInternedString);
   ASSERT_EQ(interned_string2.event_case(), ClientCaptureEvent::kInternedString);
-  ASSERT_EQ(gpu_job_event1.event_case(), ClientCaptureEvent::kInternedGpuJobEvent);
-  ASSERT_EQ(gpu_job_event2.event_case(), ClientCaptureEvent::kInternedGpuJobEvent);
+  ASSERT_EQ(gpu_job_event1.event_case(), ClientCaptureEvent::kGpuJob);
+  ASSERT_EQ(gpu_job_event2.event_case(), ClientCaptureEvent::kGpuJob);
 
   {
     const InternedString& interned_string = interned_string1.interned_string();
-    EXPECT_NE(interned_string.key(), 0);
+    EXPECT_NE(interned_string.key(), orbit_grpc_protos::kInvalidInternId);
     EXPECT_EQ(interned_string.intern(), "timeline1");
   }
 
   {
     const InternedString& interned_string = interned_string2.interned_string();
-    EXPECT_NE(interned_string.key(), 0);
+    EXPECT_NE(interned_string.key(), orbit_grpc_protos::kInvalidInternId);
     EXPECT_EQ(interned_string.intern(), "timeline2");
   }
 
   {
-    const InternedGpuJobEvent& gpu_job_event = gpu_job_event1.interned_gpu_job_event();
-    EXPECT_EQ(gpu_job_event.pid(), kPid1);
-    EXPECT_EQ(gpu_job_event.tid(), kTid1);
-    EXPECT_EQ(gpu_job_event.context(), kGpuJobContext1);
-    EXPECT_EQ(gpu_job_event.seqno(), kSeqNo1);
-    EXPECT_EQ(gpu_job_event.depth(), kDepth1);
-    EXPECT_EQ(gpu_job_event.amdgpu_cs_ioctl_time_ns(), kTimestampNs1);
-    EXPECT_EQ(gpu_job_event.amdgpu_sched_run_job_time_ns(), kTimestampNs1 + 1);
-    EXPECT_EQ(gpu_job_event.gpu_hardware_start_time_ns(), kTimestampNs1 + 2);
-    EXPECT_EQ(gpu_job_event.dma_fence_signaled_time_ns(), kTimestampNs1 + 3);
-    EXPECT_EQ(gpu_job_event.timeline_key(), interned_string1.interned_string().key());
+    const GpuJob& gpu_job = gpu_job_event1.gpu_job();
+    EXPECT_EQ(gpu_job.pid(), kPid1);
+    EXPECT_EQ(gpu_job.tid(), kTid1);
+    EXPECT_EQ(gpu_job.context(), kGpuJobContext1);
+    EXPECT_EQ(gpu_job.seqno(), kSeqNo1);
+    EXPECT_EQ(gpu_job.depth(), kDepth1);
+    EXPECT_EQ(gpu_job.amdgpu_cs_ioctl_time_ns(), kTimestampNs1);
+    EXPECT_EQ(gpu_job.amdgpu_sched_run_job_time_ns(), kTimestampNs1 + 1);
+    EXPECT_EQ(gpu_job.gpu_hardware_start_time_ns(), kTimestampNs1 + 2);
+    EXPECT_EQ(gpu_job.dma_fence_signaled_time_ns(), kTimestampNs1 + 3);
+    EXPECT_EQ(gpu_job.timeline_key(), interned_string1.interned_string().key());
   }
 
   {
-    const InternedGpuJobEvent& gpu_job_event = gpu_job_event2.interned_gpu_job_event();
-    EXPECT_EQ(gpu_job_event.pid(), kPid2);
-    EXPECT_EQ(gpu_job_event.tid(), kTid2);
-    EXPECT_EQ(gpu_job_event.context(), kGpuJobContext2);
-    EXPECT_EQ(gpu_job_event.seqno(), kSeqNo2);
-    EXPECT_EQ(gpu_job_event.depth(), kDepth2);
-    EXPECT_EQ(gpu_job_event.amdgpu_cs_ioctl_time_ns(), kTimestampNs2);
-    EXPECT_EQ(gpu_job_event.amdgpu_sched_run_job_time_ns(), kTimestampNs2 + 1);
-    EXPECT_EQ(gpu_job_event.gpu_hardware_start_time_ns(), kTimestampNs2 + 2);
-    EXPECT_EQ(gpu_job_event.dma_fence_signaled_time_ns(), kTimestampNs2 + 3);
-    EXPECT_EQ(gpu_job_event.timeline_key(), interned_string2.interned_string().key());
+    const GpuJob& gpu_job = gpu_job_event2.gpu_job();
+    EXPECT_EQ(gpu_job.pid(), kPid2);
+    EXPECT_EQ(gpu_job.tid(), kTid2);
+    EXPECT_EQ(gpu_job.context(), kGpuJobContext2);
+    EXPECT_EQ(gpu_job.seqno(), kSeqNo2);
+    EXPECT_EQ(gpu_job.depth(), kDepth2);
+    EXPECT_EQ(gpu_job.amdgpu_cs_ioctl_time_ns(), kTimestampNs2);
+    EXPECT_EQ(gpu_job.amdgpu_sched_run_job_time_ns(), kTimestampNs2 + 1);
+    EXPECT_EQ(gpu_job.gpu_hardware_start_time_ns(), kTimestampNs2 + 2);
+    EXPECT_EQ(gpu_job.dma_fence_signaled_time_ns(), kTimestampNs2 + 3);
+    EXPECT_EQ(gpu_job.timeline_key(), interned_string2.interned_string().key());
   }
 }
 
-TEST(ProducerEventProcessor, FullGpuJobEventSameTimeline) {
+TEST(ProducerEventProcessor, FullGpuJobSameTimeline) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   {
-    FullGpuJobEvent* gpu_job_event = event1.mutable_full_gpu_job_event();
-    gpu_job_event->set_pid(kPid1);
-    gpu_job_event->set_tid(kTid1);
-    gpu_job_event->set_context(kGpuJobContext1);
-    gpu_job_event->set_seqno(kSeqNo1);
-    gpu_job_event->set_depth(kDepth1);
-    gpu_job_event->set_amdgpu_cs_ioctl_time_ns(kTimestampNs1);
-    gpu_job_event->set_amdgpu_sched_run_job_time_ns(kTimestampNs1 + 1);
-    gpu_job_event->set_gpu_hardware_start_time_ns(kTimestampNs1 + 2);
-    gpu_job_event->set_dma_fence_signaled_time_ns(kTimestampNs1 + 3);
-    gpu_job_event->set_timeline("timeline1");
+    FullGpuJob* gpu_job = event1.mutable_full_gpu_job();
+    gpu_job->set_pid(kPid1);
+    gpu_job->set_tid(kTid1);
+    gpu_job->set_context(kGpuJobContext1);
+    gpu_job->set_seqno(kSeqNo1);
+    gpu_job->set_depth(kDepth1);
+    gpu_job->set_amdgpu_cs_ioctl_time_ns(kTimestampNs1);
+    gpu_job->set_amdgpu_sched_run_job_time_ns(kTimestampNs1 + 1);
+    gpu_job->set_gpu_hardware_start_time_ns(kTimestampNs1 + 2);
+    gpu_job->set_dma_fence_signaled_time_ns(kTimestampNs1 + 3);
+    gpu_job->set_timeline("timeline1");
   }
 
   ProducerCaptureEvent event2;
   {
-    FullGpuJobEvent* gpu_job_event = event2.mutable_full_gpu_job_event();
-    gpu_job_event->set_pid(kPid2);
-    gpu_job_event->set_tid(kTid2);
-    gpu_job_event->set_context(kGpuJobContext2);
-    gpu_job_event->set_seqno(kSeqNo2);
-    gpu_job_event->set_depth(kDepth2);
-    gpu_job_event->set_amdgpu_cs_ioctl_time_ns(kTimestampNs2);
-    gpu_job_event->set_amdgpu_sched_run_job_time_ns(kTimestampNs2 + 1);
-    gpu_job_event->set_gpu_hardware_start_time_ns(kTimestampNs2 + 2);
-    gpu_job_event->set_dma_fence_signaled_time_ns(kTimestampNs2 + 3);
-    gpu_job_event->set_timeline("timeline1");
+    FullGpuJob* gpu_job = event2.mutable_full_gpu_job();
+    gpu_job->set_pid(kPid2);
+    gpu_job->set_tid(kTid2);
+    gpu_job->set_context(kGpuJobContext2);
+    gpu_job->set_seqno(kSeqNo2);
+    gpu_job->set_depth(kDepth2);
+    gpu_job->set_amdgpu_cs_ioctl_time_ns(kTimestampNs2);
+    gpu_job->set_amdgpu_sched_run_job_time_ns(kTimestampNs2 + 1);
+    gpu_job->set_gpu_hardware_start_time_ns(kTimestampNs2 + 2);
+    gpu_job->set_dma_fence_signaled_time_ns(kTimestampNs2 + 3);
+    gpu_job->set_timeline("timeline1");
   }
 
   ClientCaptureEvent interned_string_event;
@@ -903,47 +894,47 @@ TEST(ProducerEventProcessor, FullGpuJobEventSameTimeline) {
   producer_event_processor->ProcessEvent(1, event2);
 
   ASSERT_EQ(interned_string_event.event_case(), ClientCaptureEvent::kInternedString);
-  ASSERT_EQ(gpu_job_event1.event_case(), ClientCaptureEvent::kInternedGpuJobEvent);
-  ASSERT_EQ(gpu_job_event2.event_case(), ClientCaptureEvent::kInternedGpuJobEvent);
+  ASSERT_EQ(gpu_job_event1.event_case(), ClientCaptureEvent::kGpuJob);
+  ASSERT_EQ(gpu_job_event2.event_case(), ClientCaptureEvent::kGpuJob);
 
   {
     const InternedString& interned_string = interned_string_event.interned_string();
-    EXPECT_NE(interned_string.key(), 0);
+    EXPECT_NE(interned_string.key(), orbit_grpc_protos::kInvalidInternId);
     EXPECT_EQ(interned_string.intern(), "timeline1");
   }
 
   {
-    const InternedGpuJobEvent& gpu_job_event = gpu_job_event1.interned_gpu_job_event();
-    EXPECT_EQ(gpu_job_event.pid(), kPid1);
-    EXPECT_EQ(gpu_job_event.tid(), kTid1);
-    EXPECT_EQ(gpu_job_event.context(), kGpuJobContext1);
-    EXPECT_EQ(gpu_job_event.seqno(), kSeqNo1);
-    EXPECT_EQ(gpu_job_event.depth(), kDepth1);
-    EXPECT_EQ(gpu_job_event.amdgpu_cs_ioctl_time_ns(), kTimestampNs1);
-    EXPECT_EQ(gpu_job_event.amdgpu_sched_run_job_time_ns(), kTimestampNs1 + 1);
-    EXPECT_EQ(gpu_job_event.gpu_hardware_start_time_ns(), kTimestampNs1 + 2);
-    EXPECT_EQ(gpu_job_event.dma_fence_signaled_time_ns(), kTimestampNs1 + 3);
-    EXPECT_EQ(gpu_job_event.timeline_key(), interned_string_event.interned_string().key());
+    const GpuJob& gpu_job = gpu_job_event1.gpu_job();
+    EXPECT_EQ(gpu_job.pid(), kPid1);
+    EXPECT_EQ(gpu_job.tid(), kTid1);
+    EXPECT_EQ(gpu_job.context(), kGpuJobContext1);
+    EXPECT_EQ(gpu_job.seqno(), kSeqNo1);
+    EXPECT_EQ(gpu_job.depth(), kDepth1);
+    EXPECT_EQ(gpu_job.amdgpu_cs_ioctl_time_ns(), kTimestampNs1);
+    EXPECT_EQ(gpu_job.amdgpu_sched_run_job_time_ns(), kTimestampNs1 + 1);
+    EXPECT_EQ(gpu_job.gpu_hardware_start_time_ns(), kTimestampNs1 + 2);
+    EXPECT_EQ(gpu_job.dma_fence_signaled_time_ns(), kTimestampNs1 + 3);
+    EXPECT_EQ(gpu_job.timeline_key(), interned_string_event.interned_string().key());
   }
 
   {
-    const InternedGpuJobEvent& gpu_job_event = gpu_job_event2.interned_gpu_job_event();
-    EXPECT_EQ(gpu_job_event.pid(), kPid2);
-    EXPECT_EQ(gpu_job_event.tid(), kTid2);
-    EXPECT_EQ(gpu_job_event.context(), kGpuJobContext2);
-    EXPECT_EQ(gpu_job_event.seqno(), kSeqNo2);
-    EXPECT_EQ(gpu_job_event.depth(), kDepth2);
-    EXPECT_EQ(gpu_job_event.amdgpu_cs_ioctl_time_ns(), kTimestampNs2);
-    EXPECT_EQ(gpu_job_event.amdgpu_sched_run_job_time_ns(), kTimestampNs2 + 1);
-    EXPECT_EQ(gpu_job_event.gpu_hardware_start_time_ns(), kTimestampNs2 + 2);
-    EXPECT_EQ(gpu_job_event.dma_fence_signaled_time_ns(), kTimestampNs2 + 3);
-    EXPECT_EQ(gpu_job_event.timeline_key(), interned_string_event.interned_string().key());
+    const GpuJob& gpu_job = gpu_job_event2.gpu_job();
+    EXPECT_EQ(gpu_job.pid(), kPid2);
+    EXPECT_EQ(gpu_job.tid(), kTid2);
+    EXPECT_EQ(gpu_job.context(), kGpuJobContext2);
+    EXPECT_EQ(gpu_job.seqno(), kSeqNo2);
+    EXPECT_EQ(gpu_job.depth(), kDepth2);
+    EXPECT_EQ(gpu_job.amdgpu_cs_ioctl_time_ns(), kTimestampNs2);
+    EXPECT_EQ(gpu_job.amdgpu_sched_run_job_time_ns(), kTimestampNs2 + 1);
+    EXPECT_EQ(gpu_job.gpu_hardware_start_time_ns(), kTimestampNs2 + 2);
+    EXPECT_EQ(gpu_job.dma_fence_signaled_time_ns(), kTimestampNs2 + 3);
+    EXPECT_EQ(gpu_job.timeline_key(), interned_string_event.interned_string().key());
   }
 }
 
 TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent producer_string_event1 = CreateInternedStringEvent(kKey1, "debug marker1");
   ProducerCaptureEvent producer_string_event2 = CreateInternedStringEvent(kKey2, "debug marker2");
@@ -1037,9 +1028,9 @@ TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
 
   uint64_t string_key1 = string_event1.interned_string().key();
   uint64_t string_key2 = string_event2.interned_string().key();
-  EXPECT_NE(string_key1, 0);
+  EXPECT_NE(string_key1, orbit_grpc_protos::kInvalidInternId);
   EXPECT_EQ(string_event1.interned_string().intern(), "debug marker1");
-  EXPECT_NE(string_key2, 0);
+  EXPECT_NE(string_key2, orbit_grpc_protos::kInvalidInternId);
   EXPECT_EQ(string_event2.interned_string().intern(), "debug marker2");
 
   const GpuQueueSubmission& gpu_queue_submission = gpu_submission_event.gpu_queue_submission();
@@ -1103,7 +1094,7 @@ TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
 
 TEST(ProducerEventProcessor, ThreadNameSmoke) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent producer_thread_name;
   producer_thread_name.mutable_thread_name()->set_pid(kPid1);
@@ -1126,7 +1117,7 @@ TEST(ProducerEventProcessor, ThreadNameSmoke) {
 
 TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1155,7 +1146,7 @@ TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
 
 TEST(ProducerEventProcessor, ModuleUpdateEventSmoke) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1193,7 +1184,7 @@ TEST(ProducerEventProcessor, ModuleUpdateEventSmoke) {
 
 TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent producer_event1;
   {
@@ -1233,8 +1224,8 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
   ASSERT_EQ(interned_string_function1.event_case(), ClientCaptureEvent::kInternedString);
   ASSERT_EQ(interned_string_function2.event_case(), ClientCaptureEvent::kInternedString);
   ASSERT_EQ(interned_string_module.event_case(), ClientCaptureEvent::kInternedString);
-  ASSERT_EQ(address_info_event1.event_case(), ClientCaptureEvent::kInternedAddressInfo);
-  ASSERT_EQ(address_info_event2.event_case(), ClientCaptureEvent::kInternedAddressInfo);
+  ASSERT_EQ(address_info_event1.event_case(), ClientCaptureEvent::kAddressInfo);
+  ASSERT_EQ(address_info_event2.event_case(), ClientCaptureEvent::kAddressInfo);
 
   EXPECT_EQ(interned_string_function1.interned_string().intern(), "function1");
   EXPECT_EQ(interned_string_function2.interned_string().intern(), "function2");
@@ -1244,12 +1235,12 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
   const uint64_t function1_key = interned_string_function1.interned_string().key();
   const uint64_t function2_key = interned_string_function2.interned_string().key();
 
-  EXPECT_NE(module_key, 0);
-  EXPECT_NE(function1_key, 0);
-  EXPECT_NE(function2_key, 0);
+  EXPECT_NE(module_key, orbit_grpc_protos::kInvalidInternId);
+  EXPECT_NE(function1_key, orbit_grpc_protos::kInvalidInternId);
+  EXPECT_NE(function2_key, orbit_grpc_protos::kInvalidInternId);
 
   {
-    const InternedAddressInfo& address_info = address_info_event1.interned_address_info();
+    const AddressInfo& address_info = address_info_event1.address_info();
     EXPECT_EQ(address_info.absolute_address(), 1000);
     EXPECT_EQ(address_info.offset_in_function(), 10);
     EXPECT_EQ(address_info.function_name_key(), function1_key);
@@ -1257,7 +1248,7 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
   }
 
   {
-    const InternedAddressInfo& address_info = address_info_event2.interned_address_info();
+    const AddressInfo& address_info = address_info_event2.address_info();
     EXPECT_EQ(address_info.absolute_address(), 2000);
     EXPECT_EQ(address_info.offset_in_function(), 20);
     EXPECT_EQ(address_info.function_name_key(), function2_key);
@@ -1267,7 +1258,7 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
 
 TEST(ProducerEventProcessor, TwoInternedStringsSameProducerSameKey) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1 = CreateInternedStringEvent(kKey1, "string1");
   ProducerCaptureEvent event2 = CreateInternedStringEvent(kKey1, "string2");
@@ -1278,7 +1269,7 @@ TEST(ProducerEventProcessor, TwoInternedStringsSameProducerSameKey) {
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
   MockCaptureEventBuffer buffer;
-  auto producer_event_processor = CreateProducerEventProcessor(&buffer);
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
   ProducerCaptureEvent event1;
   {
