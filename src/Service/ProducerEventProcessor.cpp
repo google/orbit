@@ -13,21 +13,20 @@ namespace orbit_service {
 
 namespace {
 
+using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
-using orbit_grpc_protos::FullGpuJobEvent;
+using orbit_grpc_protos::FullGpuJob;
 using orbit_grpc_protos::FullTracepointEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuDebugMarker;
+using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
-using orbit_grpc_protos::InternedAddressInfo;
 using orbit_grpc_protos::InternedCallstack;
-using orbit_grpc_protos::InternedCallstackSample;
-using orbit_grpc_protos::InternedGpuJobEvent;
 using orbit_grpc_protos::InternedString;
-using orbit_grpc_protos::InternedTracepointEvent;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::ModuleUpdateEvent;
@@ -35,11 +34,12 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::TracepointEvent;
 
 template <typename T>
-class InternedCache final {
+class InternPool final {
  public:
-  InternedCache() = default;
+  InternPool() = default;
 
   // Return pair of <id, assigned>, where assigned is true if the entry was assigned a new id
   // and false if returning id for already existing entry.
@@ -72,28 +72,30 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
 
  private:
   void ProcessFullAddressInfo(FullAddressInfo* full_address_info);
-  void ProcessFullCallstackSample(FullCallstackSample* callstack_sample);
+  void ProcessFullCallstackSample(FullCallstackSample* full_callstack_sample);
   void ProcessFunctionCall(FunctionCall* function_call);
-  void ProcessFullGpuJobEvent(FullGpuJobEvent* full_gpu_job_event);
+  void ProcessFullGpuJob(FullGpuJob* full_gpu_job_event);
   void ProcessGpuQueueSubmission(uint64_t producer_id, GpuQueueSubmission* gpu_queue_submission);
+  // ProcessInterned* functions remap producer intern_ids to the id space used in the client.
+  // They keep track of these mappings in producer_interned_callstack_id_to_client_callstack_id_
+  // and producer_interned_string_id_to_client_string_id_.
   void ProcessInternedCallstack(uint64_t producer_id, InternedCallstack* interned_callstack);
-  void ProcessInternedCallstackSample(uint64_t producer_id,
-                                      InternedCallstackSample* callstack_sample);
+  void ProcessCallstackSample(uint64_t producer_id, CallstackSample* callstack_sample);
   void ProcessInternedString(uint64_t producer_id, InternedString* interned_string);
   void ProcessIntrospectionScope(IntrospectionScope* introspection_scope);
   void ProcessModuleUpdateEvent(ModuleUpdateEvent* module_update_event);
   void ProcessSchedulingSlice(SchedulingSlice* scheduling_slice);
   void ProcessThreadName(ThreadName* thread_name);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
-  void ProcessFullTracepointEvent(FullTracepointEvent* tracepoint_event);
+  void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
 
   void SendStringAndKeyEvent(uint64_t key, std::string value);
 
   CaptureEventBuffer* capture_event_buffer_;
 
-  InternedCache<std::vector<uint64_t>> callstack_cache_;
-  InternedCache<std::string> string_cache_;
-  InternedCache<std::pair<std::string, std::string>> tracepoint_cache_;
+  InternPool<std::vector<uint64_t>> callstack_pool_;
+  InternPool<std::string> string_pool_;
+  InternPool<std::pair<std::string, std::string>> tracepoint_pool_;
 
   // These are mapping InternStrings and InternedCallstacks from producer ids
   // to client ids:
@@ -107,19 +109,19 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
 
 void ProducerEventProcessorImpl::ProcessFullAddressInfo(FullAddressInfo* full_address_info) {
   auto [function_name_key, function_key_assigned] =
-      string_cache_.GetOrAssignId(full_address_info->function_name());
+      string_pool_.GetOrAssignId(full_address_info->function_name());
   if (function_key_assigned) {
     SendStringAndKeyEvent(function_name_key, full_address_info->function_name());
   }
 
   auto [module_name_key, module_key_assigned] =
-      string_cache_.GetOrAssignId(full_address_info->module_name());
+      string_pool_.GetOrAssignId(full_address_info->module_name());
   if (module_key_assigned) {
     SendStringAndKeyEvent(module_name_key, full_address_info->module_name());
   }
 
   ClientCaptureEvent event;
-  InternedAddressInfo* interned_address_info = event.mutable_interned_address_info();
+  AddressInfo* interned_address_info = event.mutable_address_info();
   interned_address_info->set_absolute_address(full_address_info->absolute_address());
   interned_address_info->set_offset_in_function(full_address_info->offset_in_function());
   interned_address_info->set_function_name_key(function_name_key);
@@ -134,28 +136,25 @@ void ProducerEventProcessorImpl::ProcessFunctionCall(FunctionCall* function_call
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessFullGpuJobEvent(FullGpuJobEvent* full_gpu_job_event) {
-  auto [timeline_key, assigned] = string_cache_.GetOrAssignId(full_gpu_job_event->timeline());
+void ProducerEventProcessorImpl::ProcessFullGpuJob(FullGpuJob* full_gpu_job_event) {
+  auto [timeline_key, assigned] = string_pool_.GetOrAssignId(full_gpu_job_event->timeline());
   if (assigned) {
     SendStringAndKeyEvent(timeline_key, full_gpu_job_event->timeline());
   }
 
   ClientCaptureEvent event;
-  InternedGpuJobEvent* interned_gpu_job_event = event.mutable_interned_gpu_job_event();
-  interned_gpu_job_event->set_pid(full_gpu_job_event->pid());
-  interned_gpu_job_event->set_tid(full_gpu_job_event->tid());
-  interned_gpu_job_event->set_context(full_gpu_job_event->context());
-  interned_gpu_job_event->set_seqno(full_gpu_job_event->seqno());
-  interned_gpu_job_event->set_depth(full_gpu_job_event->depth());
-  interned_gpu_job_event->set_amdgpu_cs_ioctl_time_ns(
-      full_gpu_job_event->amdgpu_cs_ioctl_time_ns());
-  interned_gpu_job_event->set_amdgpu_sched_run_job_time_ns(
+  GpuJob* gpu_job_event = event.mutable_gpu_job();
+  gpu_job_event->set_pid(full_gpu_job_event->pid());
+  gpu_job_event->set_tid(full_gpu_job_event->tid());
+  gpu_job_event->set_context(full_gpu_job_event->context());
+  gpu_job_event->set_seqno(full_gpu_job_event->seqno());
+  gpu_job_event->set_depth(full_gpu_job_event->depth());
+  gpu_job_event->set_amdgpu_cs_ioctl_time_ns(full_gpu_job_event->amdgpu_cs_ioctl_time_ns());
+  gpu_job_event->set_amdgpu_sched_run_job_time_ns(
       full_gpu_job_event->amdgpu_sched_run_job_time_ns());
-  interned_gpu_job_event->set_gpu_hardware_start_time_ns(
-      full_gpu_job_event->gpu_hardware_start_time_ns());
-  interned_gpu_job_event->set_dma_fence_signaled_time_ns(
-      full_gpu_job_event->dma_fence_signaled_time_ns());
-  interned_gpu_job_event->set_timeline_key(timeline_key);
+  gpu_job_event->set_gpu_hardware_start_time_ns(full_gpu_job_event->gpu_hardware_start_time_ns());
+  gpu_job_event->set_dma_fence_signaled_time_ns(full_gpu_job_event->dma_fence_signaled_time_ns());
+  gpu_job_event->set_timeline_key(timeline_key);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -174,10 +173,11 @@ void ProducerEventProcessorImpl::ProcessGpuQueueSubmission(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessFullCallstackSample(FullCallstackSample* callstack_sample) {
-  Callstack* callstack = callstack_sample->mutable_callstack();
+void ProducerEventProcessorImpl::ProcessFullCallstackSample(
+    FullCallstackSample* full_callstack_sample) {
+  Callstack* callstack = full_callstack_sample->mutable_callstack();
   auto [callstack_id, assigned] =
-      callstack_cache_.GetOrAssignId({callstack->pcs().begin(), callstack->pcs().end()});
+      callstack_pool_.GetOrAssignId({callstack->pcs().begin(), callstack->pcs().end()});
 
   if (assigned) {
     ClientCaptureEvent interned_callstack_event;
@@ -187,14 +187,13 @@ void ProducerEventProcessorImpl::ProcessFullCallstackSample(FullCallstackSample*
     capture_event_buffer_->AddEvent(std::move(interned_callstack_event));
   }
 
-  ClientCaptureEvent interned_callstack_sample_event;
-  InternedCallstackSample* interned_callstack_sample =
-      interned_callstack_sample_event.mutable_interned_callstack_sample();
-  interned_callstack_sample->set_pid(callstack_sample->pid());
-  interned_callstack_sample->set_tid(callstack_sample->tid());
-  interned_callstack_sample->set_timestamp_ns(callstack_sample->timestamp_ns());
-  interned_callstack_sample->set_callstack_id(callstack_id);
-  capture_event_buffer_->AddEvent(std::move(interned_callstack_sample_event));
+  ClientCaptureEvent callstack_sample_event;
+  CallstackSample* callstack_sample = callstack_sample_event.mutable_callstack_sample();
+  callstack_sample->set_pid(full_callstack_sample->pid());
+  callstack_sample->set_tid(full_callstack_sample->tid());
+  callstack_sample->set_timestamp_ns(full_callstack_sample->timestamp_ns());
+  callstack_sample->set_callstack_id(callstack_id);
+  capture_event_buffer_->AddEvent(std::move(callstack_sample_event));
 }
 
 void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
@@ -205,7 +204,7 @@ void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
 
   std::vector<uint64_t> callstack_data{interned_callstack->intern().pcs().begin(),
                                        interned_callstack->intern().pcs().end()};
-  auto [interned_callstack_id, assigned] = callstack_cache_.GetOrAssignId(callstack_data);
+  auto [interned_callstack_id, assigned] = callstack_pool_.GetOrAssignId(callstack_data);
 
   producer_interned_callstack_id_to_client_callstack_id_.insert_or_assign(
       {producer_id, interned_callstack->key()}, interned_callstack_id);
@@ -221,8 +220,8 @@ void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessInternedCallstackSample(
-    uint64_t producer_id, InternedCallstackSample* callstack_sample) {
+void ProducerEventProcessorImpl::ProcessCallstackSample(uint64_t producer_id,
+                                                        CallstackSample* callstack_sample) {
   // translate producer id to client id
   auto it = producer_interned_callstack_id_to_client_callstack_id_.find(
       {producer_id, callstack_sample->callstack_id()});
@@ -231,7 +230,7 @@ void ProducerEventProcessorImpl::ProcessInternedCallstackSample(
   callstack_sample->set_callstack_id(it->second);
 
   ClientCaptureEvent event;
-  *event.mutable_interned_callstack_sample() = std::move(*callstack_sample);
+  *event.mutable_callstack_sample() = std::move(*callstack_sample);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -241,7 +240,7 @@ void ProducerEventProcessorImpl::ProcessInternedString(uint64_t producer_id,
   CHECK(!producer_interned_string_id_to_client_string_id_.contains(
       {producer_id, interned_string->key()}));
 
-  auto [client_string_id, assigned] = string_cache_.GetOrAssignId(interned_string->intern());
+  auto [client_string_id, assigned] = string_pool_.GetOrAssignId(interned_string->intern());
   producer_interned_string_id_to_client_string_id_.insert_or_assign(
       {producer_id, interned_string->key()}, client_string_id);
 
@@ -288,24 +287,26 @@ void ProducerEventProcessorImpl::ProcessThreadStateSlice(ThreadStateSlice* threa
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessFullTracepointEvent(FullTracepointEvent* tracepoint_event) {
-  auto [tracepoint_key, assigned] = tracepoint_cache_.GetOrAssignId(
-      {tracepoint_event->tracepoint_info().category(), tracepoint_event->tracepoint_info().name()});
+void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
+    FullTracepointEvent* full_tracepoint_event) {
+  auto [tracepoint_key, assigned] =
+      tracepoint_pool_.GetOrAssignId({full_tracepoint_event->tracepoint_info().category(),
+                                      full_tracepoint_event->tracepoint_info().name()});
   if (assigned) {
     ClientCaptureEvent event;
     InternedTracepointInfo* interned_tracepoint_info = event.mutable_interned_tracepoint_info();
     interned_tracepoint_info->set_key(tracepoint_key);
-    *interned_tracepoint_info->mutable_intern() = tracepoint_event->tracepoint_info();
+    *interned_tracepoint_info->mutable_intern() = full_tracepoint_event->tracepoint_info();
     capture_event_buffer_->AddEvent(std::move(event));
   }
 
   ClientCaptureEvent event;
-  InternedTracepointEvent* interned_tracepoint_event = event.mutable_interned_tracepoint_event();
-  interned_tracepoint_event->set_pid(tracepoint_event->pid());
-  interned_tracepoint_event->set_tid(tracepoint_event->tid());
-  interned_tracepoint_event->set_timestamp_ns(tracepoint_event->timestamp_ns());
-  interned_tracepoint_event->set_cpu(tracepoint_event->cpu());
-  interned_tracepoint_event->set_tracepoint_info_key(tracepoint_key);
+  TracepointEvent* tracepoint_event = event.mutable_tracepoint_event();
+  tracepoint_event->set_pid(full_tracepoint_event->pid());
+  tracepoint_event->set_tid(full_tracepoint_event->tid());
+  tracepoint_event->set_timestamp_ns(full_tracepoint_event->timestamp_ns());
+  tracepoint_event->set_cpu(full_tracepoint_event->cpu());
+  tracepoint_event->set_tracepoint_info_key(tracepoint_key);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -317,8 +318,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kSchedulingSlice:
       ProcessSchedulingSlice(event.mutable_scheduling_slice());
       break;
-    case ProducerCaptureEvent::kInternedCallstackSample:
-      ProcessInternedCallstackSample(producer_id, event.mutable_interned_callstack_sample());
+    case ProducerCaptureEvent::kCallstackSample:
+      ProcessCallstackSample(producer_id, event.mutable_callstack_sample());
       break;
     case ProducerCaptureEvent::kFullCallstackSample:
       ProcessFullCallstackSample(event.mutable_full_callstack_sample());
@@ -332,8 +333,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kInternedString:
       ProcessInternedString(producer_id, event.mutable_interned_string());
       break;
-    case ProducerCaptureEvent::kFullGpuJobEvent:
-      ProcessFullGpuJobEvent(event.mutable_full_gpu_job_event());
+    case ProducerCaptureEvent::kFullGpuJob:
+      ProcessFullGpuJob(event.mutable_full_gpu_job());
       break;
     case ProducerCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmission(producer_id, event.mutable_gpu_queue_submission());
@@ -368,7 +369,7 @@ void ProducerEventProcessorImpl::SendStringAndKeyEvent(uint64_t key, std::string
 
 }  // namespace
 
-std::unique_ptr<ProducerEventProcessor> CreateProducerEventProcessor(
+std::unique_ptr<ProducerEventProcessor> ProducerEventProcessor::Create(
     CaptureEventBuffer* capture_event_buffer) {
   return std::make_unique<ProducerEventProcessorImpl>(capture_event_buffer);
 }

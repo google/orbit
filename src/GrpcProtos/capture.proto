@@ -96,7 +96,7 @@ message InternedCallstack {
   Callstack intern = 2;
 }
 
-message InternedCallstackSample {
+message CallstackSample {
   int32 pid = 1;
   int32 tid = 2;
   uint64 callstack_id = 3;
@@ -120,7 +120,7 @@ message InternedTracepointInfo {
   TracepointInfo intern = 2;
 }
 
-message InternedTracepointEvent {
+message TracepointEvent {
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -136,7 +136,7 @@ message FullTracepointEvent {
   TracepointInfo tracepoint_info = 5;
 }
 
-message FullGpuJobEvent {
+message FullGpuJob {
   int32 pid = 1;
   int32 tid = 2;
   uint32 context = 3;
@@ -149,7 +149,7 @@ message FullGpuJobEvent {
   string timeline = 10;
 }
 
-message InternedGpuJobEvent {
+message GpuJob {
   int32 pid = 1;
   int32 tid = 2;
   uint32 context = 3;
@@ -246,7 +246,7 @@ message ThreadStateSlice {
   uint64 end_timestamp_ns = 5;
 }
 
-message InternedAddressInfo {
+message AddressInfo {
   uint64 absolute_address = 1;
   uint64 offset_in_function = 2;
   uint64 function_name_key = 3;
@@ -267,40 +267,41 @@ message ModuleUpdateEvent {
 }
 
 message ClientCaptureEvent {
-  reserved 3, 14;
   oneof event {
-    SchedulingSlice scheduling_slice = 1;
-    InternedCallstack interned_callstack = 2;
-    InternedCallstackSample interned_callstack_sample = 16;
-    FunctionCall function_call = 4;
-    InternedString interned_string = 5;
-    InternedGpuJobEvent interned_gpu_job_event = 6;
-    GpuQueueSubmission gpu_queue_submission = 13;
-    ThreadName thread_name = 7;
-    ThreadStateSlice thread_state_slice = 11;
-    InternedAddressInfo interned_address_info = 8;
-    InternedTracepointInfo interned_tracepoint_info = 9;
-    InternedTracepointEvent interned_tracepoint_event = 10;
-    IntrospectionScope introspection_scope = 12;
-    ModuleUpdateEvent module_update_event = 15;
+    // Please keep these alphabetically ordered.
+    AddressInfo address_info = 1;
+    CallstackSample callstack_sample = 2;
+    FunctionCall function_call = 3;
+    GpuJob gpu_job = 4;
+    GpuQueueSubmission gpu_queue_submission = 5;
+    InternedCallstack interned_callstack = 6;
+    InternedString interned_string = 7;
+    InternedTracepointInfo interned_tracepoint_info = 8;
+    IntrospectionScope introspection_scope = 9;
+    ModuleUpdateEvent module_update_event = 10;
+    SchedulingSlice scheduling_slice = 11;
+    ThreadName thread_name = 12;
+    ThreadStateSlice thread_state_slice = 13;
+    TracepointEvent tracepoint_event = 14;
   }
 }
 
 message ProducerCaptureEvent {
   oneof event {
-    SchedulingSlice scheduling_slice = 1;
-    InternedCallstack interned_callstack = 2;
-    InternedCallstackSample interned_callstack_sample = 3;
-    FullCallstackSample full_callstack_sample = 4;
-    FunctionCall function_call = 5;
-    InternedString interned_string = 6;
-    FullGpuJobEvent full_gpu_job_event = 7;
-    GpuQueueSubmission gpu_queue_submission = 8;
-    ThreadName thread_name = 9;
-    ThreadStateSlice thread_state_slice = 10;
-    FullAddressInfo full_address_info = 11;
-    FullTracepointEvent full_tracepoint_event = 12;
-    IntrospectionScope introspection_scope = 13;
-    ModuleUpdateEvent module_update_event = 14;
+    // Please keep these alphabetically ordered.
+    CallstackSample callstack_sample = 1;
+    FullCallstackSample full_callstack_sample = 2;
+    FullAddressInfo full_address_info = 3;
+    FullGpuJob full_gpu_job = 4;
+    FullTracepointEvent full_tracepoint_event = 5;
+    FunctionCall function_call = 6;
+    GpuQueueSubmission gpu_queue_submission = 7;
+    InternedCallstack interned_callstack = 8;
+    InternedString interned_string = 9;
+    IntrospectionScope introspection_scope = 10;
+    ModuleUpdateEvent module_update_event = 11;
+    SchedulingSlice scheduling_slice = 12;
+    ThreadName thread_name = 13;
+    ThreadStateSlice thread_state_slice = 14;
   }
 }

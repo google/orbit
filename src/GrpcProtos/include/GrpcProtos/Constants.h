@@ -5,7 +5,10 @@
 #ifndef GRPC_PROTOS_CONSTANTS_H_
 #define GRPC_PROTOS_CONSTANTS_H_
 
+#include <stdint.h>
+
 namespace orbit_grpc_protos {
+constexpr uint64_t kInvalidInternId = 0;
 constexpr uint64_t kInvalidFunctionId = 0;
 }
 
