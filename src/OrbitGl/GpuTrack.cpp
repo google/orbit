@@ -261,8 +261,8 @@ const TextBox* GpuTrack::GetRight(const TextBox* text_box) const {
   return nullptr;
 }
 
-std::string GpuTrack::GetBoxTooltip(PickingId id) const {
-  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+std::string GpuTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+  const TextBox* text_box = batcher.GetTextBox(id);
   if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }

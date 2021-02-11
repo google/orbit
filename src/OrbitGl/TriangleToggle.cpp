@@ -24,7 +24,7 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   CaptureViewElement::Draw(canvas, picking_mode, z_offset);
 
-  Batcher* batcher = canvas->GetBatcher();
+  Batcher* ui_batcher = canvas->GetBatcher();
   const float z = GlCanvas::kZValueTrack + z_offset;
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -48,14 +48,14 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_of
       triangle = Triangle(position + Vec3(half_w, half_h, z), position + Vec3(-half_w, half_h, z),
                           position + Vec3(0.f, -half_w, z));
     }
-    batcher->AddTriangle(triangle, color, shared_from_this());
+    ui_batcher->AddTriangle(triangle, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_w;
     float large_width = 2 * original_width;
     Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
             Vec2(large_width, large_width), z);
-    batcher->AddBox(box, color, shared_from_this());
+    ui_batcher->AddBox(box, color, shared_from_this());
   }
 }
 

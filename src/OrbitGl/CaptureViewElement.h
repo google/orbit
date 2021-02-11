@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 
+#include "Batcher.h"
 #include "PickingManager.h"
 
 class TimeGraph;
@@ -20,7 +21,7 @@ class CaptureViewElement : public Pickable {
     canvas_ = canvas;
   }
 
-  virtual void UpdatePrimitives(uint64_t /*min_tick*/, uint64_t /*max_tick*/,
+  virtual void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                                 PickingMode /*picking_mode*/, float /*z_offset*/ = 0){};
 
   void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }

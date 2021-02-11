@@ -21,9 +21,8 @@ GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name, CaptureData* cap
   SetLabel(name);
 }
 
-void GraphTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                                  float z_offset) {
-  Batcher* batcher = &time_graph_->GetBatcher();
+void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                  PickingMode picking_mode, float z_offset) {
   GlCanvas* canvas = time_graph_->GetCanvas();
 
   float track_width = canvas->GetWorldWidth();
@@ -130,14 +129,14 @@ void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string&
   Box arrow_text_box(text_box_position, text_box_size, z);
   Vec3 arrow_extra_point(target_pos[0], target_pos[1], z);
 
-  Batcher* batcher = canvas->GetBatcher();
-  batcher->AddBox(arrow_text_box, font_color);
+  Batcher* ui_batcher = canvas->GetBatcher();
+  ui_batcher->AddBox(arrow_text_box, font_color);
   if (arrow_is_left_directed) {
-    batcher->AddTriangle(
+    ui_batcher->AddTriangle(
         Triangle(arrow_text_box.vertices[0], arrow_text_box.vertices[1], arrow_extra_point),
         font_color);
   } else {
-    batcher->AddTriangle(
+    ui_batcher->AddTriangle(
         Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
         font_color);
   }

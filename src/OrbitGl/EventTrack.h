@@ -29,8 +29,8 @@ class EventTrack : public ThreadBar {
   std::string GetTooltip() const override;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                        float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) override;
 
   void OnPick(int x, int y) override;
   void OnRelease() override;
@@ -46,7 +46,7 @@ class EventTrack : public ThreadBar {
                                                       int max_line_length = 80, int max_lines = 20,
                                                       int bottom_n_lines = 5) const;
 
-  [[nodiscard]] std::string GetSampleTooltip(PickingId id) const;
+  [[nodiscard]] std::string GetSampleTooltip(const Batcher& batcher, PickingId id) const;
 
   Color color_;
 };

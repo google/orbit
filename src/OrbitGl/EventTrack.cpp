@@ -44,7 +44,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
     return;
   }
 
-  Batcher* batcher = canvas->GetBatcher();
+  Batcher* ui_batcher = canvas->GetBatcher();
 
   // The sample indicators are at z == 0 and do not respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if
@@ -55,7 +55,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   event_bar_z += z_offset;
   Color color = color_;
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
-  batcher->AddBox(box, color, shared_from_this());
+  ui_batcher->AddBox(box, color, shared_from_this());
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
@@ -66,8 +66,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   float x1 = x0 + size_[0];
   float y1 = y0 - size_[1];
 
-  batcher->AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
+  ui_batcher->AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
+  ui_batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
   if (picked_) {
     Vec2& from = mouse_pos_last_click_;
@@ -80,15 +80,14 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
 
     Color picked_color(0, 128, 255, 128);
     Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
-    batcher->AddBox(picked_box, picked_color, shared_from_this());
+    ui_batcher->AddBox(picked_box, picked_color, shared_from_this());
   }
 }
 
-void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                                  float z_offset) {
-  ThreadBar::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+void EventTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                  PickingMode picking_mode, float z_offset) {
+  ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent + z_offset;
   float track_height = layout.GetEventTrackHeight();
@@ -134,7 +133,8 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
-          nullptr, [this](PickingId id) -> std::string { return GetSampleTooltip(id); });
+          nullptr,
+          [this, batcher](PickingId id) -> std::string { return GetSampleTooltip(*batcher, id); });
       user_data->custom_data_ = &event;
       batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
@@ -216,10 +216,10 @@ std::string EventTrack::FormatCallstackForTooltip(const CallStack& callstack, in
   return result;
 }
 
-std::string EventTrack::GetSampleTooltip(PickingId id) const {
+std::string EventTrack::GetSampleTooltip(const Batcher& batcher, PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
 
-  auto user_data = time_graph_->GetBatcher().GetUserData(id);
+  auto user_data = batcher.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return unknown_return_text;
   }

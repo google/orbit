@@ -85,8 +85,7 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
 void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   CaptureViewElement::Draw(canvas, picking_mode, z_offset);
 
-  Batcher* batcher = canvas->GetBatcher();
-
+  Batcher* ui_batcher = canvas->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   const bool picking = picking_mode != PickingMode::kNone;
 
@@ -104,11 +103,11 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   if (!picking) {
     if (IsPinned()) {
       Box box(Vec2(x0, y0), Vec2(size_[0], size_[1]), track_z);
-      batcher->AddBox(box, kBackgroundColor, shared_from_this());
+      ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
     }
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
-      batcher->AddBox(box, kBackgroundColor, shared_from_this());
+      ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
     }
   }
 
@@ -120,7 +119,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, kBackgroundColor, shared_from_this());
+  ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
 
   // Draw rounded corners.
   if (!picking) {
@@ -136,12 +135,17 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     Vec2 end_bottom(x1 - right_margin, y1);
     Vec2 end_top(x1 - right_margin, y0 + top_margin);
 
-    DrawTriangleFan(batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0, track_z);
-    DrawTriangleFan(batcher, rounded_corner, bottom_right, kBackgroundColor, 0, track_z);
-    DrawTriangleFan(batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, end_top, GlCanvas::kBackgroundColor, 180.f, track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0,
+                    track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, bottom_right, kBackgroundColor, 0, track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f,
+                    track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f,
+                    track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f,
+                    track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, end_top, GlCanvas::kBackgroundColor, 180.f,
+                    track_z);
   }
 
   // Collapse toggle state management.
@@ -174,8 +178,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   }
 }
 
-void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/,
-                             float /*z_offset*/) {}
+void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t /*t_max*/,
+                             PickingMode /*  picking_mode*/, float /*z_offset*/) {}
 
 void Track::SetPinned(bool value) { pinned_ = value; }
 

@@ -37,21 +37,20 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_o
     return;
   }
 
-  Batcher* batcher = canvas->GetBatcher();
+  Batcher* ui_batcher = canvas->GetBatcher();
 
   float event_bar_z = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
                                                           : GlCanvas::kZValueEventBar;
   event_bar_z += z_offset;
   Color color = color_;
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
-  batcher->AddBox(box, color, shared_from_this());
+  ui_batcher->AddBox(box, color, shared_from_this());
 }
 
-void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+void TracepointTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                        PickingMode picking_mode, float z_offset) {
-  ThreadBar::UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+  ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent + z_offset;
   float track_height = layout.GetEventTrackHeight();
@@ -93,16 +92,18 @@ void TracepointTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
                    pos_[1] - track_height + 1);
           Vec2 size(kPickingBoxWidth, track_height);
-          auto user_data = std::make_unique<PickingUserData>(
-              nullptr, [&](PickingId id) -> std::string { return GetTracepointTooltip(id); });
+          auto user_data =
+              std::make_unique<PickingUserData>(nullptr, [&, batcher](PickingId id) -> std::string {
+                return GetTracepointTooltip(batcher, id);
+              });
           user_data->custom_data_ = &tracepoint;
           batcher->AddShadedBox(pos, size, z, kWhite, std::move(user_data));
         });
   }
 }
 
-std::string TracepointTrack::GetTracepointTooltip(PickingId id) const {
-  auto user_data = time_graph_->GetBatcher().GetUserData(id);
+std::string TracepointTrack::GetTracepointTooltip(Batcher* batcher, PickingId id) const {
+  auto user_data = batcher->GetUserData(id);
   CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =

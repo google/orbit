@@ -20,15 +20,15 @@ class TracepointTrack : public ThreadBar {
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                        float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) override;
 
   [[nodiscard]] bool IsEmpty() const override;
 
   void SetColor(const Color& color) { color_ = color; }
 
  private:
-  std::string GetTracepointTooltip(PickingId id) const;
+  std::string GetTracepointTooltip(Batcher* batcher, PickingId id) const;
 
   Color color_;
 };

@@ -199,8 +199,8 @@ std::string FrameTrack::GetTooltip() const {
       GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns())));
 }
 
-std::string FrameTrack::GetBoxTooltip(PickingId id) const {
-  const TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+  const TextBox* text_box = batcher.GetTextBox(id);
   if (!text_box) {
     return "";
   }
@@ -229,7 +229,6 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
 
-  Batcher* batcher = &time_graph_->GetBatcher();
   float y = pos_[1] - GetMaximumBoxHeight() + GetAverageBoxHeight();
   float x = pos_[0];
   Vec2 from(x, y);
@@ -245,9 +244,10 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   Vec2 white_text_box_position(pos_[0] + layout.GetRightMargin(),
                                y - layout.GetTextBoxHeight() / 2.f);
 
-  batcher->AddLine(from, from + Vec2(layout.GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
-  batcher->AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
-                   kWhiteColor);
+  Batcher* ui_batcher = canvas->GetBatcher();
+  ui_batcher->AddLine(from, from + Vec2(layout.GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
+  ui_batcher->AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
+                      kWhiteColor);
 
   canvas->GetTextRenderer().AddText(label.c_str(), white_text_box_position[0],
                                     white_text_box_position[1] + layout.GetTextOffset(), text_z,

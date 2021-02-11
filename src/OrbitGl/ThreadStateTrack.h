@@ -27,15 +27,15 @@ class ThreadStateTrack final : public ThreadBar {
                             ThreadID thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                        float z_offset) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset) override;
 
   void OnPick(int x, int y) override;
 
   [[nodiscard]] bool IsEmpty() const override;
 
  private:
-  std::string GetThreadStateSliceTooltip(PickingId id) const;
+  std::string GetThreadStateSliceTooltip(Batcher* batcher, PickingId id) const;
 };
 
 }  // namespace orbit_gl

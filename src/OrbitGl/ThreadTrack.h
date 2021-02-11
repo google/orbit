@@ -47,8 +47,8 @@ class ThreadTrack final : public TimerTrack {
   void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                        float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) override;
 
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
@@ -58,7 +58,7 @@ class ThreadTrack final : public TimerTrack {
                                     bool is_selected) const override;
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
                         float z_offset, TextBox* text_box) override;
-  [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetHeaderHeight() const override;

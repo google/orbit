@@ -302,8 +302,8 @@ PickingUserData* Batcher::GetUserData(PickingId id) {
   return const_cast<PickingUserData*>(static_cast<const Batcher*>(this)->GetUserData(id));
 }
 
-const TextBox* Batcher::GetTextBox(PickingId id) {
-  PickingUserData* data = GetUserData(id);
+const TextBox* Batcher::GetTextBox(PickingId id) const {
+  const PickingUserData* data = GetUserData(id);
 
   if (data && data->text_box_) {
     return data->text_box_;
