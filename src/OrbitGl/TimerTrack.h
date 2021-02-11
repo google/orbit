@@ -98,7 +98,7 @@ class TimerTrack : public Track {
     return true;
   }
   [[nodiscard]] virtual Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
-                                            bool is_selected) const = 0;
+                                            bool is_selected, bool is_highlighted) const = 0;
   [[nodiscard]] virtual bool TimerFilter(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return true;
@@ -124,6 +124,8 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   float GetHeight() const override;
   float box_height_ = 0.0f;
+
+  static const Color kHighlightColor;
 
   OrbitApp* app_ = nullptr;
 };

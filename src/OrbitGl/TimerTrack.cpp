@@ -27,6 +27,8 @@ using orbit_client_protos::TimerInfo;
 
 ABSL_DECLARE_FLAG(bool, show_return_values);
 
+const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
+
 TimerTrack::TimerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
                        const CaptureData* capture_data)
     : Track(time_graph, layout, capture_data), app_{app} {
@@ -174,8 +176,7 @@ void TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
   bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
                         function_id == draw_data.highlighted_function_id;
 
-  static const Color kHighlightColor(100, 181, 246, 255);
-  Color color = is_highlighted ? kHighlightColor : GetTimerColor(current_timer_info, is_selected);
+  Color color = GetTimerColor(current_timer_info, is_selected, is_highlighted);
 
   bool is_visible_width = elapsed_us * draw_data.inv_time_window * draw_data.canvas->GetWidth() > 1;
 

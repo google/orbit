@@ -54,8 +54,8 @@ class GpuTrack : public TimerTrack {
 
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
-  [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer,
-                                    bool is_selected) const override;
+  [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
+                                    bool is_highlighted) const override;
   [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
                         float z_offset, TextBox* text_box) override;

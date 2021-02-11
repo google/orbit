@@ -36,7 +36,7 @@ class SchedulerTrack final : public TimerTrack {
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
-                                    bool is_selected) const override;
+                                    bool is_selected, bool is_highlighted) const override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
  private:
