@@ -14,7 +14,7 @@ ScopeTree::ScopeTree() {
 }
 
 ScopeNode* ScopeTree::CreateNode(TextBox* text_box) {
-  nodes_.push_back(ScopeNode(text_box, size_++));
+  nodes_.push_back(ScopeNode(text_box));
   ScopeNode* node = nodes_.Last();
   return node;
 }
@@ -45,7 +45,7 @@ void ScopeTree::UpdateDepthInSubtree(ScopeNode* node, uint32_t new_depth) {
   ordered_nodes_by_depth_[new_depth].insert({node_timestamp, node});
 }
 
-size_t ScopeTree::CountOrderedNodes() const {
+size_t ScopeTree::CountOrderedNodesByDepth() const {
   size_t count_from_depth = 0;
   for (auto& pair : ordered_nodes_by_depth_) {
     count_from_depth += pair.second.size();
@@ -54,24 +54,29 @@ size_t ScopeTree::CountOrderedNodes() const {
 }
 
 void ScopeTree::Print() const {
-  LOG("Printing %u nodes height=%u:", size_, Height());
+  LOG("Printing %u nodes height=%u:", Size(), Height());
   root_->Print();
   LOG("");
 
   for (auto& [depth, ordered_nodes] : ordered_nodes_by_depth_) {
     for (auto& [unused_timestamp, node] : ordered_nodes) {
-      LOG("%u: node_depth:%u id:%u", depth, node->Depth(), node->Id());
+      LOG("%u: node_depth:%u", depth, node->Depth());
     }
   }
 }
 
 void ScopeNode::Print(const ScopeNode* node, uint64_t start_time, uint32_t depth) {
-  LOG("d%u %s%lu ScopeNode(%u) %p [%lu, %lu]", node->Depth(), std::string(depth, ' '), start_time,
-      node->id_, node, node->text_box_->GetTimerInfo().start(),
-      node->text_box_->GetTimerInfo().end());
+  LOG("d%u %s%lu ScopeNode(%p) [%lu, %lu]", node->Depth(), std::string(depth, ' '), start_time,
+      node, node->text_box_->GetTimerInfo().start(), node->text_box_->GetTimerInfo().end());
   for (auto& pair : node->children_) {
     Print(pair.second, pair.first, depth + 1);
   }
+}
+
+uint32_t ScopeNode::Height() const {
+  uint32_t max_height = 0;
+  FindHeight(this, &max_height);
+  return max_height;
 }
 
 void ScopeNode::FindHeight(const ScopeNode* node, uint32_t* height, uint32_t current_height) {
@@ -110,12 +115,6 @@ void ScopeNode::GetAllNodesInSubtree(const ScopeNode* node, std::set<const Scope
   }
 }
 
-uint32_t ScopeNode::Height() const {
-  uint32_t max_height = 0;
-  FindHeight(this, &max_height);
-  return max_height;
-}
-
 ScopeNode* ScopeNode::GetLastChildBeforeOrAtTime(uint64_t time) const {
   // Get first child before or exactly at "time".
   if (children_.empty()) return nullptr;
@@ -139,11 +138,9 @@ ScopeNode* ScopeNode::FindDeepestParentForNode(const ScopeNode* node) {
 std::vector<ScopeNode*> ScopeNode::GetChildrenInRange(uint64_t start, uint64_t end) const {
   // Get children that are enclosed by start and end inclusively.
   if (children_.empty()) return {};
-  auto node_it = children_.lower_bound(start);
-  if (node_it == children_.end()) return {};
   std::vector<ScopeNode*> nodes;
-  while (node_it != children_.end()) {
-    ScopeNode* node = (node_it++)->second;
+  for (auto node_it = children_.lower_bound(start); node_it != children_.end(); ++node_it) {
+    ScopeNode* node = node_it->second;
     if (node->Start() >= start && node->End() <= end) {
       nodes.push_back(node);
     } else {
@@ -153,29 +150,20 @@ std::vector<ScopeNode*> ScopeNode::GetChildrenInRange(uint64_t start, uint64_t e
   return nodes;
 }
 
-void ScopeNode::Insert(ScopeNode* node_to_insert) {
+void ScopeNode::Insert(ScopeNode* node) {
   ORBIT_SCOPE_FUNCTION;
 
-  ScopeNode* parent_node = FindDeepestParentForNode(node_to_insert);
+  // Find deepest parent and set depth on node to insert. The depth of descendants will be updated
+  // in ScopeTree::UpdateDepthInSubtree as the tree also needs to update another data structure.
+  ScopeNode* parent_node = FindDeepestParentForNode(node);
+  node->SetDepth(parent_node->Depth() + 1);
 
-  // Set depth only on the node to insert, the depth of descendants will be updated by the ScopeTree
-  // as it also needs to update a secondary data structure. See ScopeTree::UpdateDepthInSubtree.
-  node_to_insert->SetDepth(parent_node->Depth() + 1);
-
-  // Find all children encompassed by the node about to be inserted.
-  std::vector<ScopeNode*> encompassed_nodes =
-      parent_node->GetChildrenInRange(node_to_insert->Start(), node_to_insert->End());
-
-  // Remove all encompassed children from the parent node.
-  for (ScopeNode* encompassed_node : encompassed_nodes) {
+  // Migrate current children of the parent that are encompassed by the new node to the new node.
+  for (ScopeNode* encompassed_node : parent_node->GetChildrenInRange(node->Start(), node->End())) {
     parent_node->children_.erase(encompassed_node->Start());
-  }
-
-  // Make all encompassed nodes children of the new node.
-  for (ScopeNode* encompassed_node : encompassed_nodes) {
-    node_to_insert->children_.insert({encompassed_node->Start(), encompassed_node});
+    node->children_.emplace(encompassed_node->Start(), encompassed_node);
   }
 
   // Add new node as child of parent_node.
-  parent_node->children_.insert({node_to_insert->Start(), node_to_insert});
+  parent_node->children_.emplace(node->Start(), node);
 }

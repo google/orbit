@@ -16,8 +16,8 @@ namespace {
 TextBox* CreateTextBox(uint64_t start, uint64_t end) {
   static std::vector<std::unique_ptr<TextBox>> text_box_buffer;
   auto text_box = std::make_unique<TextBox>();
-  text_box->GetMutableGetTimerInfo().set_start(start);
-  text_box->GetMutableGetTimerInfo().set_end(end);
+  text_box->GetMutableTimerInfo().set_start(start);
+  text_box->GetMutableTimerInfo().set_end(end);
   text_box_buffer.push_back(std::move(text_box));
   return text_box_buffer.back().get();
 }
@@ -30,7 +30,7 @@ void ValidateTree(const ScopeTree& tree) {
   EXPECT_EQ(tree.Size(), tree.Root()->CountNodesInSubtree());
 
   // Check that counting nodes from the ScopeTree's depth maps produces the same result as Size().
-  EXPECT_EQ(tree.Size(), tree.CountOrderedNodes());
+  EXPECT_EQ(tree.Size(), tree.CountOrderedNodesByDepth());
 
   // Check that the tree does not contain duplicate nodes by counting unique nodes.
   EXPECT_EQ(tree.Size(), tree.Root()->GetAllNodesInSubtree().size());
