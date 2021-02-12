@@ -142,6 +142,13 @@ if [ -n "$1" ]; then
   echo "Starting the build (conan build)."
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
 
+  if [[ $CONAN_PROFILE == "coverage_clang9" ]]; then 
+    echo "Starting to generate unit test coverage report"
+    mkdir -p "${REPO_ROOT}/build/package/coverage"
+    ${REPO_ROOT}/contrib/unit_test_coverage/generate_coverage_report.sh \
+            "${REPO_ROOT}/src" "${REPO_ROOT}/build" "${REPO_ROOT}/build/package/coverage"
+  fi
+
   if [[ $CONAN_PROFILE != "iwyu" ]]; then
     echo "Start the packaging (conan package)."
     conan package -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
