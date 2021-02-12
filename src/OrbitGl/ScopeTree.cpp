@@ -10,6 +10,7 @@
 ScopeTree::ScopeTree() {
   static TextBox kDefaultTextBox;
   root_ = CreateNode(&kDefaultTextBox);
+  ordered_nodes_by_depth_[0].insert({0, root_});
 }
 
 ScopeNode* ScopeTree::CreateNode(TextBox* text_box) {
@@ -31,16 +32,25 @@ void ScopeTree::UpdateDepthInSubtree(ScopeNode* node, uint32_t new_depth) {
 
   // Remove node from previous depth track.
   if (previous_depth != new_depth) {
-    orderered_nodes_by_depth[previous_depth].erase(node_timestamp);
+    ordered_nodes_by_depth_[previous_depth].erase(node_timestamp);
     node->SetDepth(new_depth);
   }
 
-  // Add node to new depth track.
-  orderered_nodes_by_depth[new_depth].insert({node_timestamp, node});
-
-  for (auto& [unused_timestamp, child_node] : node->children_) {
+  // Recurse before inserting the node at new depth to prevent overwriting a child.
+  for (auto& [unused_timestamp, child_node] : node->GetChildren()) {
     UpdateDepthInSubtree(child_node, new_depth + 1);
   }
+
+  // Add node to new depth track.
+  ordered_nodes_by_depth_[new_depth].insert({node_timestamp, node});
+}
+
+size_t ScopeTree::CountOrderedNodes() const {
+  size_t count_from_depth = 0;
+  for (auto& pair : ordered_nodes_by_depth_) {
+    count_from_depth += pair.second.size();
+  }
+  return count_from_depth;
 }
 
 void ScopeTree::Print() const {
@@ -48,7 +58,7 @@ void ScopeTree::Print() const {
   root_->Print();
   LOG("");
 
-  for (auto& [depth, ordered_nodes] : orderered_nodes_by_depth) {
+  for (auto& [depth, ordered_nodes] : ordered_nodes_by_depth_) {
     for (auto& [unused_timestamp, node] : ordered_nodes) {
       LOG("%u: node_depth:%u id:%u", depth, node->Depth(), node->Id());
     }
@@ -69,6 +79,34 @@ void ScopeNode::FindHeight(const ScopeNode* node, uint32_t* height, uint32_t cur
   *height = std::max(*height, current_height);
   for (auto& pair : node->children_) {
     FindHeight(pair.second, height, current_height + 1);
+  }
+}
+
+size_t ScopeNode::CountNodesInSubtree() const {
+  size_t num_nodes = 0;
+  CountNodesInSubtree(this, &num_nodes);
+  return num_nodes;
+}
+
+void ScopeNode::CountNodesInSubtree(const ScopeNode* node, size_t* count) {
+  CHECK(count != nullptr);
+  ++(*count);
+  for (const auto [unused_time, child] : node->children_) {
+    CountNodesInSubtree(child, count);
+  }
+}
+
+std::set<const ScopeNode*> ScopeNode::GetAllNodesInSubtree() const {
+  std::set<const ScopeNode*> node_set;
+  GetAllNodesInSubtree(this, &node_set);
+  return node_set;
+}
+
+void ScopeNode::GetAllNodesInSubtree(const ScopeNode* node, std::set<const ScopeNode*>* node_set) {
+  CHECK(node_set != nullptr);
+  node_set->insert(node);
+  for (const auto [unused_time, child] : node->children_) {
+    GetAllNodesInSubtree(child, node_set);
   }
 }
 
