@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
+#include <google/protobuf/arena.h>
 #include <grpcpp/server_impl.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
@@ -28,9 +29,9 @@ namespace {
 class LockFreeBufferCaptureEventProducerImpl
     : public LockFreeBufferCaptureEventProducer<std::string> {
  protected:
-  orbit_grpc_protos::ProducerCaptureEvent TranslateIntermediateEvent(
-      std::string&& /*intermediate_event*/) override {
-    return orbit_grpc_protos::ProducerCaptureEvent{};
+  orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
+      std::string&& /*intermediate_event*/, google::protobuf::Arena* arena) override {
+    return google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
   }
 };
 

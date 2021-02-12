@@ -9,6 +9,9 @@ package orbit_grpc_protos;
 import "module.proto";
 import "tracepoint.proto";
 
+// This is needed by LockFreeBufferCaptureEventProducer.
+option cc_enable_arenas = true;
+
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;

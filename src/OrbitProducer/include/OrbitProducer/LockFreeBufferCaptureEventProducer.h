@@ -5,25 +5,32 @@
 #ifndef ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
 #define ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
 
+#include <google/protobuf/arena.h>
+
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitProducer/CaptureEventProducer.h"
 #include "concurrentqueue.h"
 
 namespace orbit_producer {
 
-// This still abstract implementation of CaptureEventProducer provides a lock-free queue
-// where to write events with low overhead from the fast path where they are produced.
-// The methods EnqueueIntermediateEvent(IfCapturing) allow to enqueue those events.
+// This still abstract implementation of CaptureEventProducer provides a lock-free queue where to
+// write events with low overhead from the fast path where they are produced.
+// Events are enqueued using the methods EnqueueIntermediateEvent(IfCapturing).
 //
-// Internally, a thread reads from the lock-free queue and sends CaptureEvents
-// to ProducerSideService using the methods provided by the superclass.
+// Internally, a thread reads from the lock-free queue and sends ProducerCaptureEvents to
+// ProducerSideService using the methods provided by the superclass.
 //
-// Note that the events stored in the lock-free queue, whose type is specified by the
-// type parameter IntermediateEventT, don't need to be CaptureEvents, nor protobufs at all.
+// The type of the events stored in the lock-free queue is specified by the type parameter
+// IntermediateEventT. These events don't need to be ProducerCaptureEvents, nor protobufs at all.
 // This is to allow enqueuing objects that are faster to produce than protobufs.
-// The translation from IntermediateEventT to CaptureEvent is handled by
-// TranslateIntermediateEvent, which subclasses need to implement.
+// ProducerCaptureEvents are then built from IntermediateEventT in TranslateIntermediateEvent, which
+// subclasses need to implement.
+//
+// In particular, when hundreds of thousands of events are produced per second, it is recommended
+// that IntermediateEventT not be a protobuf or another type that involves heap allocations, as the
+// cost of dynamic allocations and de-allocations can add up quickly.
 template <typename IntermediateEventT>
 class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
  public:
@@ -75,10 +82,18 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
     status_ = ProducerStatus::kShouldDropEvents;
   }
 
-  // Subclasses need to implement this method to convert an IntermediateEventT enqueued
-  // in the internal lock-free buffer to a CaptureEvent to be sent to ProducerSideService.
-  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent TranslateIntermediateEvent(
-      IntermediateEventT&& intermediate_event) = 0;
+  // Subclasses need to implement this method to convert an `IntermediateEventT` enqueued in the
+  // internal lock-free buffer to a `CaptureEvent` to be sent to ProducerSideService.
+  // The `CaptureEvent` must be created in the Arena using `google::protobuf::Arena::CreateMessage`
+  // from <google/protobuf/arena.h>. The pointer provided by `CreateMessage` should be returned.
+  // This optimizes memory allocations and cache efficiency. But keep in mind that:
+  // - `string` and `bytes` fields (both of which use `std::string` internally) still get heap
+  //   allocated no matter what;
+  // - If `IntermediateEventT` is itself a `ProducerCaptureEvent`, or the type of one of its fields,
+  //   attempting to move from it into the Arena-allocated `ProducerCaptureEvent` will silently
+  //   result in a deep copy.
+  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
+      IntermediateEventT&& intermediate_event, google::protobuf::Arena* arena) = 0;
 
  private:
   void ForwarderThread() {
@@ -86,6 +101,15 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
 
     constexpr uint64_t kMaxEventsPerRequest = 10'000;
     std::vector<IntermediateEventT> dequeued_events(kMaxEventsPerRequest);
+
+    // Pre-allocate and always reuse the same 1 MB chunk of memory as the first block of each Arena
+    // instance in the loop below. This is a small but measurable performance improvement.
+    google::protobuf::ArenaOptions arena_options;
+    constexpr size_t kArenaInitialBlockSize = 1024 * 1024;
+    auto arena_initial_block = make_unique_for_overwrite<char[]>(kArenaInitialBlockSize);
+    arena_options.initial_block = arena_initial_block.get();
+    arena_options.initial_block_size = kArenaInitialBlockSize;
+
     while (!shutdown_requested_) {
       while (true) {
         size_t dequeued_event_count =
@@ -105,15 +129,19 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
         if ((current_status == ProducerStatus::kShouldSendEvents ||
              current_status == ProducerStatus::kShouldNotifyAllEventsSent) &&
             dequeued_event_count > 0) {
-          orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest send_request;
+          google::protobuf::Arena arena{arena_options};
+          auto* send_request = google::protobuf::Arena::CreateMessage<
+              orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>(&arena);
           auto* capture_events =
-              send_request.mutable_buffered_capture_events()->mutable_capture_events();
+              send_request->mutable_buffered_capture_events()->mutable_capture_events();
           capture_events->Reserve(dequeued_event_count);
+
           for (size_t i = 0; i < dequeued_event_count; ++i) {
-            orbit_grpc_protos::ProducerCaptureEvent* event = capture_events->Add();
-            *event = TranslateIntermediateEvent(std::move(dequeued_events[i]));
+            capture_events->AddAllocated(
+                TranslateIntermediateEvent(std::move(dequeued_events[i]), &arena));
           }
-          if (!SendCaptureEvents(send_request)) {
+
+          if (!SendCaptureEvents(*send_request)) {
             ERROR("Forwarding %lu CaptureEvents", dequeued_event_count);
             break;
           }
