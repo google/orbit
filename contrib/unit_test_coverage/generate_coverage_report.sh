@@ -10,7 +10,7 @@
 # llvm-cov and requires a build with build arguments -fprofile-instr-generate="%m.profraw"
 # and -fcoverage-mapping. 
 #
-# usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR
+# usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR OUTPUT_DIR
 
 # Settings:
 # grep inverted matching list for directories in BUILD_DIR/src that are not used
@@ -53,9 +53,9 @@ function generate_html_td {
   echo "<td class='$css_class'><pre> $percent_formatted% ($covered/$count)</pre></td>"
 }
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 3 ]; then
   echo "error: wrong number of arguments."
-  echo "usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR"
+  echo "usage: generate_coverage_report.sh SOURCE_DIR BUILD_DIR OUTPUT_DIR"
   exit 1
 fi
 
@@ -71,7 +71,11 @@ if [ ! -d $BUILD_DIR ]; then
   exit 1
 fi
 
-OUTPUT_DIR=$BUILD_DIR/coverage
+OUTPUT_DIR=$(realpath $3)
+if [ ! -d $OUTPUT_DIR ]; then
+  echo "error: directory $3 does not exist."
+  exit 1
+fi
 
 LIBS=$(ls $BUILD_DIR/lib/* | grep -v "$LIB_FILE_FILTER")
 BINS=$(find $BUILD_DIR/bin/ -maxdepth 1 -type f | grep -v "$BIN_FILE_FILTER")
