@@ -10,7 +10,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "${DIR}/tags.sh"
 
 if [ "$(uname -s)" == "Linux" ]; then
-  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} clang_format license_headers iwyu; do
+  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} clang_format license_headers iwyu coverage_clang9; do
     tag="${docker_image_tag_mapping[${profile}]-latest}"
     docker push gcr.io/orbitprofiler/$profile:${tag} || exit $?
   done

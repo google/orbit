@@ -8,6 +8,7 @@
 # should be / will be assumed.
 declare -rA docker_image_tag_mapping=( \
   [iwyu]="2" \
+  [coverage_clang9]="1" \
 )
 
 # Use `readonly DOCKER_IMAGE_TAG="${docker_image_tag_mapping[${CONAN_PROFILE}]-latest}"`
