@@ -22,17 +22,35 @@ ErrorMessageOr<void> ProcessList::Refresh() {
 
   // TODO(b/161423785): This for loop should be refactored. For example, when
   //  parts are in a separate function, OUTCOME_TRY could be used to simplify
-  //  error handling. Also use ErrorMessageOr
-  for (const auto& directory_entry : std::filesystem::directory_iterator("/proc")) {
-    if (!directory_entry.is_directory()) continue;
+  //  error handling.
+  std::error_code error;
+  auto directory_iterator = std::filesystem::directory_iterator("/proc", error);
+  if (error) {
+    return ErrorMessage(absl::StrFormat("Unable to iterate /proc directory: %s", error.message()));
+  }
 
-    const std::filesystem::path& path = directory_entry.path();
+  for (auto it = begin(directory_iterator); it != end(directory_iterator); it.increment(error)) {
+    if (error) {
+      return ErrorMessage(
+          absl::StrFormat("Unable to iterate /proc directory: %s", error.message()));
+    }
+
+    bool is_directory = it->is_directory(error);
+    if (error) {
+      ERROR("Unable to stat \"%s\" directory entry: %s", it->path(), error.message());
+      continue;
+    }
+
+    if (!is_directory) continue;
+
+    const std::filesystem::path& path = it->path();
     std::string folder_name = path.filename().string();
 
-    uint32_t pid;
+    int32_t pid;
     if (!absl::SimpleAtoi(folder_name, &pid)) continue;
 
     const auto iter = processes_.find(pid);
+
     if (iter != processes_.end()) {
       auto process = processes_.extract(iter);
 
