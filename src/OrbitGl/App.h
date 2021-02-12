@@ -28,7 +28,6 @@
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
 #include "CaptureWindow.h"
-#include "CrashHandler/CrashHandlerBase.h"
 #include "DataManager.h"
 #include "DataView.h"
 #include "DataViewFactory.h"
@@ -43,6 +42,7 @@
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -79,13 +79,12 @@
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
   explicit OrbitApp(MainThreadExecutor* main_thread_executor,
-                    const orbit_crash_handler::CrashHandlerBase* crash_handler,
+                    const orbit_base::CrashHandler* crash_handler,
                     orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
-      MainThreadExecutor* main_thread_executor,
-      const orbit_crash_handler::CrashHandlerBase* crash_handler,
+      MainThreadExecutor* main_thread_executor, const orbit_base::CrashHandler* crash_handler,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   void PostInit();
@@ -514,7 +513,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   FrameTrackOnlineProcessor frame_track_online_processor_;
 
-  const orbit_crash_handler::CrashHandlerBase* crash_handler_;
+  const orbit_base::CrashHandler* crash_handler_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 

@@ -12,11 +12,11 @@
 #include <client/crash_report_database.h>
 #include <client/crashpad_client.h>
 
-#include "CrashHandler/CrashHandlerBase.h"
+#include "OrbitBase/CrashHandler.h"
 
 namespace orbit_crash_handler {
 
-class CrashHandler : public CrashHandlerBase{
+class CrashHandler : public orbit_base::CrashHandler{
  public:
   explicit CrashHandler(const std::string& dump_path, const std::string& handler_path,
                         const std::string& crash_server_url,

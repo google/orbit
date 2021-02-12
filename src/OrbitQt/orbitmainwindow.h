@@ -30,13 +30,13 @@
 
 #include "App.h"
 #include "CallTreeView.h"
-#include "CrashHandler/CrashHandlerBase.h"
 #include "DataView.h"
 #include "DataViewTypes.h"
 #include "DisassemblyReport.h"
 #include "FilterPanelWidgetAction.h"
 #include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/CrashHandler.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "StatusListener.h"
 #include "TargetConfiguration.h"
@@ -57,7 +57,7 @@ class OrbitMainWindow : public QMainWindow {
   static constexpr int kEndSessionReturnCode = 1;
 
   explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
-                           const orbit_crash_handler::CrashHandlerBase* crash_handler,
+                           const orbit_base::CrashHandler* crash_handler,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
                            const QStringList& command_line_flags = QStringList());
   ~OrbitMainWindow() override;

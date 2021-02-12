@@ -38,10 +38,10 @@
 
 #include "AccessibilityAdapter.h"
 #include "Connections.h"
-#include "CrashHandler/CrashHandlerBase.h"
 #include "DeploymentConfigurations.h"
 #include "ImGuiOrbit.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/ScopedConnection.h"
@@ -78,7 +78,7 @@ Q_DECLARE_METATYPE(std::error_code);
 
 void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                    const Context* ssh_context, const QStringList& command_line_flags,
-                   const orbit_crash_handler::CrashHandlerBase* crash_handler,
+                   const orbit_base::CrashHandler* crash_handler,
                    const std::filesystem::path& capture_file_path = "") {
   qRegisterMetaType<std::error_code>();
 
@@ -333,7 +333,7 @@ int main(int argc, char* argv[]) {
   QApplication::setApplicationDisplayName(display_name);
   QApplication::setApplicationVersion(version_string);
 
-  auto crash_handler = std::make_unique<orbit_crash_handler::CrashHandlerBase>();
+  auto crash_handler = std::make_unique<orbit_base::CrashHandler>();
 #ifdef ORBIT_CRASH_HANDLING
   const std::string dump_path = Path::CreateOrGetDumpDir().string();
 #ifdef _WIN32

@@ -97,7 +97,6 @@ target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   OrbitQt
   PRIVATE CodeViewer
-          CrashHandler
           MetricsUploader
           OrbitAccessibility
           OrbitCore
@@ -110,6 +109,11 @@ target_link_libraries(
           Qt5::Core
           SyntaxHighlighter
           qtpropertybrowser::qtpropertybrowser)
+
+if(WITH_CRASH_HANDLING)
+  target_link_libraries(OrbitQt PRIVATE CrashHandler)
+  target_compile_definitions(OrbitQt PRIVATE ORBIT_CRASH_HANDLING)
+endif()
 
 if(WIN32)
   set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)

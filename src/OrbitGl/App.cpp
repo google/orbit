@@ -136,7 +136,7 @@ PresetLoadState GetPresetLoadStateForProcess(
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor,
-                   const orbit_crash_handler::CrashHandlerBase* crash_handler,
+                   const orbit_base::CrashHandler* crash_handler,
                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : main_thread_executor_(main_thread_executor),
       crash_handler_(crash_handler),
@@ -315,8 +315,7 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 }
 
 std::unique_ptr<OrbitApp> OrbitApp::Create(
-    MainThreadExecutor* main_thread_executor,
-    const orbit_crash_handler::CrashHandlerBase* crash_handler,
+    MainThreadExecutor* main_thread_executor, const orbit_base::CrashHandler* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   auto app = std::make_unique<OrbitApp>(main_thread_executor, crash_handler, metrics_uploader);
 

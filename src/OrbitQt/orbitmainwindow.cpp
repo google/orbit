@@ -148,7 +148,7 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
-                                 const orbit_crash_handler::CrashHandlerBase* crash_handler,
+                                 const orbit_base::CrashHandler* crash_handler,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  const QStringList& command_line_flags)
     : QMainWindow(nullptr),
