@@ -36,30 +36,31 @@ constexpr const char* kCmdBufferString = "command buffer";
 namespace orbit_gl {
 
 std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
-  std::string label;
+  std::string queue_pretty_name;
+  std::string timeline_label(timeline);
   if (timeline.rfind("gfx", 0) == 0) {
-    if (timeline.find("_marker") != std::string::npos) {
-      return absl::StrFormat("Graphics queue debug markers (%s)", timeline);
-    }
-    return absl::StrFormat("Graphics queue (%s)", timeline);
+    queue_pretty_name = "Graphics queue";
+    timeline_label = absl::StrFormat(" (%s)", timeline);
   }
   if (timeline.rfind("sdma", 0) == 0) {
-    if (timeline.find("_marker") != std::string::npos) {
-      return absl::StrFormat("Transfer queue debug markers (%s)", timeline);
-    }
-    return absl::StrFormat("Transfer queue (%s)", timeline);
+    queue_pretty_name = "DMA queue";
+    timeline_label = absl::StrFormat(" (%s)", timeline);
   }
   if (timeline.rfind("comp", 0) == 0) {
-    if (timeline.find("_marker") != std::string::npos) {
-      return absl::StrFormat("Compute queue debug markers (%s)", timeline);
-    }
-    return absl::StrFormat("Compute queue (%s)", timeline);
+    queue_pretty_name = "Compute queue";
+    timeline_label = absl::StrFormat(" (%s)", timeline);
   }
-  // On AMD, this should not happen and we don't support tracepoints for
-  // other GPUs (at the moment). We return the timeline to make sure we
-  // at least display something. When we add support for other GPU
-  // tracepoints, this needs to be changed.
-  return std::string(timeline);
+  if (timeline.rfind("vce", 0) == 0) {
+    queue_pretty_name = "Video Coding Engine";
+    timeline_label = absl::StrFormat(" (%s)", timeline);
+  }
+  std::string debug_marker_label;
+  if (timeline.find("_marker") != std::string::npos) {
+    // Space at start is intentional as we want that space between the queue name
+    // and "debug markers". This makes constructing the string simpler.
+    debug_marker_label = " debug markers";
+  }
+  return absl::StrFormat("%s%s%s", queue_pretty_name, debug_marker_label, timeline_label);
 }
 
 }  // namespace orbit_gl
