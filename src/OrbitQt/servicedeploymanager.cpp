@@ -182,7 +182,7 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
     std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port) {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Setting up port forwarding...");
-  LOG("Setting up tunnel on port %d", grpc_port_.grpc_port);
+  LOG("Setting up tunnel on port %d", port);
 
   tunnel->emplace(&session_.value(), kLocalhost, port, this);
 
@@ -551,7 +551,17 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
         "running...");
   }
 
-  OUTCOME_TRY(local_grpc_port, StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port));
+  outcome::result<uint16_t> local_grpc_port_result =
+      StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port);
+  int retry = 3;
+  while (retry > 0 && local_grpc_port_result.has_error()) {
+    ERROR("Failed to establish tunnel. Trying again in 500ms");
+    std::this_thread::sleep_for(std::chrono::milliseconds{500});
+    local_grpc_port_result = StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port);
+    retry--;
+  }
+
+  OUTCOME_TRY(local_grpc_port, local_grpc_port_result);
 
   emit statusMessage("Successfully set up port forwarding!");
 
