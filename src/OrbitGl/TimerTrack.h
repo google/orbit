@@ -84,6 +84,13 @@ class TimerTrack : public Track {
     return true;
   }
 
+  void DrawTimer(TextBox* prev_text_box, TextBox* current_text_box, TextBox* next_text_box,
+                 uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher,
+                 GlCanvas* canvas, float world_start_x, float world_width, double inv_time_window,
+                 bool is_collapsed, float z, const TextBox* selected_textbox,
+                 uint64_t highlighted_function_id, uint64_t pixel_delta_in_ticks,
+                 uint64_t min_timegraph_tick, uint64_t* min_ignore, uint64_t* max_ignore);
+
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
   }
