@@ -45,7 +45,6 @@ target_sources(OrbitBase PRIVATE
 target_sources(OrbitBase PRIVATE
         ExecutablePath.cpp
         JoinFutures.cpp
-        ReadFileToString.cpp
         Logging.cpp
         LoggingUtils.cpp
         SafeStrerror.cpp
@@ -61,6 +60,7 @@ target_sources(OrbitBase PRIVATE
         ExecutablePathLinux.cpp
         ExecuteCommandLinux.cpp
         GetProcessIdsLinux.cpp
+        ReadFileToStringLinux.cpp
         ThreadUtilsLinux.cpp)
 endif()
 
@@ -83,7 +83,6 @@ target_sources(OrbitBaseTests PRIVATE
         ImmediateExecutorTest.cpp
         JoinFuturesTest.cpp
         LoggingUtilsTest.cpp
-        ReadFileToStringTest.cpp
         OrbitApiTest.cpp
         ProfilingTest.cpp
         PromiseTest.cpp
@@ -97,6 +96,7 @@ if (NOT WIN32)
 target_sources(OrbitBaseTests PRIVATE
         ExecutablePathLinuxTest.cpp
         ExecuteCommandLinuxTest.cpp
+        ReadFileToStringTest.cpp
         GetProcessIdsLinuxTest.cpp)
 endif()
 
