@@ -5,6 +5,8 @@
 #ifndef ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_IMPL_H_
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_IMPL_H_
 
+#include <google/protobuf/arena.h>
+
 #include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
 #include "VulkanLayerProducer.h"
 #include "absl/container/flat_hash_set.h"
@@ -64,9 +66,19 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
       outer_->ClearStringInternPool();
     }
 
-    orbit_grpc_protos::ProducerCaptureEvent TranslateIntermediateEvent(
-        orbit_grpc_protos::ProducerCaptureEvent&& intermediate_event) override {
-      return std::move(intermediate_event);
+    orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
+        orbit_grpc_protos::ProducerCaptureEvent&& intermediate_event,
+        google::protobuf::Arena* arena) override {
+      auto* capture_event =
+          google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+      // Note that, as capture_event is in the Arena and intermediate_event is on the heap, this
+      // std::move will actually end up being a copy, as it will use CopyFrom internally.
+      // For the amount of events that this Vulkan layer produces, this is fine performance-wise.
+      // This is also in line with the principle of this method, which in general expects a
+      // transformation from any type that intermediate_event could be to the ProducerCaptureEvent
+      // protobuf.
+      *capture_event = std::move(intermediate_event);
+      return capture_event;
     }
 
    private:

@@ -8,6 +8,9 @@ package orbit_grpc_protos;
 
 import "capture.proto";
 
+// This is needed by LockFreeBufferCaptureEventProducer.
+option cc_enable_arenas = true;
+
 message ReceiveCommandsAndSendEventsRequest {
   message BufferedCaptureEvents {
     reserved 1;
