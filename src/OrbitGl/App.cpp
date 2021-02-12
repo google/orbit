@@ -1099,7 +1099,8 @@ void OrbitApp::LoadModules(
           SelectFunctionsFromHashes(module, select_functions);
           EnableFrameTracksFromHashes(module, frame_tracks);
         };
-    LoadModule(module).Then(main_thread_executor_, std::move(handle_hooks_and_frame_tracks));
+    LoadOrReloadModule(module).Then(main_thread_executor_,
+                                    std::move(handle_hooks_and_frame_tracks));
   }
 }
 
@@ -1130,10 +1131,47 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModule(const std::string&
   const ModuleData* module_data = GetModuleByPath(module_path);
 
   if (module_data == nullptr) {
-    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
+    return ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)};
   }
 
-  if (module_data->is_loaded()) return {outcome::success()};
+  if (module_data->is_loaded()) {
+    return ErrorMessage{absl::StrFormat("Module \"%s\" is already loaded!", module_path)};
+  }
+
+  return LoadOrReloadModule(module_path, build_id);
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::ReloadModule(const ModuleData* module) {
+  return ReloadModule(module->file_path(), module->build_id());
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::ReloadModule(const std::string& module_path,
+                                                                const std::string& build_id) {
+  const ModuleData* module_data = GetModuleByPath(module_path);
+
+  if (module_data == nullptr) {
+    return ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)};
+  }
+
+  if (!module_data->is_loaded()) {
+    return ErrorMessage{
+        absl::StrFormat("Module \"%s\" is not loaded, so it can't be reloaded!", module_path)};
+  }
+
+  return LoadOrReloadModule(module_path, build_id);
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadOrReloadModule(const ModuleData* module) {
+  return LoadOrReloadModule(module->file_path(), module->build_id());
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadOrReloadModule(
+    const std::string& module_path, const std::string& build_id) {
+  const ModuleData* module_data = GetModuleByPath(module_path);
+
+  if (module_data == nullptr) {
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
+  }
 
   const auto it = modules_currently_loading_.find(module_path);
   if (it != modules_currently_loading_.end()) {

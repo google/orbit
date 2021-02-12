@@ -289,14 +289,29 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void NeedsRedraw();
   void RenderImGuiDebugUI();
 
+  // Loads or reloads a list of modules.
   void LoadModules(
       const std::vector<ModuleData*>& modules,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map);
+
+  // Tries to load a list of modules
+  orbit_base::Future<void> LoadModules(absl::Span<const ModuleData* const> modules);
+
+  // Tries to load a module (only if not already loaded)
   orbit_base::Future<ErrorMessageOr<void>> LoadModule(const ModuleData* module);
   orbit_base::Future<ErrorMessageOr<void>> LoadModule(const std::string& module_path,
                                                       const std::string& build_id);
-  orbit_base::Future<void> LoadModules(absl::Span<const ModuleData* const> modules);
+
+  // Tries to reload a module (only if already loaded)
+  orbit_base::Future<ErrorMessageOr<void>> ReloadModule(const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<void>> ReloadModule(const std::string& module_path,
+                                                        const std::string& build_id);
+
+  // Tries to load or reload a module (depending on whether already loaded)
+  orbit_base::Future<ErrorMessageOr<void>> LoadOrReloadModule(const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<void>> LoadOrReloadModule(const std::string& module_path,
+                                                              const std::string& build_id);
 
   // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
   // should not be necessary to have an argument here, since OrbitApp will always only have one
