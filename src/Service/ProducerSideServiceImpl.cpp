@@ -11,11 +11,11 @@
 #include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
 namespace orbit_service {
 
-using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
 void ProducerSideServiceImpl::OnCaptureStartRequested(
@@ -354,6 +354,8 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
     grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                              orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
     uint64_t producer_id, bool* all_events_sent_received) {
+  orbit_base::SetCurrentThreadName("PSSI::RcvEvents");
+
   orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
   while (stream->Read(&request)) {
     {

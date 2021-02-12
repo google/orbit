@@ -6,6 +6,7 @@
 #define ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "OrbitProducer/CaptureEventProducer.h"
 #include "concurrentqueue.h"
 
@@ -29,7 +30,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   void BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) override {
     CaptureEventProducer::BuildAndStart(channel);
 
-    forwarder_thread_ = std::thread{[this] { ForwarderThread(); }};
+    forwarder_thread_ = std::thread{&LockFreeBufferCaptureEventProducer::ForwarderThread, this};
   }
 
   void ShutdownAndWait() override {
@@ -81,6 +82,8 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
 
  private:
   void ForwarderThread() {
+    orbit_base::SetCurrentThreadName("ForwarderThread");
+
     constexpr uint64_t kMaxEventsPerRequest = 10'000;
     std::vector<IntermediateEventT> dequeued_events(kMaxEventsPerRequest);
     while (!shutdown_requested_) {
