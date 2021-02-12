@@ -83,17 +83,15 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 }  // namespace
 
 void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
-                           TextBox* next_text_box, uint64_t min_tick, uint64_t max_tick,
-                           float z_offset, Batcher* batcher, GlCanvas* canvas, float world_start_x,
-                           float world_width, double inv_time_window, bool is_collapsed, float z,
-                           const TextBox* selected_textbox, uint64_t highlighted_function_id,
-                           uint64_t pixel_delta_in_ticks, uint64_t min_timegraph_tick,
+                           TextBox* next_text_box, const internal::DrawData& draw_data,
                            uint64_t* min_ignore, uint64_t* max_ignore) {
   CHECK(min_ignore != nullptr);
   CHECK(max_ignore != nullptr);
   if (current_text_box == nullptr) return;
   const TimerInfo& current_timer_info = current_text_box->GetTimerInfo();
-  if (min_tick > current_timer_info.end() || max_tick < current_timer_info.start()) return;
+  if (draw_data.min_tick > current_timer_info.end() ||
+      draw_data.max_tick < current_timer_info.start())
+    return;
   if (current_timer_info.start() >= *min_ignore && current_timer_info.end() <= *max_ignore) return;
   if (!TimerFilter(current_timer_info)) return;
 
@@ -146,17 +144,18 @@ void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
   double elapsed_us = end_us - start_us;
 
   // Draw the Timer's text if it is not collapsed.
-  if (!is_collapsed) {
+  if (!draw_data.is_collapsed) {
     // For overlaps, let us make the textbox just a bit wider:
     double left_overlap_width_us = start_or_prev_end_us - start_us;
     double text_x_start_us = start_or_prev_end_us - (.25 * left_overlap_width_us);
     double right_overlap_width_us = end_us - end_or_next_start_us;
     double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
 
-    bool is_visible_width =
-        (text_x_end_us - text_x_start_us) * inv_time_window * canvas->GetWidth() > 1;
-    WorldXInfo world_x_info =
-        ToWorldX(text_x_start_us, text_x_end_us, inv_time_window, world_start_x, world_width);
+    bool is_visible_width = (text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
+                                draw_data.canvas->GetWidth() >
+                            1;
+    WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
+                                       draw_data.world_start_x, draw_data.world_width);
 
     if (is_visible_width) {
       Vec2 pos(world_x_info.world_x_start, world_timer_y);
@@ -164,62 +163,69 @@ void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
       current_text_box->SetPos(pos);
       current_text_box->SetSize(size);
 
-      SetTimesliceText(current_timer_info, elapsed_us, world_start_x, z_offset, current_text_box);
+      SetTimesliceText(current_timer_info, elapsed_us, draw_data.world_start_x, draw_data.z_offset,
+                       current_text_box);
     }
   }
 
   uint64_t function_id = current_timer_info.function_id();
 
-  bool is_selected = current_text_box == selected_textbox;
+  bool is_selected = current_text_box == draw_data.selected_textbox;
   bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
-                        function_id == highlighted_function_id;
+                        function_id == draw_data.highlighted_function_id;
 
   static const Color kHighlightColor(100, 181, 246, 255);
   Color color = is_highlighted ? kHighlightColor : GetTimerColor(current_timer_info, is_selected);
 
-  bool is_visible_width = elapsed_us * inv_time_window * canvas->GetWidth() > 1;
+  bool is_visible_width = elapsed_us * draw_data.inv_time_window * draw_data.canvas->GetWidth() > 1;
 
   if (is_visible_width) {
     WorldXInfo world_x_info_left_overlap =
-        ToWorldX(start_us, start_or_prev_end_us, inv_time_window, world_start_x, world_width);
+        ToWorldX(start_us, start_or_prev_end_us, draw_data.inv_time_window, draw_data.world_start_x,
+                 draw_data.world_width);
 
     WorldXInfo world_x_info_right_overlap =
-        ToWorldX(end_or_next_start_us, end_us, inv_time_window, world_start_x, world_width);
+        ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.world_start_x,
+                 draw_data.world_width);
 
-    Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y + box_height, z);
+    Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y + box_height, draw_data.z);
     Vec3 bottom_left(
         world_x_info_left_overlap.world_x_start + world_x_info_left_overlap.world_x_width,
-        world_timer_y, z);
-    Vec3 top_right(world_x_info_right_overlap.world_x_start, world_timer_y + box_height, z);
+        world_timer_y, draw_data.z);
+    Vec3 top_right(world_x_info_right_overlap.world_x_start, world_timer_y + box_height,
+                   draw_data.z);
     Vec3 bottom_right(
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
-        world_timer_y, z);
-    batcher->AddShadedTrapezium(
+        world_timer_y, draw_data.z);
+    Batcher* batcher = draw_data.batcher;
+    draw_data.batcher->AddShadedTrapezium(
         top_left, bottom_left, bottom_right, top_right, color,
         std::make_unique<PickingUserData>(current_text_box, [&, batcher](PickingId id) {
           return this->GetBoxTooltip(*batcher, id);
         }));
 
   } else {
+    Batcher* batcher = draw_data.batcher;
     auto user_data = std::make_unique<PickingUserData>(
         current_text_box, [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
 
-    WorldXInfo world_x_info =
-        ToWorldX(start_us, end_us, inv_time_window, world_start_x, world_width);
+    WorldXInfo world_x_info = ToWorldX(start_us, end_us, draw_data.inv_time_window,
+                                       draw_data.world_start_x, draw_data.world_width);
 
     Vec2 pos(world_x_info.world_x_start, world_timer_y);
-    batcher->AddVerticalLine(pos, GetTextBoxHeight(current_timer_info), z, color,
-                             std::move(user_data));
+    draw_data.batcher->AddVerticalLine(pos, GetTextBoxHeight(current_timer_info), draw_data.z,
+                                       color, std::move(user_data));
     // For lines, we can ignore the entire pixel into which this event
     // falls. We align this precisely on the pixel x-coordinate of the
     // current line being drawn (in ticks). If pixel_delta_in_ticks is
     // zero, we need to avoid dividing by zero, but we also wouldn't
     // gain anything here.
-    if (pixel_delta_in_ticks != 0) {
-      *min_ignore = min_timegraph_tick +
-                    ((current_timer_info.start() - min_timegraph_tick) / pixel_delta_in_ticks) *
-                        pixel_delta_in_ticks;
-      *max_ignore = *min_ignore + pixel_delta_in_ticks;
+    if (draw_data.pixel_delta_in_ticks != 0) {
+      *min_ignore = draw_data.min_timegraph_tick +
+                    ((current_timer_info.start() - draw_data.min_timegraph_tick) /
+                     draw_data.pixel_delta_in_ticks) *
+                        draw_data.pixel_delta_in_ticks;
+      *max_ignore = *min_ignore + draw_data.pixel_delta_in_ticks;
     }
   }
 }
@@ -228,26 +234,32 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
                                   PickingMode /*picking_mode*/, float z_offset) {
   UpdateBoxHeight();
 
-  GlCanvas* canvas = time_graph_->GetCanvas();
+  internal::DrawData draw_data{};
+  draw_data.min_tick = min_tick;
+  draw_data.max_tick = max_tick;
+  draw_data.z_offset = z_offset;
 
-  float world_start_x = canvas->GetWorldTopLeftX();
-  float world_width = canvas->GetWorldWidth();
-  double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
-  bool is_collapsed = collapse_toggle_->IsCollapsed();
+  draw_data.batcher = batcher;
+  draw_data.canvas = time_graph_->GetCanvas();
 
-  float z = GlCanvas::kZValueBox + z_offset;
+  draw_data.world_start_x = draw_data.canvas->GetWorldTopLeftX();
+  draw_data.world_width = draw_data.canvas->GetWorldWidth();
+  draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
+  draw_data.is_collapsed = collapse_toggle_->IsCollapsed();
+
+  draw_data.z = GlCanvas::kZValueBox + z_offset;
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
-  const TextBox* selected_textbox = app_->selected_text_box();
-  uint64_t highlighted_function_id = app_->GetFunctionIdToHighlight();
+  draw_data.selected_textbox = app_->selected_text_box();
+  draw_data.highlighted_function_id = app_->GetFunctionIdToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
   // events that would just draw over an already drawn line. When zoomed in
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  uint64_t pixel_delta_in_ticks = time_window_ns / canvas->GetWidth();
-  uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+  draw_data.pixel_delta_in_ticks = time_window_ns / draw_data.canvas->GetWidth();
+  draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
@@ -273,10 +285,8 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
         // the previous iteration ("current").
         next_text_box = &block[k];
 
-        DrawTimer(prev_text_box, current_text_box, next_text_box, min_tick, max_tick, z_offset,
-                  batcher, canvas, world_start_x, world_width, inv_time_window, is_collapsed, z,
-                  selected_textbox, highlighted_function_id, pixel_delta_in_ticks,
-                  min_timegraph_tick, &min_ignore, &max_ignore);
+        DrawTimer(prev_text_box, current_text_box, next_text_box, draw_data, &min_ignore,
+                  &max_ignore);
 
         prev_text_box = current_text_box;
         current_text_box = next_text_box;
@@ -284,10 +294,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
     }
     // We still need to draw the last timer.
     next_text_box = nullptr;
-    DrawTimer(prev_text_box, current_text_box, next_text_box, min_tick, max_tick, z_offset, batcher,
-              canvas, world_start_x, world_width, inv_time_window, is_collapsed, z,
-              selected_textbox, highlighted_function_id, pixel_delta_in_ticks, min_timegraph_tick,
-              &min_ignore, &max_ignore);
+    DrawTimer(prev_text_box, current_text_box, next_text_box, draw_data, &min_ignore, &max_ignore);
   }
 }
 
