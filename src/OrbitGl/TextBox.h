@@ -34,10 +34,13 @@ class TextBox {
     timer_info_ = timer_info;
   }
   const orbit_client_protos::TimerInfo& GetTimerInfo() const { return timer_info_; }
-  orbit_client_protos::TimerInfo& GetMutableTimerInfo() { return timer_info_; }
 
   void SetElapsedTimeTextLength(size_t length) { elapsed_time_text_length_ = length; }
   size_t GetElapsedTimeTextLength() const { return elapsed_time_text_length_; }
+
+  // Start() and End() are required in order to be used as node in a ScopeTree.
+  uint64_t Start() const { return timer_info_.start(); }
+  uint64_t End() const { return timer_info_.end(); }
 
  protected:
   Vec2 pos_;

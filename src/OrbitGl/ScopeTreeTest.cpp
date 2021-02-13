@@ -9,20 +9,26 @@
 #include <utility>
 
 #include "ScopeTree.h"
-#include "TextBox.h"
 
 namespace {
 
-TextBox* CreateTextBox(uint64_t start, uint64_t end) {
-  static std::vector<std::unique_ptr<TextBox>> text_box_buffer;
-  auto text_box = std::make_unique<TextBox>();
-  text_box->GetMutableTimerInfo().set_start(start);
-  text_box->GetMutableTimerInfo().set_end(end);
-  text_box_buffer.push_back(std::move(text_box));
-  return text_box_buffer.back().get();
+struct TestScope {
+  uint64_t Start() const { return start; }
+  uint64_t End() const { return end; }
+  uint64_t start;
+  uint64_t end;
+};
+
+TestScope* CreateScope(uint64_t start, uint64_t end) {
+  static std::vector<std::unique_ptr<TestScope>> scope_buffer;
+  auto scope = std::make_unique<TestScope>();
+  scope->start = start;
+  scope->end = end;
+  scope_buffer.push_back(std::move(scope));
+  return scope_buffer.back().get();
 }
 
-void ValidateTree(const ScopeTree& tree) {
+void ValidateTree(const ScopeTree<TestScope>& tree) {
   // The output of tree.Print() is visible by running ctest with --verbose.
   tree.Print();
 
@@ -37,50 +43,50 @@ void ValidateTree(const ScopeTree& tree) {
 }
 
 TEST(ScopeTree, TreeCreation) {
-  ScopeTree tree;
+  ScopeTree<TestScope> tree;
   EXPECT_EQ(tree.Size(), 1);
 
-  tree.Insert(CreateTextBox(1, 100));
+  tree.Insert(CreateScope(1, 100));
   EXPECT_EQ(tree.Size(), 2);
-  tree.Insert(CreateTextBox(1, 9));
+  tree.Insert(CreateScope(1, 9));
   EXPECT_EQ(tree.Size(), 3);
-  tree.Insert(CreateTextBox(0, 1));
-  tree.Insert(CreateTextBox(2, 4));
-  tree.Insert(CreateTextBox(4, 9));
-  tree.Insert(CreateTextBox(5, 8));
-  tree.Insert(CreateTextBox(0, 200));
-  tree.Insert(CreateTextBox(1, 100));
+  tree.Insert(CreateScope(0, 1));
+  tree.Insert(CreateScope(2, 4));
+  tree.Insert(CreateScope(4, 9));
+  tree.Insert(CreateScope(5, 8));
+  tree.Insert(CreateScope(0, 200));
+  tree.Insert(CreateScope(1, 100));
   EXPECT_EQ(tree.Height(), 6);
   EXPECT_EQ(tree.Size(), 9);
   ValidateTree(tree);
 }
 
 TEST(ScopeTree, SameTimestamps) {
-  ScopeTree tree;
-  tree.Insert(CreateTextBox(1, 10));
-  tree.Insert(CreateTextBox(1, 10));
-  tree.Insert(CreateTextBox(1, 10));
+  ScopeTree<TestScope> tree;
+  tree.Insert(CreateScope(1, 10));
+  tree.Insert(CreateScope(1, 10));
+  tree.Insert(CreateScope(1, 10));
   EXPECT_EQ(tree.Height(), 3);
   EXPECT_EQ(tree.Size(), 4);
   ValidateTree(tree);
 }
 
 TEST(ScopeTree, SameStartTimestamps) {
-  ScopeTree tree;
-  tree.Insert(CreateTextBox(1, 10));
+  ScopeTree<TestScope> tree;
+  tree.Insert(CreateScope(1, 10));
   ValidateTree(tree);
-  tree.Insert(CreateTextBox(1, 100));
+  tree.Insert(CreateScope(1, 100));
   ValidateTree(tree);
-  tree.Insert(CreateTextBox(1, 50));
+  tree.Insert(CreateScope(1, 50));
   EXPECT_EQ(tree.Height(), 3);
   ValidateTree(tree);
 }
 
 TEST(ScopeTree, SameEndTimestamps) {
-  ScopeTree tree;
-  tree.Insert(CreateTextBox(3, 10));
-  tree.Insert(CreateTextBox(1, 10));
-  tree.Insert(CreateTextBox(2, 10));
+  ScopeTree<TestScope> tree;
+  tree.Insert(CreateScope(3, 10));
+  tree.Insert(CreateScope(1, 10));
+  tree.Insert(CreateScope(2, 10));
   EXPECT_EQ(tree.Height(), 3);
   EXPECT_EQ(tree.Size(), 4);
   ValidateTree(tree);
@@ -88,11 +94,11 @@ TEST(ScopeTree, SameEndTimestamps) {
 
 TEST(ScopeTree, OverlappingTimers) {
   // Overlapping timers should appear at the same depth.
-  ScopeTree tree;
-  tree.Insert(CreateTextBox(0, 200));  // node 0
-  tree.Insert(CreateTextBox(1, 10));   // node 1 fits in node 0
-  tree.Insert(CreateTextBox(5, 100));  // node 2 overlaps node 1, fits in node 0
-  tree.Insert(CreateTextBox(2, 50));   // node 3 overlaps nodes 1 and 2, fits in node 0
+  ScopeTree<TestScope> tree;
+  tree.Insert(CreateScope(0, 200));  // node 0
+  tree.Insert(CreateScope(1, 10));   // node 1 fits in node 0
+  tree.Insert(CreateScope(5, 100));  // node 2 overlaps node 1, fits in node 0
+  tree.Insert(CreateScope(2, 50));   // node 3 overlaps nodes 1 and 2, fits in node 0
   EXPECT_EQ(tree.Height(), 2);
   EXPECT_EQ(tree.Size(), 5);
 
@@ -104,7 +110,7 @@ TEST(ScopeTree, OverlappingTimers) {
 }
 
 TEST(ScopeTree, EmptyTree) {
-  ScopeTree tree;
+  ScopeTree<TestScope> tree;
   ValidateTree(tree);
 }
 
