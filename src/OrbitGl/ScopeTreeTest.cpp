@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -26,6 +27,40 @@ TestScope* CreateScope(uint64_t start, uint64_t end) {
   scope->end = end;
   scope_buffer.push_back(std::move(scope));
   return scope_buffer.back().get();
+}
+
+uint64_t GetFakeTimeStamp() {
+  static uint64_t count = 0;
+  return ++count;
+}
+
+struct ScopeTimer {
+  ScopeTimer(std::vector<TestScope*>* scopes, size_t max_nodes) {
+    start = GetFakeTimeStamp();
+    max_num_nodes = max_nodes;
+    scope_buffer = scopes;
+  }
+  ~ScopeTimer() {
+    if (scope_buffer->size() < max_num_nodes) {
+      scope_buffer->push_back(CreateScope(start, GetFakeTimeStamp()));
+    }
+  }
+  uint64_t start;
+  size_t max_num_nodes;
+  std::vector<TestScope*>* scope_buffer;
+};
+
+void CreateNonOverlappingTestTree(size_t max_num_nodes, size_t max_depth,
+                                  std::vector<TestScope*>* scope_buffer, size_t depth = 0) {
+  if (depth > max_depth) return;
+  if (scope_buffer->size() >= max_num_nodes) return;
+
+  ScopeTimer timer(scope_buffer, max_num_nodes);
+  constexpr int kNumSiblingNodes = 4;
+  for (int i = 0; i < kNumSiblingNodes; ++i) {
+    ScopeTimer inner_timer(scope_buffer, max_num_nodes);
+    CreateNonOverlappingTestTree(max_num_nodes, max_depth, scope_buffer, depth + 1);
+  }
 }
 
 void ValidateTree(const ScopeTree<TestScope>& tree) {
@@ -112,6 +147,36 @@ TEST(ScopeTree, OverlappingTimers) {
 TEST(ScopeTree, EmptyTree) {
   ScopeTree<TestScope> tree;
   ValidateTree(tree);
+}
+
+TEST(ScopeTree, OutOfOrderScopes) {
+  constexpr size_t kMaxNumNodes = 1024;
+  constexpr size_t kMaxDepth = 16;
+  std::vector<TestScope*> test_scopes;
+  CreateNonOverlappingTestTree(kMaxNumNodes, kMaxDepth, &test_scopes);
+
+  // Create a reference tree from "test_scopes".
+  ScopeTree<TestScope> reference_tree;
+  for (TestScope* scope : test_scopes) {
+    reference_tree.Insert(scope);
+  }
+  ValidateTree(reference_tree);
+  std::string reference_string = reference_tree.ToString();
+
+  // Create a series of new trees after having shuffled the elements in "nodes" and verify that the
+  // resulting trees are the same as the reference tree by comparing their string representation.
+  constexpr int kNumShuffles = 10;
+  for (int i = 0; i < kNumShuffles; ++i) {
+    std::random_shuffle(test_scopes.begin(), test_scopes.end());
+    ScopeTree<TestScope> tree;
+    for (TestScope* scope : test_scopes) {
+      LOG("Adding [%lu, %lu]", scope->start, scope->end);
+      tree.Insert(scope);
+    }
+    ValidateTree(tree);
+    std::string tree_string = tree.ToString();
+    EXPECT_STREQ(reference_string.c_str(), tree_string.c_str());
+  }
 }
 
 }  // namespace
