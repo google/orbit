@@ -168,7 +168,7 @@ void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
   text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      time_graph_->CalculateZoomedFontSize(), max_size);
+      layout_->CalculateZoomedFontSize(), max_size);
 }
 
 std::string FrameTrack::GetTooltip() const {
@@ -235,7 +235,7 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
 
   std::string avg_time = GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
-  uint32_t font_size = time_graph_->CalculateZoomedFontSize();
+  uint32_t font_size = layout_->CalculateZoomedFontSize();
   float string_width = canvas->GetTextRenderer().GetStringWidth(label.c_str(), font_size);
   Vec2 white_text_box_size(string_width, layout_->GetTextBoxHeight());
   Vec2 white_text_box_position(pos_[0] + layout_->GetRightMargin(),

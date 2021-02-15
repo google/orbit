@@ -333,7 +333,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
   text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      time_graph_->CalculateZoomedFontSize(), max_size);
+      layout_->CalculateZoomedFontSize(), max_size);
 }
 
 std::string ThreadTrack::GetTooltip() const {

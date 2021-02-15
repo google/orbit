@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 #define ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 
+#include <math.h>
 #include <stdint.h>
 
 class TimeGraphLayout {
@@ -43,6 +44,9 @@ class TimeGraphLayout {
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return draw_track_background_; }
   uint32_t GetFontSize() const { return font_size_; }
+  [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
+    return lround(GetFontSize() * GetScale());
+  }
 
  protected:
   float text_box_height_;
