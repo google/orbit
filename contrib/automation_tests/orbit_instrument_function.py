@@ -6,9 +6,9 @@ found in the LICENSE file.
 
 from absl import app
 
-from core.orbit_e2e import E2ETestSuite, E2ETestCase
+from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture
+from test_cases.capture_window import Capture, CheckTimers
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
 from test_cases.live_tab import VerifyFunctionCallCount
 
@@ -35,9 +35,16 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
         LoadSymbols(module_search_string="hello_ggp"),
+        Capture(),
+        CheckTimers(track_name_contains='Scheduler'),
+        CheckTimers(track_name_contains='gfx'),
+        CheckTimers(track_name_contains="All Threads", expect_exists=False),
+        CheckTimers(track_name_contains="hello_ggp_stand", expect_exists=False),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
-        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000)
+        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000),
+        CheckTimers(track_name_contains="All Threads", expect_exists=False),
+        CheckTimers(track_name_contains="hello_ggp_stand")
     ]
     suite = E2ETestSuite(test_name="Connect & Capture", test_cases=test_cases)
     suite.execute()
