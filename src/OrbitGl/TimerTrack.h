@@ -33,18 +33,18 @@ namespace internal {
 struct DrawData {
   uint64_t min_tick;
   uint64_t max_tick;
-  float z_offset;
-  Batcher* batcher;
-  GlCanvas* canvas;
-  float world_start_x;
-  float world_width;
-  double inv_time_window;
-  bool is_collapsed;
-  float z;
-  const TextBox* selected_textbox;
   uint64_t highlighted_function_id;
   uint64_t pixel_delta_in_ticks;
   uint64_t min_timegraph_tick;
+  Batcher* batcher;
+  GlCanvas* canvas;
+  const TextBox* selected_textbox;
+  double inv_time_window;
+  float world_start_x;
+  float world_width;
+  float z_offset;
+  float z;
+  bool is_collapsed;
 };
 }  // namespace internal
 
