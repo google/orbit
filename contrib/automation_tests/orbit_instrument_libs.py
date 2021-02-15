@@ -6,7 +6,7 @@ found in the LICENSE file.
 
 from absl import app
 
-from core.orbit_e2e import E2ETestSuite, E2ETestCase, OrbitE2EError
+from core.orbit_e2e import E2ETestSuite, E2ETestCase
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookMultipleFunctions
