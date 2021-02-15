@@ -18,7 +18,8 @@ class OrbitApp;
 
 class SchedulerTrack final : public TimerTrack {
  public:
-  explicit SchedulerTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data);
+  explicit SchedulerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+                          CaptureData* capture_data);
   ~SchedulerTrack() override = default;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 

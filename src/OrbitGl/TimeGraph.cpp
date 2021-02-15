@@ -50,7 +50,7 @@ TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canva
   text_renderer_->SetCanvas(canvas);
   text_renderer_static_.SetCanvas(canvas);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
-  track_manager_ = std::make_unique<TrackManager>(this, app, capture_data);
+  track_manager_ = std::make_unique<TrackManager>(this, &GetLayout(), app, capture_data);
 
   async_timer_info_listener_ =
       std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(

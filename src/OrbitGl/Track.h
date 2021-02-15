@@ -43,7 +43,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     kUnknown,
   };
 
-  explicit Track(TimeGraph* time_graph, CaptureData* capture_data);
+  explicit Track(TimeGraph* time_graph, TimeGraphLayout* layout, CaptureData* capture_data);
   ~Track() override = default;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;

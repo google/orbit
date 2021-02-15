@@ -27,8 +27,9 @@ using orbit_client_protos::TimerInfo;
 
 ABSL_DECLARE_FLAG(bool, show_return_values);
 
-TimerTrack::TimerTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data)
-    : Track(time_graph, capture_data), app_{app} {
+TimerTrack::TimerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+                       CaptureData* capture_data)
+    : Track(time_graph, layout, capture_data), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();
 }
 
@@ -52,12 +53,11 @@ std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
 }
 
 float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
+  return pos_[1] - GetHeaderHeight() - layout_->GetSpaceBetweenTracksAndThread() -
          box_height_ * static_cast<float>(timer_info.depth() + 1);
 }
 
-void TimerTrack::UpdateBoxHeight() { box_height_ = time_graph_->GetLayout().GetTextBoxHeight(); }
+void TimerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextBoxHeight(); }
 
 float TimerTrack::GetTextBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
 
@@ -322,13 +322,12 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 float TimerTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
   bool is_collapsed = collapse_toggle_->IsCollapsed();
   uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
-  return layout.GetTextBoxHeight() * depth +
-         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) + layout.GetEventTrackHeight() +
-         layout.GetTrackBottomMargin();
+  return layout_->GetTextBoxHeight() * depth +
+         (depth > 0 ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
+         layout_->GetEventTrackHeight() + layout_->GetTrackBottomMargin();
 }
 
 std::string TimerTrack::GetTooltip() const {
@@ -416,7 +415,4 @@ std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id
   return "";
 }
 
-float TimerTrack::GetHeaderHeight() const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  return layout.GetEventTrackHeight();
-}
+float TimerTrack::GetHeaderHeight() const { return layout_->GetEventTrackHeight(); }

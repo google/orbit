@@ -7,6 +7,7 @@
 
 #include "Batcher.h"
 #include "PickingManager.h"
+#include "TimeGraphLayout.h"
 
 class TimeGraph;
 class GlCanvas;
@@ -16,7 +17,7 @@ namespace orbit_gl {
 /* Base class for UI elements drawn underneath the capture window. */
 class CaptureViewElement : public Pickable {
  public:
-  explicit CaptureViewElement(TimeGraph* time_graph);
+  explicit CaptureViewElement(TimeGraph* time_graph, TimeGraphLayout* layout);
   virtual void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/, float /*z_offset*/ = 0) {
     canvas_ = canvas;
   }
@@ -41,6 +42,7 @@ class CaptureViewElement : public Pickable {
   [[nodiscard]] bool Draggable() override { return true; }
 
  protected:
+  TimeGraphLayout* layout_;
   GlCanvas* canvas_ = nullptr;
   TimeGraph* time_graph_;
   Vec2 pos_ = Vec2(0, 0);

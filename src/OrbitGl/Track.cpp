@@ -17,12 +17,12 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
-Track::Track(TimeGraph* time_graph, CaptureData* capture_data)
-    : CaptureViewElement(time_graph),
+Track::Track(TimeGraph* time_graph, TimeGraphLayout* layout, CaptureData* capture_data)
+    : CaptureViewElement(time_graph, layout),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph)),
-      accessibility_(this, &time_graph->GetLayout()),
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout)),
+      accessibility_(this, layout),
       capture_data_(capture_data) {
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
@@ -86,7 +86,6 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   CaptureViewElement::Draw(canvas, picking_mode, z_offset);
 
   Batcher* ui_batcher = canvas->GetBatcher();
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   const bool picking = picking_mode != PickingMode::kNone;
 
   float x0 = pos_[0];
@@ -95,7 +94,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float y1 = y0 - size_[1];
   float track_z = GlCanvas::kZValueTrack + z_offset;
   float text_z = GlCanvas::kZValueTrackText + z_offset;
-  float top_margin = layout.GetTrackTopMargin();
+  float top_margin = layout_->GetTrackTopMargin();
 
   const Color kBackgroundColor = GetBackgroundColor();
 
@@ -105,18 +104,18 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
       Box box(Vec2(x0, y0), Vec2(size_[0], size_[1]), track_z);
       ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
     }
-    if (layout.GetDrawTrackBackground()) {
+    if (layout_->GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
       ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
     }
   }
 
   // Draw tab.
-  float label_height = layout.GetTrackTabHeight();
+  float label_height = layout_->GetTrackTabHeight();
   float half_label_height = 0.5f * label_height;
-  float label_width = layout.GetTrackTabWidth();
+  float label_width = layout_->GetTrackTabWidth();
   float half_label_width = 0.5f * label_width;
-  float tab_x0 = x0 + layout.GetTrackTabOffset();
+  float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
   ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
@@ -124,9 +123,9 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   // Draw rounded corners.
   if (!picking) {
     float right_margin = time_graph_->GetRightMargin();
-    float radius = std::min(layout.GetRoundingRadius(), half_label_height);
+    float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
     radius = std::min(radius, half_label_width);
-    uint32_t sides = static_cast<uint32_t>(layout.GetRoundingNumSides() + 0.5f);
+    uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
     Vec2 bottom_left(x0, y1);
     Vec2 bottom_right(tab_x0 + label_width, y0 + top_margin);
@@ -156,7 +155,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   }
 
   // Draw collapsing triangle.
-  float button_offset = layout.GetCollapseButtonOffset();
+  float button_offset = layout_->GetCollapseButtonOffset();
   float toggle_y_pos = pos_[1] + half_label_height;
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
@@ -166,7 +165,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   if (!picking) {
     uint32_t font_size = time_graph_->CalculateZoomedFontSize();
     auto& text_renderer = canvas->GetTextRenderer();
-    float label_offset_x = layout.GetTrackLabelOffsetX();
+    float label_offset_x = layout_->GetTrackLabelOffsetX();
     float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;
 
     const Color kColor =

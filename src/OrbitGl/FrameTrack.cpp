@@ -64,9 +64,9 @@ float FrameTrack::GetAverageBoxHeight() const {
   return box_height_ / box_height_normalizer;
 }
 
-FrameTrack::FrameTrack(TimeGraph* time_graph, uint64_t function_id, FunctionInfo function,
-                       OrbitApp* app, CaptureData* capture_data)
-    : TimerTrack(time_graph, app, capture_data),
+FrameTrack::FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t function_id,
+                       FunctionInfo function, OrbitApp* app, CaptureData* capture_data)
+    : TimerTrack(time_graph, layout, app, capture_data),
       function_id_(function_id),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
@@ -83,8 +83,7 @@ FrameTrack::FrameTrack(TimeGraph* time_graph, uint64_t function_id, FunctionInfo
 float FrameTrack::GetHeaderHeight() const { return 0.f; }
 
 float FrameTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
-  return GetMaximumBoxHeight() + layout.GetTrackBottomMargin();
+  return GetMaximumBoxHeight() + layout_->GetTrackBottomMargin();
 }
 
 float FrameTrack::GetYFromTimer(const TimerInfo& /*timer_info*/) const {
@@ -153,7 +152,6 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
 
 void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
                                   float z_offset, TextBox* text_box) {
-  TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     text_box->SetElapsedTimeTextLength(time.length());
@@ -168,7 +166,7 @@ void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
+      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       time_graph_->CalculateZoomedFontSize(), max_size);
 }
@@ -235,27 +233,26 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   Vec2 to(x + size_[0], y);
   float text_z = GlCanvas::kZValueTrackText + z_offset;
 
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   std::string avg_time = GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = time_graph_->CalculateZoomedFontSize();
   float string_width = canvas->GetTextRenderer().GetStringWidth(label.c_str(), font_size);
-  Vec2 white_text_box_size(string_width, layout.GetTextBoxHeight());
-  Vec2 white_text_box_position(pos_[0] + layout.GetRightMargin(),
-                               y - layout.GetTextBoxHeight() / 2.f);
+  Vec2 white_text_box_size(string_width, layout_->GetTextBoxHeight());
+  Vec2 white_text_box_position(pos_[0] + layout_->GetRightMargin(),
+                               y - layout_->GetTextBoxHeight() / 2.f);
 
   Batcher* ui_batcher = canvas->GetBatcher();
-  ui_batcher->AddLine(from, from + Vec2(layout.GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
+  ui_batcher->AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
   ui_batcher->AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
                       kWhiteColor);
 
   canvas->GetTextRenderer().AddText(label.c_str(), white_text_box_position[0],
-                                    white_text_box_position[1] + layout.GetTextOffset(), text_z,
+                                    white_text_box_position[1] + layout_->GetTextOffset(), text_z,
                                     kWhiteColor, font_size, white_text_box_size[0]);
 }
 
 void FrameTrack::UpdateBoxHeight() {
-  box_height_ = kBoxHeightMultiplier * time_graph_->GetLayout().GetTextBoxHeight();
+  box_height_ = kBoxHeightMultiplier * layout_->GetTextBoxHeight();
 }
 
 std::vector<std::shared_ptr<TimerChain>> FrameTrack::GetAllSerializableChains() const {

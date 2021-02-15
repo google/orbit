@@ -15,8 +15,9 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
-GraphTrack::GraphTrack(TimeGraph* time_graph, std::string name, CaptureData* capture_data)
-    : Track(time_graph, capture_data) {
+GraphTrack::GraphTrack(TimeGraph* time_graph, TimeGraphLayout* layout, std::string name,
+                       CaptureData* capture_data)
+    : Track(time_graph, layout, capture_data) {
   SetName(name);
   SetLabel(name);
 }
@@ -113,11 +114,10 @@ void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, floa
 
 void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
                            const Color& text_color, const Color& font_color, float z) {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   uint32_t font_size = time_graph_->CalculateZoomedFontSize();
 
   float text_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
-  Vec2 text_box_size(text_width, layout.GetTextBoxHeight());
+  Vec2 text_box_size(text_width, layout_->GetTextBoxHeight());
 
   float arrow_width = text_box_size[1] / 2.f;
   bool arrow_is_left_directed =
@@ -142,7 +142,7 @@ void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string&
   }
 
   canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                    text_box_position[1] + layout.GetTextOffset(), z, text_color,
+                                    text_box_position[1] + layout_->GetTextOffset(), z, text_color,
                                     font_size, text_box_size[0]);
 }
 
@@ -166,8 +166,7 @@ std::optional<std::pair<uint64_t, double> > GraphTrack::GetPreviousValueAndTime(
 }
 
 float GraphTrack::GetHeight() const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float height = layout.GetTextBoxHeight() + layout.GetSpaceBetweenTracksAndThread() +
-                 layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
+  float height = layout_->GetTextBoxHeight() + layout_->GetSpaceBetweenTracksAndThread() +
+                 layout_->GetEventTrackHeight() + layout_->GetTrackBottomMargin();
   return height;
 }

@@ -26,9 +26,9 @@
 
 namespace orbit_gl {
 
-TracepointTrack::TracepointTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
-                                 int32_t thread_id)
-    : ThreadBar(app, time_graph, capture_data, thread_id), color_{255, 0, 0, 255} {}
+TracepointTrack::TracepointTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                                 CaptureData* capture_data, int32_t thread_id)
+    : ThreadBar(app, time_graph, layout, capture_data, thread_id), color_{255, 0, 0, 255} {}
 
 void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ThreadBar::Draw(canvas, picking_mode, z_offset);
@@ -51,9 +51,8 @@ void TracepointTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint
                                        PickingMode picking_mode, float z_offset) {
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent + z_offset;
-  float track_height = layout.GetEventTrackHeight();
+  float track_height = layout_->GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 
   const Color kWhite(255, 255, 255, 255);

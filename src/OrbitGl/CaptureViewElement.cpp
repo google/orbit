@@ -9,7 +9,10 @@
 
 namespace orbit_gl {
 
-CaptureViewElement::CaptureViewElement(TimeGraph* time_graph) : time_graph_(time_graph) {}
+CaptureViewElement::CaptureViewElement(TimeGraph* time_graph, TimeGraphLayout* layout)
+    : layout_(layout), time_graph_(time_graph) {
+  CHECK(layout != nullptr);
+}
 
 void CaptureViewElement::OnPick(int x, int y) {
   canvas_->ScreenToWorld(x, y, mouse_pos_last_click_[0], mouse_pos_last_click_[1]);
