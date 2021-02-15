@@ -151,9 +151,8 @@ void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
     double right_overlap_width_us = end_us - end_or_next_start_us;
     double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
 
-    bool is_visible_width = (text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
-                                draw_data.canvas->GetWidth() >
-                            1;
+    bool is_visible_width = ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
+                             draw_data.canvas->GetWidth()) > 1;
     WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
                                        draw_data.world_start_x, draw_data.world_width);
 
