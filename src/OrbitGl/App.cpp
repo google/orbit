@@ -345,7 +345,7 @@ void OrbitApp::PostInit(bool is_connected) {
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
     if (GetTargetProcess() != nullptr) {
-      UpdateProcessAndModuleList(GetTargetProcess()->pid());
+      UpdateProcessAndModuleList();
     }
 
     frame_pointer_validator_client_ =
@@ -1525,7 +1525,8 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
   });
 }
 
-void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
+void OrbitApp::UpdateProcessAndModuleList() {
+  const int32_t pid = GetTargetProcess()->pid();
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result = GetProcessManager()->LoadModuleList(pid);
 
