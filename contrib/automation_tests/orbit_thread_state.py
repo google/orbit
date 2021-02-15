@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture
+from test_cases.capture_window import Capture, CheckThreadStates
 
 """Smoke test for thread state collection.
 
@@ -21,7 +21,10 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
-        Capture(collect_thread_states=True)
+        Capture(collect_thread_states=True),
+        CheckThreadStates(track_name_contains='hello_ggp'),
+        Capture(collect_thread_states=False),
+        CheckThreadStates(track_name_contains='hello_ggp', expect_exists=False),
     ]
     suite = E2ETestSuite(test_name="Collect Thread States", test_cases=test_cases)
     suite.execute()

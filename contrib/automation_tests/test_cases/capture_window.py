@@ -28,8 +28,11 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
         super().execute(suite=suite)
 
-    def _find_tracks(self):
-        return self._time_graph.children()
+    def _find_tracks(self, name_contains: str = None):
+        tracks = self._time_graph.children()
+        if name_contains is not None:
+            tracks = filter(lambda track: name_contains in track.texts()[0], tracks)
+        return list(tracks)
 
 
 class SelectTrack(CaptureWindowE2ETestCaseBase):
@@ -239,3 +242,42 @@ class Capture(E2ETestCase):
         self._set_capture_options(collect_thread_states)
         self._take_capture(length_in_seconds)
         self._verify_existence_of_tracks()
+
+
+class CheckThreadStates(CaptureWindowE2ETestCaseBase):
+    def _execute(self, track_name_contains: str, expect_exists: bool = True):
+        tracks = self._find_tracks(track_name_contains)
+        self.expect_true(len(tracks) > 0, 'Found tracks matching %s' % track_name_contains)
+        logging.info('Checking for thread states in %s tracks', len(tracks))
+        for track in tracks:
+            track = Track(track)
+            if expect_exists:
+                self.expect_true(track.thread_states is not None, 'Track %s has a thread state pane' % track.name)
+            else:
+                self.expect_true(track.thread_states is None, 'Track %s has a no thread state pane' % track.name)
+
+
+class CheckTimers(CaptureWindowE2ETestCaseBase):
+    def _execute(self, track_name_contains: str, expect_exists: bool = True):
+        tracks = self._find_tracks(track_name_contains)
+        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_contains)
+        logging.info('Checking for timers in %s tracks', len(tracks))
+        for track in tracks:
+            track = Track(track)
+            if expect_exists:
+                self.expect_true(track.timers is not None, 'Track "%s" has timers pane' % track.name)
+            else:
+                self.expect_true(track.timers is None, 'Track "%s" has no timers pane' % track.name)
+
+
+class CheckEvents(CaptureWindowE2ETestCaseBase):
+    def _execute(self, track_name_contains: str, expect_exists: bool = True):
+        tracks = self._find_tracks(track_name_contains)
+        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_contains)
+        logging.info('Checking for events in %s tracks', len(tracks))
+        for track in tracks:
+            track = Track(track)
+            if expect_exists:
+                self.expect_true(track.events is not None, 'Track "%s" has events pane' % track.name)
+            else:
+                self.expect_true(track.events is None, 'Track "%s" has no events pane' % track.name)
