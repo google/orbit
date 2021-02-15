@@ -11,7 +11,7 @@ from pywinauto.base_wrapper import BaseWrapper
 
 from core.orbit_e2e import E2ETestCase, wait_for_condition
 
-from test_cases.capture_window import MatchTracks
+from test_cases.capture_window import MatchTracks, CheckTimers
 
 
 class LiveTabTestCase(E2ETestCase):
@@ -69,6 +69,9 @@ class AddFrameTrack(LiveTabTestCase):
         match_tracks = MatchTracks(expected_names=["Frame track based on %s" % function_name],
                                    allow_additional_tracks=True)
         match_tracks.execute(self.suite)
+
+        check_timers = CheckTimers(track_name_contains=function_name)
+        check_timers.execute(self.suite)
 
 
 class VerifyFunctionCallCount(LiveTabTestCase):
