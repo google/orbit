@@ -43,7 +43,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     kUnknown,
   };
 
-  explicit Track(TimeGraph* time_graph, TimeGraphLayout* layout, CaptureData* capture_data);
+  explicit Track(TimeGraph* time_graph, TimeGraphLayout* layout, const CaptureData* capture_data);
   ~Track() override = default;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
@@ -51,8 +51,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   void OnDrag(int x, int y) override;
-
-  virtual void SetCaptureData(CaptureData* capture_data) { capture_data_ = capture_data; }
 
   [[nodiscard]] virtual Type GetType() const = 0;
   [[nodiscard]] virtual bool Movable() { return !pinned_; }
@@ -126,7 +124,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 
   orbit_gl::AccessibleTrack accessibility_;
-  CaptureData* capture_data_ = nullptr;
+  const CaptureData* capture_data_ = nullptr;
 };
 
 #endif

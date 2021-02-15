@@ -22,7 +22,7 @@ const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
-                               CaptureData* capture_data)
+                               const CaptureData* capture_data)
     : TimerTrack(time_graph, layout, app, capture_data) {
   SetPinned(false);
   SetName("Scheduler");

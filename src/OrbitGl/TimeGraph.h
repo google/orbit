@@ -37,7 +37,7 @@ class OrbitApp;
 class TimeGraph {
  public:
   explicit TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
-                     CaptureData* capture_data);
+                     const CaptureData* capture_data);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -228,7 +228,7 @@ class TimeGraph {
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
-  CaptureData* capture_data_ = nullptr;
+  const CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 };

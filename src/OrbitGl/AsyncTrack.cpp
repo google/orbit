@@ -31,7 +31,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 AsyncTrack::AsyncTrack(TimeGraph* time_graph, TimeGraphLayout* layout, const std::string& name,
-                       OrbitApp* app, CaptureData* capture_data)
+                       OrbitApp* app, const CaptureData* capture_data)
     : TimerTrack(time_graph, layout, app, capture_data) {
   SetName(name);
   SetLabel(name);

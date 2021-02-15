@@ -32,7 +32,7 @@ using orbit_client_protos::CallstackEvent;
 namespace orbit_gl {
 
 EventTrack::EventTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                       CaptureData* capture_data, ThreadID thread_id)
+                       const CaptureData* capture_data, ThreadID thread_id)
     : ThreadBar(app, time_graph, layout, capture_data, thread_id), color_{0, 255, 0, 255} {}
 
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }

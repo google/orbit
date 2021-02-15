@@ -65,7 +65,7 @@ float FrameTrack::GetAverageBoxHeight() const {
 }
 
 FrameTrack::FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t function_id,
-                       FunctionInfo function, OrbitApp* app, CaptureData* capture_data)
+                       FunctionInfo function, OrbitApp* app, const CaptureData* capture_data)
     : TimerTrack(time_graph, layout, app, capture_data),
       function_id_(function_id),
       function_(std::move(function)) {
