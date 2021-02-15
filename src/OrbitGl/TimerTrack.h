@@ -103,8 +103,9 @@ class TimerTrack : public Track {
     return true;
   }
 
-  void DrawTimer(TextBox* prev_text_box, TextBox* current_text_box, TextBox* next_text_box,
-                 const internal::DrawData& draw_data, uint64_t* min_ignore, uint64_t* max_ignore);
+  void DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
+                 const internal::DrawData& draw_data, TextBox* current_text_box,
+                 uint64_t* min_ignore, uint64_t* max_ignore);
 
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;

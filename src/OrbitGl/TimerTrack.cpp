@@ -82,16 +82,17 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 
 }  // namespace
 
-void TimerTrack::DrawTimer(TextBox* prev_text_box, TextBox* current_text_box,
-                           TextBox* next_text_box, const internal::DrawData& draw_data,
+void TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
+                           const internal::DrawData& draw_data, TextBox* current_text_box,
                            uint64_t* min_ignore, uint64_t* max_ignore) {
   CHECK(min_ignore != nullptr);
   CHECK(max_ignore != nullptr);
   if (current_text_box == nullptr) return;
   const TimerInfo& current_timer_info = current_text_box->GetTimerInfo();
   if (draw_data.min_tick > current_timer_info.end() ||
-      draw_data.max_tick < current_timer_info.start())
+      draw_data.max_tick < current_timer_info.start()) {
     return;
+  }
   if (current_timer_info.start() >= *min_ignore && current_timer_info.end() <= *max_ignore) return;
   if (!TimerFilter(current_timer_info)) return;
 
@@ -284,7 +285,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
         // the previous iteration ("current").
         next_text_box = &block[k];
 
-        DrawTimer(prev_text_box, current_text_box, next_text_box, draw_data, &min_ignore,
+        DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
                   &max_ignore);
 
         prev_text_box = current_text_box;
@@ -293,7 +294,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
     }
     // We still need to draw the last timer.
     next_text_box = nullptr;
-    DrawTimer(prev_text_box, current_text_box, next_text_box, draw_data, &min_ignore, &max_ignore);
+    DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore, &max_ignore);
   }
 }
 
