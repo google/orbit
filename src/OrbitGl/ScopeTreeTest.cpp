@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <random>
 #include <string>
 #include <utility>
 
@@ -165,9 +166,11 @@ TEST(ScopeTree, OutOfOrderScopes) {
 
   // Create a series of new trees after having shuffled the elements in "nodes" and verify that the
   // resulting trees are the same as the reference tree by comparing their string representation.
+  std::random_device rd;
+  std::mt19937 gen(rd());
   constexpr int kNumShuffles = 10;
   for (int i = 0; i < kNumShuffles; ++i) {
-    std::random_shuffle(test_scopes.begin(), test_scopes.end());
+    std::shuffle(test_scopes.begin(), test_scopes.end(), gen);
     ScopeTree<TestScope> tree;
     for (TestScope* scope : test_scopes) {
       LOG("Adding [%lu, %lu]", scope->start, scope->end);
