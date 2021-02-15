@@ -40,7 +40,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
-                     CaptureData* capture_data)
+                     const CaptureData* capture_data)
     : text_renderer_{text_renderer},
       canvas_{canvas},
       accessibility_(this),

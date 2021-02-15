@@ -35,7 +35,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, CaptureData* capture_data)
+                         OrbitApp* app, const CaptureData* capture_data)
     : TimerTrack(time_graph, layout, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
@@ -72,13 +72,6 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
     SetLabel(track_label);
     SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
   }
-}
-
-void ThreadTrack::SetCaptureData(CaptureData* capture_data) {
-  Track::SetCaptureData(capture_data);
-  thread_state_track_->SetCaptureData(capture_data);
-  event_track_->SetCaptureData(capture_data);
-  tracepoint_track_->SetCaptureData(capture_data);
 }
 
 const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {

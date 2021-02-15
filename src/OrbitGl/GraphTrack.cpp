@@ -16,7 +16,7 @@
 #include "TimeGraphLayout.h"
 
 GraphTrack::GraphTrack(TimeGraph* time_graph, TimeGraphLayout* layout, std::string name,
-                       CaptureData* capture_data)
+                       const CaptureData* capture_data)
     : Track(time_graph, layout, capture_data) {
   SetName(name);
   SetLabel(name);

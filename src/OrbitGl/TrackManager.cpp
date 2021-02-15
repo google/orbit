@@ -33,7 +33,7 @@
 using orbit_client_protos::FunctionInfo;
 
 TrackManager::TrackManager(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
-                           CaptureData* capture_data)
+                           const CaptureData* capture_data)
     : time_graph_(time_graph), layout_(layout), capture_data_{capture_data}, app_{app} {
   GetOrCreateSchedulerTrack();
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);

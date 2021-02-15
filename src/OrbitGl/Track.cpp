@@ -17,7 +17,7 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
-Track::Track(TimeGraph* time_graph, TimeGraphLayout* layout, CaptureData* capture_data)
+Track::Track(TimeGraph* time_graph, TimeGraphLayout* layout, const CaptureData* capture_data)
     : CaptureViewElement(time_graph, layout),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,

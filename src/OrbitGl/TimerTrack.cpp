@@ -28,7 +28,7 @@ using orbit_client_protos::TimerInfo;
 ABSL_DECLARE_FLAG(bool, show_return_values);
 
 TimerTrack::TimerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
-                       CaptureData* capture_data)
+                       const CaptureData* capture_data)
     : Track(time_graph, layout, capture_data), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();
 }
