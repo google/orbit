@@ -28,6 +28,7 @@
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
 #include "module.pb.h"
@@ -75,7 +76,7 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   return result;
 }
 
-std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
+std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept {
   const auto stat = std::filesystem::path{"/proc"} / std::to_string(pid) / "stat";
 
   // /proc/[pid]/stat looks like so (example - all in one line):
@@ -88,18 +89,26 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   // Older kernels might have less fields than in the example. Over time fields had been added to
   // the end, but field indexes stayed stable.
 
-  if (!std::filesystem::exists(stat)) {
-    return {};
+  std::error_code error;
+  bool file_exists = std::filesystem::exists(stat, error);
+  // Even if we couldn't stat we could still be able to read, continue in case of an error.
+  if (!error && !file_exists) {
+    return std::nullopt;
   }
 
-  std::ifstream stream{stat.string()};
-  if (!stream.good()) {
-    LOG("Could not open %s", stat.string());
-    return {};
+  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(stat);
+  if (!file_content) {
+    ERROR("Could not read \"%s\": %s", stat.string(), file_content.error().message());
+    return std::nullopt;
   }
 
-  std::string first_line{};
-  std::getline(stream, first_line);
+  std::vector<std::string> lines = absl::StrSplit(file_content.value(), absl::MaxSplits('\n', 1));
+  if (lines.empty()) {
+    ERROR("\"%s\" file is empty", stat.string());
+    return std::nullopt;
+  }
+
+  const std::string& first_line = lines.at(0);
 
   // Remove fields up to comm (process name) as this, enclosed in parentheses, could contain spaces.
   size_t last_closed_paren_index = first_line.find_last_of(')');
@@ -119,24 +128,33 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   constexpr size_t kStimeIndexExclPidComm = kStimeIndex - kCommIndex - 1;
 
   if (fields_excl_pid_comm.size() <= std::max(kUtimeIndex, kStimeIndex)) {
-    return {};
+    return std::nullopt;
   }
 
   size_t utime{};
   if (!absl::SimpleAtoi(fields_excl_pid_comm[kUtimeIndexExclPidComm], &utime)) {
-    return {};
+    return std::nullopt;
   }
 
   size_t stime{};
   if (!absl::SimpleAtoi(fields_excl_pid_comm[kStimeIndexExclPidComm], &stime)) {
-    return {};
+    return std::nullopt;
   }
 
   return Jiffies{utime + stime};
 }
 
-std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
-  std::ifstream stat_stream{"/proc/stat"};
+std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept {
+  ErrorMessageOr<std::string> stat_content = orbit_base::ReadFileToString("/proc/stat");
+  if (!stat_content) {
+    ERROR("%s", stat_content.error().message());
+    return std::nullopt;
+  }
+
+  std::vector<std::string> lines = absl::StrSplit(stat_content.value(), '\n');
+  if (lines.empty()) {
+    return std::nullopt;
+  }
 
   // /proc/stat looks like so (example):
   // cpu  2939645 2177780 3213131 495750308 128031 0 469660 0 0 0
@@ -164,18 +182,17 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   // counted. It also reads the lines beginning with "cpu*" to determine the number of logical CPUs
   // in the system.
 
-  std::string first_line;
-  std::getline(stat_stream, first_line);
+  const std::string& first_line = lines.at(0);
 
   if (!absl::StartsWith(first_line, "cpu ")) {
-    return {};
+    return std::nullopt;
   }
 
   // This is counting the number of CPUs
   size_t cpus = 0;
-  while (true) {
-    std::string current_line;
-    std::getline(stat_stream, current_line);
+  // Skip the first line
+  for (size_t i = 1; i < lines.size(); ++i) {
+    const std::string& current_line = lines.at(i);
     if (!absl::StartsWith(current_line, "cpu")) {
       break;
     }
@@ -183,7 +200,7 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   }
 
   if (cpus == 0) {
-    return {};
+    return std::nullopt;
   }
 
   std::vector<std::string_view> splits = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
@@ -201,8 +218,8 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   return TotalCpuTime{jiffies, cpus};
 }
 
-ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
-                                         const std::vector<Path>& search_directories) {
+ErrorMessageOr<fs::path> FindSymbolsFilePath(
+    const fs::path& module_path, const std::vector<fs::path>& search_directories) noexcept {
   OUTCOME_TRY(module_elf_file, ElfFile::Create(module_path.string()));
   if (module_elf_file->HasSymtab()) {
     return module_path;
@@ -214,13 +231,13 @@ ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
         module_path));
   }
 
-  const Path& filename = module_path.filename();
-  Path filename_dot_debug = filename;
+  const fs::path& filename = module_path.filename();
+  fs::path filename_dot_debug = filename;
   filename_dot_debug.replace_extension(".debug");
-  Path filename_plus_debug = filename;
+  fs::path filename_plus_debug = filename;
   filename_plus_debug.replace_extension(filename.extension().string() + ".debug");
 
-  std::set<Path> search_paths;
+  std::set<fs::path> search_paths;
   for (const auto& directory : search_directories) {
     search_paths.insert(directory / filename_dot_debug);
     search_paths.insert(directory / filename_plus_debug);
@@ -230,28 +247,38 @@ ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
   std::vector<std::string> error_messages;
 
   for (const auto& symbols_path : search_paths) {
-    if (!std::filesystem::exists(symbols_path)) continue;
+    std::error_code error;
+    bool path_exists = std::filesystem::exists(symbols_path, error);
+    if (error) {
+      std::string error_message =
+          absl::StrFormat("Unable to stat \"%s\": %s", symbols_path, error.message());
+      ERROR("%s", error_message);
+      error_messages.emplace_back("* " + std::move(error_message));
+      continue;
+    }
+
+    if (!path_exists) continue;
 
     ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file = ElfFile::Create(symbols_path.string());
     if (!symbols_file) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" cannot be read as an elf file: %s",
                           symbols_path, symbols_file.error().message());
-      LOG("%s", error_message);
+      ERROR("%s", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
     if (!symbols_file.value()->HasSymtab()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" does not contain symbols.", symbols_path);
-      LOG("%s (It does not contain a .symtab section)", error_message);
+      ERROR("%s (It does not contain a .symtab section)", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
     if (symbols_file.value()->GetBuildId().empty()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" does not have a build id", symbols_path);
-      LOG("%s", error_message);
+      ERROR("%s", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
@@ -261,7 +288,7 @@ ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
           "Potential symbols file \"%s\" has a different build id than the module requested by the "
           "client. \"%s\" != \"%s\"",
           symbols_path, build_id, module_elf_file->GetBuildId());
-      LOG("%s", error_message);
+      ERROR("%s", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
@@ -278,7 +305,7 @@ ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
 }
 
 bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read) {
+                       uint64_t* num_bytes_read) noexcept {
   iovec local_iov[] = {{buffer, size}};
   iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
   *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov), remote_iov,

@@ -23,7 +23,6 @@
 #include "tracepoint.pb.h"
 
 namespace orbit_service::utils {
-using Path = std::filesystem::path;
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints();
 
 // In the linux world, Jiffies is a global counter which increments on tick (caused by a CPU timer
@@ -41,17 +40,17 @@ struct TotalCpuTime {
   size_t cpus;
 };
 
-std::optional<TotalCpuTime> GetCumulativeTotalCpuTime();
-std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
+std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept;
+std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept;
 
-ErrorMessageOr<Path> FindSymbolsFilePath(const Path& module_path,
-                                         const std::vector<Path>& search_directories = {
-                                             "/home/cloudcast/", "/home/cloudcast/debug_symbols/",
-                                             "/mnt/developer/", "/mnt/developer/debug_symbols/",
-                                             "/srv/game/assets/",
-                                             "/srv/game/assets/debug_symbols/"});
+ErrorMessageOr<std::filesystem::path> FindSymbolsFilePath(
+    const std::filesystem::path& module_path,
+    const std::vector<std::filesystem::path>& search_directories = {
+        "/home/cloudcast/", "/home/cloudcast/debug_symbols/", "/mnt/developer/",
+        "/mnt/developer/debug_symbols/", "/srv/game/assets/",
+        "/srv/game/assets/debug_symbols/"}) noexcept;
 bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read);
+                       uint64_t* num_bytes_read) noexcept;
 }  // namespace orbit_service::utils
 
 #endif  // ORBIT_SERVICE_SERVICE_UTILS_H_
