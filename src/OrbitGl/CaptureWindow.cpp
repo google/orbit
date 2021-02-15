@@ -703,6 +703,10 @@ void CaptureWindow::set_draw_help(bool draw_help) {
   NeedsRedraw();
 }
 
+void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
+  time_graph_ = std::make_unique<TimeGraph>(app_, &text_renderer_, this, capture_data);
+}
+
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   switch (batcher_id) {
     case BatcherId::kTimeGraph:
@@ -801,10 +805,11 @@ void CaptureWindow::RenderHelpUi() {
 
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
-  text_renderer_.AddText(
-      GetHelpText(), world_x, world_y, GlCanvas::kZValueTextUi, Color(255, 255, 255, 255),
-      14 /*TODO time_graph_->GetLayout().GetFontSize()*/, -1.f /*max_size*/,
-      false /*right_justified*/, &text_bounding_box_pos, &text_bounding_box_size);
+  // TODO (b/180312795): Use TimeGraphLayout's font size again.
+  text_renderer_.AddText(GetHelpText(), world_x, world_y, GlCanvas::kZValueTextUi,
+                         Color(255, 255, 255, 255), 14, -1.f /*max_size*/,
+                         false /*right_justified*/, &text_bounding_box_pos,
+                         &text_bounding_box_size);
 
   const Color kBoxColor(50, 50, 50, 230);
   const float kMargin = 15.f;

@@ -111,7 +111,6 @@ class TimeGraph {
 
   [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
-  void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
     return lround(layout_.GetFontSize() * layout_.GetScale());

@@ -42,11 +42,14 @@ using orbit_client_protos::TimerInfo;
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
                      CaptureData* capture_data)
     : text_renderer_{text_renderer},
+      canvas_{canvas},
       accessibility_(this),
       batcher_(BatcherId::kTimeGraph),
       capture_data_{capture_data},
       app_{app} {
-  SetCanvas(canvas);
+  text_renderer_->SetCanvas(canvas);
+  text_renderer_static_.SetCanvas(canvas);
+  batcher_.SetPickingManager(&canvas->GetPickingManager());
   track_manager_ = std::make_unique<TrackManager>(this, app, capture_data);
 
   async_timer_info_listener_ =
@@ -60,13 +63,6 @@ TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canva
 
 TimeGraph::~TimeGraph() {
   manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
-}
-
-void TimeGraph::SetCanvas(GlCanvas* canvas) {
-  canvas_ = canvas;
-  text_renderer_->SetCanvas(canvas);
-  text_renderer_static_.SetCanvas(canvas);
-  batcher_.SetPickingManager(&canvas->GetPickingManager());
 }
 
 double GNumHistorySeconds = 2.f;
