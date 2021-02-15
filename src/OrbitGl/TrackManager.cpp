@@ -32,25 +32,8 @@
 
 using orbit_client_protos::FunctionInfo;
 
-TrackManager::TrackManager(TimeGraph* time_graph, OrbitApp* app)
-    : time_graph_(time_graph), app_{app} {
-  GetOrCreateSchedulerTrack();
-
-  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
-}
-
-void TrackManager::Clear() {
-  all_tracks_.clear();
-  scheduler_track_ = nullptr;
-  thread_tracks_.clear();
-  gpu_tracks_.clear();
-  graph_tracks_.clear();
-  async_tracks_.clear();
-  frame_tracks_.clear();
-
-  sorted_tracks_.clear();
-  visible_tracks_.clear();
-
+TrackManager::TrackManager(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data)
+    : time_graph_(time_graph), capture_data_{capture_data}, app_{app} {
   GetOrCreateSchedulerTrack();
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
@@ -78,13 +61,6 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
     tracks.push_back(track.get());
   }
   return tracks;
-}
-
-void TrackManager::SetCaptureData(CaptureData* capture_data) {
-  capture_data_ = capture_data;
-  for (Track* track : GetAllTracks()) {
-    track->SetCaptureData(capture_data);
-  }
 }
 
 void TrackManager::SortTracks() {

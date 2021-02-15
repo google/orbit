@@ -37,7 +37,8 @@ class OrbitApp;
 
 class TimeGraph {
  public:
-  explicit TimeGraph(OrbitApp* app);
+  explicit TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
+                     CaptureData* capture_data);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
@@ -55,7 +56,6 @@ class TimeGraph {
 
   // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
-  void SetCaptureData(CaptureData* capture_data);
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
@@ -68,7 +68,6 @@ class TimeGraph {
   void GetWorldMinMax(float& min, float& max) const;
   void UpdateCaptureMinMaxTimestamps();
 
-  void Clear();
   void ZoomAll();
   void Zoom(const orbit_client_protos::TimerInfo& timer_info);
   void Zoom(uint64_t min, uint64_t max);
@@ -111,9 +110,7 @@ class TimeGraph {
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
   [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
-  void SetTextRenderer(TextRenderer* text_renderer) { text_renderer_ = text_renderer; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
-  void SetCanvas(GlCanvas* canvas);
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
     return lround(layout_.GetFontSize() * layout_.GetScale());

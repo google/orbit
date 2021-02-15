@@ -228,6 +228,9 @@ uint64_t LiveFunctionsController::GetCaptureMax() const {
 void LiveFunctionsController::Reset() {
   iterator_id_to_function_id_.clear();
   current_textboxes_.clear();
-  app_->GetMutableTimeGraph()->SetIteratorOverlayData({}, {});
+  TimeGraph* time_graph = app_->GetMutableTimeGraph();
+  if (time_graph != nullptr) {
+    app_->GetMutableTimeGraph()->SetIteratorOverlayData({}, {});
+  }
   id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
 }
