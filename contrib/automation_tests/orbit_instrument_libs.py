@@ -30,7 +30,7 @@ Note that it is a bit weird to instrument something in libggp and make
 assumptions about its inner workings. Our assumption here is that
 "GgpIssueFrameToken_v*" will be the name of the implementation of
 "GgpIssueFrameToken". While in theory we might change the inner workings of
-libggp I hape this assumption is weak enought to never become false.
+libggp I hope this assumption is weak enought to never become false.
 
 This automation script covers a basic workflow:
  - start Orbit
