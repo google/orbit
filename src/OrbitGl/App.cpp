@@ -186,7 +186,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
         capture_data_ =
             CaptureData(std::move(process), module_manager_.get(), std::move(selected_functions),
                         std::move(selected_tracepoints), std::move(frame_track_function_ids));
-        GetMutableTimeGraph()->SetCaptureData(&capture_data_.value());
+        capture_window_->CreateTimeGraph(&capture_data_.value());
 
         frame_track_online_processor_ =
             FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
@@ -691,7 +691,8 @@ void OrbitApp::ClearSelectionBottomUpView() {
 }
 
 std::string OrbitApp::GetCaptureTime() {
-  double time = GetTimeGraph()->GetCaptureTimeSpanUs();
+  const TimeGraph* time_graph = GetTimeGraph();
+  double time = (time_graph == nullptr) ? 0 : time_graph->GetCaptureTimeSpanUs();
   return GetPrettyTime(absl::Microseconds(time));
 }
 
@@ -923,7 +924,7 @@ void OrbitApp::AbortCapture() {
 void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
   if (capture_window_ != nullptr) {
-    GetMutableTimeGraph()->Clear();
+    capture_window_->ClearTimeGraph();
   }
   capture_data_.reset();
   set_selected_thread_id(orbit_base::kAllProcessThreadsTid);

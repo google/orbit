@@ -72,7 +72,14 @@ class CaptureWindow : public GlCanvas {
   virtual void ToggleRecording();
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
-  [[nodiscard]] TimeGraph* GetTimeGraph() { return &time_graph_; }
+  [[nodiscard]] TimeGraph* GetTimeGraph() {
+    if (time_graph_ == nullptr) return nullptr;
+    return time_graph_.get();
+  }
+  void CreateTimeGraph(CaptureData* capture_data) {
+    time_graph_ = std::make_unique<TimeGraph>(app_, &text_renderer_, this, capture_data);
+  }
+  void ClearTimeGraph() { time_graph_ = nullptr; }
 
   Batcher& GetBatcherById(BatcherId batcher_id);
 
@@ -81,7 +88,7 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
 
  protected:
-  TimeGraph time_graph_;
+  std::unique_ptr<TimeGraph> time_graph_ = nullptr;
   bool draw_help_;
   bool draw_filter_;
   std::shared_ptr<GlSlider> slider_;

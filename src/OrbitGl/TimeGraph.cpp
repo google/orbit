@@ -39,9 +39,15 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-TimeGraph::TimeGraph(OrbitApp* app)
-    : accessibility_(this), batcher_(BatcherId::kTimeGraph), app_{app} {
-  track_manager_ = std::make_unique<TrackManager>(this, app);
+TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
+                     CaptureData* capture_data)
+    : text_renderer_{text_renderer},
+      accessibility_(this),
+      batcher_(BatcherId::kTimeGraph),
+      capture_data_{capture_data},
+      app_{app} {
+  SetCanvas(canvas);
+  track_manager_ = std::make_unique<TrackManager>(this, app, capture_data);
 
   async_timer_info_listener_ =
       std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
@@ -61,23 +67,6 @@ void TimeGraph::SetCanvas(GlCanvas* canvas) {
   text_renderer_->SetCanvas(canvas);
   text_renderer_static_.SetCanvas(canvas);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
-}
-
-void TimeGraph::Clear() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  capture_data_ = nullptr;
-  track_manager_->SetCaptureData(nullptr);
-
-  batcher_.StartNewFrame();
-  capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
-  capture_max_timestamp_ = 0;
-
-  track_manager_->Clear();
-
-  SetIteratorOverlayData({}, {});
-
-  NeedsUpdate();
 }
 
 double GNumHistorySeconds = 2.f;
@@ -433,11 +422,6 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllSerializableTimerChain
     Append(chains, track->GetAllSerializableChains());
   }
   return chains;
-}
-
-void TimeGraph::SetCaptureData(CaptureData* capture_data) {
-  capture_data_ = capture_data;
-  track_manager_->SetCaptureData(capture_data);
 }
 
 float TimeGraph::GetWorldFromTick(uint64_t time) const {
