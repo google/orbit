@@ -104,6 +104,3 @@ class VerifyOneFunctionWasCalled(LiveTabTestCase):
                     return
         
         raise RuntimeError('No function matching "%s" has received the required hit count' % (function_name))
-
-        
-
