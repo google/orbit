@@ -51,16 +51,18 @@ struct ScopeTimer {
   std::vector<TestScope*>* scope_buffer;
 };
 
-void CreateNonOverlappingTestTree(size_t max_num_nodes, size_t max_depth,
-                                  std::vector<TestScope*>* scope_buffer, size_t depth = 0) {
+void CreateNestedTestScopes(size_t max_num_nodes, size_t max_depth, size_t num_siblings_per_depth,
+                            std::vector<TestScope*>* scope_buffer, size_t depth = 0) {
   if (depth > max_depth) return;
   if (scope_buffer->size() >= max_num_nodes) return;
 
+  // Use ScopeTimer local variables to generate nested scopes that start at creation time and end at
+  // destruction time through the use of RAII. Return scopes through passed in "scope_buffer".
   ScopeTimer timer(scope_buffer, max_num_nodes);
-  constexpr int kNumSiblingNodes = 4;
-  for (int i = 0; i < kNumSiblingNodes; ++i) {
+  for (size_t i = 0; i < num_siblings_per_depth; ++i) {
     ScopeTimer inner_timer(scope_buffer, max_num_nodes);
-    CreateNonOverlappingTestTree(max_num_nodes, max_depth, scope_buffer, depth + 1);
+    CreateNestedTestScopes(max_num_nodes, max_depth, num_siblings_per_depth, scope_buffer,
+                           depth + 1);
   }
 }
 
@@ -153,8 +155,9 @@ TEST(ScopeTree, EmptyTree) {
 TEST(ScopeTree, OutOfOrderScopes) {
   constexpr size_t kMaxNumNodes = 1024;
   constexpr size_t kMaxDepth = 16;
+  constexpr size_t kNumSiblingsPerDepth = 4;
   std::vector<TestScope*> test_scopes;
-  CreateNonOverlappingTestTree(kMaxNumNodes, kMaxDepth, &test_scopes);
+  CreateNestedTestScopes(kMaxNumNodes, kMaxDepth, kNumSiblingsPerDepth, &test_scopes);
 
   // Create a reference tree from "test_scopes".
   ScopeTree<TestScope> reference_tree;
@@ -164,8 +167,8 @@ TEST(ScopeTree, OutOfOrderScopes) {
   ValidateTree(reference_tree);
   std::string reference_string = reference_tree.ToString();
 
-  // Create a series of new trees after having shuffled the elements in "nodes" and verify that the
-  // resulting trees are the same as the reference tree by comparing their string representation.
+  // shuffle the elements in "test_scopes" and verify that the resulting trees are the same as the
+  // reference tree by comparing their string representation.
   std::random_device rd;
   std::mt19937 gen(rd());
   constexpr int kNumShuffles = 10;
