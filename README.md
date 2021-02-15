@@ -1,6 +1,9 @@
 ![Alt text](logos/orbit_logo_simple.png)
-
+<br/>
+ #
 ![Alt text](logos/screenshot.png)
+ # 
+<br/>
 
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool, is a standalone **C/C++** profiler for Windows and Linux. Its main purpose is to help developers visualize the execution flow of a complex application.
 
@@ -8,7 +11,7 @@ The key differentiator with many existing tools is that no alteration to the tar
 
 Orbit combines sampling and dynamic instrumentation to optimize the profiling workflow. Sampling can quickly identify interesting functions to instrument. Dynamic instrumentation results in exact function entry and exit information which is presented in the form of per-thread hierarchical call graphs.  Scheduling events are also shown to visualize when a thread was running and on what core.
 
-**Features**
+ # Features
 - Dynamic Instrumentation (No Code Change Required)
 - Robust Sampling
 - Fast Debug Symbol Parsing
@@ -19,15 +22,15 @@ Orbit combines sampling and dynamic instrumentation to optimize the profiling wo
 - Full Serialization of Captured Data
 - Tested on Unreal, Unity, Lumberyard, Qt, Doom3, PhysX, ...
 
-**Note**
+ # Note
 
 Orbit is undergoing a major overhaul. The focus has now shifted to the Linux version. Windows local profiling is currently broken in the main branch. It is possible however to profile Linux executable from a Windows UI instance. For Windows local profiling, please use the released [binaries](https://github.com/google/orbit/releases). Windows development will resume in the coming months.
 
-**Build**
+ # Build
 
 Please have a look at the first three sections of our [development documentation](DEVELOPMENT.md). It describes how to build Orbit and what Compilers, Platforms, and Tools are supported and needed.
 
-**Workflow**
+ # Workflow
 1. Select a process in the list of currently running processes in the "Home" tab.
 2. The list of loaded modules will appear on the bottom of the "Home" tab.  If debug symbols were found for a module, it will be highlighted in blue.
 3. Right click on the module(s) for which you want to load debug information and select "Load Symbols". The "Functions", "Types" and "Globals" tabs will get populated.
@@ -36,15 +39,15 @@ Please have a look at the first three sections of our [development documentation
 6. When you select a function in the "Capture" view, the full callstack will be available in the "Callstack" tab.  You can select functions to be profiled in the callstack tab as well.  Also, if code is available on your machine, it will be displayed in the "Code" tab.
 7.  You can select sections of the per-thread sampling event track to get a sampling report of your selection.
 
-**Sessions**
+ # Sessions
 
 Once you have loaded the debug information for your modules and have chosen functions of interest, you can save your profiling session so that you won't have to do this manually again.  To save a session, go to "File"->"Save Session"
 
-**Feedback**
+ # Feedback
 
 Questions and comments are more than welcome, please open an [issue](https://github.com/google/orbit/issues).
 
-**About**
+ # About
 
 Orbit was created by [Pierric Gimmig](https://www.linkedin.com/in/pgimmig/) but is now actively developed and maintained by a team of engineers at Google.
 
