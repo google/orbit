@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture
+from test_cases.capture_window import Capture, FilterTracks, CheckTimers
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
 from test_cases.live_tab import AddFrameTrack
 
@@ -38,7 +38,9 @@ def main(argv):
         LoadSymbols(module_search_string="hello_ggp"),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
-        AddFrameTrack(function_name="DrawFrame")
+        AddFrameTrack(function_name="DrawFrame"),
+        FilterTracks(filter_string="Frame", expected_count=1),   # Verify there's exactly one frame track
+        CheckTimers(track_name_contains='Frame track')  # Verify the frame track has timers
     ]
     suite = E2ETestSuite(test_name="Add Frame Track", test_cases=test_cases)
     suite.execute()
