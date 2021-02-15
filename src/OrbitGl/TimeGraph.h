@@ -6,7 +6,6 @@
 #define ORBIT_GL_TIME_GRAPH_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <math.h>
 
 #include <cstdint>
 #include <map>
@@ -112,9 +111,6 @@ class TimeGraph {
   [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
-  [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
-    return lround(layout_.GetFontSize() * layout_.GetScale());
-  }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;

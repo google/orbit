@@ -163,7 +163,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
 
   // Draw label.
   if (!picking) {
-    uint32_t font_size = time_graph_->CalculateZoomedFontSize();
+    uint32_t font_size = layout_->CalculateZoomedFontSize();
     auto& text_renderer = canvas->GetTextRenderer();
     float label_offset_x = layout_->GetTrackLabelOffsetX();
     float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;

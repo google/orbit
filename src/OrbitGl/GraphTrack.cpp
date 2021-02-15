@@ -114,7 +114,7 @@ void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, floa
 
 void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
                            const Color& text_color, const Color& font_color, float z) {
-  uint32_t font_size = time_graph_->CalculateZoomedFontSize();
+  uint32_t font_size = layout_->CalculateZoomedFontSize();
 
   float text_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
   Vec2 text_box_size(text_width, layout_->GetTextBoxHeight());
