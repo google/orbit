@@ -313,10 +313,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const std::string& module_path, const std::string& build_id);
 
-  // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
-  // should not be necessary to have an argument here, since OrbitApp will always only have one
-  // process associated)
-  void UpdateProcessAndModuleList(int32_t pid);
+  void UpdateProcessAndModuleList();
 
   void UpdateAfterSymbolLoading();
   void UpdateAfterCaptureCleared();
