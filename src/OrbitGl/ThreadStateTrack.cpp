@@ -22,9 +22,9 @@ using orbit_client_protos::ThreadStateSliceInfo;
 
 namespace orbit_gl {
 
-ThreadStateTrack::ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
-                                   ThreadID thread_id)
-    : ThreadBar(app, time_graph, capture_data, thread_id) {}
+ThreadStateTrack::ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                                   CaptureData* capture_data, ThreadID thread_id)
+    : ThreadBar(app, time_graph, layout, capture_data, thread_id) {}
 
 bool ThreadStateTrack::IsEmpty() const {
   if (capture_data_ == nullptr) return true;

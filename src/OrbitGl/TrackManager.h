@@ -34,7 +34,8 @@ class Timegraph;
 // and sorting).
 class TrackManager {
  public:
-  explicit TrackManager(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data);
+  explicit TrackManager(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+                        CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
@@ -85,6 +86,7 @@ class TrackManager {
   ThreadTrack* tracepoints_system_wide_track_;
 
   TimeGraph* time_graph_;
+  TimeGraphLayout* layout_;
 
   std::vector<Track*> sorted_tracks_;
   bool sorting_invalidated_ = false;

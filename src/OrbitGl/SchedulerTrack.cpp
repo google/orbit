@@ -21,8 +21,9 @@ using orbit_client_protos::TimerInfo;
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data)
-    : TimerTrack(time_graph, app, capture_data) {
+SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+                               CaptureData* capture_data)
+    : TimerTrack(time_graph, layout, app, capture_data) {
   SetPinned(false);
   SetName("Scheduler");
   SetLabel("Scheduler (0 cores)");
@@ -38,10 +39,9 @@ void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 }
 
 float SchedulerTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
   uint32_t num_gaps = depth_ > 0 ? depth_ - 1 : 0;
-  return (depth_ * layout.GetTextCoresHeight()) + (num_gaps * layout.GetSpaceBetweenCores()) +
-         layout.GetTrackBottomMargin();
+  return (depth_ * layout_->GetTextCoresHeight()) + (num_gaps * layout_->GetSpaceBetweenCores()) +
+         layout_->GetTrackBottomMargin();
 }
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -65,19 +65,16 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
 }
 
 float SchedulerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   uint32_t num_gaps = timer_info.depth();
-  return pos_[1] - (layout.GetTextCoresHeight() * static_cast<float>(timer_info.depth() + 1)) -
-         num_gaps * layout.GetSpaceBetweenCores();
+  return pos_[1] - (layout_->GetTextCoresHeight() * static_cast<float>(timer_info.depth() + 1)) -
+         num_gaps * layout_->GetSpaceBetweenCores();
 }
 
 std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }
 
-void SchedulerTrack::UpdateBoxHeight() {
-  box_height_ = time_graph_->GetLayout().GetTextCoresHeight();
-}
+void SchedulerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextCoresHeight(); }
 
 std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const TextBox* text_box = batcher.GetTextBox(id);

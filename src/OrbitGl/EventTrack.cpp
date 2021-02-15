@@ -31,9 +31,9 @@ using orbit_client_protos::CallstackEvent;
 
 namespace orbit_gl {
 
-EventTrack::EventTrack(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
-                       ThreadID thread_id)
-    : ThreadBar(app, time_graph, capture_data, thread_id), color_{0, 255, 0, 255} {}
+EventTrack::EventTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                       CaptureData* capture_data, ThreadID thread_id)
+    : ThreadBar(app, time_graph, layout, capture_data, thread_id), color_{0, 255, 0, 255} {}
 
 std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
 
@@ -88,9 +88,8 @@ void EventTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
                                   PickingMode picking_mode, float z_offset) {
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::kZValueEvent + z_offset;
-  float track_height = layout.GetEventTrackHeight();
+  float track_height = layout_->GetEventTrackHeight();
   const bool picking = picking_mode != PickingMode::kNone;
 
   const Color kWhite(255, 255, 255, 255);

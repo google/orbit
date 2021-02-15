@@ -23,7 +23,8 @@ class TimeGraph;
 
 class GraphTrack : public Track {
  public:
-  explicit GraphTrack(TimeGraph* time_graph, std::string name, CaptureData* capture_data);
+  explicit GraphTrack(TimeGraph* time_graph, TimeGraphLayout* layout, std::string name,
+                      CaptureData* capture_data);
   [[nodiscard]] Type GetType() const override { return kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,

@@ -32,8 +32,9 @@
 
 using orbit_client_protos::FunctionInfo;
 
-TrackManager::TrackManager(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data)
-    : time_graph_(time_graph), capture_data_{capture_data}, app_{app} {
+TrackManager::TrackManager(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+                           CaptureData* capture_data)
+    : time_graph_(time_graph), layout_(layout), capture_data_{capture_data}, app_{app} {
   GetOrCreateSchedulerTrack();
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
 }
@@ -260,10 +261,8 @@ int TrackManager::FindMovingTrackIndex() {
 
 void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                 PickingMode picking_mode) {
-  TimeGraphLayout layout = time_graph_->GetLayout();
-
   // Make sure track tab fits in the viewport.
-  float current_y = -layout.GetSchedulerTrackOffset() - layout.GetTrackTabHeight();
+  float current_y = -layout_->GetSchedulerTrackOffset() - layout_->GetTrackTabHeight();
   float pinned_tracks_height = 0.f;
 
   // Draw pinned tracks
@@ -275,11 +274,11 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
     const float z_offset = GlCanvas::kZOffsetPinnedTrack;
     if (!track->IsMoving()) {
       track->SetPos(track->GetPos()[0], current_y + time_graph_->GetCanvas()->GetWorldTopLeftY() -
-                                            layout.GetTopMargin() -
-                                            layout.GetSchedulerTrackOffset());
+                                            layout_->GetTopMargin() -
+                                            layout_->GetSchedulerTrackOffset());
     }
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-    const float height = (track->GetHeight() + layout.GetSpaceBetweenTracks());
+    const float height = (track->GetHeight() + layout_->GetSpaceBetweenTracks());
     current_y -= height;
     pinned_tracks_height += height;
   }
@@ -295,7 +294,7 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
       track->SetPos(track->GetPos()[0], current_y);
     }
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-    current_y -= (track->GetHeight() + layout.GetSpaceBetweenTracks());
+    current_y -= (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
 
   // Tracks are drawn from 0 (top) to negative y-coordinates.
@@ -319,7 +318,7 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
-    track = std::make_shared<SchedulerTrack>(time_graph_, app_, capture_data_);
+    track = std::make_shared<SchedulerTrack>(time_graph_, layout_, app_, capture_data_);
     AddTrack(track);
     scheduler_track_ = track;
   }
@@ -330,7 +329,7 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(time_graph_, tid, app_, capture_data_);
+    track = std::make_shared<ThreadTrack>(time_graph_, layout_, tid, app_, capture_data_);
     AddTrack(track);
     thread_tracks_[tid] = track;
   }
@@ -341,7 +340,7 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(time_graph_, timeline_hash, app_, capture_data_);
+    track = std::make_shared<GpuTrack>(time_graph_, layout_, timeline_hash, app_, capture_data_);
     AddTrack(track);
     gpu_tracks_[timeline_hash] = track;
   }
@@ -352,7 +351,7 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GraphTrack> track = graph_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<GraphTrack>(time_graph_, name, capture_data_);
+    track = std::make_shared<GraphTrack>(time_graph_, layout_, name, capture_data_);
     AddTrack(track);
     graph_tracks_[name] = track;
   }
@@ -363,7 +362,7 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<AsyncTrack>(time_graph_, name, app_, capture_data_);
+    track = std::make_shared<AsyncTrack>(time_graph_, layout_, name, app_, capture_data_);
     AddTrack(track);
     async_tracks_[name] = track;
   }
@@ -379,8 +378,8 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id,
     return track_it->second.get();
   }
 
-  auto track =
-      std::make_shared<FrameTrack>(time_graph_, function_id, function, app_, capture_data_);
+  auto track = std::make_shared<FrameTrack>(time_graph_, layout_, function_id, function, app_,
+                                            capture_data_);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks.

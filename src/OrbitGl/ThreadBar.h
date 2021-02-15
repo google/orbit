@@ -10,6 +10,7 @@
 
 #include "CaptureViewElement.h"
 #include "OrbitClientModel/CaptureData.h"
+#include "TimeGraphLayout.h"
 
 class OrbitApp;
 
@@ -17,9 +18,9 @@ namespace orbit_gl {
 
 class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this<ThreadBar> {
  public:
-  explicit ThreadBar(OrbitApp* app, TimeGraph* time_graph, CaptureData* capture_data,
-                     ThreadID thread_id)
-      : CaptureViewElement(time_graph),
+  explicit ThreadBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                     CaptureData* capture_data, ThreadID thread_id)
+      : CaptureViewElement(time_graph, layout),
         thread_id_(thread_id),
         app_(app),
         capture_data_(capture_data){};

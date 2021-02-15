@@ -25,8 +25,8 @@ class OrbitApp;
 
 class ThreadTrack final : public TimerTrack {
  public:
-  explicit ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
-                       CaptureData* capture_data);
+  explicit ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
+                       OrbitApp* app, CaptureData* capture_data);
   void InitializeNameAndLabel(int32_t thread_id);
 
   void SetCaptureData(CaptureData* capture_data) override;

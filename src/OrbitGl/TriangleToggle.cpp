@@ -15,8 +15,8 @@
 #include "TimeGraph.h"
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
-                               TimeGraph* time_graph)
-    : CaptureViewElement(time_graph),
+                               TimeGraph* time_graph, TimeGraphLayout* layout)
+    : CaptureViewElement(time_graph, layout),
       state_(initial_state),
       initial_state_(initial_state),
       handler_(std::move(handler)) {}

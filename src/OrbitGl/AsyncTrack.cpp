@@ -30,9 +30,9 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp* app,
-                       CaptureData* capture_data)
-    : TimerTrack(time_graph, app, capture_data) {
+AsyncTrack::AsyncTrack(TimeGraph* time_graph, TimeGraphLayout* layout, const std::string& name,
+                       OrbitApp* app, CaptureData* capture_data)
+    : TimerTrack(time_graph, layout, app, capture_data) {
   SetName(name);
   SetLabel(name);
 }
@@ -68,7 +68,7 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, const std::string& name, OrbitApp*
 }
 
 void AsyncTrack::UpdateBoxHeight() {
-  box_height_ = time_graph_->GetLayout().GetTextBoxHeight();
+  box_height_ = layout_->GetTextBoxHeight();
   if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
     box_height_ /= static_cast<float>(depth_);
   }
@@ -95,7 +95,6 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 
 void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
                                   float z_offset, TextBox* text_box) {
-  TimeGraphLayout layout = time_graph_->GetLayout();
   std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
   text_box->SetElapsedTimeTextLength(time.length());
 
@@ -111,7 +110,7 @@ void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
+      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       time_graph_->CalculateZoomedFontSize(), max_size);
 }

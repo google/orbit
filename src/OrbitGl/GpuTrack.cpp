@@ -65,9 +65,9 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(TimeGraph* time_graph, uint64_t timeline_hash, OrbitApp* app,
-                   CaptureData* capture_data)
-    : TimerTrack(time_graph, app, capture_data) {
+GpuTrack::GpuTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t timeline_hash,
+                   OrbitApp* app, CaptureData* capture_data)
+    : TimerTrack(time_graph, layout, app, capture_data) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();
@@ -157,13 +157,12 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
 }
 
 float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   auto adjusted_depth = static_cast<float>(timer_info.depth());
   if (collapse_toggle_->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
   if (timer_info.type() == TimerInfo::kGpuDebugMarker) {
-    return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f);
+    return pos_[1] - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f);
   }
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
         timer_info.type() == TimerInfo::kGpuCommandBuffer);
@@ -175,7 +174,7 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
     adjusted_depth *= 2.f;
   }
 
-  float gap_space = adjusted_depth * layout.GetSpaceBetweenGpuDepths();
+  float gap_space = adjusted_depth * layout_->GetSpaceBetweenGpuDepths();
 
   // Command buffer timers have the same depth value as their matching "hw execution" timer.
   // As we want to draw command buffers underneath the hw execution timers, we need to increase
@@ -183,7 +182,7 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
     adjusted_depth += 1.f;
   }
-  return pos_[1] - layout.GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
+  return pos_[1] - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
 }
 
 // When track is collapsed, only draw "hardware execution" timers and the root "debug markers".
@@ -198,7 +197,6 @@ bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
 
 void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
                                 float z_offset, TextBox* text_box) {
-  TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
 
@@ -219,7 +217,7 @@ void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, 
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
+      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       time_graph_->CalculateZoomedFontSize(), max_size);
 }
@@ -230,15 +228,14 @@ std::string GpuTrack::GetTooltip() const {
 }
 
 float GpuTrack::GetHeight() const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
   bool collapsed = collapse_toggle_->IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
   }
-  return layout.GetTextBoxHeight() * depth + (num_gaps * layout.GetSpaceBetweenGpuDepths()) +
-         layout.GetTrackBottomMargin();
+  return layout_->GetTextBoxHeight() * depth + (num_gaps * layout_->GetSpaceBetweenGpuDepths()) +
+         layout_->GetTrackBottomMargin();
 }
 
 const TextBox* GpuTrack::GetLeft(const TextBox* text_box) const {

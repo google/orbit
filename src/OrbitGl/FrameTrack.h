@@ -24,7 +24,7 @@ class OrbitApp;
 
 class FrameTrack : public TimerTrack {
  public:
-  explicit FrameTrack(TimeGraph* time_graph, uint64_t function_id,
+  explicit FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t function_id,
                       orbit_client_protos::FunctionInfo function, OrbitApp* app,
                       CaptureData* capture_data);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }

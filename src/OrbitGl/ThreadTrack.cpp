@@ -34,20 +34,21 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id, OrbitApp* app,
-                         CaptureData* capture_data)
-    : TimerTrack(time_graph, app, capture_data) {
+ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
+                         OrbitApp* app, CaptureData* capture_data)
+    : TimerTrack(time_graph, layout, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_track_ =
-      std::make_shared<orbit_gl::ThreadStateTrack>(app_, time_graph, capture_data, thread_id_);
+  thread_state_track_ = std::make_shared<orbit_gl::ThreadStateTrack>(app_, time_graph, layout,
+                                                                     capture_data, thread_id_);
 
-  event_track_ = std::make_shared<orbit_gl::EventTrack>(app_, time_graph, capture_data, thread_id_);
+  event_track_ =
+      std::make_shared<orbit_gl::EventTrack>(app_, time_graph, layout, capture_data, thread_id_);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ =
-      std::make_shared<orbit_gl::TracepointTrack>(app_, time_graph, capture_data, thread_id_);
+  tracepoint_track_ = std::make_shared<orbit_gl::TracepointTrack>(app_, time_graph, layout,
+                                                                  capture_data, thread_id_);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 
@@ -199,7 +200,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
 }
 
 void ThreadTrack::UpdateBoxHeight() {
-  box_height_ = time_graph_->GetLayout().GetTextBoxHeight();
+  box_height_ = layout_->GetTextBoxHeight();
   if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
     box_height_ /= static_cast<float>(depth_);
   }
@@ -211,10 +212,9 @@ bool ThreadTrack::IsEmpty() const {
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  const float thread_state_track_height = layout.GetThreadStateTrackHeight();
-  const float event_track_height = layout.GetEventTrackHeight();
-  const float space_between_subtracks = layout.GetSpaceBetweenTracksAndThread();
+  const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
+  const float event_track_height = layout_->GetEventTrackHeight();
+  const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
   float current_y = pos_[1];
 
@@ -245,10 +245,9 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
 
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  const float thread_state_track_height = layout.GetThreadStateTrackHeight();
-  const float event_track_height = layout.GetEventTrackHeight();
-  const float tracepoint_track_height = layout.GetEventTrackHeight();
+  const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
+  const float event_track_height = layout_->GetEventTrackHeight();
+  const float tracepoint_track_height = layout_->GetEventTrackHeight();
 
   if (!thread_state_track_->IsEmpty()) {
     thread_state_track_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
@@ -296,7 +295,6 @@ void ThreadTrack::SetTrackColor(Color color) {
 
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
                                    float z_offset, TextBox* text_box) {
-  TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     text_box->SetElapsedTimeTextLength(time.length());
@@ -333,7 +331,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout.GetTextOffset(),
+      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       time_graph_->CalculateZoomedFontSize(), max_size);
 }
@@ -344,7 +342,6 @@ std::string ThreadTrack::GetTooltip() const {
 }
 
 float ThreadTrack::GetHeight() const {
-  TimeGraphLayout& layout = time_graph_->GetLayout();
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
   const uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
@@ -354,16 +351,15 @@ float ThreadTrack::GetHeight() const {
        !tracepoint_track_->IsEmpty()) &&
       (depth > 0);
   return GetHeaderHeight() +
-         (gap_between_tracks_and_timers ? layout.GetSpaceBetweenTracksAndThread() : 0) +
-         layout.GetTextBoxHeight() * depth + layout.GetTrackBottomMargin();
+         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
+         layout_->GetTextBoxHeight() * depth + layout_->GetTrackBottomMargin();
 }
 
 float ThreadTrack::GetHeaderHeight() const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  const float thread_state_track_height = layout.GetThreadStateTrackHeight();
-  const float event_track_height = layout.GetEventTrackHeight();
-  const float tracepoint_track_height = layout.GetEventTrackHeight();
-  const float space_between_subtracks = layout.GetSpaceBetweenTracksAndThread();
+  const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
+  const float event_track_height = layout_->GetEventTrackHeight();
+  const float tracepoint_track_height = layout_->GetEventTrackHeight();
+  const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
   float header_height = 0.0f;
   int track_count = 0;
