@@ -29,6 +29,25 @@
 class OrbitApp;
 class TextRenderer;
 
+namespace internal {
+struct DrawData {
+  uint64_t min_tick;
+  uint64_t max_tick;
+  uint64_t highlighted_function_id;
+  uint64_t pixel_delta_in_ticks;
+  uint64_t min_timegraph_tick;
+  Batcher* batcher;
+  GlCanvas* canvas;
+  const TextBox* selected_textbox;
+  double inv_time_window;
+  float world_start_x;
+  float world_width;
+  float z_offset;
+  float z;
+  bool is_collapsed;
+};
+}  // namespace internal
+
 class TimerTrack : public Track {
  public:
   explicit TimerTrack(TimeGraph* time_graph, OrbitApp* app, CaptureData* capture_data);
@@ -84,12 +103,9 @@ class TimerTrack : public Track {
     return true;
   }
 
-  void DrawTimer(TextBox* prev_text_box, TextBox* current_text_box, TextBox* next_text_box,
-                 uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher,
-                 GlCanvas* canvas, float world_start_x, float world_width, double inv_time_window,
-                 bool is_collapsed, float z, const TextBox* selected_textbox,
-                 uint64_t highlighted_function_id, uint64_t pixel_delta_in_ticks,
-                 uint64_t min_timegraph_tick, uint64_t* min_ignore, uint64_t* max_ignore);
+  void DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
+                 const internal::DrawData& draw_data, TextBox* current_text_box,
+                 uint64_t* min_ignore, uint64_t* max_ignore);
 
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
