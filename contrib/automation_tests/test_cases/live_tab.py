@@ -99,7 +99,7 @@ class VerifyOneFunctionWasCalled(LiveTabTestCase):
             if function_name in children[i].window_text():
                 call_count = int(children[i + 1].window_text())
                 if min_calls <= call_count <= max_calls:
-                    logging.info('Found a call to %s with %s hits', 
+                    logging.info('Found a call to "%s" with %s hits', 
                                  children[i].window_text(), call_count)
                     return
         
