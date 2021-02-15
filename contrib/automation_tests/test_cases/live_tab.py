@@ -87,3 +87,23 @@ class VerifyFunctionCallCount(LiveTabTestCase):
         self.expect_true(min_calls <= call_count <= max_calls,
                          'Call count for function "%s" expected to be between %s and %s, was %s'
                          % (function_name, min_calls, max_calls, call_count))
+                         
+class VerifyOneFunctionWasCalled(LiveTabTestCase):
+    """
+    Verify that at least one of the functions matching the function name has 
+    received the given number of hits.
+    """
+    def _execute(self, function_name, min_calls=0, max_calls=pow(2, 33)-1):
+        children = self.find_control('Tree', parent=self._live_tab).children()
+        for i in range(len(children)):
+            if function_name in children[i].window_text():
+                call_count = int(children[i + 1].window_text())
+                if min_calls <= call_count <= max_calls:
+                    logging.info('Found a call to %s with %s hits', 
+                                 children[i].window_text(), call_count)
+                    return
+        
+        raise RuntimeError('No function matching "%s" has received the required hit count' % (function_name))
+
+        
+
