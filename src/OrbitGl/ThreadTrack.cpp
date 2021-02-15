@@ -60,7 +60,7 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
     // This is the process track.
     const CaptureData& capture_data = app_->GetCaptureData();
     std::string process_name = capture_data.process_name();
-    SetName(process_name);
+    SetName("All Threads");
     const std::string_view all_threads = " (all_threads)";
     SetLabel(process_name.append(all_threads));
     SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
