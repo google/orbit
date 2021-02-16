@@ -62,7 +62,7 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
     return window_->GetTimeGraph()->GetOrCreateAccessibleInterface();
   }
 
- private: 
+ private:
   CaptureWindow* window_;
 };
 
