@@ -73,6 +73,82 @@ template <typename T>
   return promise->GetFuture();
 }
 
+template <typename T>
+[[nodiscard]] Future<ErrorMessageOr<T>> UnwrapFuture(
+    const Future<ErrorMessageOr<Future<T>>>& outer_future) {
+  orbit_base::Promise<ErrorMessageOr<T>> promise{};
+  auto future = promise.GetFuture();
+
+  auto outer_continuation =
+      [promise = std::move(promise)](const ErrorMessageOr<Future<T>>& outer_result) mutable {
+        if (outer_result.has_error()) {
+          promise.SetResult(outcome::failure(outer_result.error()));
+          return;
+        }
+
+        auto inner_continuation = [promise = std::move(promise)](const T& arg) mutable {
+          promise.SetResult(arg);
+        };
+
+        const auto& inner_future = outer_result.value();
+        RegisterContinuationOrCallDirectly(inner_future, std::move(inner_continuation));
+      };
+  RegisterContinuationOrCallDirectly(outer_future, std::move(outer_continuation));
+
+  return future;
+}
+
+template <>
+[[nodiscard]] inline Future<ErrorMessageOr<void>> UnwrapFuture(
+    const Future<ErrorMessageOr<Future<void>>>& outer_future) {
+  orbit_base::Promise<ErrorMessageOr<void>> promise{};
+  auto future = promise.GetFuture();
+
+  auto outer_continuation =
+      [promise = std::move(promise)](const ErrorMessageOr<Future<void>>& outer_result) mutable {
+        if (outer_result.has_error()) {
+          promise.SetResult(outcome::failure(outer_result.error()));
+          return;
+        }
+
+        auto inner_continuation = [promise = std::move(promise)]() mutable {
+          promise.SetResult(outcome::success());
+        };
+
+        const auto& inner_future = outer_result.value();
+        RegisterContinuationOrCallDirectly(inner_future, std::move(inner_continuation));
+      };
+  RegisterContinuationOrCallDirectly(outer_future, std::move(outer_continuation));
+
+  return future;
+}
+
+template <typename T>
+[[nodiscard]] Future<ErrorMessageOr<T>> UnwrapFuture(
+    const Future<ErrorMessageOr<Future<ErrorMessageOr<T>>>>& outer_future) {
+  orbit_base::Promise<ErrorMessageOr<T>> promise{};
+  auto future = promise.GetFuture();
+
+  auto outer_continuation =
+      [promise = std::move(promise)](
+          const ErrorMessageOr<Future<ErrorMessageOr<T>>>& outer_result) mutable {
+        if (outer_result.has_error()) {
+          promise.SetResult(outcome::failure(outer_result.error()));
+          return;
+        }
+
+        auto inner_continuation = [promise =
+                                       std::move(promise)](const ErrorMessageOr<T>& arg) mutable {
+          promise.SetResult(arg);
+        };
+
+        const auto& inner_future = outer_result.value();
+        RegisterContinuationOrCallDirectly(inner_future, std::move(inner_continuation));
+      };
+  RegisterContinuationOrCallDirectly(outer_future, std::move(outer_continuation));
+
+  return future;
+}
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FUTURE_HELPERS_H_

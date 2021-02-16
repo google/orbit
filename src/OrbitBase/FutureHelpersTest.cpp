@@ -126,4 +126,85 @@ TEST(UnwrapFuture, OuterFutureCompletesFirstWithInt) {
   EXPECT_TRUE(unwrapped_future.IsFinished());
   EXPECT_EQ(unwrapped_future.Get(), 42);
 }
+
+// Future<ErrorMessageOr<Future<int>>> should unwrap to Future<ErrorMessageOr<int>>
+TEST(UnwrapFuture, FutureOfErrorMessageOrFutureOfInt) {
+  Promise<ErrorMessageOr<Future<int>>> outer_promise;
+  Future<ErrorMessageOr<Future<int>>> outer_future = outer_promise.GetFuture();
+
+  Future<ErrorMessageOr<int>> unwrapped_future = UnwrapFuture(outer_future);
+  EXPECT_TRUE(unwrapped_future.IsValid());
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  Promise<int> inner_promise;
+  Future<int> inner_future = inner_promise.GetFuture();
+
+  inner_promise.SetResult(42);
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  outer_promise.SetResult(outcome::success(inner_future));
+  EXPECT_TRUE(unwrapped_future.IsFinished());
+  EXPECT_TRUE(unwrapped_future.Get().has_value());
+  EXPECT_EQ(unwrapped_future.Get().value(), 42);
+}
+
+// Future<ErrorMessageOr<Future<ErrorMessageOr<int>>>> should unwrap to Future<ErrorMessageOr<int>>
+TEST(UnwrapFuture, FutureOfErrorMessageOrFutureOfErrorMessageOrInt) {
+  Promise<ErrorMessageOr<Future<ErrorMessageOr<int>>>> outer_promise;
+  Future<ErrorMessageOr<Future<ErrorMessageOr<int>>>> outer_future = outer_promise.GetFuture();
+
+  Future<ErrorMessageOr<int>> unwrapped_future = UnwrapFuture(outer_future);
+  EXPECT_TRUE(unwrapped_future.IsValid());
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  Promise<ErrorMessageOr<int>> inner_promise;
+  Future<ErrorMessageOr<int>> inner_future = inner_promise.GetFuture();
+
+  inner_promise.SetResult(42);
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  outer_promise.SetResult(outcome::success(inner_future));
+  EXPECT_TRUE(unwrapped_future.IsFinished());
+  EXPECT_TRUE(unwrapped_future.Get().has_value());
+  EXPECT_EQ(unwrapped_future.Get().value(), 42);
+}
+
+// Future<ErrorMessageOr<Future<ErrorMessageOr<int>>>> should unwrap to Future<ErrorMessageOr<int>>
+TEST(UnwrapFuture, FutureOfErrorMessageOrFutureOfErrorMessageOrIntWithInnerError) {
+  Promise<ErrorMessageOr<Future<ErrorMessageOr<int>>>> outer_promise;
+  Future<ErrorMessageOr<Future<ErrorMessageOr<int>>>> outer_future = outer_promise.GetFuture();
+
+  Future<ErrorMessageOr<int>> unwrapped_future = UnwrapFuture(outer_future);
+  EXPECT_TRUE(unwrapped_future.IsValid());
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  Promise<ErrorMessageOr<int>> inner_promise;
+  Future<ErrorMessageOr<int>> inner_future = inner_promise.GetFuture();
+
+  inner_promise.SetResult(outcome::failure(ErrorMessage{"Error"}));
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  outer_promise.SetResult(outcome::success(inner_future));
+  EXPECT_TRUE(unwrapped_future.IsFinished());
+  EXPECT_TRUE(unwrapped_future.Get().has_error());
+  EXPECT_EQ(unwrapped_future.Get().error().message(), "Error");
+}
+
+// Future<ErrorMessageOr<Future<ErrorMessageOr<int>>>> should unwrap to Future<ErrorMessageOr<int>>
+TEST(UnwrapFuture, FutureOfErrorMessageOrFutureOfErrorMessageOrIntWithOuterError) {
+  Promise<ErrorMessageOr<Future<ErrorMessageOr<int>>>> outer_promise;
+  Future<ErrorMessageOr<Future<ErrorMessageOr<int>>>> outer_future = outer_promise.GetFuture();
+
+  Future<ErrorMessageOr<int>> unwrapped_future = UnwrapFuture(outer_future);
+  EXPECT_TRUE(unwrapped_future.IsValid());
+  EXPECT_FALSE(unwrapped_future.IsFinished());
+
+  Promise<ErrorMessageOr<int>> inner_promise;
+  Future<ErrorMessageOr<int>> inner_future = inner_promise.GetFuture();
+
+  outer_promise.SetResult(outcome::failure(ErrorMessage{"Error"}));
+  EXPECT_TRUE(unwrapped_future.IsFinished());
+  EXPECT_TRUE(unwrapped_future.Get().has_error());
+  EXPECT_EQ(unwrapped_future.Get().error().message(), "Error");
+}
 }  // namespace orbit_base
