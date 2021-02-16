@@ -6,6 +6,7 @@
 #define ORBIT_BASE_RESULT_H_
 
 #include <string>
+#include <type_traits>
 
 #include "outcome.hpp"
 
@@ -25,5 +26,11 @@ using Result = outcome::result<T, E, outcome::policy::terminate>;
 
 template <typename T>
 using ErrorMessageOr = Result<T, ErrorMessage>;
+
+template <typename T>
+struct IsErrorMessageOr : std::false_type {};
+
+template <typename T>
+struct IsErrorMessageOr<ErrorMessageOr<T>> : std::true_type {};
 
 #endif  // ORBIT_BASE_RESULT_H_
