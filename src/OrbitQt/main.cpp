@@ -164,7 +164,7 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       target_config = w.ClearTargetConfiguration();
     }
 
-    if (application_return_code == 0) {
+    if (application_return_code == OrbitMainWindow::kQuitOrbitReturnCode) {
       // User closed window
       break;
     } else if (application_return_code == OrbitMainWindow::kEndSessionReturnCode) {

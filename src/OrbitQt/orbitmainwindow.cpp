@@ -450,18 +450,8 @@ void OrbitMainWindow::SetupTargetLabel() {
 
   ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
 
-  QObject::connect(disconnect_target_button, &QPushButton::clicked, this, [this]() {
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, QApplication::applicationName(),
-        "This discards any unsaved progress. Are you sure you want to continue?");
-
-    if (reply == QMessageBox::Yes) {
-      if (app_->IsCapturing()) {
-        app_->AbortCapture();
-      }
-      QApplication::exit(kEndSessionReturnCode);
-    }
-  });
+  QObject::connect(disconnect_target_button, &QPushButton::clicked, this,
+                   [this] { RequestExitWithReturnCode(kEndSessionReturnCode); });
 }
 
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
@@ -1140,26 +1130,44 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
   return QObject::eventFilter(watched, event);
 }
 
-void OrbitMainWindow::closeEvent(QCloseEvent* event) {
+bool OrbitMainWindow::RequestExitWithReturnCode(int return_code) {
   if (app_->IsCapturing()) {
-    event->ignore();
-
     if (QMessageBox::question(this, "Capture in progress",
                               "A capture is currently in progress. Do you want to abort the "
-                              "capture and exit Orbit?") == QMessageBox::Yes) {
-      // We need for the capture to clean up - close as soon as this is done
-      app_->SetCaptureFailedCallback([&] { close(); });
-      app_->AbortCapture();
+                              "capture and exit Orbit?") != QMessageBox::Yes) {
+      return false;
     }
-  } else {
-    if (main_thread_executor_) {
-      main_thread_executor_->AbortWaitingJobs();
-    }
-    if (introspection_widget_ != nullptr) {
-      introspection_widget_->close();
-    }
-    QMainWindow::closeEvent(event);
+
+    // We need for the capture to clean up - exit as soon as this is done
+    app_->SetCaptureFailedCallback([return_code] { QApplication::exit(return_code); });
+    app_->AbortCapture();
+    return true;
   }
+
+  if (QMessageBox::question(
+          this, QApplication::applicationName(),
+          "This discards any unsaved progress. Are you sure you want to continue?") !=
+      QMessageBox::Yes) {
+    return false;
+  }
+
+  if (main_thread_executor_ != nullptr) {
+    main_thread_executor_->AbortWaitingJobs();
+  }
+  if (introspection_widget_ != nullptr) {
+    introspection_widget_->close();
+  }
+
+  QApplication::exit(return_code);
+  return true;
+}
+
+void OrbitMainWindow::closeEvent(QCloseEvent* event) {
+  if (!RequestExitWithReturnCode(kQuitOrbitReturnCode)) {
+    event->ignore();
+    return;
+  }
+  QMainWindow::closeEvent(event);
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {

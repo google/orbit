@@ -54,6 +54,7 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
+  static constexpr int kQuitOrbitReturnCode = 0;
   static constexpr int kEndSessionReturnCode = 1;
 
   explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
@@ -163,6 +164,8 @@ class OrbitMainWindow : public QMainWindow {
 
   static const QString kCollectThreadStatesSettingKey;
   void LoadCaptureOptionsIntoApp();
+
+  bool RequestExitWithReturnCode(int return_code);
 
  private:
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
