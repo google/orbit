@@ -301,9 +301,10 @@ int main(int argc, char* argv[]) {
   // Skip program name in positional_args[0].
   std::vector<std::string> capture_file_paths(positional_args.begin() + 1, positional_args.end());
 
-  InitLogFile(Path::GetLogFilePath());
+  orbit_base::InitLogFile(Path::GetLogFilePath());
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
-  ErrorMessageOr<void> remove_old_log_result = TryRemoveOldLogFiles(Path::CreateOrGetLogDir());
+  ErrorMessageOr<void> remove_old_log_result =
+      orbit_base::TryRemoveOldLogFiles(Path::CreateOrGetLogDir());
   if (remove_old_log_result.has_error()) {
     LOG("Warning: Unable to remove some old log files:\n%s",
         remove_old_log_result.error().message());

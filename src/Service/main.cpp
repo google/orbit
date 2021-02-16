@@ -49,7 +49,7 @@ std::string GetLogFilePath() {
 }  // namespace
 
 int main(int argc, char** argv) {
-  InitLogFile(GetLogFilePath());
+  orbit_base::InitLogFile(GetLogFilePath());
 
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});

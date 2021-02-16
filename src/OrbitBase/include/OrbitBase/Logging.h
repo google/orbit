@@ -114,23 +114,13 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     absl::StrFormat(format, ##__VA_ARGS__)                                                     \
   }
 
-std::string GetLogFileName();
-// This function tries to remove log files older than kLogFileLifetime even when an error is
-// returned. An error returns, for instance, if some log files to remove are used by other
-// applications. If so, both the file name and the error message will be recorded in the log file.
-ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir);
-
-extern std::ofstream log_file;
-void InitLogFile(const std::filesystem::path& path);
-void LogToFile(const std::string& message);
-
 // Internal.
 #if defined(_WIN32)
 #define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
     OutputDebugStringA(message);    \
-    LogToFile(message);             \
+    orbit_base::LogToFile(message); \
   } while (0)
 #define PLATFORM_ABORT() \
   do {                   \
@@ -141,7 +131,7 @@ void LogToFile(const std::string& message);
 #define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
-    LogToFile(message);             \
+    orbit_base::LogToFile(message); \
   } while (0)
 #define PLATFORM_ABORT() abort()
 #endif
@@ -150,6 +140,17 @@ void LogToFile(const std::string& message);
 #pragma clang diagnostic pop
 #endif
 
+namespace orbit_base {
+std::string GetLogFileName();
+// This function tries to remove log files older than kLogFileLifetime even when an error is
+// returned. An error returns, for instance, if some log files to remove are used by other
+// applications. If so, both the file name and the error message will be recorded in the log file.
+ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir);
+
+void InitLogFile(const std::filesystem::path& path) noexcept;
+void LogToFile(const std::string& message) noexcept;
+
 void LogStacktrace();
+}  // namespace orbit_base
 
 #endif  // ORBIT_BASE_LOGGING_H_
