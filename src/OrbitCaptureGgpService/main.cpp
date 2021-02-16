@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 
   const std::string log_directory = absl::GetFlag(FLAGS_log_directory);
   if (!log_directory.empty()) {
-    InitLogFile(GetLogFilePath(log_directory));
+    orbit_base::InitLogFile(GetLogFilePath(log_directory));
   }
 
   if (!absl::GetFlag(FLAGS_pid)) {

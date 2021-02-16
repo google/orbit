@@ -73,5 +73,5 @@ std::filesystem::path Path::CreateOrGetLogDir() {
 }
 
 std::filesystem::path Path::GetLogFilePath() {
-  return Path::CreateOrGetLogDir() / GetLogFileName();
+  return Path::CreateOrGetLogDir() / orbit_base::GetLogFileName();
 }

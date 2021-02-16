@@ -10,16 +10,27 @@
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
+#include <stdio.h>
 
 #include <array>
 #include <system_error>
 
 #include "LoggingUtils.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/UniqueResource.h"
+
+namespace orbit_base {
+
+#if defined(_WIN32)
+// Windows does not have TEMP_FAILURE_RETRY, shortcut to expression
+#define TEMP_FAILURE_RETRY(expression) (expression)
+#endif
 
 static absl::Mutex log_file_mutex(absl::kConstInit);
-std::ofstream log_file;
-
+static orbit_base::unique_resource log_file{static_cast<FILE*>(nullptr), [](FILE* f) {
+                                              if (f != nullptr) TEMP_FAILURE_RETRY(fclose(f));
+                                            }};
 std::string GetLogFileName() {
   std::string timestamp_string = absl::FormatTime(orbit_base_internal::kLogFileNameTimeFormat,
                                                   absl::Now(), absl::UTCTimeZone());
@@ -35,22 +46,39 @@ ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir) 
   return orbit_base_internal::RemoveFiles(old_files);
 }
 
-void InitLogFile(const std::filesystem::path& path) {
+void InitLogFile(const std::filesystem::path& path) noexcept {
   absl::MutexLock lock(&log_file_mutex);
   // Do not call CHECK here - it will end up calling LogToFile,
   // which tries to lock on the same mutex a second time. This will
   // lead to an error since the mutex is not recursive.
-  if (log_file.is_open()) {
+  if (log_file != nullptr) {
     PLATFORM_ABORT();
   }
-  log_file.open(path, std::ofstream::out);
+
+  // TEMP_FAILURE_RETRY for FILE*
+  do {
+    // O_WRONLY, O_CLOEXEC for glibc, O_BINARY for windows
+#if defined(_WIN32)
+    log_file.reset(fopen(path.string().c_str(), "wb"));
+#else
+    log_file.reset(fopen(path.string().c_str(), "wbe"));
+#endif
+  } while (log_file == nullptr && errno == EINTR);
+
+  if (log_file == nullptr) {
+    // Log a error (to stderr)
+    fprintf(stderr, "Error: Unable to open logfile \"%s\": %s\n", path.string().c_str(),
+            SafeStrerror(errno));
+  }
 }
 
-void LogToFile(const std::string& message) {
+void LogToFile(const std::string& message) noexcept {
   absl::MutexLock lock(&log_file_mutex);
-  if (log_file.is_open()) {
-    log_file << message;
-    log_file.flush();
+  if (log_file != nullptr) {
+    // Ignore any errors that can happen, we cannot do anything about them at this
+    // point anyways.
+    fwrite(message.c_str(), message.size(), 1, log_file);
+    fflush(log_file);
   }
 }
 
@@ -67,3 +95,5 @@ void LogStacktrace() {
     LOG("  %p: %s\n", raw_stack[i], symbol);
   }
 }
+
+}  // namespace orbit_base
