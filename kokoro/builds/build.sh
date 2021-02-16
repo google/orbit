@@ -51,7 +51,19 @@ if [ -n "$1" ]; then
     echo "Delete all unnecessary files from the src/-directory."
     
     set +e # This is allowed to fail when deleting
-    if [ "${BUILD_TYPE}" == "presubmit" ]; then
+    if [ $CONAN_PROFILE == "coverage_clang9" ]; then
+      # In the coverage_clang9 case, we spare the results at build/package and this
+      # script (well, everything under kokoro).
+      echo "Cleanup for coverage_clang9"
+      find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
+                            ! -path "${MOUNT_POINT}/github" \
+                            ! -path "${REPO_ROOT}" \
+                            ! -path "${REPO_ROOT}/kokoro*" \
+                            ! -path "${REPO_ROOT}/build" \
+                            ! -path "${REPO_ROOT}/build/package*"\
+                            -delete
+      echo "Cleanup for coverage_clang9 done."
+    elif [ "${BUILD_TYPE}" == "presubmit" ]; then
       # In the presubmit case we only spare the testresults (under build/) and this
       # script (well, everything under kokoro).
       echo "Cleanup for presubmit."
