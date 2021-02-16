@@ -34,7 +34,7 @@ TEST(ThreadUtils, GetCurrentThreadId) {
 
 TEST(ThreadUtils, GetSetCurrentThreadShortName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
-  static const std::string kThreadName = "123456789012345";
+  static const char* kThreadName = "123456789012345";
   orbit_base::SetCurrentThreadName(kThreadName);
   std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
   EXPECT_EQ(kThreadName, thread_name);
@@ -46,24 +46,24 @@ TEST(ThreadUtils, GetSetCurrentThreadLongName) {
 
   // Set thread name longer than 15 characters. The Linux version will truncate the name to 15
   // characters.
-  static const std::string kLongThreadName = "1234567890123456";
-  EXPECT_GT(kLongThreadName.size(), kMaxNonZeroCharactersLinux);
+  static const char* kLongThreadName = "1234567890123456";
+  EXPECT_GT(strlen(kLongThreadName), kMaxNonZeroCharactersLinux);
   orbit_base::SetCurrentThreadName(kLongThreadName);
   std::string long_thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
   EXPECT_EQ(long_thread_name.substr(0, kMaxNonZeroCharactersLinux),
-            kLongThreadName.substr(0, kMaxNonZeroCharactersLinux));
+            std::string(kLongThreadName, kMaxNonZeroCharactersLinux));
 
 #ifdef __linux
   // Test that the allowed thread name length hasn't increased on Linux.
   // If this fails, we should modify the Linux SetThreadName implementation
   // to allow for longer thread names.
-  EXPECT_NE(pthread_setname_np(pthread_self(), kLongThreadName.data()), 0);
+  EXPECT_NE(pthread_setname_np(pthread_self(), kLongThreadName), 0);
 #endif
 }
 
 TEST(ThreadUtils, GetSetCurrentThreadEmptyName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
-  static const std::string kEmptyThreadName{};
+  static const char* kEmptyThreadName = "";
   orbit_base::SetCurrentThreadName(kEmptyThreadName);
   std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
   EXPECT_EQ(kEmptyThreadName, thread_name);
@@ -78,7 +78,7 @@ TEST(ThreadUtils, GetThreadName) {
 #endif
   PidType other_tid = 0;
   bool other_name_read = false;
-  static const std::string kThreadName = "OtherThread";
+  static const char* kThreadName = "OtherThread";
 
   std::thread other_thread{[&mutex, &other_tid, &other_name_read] {
     orbit_base::SetCurrentThreadName(kThreadName);

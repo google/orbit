@@ -40,12 +40,14 @@ std::string GetThreadName(pid_t tid) {
   return comm_content.value();
 }
 
-void SetCurrentThreadName(const std::string& thread_name) {
-  std::string name = thread_name;
-  if (name.length() >= kMaxThreadNameLength) {
-    name[kMaxThreadNameLength - 1] = '\0';
+void SetCurrentThreadName(const char* thread_name) {
+  std::string buf;
+  if (strlen(thread_name) >= kMaxThreadNameLength) {
+    buf.assign(thread_name, kMaxThreadNameLength - 1);
+    thread_name = buf.c_str();
   }
-  int result = pthread_setname_np(pthread_self(), name.data());
+
+  int result = pthread_setname_np(pthread_self(), thread_name);
   if (result != 0) {
     ERROR("Setting thread name for tid %d. Error %d", GetCurrentThreadId(), result);
   }
