@@ -57,7 +57,7 @@ class ProcessData final {
   [[nodiscard]] const std::string& command_line() const { return process_info_.command_line(); }
   [[nodiscard]] bool is_64_bit() const { return process_info_.is_64_bit(); }
 
-  void UpdateModuleInfos(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
+  void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
   [[nodiscard]] ErrorMessageOr<std::pair<std::string, uint64_t>> FindModuleByAddress(
       uint64_t absolute_address) const;
