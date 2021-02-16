@@ -45,7 +45,7 @@ using orbit_accessibility::AccessibleWidgetBridge;
 
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:
-  explicit AccessibleCaptureWindow(CaptureWindow* window) : window_(window){}
+  explicit AccessibleCaptureWindow(CaptureWindow* window) : window_(window) {}
 
   [[nodiscard]] int AccessibleChildCount() const override {
     if (window_->GetTimeGraph() == nullptr) {
