@@ -270,7 +270,7 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
 }
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
-  string_manager_->AddIfNotPresent(key, std::move(str));
+  string_manager_.AddIfNotPresent(key, std::move(str));
 }
 
 void OrbitApp::OnUniqueCallStack(CallStack callstack) {
@@ -348,7 +348,6 @@ void OrbitApp::PostInit() {
 
   ListPresets();
 
-  string_manager_ = std::make_shared<StringManager>();
   if (metrics_uploader_ != nullptr) {
     metrics_uploader_->SendLogEvent(
         orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
@@ -785,7 +784,7 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
-  const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
+  const auto& key_to_string_map = string_manager_.GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllSerializableTimerChains();
 
@@ -803,7 +802,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
-  string_manager_->Clear();
+  string_manager_.Clear();
   auto load_future = thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancellation_requested_ = false;
 

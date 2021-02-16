@@ -329,7 +329,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
-  [[nodiscard]] StringManager* GetStringManager() { return string_manager_.get(); }
+  [[nodiscard]] StringManager* GetStringManager() { return &string_manager_; }
   [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_; }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
@@ -485,7 +485,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<void>>>
       modules_currently_loading_;
 
-  std::shared_ptr<StringManager> string_manager_;
+  StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   MainThreadExecutor* main_thread_executor_;

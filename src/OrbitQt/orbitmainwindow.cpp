@@ -178,15 +178,6 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
 
   SaveCurrentTabLayoutAsDefaultInMemory();
 
-  // TODO(177304549): This is still the way it is because of the old UI. Refactor:
-  // As soon as PostInit() is cleaned up (see todo comments in PostInit), it should be called before
-  // std::visit and then OpenCapture can be called inside SetTarget(FileTarget).
-  std::string file_path_to_open;
-  if (std::holds_alternative<orbit_qt::FileTarget>(target_configuration_)) {
-    OpenCapture(
-        std::get<orbit_qt::FileTarget>(target_configuration_).GetCaptureFilePath().string());
-  }
-
   UpdateCaptureStateDependentWidgets();
 
   LoadCaptureOptionsIntoApp();
@@ -1189,6 +1180,8 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
 void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
   target_label_->setStyleSheet(kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorFileTarget));
   target_label_->setText(QString::fromStdString(target.GetCaptureFilePath().filename().string()));
+
+  OpenCapture(target.GetCaptureFilePath().string());
 }
 
 void OrbitMainWindow::OnProcessListUpdated(
