@@ -19,8 +19,7 @@ using orbit_grpc_protos::ProcessInfo;
 
 ProcessData::ProcessData() { process_info_.set_pid(-1); }
 
-void ProcessData::UpdateModuleInfos(
-    const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
+void ProcessData::UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos) {
   module_memory_map_.clear();
   start_addresses_.clear();
 

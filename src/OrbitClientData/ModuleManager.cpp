@@ -22,7 +22,7 @@ using orbit_client_protos::FunctionInfo;
 namespace orbit_client_data {
 
 std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
-    const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
+    absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos) {
   absl::MutexLock lock(&mutex_);
 
   std::vector<ModuleData*> unloaded_modules;
