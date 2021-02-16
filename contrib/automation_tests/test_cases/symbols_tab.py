@@ -75,7 +75,30 @@ class FilterAndHookFunction(E2ETestCase):
 
         self.find_context_menu_item('Hook').click_input()
         wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(0, 0).texts()[0])
+        
+class FilterAndHookMultipleFunctions(E2ETestCase):
+    """
+    Hook multiple functions based on a search string, and verify it is indicated as hooked in the UI.
+    """
+    def _execute(self, function_search_string):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
 
+        logging.info('Hooking functions based on search "%s"', function_search_string)
+        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+
+        logging.info('Waiting for function list to be populated...')
+        wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
+
+        logging.info('Filtering and hooking')
+        functions_dataview.filter.set_focus()
+        functions_dataview.filter.set_edit_text('')
+        send_keys(function_search_string)
+        wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
+        
+        for i in range(functions_dataview.get_row_count()):
+            functions_dataview.get_item_at(i, 0).click_input('right')
+            self.find_context_menu_item('Hook').click_input()
+            wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(i, 0).texts()[0])
 
 class LoadAndVerifyHelloGgpPreset(E2ETestCase):
     """
