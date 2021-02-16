@@ -48,7 +48,7 @@ def main(argv):
         LoadSymbols(module_search_string="libggp"),
         FilterAndHookMultipleFunctions(function_search_string='GgpIssueFrameToken_v'),
         Capture(),
-        VerifyOneFunctionWasCalled(function_name='GgpIssueFrameToken_v')
+        VerifyOneFunctionWasCalled(function_name='GgpIssueFrameToken_v', min_calls=30, max_calls=3000)
     ]
     suite = E2ETestSuite(test_name="Instrument libggp", test_cases=test_cases)
     suite.execute()
