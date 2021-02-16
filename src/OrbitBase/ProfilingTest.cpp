@@ -12,8 +12,8 @@
 #include "OrbitBase/Profiling.h"
 
 TEST(Profiling, MonotonicClock) {
-  uint64_t t0 = MonotonicTimestampNs();
+  uint64_t t0 = orbit_base::CaptureTimestampNs();
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  uint64_t t1 = MonotonicTimestampNs();
+  uint64_t t1 = orbit_base::CaptureTimestampNs();
   EXPECT_TRUE(t1 > t0);
 }

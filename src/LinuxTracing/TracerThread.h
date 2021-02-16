@@ -162,7 +162,7 @@ class TracerThread {
 
   struct EventStats {
     void Reset() {
-      event_count_begin_ns = MonotonicTimestampNs();
+      event_count_begin_ns = orbit_base::CaptureTimestampNs();
       sched_switch_count = 0;
       sample_count = 0;
       uprobes_count = 0;
