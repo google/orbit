@@ -198,8 +198,11 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
 
   LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
-  if (finish_result.has_error()) return finish_result.error();
-
+  if (finish_result.has_error()) {
+    return ErrorMessage{absl::StrFormat(
+        "Unable to finish the capture in an orderly manner. The following error occurred: %s",
+        finish_result.error().message())};
+  }
   return CaptureListener::CaptureOutcome::kComplete;
 }
 
