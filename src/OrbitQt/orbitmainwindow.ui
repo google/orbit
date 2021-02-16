@@ -108,7 +108,7 @@ QPushButton:disabled {
        <property name="movable">
         <bool>true</bool>
        </property>
-       <widget class="QWidget" name="FunctionsTab">
+       <widget class="QWidget" name="SymbolsTab">
         <attribute name="title">
          <string>Symbols</string>
         </attribute>

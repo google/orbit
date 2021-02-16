@@ -496,7 +496,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
   const bool is_target_process_running = target_process_state_ == TargetProcessState::kRunning;
 
-  set_tab_enabled(ui->FunctionsTab, true);
+  set_tab_enabled(ui->SymbolsTab, true);
   set_tab_enabled(ui->CaptureTab, true);
   set_tab_enabled(ui->liveTab, has_data);
   set_tab_enabled(ui->samplingTab, has_data && !is_capturing);
@@ -579,11 +579,11 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
     }
   };
 
-  show_corresponding_selection_tab({ui->samplingTab, ui->liveTab, ui->FunctionsTab},
+  show_corresponding_selection_tab({ui->samplingTab, ui->liveTab, ui->SymbolsTab},
                                    ui->selectionSamplingTab);
-  show_corresponding_selection_tab({ui->topDownTab, ui->liveTab, ui->FunctionsTab},
+  show_corresponding_selection_tab({ui->topDownTab, ui->liveTab, ui->SymbolsTab},
                                    ui->selectionTopDownTab);
-  show_corresponding_selection_tab({ui->bottomUpTab, ui->liveTab, ui->FunctionsTab},
+  show_corresponding_selection_tab({ui->bottomUpTab, ui->liveTab, ui->SymbolsTab},
                                    ui->selectionBottomUpTab);
 }
 

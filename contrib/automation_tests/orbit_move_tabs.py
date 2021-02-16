@@ -16,7 +16,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
-        MoveTab(tab_title=tab_title, tab_name="FunctionsTab")
+        MoveTab(tab_title=tab_title, tab_name="SymbolsTab")
     ]
     suite = E2ETestSuite(test_name="Move tabs", test_cases=test_cases)
     suite.execute()
