@@ -47,9 +47,17 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:
   explicit AccessibleCaptureWindow(CaptureWindow* window) : window_(window) {}
 
-  [[nodiscard]] int AccessibleChildCount() const override { return 1; }
+  [[nodiscard]] int AccessibleChildCount() const override {
+    if (window_->GetTimeGraph() == nullptr) {
+      return 0;
+    }
+    return 1;
+  }
 
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
+    if (window_->GetTimeGraph() == nullptr) {
+      return nullptr;
+    }
     return window_->GetTimeGraph()->GetOrCreateAccessibleInterface();
   }
 
