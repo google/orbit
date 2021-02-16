@@ -26,7 +26,7 @@ namespace orbit_base {
 [[nodiscard]] pid_t GetCurrentProcessId();
 #endif
 
-void SetCurrentThreadName(const std::string& thread_name);
+void SetCurrentThreadName(const char* thread_name);
 
 }  // namespace orbit_base
 

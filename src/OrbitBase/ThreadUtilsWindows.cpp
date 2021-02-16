@@ -58,10 +58,10 @@ std::string GetThreadName(uint32_t tid) {
   return kEmptyString;
 }
 
-void SetCurrentThreadName(const std::string& name) {
+void SetCurrentThreadName(const char* name) {
   static auto set_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PCWSTR)>("kernel32.dll", "SetThreadDescription");
-  std::wstring wide_name(name.begin(), name.end());
+  std::wstring wide_name(name, name + strlen(name));
   if (set_thread_description == nullptr ||
       !SUCCEEDED((*set_thread_description)(GetCurrentThread(), wide_name.c_str()))) {
     ERROR("Setting thread name %s with proc[%llx]", name, set_thread_description);
