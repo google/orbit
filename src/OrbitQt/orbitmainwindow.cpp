@@ -414,7 +414,7 @@ void OrbitMainWindow::SetupTargetLabel() {
   ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
 
   QObject::connect(disconnect_target_button, &QPushButton::clicked, this,
-                   [this] { RequestExitWithReturnCode(kEndSessionReturnCode); });
+                   [this] { on_actionEnd_Session_triggered(); });
 }
 
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
@@ -814,13 +814,11 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
 }
 
 void OrbitMainWindow::on_actionEnd_Session_triggered() {
-  close();
-  QApplication::exit(kEndSessionReturnCode);
+  if (ConfirmExit()) Exit(kEndSessionReturnCode);
 }
 
 void OrbitMainWindow::on_actionQuit_triggered() {
-  close();
-  QApplication::quit();
+  if (ConfirmExit()) Exit(kQuitOrbitReturnCode);
 }
 
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
@@ -1016,13 +1014,13 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
         if (!result.has_value()) {
           QMessageBox::critical(this, "Error while loading capture",
                                 QString::fromStdString(result.error().message()));
-          on_actionEnd_Session_triggered();
+          Exit(kEndSessionReturnCode);
           return;
         }
 
         switch (result.value()) {
           case CaptureListener::CaptureOutcome::kCancelled:
-            on_actionEnd_Session_triggered();
+            Exit(kEndSessionReturnCode);
             return;
           case CaptureListener::CaptureOutcome::kComplete:
             UpdateCaptureStateDependentWidgets();
@@ -1093,25 +1091,23 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
   return QObject::eventFilter(watched, event);
 }
 
-bool OrbitMainWindow::RequestExitWithReturnCode(int return_code) {
+bool OrbitMainWindow::ConfirmExit() {
   if (app_->IsCapturing()) {
-    if (QMessageBox::question(this, "Capture in progress",
-                              "A capture is currently in progress. Do you want to abort the "
-                              "capture and exit Orbit?") != QMessageBox::Yes) {
-      return false;
-    }
-
-    // We need for the capture to clean up - exit as soon as this is done
-    app_->SetCaptureFailedCallback([return_code] { QApplication::exit(return_code); });
-    app_->AbortCapture();
-    return true;
+    return QMessageBox::question(this, "Capture in progress",
+                                 "A capture is currently in progress. Do you want to abort the "
+                                 "capture and exit Orbit?") == QMessageBox::Yes;
   }
+  return QMessageBox::question(
+             this, QApplication::applicationName(),
+             "This discards any unsaved progress. Are you sure you want to continue?") ==
+         QMessageBox::Yes;
+}
 
-  if (QMessageBox::question(
-          this, QApplication::applicationName(),
-          "This discards any unsaved progress. Are you sure you want to continue?") !=
-      QMessageBox::Yes) {
-    return false;
+void OrbitMainWindow::Exit(int return_code) {
+  if (app_->IsCapturing()) {
+    // We need for the capture to clean up - exit as soon as this is done
+    app_->SetCaptureFailedCallback([this, return_code] { Exit(return_code); });
+    app_->AbortCapture();
   }
 
   if (main_thread_executor_ != nullptr) {
@@ -1122,15 +1118,15 @@ bool OrbitMainWindow::RequestExitWithReturnCode(int return_code) {
   }
 
   QApplication::exit(return_code);
-  return true;
 }
 
 void OrbitMainWindow::closeEvent(QCloseEvent* event) {
-  if (!RequestExitWithReturnCode(kQuitOrbitReturnCode)) {
+  if (!ConfirmExit()) {
     event->ignore();
     return;
   }
   QMainWindow::closeEvent(event);
+  Exit(kQuitOrbitReturnCode);
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
