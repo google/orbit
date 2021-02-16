@@ -108,6 +108,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
           orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest send_request;
           auto* capture_events =
               send_request.mutable_buffered_capture_events()->mutable_capture_events();
+          capture_events->Reserve(dequeued_event_count);
           for (size_t i = 0; i < dequeued_event_count; ++i) {
             orbit_grpc_protos::ProducerCaptureEvent* event = capture_events->Add();
             *event = TranslateIntermediateEvent(std::move(dequeued_events[i]));
@@ -135,7 +136,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
         }
       }
 
-      static constexpr std::chrono::duration kSleepOnEmptyQueue = std::chrono::microseconds{100};
+      static constexpr std::chrono::duration kSleepOnEmptyQueue = std::chrono::microseconds{1000};
       // Wait for lock_free_queue_ to fill up with new CaptureEvents.
       std::this_thread::sleep_for(kSleepOnEmptyQueue);
     }
