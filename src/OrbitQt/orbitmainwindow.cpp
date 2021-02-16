@@ -111,6 +111,8 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 using orbit_base::Future;
 
+using orbit_qt::ServiceDeployManager;
+
 extern QMenu* GContextMenu;
 
 namespace {
@@ -1131,12 +1133,25 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
 
 void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   const orbit_qt::StadiaConnection* connection = target.GetConnection();
-  orbit_qt::ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
+  ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
   app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
                                                        std::string_view destination) {
     CHECK(service_deploy_manager != nullptr);
     return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
   });
+
+  QObject::connect(service_deploy_manager, &ServiceDeployManager::socketErrorOccurred, this,
+                   [this, instance_name = target.GetConnection()->GetInstance().display_name](
+                       std::error_code error) {
+                     QMessageBox::critical(
+                         this, "Connection error",
+                         QString("The connection to instance \"%1\" failed with error message: %2")
+                             .arg(instance_name)
+                             .arg(QString::fromStdString(error.message())),
+                         QMessageBox::Ok);
+                     QApplication::exit(kEndSessionReturnCode);
+                   });
+
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());

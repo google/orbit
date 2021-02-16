@@ -126,13 +126,6 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
     {  // Scoping of QT UI Resources
 
-      ServiceDeployManager* service_deploy_manager_ptr = nullptr;
-      if (std::holds_alternative<orbit_qt::StadiaTarget>(target_config.value())) {
-        service_deploy_manager_ptr = std::get<orbit_qt::StadiaTarget>(target_config.value())
-                                         .GetConnection()
-                                         ->GetServiceDeployManager();
-      }
-
       OrbitMainWindow w(std::move(target_config.value()), crash_handler,
                         metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr,
                         command_line_flags);
@@ -140,24 +133,6 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       // "resize" is required to make "showMaximized" work properly.
       w.resize(1280, 720);
       w.showMaximized();
-
-      QMessageBox box(QMessageBox::Critical, QApplication::applicationName(), "", QMessageBox::Ok);
-      auto error_handler = [&]() -> ScopedConnection {
-        if (service_deploy_manager_ptr == nullptr) {
-          return ScopedConnection();
-        }
-
-        return orbit_ssh_qt::ScopedConnection{QObject::connect(
-            service_deploy_manager_ptr, &ServiceDeployManager::socketErrorOccurred, &box,
-            [&](std::error_code error) {
-              box.setText(
-                  QString("Connection error: %1").arg(QString::fromStdString(error.message())));
-              box.exec();
-              w.close();
-              static_cast<void>(w.ClearTargetConfiguration());
-              QApplication::exit(OrbitMainWindow::kEndSessionReturnCode);
-            })};
-      }();
 
       application_return_code = QApplication::exec();
 
