@@ -1526,105 +1526,123 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
 }
 
 void OrbitApp::UpdateProcessAndModuleList() {
-  const int32_t pid = GetTargetProcess()->pid();
-  thread_pool_->Schedule([pid, this] {
-    ErrorMessageOr<std::vector<ModuleInfo>> result = GetProcessManager()->LoadModuleList(pid);
+  auto module_infos = thread_pool_->Schedule(
+      [this] { return GetProcessManager()->LoadModuleList(GetTargetProcess()->pid()); });
 
-    if (result.has_error()) {
-      ERROR("Error retrieving modules: %s", result.error().message());
-      SendErrorToUi("Error retrieving modules", result.error().message());
-      return;
+  auto all_reloaded_modules = module_infos.ThenIfSuccess(
+      main_thread_executor_,
+      [this](const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
+        return ReloadModules(module_infos);
+      });
+
+  // `all_modules_reloaded` is a future in a future. So we have to unwrap here.
+  orbit_base::UnwrapFuture(all_reloaded_modules)
+      .ThenIfSuccess(main_thread_executor_,
+                     [this](const std::vector<ErrorMessageOr<void>>& reload_results) {
+                       // We ignore whether reloading a particular module failed to preserve the
+                       // behaviour from before refactoring this. This can be changed in a
+                       // subsequent PR.
+                       (void)reload_results;
+
+                       RefreshUIAfterModuleReload();
+                     })
+      .Then(main_thread_executor_, [this](const ErrorMessageOr<void>& result) {
+        if (result.has_error()) {
+          std::string error_message =
+              absl::StrFormat("Error retrieving modules: %s", result.error().message());
+          ERROR("%s", error_message);
+          SendErrorToUi("%s", error_message);
+        }
+      });
+}
+
+void OrbitApp::RefreshUIAfterModuleReload() {
+  modules_data_view_->UpdateModules(GetMutableTargetProcess());
+
+  functions_data_view_->ClearFunctions();
+  for (const auto& [module_path, _] : GetTargetProcess()->GetMemoryMap()) {
+    ModuleData* module = module_manager_->GetMutableModuleByPath(module_path);
+    if (module->is_loaded()) {
+      functions_data_view_->AddFunctions(module->GetFunctions());
     }
+  }
 
-    main_thread_executor_->Schedule([pid, module_infos = std::move(result.value()), this] {
-      // Since this callback is executed asynchronously we can't be sure the target process has
-      // been changed in the meantime. So we check and abort in case.
-      if (pid != GetTargetProcess()->pid()) {
-        return;
-      }
+  FireRefreshCallbacks();
+}
 
-      ProcessData* process = GetMutableTargetProcess();
+orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
+    absl::Span<const ModuleInfo> module_infos) {
+  ProcessData* process = GetMutableTargetProcess();
 
-      CHECK(process != nullptr);
-      process->UpdateModuleInfos(module_infos);
+  CHECK(process != nullptr);
+  process->UpdateModuleInfos(module_infos);
 
-      // Updating the list of loaded modules (in memory) of a process, can mean that a process has
-      // now less loaded modules than before. If the user hooked (selected) functions of a module
-      // that is now not used anymore by the process, these functions need to be deselected (A)
+  // Updating the list of loaded modules (in memory) of a process, can mean that a process has
+  // now less loaded modules than before. If the user hooked (selected) functions of a module
+  // that is now not used anymore by the process, these functions need to be deselected (A)
 
-      // Updating a module can result in not having symbols(functions) anymore. In that case all
-      // functions from this module need to be deselected (B), because they are not valid
-      // anymore. These functions are saved (C), so the module can be loaded again and the functions
-      // are then selected (hooked) again (D).
+  // Updating a module can result in not having symbols(functions) anymore. In that case all
+  // functions from this module need to be deselected (B), because they are not valid
+  // anymore. These functions are saved (C), so the module can be loaded again and the functions
+  // are then selected (hooked) again (D).
 
-      // This all applies similarly to frame tracks that are based on selected functions.
+  // This all applies similarly to frame tracks that are based on selected functions.
 
-      // Update modules and get the ones to reload.
-      std::vector<ModuleData*> modules_to_reload =
-          module_manager_->AddOrUpdateModules(module_infos);
+  // Update modules and get the ones to reload.
+  std::vector<ModuleData*> modules_to_reload = module_manager_->AddOrUpdateModules(module_infos);
 
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
-      for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-        const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
-        // (A) deselect functions when the module is not loaded by the process anymore
-        if (!process->IsModuleLoaded(module->file_path())) {
-          data_manager_->DeselectFunction(func);
-        } else if (!module->is_loaded()) {
-          // (B) deselect when module does not have functions anymore (!is_loaded())
-          data_manager_->DeselectFunction(func);
-          // (C) Save function hashes, so they can be hooked again after reload
-          function_hashes_to_hook_map[module->file_path()].push_back(function_utils::GetHash(func));
-        }
-      }
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
-      for (const FunctionInfo& func :
-           data_manager_->user_defined_capture_data().frame_track_functions()) {
-        const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
-        // Frame tracks are only meaningful if the module for the underlying function is actually
-        // loaded by the process.
-        if (!process->IsModuleLoaded(module->file_path())) {
-          RemoveFrameTrack(func);
-        } else if (!module->is_loaded()) {
-          RemoveFrameTrack(func);
-          frame_track_function_hashes_map[module->file_path()].push_back(
-              function_utils::GetHash(func));
-        }
-      }
-      // (D) Load Modules again (and pass on functions to hook after loading)
-      const auto future = LoadModules(modules_to_reload);
+  absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
+  for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
+    const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+    // (A) deselect functions when the module is not loaded by the process anymore
+    if (!process->IsModuleLoaded(module->file_path())) {
+      data_manager_->DeselectFunction(func);
+    } else if (!module->is_loaded()) {
+      // (B) deselect when module does not have functions anymore (!is_loaded())
+      data_manager_->DeselectFunction(func);
+      // (C) Save function hashes, so they can be hooked again after reload
+      function_hashes_to_hook_map[module->file_path()].push_back(function_utils::GetHash(func));
+    }
+  }
+  absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
+  for (const FunctionInfo& func :
+       data_manager_->user_defined_capture_data().frame_track_functions()) {
+    const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+    // Frame tracks are only meaningful if the module for the underlying function is actually
+    // loaded by the process.
+    if (!process->IsModuleLoaded(module->file_path())) {
+      RemoveFrameTrack(func);
+    } else if (!module->is_loaded()) {
+      RemoveFrameTrack(func);
+      frame_track_function_hashes_map[module->file_path()].push_back(function_utils::GetHash(func));
+    }
+  }
 
-      if (main_thread_executor_->WaitFor(future) != MainThreadExecutor::WaitResult::kCompleted) {
-        return;
-      }
+  std::vector<orbit_base::Future<ErrorMessageOr<void>>> reloaded_modules;
+  reloaded_modules.reserve(modules_to_reload.size());
 
-      for (const auto& [module_path, function_hashes] : function_hashes_to_hook_map) {
-        ModuleData* const module_data = GetMutableModuleByPath(module_path);
-        if (module_data == nullptr) continue;
-        SelectFunctionsFromHashes(module_data, function_hashes);
-        LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
-      }
+  for (const auto& module_to_reload : modules_to_reload) {
+    std::vector<uint64_t> hooked_functions =
+        std::move(function_hashes_to_hook_map[module_to_reload->file_path()]);
+    std::vector<uint64_t> frame_tracks =
+        std::move(frame_track_function_hashes_map[module_to_reload->file_path()]);
 
-      for (const auto& [module_path, function_hashes] : frame_track_function_hashes_map) {
-        ModuleData* const module_data = GetMutableModuleByPath(module_path);
-        if (module_data == nullptr) continue;
-        EnableFrameTracksFromHashes(module_data, function_hashes);
-        LOG("Added frame tracks in module \"%s\"", module_data->file_path());
-      }
+    auto reloaded_module =
+        RetrieveModuleAndLoadSymbols(module_to_reload)
+            .ThenIfSuccess(main_thread_executor_, [this, module_to_reload,
+                                                   hooked_functions = std::move(hooked_functions),
+                                                   frame_tracks = std::move(frame_tracks)]() {
+              // (D) Re-hook functions which had been hooked before.
+              SelectFunctionsFromHashes(module_to_reload, hooked_functions);
+              LOG("Auto hooked functions in module \"%s\"", module_to_reload->file_path());
 
-      // Refresh UI
-      modules_data_view_->UpdateModules(process);
+              EnableFrameTracksFromHashes(module_to_reload, frame_tracks);
+              LOG("Added frame tracks in module \"%s\"", module_to_reload->file_path());
+            });
+    reloaded_modules.emplace_back(std::move(reloaded_module));
+  }
 
-      functions_data_view_->ClearFunctions();
-      for (const auto& [module_path, _] : GetTargetProcess()->GetMemoryMap()) {
-        ModuleData* module = module_manager_->GetMutableModuleByPath(module_path);
-        if (module->is_loaded()) {
-          functions_data_view_->AddFunctions(module->GetFunctions());
-        }
-      }
-
-      FireRefreshCallbacks();
-    });
-  });
+  return orbit_base::JoinFutures(absl::MakeConstSpan(reloaded_modules));
 }
 
 void OrbitApp::SetCollectThreadStates(bool collect_thread_states) {

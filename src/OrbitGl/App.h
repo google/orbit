@@ -314,6 +314,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::string& module_path, const std::string& build_id);
 
   void UpdateProcessAndModuleList();
+  orbit_base::Future<std::vector<ErrorMessageOr<void>>> ReloadModules(
+      absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
+  void RefreshUIAfterModuleReload();
 
   void UpdateAfterSymbolLoading();
   void UpdateAfterCaptureCleared();
