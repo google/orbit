@@ -54,7 +54,7 @@ struct HandleErrorAndSetResultInPromise {
   template <typename Invocable, typename T>
   void Call(Invocable&& invocable, const ErrorMessageOr<T>& input) {
     if (input.has_error()) {
-      promise->SetResult(input.error());
+      promise->SetResult(outcome::failure(input.error()));
       return;
     }
 
@@ -62,15 +62,19 @@ struct HandleErrorAndSetResultInPromise {
       if constexpr (std::is_same_v<decltype(invocable()), void>) {
         invocable();
         promise->SetResult(outcome::success());
-      } else {
+      } else if constexpr (IsErrorMessageOr<decltype(invocable())>::value) {
         promise->SetResult(invocable());
+      } else {
+        promise->SetResult(outcome::success(invocable()));
       }
     } else {
       if constexpr (std::is_same_v<decltype(invocable(input.value())), void>) {
         invocable(input.value());
         promise->SetResult(outcome::success());
-      } else {
+      } else if constexpr (IsErrorMessageOr<decltype(invocable(input.value()))>::value) {
         promise->SetResult(invocable(input.value()));
+      } else {
+        promise->SetResult(outcome::success(invocable(input.value())));
       }
     }
   }

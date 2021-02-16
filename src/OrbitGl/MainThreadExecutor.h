@@ -149,7 +149,7 @@ class MainThreadExecutor : public std::enable_shared_from_this<MainThreadExecuto
       // might do things that need synchronization and can't happen in a different context (like a
       // thread pool), i.e. when the continuation owns a ScopedStatus.
       if (argument.has_error()) {
-        promise.SetResult(argument.error());
+        promise.SetResult(outcome::failure(argument.error()));
         executor->Schedule(CreateAction(
             [this, function_reference]() { waiting_continuations_.erase(function_reference); }));
         return;
