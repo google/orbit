@@ -177,7 +177,7 @@ class InternalFuture<void, Derived>
   // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
   template <typename Executor, typename Invocable>
   auto Then(Executor* executor, Invocable&& invocable) const {
-    return executor->ScheduleAfter(*this->self(), std::forward<Invocable>(invocable));
+    return executor->ScheduleAfter(this->self(), std::forward<Invocable>(invocable));
   }
 
  private:
