@@ -21,16 +21,18 @@ static absl::Mutex log_file_mutex(absl::kConstInit);
 std::ofstream log_file;
 
 std::string GetLogFileName() {
-  std::string timestamp_string =
-      absl::FormatTime(kLogFileNameTimeFormat, absl::Now(), absl::LocalTimeZone());
-  return absl::StrFormat(kLogFileNameDelimiter, timestamp_string,
+  std::string timestamp_string = absl::FormatTime(orbit_base_internal::kLogFileNameTimeFormat,
+                                                  absl::Now(), absl::UTCTimeZone());
+  return absl::StrFormat(orbit_base_internal::kLogFileNameDelimiter, timestamp_string,
                          static_cast<uint32_t>(orbit_base::GetCurrentProcessId()));
 }
 
 ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir) {
-  std::vector<std::filesystem::path> log_file_paths = ListFiles(log_dir);
-  std::vector<std::filesystem::path> old_files = FilterOldLogFiles(log_file_paths);
-  return RemoveFiles(old_files);
+  std::vector<std::filesystem::path> log_file_paths =
+      orbit_base_internal::ListFilesRecursivelyIgnoreErrors(log_dir);
+  std::vector<std::filesystem::path> old_files =
+      orbit_base_internal::FindOldLogFiles(log_file_paths);
+  return orbit_base_internal::RemoveFiles(old_files);
 }
 
 void InitLogFile(const std::filesystem::path& path) {

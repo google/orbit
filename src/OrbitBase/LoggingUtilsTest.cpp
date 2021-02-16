@@ -9,6 +9,7 @@
 
 #include "LoggingUtils.h"
 
+namespace orbit_base_internal {
 namespace {
 std::filesystem::path GenerateTestLogFilePath(const absl::Time& timestamp) {
   std::filesystem::path test_log_dir = "C:/OrbitAppDataDir/logs";
@@ -20,45 +21,48 @@ std::filesystem::path GenerateTestLogFilePath(const absl::Time& timestamp) {
 }
 }  // namespace
 
-namespace orbit_base {
-
-TEST(LoggingUtils, GetLogFileLifetime) {
+TEST(LoggingUtils, ParseLogFileTimestamp) {
   const std::string kFilenameInvalidNoTimestamp = "sfsdf-.log ";
   const std::string kFilenameInvalidValidTimestampWrongFormat =
       "Orbitfoobar-2021_01_31_00_00_00-.log";
-  const std::string kFilenameValid = "Orbit-2021_01_31_00_00_00-7188.log";
+  const std::string kFilenameValid = "Orbit-2021_01_31_10_21_33-7188.log";
 
-  ErrorMessageOr<absl::Duration> result_extract_failed =
-      GetLogFileLifetime(kFilenameInvalidNoTimestamp);
-  ASSERT_FALSE(result_extract_failed);
-  EXPECT_EQ(result_extract_failed.error().message(),
-            absl::StrFormat("Unable to extract time information from log file: %s",
-                            kFilenameInvalidNoTimestamp));
+  {
+    ErrorMessageOr<absl::Time> parse_result = ParseLogFileTimestamp(kFilenameInvalidNoTimestamp);
+    ASSERT_FALSE(parse_result);
+    EXPECT_EQ(parse_result.error().message(),
+              absl::StrFormat("Unable to extract time information from log file: %s",
+                              kFilenameInvalidNoTimestamp));
+  }
 
-  ErrorMessageOr<absl::Duration> result_parse_failed =
-      GetLogFileLifetime(kFilenameInvalidValidTimestampWrongFormat);
-  ASSERT_FALSE(result_parse_failed);
-  EXPECT_THAT(
-      result_parse_failed.error().message(),
-      testing::HasSubstr(absl::StrFormat("Error while parsing time information from log file %s",
-                                         kFilenameInvalidValidTimestampWrongFormat)));
+  {
+    ErrorMessageOr<absl::Time> parse_result =
+        ParseLogFileTimestamp(kFilenameInvalidValidTimestampWrongFormat);
+    ASSERT_FALSE(parse_result);
+    EXPECT_THAT(
+        parse_result.error().message(),
+        testing::HasSubstr(absl::StrFormat("Error while parsing time information from log file %s",
+                                           kFilenameInvalidValidTimestampWrongFormat)));
+  }
 
-  ErrorMessageOr<absl::Duration> result_parse_succeed = GetLogFileLifetime(kFilenameValid);
-  absl::Duration expected_result =
-      absl::Now() - absl::FromCivil(absl::CivilSecond(2021, 1, 31, 0, 0, 0), absl::LocalTimeZone());
-  EXPECT_NEAR(absl::ToDoubleSeconds(result_parse_succeed.value()),
-              absl::ToDoubleSeconds(expected_result), 1);
+  {
+    ErrorMessageOr<absl::Time> parse_result = ParseLogFileTimestamp(kFilenameValid);
+    absl::Time expected_result =
+        absl::FromCivil(absl::CivilSecond(2021, 1, 31, 10, 21, 33), absl::UTCTimeZone());
+    ASSERT_TRUE(parse_result) << parse_result.error().message();
+    EXPECT_EQ(parse_result.value(), expected_result);
+  }
 }
 
-TEST(LoggingUtils, FilterOldLogFiles) {
+TEST(LoggingUtils, FindOldLogFiles) {
   absl::Time now = absl::Now();
   std::filesystem::path recent_file = GenerateTestLogFilePath(now - absl::Hours(24));
   std::filesystem::path old_file = GenerateTestLogFilePath(now - absl::Hours(24 * 14));
 
   std::vector<std::filesystem::path> test_case({recent_file, old_file});
-  std::vector<std::filesystem::path> result = FilterOldLogFiles(test_case);
+  std::vector<std::filesystem::path> result = FindOldLogFiles(test_case);
   std::vector<std::filesystem::path> expected_result({old_file});
   EXPECT_EQ(result, expected_result);
 }
 
-}  // namespace orbit_base
+}  // namespace orbit_base_internal
