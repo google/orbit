@@ -63,53 +63,6 @@ QPushButton:disabled {
        <property name="movable">
         <bool>true</bool>
        </property>
-       <widget class="QWidget" name="HomeTab">
-        <attribute name="title">
-         <string>Home</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_7">
-         <item row="0" column="1">
-          <widget class="QSplitter" name="HomeHorizontalSplitter">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <widget class="QSplitter" name="HomeVerticalSplitter">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="baseSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <widget class="OrbitDataViewPanel" name="SessionList" native="true">
-             <property name="accessibleName">
-              <string>PresetsDataView</string>
-             </property>
-            </widget>
-           </widget>
-           <widget class="OrbitDataViewPanel" name="ModulesList" native="true">
-            <property name="accessibleName">
-             <string>ModulesDataView</string>
-            </property>
-           </widget>
-          </widget>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="CaptureTab">
         <attribute name="title">
          <string>Capture</string>
@@ -157,14 +110,34 @@ QPushButton:disabled {
        </property>
        <widget class="QWidget" name="FunctionsTab">
         <attribute name="title">
-         <string>Functions</string>
+         <string>Symbols</string>
         </attribute>
-        <layout class="QGridLayout" name="functionsTabLayout">
+        <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="FunctionsList" native="true">
-           <property name="accessibleName">
-            <string>FunctionsDataView</string>
+          <widget class="QSplitter" name="splitter_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
            </property>
+           <widget class="QSplitter" name="splitter">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <widget class="OrbitDataViewPanel" name="ModulesList" native="true">
+             <property name="accessibleName">
+              <string>ModulesDataView</string>
+             </property>
+            </widget>
+            <widget class="OrbitDataViewPanel" name="SessionList" native="true">
+             <property name="accessibleName">
+              <string>PresetsDataView</string>
+             </property>
+            </widget>
+           </widget>
+           <widget class="OrbitDataViewPanel" name="FunctionsList" native="true">
+            <property name="accessibleName">
+             <string>FunctionsDataView</string>
+            </property>
+           </widget>
           </widget>
          </item>
         </layout>
