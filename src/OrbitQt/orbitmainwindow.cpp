@@ -162,29 +162,6 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   SetupTargetLabel();
   SetupHintFrame();
 
-  ui->RightTabWidget->setTabText(ui->RightTabWidget->indexOf(ui->FunctionsTab), "Symbols");
-
-  // TODO (177304549): This next line is still here from the old UI. Remove ui->HomeTab completely
-  ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->HomeTab));
-
-  // remove Functions list from position 0,0
-  ui->functionsTabLayout->removeItem(ui->functionsTabLayout->itemAtPosition(0, 0));
-
-  auto* symbols_vertical_splitter = new QSplitter(Qt::Vertical);
-  auto* symbols_horizontal_splitter = new QSplitter(Qt::Horizontal);
-
-  ui->functionsTabLayout->addWidget(symbols_vertical_splitter, 0, 0);
-
-  symbols_vertical_splitter->addWidget(symbols_horizontal_splitter);
-  symbols_vertical_splitter->addWidget(ui->FunctionsList);
-
-  symbols_horizontal_splitter->addWidget(ui->SessionList);
-  symbols_horizontal_splitter->addWidget(ui->ModulesList);
-
-  // Make the splitters take 50% of the space.
-  symbols_vertical_splitter->setSizes({5000, 5000});
-  symbols_horizontal_splitter->setSizes({5000, 5000});
-
   DataViewFactory* data_view_factory = app_.get();
   ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
                               SelectionType::kExtended, FontType::kDefault);
@@ -220,12 +197,7 @@ void OrbitMainWindow::SetupMainWindow() {
 
   ui->setupUi(this);
 
-  QList<int> sizes;
-  sizes.append(5000);
-  sizes.append(5000);
-  ui->HomeVerticalSplitter->setSizes(sizes);
-  ui->HomeHorizontalSplitter->setSizes(sizes);
-  ui->splitter_2->setSizes(sizes);
+  ui->splitter_2->setSizes({5000, 5000});
 
   status_listener_ = StatusListenerImpl::Create(statusBar());
 
