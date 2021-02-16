@@ -48,7 +48,7 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
   explicit AccessibleCaptureWindow(CaptureWindow* window)
       : window_(window){}
 
-    [[nodiscard]] int AccessibleChildCount() const override {
+  [[nodiscard]] int AccessibleChildCount() const override {
     if (window_->GetTimeGraph() == nullptr) {
       return 0;
     }
@@ -62,7 +62,8 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
     return window_->GetTimeGraph()->GetOrCreateAccessibleInterface();
   }
 
-  private : CaptureWindow* window_;
+ private : 
+  CaptureWindow* window_;
 };
 
 using orbit_client_protos::TimerInfo;
