@@ -165,7 +165,8 @@ class OrbitMainWindow : public QMainWindow {
   static const QString kCollectThreadStatesSettingKey;
   void LoadCaptureOptionsIntoApp();
 
-  bool RequestExitWithReturnCode(int return_code);
+  [[nodiscard]] bool ConfirmExit();
+  void Exit(int return_code);
 
  private:
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
