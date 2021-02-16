@@ -51,6 +51,7 @@ target_sources(
          SamplingReport.h
          SamplingReportDataView.h
          SchedulerTrack.h
+         ScopeTree.h
          StatusListener.h
          TextBox.h
          TextRenderer.h
@@ -161,6 +162,7 @@ target_sources(OrbitGlTests PRIVATE
                GpuTrackTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
+               ScopeTreeTest.cpp
                SliderTest.cpp
                TimerInfosIteratorTest.cpp
                ClientFlags.cpp)

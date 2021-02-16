@@ -27,6 +27,11 @@ class Block final {
   [[nodiscard]] uint32_t size() const { return size_; }
 
   [[nodiscard]] const T* data() const { return data_; }
+  [[nodiscard]] T* Last() {
+    CHECK(size_ > 0);
+    CHECK(size_ <= Size);
+    return &data_[size_ - 1];
+  }
 
  private:
   friend class BlockIterator<T, Size>;
@@ -167,6 +172,10 @@ class BlockChain final {
   }
 
   [[nodiscard]] const Block<T, BlockSize>* root() const { return root_; }
+  [[nodiscard]] T* Last() {
+    CHECK(size_ > 0);
+    return current_->Last();
+  }
 
   void Reset() {
     Block<T, BlockSize>* block = root_;
