@@ -73,11 +73,10 @@ class CaptureWindow : public GlCanvas {
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
   [[nodiscard]] TimeGraph* GetTimeGraph() {
-    if (time_graph_ == nullptr) return nullptr;
     return time_graph_.get();
   }
   void CreateTimeGraph(const CaptureData* capture_data);
-  void ClearTimeGraph() { time_graph_ = nullptr; }
+  void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
   Batcher& GetBatcherById(BatcherId batcher_id);
 
