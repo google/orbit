@@ -328,7 +328,7 @@ void ConnectToStadiaWidget::OnConnectToStadiaRadioButtonClicked(bool checked) {
 }
 
 void ConnectToStadiaWidget::OnErrorOccurred(const QString& message) {
-  if (isVisible()) {
+  if (IsActive()) {
     QMessageBox::critical(this, QApplication::applicationName(), message);
   } else {
     ERROR("%s", message.toStdString());
