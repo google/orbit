@@ -167,7 +167,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
                               SelectionType::kExtended, FontType::kDefault);
   ui->FunctionsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
                                 SelectionType::kExtended, FontType::kDefault);
-  ui->SessionList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
+  ui->PresetsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
                               SelectionType::kDefault, FontType::kDefault,
                               /*is_main_instance=*/true, /*uniform_row_height=*/false,
                               /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
@@ -618,7 +618,7 @@ OrbitMainWindow::~OrbitMainWindow() {
   }
 
   ui->CaptureGLWidget->Deinitialize(this);
-  ui->SessionList->Deinitialize();
+  ui->PresetsList->Deinitialize();
   ui->FunctionsList->Deinitialize();
   ui->ModulesList->Deinitialize();
 
@@ -652,7 +652,7 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       ui->ModulesList->Refresh();
       break;
     case DataViewType::kPresets:
-      ui->SessionList->Refresh();
+      ui->PresetsList->Refresh();
       break;
     case DataViewType::kSampling:
       ui->samplingReport->RefreshCallstackView();

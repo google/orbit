@@ -127,7 +127,7 @@ QPushButton:disabled {
               <string>ModulesDataView</string>
              </property>
             </widget>
-            <widget class="OrbitDataViewPanel" name="SessionList" native="true">
+            <widget class="OrbitDataViewPanel" name="PresetsList" native="true">
              <property name="accessibleName">
               <string>PresetsDataView</string>
              </property>
