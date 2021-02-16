@@ -22,7 +22,7 @@ class PresetsDataView : public DataView {
   explicit PresetsDataView(OrbitApp* app);
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return kColumnSessionName; }
+  int GetDefaultSortingColumn() override { return kColumnPresetName; }
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
@@ -60,7 +60,7 @@ class PresetsDataView : public DataView {
 
   enum ColumnIndex {
     kColumnLoadState,
-    kColumnSessionName,
+    kColumnPresetName,
     kColumnModules,
     kColumnFunctionCount,
     kNumColumns

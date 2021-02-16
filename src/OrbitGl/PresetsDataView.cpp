@@ -63,7 +63,7 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
     columns.resize(kNumColumns);
     columns[kColumnLoadState] = {kLoadableColumnName, kLoadableColumnWidth,
                                  SortingOrder::kAscending};
-    columns[kColumnSessionName] = {kPresetColumnName, kPresetColumnWidth, SortingOrder::kAscending};
+    columns[kColumnPresetName] = {kPresetColumnName, kPresetColumnWidth, SortingOrder::kAscending};
     columns[kColumnModules] = {kModulesColumnName, kModulesColumnWidth, SortingOrder::kAscending};
     columns[kColumnFunctionCount] = {kHookedFunctionsColumnName, kHookedFunctionsColumnWidth,
                                      SortingOrder::kAscending};
@@ -78,7 +78,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
   switch (column) {
     case kColumnLoadState:
       return GetLoadStateString(app_, preset);
-    case kColumnSessionName:
+    case kColumnPresetName:
       return std::filesystem::path(preset->file_name()).filename().string();
     case kColumnModules:
       return GetModulesList(GetModules(row));
@@ -108,7 +108,7 @@ void PresetsDataView::DoSort() {
                                    app_->GetPresetLoadState(presets_[b]).state, ascending);
       };
       break;
-    case kColumnSessionName:
+    case kColumnPresetName:
       sorter = [&](int a, int b) {
         return orbit_core::Compare(presets_[a]->file_name(), presets_[b]->file_name(), ascending);
       };
