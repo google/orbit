@@ -1,6 +1,7 @@
-This directory contains end-to-end tests for Orbit.
+This directory contains end-to-end tests for Orbit. The end-to-end tests use pywinauto, hence can
+only be executed on Windows.
 
-## Installing the prerequesits
+## Installing the prerequesites
 
 We use pywinauto to remote control the Orbit UI. For each test there is a script $TestName.py in this folder.  
 You need a python environment to run the automation scripts. 
@@ -15,8 +16,12 @@ python -m venv env
 ```
 
 where `env` will be the name of your virtual environment and can be chosen freely. 
-Next, activate the virtual environment by running `.\env\Scripts\activate` on Windows, 
-or `source ./env/bin/activate` on Linux.
+Next, activate the virtual environment by running:
+
+```
+.\env\Scripts\activate
+```
+
 Once you've activated the virtual environment, install the dependencies:
 
 ```
@@ -39,7 +44,9 @@ double click on Orbit.exe
 
 To run a test, e.g. orbit_instrument_function, execute
 
-`python orbit_instrument_function.py`
+```
+python orbit_instrument_function.py
+```
 
 Besides the test scripts, the folder contains the needed test data to set the test up and 
 a folder "flags". For each script $TestName.py there is an empty file flags/$TestName.
