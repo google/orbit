@@ -5,9 +5,17 @@
 #include <absl/strings/str_format.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#if defined(__linux)
 #include <unistd.h>
+#elif defined(_WIN32)
+#include <io.h>
+// Windows does not have TEMP_FAILURE_RETRY - define a shortcut
+#define TEMP_FAILURE_RETRY(expression) (expression)
+#endif
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
@@ -16,10 +24,15 @@
 namespace orbit_base {
 
 ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) noexcept {
-  auto fd = unique_resource(TEMP_FAILURE_RETRY(open(file_name.c_str(), O_RDONLY | O_CLOEXEC)),
-                            [](int fd) {
-                              if (fd != -1) close(fd);
-                            });
+#if defined(__linux)
+  constexpr int open_flags = O_RDONLY | O_CLOEXEC;
+#elif defined(_WIN32)
+  constexpr int open_flags = O_RDONLY | O_BINARY;
+#endif  // defined(__linux)
+  auto fd =
+      unique_resource(TEMP_FAILURE_RETRY(open(file_name.string().c_str(), open_flags)), [](int fd) {
+        if (fd != -1) close(fd);
+      });
   if (fd == -1) {
     return ErrorMessage(
         absl::StrFormat("Unable to read file \"%s\": %s", file_name.string(), SafeStrerror(errno)));
@@ -34,7 +47,7 @@ ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_n
   }
 
   std::array<char, BUFSIZ> buf{};
-  ssize_t number_of_bytes;
+  int64_t number_of_bytes;
   while ((number_of_bytes = TEMP_FAILURE_RETRY(read(fd, buf.data(), buf.size()))) > 0) {
     result.append(buf.data(), number_of_bytes);
   }
