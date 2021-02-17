@@ -14,7 +14,6 @@
 #include <array>
 #include <ctime>
 #include <filesystem>
-#include <fstream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -25,31 +24,21 @@
 
 #include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_linux_tracing {
 
 namespace fs = std::filesystem;
 
-std::optional<std::string> ReadFile(std::string_view filename) {
-  std::ifstream file{std::string{filename}, std::ios::in | std::ios::binary};
-  if (!file) {
-    ERROR("Could not open \"%s\"", std::string{filename}.c_str());
-    return std::optional<std::string>{};
-  }
-
-  std::ostringstream content;
-  content << file.rdbuf();
-  return content.str();
-}
-
 std::string ReadMaps(pid_t pid) {
   std::string maps_filename = absl::StrFormat("/proc/%d/maps", pid);
-  std::optional<std::string> maps_content_opt = ReadFile(maps_filename);
-  if (maps_content_opt.has_value()) {
-    return maps_content_opt.value();
+  ErrorMessageOr<std::string> maps_content = orbit_base::ReadFileToString(maps_filename);
+  if (!maps_content) {
+    return {};
   }
-  return "";
+
+  return maps_content.value();
 }
 
 std::optional<char> GetThreadState(pid_t tid) {
@@ -58,14 +47,18 @@ std::optional<char> GetThreadState(pid_t tid) {
     return std::nullopt;
   }
 
-  std::ifstream stream{stat.string()};
-  if (!stream.good()) {
-    ERROR("Could not open \"%s\"", stat.string());
+  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(stat);
+  if (!file_content) {
+    ERROR("Could not open \"%s\": %s", stat.string(), file_content.error().message());
     return std::nullopt;
   }
 
-  std::string first_line{};
-  std::getline(stream, first_line);
+  std::vector<std::string> lines = absl::StrSplit(file_content.value(), absl::MaxSplits('\n', 1));
+  if (lines.empty()) {
+    ERROR("Empty \"%s\" file", stat.string());
+    return std::nullopt;
+  }
+  std::string first_line = lines.at(0);
 
   // Remove fields up to comm (process name) as this, enclosed in parentheses, could contain spaces.
   size_t last_closed_paren_index = first_line.find_last_of(')');
@@ -103,9 +96,9 @@ int GetNumCores() {
 }
 
 // Read /proc/<pid>/cgroup.
-static std::optional<std::string> ReadCgroupContent(pid_t pid) {
+static ErrorMessageOr<std::string> ReadCgroupContent(pid_t pid) {
   std::string cgroup_filename = absl::StrFormat("/proc/%d/cgroup", pid);
-  return ReadFile(cgroup_filename);
+  return orbit_base::ReadFileToString(cgroup_filename);
 }
 
 // Extract the cpuset entry from the content of /proc/<pid>/cgroup.
@@ -125,10 +118,10 @@ std::optional<std::string> ExtractCpusetFromCgroup(const std::string& cgroup_con
 }
 
 // Read /sys/fs/cgroup/cpuset/<cgroup>/cpuset.cpus.
-static std::optional<std::string> ReadCpusetCpusContent(const std::string& cgroup_cpuset) {
+static ErrorMessageOr<std::string> ReadCpusetCpusContent(const std::string& cgroup_cpuset) {
   std::string cpuset_cpus_filename = absl::StrFormat("/sys/fs/cgroup/cpuset%s/cpuset.cpus",
                                                      cgroup_cpuset == "/" ? "" : cgroup_cpuset);
-  return ReadFile(cpuset_cpus_filename);
+  return orbit_base::ReadFileToString(cpuset_cpus_filename);
 }
 
 std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content) {
@@ -153,36 +146,38 @@ std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content) {
 // An empty result indicates an error, as trying to start a process with an
 // empty cpuset fails with message "cgroup change of group failed".
 std::vector<int> GetCpusetCpus(pid_t pid) {
-  std::optional<std::string> cgroup_content_opt = ReadCgroupContent(pid);
-  if (!cgroup_content_opt.has_value()) {
+  ErrorMessageOr<std::string> cgroup_content = ReadCgroupContent(pid);
+  if (!cgroup_content) {
     return {};
   }
 
   // For example "/" or "/game".
-  std::optional<std::string> cgroup_cpuset_opt =
-      ExtractCpusetFromCgroup(cgroup_content_opt.value());
+  std::optional<std::string> cgroup_cpuset_opt = ExtractCpusetFromCgroup(cgroup_content.value());
   if (!cgroup_cpuset_opt.has_value()) {
     return {};
   }
 
   // For example "0-2,7,12-14".
-  std::optional<std::string> cpuset_cpus_content_opt =
+  ErrorMessageOr<std::string> cpuset_cpus_content =
       ReadCpusetCpusContent(cgroup_cpuset_opt.value());
-  if (!cpuset_cpus_content_opt.has_value()) {
+  if (!cpuset_cpus_content) {
     return {};
   }
 
-  return ParseCpusetCpus(cpuset_cpus_content_opt.value());
+  return ParseCpusetCpus(cpuset_cpus_content.value());
 }
 
 int GetTracepointId(const char* tracepoint_category, const char* tracepoint_name) {
   std::string filename = absl::StrFormat("/sys/kernel/debug/tracing/events/%s/%s/id",
                                          tracepoint_category, tracepoint_name);
 
-  std::optional<std::string> file_content = ReadFile(filename);
-  if (!file_content.has_value()) {
+  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(filename);
+  if (!file_content) {
+    ERROR("Reading tracepoint id of %s:%s: %s", tracepoint_category, tracepoint_name,
+          file_content.error().message());
     return -1;
   }
+
   int tp_id = -1;
   if (!absl::SimpleAtoi(file_content.value(), &tp_id)) {
     ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category, tracepoint_name);

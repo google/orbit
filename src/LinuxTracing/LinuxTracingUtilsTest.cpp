@@ -25,15 +25,6 @@
 
 namespace orbit_linux_tracing {
 
-TEST(ReadFile, ProcPidCommOfLinuxTracingTests) {
-  std::string filename = absl::StrFormat("/proc/%d/comm", getpid());
-  std::optional<std::string> returned_comm = ReadFile(filename);
-  // Comm values have a size limit of 15 characters.
-  std::string expected_comm = std::string{"LinuxTracingTests"}.substr(0, 15).append("\n");
-  ASSERT_TRUE(returned_comm.has_value());
-  EXPECT_EQ(returned_comm.value(), expected_comm);
-}
-
 TEST(GetThreadName, LinuxTracingTests) {
   // Thread names have a length limit of 15 characters.
   std::string expected_name = std::string{"LinuxTracingTests"}.substr(0, 15);
