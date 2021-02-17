@@ -16,7 +16,14 @@ namespace orbit_base {
 namespace fs = std::filesystem;
 
 static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entry& entry) {
-  if (!entry.is_directory()) {
+  std::error_code error;
+  bool is_directory = entry.is_directory(error);
+  if (error) {
+    ERROR("Unable to stat \"%s\": %s", entry.path(), error.message());
+    return std::nullopt;
+  }
+
+  if (!is_directory) {
     return std::nullopt;
   }
 
@@ -33,11 +40,21 @@ static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entr
 }
 
 std::vector<pid_t> GetAllPids() {
-  fs::directory_iterator proc{"/proc"};
+  std::error_code error;
+  fs::directory_iterator proc{"/proc", error};
+  if (error) {
+    ERROR("Unable to ls /proc: %s", error.message());
+    return {};
+  }
+
   std::vector<pid_t> pids;
 
-  for (const auto& entry : proc) {
-    auto pid = ProcEntryToPid(entry);
+  for (auto it = fs::begin(proc), end = fs::end(proc); it != end; it.increment(error)) {
+    if (error) {
+      ERROR("directory_iterator::increment failed with: %s (will ignore)", error.message());
+      continue;
+    }
+    auto pid = ProcEntryToPid(*it);
     if (pid.has_value()) {
       pids.emplace_back(pid.value());
     }
@@ -47,18 +64,22 @@ std::vector<pid_t> GetAllPids() {
 }
 
 std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
-  std::error_code error_code;
-  fs::directory_iterator proc_pid_task{fs::path{"/proc"} / std::to_string(pid) / "task",
-                                       error_code};
-  if (error_code) {
+  std::error_code error;
+  fs::directory_iterator proc_pid_task{fs::path{"/proc"} / std::to_string(pid) / "task", error};
+  if (error) {
     // The process with id `pid` could have stopped existing.
-    ERROR("Getting tids of threads of process %d: %s", pid, error_code.message());
+    ERROR("Getting tids of threads of process %d: %s", pid, error.message());
     return {};
   }
 
   std::vector<pid_t> tids;
-  for (const auto& entry : proc_pid_task) {
-    if (auto tid = ProcEntryToPid(entry); tid.has_value()) {
+  for (auto it = fs::begin(proc_pid_task), end = fs::end(proc_pid_task); it != end;
+       it.increment(error)) {
+    if (error) {
+      ERROR("directory_iterator::increment failed with: %s (will ignore)", error.message());
+      continue;
+    }
+    if (auto tid = ProcEntryToPid(*it); tid.has_value()) {
       tids.emplace_back(tid.value());
     }
   }
