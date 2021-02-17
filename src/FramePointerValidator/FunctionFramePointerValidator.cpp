@@ -9,11 +9,12 @@
 
 #include "OrbitBase/Logging.h"
 
-FunctionFramePointerValidator::FunctionFramePointerValidator(csh handle, const uint8_t* code,
+FunctionFramePointerValidator::FunctionFramePointerValidator(csh handle, const void* code,
                                                              size_t code_size) {
   handle_ = handle;
   instructions_ = nullptr;
-  instructions_count_ = cs_disasm(handle, code, code_size, 0, 0, &instructions_);
+  instructions_count_ =
+      cs_disasm(handle, static_cast<const uint8_t*>(code), code_size, 0, 0, &instructions_);
 }
 
 FunctionFramePointerValidator::~FunctionFramePointerValidator() {

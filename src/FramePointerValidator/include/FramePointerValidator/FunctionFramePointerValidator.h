@@ -16,7 +16,7 @@
 // exists.
 class FunctionFramePointerValidator {
  public:
-  FunctionFramePointerValidator(csh handle, const uint8_t* code, size_t code_size);
+  FunctionFramePointerValidator(csh handle, const void* code, size_t code_size);
   virtual ~FunctionFramePointerValidator();
 
   // FunctionFramePointerValidator is neither copyable nor movable.

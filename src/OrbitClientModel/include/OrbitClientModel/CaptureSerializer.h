@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
+#include <fstream>
 #include <iosfwd>
 #include <outcome.hpp>
 #include <string>
