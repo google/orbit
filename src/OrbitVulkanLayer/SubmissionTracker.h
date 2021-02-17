@@ -542,7 +542,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
   }
 
-  void OnCaptureStart(orbit_grpc_protos::CaptureOptions /*capture_options*/) override {}
+  void OnCaptureStart(orbit_grpc_protos::CaptureOptions capture_options) override {
+    SetMaxLocalMarkerDepthPerCommandBuffer(
+        capture_options.max_local_marker_depth_per_command_buffer());
+  }
 
   void OnCaptureStop() override {}
 

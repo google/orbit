@@ -841,10 +841,22 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
 void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(); }
 
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
+const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey{
+    "LimitLocalMarkerDepthPerCommandBuffer"};
+const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
+    "MaxLocalMarkerDepthPerCommandBuffer"};
+;
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+
+  uint64_t max_local_marker_depth_per_command_buffer = std::numeric_limits<uint64_t>::max();
+  if (settings.value(kLimitLocalMarkerDepthPerCommandBufferSettingsKey, false).toBool()) {
+    max_local_marker_depth_per_command_buffer =
+        settings.value(kMaxLocalMarkerDepthPerCommandBufferSettingsKey, 0).toULongLong();
+  }
+  app_->SetMaxLocalMarkerDepthPerCommandBuffer(max_local_marker_depth_per_command_buffer);
 }
 
 void OrbitMainWindow::on_actionCaptureOptions_triggered() {
@@ -852,6 +864,10 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
   orbit_qt::CaptureOptionsDialog dialog{this};
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+  dialog.SetLimitLocalMarkerDepthPerCommandBuffer(
+      settings.value(kLimitLocalMarkerDepthPerCommandBufferSettingsKey, false).toBool());
+  dialog.SetMaxLocalMarkerDepthPerCommandBuffer(
+      settings.value(kMaxLocalMarkerDepthPerCommandBufferSettingsKey, 0).toULongLong());
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -859,6 +875,10 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   }
 
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
+  settings.setValue(kLimitLocalMarkerDepthPerCommandBufferSettingsKey,
+                    dialog.GetLimitLocalMarkerDepthPerCommandBuffer());
+  settings.setValue(kMaxLocalMarkerDepthPerCommandBufferSettingsKey,
+                    QString::number(dialog.GetMaxLocalMarkerDepthPerCommandBuffer()));
   LoadCaptureOptionsIntoApp();
 }
 

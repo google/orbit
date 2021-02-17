@@ -163,6 +163,8 @@ class OrbitMainWindow : public QMainWindow {
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
   static const QString kCollectThreadStatesSettingKey;
+  static const QString kLimitLocalMarkerDepthPerCommandBufferSettingsKey;
+  static const QString kMaxLocalMarkerDepthPerCommandBufferSettingsKey;
   void LoadCaptureOptionsIntoApp();
 
   [[nodiscard]] bool ConfirmExit();

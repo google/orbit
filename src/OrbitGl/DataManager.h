@@ -72,6 +72,15 @@ class DataManager final {
   }
   [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
 
+  void set_max_local_marker_depth_per_command_buffer(
+      uint64_t max_local_marker_depth_per_command_buffer) {
+    max_local_marker_depth_per_command_buffer_ = max_local_marker_depth_per_command_buffer;
+  }
+
+  [[nodiscard]] uint64_t max_local_marker_depth_per_command_buffer() {
+    return max_local_marker_depth_per_command_buffer_;
+  }
+
  private:
   const std::thread::id main_thread_id_;
   FunctionInfoSet selected_functions_;
@@ -88,6 +97,7 @@ class DataManager final {
   UserDefinedCaptureData user_defined_capture_data_;
 
   bool collect_thread_states_ = false;
+  uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

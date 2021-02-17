@@ -8,6 +8,7 @@
 #include <QDialog>
 #include <QObject>
 #include <QString>
+#include <QValidator>
 #include <QWidget>
 #include <memory>
 
@@ -15,6 +16,24 @@
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {
+
+namespace internal {
+class UInt64Validator : public QValidator {
+ public:
+  explicit UInt64Validator(QObject* parent = nullptr) : QValidator(parent) {}
+  QValidator::State validate(QString& input, int& /*pos*/) const override {
+    if (input.isEmpty()) {
+      return QValidator::State::Acceptable;
+    }
+    bool valid = false;
+    input.toULongLong(&valid);
+    if (valid) {
+      return QValidator::State::Acceptable;
+    }
+    return QValidator::State::Invalid;
+  }
+};
+}  // namespace internal
 
 class CaptureOptionsDialog : public QDialog {
   Q_OBJECT
@@ -24,9 +43,17 @@ class CaptureOptionsDialog : public QDialog {
 
   void SetCollectThreadStates(bool collect_thread_state);
   [[nodiscard]] bool GetCollectThreadStates() const;
+  void SetLimitLocalMarkerDepthPerCommandBuffer(bool limit_local_marker_depth_per_command_buffer);
+  [[nodiscard]] bool GetLimitLocalMarkerDepthPerCommandBuffer() const;
+  void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);
+  [[nodiscard]] uint64_t GetMaxLocalMarkerDepthPerCommandBuffer() const;
+
+ public slots:
+  void resetLocalMarkerDepthLineEdit();
 
  private:
   std::unique_ptr<Ui::CaptureOptionsDialog> ui_;
+  internal::UInt64Validator uint64_validator_;
 };
 
 }  // namespace orbit_qt

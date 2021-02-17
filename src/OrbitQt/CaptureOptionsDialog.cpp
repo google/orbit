@@ -4,10 +4,10 @@
 
 #include "CaptureOptionsDialog.h"
 
-#include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QWidget>
+#include <QtGui/QValidator>
 
 #include "ui_CaptureOptionsDialog.h"
 
@@ -19,6 +19,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+  ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
 }
 
 bool CaptureOptionsDialog::GetCollectThreadStates() const {
@@ -28,5 +30,33 @@ bool CaptureOptionsDialog::GetCollectThreadStates() const {
 void CaptureOptionsDialog::SetCollectThreadStates(bool collect_thread_state) {
   ui_->threadStateCheckBox->setChecked(collect_thread_state);
 }
+
+void CaptureOptionsDialog::SetLimitLocalMarkerDepthPerCommandBuffer(
+    bool limit_local_marker_depth_per_command_buffer) {
+  ui_->localMarkerDepthCheckBox->setChecked(limit_local_marker_depth_per_command_buffer);
+}
+
+bool CaptureOptionsDialog::GetLimitLocalMarkerDepthPerCommandBuffer() const {
+  return ui_->localMarkerDepthCheckBox->isChecked();
+}
+
+void CaptureOptionsDialog::SetMaxLocalMarkerDepthPerCommandBuffer(
+    uint64_t local_marker_depth_per_command_buffer) {
+  ui_->localMarkerDepthLineEdit->setText(QString::number(local_marker_depth_per_command_buffer));
+}
+
+uint64_t CaptureOptionsDialog::GetMaxLocalMarkerDepthPerCommandBuffer() const {
+  CHECK(!ui_->localMarkerDepthLineEdit->text().isEmpty());
+  bool valid = false;
+  uint64_t result = ui_->localMarkerDepthLineEdit->text().toULongLong(&valid);
+  CHECK(valid);
+  return result;
+}
+
+void CaptureOptionsDialog::resetLocalMarkerDepthLineEdit() {
+  if (ui_->localMarkerDepthLineEdit->text().isEmpty()) {
+    ui_->localMarkerDepthLineEdit->setText(QString::number(0));
+  }
+};
 
 }  // namespace orbit_qt
