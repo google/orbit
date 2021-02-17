@@ -6,7 +6,6 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <fstream>
 #include <iterator>
 #include <memory>
 #include <outcome.hpp>
@@ -16,6 +15,7 @@
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
@@ -141,9 +141,9 @@ TEST(ElfFile, CreateFromBuffer) {
   const std::filesystem::path test_elf_file =
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
-  std::ifstream test_elf_stream{test_elf_file, std::ios::binary};
-  const std::string buffer{std::istreambuf_iterator<char>{test_elf_stream},
-                           std::istreambuf_iterator<char>{}};
+  auto file_content = orbit_base::ReadFileToString(test_elf_file);
+  ASSERT_TRUE(file_content) << file_content.error().message();
+  const std::string& buffer = file_content.value();
   ASSERT_NE(buffer.size(), 0);
 
   auto elf_file = ElfFile::CreateFromBuffer(test_elf_file, buffer.data(), buffer.size());
