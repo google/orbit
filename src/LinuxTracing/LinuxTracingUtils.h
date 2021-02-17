@@ -15,8 +15,6 @@
 
 namespace orbit_linux_tracing {
 
-std::optional<std::string> ReadFile(std::string_view filename);
-
 std::string ReadMaps(pid_t pid);
 
 // The association between a character and a thread state is documented at
