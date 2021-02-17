@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Promise.h"
 
 namespace orbit_base {
@@ -110,5 +111,144 @@ TEST(Future, CreateCompletedFutureWithInt) {
   EXPECT_TRUE(future.IsValid());
   EXPECT_TRUE(future.IsFinished());
   EXPECT_EQ(future.Get(), 42);
+}
+
+TEST(Future, ThenWithVoid) {
+  orbit_base::Promise<void> promise{};
+  orbit_base::Future<void> future = promise.GetFuture();
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  future.Then(&executor, [&called]() { called = true; });
+
+  EXPECT_FALSE(called);
+
+  promise.MarkFinished();
+  EXPECT_TRUE(called);
+}
+
+TEST(Future, ThenWithVoidFinished) {
+  orbit_base::Future<void> future{};
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  future.Then(&executor, [&called]() { called = true; });
+
+  EXPECT_TRUE(called);
+}
+
+TEST(Future, ThenWithInt) {
+  orbit_base::Promise<int> promise{};
+  orbit_base::Future<int> future = promise.GetFuture();
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  future.Then(&executor, [&called](int value) {
+    EXPECT_EQ(value, 42);
+    called = true;
+  });
+
+  EXPECT_FALSE(called);
+
+  promise.SetResult(42);
+  EXPECT_TRUE(called);
+}
+
+TEST(Future, ThenWithIntFinished) {
+  orbit_base::Future<int> future{42};
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  future.Then(&executor, [&called](int value) {
+    EXPECT_EQ(value, 42);
+    called = true;
+  });
+
+  EXPECT_TRUE(called);
+}
+
+TEST(Future, ThenIfSuccessWithVoid) {
+  orbit_base::Promise<ErrorMessageOr<void>> promise{};
+  orbit_base::Future<ErrorMessageOr<void>> future = promise.GetFuture();
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  auto chained_future = future.ThenIfSuccess(&executor, [&called]() { called = true; });
+
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  promise.SetResult(outcome::success());
+  EXPECT_TRUE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+}
+
+TEST(Future, ThenIfSuccessWithInt) {
+  orbit_base::Promise<ErrorMessageOr<int>> promise{};
+  orbit_base::Future<ErrorMessageOr<int>> future = promise.GetFuture();
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  auto chained_future = future.ThenIfSuccess(&executor, [&called](int value) {
+    EXPECT_EQ(value, 42);
+    called = true;
+  });
+
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  promise.SetResult(42);
+  EXPECT_TRUE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+}
+
+TEST(Future, ThenIfSuccessWithVoidAndError) {
+  orbit_base::Promise<ErrorMessageOr<void>> promise{};
+  orbit_base::Future<ErrorMessageOr<void>> future = promise.GetFuture();
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  auto chained_future = future.ThenIfSuccess(&executor, [&called]() -> ErrorMessageOr<void> {
+    called = true;
+    return outcome::success();
+  });
+
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  promise.SetResult(outcome::success());
+  EXPECT_TRUE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+  EXPECT_FALSE(chained_future.Get().has_error());
+}
+
+TEST(Future, ThenIfSuccessWithIntAndError) {
+  orbit_base::Promise<ErrorMessageOr<int>> promise{};
+  orbit_base::Future<ErrorMessageOr<int>> future = promise.GetFuture();
+
+  bool called = false;
+
+  orbit_base::ImmediateExecutor executor{};
+  auto chained_future =
+      future.ThenIfSuccess(&executor, [&called](int value) -> ErrorMessageOr<int> {
+        EXPECT_EQ(value, 42);
+        called = true;
+        return value;
+      });
+
+  EXPECT_FALSE(called);
+  EXPECT_FALSE(chained_future.IsFinished());
+
+  promise.SetResult(42);
+  EXPECT_TRUE(called);
+  EXPECT_TRUE(chained_future.IsFinished());
+  EXPECT_FALSE(chained_future.Get().has_error());
 }
 }  // namespace orbit_base
