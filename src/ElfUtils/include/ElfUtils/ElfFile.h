@@ -21,6 +21,15 @@
 
 namespace orbit_elf_utils {
 
+struct GnuDebugLinkInfo {
+  std::filesystem::path path;
+
+  // That's a CRC32 checksum of the file contents of the separate debuginfo file.
+  // Check the ELF documentation for the exact polynomial and the initial value.
+  // Docs: https://refspecs.linuxfoundation.org/elf/elf.pdf
+  uint32_t crc32_checksum;
+};
+
 class ElfFile {
  public:
   ElfFile() = default;
@@ -44,11 +53,13 @@ class ElfFile {
   [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
   [[nodiscard]] virtual bool HasSymtab() const = 0;
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;
+  [[nodiscard]] virtual bool HasGnuDebuglink() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual std::filesystem::path GetFilePath() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
+  [[nodiscard]] virtual std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const = 0;
 
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
       const std::filesystem::path& file_path);

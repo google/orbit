@@ -225,3 +225,26 @@ TEST(ElfFile, LineInfoNoDebugInfo) {
 
   EXPECT_DEATH((void)hello_world.value()->GetLineInfo(0x1140), "");
 }
+
+TEST(ElfFile, HasNoGnuDebugLink) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+
+  EXPECT_FALSE(hello_world.value()->HasGnuDebuglink());
+  EXPECT_FALSE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
+}
+
+TEST(ElfFile, HasGnuDebugLink) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_gnu_debuglink";
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+
+  EXPECT_TRUE(hello_world.value()->HasGnuDebuglink());
+  EXPECT_TRUE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
+  EXPECT_EQ(hello_world.value()->GetGnuDebugLinkInfo()->path.string(), "hello_world_elf.debug");
+}
