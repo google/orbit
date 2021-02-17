@@ -17,7 +17,6 @@
 
 namespace orbit_qt {
 
-namespace internal {
 class UInt64Validator : public QValidator {
  public:
   explicit UInt64Validator(QObject* parent = nullptr) : QValidator(parent) {}
@@ -33,7 +32,6 @@ class UInt64Validator : public QValidator {
     return QValidator::State::Invalid;
   }
 };
-}  // namespace internal
 
 class CaptureOptionsDialog : public QDialog {
   Q_OBJECT
@@ -49,11 +47,11 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] uint64_t GetMaxLocalMarkerDepthPerCommandBuffer() const;
 
  public slots:
-  void resetLocalMarkerDepthLineEdit();
+  void ResetLocalMarkerDepthLineEdit();
 
  private:
   std::unique_ptr<Ui::CaptureOptionsDialog> ui_;
-  internal::UInt64Validator uint64_validator_;
+  UInt64Validator uint64_validator_;
 };
 
 }  // namespace orbit_qt

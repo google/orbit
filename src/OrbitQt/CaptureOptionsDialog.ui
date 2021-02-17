@@ -47,144 +47,85 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="Line" name="line_4">
-         <property name="styleSheet">
-          <string notr="true">background: #353535</string>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>General</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_5">
-         <property name="styleSheet">
-          <string notr="true">background: #353535</string>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="threadStateCheckBox">
-       <property name="text">
-        <string>Collect thread states</string>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>General</string>
        </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="threadStateCheckBox">
+          <property name="text">
+           <string>Collect thread states</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="Line" name="line_3">
-         <property name="styleSheet">
-          <string notr="true">background: #353535</string>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_3">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Vulkan layer</string>
-         </property>
-         <property name="scaledContents">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_2">
-         <property name="styleSheet">
-          <string notr="true">background: #353535</string>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="localMarkerDepthCheckBox">
-       <property name="text">
-        <string>Limit local marker depth per command buffer</string>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
        </property>
-      </widget>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>6</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLineEdit" name="localMarkerDepthLineEdit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="inputMethodHints">
-          <set>Qt::ImhDigitsOnly</set>
-         </property>
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>4</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_2">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Max local marker depth per command buffer </string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="toolTip">
+        <string>This requires Orbit's Vulkan layer to be loaded by the target process.</string>
+       </property>
+       <property name="title">
+        <string>Vulkan layer</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QCheckBox" name="localMarkerDepthCheckBox">
+            <property name="text">
+             <string>Limit local depth of markers per command buffer to:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="localMarkerDepthLineEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="inputMethodHints">
+             <set>Qt::ImhDigitsOnly</set>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>4</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </item>
      <item>
       <spacer name="verticalSpacer">
@@ -198,16 +139,6 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <widget class="Line" name="line_6">
-       <property name="styleSheet">
-        <string notr="true">background: #353535</string>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
      </item>
      <item>
       <widget class="QLabel" name="label">
@@ -229,28 +160,12 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>219</x>
-     <y>93</y>
+     <x>193</x>
+     <y>133</y>
     </hint>
     <hint type="destinationlabel">
-     <x>80</x>
-     <y>122</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>localMarkerDepthCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>label_2</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>219</x>
-     <y>93</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>292</x>
-     <y>122</y>
+     <x>390</x>
+     <y>133</y>
     </hint>
    </hints>
   </connection>
@@ -258,11 +173,11 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
    <sender>localMarkerDepthLineEdit</sender>
    <signal>editingFinished()</signal>
    <receiver>CaptureOptionsDialog</receiver>
-   <slot>resetLocalMarkerDepthLineEdit()</slot>
+   <slot>ResetLocalMarkerDepthLineEdit()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>73</x>
-     <y>122</y>
+     <x>390</x>
+     <y>133</y>
     </hint>
     <hint type="destinationlabel">
      <x>219</x>
@@ -272,6 +187,6 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
   </connection>
  </connections>
  <slots>
-  <slot>resetLocalMarkerDepthLineEdit()</slot>
+  <slot>ResetLocalMarkerDepthLineEdit()</slot>
  </slots>
 </ui>

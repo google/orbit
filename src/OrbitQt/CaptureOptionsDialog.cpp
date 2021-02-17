@@ -53,10 +53,10 @@ uint64_t CaptureOptionsDialog::GetMaxLocalMarkerDepthPerCommandBuffer() const {
   return result;
 }
 
-void CaptureOptionsDialog::resetLocalMarkerDepthLineEdit() {
+void CaptureOptionsDialog::ResetLocalMarkerDepthLineEdit() {
   if (ui_->localMarkerDepthLineEdit->text().isEmpty()) {
     ui_->localMarkerDepthLineEdit->setText(QString::number(0));
   }
-};
+}
 
 }  // namespace orbit_qt
