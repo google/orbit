@@ -50,10 +50,12 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
   [[nodiscard]] bool HasSymtab() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
+  [[nodiscard]] bool HasGnuDebuglink() const override;
   [[nodiscard]] bool Is64Bit() const override;
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] std::filesystem::path GetFilePath() const override;
   [[nodiscard]] ErrorMessageOr<LineInfo> GetLineInfo(uint64_t address) override;
+  [[nodiscard]] std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const override;
 
  private:
   void InitSections();
@@ -65,7 +67,52 @@ class ElfFileImpl : public ElfFile {
   std::string build_id_;
   bool has_symtab_section_;
   bool has_debug_info_section_;
+  std::optional<GnuDebugLinkInfo> gnu_debuglink_info_;
 };
+
+template <typename ElfT>
+ErrorMessageOr<GnuDebugLinkInfo> ReadGnuDebuglinkSection(
+    const typename ElfT::Shdr& section_header, const llvm::object::ELFFile<ElfT>& elf_file) {
+  llvm::Expected<llvm::ArrayRef<uint8_t>> contents_or_error =
+      elf_file.getSectionContents(&section_header);
+  if (!contents_or_error) return ErrorMessage("Could not obtain contents.");
+
+  const llvm::ArrayRef<uint8_t>& contents = contents_or_error.get();
+
+  using ChecksumType = uint32_t;
+  constexpr size_t kMinimumPathLength = 1;
+  if (contents.size() < kMinimumPathLength + sizeof(ChecksumType)) {
+    return ErrorMessage{"Section is too short."};
+  }
+
+  constexpr size_t kOneHundredKiB = 100 * 1024;
+  if (contents.size() > kOneHundredKiB) {
+    return ErrorMessage{"Section is longer than 100KiB. Something is not right."};
+  }
+
+  std::string path{};
+  path.reserve(contents.size());
+
+  for (const auto& byte : contents) {
+    if (byte == '\0') break;
+    path.push_back(static_cast<char>(byte));
+  }
+
+  if (path.size() > contents.size() - sizeof(ChecksumType)) {
+    return ErrorMessage{"No CRC32 checksum found"};
+  }
+
+  static_assert(ElfT::TargetEndianness == llvm::support::little,
+                "This code only supports little endian architectures.");
+  const auto checksum_storage = contents.slice(contents.size() - sizeof(ChecksumType));
+  uint32_t reference_crc{};
+  std::memcpy(&reference_crc, checksum_storage.data(), sizeof(reference_crc));
+
+  GnuDebugLinkInfo gnu_debuglink_info{};
+  gnu_debuglink_info.path = std::filesystem::path{std::move(path)};
+  gnu_debuglink_info.crc32_checksum = reference_crc;
+  return gnu_debuglink_info;
+}
 
 template <typename ElfT>
 ElfFileImpl<ElfT>::ElfFileImpl(std::filesystem::path file_path,
@@ -116,6 +163,16 @@ void ElfFileImpl<ElfT>::InitSections() {
       }
       if (error) {
         LOG("Error while reading elf notes");
+      }
+    }
+
+    if (name.str() == ".gnu_debuglink") {
+      ErrorMessageOr<GnuDebugLinkInfo> error_or_info = ReadGnuDebuglinkSection(section, *elf_file);
+      if (error_or_info.has_value()) {
+        gnu_debuglink_info_ = std::move(error_or_info.value());
+      } else {
+        ERROR("Invalid .gnu_debuglink section in \"%s\". %s", file_path_.string(),
+              error_or_info.error().message());
       }
     }
   }
@@ -216,6 +273,11 @@ bool ElfFileImpl<ElfT>::HasDebugInfo() const {
 }
 
 template <typename ElfT>
+bool ElfFileImpl<ElfT>::HasGnuDebuglink() const {
+  return gnu_debuglink_info_.has_value();
+}
+
+template <typename ElfT>
 std::string ElfFileImpl<ElfT>::GetBuildId() const {
   return build_id_;
 }
@@ -260,6 +322,10 @@ bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
   return false;
 }
 
+template <typename ElfT>
+std::optional<GnuDebugLinkInfo> ElfFileImpl<ElfT>::GetGnuDebugLinkInfo() const {
+  return gnu_debuglink_info_;
+}
 }  // namespace
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(
