@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "OrbitBase/Logging.h"
-#include "llvm/Demangle/Demangle.h"
 
 namespace orbit_service {
 

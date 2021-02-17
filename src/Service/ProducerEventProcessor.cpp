@@ -89,7 +89,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
 
-  void SendStringAndKeyEvent(uint64_t key, std::string value);
+  void SendInternedStringEvent(uint64_t key, std::string value);
 
   CaptureEventBuffer* capture_event_buffer_;
 
@@ -111,13 +111,13 @@ void ProducerEventProcessorImpl::ProcessFullAddressInfo(FullAddressInfo* full_ad
   auto [function_name_key, function_key_assigned] =
       string_pool_.GetOrAssignId(full_address_info->function_name());
   if (function_key_assigned) {
-    SendStringAndKeyEvent(function_name_key, full_address_info->function_name());
+    SendInternedStringEvent(function_name_key, full_address_info->function_name());
   }
 
   auto [module_name_key, module_key_assigned] =
       string_pool_.GetOrAssignId(full_address_info->module_name());
   if (module_key_assigned) {
-    SendStringAndKeyEvent(module_name_key, full_address_info->module_name());
+    SendInternedStringEvent(module_name_key, full_address_info->module_name());
   }
 
   ClientCaptureEvent event;
@@ -139,7 +139,7 @@ void ProducerEventProcessorImpl::ProcessFunctionCall(FunctionCall* function_call
 void ProducerEventProcessorImpl::ProcessFullGpuJob(FullGpuJob* full_gpu_job_event) {
   auto [timeline_key, assigned] = string_pool_.GetOrAssignId(full_gpu_job_event->timeline());
   if (assigned) {
-    SendStringAndKeyEvent(timeline_key, full_gpu_job_event->timeline());
+    SendInternedStringEvent(timeline_key, full_gpu_job_event->timeline());
   }
 
   ClientCaptureEvent event;
@@ -359,7 +359,7 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
   }
 }
 
-void ProducerEventProcessorImpl::SendStringAndKeyEvent(uint64_t key, std::string value) {
+void ProducerEventProcessorImpl::SendInternedStringEvent(uint64_t key, std::string value) {
   ClientCaptureEvent event;
   InternedString* interned_string = event.mutable_interned_string();
   interned_string->set_key(key);
