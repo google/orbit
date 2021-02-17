@@ -19,7 +19,7 @@ TEST(ReadFileToString, InvalidFile) {
 
 TEST(ReadFileToString, Smoke) {
   const auto result = orbit_base::ReadFileToString(orbit_base::GetExecutableDir() / "testdata" /
-                                                   "OrbitBase" / "textfile.txt");
+                                                   "OrbitBase" / "textfile.bin");
   ASSERT_TRUE(result) << result.error().message();
   EXPECT_EQ(result.value(), "content\nnew line");
 }
