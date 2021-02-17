@@ -77,8 +77,8 @@ class TrackManager {
   std::unordered_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
-  // Mapping from timeline hash to GPU tracks.
-  std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
+  // Mapping from timeline to GPU tracks.
+  std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
   // Mapping from function address to frame tracks.
   // TODO (b/175865913): Use Function info instead of their address as key to FrameTracks
   std::unordered_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
