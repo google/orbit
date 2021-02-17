@@ -14,6 +14,7 @@
 
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Error.h"
@@ -28,14 +29,14 @@ void LogFileContents(const std::filesystem::path& file_path) {
     return;
   }
 
-  std::ifstream stream{file_path.string()};
-  if (!stream.good()) {
-    ERROR("Unable to print contents of file \"%s\": Could not open.", file_path.string());
+  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(file_path);
+  if (!file_content) {
+    ERROR("Unable to print contents of file \"%s\": %s", file_path.string(),
+          file_content.error().message());
     return;
   }
 
-  LOG("Contents of file \"%s\":\n%s", file_path.string(),
-      std::string{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}});
+  LOG("Contents of file \"%s\":\n%s", file_path.string(), file_content.value());
 }
 
 }  // namespace

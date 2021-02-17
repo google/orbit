@@ -15,6 +15,7 @@
 
 #include "FramePointerValidator/FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/UniqueResource.h"
 
 using orbit_grpc_protos::CodeBlock;
@@ -30,13 +31,15 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     ERROR("Unable to open capstone.");
     return {};
   }
-  orbit_base::unique_resource handle{std::move(temp_handle), [](csh handle) { cs_close(&handle); }};
+  orbit_base::unique_resource handle{temp_handle, [](csh handle) { cs_close(&handle); }};
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
-  std::ifstream instream(file_name, std::ios::in | std::ios::binary);
-  std::vector<uint8_t> binary((std::istreambuf_iterator<char>(instream)),
-                              std::istreambuf_iterator<char>());
+  ErrorMessageOr<std::string> binary = orbit_base::ReadFileToString(file_name);
+  if (!binary) {
+    ERROR("%s", binary.error().message());
+    return {};
+  }
 
   for (const auto& function : functions) {
     uint64_t function_size = function.size();
@@ -44,7 +47,8 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
       continue;
     }
 
-    FunctionFramePointerValidator validator{handle, binary.data() + function.offset(),
+    const std::string& content = binary.value();
+    FunctionFramePointerValidator validator{handle, content.data() + function.offset(),
                                             static_cast<size_t>(function.size())};
 
     if (!validator.Validate()) {

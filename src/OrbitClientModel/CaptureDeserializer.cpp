@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <fstream>
 #include <memory>
 #include <utility>
 #include <vector>
