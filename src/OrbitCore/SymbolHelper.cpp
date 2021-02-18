@@ -7,18 +7,20 @@
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <absl/strings/str_split.h>
 
 #include <algorithm>
 #include <filesystem>
-#include <fstream>
 #include <memory>
 #include <outcome.hpp>
 #include <set>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitBase/WriteStringToFile.h"
 #include "Path.h"
 
 using orbit_grpc_protos::ModuleSymbols;
@@ -30,39 +32,61 @@ namespace {
 
 std::vector<fs::path> ReadSymbolsFile() {
   fs::path file_name = Path::GetSymbolsFileName();
-  if (!fs::exists(file_name)) {
-    std::ofstream outfile(file_name);
-    outfile << "//-------------------" << std::endl
-            << "// Orbit Symbol Locations" << std::endl
-            << "//-------------------" << std::endl
-            << "// Orbit will scan the specified directories for symbol files." << std::endl
-            << "// Enter one directory per line, like so:" << std::endl
-#ifdef _WIN32
-            << "// C:\\MyApp\\Release\\" << std::endl
-            << "// D:\\MySymbolServer\\" << std::endl
-#else
-            << "// /home/git/project/build/" << std::endl
-            << "// /home/symbol_server/" << std::endl
-#endif
-            << std::endl;
+  std::error_code error;
+  bool file_exists = fs::exists(file_name, error);
+  if (error) {
+    ERROR("Unable to stat \"%s\":%s", file_name.string(), error.message());
+    return {};
+  }
 
-    outfile.close();
+  if (!file_exists) {
+    ErrorMessageOr<void> result = orbit_base::WriteStringToFile(
+        file_name,
+        "//-------------------\n"
+        "// Orbit Symbol Locations\n"
+        "//-------------------\n"
+        "// Orbit will scan the specified directories for symbol files.\n"
+        "// Enter one directory per line, like so:\n"
+#ifdef _WIN32
+        "// C:\\MyApp\\Release\\\n"
+        "// D:\\MySymbolServer\\\n"
+#else
+        "// /home/git/project/build/\n"
+        "// /home/symbol_server/\n"
+#endif
+    );
+
+    if (!result) {
+      ERROR("Unable to create symbols file: %s", result.error().message());
+    }
+    // Since file is empty - return empty list
+    return {};
   }
 
   std::vector<fs::path> directories;
-  std::fstream infile(file_name);
-  if (!infile.fail()) {
-    std::string line;
-    while (std::getline(infile, line)) {
-      if (absl::StartsWith(line, "//") || line.empty()) continue;
+  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(file_name);
+  if (!file_content) {
+    ERROR("%s", file_content.error().message());
+    return {};
+  }
 
-      const fs::path& dir = line;
-      if (std::filesystem::is_directory(dir)) {
-        directories.push_back(dir);
-      } else {
-        ERROR("Symbols directory \"%s\" doesn't exist", dir.string());
-      }
+  std::vector<std::string> lines = absl::StrSplit(file_content.value(), absl::ByAnyChar("\r\n"));
+  for (const std::string& line : lines) {
+    if (absl::StartsWith(line, "//") || line.empty()) continue;
+
+    const fs::path& dir = line;
+    bool is_directory = fs::is_directory(dir, error);
+    if (error) {
+      ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
+      continue;
     }
+
+    if (!is_directory) {
+      ERROR("\"%s\" is not a directory (skipping)", dir.string());
+      continue;
+    }
+
+    directories.push_back(dir);
   }
   return directories;
 }
@@ -116,7 +140,14 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
 
   LOG("Trying to find symbols for module: \"%s\"", module_path.string());
   for (const auto& symbols_path : search_paths) {
-    if (!fs::exists(symbols_path)) continue;
+    std::error_code error;
+    bool exists = fs::exists(symbols_path, error);
+    if (error) {
+      ERROR("Unable to stat \"%s\": %s", symbols_path.string(), error.message());
+      continue;
+    }
+
+    if (!exists) continue;
 
     const auto verification_result = VerifySymbolsFile(symbols_path, build_id);
     if (!verification_result) {
@@ -137,7 +168,13 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
 [[nodiscard]] ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(
     const fs::path& module_path, const std::string& build_id) const {
   fs::path cache_file_path = GenerateCachedFileName(module_path);
-  if (!fs::exists(cache_file_path)) {
+  std::error_code error;
+  bool exists = fs::exists(cache_file_path, error);
+  if (error) {
+    return ErrorMessage{
+        absl::StrFormat("Unable to stat \"%s\": %s", cache_file_path.string(), error.message())};
+  }
+  if (!exists) {
     return ErrorMessage(
         absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
   }
