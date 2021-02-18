@@ -87,6 +87,7 @@ ProfilingTargetDialog::ProfilingTargetDialog(
   CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
+  ui_->stadiaWidget->SetSshConnectionArtifacts(ssh_connection_artifacts);
   ui_->processesTableOverlay->raise();
 
   state_machine_.setGlobalRestorePolicy(QStateMachine::RestoreProperties);
@@ -139,20 +140,24 @@ ProfilingTargetDialog::ProfilingTargetDialog(
   if (target_configuration_opt.has_value()) {
     TargetConfiguration config = std::move(target_configuration_opt.value());
     target_configuration_opt = std::nullopt;
-    StartFromExistingTarget(std::move(config), ssh_connection_artifacts);
+    SetStateMachineInitialStateFromTarget(std::move(config));
   } else {
-    if (absl::GetFlag(FLAGS_local)) {
-      state_machine_.setInitialState(&state_local_);
-    } else if (ui_->stadiaWidget->IsActive()) {
-      state_machine_.setInitialState(&state_stadia_);
-    } else {
-      state_machine_.setInitialState(&state_file_);
-    }
-    ui_->stadiaWidget->Start(ssh_connection_artifacts);
+    SetStateMachineInitialState();
+  }
+}
+
+void ProfilingTargetDialog::SetStateMachineInitialState() {
+  if (absl::GetFlag(FLAGS_local)) {
+    state_machine_.setInitialState(&state_local_);
+  } else if (ui_->stadiaWidget->IsActive()) {
+    state_machine_.setInitialState(&state_stadia_);
+  } else {
+    state_machine_.setInitialState(&state_file_);
   }
 }
 
 std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
+  ui_->stadiaWidget->Start();
   state_machine_.start();
   int rc = QDialog::exec();
   state_machine_.stop();
@@ -339,16 +344,8 @@ void ProfilingTargetDialog::SetupLocalStates() {
   });
 }
 
-void ProfilingTargetDialog::StartFromExistingTarget(
-    TargetConfiguration config, SshConnectionArtifacts* ssh_connection_artifacts) {
-  if (std::holds_alternative<StadiaTarget>(config)) {
-    ui_->stadiaWidget->Start(ssh_connection_artifacts,
-                             std::move(std::get<StadiaTarget>(config).connection_));
-  } else {
-    ui_->stadiaWidget->Start(ssh_connection_artifacts);
-  }
-
-  std::visit([this](auto target) { SetTargetAndInitialState(std::move(target)); },
+void ProfilingTargetDialog::SetStateMachineInitialStateFromTarget(TargetConfiguration config) {
+  std::visit([this](auto target) { SetTargetAndStateMachineInitialState(std::move(target)); },
              std::move(config));
 
   if (process_manager_ != nullptr) {
@@ -494,16 +491,19 @@ void ProfilingTargetDialog::ConnectToLocal() {
 
 void ProfilingTargetDialog::SetupLocalProcessManager() { SetupProcessManager(local_grpc_channel_); }
 
-void ProfilingTargetDialog::SetTargetAndInitialState(StadiaTarget target) {
+void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(StadiaTarget target) {
+  state_machine_.setInitialState(&state_stadia_);
+
+  if (target.connection_.GetGrpcChannel()->GetState(false) != GRPC_CHANNEL_READY) return;
+
+  ui_->stadiaWidget->SetConnection(std::move(target.connection_));
   process_manager_ = std::move(target.process_manager_);
   process_ = std::move(target.process_);
-
   state_stadia_.setInitialState(&state_stadia_connected_);
   state_stadia_history_.setDefaultState(&state_stadia_connected_);
-  state_machine_.setInitialState(&state_stadia_);
 }
 
-void ProfilingTargetDialog::SetTargetAndInitialState(LocalTarget target) {
+void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(LocalTarget target) {
   local_grpc_channel_ = target.GetConnection()->GetGrpcChannel();
   process_manager_ = std::move(target.process_manager_);
   process_ = std::move(target.process_);
@@ -513,7 +513,7 @@ void ProfilingTargetDialog::SetTargetAndInitialState(LocalTarget target) {
   state_machine_.setInitialState(&state_local_);
 }
 
-void ProfilingTargetDialog::SetTargetAndInitialState(FileTarget target) {
+void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(FileTarget target) {
   selected_file_path_ = target.GetCaptureFilePath();
   state_file_.setInitialState(&state_file_selected_);
   state_file_history_.setDefaultState(&state_file_selected_);
