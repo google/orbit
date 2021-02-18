@@ -24,6 +24,7 @@ int main(int argc, char* argv[]) {
   });
 
   dialog.SetEnableLineNumbers(true);
+  dialog.GoToLineNumber(10);
 
   return dialog.exec();
 }

@@ -48,4 +48,12 @@ void Dialog::SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right) {
 
 void Dialog::SetEnableLineNumbers(bool enabled) { ui_->viewer->SetEnableLineNumbers(enabled); }
 
+void Dialog::GoToLineNumber(size_t line_number) {
+  const QTextBlock block =
+      ui_->viewer->document()->findBlockByLineNumber(static_cast<int>(line_number));
+  if (!block.isValid()) return;
+
+  ui_->viewer->setTextCursor(QTextCursor{block});
+}
+
 }  // namespace orbit_code_viewer
