@@ -43,8 +43,10 @@ class ConnectToStadiaWidget : public QWidget {
   [[nodiscard]] std::optional<StadiaConnection> StopAndClearConnection();
   [[nodiscard]] bool IsActive() const { return ui_->contentFrame->isEnabled(); }
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() { return grpc_channel_; }
-  void Start(SshConnectionArtifacts* ssh_connection_artifacts,
-             std::optional<StadiaConnection> connection = std::nullopt);
+  void SetSshConnectionArtifacts(SshConnectionArtifacts* ssh_connection_artifacts);
+  void ClearSshConnectionArtifacts() { ssh_connection_artifacts_ = nullptr; }
+  void SetConnection(StadiaConnection connection);
+  void Start();
   [[nodiscard]] std::optional<orbit_ggp::Instance> GetSelectedInstance() const {
     return selected_instance_;
   }

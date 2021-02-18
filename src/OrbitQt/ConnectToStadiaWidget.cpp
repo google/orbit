@@ -88,10 +88,23 @@ void ConnectToStadiaWidget::SetActive(bool value) {
   ui_->radioButton->setChecked(value);
 }
 
-void ConnectToStadiaWidget::Start(SshConnectionArtifacts* ssh_connection_artifacts,
-                                  std::optional<StadiaConnection> connection) {
+void ConnectToStadiaWidget::SetSshConnectionArtifacts(
+    SshConnectionArtifacts* ssh_connection_artifacts) {
   CHECK(ssh_connection_artifacts != nullptr);
   ssh_connection_artifacts_ = ssh_connection_artifacts;
+}
+
+void ConnectToStadiaWidget::SetConnection(StadiaConnection connection) {
+  selected_instance_ = std::move(connection.instance_);
+  service_deploy_manager_ = std::move(connection.service_deploy_manager_);
+  grpc_channel_ = std::move(connection.grpc_channel_);
+}
+
+void ConnectToStadiaWidget::Start() {
+  if (ssh_connection_artifacts_ == nullptr) {
+    ERROR("Unable to start ConnectToStadiaWidget: ssh_connection_artifacts_ is nullptr");
+    return;
+  }
 
   auto client_result = orbit_ggp::Client::Create(this);
   if (!client_result) {
@@ -101,10 +114,7 @@ void ConnectToStadiaWidget::Start(SshConnectionArtifacts* ssh_connection_artifac
   }
   ggp_client_ = client_result.value();
 
-  if (connection.has_value()) {
-    selected_instance_ = std::move(connection->instance_);
-    service_deploy_manager_ = std::move(connection->service_deploy_manager_);
-    grpc_channel_ = std::move(connection->grpc_channel_);
+  if (grpc_channel_ != nullptr && grpc_channel_->GetState(false) == GRPC_CHANNEL_READY) {
     state_machine_.setInitialState(&s_connected_);
   } else {
     state_machine_.setInitialState(&s_instances_loading_);

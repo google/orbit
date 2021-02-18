@@ -94,14 +94,14 @@ class ProfilingTargetDialog : public QDialog {
   void SetupStadiaStates();
   void SetupFileStates();
   void SetupLocalStates();
-  void StartFromExistingTarget(TargetConfiguration config,
-                               SshConnectionArtifacts* ssh_connection_artifacts);
+  void SetStateMachineInitialStateFromTarget(TargetConfiguration config);
+  void SetStateMachineInitialState();
   [[nodiscard]] bool TrySelectProcess(const ProcessData& process);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
   void SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel);
-  void SetTargetAndInitialState(StadiaTarget target);
-  void SetTargetAndInitialState(LocalTarget target);
-  void SetTargetAndInitialState(FileTarget target);
+  void SetTargetAndStateMachineInitialState(StadiaTarget target);
+  void SetTargetAndStateMachineInitialState(LocalTarget target);
+  void SetTargetAndStateMachineInitialState(FileTarget target);
 };
 
 }  // namespace orbit_qt
