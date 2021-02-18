@@ -1058,7 +1058,8 @@ void OrbitApp::LoadModules(
           SelectFunctionsFromHashes(module, select_functions);
           EnableFrameTracksFromHashes(module, frame_tracks);
         };
-    LoadModule(module).Then(main_thread_executor_, std::move(handle_hooks_and_frame_tracks));
+    LoadModuleAndSymbols(module).Then(main_thread_executor_,
+                                      std::move(handle_hooks_and_frame_tracks));
   }
 }
 
@@ -1074,64 +1075,77 @@ orbit_base::Future<void> OrbitApp::LoadModules(absl::Span<const ModuleData* cons
   };
 
   for (const auto& module : modules) {
-    futures.emplace_back(LoadModule(module).Then(main_thread_executor_, std::move(handle_error)));
+    futures.emplace_back(
+        LoadModuleAndSymbols(module).Then(main_thread_executor_, std::move(handle_error)));
   }
 
   return orbit_base::JoinFutures(futures);
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModule(const ModuleData* module) {
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModuleAndSymbols(const ModuleData* module) {
+  return LoadModuleAndSymbols(module->file_path(), module->build_id());
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModuleAndSymbols(
+    const std::string& module_path, const std::string& build_id) {
+  const ModuleData* const module_data = GetModuleByPath(module_path);
+  if (module_data == nullptr) {
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
+  }
+  if (module_data->is_loaded()) return {outcome::success()};
+
+  return orbit_base::UnwrapFuture(
+      LoadModule(module_path, build_id)
+          .ThenIfSuccess(main_thread_executor_,
+                         [this, module_path](const std::filesystem::path& local_file_path) {
+                           return LoadSymbols(local_file_path, module_path);
+                         }));
+}
+
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModule(
+    const ModuleData* module) {
   return LoadModule(module->file_path(), module->build_id());
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModule(const std::string& module_path,
-                                                              const std::string& build_id) {
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModule(
+    const std::string& module_path, const std::string& build_id) {
   const ModuleData* module_data = GetModuleByPath(module_path);
 
   if (module_data == nullptr) {
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
 
-  if (module_data->is_loaded()) return {outcome::success()};
-
   const auto it = modules_currently_loading_.find(module_path);
   if (it != modules_currently_loading_.end()) {
     return it->second;
   }
 
-  const auto local_symbols_path = FindModuleLocally(module_path, build_id);
+  auto local_symbols_path = FindModuleLocally(module_path, build_id);
 
   if (local_symbols_path) {
-    return LoadSymbols(local_symbols_path.value(), module_path);
+    return local_symbols_path;
   }
 
   // TODO(177304549): [new UI] maybe come up with a better indicator whether orbit is
   // connected than process_manager != nullptr
   if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr) {
-    return orbit_base::Future<ErrorMessageOr<void>>{local_symbols_path.error()};
+    return local_symbols_path;
   }
 
-  auto load_symbols = [this, module_path, local_error_msg = local_symbols_path.error().message()](
-                          const ErrorMessageOr<std::filesystem::path>& result)
-      -> orbit_base::Future<ErrorMessageOr<void>> {
-    if (result.has_error()) {
-      return {ErrorMessage{
-          absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
-                          module_path, local_error_msg, result.error().message())}};
-    }
-
-    return LoadSymbols(result.value(), module_path);
-  };
-
-  auto load_symbols_result =
-      LoadModuleOnRemote(module_path).Then(main_thread_executor_, std::move(load_symbols));
-
   auto final_result =
-      UnwrapFuture(load_symbols_result)
-          .Then(main_thread_executor_, [this, module_path](const ErrorMessageOr<void>& result) {
-            modules_currently_loading_.erase(module_path);
-            return result;
-          });
+      LoadModuleOnRemote(module_path)
+          .Then(main_thread_executor_,
+                [this, module_path, local_error_message = local_symbols_path.error().message()](
+                    const ErrorMessageOr<std::filesystem::path>& remote_result)
+                    -> ErrorMessageOr<std::filesystem::path> {
+                  modules_currently_loading_.erase(module_path);
+
+                  // If remote loading fails as well, we combine the error messages.
+                  if (remote_result.has_value()) return remote_result;
+                  return {ErrorMessage{absl::StrFormat(
+                      "Did not find symbols locally or on remote for module \"%s\": %s\n%s",
+                      module_path, local_error_message, remote_result.error().message())}};
+                });
 
   modules_currently_loading_.emplace(module_path, final_result);
   return final_result;
@@ -1287,7 +1301,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
     return outcome::success();
   };
 
-  return LoadModule(module_data)
+  return LoadModuleAndSymbols(module_data)
       .Then(main_thread_executor_, std::move(handle_hooks_and_frame_tracks));
 }
 

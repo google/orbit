@@ -289,10 +289,19 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::vector<ModuleData*>& modules,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map);
-  orbit_base::Future<ErrorMessageOr<void>> LoadModule(const ModuleData* module);
-  orbit_base::Future<ErrorMessageOr<void>> LoadModule(const std::string& module_path,
-                                                      const std::string& build_id);
+
+  // LoadModule retrieves a module file and returns the local file path (potentially from the local
+  // cache). Symbols won't be loaded.
+  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> LoadModule(const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> LoadModule(
+      const std::string& module_path, const std::string& build_id);
   orbit_base::Future<void> LoadModules(absl::Span<const ModuleData* const> modules);
+
+  // LoadModuleAndSymbols is a helper function which first retrieves the module by calling
+  // `LoadModule` and afterwards load the symbols by calling `LoadSymbols`.
+  orbit_base::Future<ErrorMessageOr<void>> LoadModuleAndSymbols(const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<void>> LoadModuleAndSymbols(const std::string& module_path,
+                                                                const std::string& build_id);
 
   // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
   // should not be necessary to have an argument here, since OrbitApp will always only have one
@@ -478,7 +487,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<void>>>
+  absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
       modules_currently_loading_;
 
   StringManager string_manager_;
