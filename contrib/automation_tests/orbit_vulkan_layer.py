@@ -32,7 +32,7 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter="benchmark"),
         Capture(),
         MatchTracks(expected_names=["gfx", "gfx_marker"], allow_additional_tracks=True)]
-    suite = E2ETestSuite(test_name="Track Interaction", test_cases=test_cases)
+    suite = E2ETestSuite(test_name="Vulkan Layer", test_cases=test_cases)
     suite.execute()
 
 
