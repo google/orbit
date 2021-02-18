@@ -327,8 +327,8 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(
   return app;
 }
 
-void OrbitApp::PostInit() {
-  if (IsConnectedToInstance()) {
+void OrbitApp::PostInit(bool is_connected) {
+  if (is_connected) {
     CHECK(process_manager_ != nullptr);
 
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);

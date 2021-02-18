@@ -205,6 +205,13 @@ class OrbitMainWindow : public QMainWindow {
   enum class TargetProcessState { kRunning, kEnded };
 
   TargetProcessState target_process_state_ = TargetProcessState::kRunning;
+
+  // This value indicates whether Orbit (Ui / OrbitQt) is connected to an OrbitService. This can
+  // currently be connection to a Stadia instance (ssh tunnel via ServiceDeployManager) or a
+  // connection to an OrbitService running on the local machine. If Orbit displays a capture saved
+  // to a file, it is not connected and this bool is false. This is also false when the connection
+  // broke.
+  bool is_connected_ = false;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

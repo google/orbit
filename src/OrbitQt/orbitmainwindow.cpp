@@ -178,7 +178,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
 
   std::visit([this](const auto& target) { SetTarget(target); }, target_configuration_);
 
-  app_->PostInit();
+  app_->PostInit(is_connected_);
 
   SaveCurrentTabLayoutAsDefaultInMemory();
 
@@ -486,7 +486,6 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 
   const bool has_data = app_->HasCaptureData();
   const bool has_selection = has_data && app_->HasSampleSelection();
-  const bool is_connected = app_->IsConnectedToInstance();
   CaptureClient::State capture_state = app_->GetCaptureState();
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
   const bool is_target_process_running = target_process_state_ == TargetProcessState::kRunning;
@@ -508,7 +507,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionCaptureOptions->setEnabled(!is_capturing);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
   ui->actionSave_Capture->setEnabled(!is_capturing && has_data);
-  ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
+  ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
 
   hint_frame_->setVisible(!has_data);
@@ -527,13 +526,12 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 void OrbitMainWindow::UpdateProcessConnectionStateDependentWidgets() {
   CaptureClient::State capture_state = app_->GetCaptureState();
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
-  const bool is_connected = app_->IsConnectedToInstance();
   const bool is_target_process_running = target_process_state_ == TargetProcessState::kRunning;
 
   ui->actionToggle_Capture->setEnabled(
       capture_state == CaptureClient::State::kStarted ||
       (capture_state == CaptureClient::State::kStopped && is_target_process_running));
-  ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected);
+  ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
 }
 
 void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
@@ -1139,6 +1137,9 @@ void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
 
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
+  is_connected_ = false;
+  UpdateProcessConnectionStateDependentWidgets();
+
   QString error_message = QString("The connection to instance \"%1\" failed with error message: %2")
                               .arg(target.GetConnection()->GetInstance().display_name)
                               .arg(QString::fromStdString(error.message()));
@@ -1177,6 +1178,8 @@ void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
     QMetaObject::invokeMethod(
         this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
   });
+
+  is_connected_ = true;
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
@@ -1196,6 +1199,8 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
     QMetaObject::invokeMethod(
         this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
   });
+
+  is_connected_ = true;
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
