@@ -87,7 +87,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       MainThreadExecutor* main_thread_executor, const orbit_base::CrashHandler* crash_handler,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
-  void PostInit();
+  void PostInit(bool is_connected);
   void MainTick();
 
   std::string GetCaptureTime();
@@ -181,10 +181,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   // This needs to be called from the main thread.
   [[nodiscard]] bool IsCaptureConnected(const CaptureData& capture) const;
-
-  [[nodiscard]] bool IsConnectedToInstance() const {
-    return grpc_channel_ != nullptr && grpc_channel_->GetState(false) == GRPC_CHANNEL_READY;
-  }
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
