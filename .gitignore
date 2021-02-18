@@ -7,3 +7,6 @@ corpora/
 /.vscode/
 __pycache__
 /conan.log
+
+# Ignore generated Python protobuffer code
+*_pb2.py
