@@ -303,6 +303,7 @@ message ClientCaptureEvent {
     // it is going to go away in the future when we switch to
     // frame-pointer based unwinding.
     AddressInfo address_info = 16;
+    ApiEvent api_event = 24;
     CallstackSample callstack_sample = 1;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;

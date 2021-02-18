@@ -27,13 +27,14 @@ class LockFreeApiEventProducer
   ~LockFreeApiEventProducer() { ShutdownAndWait(); }
 
  protected:
-  [[nodiscard]] orbit_grpc_protos::CaptureEvent TranslateIntermediateEvent(
-      orbit_api::ApiEvent&& intermediate_event) override {
-    orbit_grpc_protos::ApiEvent api_event;
-    api_event.set_num_raw_events(1);
-    api_event.set_raw_data(&intermediate_event, sizeof(orbit_api::ApiEvent));
-    orbit_grpc_protos::CaptureEvent capture_event;
-    *capture_event.mutable_api_event() = std::move(api_event);
+  [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
+      orbit_api::ApiEvent&& intermediate_event, google::protobuf::Arena* arena) override {
+    auto* capture_event =
+        google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+    auto* api_event = google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ApiEvent>(arena);
+    api_event->set_num_raw_events(1);
+    api_event->set_raw_data(&intermediate_event, sizeof(orbit_api::ApiEvent));
+    *capture_event->mutable_api_event() = std::move(*api_event);
     return capture_event;
   }
 };
@@ -50,13 +51,13 @@ class LockFreeApiEventBulkProducer
   ~LockFreeApiEventBulkProducer() { ShutdownAndWait(); }
 
  protected:
-  [[nodiscard]] orbit_grpc_protos::CaptureEvent TranslateIntermediateEvents(
+  [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent TranslateIntermediateEvents(
       orbit_api::ApiEvent* intermediate_events, size_t size) override {
     orbit_grpc_protos::ApiEvent api_event;
     api_event.set_num_raw_events(size);
     api_event.set_raw_data(intermediate_events, size * sizeof(orbit_api::ApiEvent));
 
-    orbit_grpc_protos::CaptureEvent capture_event;
+    orbit_grpc_protos::ProducerCaptureEvent capture_event;
     *capture_event.mutable_api_event() = std::move(api_event);
     return capture_event;
   }

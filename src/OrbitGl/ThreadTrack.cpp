@@ -87,23 +87,22 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
          box_height_ * static_cast<float>(depth + 1);
 }
 
-void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode,
-                                   float z_offset) {
+void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                   PickingMode picking_mode, float z_offset) {
   UpdatePositionOfSubtracks();
 
   if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    thread_state_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
   if (!event_track_->IsEmpty()) {
-    event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    event_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
   if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->UpdatePrimitives(min_tick, max_tick, picking_mode, z_offset);
+    tracepoint_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
 
   UpdateBoxHeight();
 
-  Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
 
   float world_start_x = canvas->GetWorldTopLeftX();
@@ -137,8 +136,8 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
       float world_timer_y = GetYFromDepth(depth - 1);
 
       for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
-        ScopeNode* node = it->second;
-        TextBox& text_box = *node->GetTextBox();
+        ScopeNode<TextBox>* node = it->second;
+        TextBox& text_box = *node->GetScope();
 
         const TimerInfo& timer_info = text_box.GetTimerInfo();
         // if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
@@ -165,12 +164,12 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
         Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
         float z = GlCanvas::kZValueBox + z_offset;
         const Color kHighlightColor(100, 181, 246, 255);
-        Color color = is_highlighted ? kHighlightColor : GetTimerColor(timer_info, is_selected);
+        Color color = GetTimerColor(timer_info, is_selected, is_highlighted);
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
         auto user_data = std::make_unique<PickingUserData>(
-            &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+            &text_box, [&](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
 
         if (is_visible_width) {
           if (!is_collapsed) {
@@ -234,12 +233,12 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
           Vec2 size(world_timer_width, GetTextBoxHeight(timer_info));
           float z = GlCanvas::kZValueBox + z_offset;
           const Color kHighlightColor(100, 181, 246, 255);
-          Color color = is_highlighted ? kHighlightColor : GetTimerColor(timer_info, is_selected);
+          Color color = GetTimerColor(timer_info, is_selected, is_highlighted);
           text_box.SetPos(pos);
           text_box.SetSize(size);
 
           auto user_data = std::make_unique<PickingUserData>(
-              &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
+              &text_box, [&](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
 
           if (is_visible_width) {
             if (!is_collapsed) {
@@ -479,23 +478,6 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
 void ThreadTrack::OnPick(int x, int y) {
   Track::OnPick(x, y);
   app_->set_selected_thread_id(thread_id_);
-}
-
-void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                   PickingMode picking_mode, float z_offset) {
-  UpdatePositionOfSubtracks();
-
-  if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-  if (!event_bar_->IsEmpty()) {
-    event_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-  if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-
-  TimerTrack::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 }
 
 std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {

@@ -117,7 +117,6 @@ target_sources(
           TimerChain.cpp
           TimerInfosIterator.cpp
           TimerTrack.cpp
-          ScopeTree.cpp
           ThreadBar.cpp
           ThreadStateBar.cpp
           ThreadTrack.cpp

@@ -14,6 +14,7 @@ namespace orbit_service {
 namespace {
 
 using orbit_grpc_protos::AddressInfo;
+using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::ClientCaptureEvent;
@@ -89,7 +90,11 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadName(ThreadName* thread_name);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
+<<<<<<< HEAD
   void ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage);
+=======
+  void ProcessApiEvent(ApiEvent* api_event);
+>>>>>>> a5c36ef0 (Rebase and adapt to latest changes)
 
   void SendInternedStringEvent(uint64_t key, std::string value);
 
@@ -315,6 +320,11 @@ void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
 void ProducerEventProcessorImpl::ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage) {
   ClientCaptureEvent event;
   *event.mutable_system_memory_usage() = std::move(*system_memory_usage);
+}
+
+void ProducerEventProcessorImpl::ProcessApiEvent(ApiEvent* api_event) {
+  ClientCaptureEvent event;
+  *event.mutable_api_event() = std::move(*api_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -365,6 +375,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kSystemMemoryUsage:
       ProcessSystemMemoryUsage(event.mutable_system_memory_usage());
       break;
+    case ProducerCaptureEvent::kApiEvent: {
+      ProcessApiEvent(event.mutable_api_event());
+      break;
+    }
     case ProducerCaptureEvent::EVENT_NOT_SET:
       UNREACHABLE();
   }

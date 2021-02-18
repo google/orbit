@@ -47,6 +47,7 @@ class ScopeNode {
   [[nodiscard]] size_t CountNodesInSubtree() const;
   [[nodiscard]] std::set<const ScopeNode*> GetAllNodesInSubtree() const;
   void SetDepth(uint32_t depth) { depth_ = depth; }
+  ScopeT* GetScope() { return scope_; }
 
  private:
   [[nodiscard]] ScopeNode* FindDeepestParentForNode(const ScopeNode* node);
@@ -77,15 +78,6 @@ class ScopeTree {
   [[nodiscard]] uint32_t Height() const { return root_->Height(); }
   [[nodiscard]] const std::map<uint32_t, std::map<uint64_t /*start time*/, ScopeNodeT*>>&
   GetOrderedNodesByDepth() const {
-    return ordered_nodes_by_depth_;
-  }
-
-  [[nodiscard]] const ScopeNode* Root() const { return root_; }
-  [[nodiscard]] size_t Size() const { return size_; }
-  [[nodiscard]] size_t CountOrderedNodes() const;
-  [[nodiscard]] uint32_t Height() const { return root_->Height(); }
-  [[nodiscard]] const std::map<uint32_t, std::map<uint64_t, ScopeNode*>>& GetOrderedNodesByDepth()
-      const {
     return ordered_nodes_by_depth_;
   }
 

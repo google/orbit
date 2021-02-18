@@ -79,7 +79,7 @@ class LockFreeBufferBulkedCaptureEventProducer : public CaptureEventProducer {
 
   // Subclasses need to implement this method to convert an IntermediateEventT enqueued
   // in the internal lock-free buffer to a CaptureEvent to be sent to ProducerSideService.
-  [[nodiscard]] virtual orbit_grpc_protos::CaptureEvent TranslateIntermediateEvents(
+  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent TranslateIntermediateEvents(
       IntermediateEventT* intermediate_events, size_t size) = 0;
 
  private:
@@ -109,7 +109,7 @@ class LockFreeBufferBulkedCaptureEventProducer : public CaptureEventProducer {
           auto* capture_events =
               send_request.mutable_buffered_capture_events()->mutable_capture_events();
 
-          orbit_grpc_protos::CaptureEvent* event = capture_events->Add();
+          orbit_grpc_protos::ProducerCaptureEvent* event = capture_events->Add();
           *event = TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count);
 
           if (!SendCaptureEvents(send_request)) {

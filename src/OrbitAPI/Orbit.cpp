@@ -16,10 +16,12 @@ constexpr uint64_t kDataZero = 0;
 static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
                             uint64_t data = kDataZero, orbit_api_color color = kOrbitColorAuto) {
   static orbit_api::LockFreeApiEventBulkProducer producer;
+  // static orbit_api::LockFreeApiEventProducer producer;
   static pid_t pid = orbit_base::GetCurrentProcessId();
   thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
 
-  orbit_api::ApiEvent api_event(pid, tid, MonotonicTimestampNs(), type, name, data, color);
+  orbit_api::ApiEvent api_event(pid, tid, orbit_base::CaptureTimestampNs(), type, name, data,
+                                color);
   producer.EnqueueIntermediateEvent(api_event);
 }
 

@@ -80,20 +80,6 @@ void ValidateTree(const ScopeTree<TestScope>& tree) {
   EXPECT_EQ(tree.Size(), tree.Root()->GetAllNodesInSubtree().size());
 }
 
-void ValidateTree(const ScopeTree& tree) {
-  // The output of tree.Print() is visible by running ctest with --verbose.
-  tree.Print();
-
-  // Check that recursively counting nodes produces the same result as Size().
-  EXPECT_EQ(tree.Size(), tree.Root()->CountNodesInSubtree());
-
-  // Check that counting nodes from the ScopeTree's depth maps produces the same result as Size().
-  EXPECT_EQ(tree.Size(), tree.CountOrderedNodes());
-
-  // Check that the tree does not contain duplicate nodes by counting unique nodes.
-  EXPECT_EQ(tree.Size(), tree.Root()->GetAllNodesInSubtree().size());
-}
-
 TEST(ScopeTree, TreeCreation) {
   ScopeTree<TestScope> tree;
   EXPECT_EQ(tree.Size(), 1);
