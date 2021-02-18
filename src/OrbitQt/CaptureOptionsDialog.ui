@@ -9,16 +9,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>440</width>
+    <width>480</width>
     <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Capture Options</string>
-  </property>
-  <property name="toolTip">
-   <string>Limits the maximal depth of Vulkan debug markers per command buffer to the given value.
-Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -46,6 +42,9 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
    </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>12</number>
+     </property>
      <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
@@ -63,28 +62,12 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
       </widget>
      </item>
      <item>
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>6</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="toolTip">
         <string>This requires Orbit's Vulkan layer to be loaded by the target process.</string>
        </property>
        <property name="title">
-        <string>Vulkan layer</string>
+        <string>Vulkan layer (requires Orbit's Vulkan layer to be loaded by the target)</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -101,26 +84,17 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
             <property name="enabled">
              <bool>false</bool>
             </property>
+            <property name="toolTip">
+             <string>Limits the maximum depth of Vulkan debug markers per command buffer to the given value.
+Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</string>
+            </property>
             <property name="inputMethodHints">
              <set>Qt::ImhDigitsOnly</set>
             </property>
             <property name="text">
-             <string>0</string>
+             <string>3</string>
             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>4</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </item>
@@ -131,12 +105,6 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
        </property>
       </spacer>
      </item>
