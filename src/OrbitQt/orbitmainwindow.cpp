@@ -512,6 +512,10 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 
   hint_frame_->setVisible(!has_data);
 
+  UpdateCaptureToolbarIconOpacity();
+}
+
+void OrbitMainWindow::UpdateCaptureToolbarIconOpacity() {
   // Gray out disabled actions on the capture toolbar.
   for (QAction* action : ui->capture_toolbar->actions()) {
     // setGraphicsEffect(effect) transfers the ownership of effect to the QWidget. If the effect is
@@ -532,6 +536,8 @@ void OrbitMainWindow::UpdateProcessConnectionStateDependentWidgets() {
       capture_state == CaptureClient::State::kStarted ||
       (capture_state == CaptureClient::State::kStopped && is_target_process_running));
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
+
+  UpdateCaptureToolbarIconOpacity();
 }
 
 void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
@@ -1138,6 +1144,7 @@ void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
   is_connected_ = false;
+  target_process_state_ = TargetProcessState::kEnded;
   UpdateProcessConnectionStateDependentWidgets();
 
   QString error_message = QString("The connection to instance \"%1\" failed with error message: %2")

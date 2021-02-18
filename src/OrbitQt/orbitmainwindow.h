@@ -171,6 +171,8 @@ class OrbitMainWindow : public QMainWindow {
 
   void OnStadiaConnectionError(std::error_code error);
 
+  void UpdateCaptureToolbarIconOpacity();
+
  private:
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
