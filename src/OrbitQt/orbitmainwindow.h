@@ -204,7 +204,7 @@ class OrbitMainWindow : public QMainWindow {
 
   enum class TargetProcessState { kRunning, kEnded };
 
-  TargetProcessState target_process_state_ = TargetProcessState::kRunning;
+  TargetProcessState target_process_state_ = TargetProcessState::kEnded;
 
   // This value indicates whether Orbit (Ui / OrbitQt) is connected to an OrbitService. This can
   // currently be connection to a Stadia instance (ssh tunnel via ServiceDeployManager) or a
