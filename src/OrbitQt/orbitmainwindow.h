@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -167,6 +168,8 @@ class OrbitMainWindow : public QMainWindow {
 
   [[nodiscard]] bool ConfirmExit();
   void Exit(int return_code);
+
+  void OnStadiaConnectionError(std::error_code error);
 
  private:
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;

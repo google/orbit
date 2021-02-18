@@ -54,6 +54,7 @@
 #include <initializer_list>
 #include <memory>
 #include <optional>
+#include <system_error>
 #include <utility>
 #include <variant>
 
@@ -128,6 +129,7 @@ const QString kTargetLabelDefaultStyleSheet = "#TargetLabel { color: %1; }";
 const QString kTargetLabelColorConnected = "#66BB6A";
 const QString kTargetLabelColorFileTarget = "#BDBDBD";
 const QString kTargetLabelColorTargetProcessDied = "orange";
+const QString kTargetLabelColorTargetDisconnected = "red";
 
 void OpenDisassembly(const std::string& assembly, const DisassemblyReport& report) {
   orbit_code_viewer::Dialog dialog{};
@@ -1131,6 +1133,23 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
   Exit(kQuitOrbitReturnCode);
 }
 
+void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
+  CHECK(std::holds_alternative<orbit_qt::StadiaTarget>(target_configuration_));
+  const orbit_qt::StadiaTarget& target = std::get<orbit_qt::StadiaTarget>(target_configuration_);
+
+  target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
+
+  QString error_message = QString("The connection to instance \"%1\" failed with error message: %2")
+                              .arg(target.GetConnection()->GetInstance().display_name)
+                              .arg(QString::fromStdString(error.message()));
+
+  target_label_->setStyleSheet(
+      kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorTargetDisconnected));
+  target_label_->setToolTip(error_message);
+
+  QMessageBox::critical(this, "Connection error", error_message, QMessageBox::Ok);
+}
+
 void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   const orbit_qt::StadiaConnection* connection = target.GetConnection();
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
@@ -1141,16 +1160,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   });
 
   QObject::connect(service_deploy_manager, &ServiceDeployManager::socketErrorOccurred, this,
-                   [this, instance_name = target.GetConnection()->GetInstance().display_name](
-                       std::error_code error) {
-                     QMessageBox::critical(
-                         this, "Connection error",
-                         QString("The connection to instance \"%1\" failed with error message: %2")
-                             .arg(instance_name)
-                             .arg(QString::fromStdString(error.message())),
-                         QMessageBox::Ok);
-                     QApplication::exit(kEndSessionReturnCode);
-                   });
+                   &OrbitMainWindow::OnStadiaConnectionError, Qt::UniqueConnection);
 
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
