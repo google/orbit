@@ -41,7 +41,8 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
         include/OrbitBase/Tracing.h
-        include/OrbitBase/UniqueResource.h)
+        include/OrbitBase/UniqueResource.h
+        include/OrbitBase/WriteStringToFile.h)
 
 target_sources(OrbitBase PRIVATE
         ExecutablePath.cpp
@@ -51,7 +52,8 @@ target_sources(OrbitBase PRIVATE
         ReadFileToString.cpp
         SafeStrerror.cpp
         ThreadPool.cpp
-        Tracing.cpp)
+        Tracing.cpp
+        WriteStringToFile.cpp)
 
 if (WIN32)
 target_sources(OrbitBase PRIVATE
@@ -92,6 +94,7 @@ target_sources(OrbitBaseTests PRIVATE
         ThreadUtilsTest.cpp
         TracingTest.cpp
         UniqueResourceTest.cpp
+        WriteStringToFileTest.cpp
 )
 
 if (NOT WIN32)
