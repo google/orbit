@@ -25,6 +25,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/ExecuteCommand.h
+        include/OrbitBase/File.h
         include/OrbitBase/Future.h
         include/OrbitBase/FutureHelpers.h
         include/OrbitBase/JoinFutures.h
@@ -46,6 +47,7 @@ target_sources(OrbitBase PRIVATE
 
 target_sources(OrbitBase PRIVATE
         ExecutablePath.cpp
+        File.cpp
         JoinFutures.cpp
         Logging.cpp
         LoggingUtils.cpp

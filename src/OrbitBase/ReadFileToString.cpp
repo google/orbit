@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "OrbitBase/ReadFileToString.h"
+
 #include <absl/strings/str_format.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -9,34 +11,19 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#if defined(__linux)
-#include <unistd.h>
-#elif defined(_WIN32)
-#include <io.h>
-// Windows does not have TEMP_FAILURE_RETRY - define a shortcut
-#define TEMP_FAILURE_RETRY(expression) (expression)
-#endif
-
-#include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "OrbitBase/UniqueResource.h"
 
 namespace orbit_base {
 
 ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) noexcept {
-#if defined(__linux)
-  constexpr int open_flags = O_RDONLY | O_CLOEXEC;
-#elif defined(_WIN32)
-  constexpr int open_flags = O_RDONLY | O_BINARY;
-#endif  // defined(__linux)
-  auto fd =
-      unique_resource(TEMP_FAILURE_RETRY(open(file_name.string().c_str(), open_flags)), [](int fd) {
-        if (fd != -1) close(fd);
-      });
-  if (fd == -1) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to read file \"%s\": %s", file_name.string(), SafeStrerror(errno)));
+  ErrorMessageOr<unique_fd> open_result = OpenFileForReading(file_name);
+  if (!open_result) {
+    return open_result.error();
   }
+
+  const unique_fd& fd = open_result.value();
 
   std::string result;
 
