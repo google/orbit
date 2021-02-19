@@ -124,7 +124,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void ToggleDrawHelp();
   void ToggleCapture();
-  void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView();
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
@@ -481,7 +480,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
-  std::map<std::string, std::string> file_mapping_;
 
   absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<void>>>
       modules_currently_loading_;

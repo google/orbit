@@ -324,8 +324,6 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(
   oqpi::default_helpers::start_default_scheduler();
 #endif
 
-  app->LoadFileMapping();
-
   return app;
 }
 
@@ -376,53 +374,6 @@ void OrbitApp::PostInit() {
       FireRefreshCallbacks(DataViewType::kTracepoints);
     });
   });
-}
-
-void OrbitApp::LoadFileMapping() {
-  file_mapping_.clear();
-  std::filesystem::path file_name = Path::GetFileMappingFileName();
-  if (!std::filesystem::exists(file_name)) {
-    std::ofstream outfile(file_name);
-    outfile << "//-------------------" << std::endl
-            << "// Orbit File Mapping" << std::endl
-            << "//-------------------" << std::endl
-            << R"(// If the file path in the pdb is "D:\NoAccess\File.cpp")" << std::endl
-            << R"(// and File.cpp is locally available in "C:\Available\")" << std::endl
-            << "// then enter a file mapping on its own line like so:" << std::endl
-            << R"(// "D:\NoAccess\File.cpp" "C:\Available\")" << std::endl
-            << std::endl
-            << R"("D:\NoAccess" "C:\Available")" << std::endl;
-
-    outfile.close();
-  }
-
-  std::fstream infile(file_name);
-  if (!infile.fail()) {
-    std::string line;
-    while (std::getline(infile, line)) {
-      if (absl::StartsWith(line, "//")) continue;
-
-      bool contains_quotes = absl::StrContains(line, "\"");
-
-      std::vector<std::string> tokens = absl::StrSplit(line, ' ');
-
-      if (tokens.size() == 2 && !contains_quotes) {
-        file_mapping_[ToLower(tokens[0])] = ToLower(tokens[1]);
-      } else {
-        std::vector<std::string> valid_tokens;
-        std::vector<std::string> subtokens = absl::StrSplit(line, '"');
-        for (const std::string& subtoken : subtokens) {
-          if (!IsBlank(subtoken)) {
-            valid_tokens.push_back(subtoken);
-          }
-        }
-
-        if (valid_tokens.size() > 1) {
-          file_mapping_[ToLower(valid_tokens[0])] = ToLower(valid_tokens[1]);
-        }
-      }
-    }
-  }
 }
 
 static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
