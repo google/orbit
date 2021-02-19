@@ -19,17 +19,25 @@ inline const QString testing_example =
   OrbitService o;
   QSyntaxHighlighter q;
   ORBIT_SCOPE; // no lowercase regex
-  x;
-  kTreeSize == 3;
-  _Tree_;
+  x = _Tree_;
+  bool P = (kTreeSize == 3);
+
+  // Class members
+  Track* track_;
+  int __int__ = 3;
+  m_PascalCase = 5;
+  Track::SortTracks();
+  class TrackManager {};
 
   // Function unit tests
-  int my_function(void)
+  int my_function(void);
+  int MyFunction(void);
   bool b = a.insert(3);
   void AddEvent();
   char _my_underscore_func();
-  int CaptureServiceImpl::Capture() // Function from other class
-  void QSyntaxHighlighter::Play
+  int CaptureServiceImpl::Capture(); // Function from other class
+  a = absl::Milliseconds(20); // method that we don't have to highlight
+  int QSyntaxHighlighter::PlayInteger;
   CHECK(false); // no lowercase regex
 
   // Preprocessor + <> unit tests
