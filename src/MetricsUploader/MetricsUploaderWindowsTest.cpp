@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_set.h"
@@ -14,53 +16,51 @@ namespace orbit_metrics_uploader {
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSendEvent) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutSendEvent");
-  EXPECT_EQ(metrics_uploader.has_value(), false);
+  EXPECT_FALSE(metrics_uploader.has_value());
 }
 
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSetup) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutSetup");
-  EXPECT_EQ(metrics_uploader.has_value(), false);
+  EXPECT_FALSE(metrics_uploader.has_value());
 }
 
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutShutdown) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutShutdown");
-  EXPECT_EQ(metrics_uploader.has_value(), false);
+  EXPECT_FALSE(metrics_uploader.has_value());
 }
 
 TEST(MetricsUploader, SetupMetricsUploaderWithError) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderSetupWithErrorClient");
-  EXPECT_EQ(metrics_uploader.has_value(), false);
+  EXPECT_FALSE(metrics_uploader.has_value());
 }
 
 TEST(MetricsUploader, SendLogEvent) {
   auto metrics_uploader = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
-  EXPECT_EQ(metrics_uploader.has_value(), true);
-  bool result = metrics_uploader.value().SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
-  EXPECT_EQ(result, false);
-  result = metrics_uploader.value().SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
-  EXPECT_EQ(result, true);
-  result = metrics_uploader.value().SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
-      std::chrono::milliseconds(100));
-  EXPECT_EQ(result, true);
+  ASSERT_TRUE(metrics_uploader.has_value());
+  bool result =
+      metrics_uploader.value().SendLogEvent(OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
+  EXPECT_FALSE(result);
+  result = metrics_uploader.value().SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
+  EXPECT_TRUE(result);
+  result = metrics_uploader.value().SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
+                                                 std::chrono::milliseconds(100));
+  EXPECT_TRUE(result);
 }
 
 TEST(MetricsUploader, CreateTwoMetricsUploaders) {
   auto metrics_uploader1 = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
-  EXPECT_EQ(metrics_uploader1.has_value(), true);
+  EXPECT_TRUE(metrics_uploader1.has_value());
   auto metrics_uploader2 = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
-  EXPECT_EQ(metrics_uploader2.has_value(), false);
+  EXPECT_FALSE(metrics_uploader2.has_value());
 }
 
 TEST(MetricsUploader, CreateMetricsUploaderFromNonexistentClient) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("NonexistentMetricsUploaderClient");
-  EXPECT_EQ(metrics_uploader.has_value(), false);
+  EXPECT_FALSE(metrics_uploader.has_value());
 }
 
 TEST(MetricsUploader, GenerateUUID) {
