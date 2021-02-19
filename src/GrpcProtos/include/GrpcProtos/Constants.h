@@ -10,6 +10,6 @@
 namespace orbit_grpc_protos {
 constexpr uint64_t kInvalidInternId = 0;
 constexpr uint64_t kInvalidFunctionId = 0;
-}
+}  // namespace orbit_grpc_protos
 
 #endif  // GRPC_PROTOS_CONSTANTS_H_

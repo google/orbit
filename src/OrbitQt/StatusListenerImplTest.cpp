@@ -12,7 +12,6 @@
 #include "StatusListenerImpl.h"
 #include "gtest/gtest.h"
 
-
 TEST(StatusListenerImpl, ShowAndClearOneMessage) {
   auto status_bar = std::make_unique<QStatusBar>(nullptr);
   auto status_listener = StatusListenerImpl::Create(status_bar.get());
