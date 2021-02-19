@@ -57,7 +57,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    bool collect_thread_state, bool enable_introspection) {
+    bool collect_thread_state, bool enable_introspection,
+    uint64_t max_local_marker_depth_per_command_buffer) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return {
@@ -77,10 +78,11 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
       [this, process = std::move(process_copy), &module_manager,
        selected_functions = std::move(selected_functions), selected_tracepoints,
        frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
-       enable_introspection]() mutable {
+       enable_introspection, max_local_marker_depth_per_command_buffer]() mutable {
         return CaptureSync(std::move(process), module_manager, std::move(selected_functions),
                            std::move(selected_tracepoints), std::move(frame_track_function_ids),
-                           collect_thread_state, enable_introspection);
+                           collect_thread_state, enable_introspection,
+                           max_local_marker_depth_per_command_buffer);
       });
 
   return capture_result;
@@ -90,7 +92,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    bool collect_thread_state, bool enable_introspection) {
+    bool collect_thread_state, bool enable_introspection,
+    uint64_t max_local_marker_depth_per_command_buffer) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -120,6 +123,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   capture_options->set_trace_thread_state(collect_thread_state);
   capture_options->set_trace_gpu_driver(true);
+  capture_options->set_max_local_marker_depth_per_command_buffer(
+      max_local_marker_depth_per_command_buffer);
   for (const auto& [function_id, function] : selected_functions) {
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();

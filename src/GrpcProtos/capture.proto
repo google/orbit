@@ -46,6 +46,8 @@ message CaptureOptions {
   repeated TracepointInfo instrumented_tracepoint = 7;
 
   bool enable_introspection = 9;
+
+  uint64 max_local_marker_depth_per_command_buffer = 10;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we

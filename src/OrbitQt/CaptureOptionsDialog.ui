@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>200</height>
+    <width>480</width>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,13 +23,82 @@
    <property name="verticalSpacing">
     <number>9</number>
    </property>
+   <item row="2" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="Line" name="line">
+     <property name="styleSheet">
+      <string notr="true">background: #353535</string>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>12</number>
+     </property>
      <item>
-      <widget class="QCheckBox" name="threadStateCheckBox">
-       <property name="text">
-        <string>Collect thread states</string>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>General</string>
        </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="threadStateCheckBox">
+          <property name="text">
+           <string>Collect thread states</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="toolTip">
+        <string>This requires Orbit's Vulkan layer to be loaded by the target process.</string>
+       </property>
+       <property name="title">
+        <string>Vulkan layer (requires Orbit's Vulkan layer to be loaded by the target)</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QCheckBox" name="localMarkerDepthCheckBox">
+            <property name="text">
+             <string>Limit local depth of markers per command buffer to:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="localMarkerDepthLineEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>Limits the maximum depth of Vulkan debug markers per command buffer to the given value.
+Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</string>
+            </property>
+            <property name="inputMethodHints">
+             <set>Qt::ImhDigitsOnly</set>
+            </property>
+            <property name="text">
+             <string>3</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>
@@ -48,25 +117,44 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
-    <widget class="Line" name="line">
-     <property name="styleSheet">
-      <string notr="true">background: #353535</string>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>localMarkerDepthCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>localMarkerDepthLineEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>193</x>
+     <y>133</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>390</x>
+     <y>133</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>localMarkerDepthLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>CaptureOptionsDialog</receiver>
+   <slot>ResetLocalMarkerDepthLineEdit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>390</x>
+     <y>133</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>219</x>
+     <y>129</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>ResetLocalMarkerDepthLineEdit()</slot>
+ </slots>
 </ui>
