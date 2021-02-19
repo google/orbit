@@ -7,13 +7,12 @@
 #include <absl/time/clock.h>
 
 #include <chrono>
-#include <cstdio>
-#include <fstream>
 #include <string>
 #include <system_error>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/WriteStringToFile.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -22,9 +21,10 @@ namespace fs = std::filesystem;
 namespace {
 
 // Create a file at path.
-void Touch(fs::path p) {
-  std::ofstream ofs(p);
-  ofs << "\n";
+void Touch(const fs::path& path) {
+  if (ErrorMessageOr<void> result = orbit_base::WriteStringToFile(path, "\n"); result.has_error()) {
+    ERROR("%s", result.error().message());
+  }
 }
 
 }  // namespace
