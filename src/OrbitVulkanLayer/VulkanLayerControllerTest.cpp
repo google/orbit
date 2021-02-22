@@ -170,12 +170,19 @@ TEST_F(VulkanLayerControllerTest, CanEnumerateTheLayersInstanceLayerProperties) 
   EXPECT_EQ(actual_properties.implementationVersion, VulkanLayerControllerImpl::kLayerImplVersion);
 }
 
-TEST_F(VulkanLayerControllerTest, TheLayerHasNoInstanceExtensionProperties) {
+TEST_F(VulkanLayerControllerTest, CanEnumerateInstanceExtensionPropertiesForThisLayer) {
   uint32_t actual_property_count = 123;
   VkResult result = controller_.OnEnumerateInstanceExtensionProperties(
       VulkanLayerControllerImpl::kLayerName, &actual_property_count, nullptr);
   EXPECT_EQ(result, VK_SUCCESS);
-  EXPECT_EQ(actual_property_count, 0);
+  ASSERT_EQ(actual_property_count, 2);
+  std::array<VkExtensionProperties, 2> actual_properties = {};
+  result = controller_.OnEnumerateInstanceExtensionProperties(
+      VulkanLayerControllerImpl::kLayerName, &actual_property_count, actual_properties.data());
+  EXPECT_EQ(result, VK_SUCCESS);
+  EXPECT_THAT(actual_properties,
+              UnorderedElementsAreArray({VkExtensionPropertiesAreEqual(kDebugUtilsExtension),
+                                         VkExtensionPropertiesAreEqual(kHostQueryResetExtension)}));
 }
 
 TEST_F(VulkanLayerControllerTest, ErrorOnEnumerateInstanceExtensionPropertiesForDifferentLayer) {
@@ -198,32 +205,26 @@ TEST_F(VulkanLayerControllerTest, CanEnumerateTheLayersExclusiveDeviceExtensionP
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, VulkanLayerControllerImpl::kLayerName, &actual_property_count, nullptr);
   EXPECT_EQ(result, VK_SUCCESS);
-  ASSERT_EQ(actual_property_count, 3);
-  std::array<VkExtensionProperties, 3> actual_properties = {};
+  ASSERT_EQ(actual_property_count, 1);
+  std::array<VkExtensionProperties, 1> actual_properties = {};
   result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, VulkanLayerControllerImpl::kLayerName, &actual_property_count,
       actual_properties.data());
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_THAT(actual_properties,
-              UnorderedElementsAreArray({VkExtensionPropertiesAreEqual(kDebugMarkerExtension),
-                                         VkExtensionPropertiesAreEqual(kDebugUtilsExtension),
-                                         VkExtensionPropertiesAreEqual(kHostQueryResetExtension)}));
+              UnorderedElementsAreArray({VkExtensionPropertiesAreEqual(kDebugMarkerExtension)}));
 }
 
 TEST_F(VulkanLayerControllerTest,
        CanEnumerateASubsetOfTheLayersExclusiveDeviceExtensionProperties) {
   VkPhysicalDevice physical_device = {};
-  uint32_t actual_property_count = 2;
-  std::array<VkExtensionProperties, 2> actual_properties = {};
+  uint32_t actual_property_count = 0;
+  std::array<VkExtensionProperties, 1> actual_properties = {};
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, VulkanLayerControllerImpl::kLayerName, &actual_property_count,
       actual_properties.data());
   EXPECT_EQ(result, VK_INCOMPLETE);
-  ASSERT_EQ(actual_property_count, 2);
-  EXPECT_THAT(actual_properties,
-              IsSubsetOf({VkExtensionPropertiesAreEqual(kDebugMarkerExtension),
-                          VkExtensionPropertiesAreEqual(kDebugUtilsExtension),
-                          VkExtensionPropertiesAreEqual(kHostQueryResetExtension)}));
+  ASSERT_EQ(actual_property_count, 0);
 }
 
 TEST_F(VulkanLayerControllerTest, WillForwardCallOnEnumerateOtherLayersDeviceExtensionProperties) {
@@ -279,18 +280,17 @@ TEST_F(VulkanLayerControllerTest,
       physical_device, nullptr, &actual_property_count, nullptr);
 
   EXPECT_EQ(result, VK_SUCCESS);
-  ASSERT_EQ(actual_property_count, 5);
+  ASSERT_EQ(actual_property_count, 3);
 
-  std::array<VkExtensionProperties, 5> actual_properties = {};
+  std::array<VkExtensionProperties, 3> actual_properties = {};
   result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, nullptr, &actual_property_count, actual_properties.data());
   EXPECT_EQ(result, VK_SUCCESS);
-  EXPECT_THAT(actual_properties,
-              UnorderedElementsAreArray({VkExtensionPropertiesAreEqual(kFakeExtension1),
-                                         VkExtensionPropertiesAreEqual(kFakeExtension2),
-                                         VkExtensionPropertiesAreEqual(kDebugMarkerExtension),
-                                         VkExtensionPropertiesAreEqual(kDebugUtilsExtension),
-                                         VkExtensionPropertiesAreEqual(kHostQueryResetExtension)}));
+  EXPECT_THAT(actual_properties, UnorderedElementsAreArray({
+                                     VkExtensionPropertiesAreEqual(kFakeExtension1),
+                                     VkExtensionPropertiesAreEqual(kFakeExtension2),
+                                     VkExtensionPropertiesAreEqual(kDebugMarkerExtension),
+                                 }));
 }
 
 TEST_F(VulkanLayerControllerTest,
@@ -300,17 +300,15 @@ TEST_F(VulkanLayerControllerTest,
       .WillRepeatedly(Return(kFakeEnumerateDeviceExtensionPropertiesFunction));
   VkPhysicalDevice physical_device = {};
 
-  std::array<VkExtensionProperties, 3> actual_properties = {};
-  uint32_t stripped_property_count = 3;
+  std::array<VkExtensionProperties, 2> actual_properties = {};
+  uint32_t stripped_property_count = 2;
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, nullptr, &stripped_property_count, actual_properties.data());
   EXPECT_EQ(result, VK_INCOMPLETE);
   EXPECT_THAT(actual_properties,
               IsSubsetOf({VkExtensionPropertiesAreEqual(kFakeExtension1),
                           VkExtensionPropertiesAreEqual(kFakeExtension2),
-                          VkExtensionPropertiesAreEqual(kDebugMarkerExtension),
-                          VkExtensionPropertiesAreEqual(kDebugUtilsExtension),
-                          VkExtensionPropertiesAreEqual(kHostQueryResetExtension)}));
+                          VkExtensionPropertiesAreEqual(kDebugMarkerExtension)}));
 }
 
 // ----------------------------------------------------------------------------

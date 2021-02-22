@@ -19,11 +19,39 @@ void DispatchTable::CreateInstanceDispatchTable(
   dispatch_table.GetPhysicalDeviceProperties = absl::bit_cast<PFN_vkGetPhysicalDeviceProperties>(
       next_get_instance_proc_addr_function(instance, "vkGetPhysicalDeviceProperties"));
 
+  dispatch_table.CreateDebugUtilsMessengerEXT = absl::bit_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+      next_get_instance_proc_addr_function(instance, "vkCreateDebugUtilsMessengerEXT"));
+  dispatch_table.DestroyDebugUtilsMessengerEXT =
+      absl::bit_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+          next_get_instance_proc_addr_function(instance, "vkDestroyDebugUtilsMessengerEXT"));
+  dispatch_table.SubmitDebugUtilsMessageEXT = absl::bit_cast<PFN_vkSubmitDebugUtilsMessageEXT>(
+      next_get_instance_proc_addr_function(instance, "vkSubmitDebugUtilsMessageEXT"));
+
+  dispatch_table.CreateDebugReportCallbackEXT = absl::bit_cast<PFN_vkCreateDebugReportCallbackEXT>(
+      next_get_instance_proc_addr_function(instance, "vkCreateDebugReportCallbackEXT"));
+  dispatch_table.DestroyDebugReportCallbackEXT =
+      absl::bit_cast<PFN_vkDestroyDebugReportCallbackEXT>(
+          next_get_instance_proc_addr_function(instance, "vkDestroyDebugReportCallbackEXT"));
+  dispatch_table.DebugReportMessageEXT = absl::bit_cast<PFN_vkDebugReportMessageEXT>(
+      next_get_instance_proc_addr_function(instance, "vkDebugReportMessageEXT"));
+
   void* key = GetDispatchTableKey(instance);
   {
     absl::WriterMutexLock lock(&mutex_);
     CHECK(!instance_dispatch_table_.contains(key));
     instance_dispatch_table_[key] = dispatch_table;
+
+    CHECK(!instance_supports_debug_utils_extension_.contains(key));
+    instance_supports_debug_utils_extension_[key] =
+        dispatch_table.CreateDebugUtilsMessengerEXT != nullptr &&
+        dispatch_table.DestroyDebugUtilsMessengerEXT != nullptr &&
+        dispatch_table.SubmitDebugUtilsMessageEXT != nullptr;
+
+    CHECK(!instance_supports_debug_report_extension_.contains(key));
+    instance_supports_debug_report_extension_[key] =
+        dispatch_table.CreateDebugReportCallbackEXT != nullptr &&
+        dispatch_table.DestroyDebugReportCallbackEXT != nullptr &&
+        dispatch_table.DebugReportMessageEXT != nullptr;
   }
 }
 
@@ -33,6 +61,12 @@ void DispatchTable::RemoveInstanceDispatchTable(VkInstance instance) {
     absl::WriterMutexLock lock(&mutex_);
     CHECK(instance_dispatch_table_.contains(key));
     instance_dispatch_table_.erase(key);
+
+    CHECK(instance_supports_debug_utils_extension_.contains(key));
+    instance_supports_debug_utils_extension_.erase(key);
+
+    CHECK(instance_supports_debug_report_extension_.contains(key));
+    instance_supports_debug_report_extension_.erase(key);
   }
 }
 
@@ -84,11 +118,31 @@ void DispatchTable::CreateDeviceDispatchTable(
       next_get_device_proc_addr_function(device, "vkCmdBeginDebugUtilsLabelEXT"));
   dispatch_table.CmdEndDebugUtilsLabelEXT = absl::bit_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(
       next_get_device_proc_addr_function(device, "vkCmdEndDebugUtilsLabelEXT"));
+  dispatch_table.CmdInsertDebugUtilsLabelEXT = absl::bit_cast<PFN_vkCmdInsertDebugUtilsLabelEXT>(
+      next_get_device_proc_addr_function(device, "vkCmdInsertDebugUtilsLabelEXT"));
+  dispatch_table.SetDebugUtilsObjectNameEXT = absl::bit_cast<PFN_vkSetDebugUtilsObjectNameEXT>(
+      next_get_device_proc_addr_function(device, "vkSetDebugUtilsObjectNameEXT"));
+  dispatch_table.SetDebugUtilsObjectTagEXT = absl::bit_cast<PFN_vkSetDebugUtilsObjectTagEXT>(
+      next_get_device_proc_addr_function(device, "vkSetDebugUtilsObjectTagEXT"));
+  dispatch_table.QueueBeginDebugUtilsLabelEXT = absl::bit_cast<PFN_vkQueueBeginDebugUtilsLabelEXT>(
+      next_get_device_proc_addr_function(device, "vkQueueBeginDebugUtilsLabelEXT"));
+  dispatch_table.QueueEndDebugUtilsLabelEXT = absl::bit_cast<PFN_vkQueueEndDebugUtilsLabelEXT>(
+      next_get_device_proc_addr_function(device, "vkQueueEndDebugUtilsLabelEXT"));
+  dispatch_table.QueueInsertDebugUtilsLabelEXT =
+      absl::bit_cast<PFN_vkQueueInsertDebugUtilsLabelEXT>(
+          next_get_device_proc_addr_function(device, "vkQueueInsertDebugUtilsLabelEXT"));
 
   dispatch_table.CmdDebugMarkerBeginEXT = absl::bit_cast<PFN_vkCmdDebugMarkerBeginEXT>(
       next_get_device_proc_addr_function(device, "vkCmdDebugMarkerBeginEXT"));
   dispatch_table.CmdDebugMarkerEndEXT = absl::bit_cast<PFN_vkCmdDebugMarkerEndEXT>(
       next_get_device_proc_addr_function(device, "vkCmdDebugMarkerEndEXT"));
+
+  dispatch_table.DebugMarkerSetObjectTagEXT = absl::bit_cast<PFN_vkDebugMarkerSetObjectTagEXT>(
+      next_get_device_proc_addr_function(device, "vkDebugMarkerSetObjectTagEXT"));
+  dispatch_table.DebugMarkerSetObjectNameEXT = absl::bit_cast<PFN_vkDebugMarkerSetObjectNameEXT>(
+      next_get_device_proc_addr_function(device, "vkDebugMarkerSetObjectNameEXT"));
+  dispatch_table.CmdDebugMarkerInsertEXT = absl::bit_cast<PFN_vkCmdDebugMarkerInsertEXT>(
+      next_get_device_proc_addr_function(device, "vkCmdDebugMarkerInsertEXT"));
 
   void* key = GetDispatchTableKey(device);
   {
@@ -99,12 +153,21 @@ void DispatchTable::CreateDeviceDispatchTable(
     CHECK(!device_supports_debug_utils_extension_.contains(key));
     device_supports_debug_utils_extension_[key] =
         dispatch_table.CmdBeginDebugUtilsLabelEXT != nullptr &&
-        dispatch_table.CmdEndDebugUtilsLabelEXT != nullptr;
+        dispatch_table.CmdEndDebugUtilsLabelEXT != nullptr &&
+        dispatch_table.SetDebugUtilsObjectNameEXT != nullptr &&
+        dispatch_table.SetDebugUtilsObjectTagEXT != nullptr &&
+        dispatch_table.QueueBeginDebugUtilsLabelEXT != nullptr &&
+        dispatch_table.QueueEndDebugUtilsLabelEXT != nullptr &&
+        dispatch_table.QueueInsertDebugUtilsLabelEXT != nullptr &&
+        dispatch_table.CmdInsertDebugUtilsLabelEXT != nullptr;
 
     CHECK(!device_supports_debug_marker_extension_.contains(key));
     device_supports_debug_marker_extension_[key] =
         dispatch_table.CmdDebugMarkerBeginEXT != nullptr &&
-        dispatch_table.CmdDebugMarkerEndEXT != nullptr;
+        dispatch_table.CmdDebugMarkerEndEXT != nullptr &&
+        dispatch_table.DebugMarkerSetObjectTagEXT != nullptr &&
+        dispatch_table.DebugMarkerSetObjectNameEXT != nullptr &&
+        dispatch_table.CmdDebugMarkerInsertEXT != nullptr;
   }
 }
 

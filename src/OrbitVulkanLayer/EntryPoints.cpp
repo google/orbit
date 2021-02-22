@@ -128,6 +128,10 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitQueuePresentKHR(VkQueue queue,
   return controller.OnQueuePresentKHR(queue, present_info);
 }
 
+// ----------------------------------------------------------------------------
+// Implemented extension methods
+// ----------------------------------------------------------------------------
+
 VKAPI_ATTR void VKAPI_CALL OrbitCmdBeginDebugUtilsLabelEXT(VkCommandBuffer command_buffer,
                                                            const VkDebugUtilsLabelEXT* label_info) {
   controller.OnCmdBeginDebugUtilsLabelEXT(command_buffer, label_info);
@@ -146,6 +150,92 @@ VKAPI_ATTR void VKAPI_CALL OrbitCmdDebugMarkerEndEXT(VkCommandBuffer command_buf
   controller.OnCmdDebugMarkerEndEXT(command_buffer);
 }
 
+// ----------------------------------------------------------------------------
+// Unused but implemented extension methods (need to implement all methods of a
+// extension)
+// ----------------------------------------------------------------------------
+VKAPI_ATTR void VKAPI_CALL OrbitCmdInsertDebugUtilsLabelEXT(
+    VkCommandBuffer command_buffer, const VkDebugUtilsLabelEXT* label_info) {
+  controller.OnCmdInsertDebugUtilsLabelEXT(command_buffer, label_info);
+}
+
+VKAPI_ATTR void VKAPI_CALL OrbitCreateDebugUtilsMessengerEXT(
+    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* create_info,
+    const VkAllocationCallbacks* allocator, VkDebugUtilsMessengerEXT* messenger) {
+  controller.OnCreateDebugUtilsMessengerEXT(instance, create_info, allocator, messenger);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
+                                   const VkAllocationCallbacks* allocator) {
+  controller.OnDestroyDebugUtilsMessengerEXT(instance, messenger, allocator);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitQueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* label_info) {
+  controller.OnQueueBeginDebugUtilsLabelEXT(queue, label_info);
+}
+
+VKAPI_ATTR void VKAPI_CALL OrbitQueueEndDebugUtilsLabelEXT(VkQueue queue) {
+  controller.OnQueueEndDebugUtilsLabelEXT(queue);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitQueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* label_info) {
+  controller.OnQueueInsertDebugUtilsLabelEXT(queue, label_info);
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL
+OrbitSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* name_info) {
+  return controller.OnSetDebugUtilsObjectNameEXT(device, name_info);
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL
+OrbitSetDebugUtilsObjectTagEXT(VkDevice device, const VkDebugUtilsObjectTagInfoEXT* tag_info) {
+  return controller.OnSetDebugUtilsObjectTagEXT(device, tag_info);
+}
+
+VKAPI_ATTR void VKAPI_CALL OrbitSubmitDebugUtilsMessageEXT(
+    VkInstance instance, VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+    VkDebugUtilsMessageTypeFlagsEXT message_types,
+    const VkDebugUtilsMessengerCallbackDataEXT* callback_data) {
+  controller.OnSubmitDebugUtilsMessageEXT(instance, message_severity, message_types, callback_data);
+}
+
+VKAPI_ATTR void VKAPI_CALL OrbitCmdDebugMarkerInsertEXT(
+    VkCommandBuffer command_buffer, const VkDebugMarkerMarkerInfoEXT* marker_info) {
+  controller.OnCmdDebugMarkerInsertEXT(command_buffer, marker_info);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitDebugMarkerSetObjectNameEXT(VkDevice device, const VkDebugMarkerObjectNameInfoEXT* name_info) {
+  controller.OnDebugMarkerSetObjectNameEXT(device, name_info);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitDebugMarkerSetObjectTagEXT(VkDevice device, const VkDebugMarkerObjectTagInfoEXT* tag_info) {
+  controller.OnDebugMarkerSetObjectTagEXT(device, tag_info);
+}
+
+VKAPI_ATTR void VKAPI_CALL OrbitCreateDebugReportCallbackEXT(
+    VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* create_info,
+    const VkAllocationCallbacks* allocator, VkDebugReportCallbackEXT* callback) {
+  controller.OnCreateDebugReportCallbackEXT(instance, create_info, allocator, callback);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitDebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags,
+                           VkDebugReportObjectTypeEXT object_type, uint64_t object, size_t location,
+                           int32_t message_code, const char* layer_prefix, const char* message) {
+  controller.OnDebugReportMessageEXT(instance, flags, object_type, object, location, message_code,
+                                     layer_prefix, message);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+OrbitDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
+                                   const VkAllocationCallbacks* allocator) {
+  controller.OnDestroyDebugReportCallbackEXT(instance, callback, allocator);
+}
 // ----------------------------------------------------------------------------
 // Layer enumeration functions
 // ----------------------------------------------------------------------------
@@ -214,6 +304,17 @@ OrbitGetDeviceProcAddr(VkDevice device, const char* name) {
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdDebugMarkerBeginEXT);
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdDebugMarkerEndEXT);
 
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(SetDebugUtilsObjectNameEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(SetDebugUtilsObjectTagEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(QueueBeginDebugUtilsLabelEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(QueueEndDebugUtilsLabelEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(QueueInsertDebugUtilsLabelEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdInsertDebugUtilsLabelEXT);
+
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DebugMarkerSetObjectTagEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DebugMarkerSetObjectNameEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdDebugMarkerInsertEXT);
+
   return controller.ForwardGetDeviceProcAddr(device, name);
 }
 
@@ -225,6 +326,14 @@ OrbitGetInstanceProcAddr(VkInstance instance, const char* name) {
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DestroyInstance);
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(EnumerateInstanceLayerProperties);
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(EnumerateInstanceExtensionProperties);
+
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CreateDebugUtilsMessengerEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DestroyDebugUtilsMessengerEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(SubmitDebugUtilsMessageEXT);
+
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CreateDebugReportCallbackEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DestroyDebugReportCallbackEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DebugReportMessageEXT);
 
   // Functions available through GetInstanceProcAddr and GetDeviceProcAddr
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(GetDeviceProcAddr);
@@ -251,6 +360,17 @@ OrbitGetInstanceProcAddr(VkInstance instance, const char* name) {
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdEndDebugUtilsLabelEXT);
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdDebugMarkerBeginEXT);
   RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdDebugMarkerEndEXT);
+
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(SetDebugUtilsObjectNameEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(SetDebugUtilsObjectTagEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(QueueBeginDebugUtilsLabelEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(QueueEndDebugUtilsLabelEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(QueueInsertDebugUtilsLabelEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdInsertDebugUtilsLabelEXT);
+
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DebugMarkerSetObjectTagEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(DebugMarkerSetObjectNameEXT);
+  RETURN_ORBIT_FUNCTION_IF_MATCHES_VK_FUNCTION(CmdDebugMarkerInsertEXT);
 
   return controller.ForwardGetInstanceProcAddr(instance, name);
 }
