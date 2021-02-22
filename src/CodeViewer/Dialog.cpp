@@ -50,7 +50,7 @@ void Dialog::SetEnableLineNumbers(bool enabled) { ui_->viewer->SetEnableLineNumb
 
 void Dialog::GoToLineNumber(size_t line_number) {
   const QTextBlock block =
-      ui_->viewer->document()->findBlockByLineNumber(static_cast<int>(line_number));
+      ui_->viewer->document()->findBlockByLineNumber(static_cast<int>(line_number) - 1);
   if (!block.isValid()) return;
 
   ui_->viewer->setTextCursor(QTextCursor{block});
