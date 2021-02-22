@@ -892,8 +892,6 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
 
   event_processor.ProcessEvent(queue_submission_event_1);
 
-  testing::Mock::VerifyAndClearExpectations(&listener);
-
   uint64_t actual_command_buffer_key;
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
       .Times(1)

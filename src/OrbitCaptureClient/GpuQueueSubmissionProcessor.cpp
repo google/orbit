@@ -211,9 +211,9 @@ void GpuQueueSubmissionProcessor::DeleteSavedGpuJob(int32_t thread_id,
   if (!tid_to_submission_time_to_gpu_job_.contains(thread_id)) {
     return;
   }
-  // This method might be also called if the the last Gpu Job that was was not part of the capture,
-  // and is thus not present in the map. For simplicity we "erase" it anyways (insert and remove it
-  // again).
+  // This method might be called if the "capture start" falls directly inside a GpuJob, and we thus
+  // don't have the job present in the map.
+  // For simplicity we "erase" it anyways (insert and remove it again).
   auto& submission_time_to_gpu_job = tid_to_submission_time_to_gpu_job_[thread_id];
   submission_time_to_gpu_job.erase(submission_timestamp);
   if (submission_time_to_gpu_job.empty()) {
@@ -352,7 +352,6 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
           begin_marker_post_submission_cpu_timestamp);
 
       uint64_t begin_submission_time_ns = 0;
-      // We might have bad luck and captured the "begin" submission, but not the matching job.
       if (matching_begin_job != nullptr) {
         // Convert the GPU time to CPU time, based on the CPU time of the HW execution begin and the
         // GPU timestamp of the begin of the first command buffer. Note that we will assume that the
@@ -362,6 +361,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
                                begin_submission_first_command_buffer->begin_gpu_timestamp_ns());
         begin_submission_time_ns = matching_begin_job->amdgpu_cs_ioctl_time_ns();
       } else {
+        // We might have bad luck and have captured the "begin" submission, but not the matching
+        // job.
         marker_timer.set_start(begin_capture_time_ns_);
       }
 
