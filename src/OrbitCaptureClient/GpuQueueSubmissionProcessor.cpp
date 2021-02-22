@@ -360,7 +360,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
         marker_timer.set_start(completed_marker.begin_marker().gpu_timestamp_ns() +
                                matching_begin_job->gpu_hardware_start_time_ns() -
                                begin_submission_first_command_buffer->begin_gpu_timestamp_ns());
-        matching_begin_job->amdgpu_cs_ioctl_time_ns();
+        begin_submission_time_ns = matching_begin_job->amdgpu_cs_ioctl_time_ns();
       } else {
         marker_timer.set_start(begin_capture_time_ns_);
       }
