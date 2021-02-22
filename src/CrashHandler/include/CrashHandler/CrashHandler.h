@@ -5,18 +5,18 @@
 #ifndef CRASH_HANDLER_CRASH_HANDLER_H_
 #define CRASH_HANDLER_CRASH_HANDLER_H_
 
+#include <client/crash_report_database.h>
+#include <client/crashpad_client.h>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <client/crash_report_database.h>
-#include <client/crashpad_client.h>
 
 #include "OrbitBase/CrashHandler.h"
 
 namespace orbit_crash_handler {
 
-class CrashHandler : public orbit_base::CrashHandler{
+class CrashHandler : public orbit_base::CrashHandler {
  public:
   explicit CrashHandler(const std::string& dump_path, const std::string& handler_path,
                         const std::string& crash_server_url,

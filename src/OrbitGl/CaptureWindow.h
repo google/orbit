@@ -72,9 +72,7 @@ class CaptureWindow : public GlCanvas {
   virtual void ToggleRecording();
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
-  [[nodiscard]] TimeGraph* GetTimeGraph() {
-    return time_graph_.get();
-  }
+  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
   void CreateTimeGraph(const CaptureData* capture_data);
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
