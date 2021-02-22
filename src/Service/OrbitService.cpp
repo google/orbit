@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <cinttypes>
 #include <cstdio>
 #include <filesystem>
 #include <memory>
@@ -19,6 +20,7 @@
 
 #include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitGrpcServer.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -81,6 +83,14 @@ static void PrintInstanceVersions() {
       ERROR("Could not execute \"%s\"", kDriverVersionCommand);
     }
   }
+}
+
+// We try to determine the clock resolution and print out the determined value for
+// postmortem debugging purposes. The resolution should be fairly small (in my tests
+// it was ~35 nanoseconds).
+static void PrintClockResolution() {
+  LOG("%s",
+      absl::StrFormat("Clock resolution: %" PRIi64 " (ns)", orbit_base::EstimateClockResolution()));
 }
 
 static std::string ReadStdIn() {
@@ -148,6 +158,8 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   LOG("Orbit Service is running in DEBUG!");
   LOG("**********************************");
 #endif
+
+  PrintClockResolution();
 
   std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_);
   if (grpc_server == nullptr) {

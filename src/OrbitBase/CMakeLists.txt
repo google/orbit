@@ -51,6 +51,7 @@ target_sources(OrbitBase PRIVATE
         JoinFutures.cpp
         Logging.cpp
         LoggingUtils.cpp
+        Profiling.cpp
         ReadFileToString.cpp
         SafeStrerror.cpp
         ThreadPool.cpp

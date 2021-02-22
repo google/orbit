@@ -17,3 +17,10 @@ TEST(Profiling, MonotonicClock) {
   uint64_t t1 = orbit_base::CaptureTimestampNs();
   EXPECT_TRUE(t1 > t0);
 }
+
+TEST(Profiling, EstimatedClockResolutionNonNegative) {
+  uint64_t resolution = orbit_base::EstimateClockResolution();
+
+  // There's not really any guarantee we have for results of the above call.
+  EXPECT_TRUE(resolution >= 0);
+}

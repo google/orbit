@@ -39,6 +39,10 @@ constexpr clockid_t kOrbitCaptureClock = CLOCK_MONOTONIC;
 
 #endif
 
+// Estimates the clock resolution for debugging purposes. Should only be used to display this
+// information to the user or log it.
+[[nodiscard]] uint64_t EstimateClockResolution();
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_PROFILING_H_
