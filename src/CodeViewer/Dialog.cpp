@@ -56,4 +56,10 @@ void Dialog::GoToLineNumber(size_t line_number) {
   ui_->viewer->setTextCursor(QTextCursor{block});
 }
 
+void Dialog::SetHighlightCurrentLine(bool enabled) {
+  ui_->viewer->SetHighlightCurrentLine(enabled);
+}
+
+bool Dialog::IsCurrentLineHighlighted() const { return ui_->viewer->IsCurrentLineHighlighted(); }
+
 }  // namespace orbit_code_viewer

@@ -137,10 +137,10 @@ void Viewer::UpdateLeftSidebarWidth() {
   left_sidebar_widget_.SetSizeHint({overall_width_px, 0});
 }
 
-void Viewer::SetEnableLineNumbers(bool enabled) {
-  if (line_numbers_enabled_ == enabled) return;
+void Viewer::SetEnableLineNumbers(bool is_enabled) {
+  if (line_numbers_enabled_ == is_enabled) return;
 
-  line_numbers_enabled_ = enabled;
+  line_numbers_enabled_ = is_enabled;
   UpdateLeftSidebarWidth();
 }
 
@@ -163,6 +163,35 @@ void Viewer::SetHeatmapSource(HeatmapSource heatmap_source) {
 void Viewer::ClearHeatmapSource() {
   heatmap_source_ = {};
   UpdateLeftSidebarWidth();
+}
+
+void Viewer::SetHighlightCurrentLine(bool enabled) {
+  if (is_current_line_highlighted_ == enabled) return;
+
+  is_current_line_highlighted_ = enabled;
+
+  if (!is_current_line_highlighted_) {
+    QObject::disconnect(this, &Viewer::cursorPositionChanged, this, &Viewer::HighlightCurrentLine);
+    return;
+  }
+
+  QObject::connect(this, &Viewer::cursorPositionChanged, this, &Viewer::HighlightCurrentLine,
+                   Qt::UniqueConnection);
+  HighlightCurrentLine();
+}
+
+bool Viewer::IsCurrentLineHighlighted() const { return is_current_line_highlighted_; }
+
+void Viewer::HighlightCurrentLine() {
+  const QColor highlight_color = palette().base().color().lighter();
+
+  QTextEdit::ExtraSelection selection{};
+  selection.format.setBackground(highlight_color);
+  selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+  selection.cursor = textCursor();
+  selection.cursor.clearSelection();
+
+  setExtraSelections({selection});
 }
 
 }  // namespace orbit_code_viewer
