@@ -37,6 +37,7 @@
 #include "CoreUtils.h"
 #include "Disassembler.h"
 #include "DisassemblyReport.h"
+#include "ElfUtils/ElfFile.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -509,8 +510,42 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function) {
-  // For now this is just a stub. This will change in a subsequent commit
-  LOG("The user requested to show source code for the function %s", function.pretty_name());
+  const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
+
+  auto loaded_module = RetrieveModule(module);
+
+  loaded_module
+      .ThenIfSuccess(
+          main_thread_executor_,
+          [this, module,
+           function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
+            const auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
+
+            if (elf_file.has_error()) return elf_file.error();
+
+            if (!elf_file.value()->HasDebugInfo()) {
+              return ErrorMessage{absl::StrFormat(
+                  "Module \"%s\" does not include debug info. Other sources are not yet supported.",
+                  module->file_path())};
+            }
+
+            const auto line_info = elf_file.value()->GetLineInfo(function.address());
+
+            if (line_info.has_error()) {
+              return ErrorMessage{absl::StrFormat(
+                  "Could not find source code line info for function \"%s\" in module \"%s\": %s",
+                  function.pretty_name(), module->file_path(), line_info.error().message())};
+            }
+
+            main_window_->ShowSourceCode(std::filesystem::path{line_info.value().source_file()},
+                                         line_info.value().source_line());
+            return outcome::success();
+          })
+      .Then(main_thread_executor_, [this](const ErrorMessageOr<void>& maybe_error) {
+        if (maybe_error.has_error()) {
+          SendErrorToUi("Error showing source code", maybe_error.error().message());
+        }
+      });
 }
 
 Timer GMainTimer;
