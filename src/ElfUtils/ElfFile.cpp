@@ -13,6 +13,7 @@
 #include <llvm/Object/ELF.h>
 #include <llvm/Object/ELFTypes.h>
 #include <llvm/Object/SymbolicFile.h>
+#include <llvm/Support/CRC.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/Error.h>
 #include <llvm/Support/MathExtras.h>
@@ -22,7 +23,10 @@
 #include <utility>
 #include <vector>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "llvm/DebugInfo/Symbolize/Symbolize.h"
@@ -383,6 +387,35 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
   }
 
   return result;
+}
+
+ErrorMessageOr<uint32_t> ElfFile::CalculateDebuglinkChecksum(
+    const std::filesystem::path& file_path) {
+  // TODO(b/180995172): Make this read operation iterative since the potentially read files can be
+  // very large (gigabytes).
+  ErrorMessageOr<orbit_base::unique_fd> fd_or_error = orbit_base::OpenFileForReading(file_path);
+
+  if (fd_or_error.has_error()) {
+    return fd_or_error.error();
+  }
+
+  constexpr size_t kBufferSize = 4 * 1024 * 1024;  // 4 MiB
+  std::vector<char> buffer(kBufferSize);
+
+  uint32_t rolling_checksum = 0;
+
+  while (true) {
+    ErrorMessageOr<size_t> chunksize_or_error =
+        orbit_base::ReadFully(fd_or_error.value(), buffer.data(), buffer.size());
+    if (chunksize_or_error.has_error()) return chunksize_or_error.error();
+
+    if (chunksize_or_error.value() == 0) break;
+
+    const llvm::StringRef str{buffer.data(), chunksize_or_error.value()};
+    rolling_checksum = llvm::crc32(rolling_checksum, str);
+  }
+
+  return rolling_checksum;
 }
 
 }  // namespace orbit_elf_utils
