@@ -58,6 +58,9 @@ class Dialog : public QDialog {
 
   void GoToLineNumber(size_t line_number);
 
+  void SetHighlightCurrentLine(bool enabled);
+  [[nodiscard]] bool IsCurrentLineHighlighted() const;
+
  private:
   std::unique_ptr<Ui::CodeViewerDialog> ui_;
   std::unique_ptr<QSyntaxHighlighter> syntax_highlighter_;

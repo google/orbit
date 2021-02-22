@@ -58,11 +58,15 @@ class Viewer : public QPlainTextEdit {
   void SetHeatmapSource(HeatmapSource heatmap_source);
   void ClearHeatmapSource();
 
+  void SetHighlightCurrentLine(bool is_enabled);
+  [[nodiscard]] bool IsCurrentLineHighlighted() const;
+
  private:
   void resizeEvent(QResizeEvent* ev) override;
   void wheelEvent(QWheelEvent* ev) override;
   void DrawLineNumbers(QPaintEvent* event);
   void UpdateLeftSidebarWidth();
+  void HighlightCurrentLine();
 
   PlaceHolderWidget left_sidebar_widget_;
   bool line_numbers_enabled_ = false;
@@ -71,6 +75,8 @@ class Viewer : public QPlainTextEdit {
 
   FontSizeInEm heatmap_bar_width_ = FontSizeInEm{0.0f};
   HeatmapSource heatmap_source_;
+
+  bool is_current_line_highlighted_ = false;
 };
 
 // Determine how many pixels are needed to draw all possible line numbers for the given font

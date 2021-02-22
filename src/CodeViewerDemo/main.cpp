@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
 
   dialog.SetEnableLineNumbers(true);
   dialog.GoToLineNumber(10);
+  dialog.SetHighlightCurrentLine(true);
 
   return dialog.exec();
 }
