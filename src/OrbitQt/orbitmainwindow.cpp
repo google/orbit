@@ -157,7 +157,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
                                  const QStringList& command_line_flags)
     : QMainWindow(nullptr),
       main_thread_executor_{orbit_qt_utils::MainThreadExecutorImpl::Create()},
-      app_{OrbitApp::Create(main_thread_executor_.get(), crash_handler, metrics_uploader)},
+      app_{OrbitApp::Create(this, main_thread_executor_.get(), crash_handler, metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
       target_configuration_(std::move(target_configuration)) {
@@ -279,9 +279,6 @@ void OrbitMainWindow::SetupMainWindow() {
   });
   app_->SetInfoMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(text));
-  });
-  app_->SetTooltipCallback([this](const std::string& tooltip) {
-    QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
   app_->SetSaveFileCallback(
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
@@ -1270,4 +1267,9 @@ orbit_qt::TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
         ->SetProcessListUpdateListener(nullptr);
   }
   return std::move(target_configuration_);
+}
+
+void OrbitMainWindow::ShowTooltip(std::string_view message) {
+  QToolTip::showText(QCursor::pos(),
+                     QString::fromUtf8(message.data(), static_cast<int>(message.size())), this);
 }

@@ -39,6 +39,7 @@
 #include "GlCanvas.h"
 #include "IntrospectionWindow.h"
 #include "MainThreadExecutor.h"
+#include "MainWindowInterface.h"
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "ModulesDataView.h"
@@ -78,13 +79,15 @@
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  explicit OrbitApp(MainThreadExecutor* main_thread_executor,
+  explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
+                    MainThreadExecutor* main_thread_executor,
                     const orbit_base::CrashHandler* crash_handler,
                     orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
-      MainThreadExecutor* main_thread_executor, const orbit_base::CrashHandler* crash_handler,
+      orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+      const orbit_base::CrashHandler* crash_handler,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   void PostInit(bool is_connected);
@@ -225,8 +228,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetInfoMessageCallback(InfoMessageCallback callback) {
     info_message_callback_ = std::move(callback);
   }
-  using TooltipCallback = std::function<void(const std::string&)>;
-  void SetTooltipCallback(TooltipCallback callback) { tooltip_callback_ = std::move(callback); }
   using RefreshCallback = std::function<void(DataViewType type)>;
   void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
 
@@ -460,7 +461,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageCallback error_message_callback_;
   WarningMessageCallback warning_message_callback_;
   InfoMessageCallback info_message_callback_;
-  TooltipCallback tooltip_callback_;
   RefreshCallback refresh_callback_;
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;
@@ -496,6 +496,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
+  orbit_gl::MainWindowInterface* main_window_ = nullptr;
   MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;

@@ -136,12 +136,16 @@ PresetLoadState GetPresetLoadStateForProcess(
 
 bool DoZoom = false;
 
-OrbitApp::OrbitApp(MainThreadExecutor* main_thread_executor,
+OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
+                   MainThreadExecutor* main_thread_executor,
                    const orbit_base::CrashHandler* crash_handler,
                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : main_thread_executor_(main_thread_executor),
+    : main_window_{main_window},
+      main_thread_executor_(main_thread_executor),
       crash_handler_(crash_handler),
       metrics_uploader_(metrics_uploader) {
+  CHECK(main_window_ != nullptr);
+
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
@@ -316,9 +320,11 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 }
 
 std::unique_ptr<OrbitApp> OrbitApp::Create(
-    MainThreadExecutor* main_thread_executor, const orbit_base::CrashHandler* crash_handler,
+    orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+    const orbit_base::CrashHandler* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  auto app = std::make_unique<OrbitApp>(main_thread_executor, crash_handler, metrics_uploader);
+  auto app = std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
+                                        metrics_uploader);
 
 #ifdef _WIN32
   oqpi::default_helpers::start_default_scheduler();
@@ -948,10 +954,7 @@ void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport re
 }
 
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
-  main_thread_executor_->Schedule([this, tooltip] {
-    CHECK(tooltip_callback_);
-    tooltip_callback_(tooltip);
-  });
+  main_thread_executor_->Schedule([this, tooltip] { main_window_->ShowTooltip(tooltip); });
 }
 
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
