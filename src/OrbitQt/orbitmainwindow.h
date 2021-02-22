@@ -51,7 +51,7 @@ namespace Ui {
 class OrbitMainWindow;
 }
 
-class OrbitMainWindow : public QMainWindow {
+class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInterface {
   Q_OBJECT
 
  public:
@@ -97,6 +97,8 @@ class OrbitMainWindow : public QMainWindow {
   void RestoreDefaultTabLayout();
 
   [[nodiscard]] orbit_qt::TargetConfiguration ClearTargetConfiguration();
+
+  void ShowTooltip(std::string_view message) override;
 
  protected:
   void closeEvent(QCloseEvent* event) override;
