@@ -68,6 +68,9 @@ class ElfFile {
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(
       const std::filesystem::path& file_path, const void* buf, size_t len);
+
+  [[nodiscard]] static ErrorMessageOr<uint32_t> CalculateDebuglinkChecksum(
+      const std::filesystem::path& file_path);
 };
 
 }  // namespace orbit_elf_utils

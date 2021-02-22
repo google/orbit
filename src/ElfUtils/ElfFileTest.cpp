@@ -248,3 +248,28 @@ TEST(ElfFile, HasGnuDebugLink) {
   EXPECT_TRUE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
   EXPECT_EQ(hello_world.value()->GetGnuDebugLinkInfo()->path.string(), "hello_world_elf.debug");
 }
+
+TEST(ElfFile, CalculateDebuglinkChecksumValid) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_gnu_debuglink";
+  const std::filesystem::path debuglink_file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf.debug";
+
+  auto hello_world = ElfFile::Create(file_path);
+  ASSERT_TRUE(hello_world) << hello_world.error().message();
+  ASSERT_TRUE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
+
+  const ErrorMessageOr<uint32_t> checksum_or_error =
+      ElfFile::CalculateDebuglinkChecksum(debuglink_file_path);
+  ASSERT_TRUE(checksum_or_error.has_value());
+  EXPECT_EQ(hello_world.value()->GetGnuDebugLinkInfo()->crc32_checksum, checksum_or_error.value());
+}
+
+TEST(ElfFile, CalculateDebuglinkChecksumNotFound) {
+  const std::filesystem::path debuglink_file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "invalid_non_existing_filename.xyz";
+
+  const ErrorMessageOr<uint32_t> checksum_or_error =
+      ElfFile::CalculateDebuglinkChecksum(debuglink_file_path);
+  EXPECT_TRUE(checksum_or_error.has_error());
+}
