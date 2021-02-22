@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_MAIN_WINDOW_INTERFACE_H_
 #define ORBIT_GL_MAIN_WINDOW_INTERFACE_H_
 
+#include <stdint.h>
+
+#include <filesystem>
 #include <string_view>
 
 namespace orbit_gl {
@@ -17,6 +20,7 @@ namespace orbit_gl {
 class MainWindowInterface {
  public:
   virtual void ShowTooltip(std::string_view message) = 0;
+  virtual void ShowSourceCode(const std::filesystem::path& file_path, size_t line_number) = 0;
 
   virtual ~MainWindowInterface() = default;
 };

@@ -85,6 +85,7 @@
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SamplingReport.h"
 #include "StatusListenerImpl.h"
+#include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 #include "TargetConfiguration.h"
 #include "TutorialContent.h"
@@ -1272,4 +1273,24 @@ orbit_qt::TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
 void OrbitMainWindow::ShowTooltip(std::string_view message) {
   QToolTip::showText(QCursor::pos(),
                      QString::fromUtf8(message.data(), static_cast<int>(message.size())), this);
+}
+
+void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, size_t line_number) {
+  orbit_code_viewer::Dialog code_viewer_dialog{this};
+
+  code_viewer_dialog.SetEnableLineNumbers(true);
+  code_viewer_dialog.SetHighlightCurrentLine(true);
+
+  QFile source_code_file{QString::fromStdString(file_path.string())};
+
+  if (!source_code_file.open(QIODevice::ReadOnly)) {
+    ERROR("Could not open file: \"%s\"", file_path.string());
+    return;
+  }
+
+  auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
+  code_viewer_dialog.SetSourceCode(source_code_file.readAll(), std::move(syntax_highlighter));
+
+  code_viewer_dialog.GoToLineNumber(line_number);
+  code_viewer_dialog.exec();
 }
