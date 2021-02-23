@@ -747,7 +747,7 @@ PresetLoadState OrbitApp::GetPresetLoadState(
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
-ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
+ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_name) {
   const auto& key_to_string_map = string_manager_.GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllSerializableTimerChains();
