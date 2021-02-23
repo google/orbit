@@ -245,6 +245,28 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept {
   return TotalCpuTime{jiffies, cpus};
 }
 
+static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
+    const std::filesystem::path& structured_debug_store, std::string_view build_id) {
+  CHECK(build_id.size() >= 3);
+
+  auto path_in_structured_debug_store = structured_debug_store / ".build-id" /
+                                        build_id.substr(0, 2) /
+                                        absl::StrFormat("%s.debug", build_id.substr(2));
+
+  std::error_code error{};
+  if (fs::is_regular_file(path_in_structured_debug_store, error)) {
+    return path_in_structured_debug_store;
+  }
+
+  if (error.value() != 0) {
+    return ErrorMessage{absl::StrFormat("Error while checking file \"%s\": %s",
+                                        path_in_structured_debug_store, error.message())};
+  }
+
+  return ErrorMessage{
+      absl::StrFormat("File does not exist: %s", path_in_structured_debug_store.string())};
+}
+
 ErrorMessageOr<fs::path> FindSymbolsFilePath(
     const fs::path& module_path, const std::vector<fs::path>& search_directories) noexcept {
   OUTCOME_TRY(module_elf_file, ElfFile::Create(module_path.string()));
@@ -257,6 +279,18 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
         "Unable to find symbols for module \"%s\". Module does not contain a build id",
         module_path));
   }
+
+  std::string build_id = module_elf_file->GetBuildId();
+
+  if (build_id.size() < 3) {
+    return ErrorMessage{
+        absl::StrFormat("The build id of \"%s\" is malformed: %s", module_path, build_id)};
+  }
+
+  const fs::path structured_debug_store{"/usr/lib/debug"};
+  ErrorMessageOr<fs::path> debug_store_result =
+      FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, build_id);
+  if (debug_store_result.has_value()) return debug_store_result.value();
 
   const fs::path& filename = module_path.filename();
   fs::path filename_dot_debug = filename;
