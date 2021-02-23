@@ -33,6 +33,9 @@ class SymbolHelper {
 
   [[nodiscard]] fs::path GenerateCachedFileName(const fs::path& file_path) const;
 
+  [[nodiscard]] ErrorMessageOr<fs::path> FindDebugInfoFileLocally(std::string_view filename,
+                                                                  uint32_t checksum) const;
+
  private:
   const std::vector<fs::path> symbols_file_directories_;
   const fs::path cache_directory_;
