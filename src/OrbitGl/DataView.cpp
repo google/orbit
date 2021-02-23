@@ -4,10 +4,11 @@
 
 #include "DataView.h"
 
-#include <fstream>
 #include <memory>
 
 #include "App.h"
+#include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 
 void DataView::InitSortingOrders() {
   sorting_orders_.clear();
@@ -70,7 +71,10 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
   if (action == kMenuActionExportToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {
-      ExportCSV(save_file);
+      auto result = ExportCSV(save_file);
+      if (result.has_error()) {
+        app_->SendErrorToUi("Export to CSV", result.error().message());
+      }
     }
   } else if (action == kMenuActionCopySelection) {
     CopySelection(item_indices);
@@ -87,27 +91,49 @@ std::vector<int> DataView::GetVisibleSelectedIndices() {
   return visible_selected_indices;
 }
 
-void DataView::ExportCSV(const std::string& file_path) {
-  std::ofstream out(file_path);
-  if (out.fail()) return;
+ErrorMessageOr<void> DataView::ExportCSV(const std::filesystem::path& file_path) {
+  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
+  if (result.has_error()) {
+    return ErrorMessage{absl::StrFormat("Failed to open \"%s\" file: %s", file_path.string(),
+                                        result.error().message())};
+  }
+
+  const orbit_base::unique_fd& fd = result.value();
 
   size_t num_columns = GetColumns().size();
-  for (size_t i = 0; i < num_columns; ++i) {
-    out << GetColumns()[i].header;
-    if (i < num_columns - 1) out << ", ";
+
+  {
+    std::string header_line;
+    for (size_t i = 0; i < num_columns; ++i) {
+      header_line.append(GetColumns()[i].header);
+      if (i < num_columns - 1) header_line.append(", ");
+    }
+
+    // CSV RFC requires lines to end with CRLF
+    header_line.append("\r\n");
+    auto write_result = orbit_base::WriteFully(fd, header_line);
+    if (write_result.has_error()) {
+      return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
+                                          write_result.error().message())};
+    }
   }
-  out << "\n";
 
   size_t num_elements = GetNumElements();
   for (size_t i = 0; i < num_elements; ++i) {
+    std::string line;
     for (size_t j = 0; j < num_columns; ++j) {
-      out << GetValue(i, j);
-      if (j < num_columns - 1) out << ", ";
+      line.append(GetValue(i, j));
+      if (j < num_columns - 1) line.append(", ");
     }
-    out << "\n";
+    line.append("\r\n");
+    auto write_result = orbit_base::WriteFully(fd, line);
+    if (write_result.has_error()) {
+      return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
+                                          write_result.error().message())};
+    }
   }
 
-  out.close();
+  return outcome::success();
 }
 
 void DataView::CopySelection(const std::vector<int>& selection) {
