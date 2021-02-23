@@ -207,20 +207,20 @@ VKAPI_ATTR void VKAPI_CALL OrbitCmdDebugMarkerInsertEXT(
   controller.OnCmdDebugMarkerInsertEXT(command_buffer, marker_info);
 }
 
-VKAPI_ATTR void VKAPI_CALL
+VKAPI_ATTR VkResult VKAPI_CALL
 OrbitDebugMarkerSetObjectNameEXT(VkDevice device, const VkDebugMarkerObjectNameInfoEXT* name_info) {
-  controller.OnDebugMarkerSetObjectNameEXT(device, name_info);
+  return controller.OnDebugMarkerSetObjectNameEXT(device, name_info);
 }
 
-VKAPI_ATTR void VKAPI_CALL
+VKAPI_ATTR VkResult VKAPI_CALL
 OrbitDebugMarkerSetObjectTagEXT(VkDevice device, const VkDebugMarkerObjectTagInfoEXT* tag_info) {
-  controller.OnDebugMarkerSetObjectTagEXT(device, tag_info);
+  return controller.OnDebugMarkerSetObjectTagEXT(device, tag_info);
 }
 
-VKAPI_ATTR void VKAPI_CALL OrbitCreateDebugReportCallbackEXT(
+VKAPI_ATTR VkResult VKAPI_CALL OrbitCreateDebugReportCallbackEXT(
     VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* create_info,
     const VkAllocationCallbacks* allocator, VkDebugReportCallbackEXT* callback) {
-  controller.OnCreateDebugReportCallbackEXT(instance, create_info, allocator, callback);
+  return controller.OnCreateDebugReportCallbackEXT(instance, create_info, allocator, callback);
 }
 
 VKAPI_ATTR void VKAPI_CALL

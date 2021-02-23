@@ -388,28 +388,31 @@ class VulkanLayerController {
     }
   }
 
-  void OnDebugMarkerSetObjectNameEXT(VkDevice device,
-                                     const VkDebugMarkerObjectNameInfoEXT* name_info) {
+  VkResult OnDebugMarkerSetObjectNameEXT(VkDevice device,
+                                         const VkDebugMarkerObjectNameInfoEXT* name_info) {
     if (dispatch_table_.IsDebugMarkerExtensionSupported(device)) {
-      dispatch_table_.DebugMarkerSetObjectNameEXT(device)(device, name_info);
+      return dispatch_table_.DebugMarkerSetObjectNameEXT(device)(device, name_info);
     }
+    return VK_SUCCESS;
   }
 
-  void OnDebugMarkerSetObjectTagEXT(VkDevice device,
-                                    const VkDebugMarkerObjectTagInfoEXT* tag_info) {
+  VkResult OnDebugMarkerSetObjectTagEXT(VkDevice device,
+                                        const VkDebugMarkerObjectTagInfoEXT* tag_info) {
     if (dispatch_table_.IsDebugMarkerExtensionSupported(device)) {
-      dispatch_table_.DebugMarkerSetObjectTagEXT(device)(device, tag_info);
+      return dispatch_table_.DebugMarkerSetObjectTagEXT(device)(device, tag_info);
     }
+    return VK_SUCCESS;
   }
 
-  void OnCreateDebugReportCallbackEXT(VkInstance instance,
-                                      const VkDebugReportCallbackCreateInfoEXT* create_info,
-                                      const VkAllocationCallbacks* allocator,
-                                      VkDebugReportCallbackEXT* callback) {
+  VkResult OnCreateDebugReportCallbackEXT(VkInstance instance,
+                                          const VkDebugReportCallbackCreateInfoEXT* create_info,
+                                          const VkAllocationCallbacks* allocator,
+                                          VkDebugReportCallbackEXT* callback) {
     if (dispatch_table_.IsDebugReportExtensionSupported(instance)) {
-      dispatch_table_.CreateDebugReportCallbackEXT(instance)(instance, create_info, allocator,
-                                                             callback);
+      return dispatch_table_.CreateDebugReportCallbackEXT(instance)(instance, create_info,
+                                                                    allocator, callback);
     }
+    return VK_SUCCESS;
   }
 
   void OnDebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags,

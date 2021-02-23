@@ -9,7 +9,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+using ::testing::A;
 using ::testing::AllOf;
+using ::testing::Const;
 using ::testing::Field;
 using ::testing::IsSubsetOf;
 using ::testing::Matcher;
@@ -48,8 +50,28 @@ class MockDispatchTable {
   MOCK_METHOD(PFN_vkCmdEndDebugUtilsLabelEXT, CmdEndDebugUtilsLabelEXT, (VkCommandBuffer));
   MOCK_METHOD(PFN_vkCmdDebugMarkerBeginEXT, CmdDebugMarkerBeginEXT, (VkCommandBuffer));
   MOCK_METHOD(PFN_vkCmdDebugMarkerEndEXT, CmdDebugMarkerEndEXT, (VkCommandBuffer));
-  MOCK_METHOD(bool, IsDebugUtilsExtensionSupported, (VkCommandBuffer));
-  MOCK_METHOD(bool, IsDebugMarkerExtensionSupported, (VkCommandBuffer));
+  MOCK_METHOD(bool, IsDebugUtilsExtensionSupported, (VkCommandBuffer), (const));
+  MOCK_METHOD(bool, IsDebugUtilsExtensionSupported, (VkInstance), (const));
+  MOCK_METHOD(bool, IsDebugUtilsExtensionSupported, (VkQueue), (const));
+  MOCK_METHOD(bool, IsDebugUtilsExtensionSupported, (VkDevice), (const));
+  MOCK_METHOD(bool, IsDebugMarkerExtensionSupported, (VkCommandBuffer), (const));
+  MOCK_METHOD(bool, IsDebugMarkerExtensionSupported, (VkDevice), (const));
+  MOCK_METHOD(bool, IsDebugReportExtensionSupported, (VkInstance), (const));
+  MOCK_METHOD(PFN_vkCmdInsertDebugUtilsLabelEXT, CmdInsertDebugUtilsLabelEXT, (VkCommandBuffer));
+  MOCK_METHOD(PFN_vkCreateDebugUtilsMessengerEXT, CreateDebugUtilsMessengerEXT, (VkInstance));
+  MOCK_METHOD(PFN_vkDestroyDebugUtilsMessengerEXT, DestroyDebugUtilsMessengerEXT, (VkInstance));
+  MOCK_METHOD(PFN_vkQueueBeginDebugUtilsLabelEXT, QueueBeginDebugUtilsLabelEXT, (VkQueue));
+  MOCK_METHOD(PFN_vkQueueEndDebugUtilsLabelEXT, QueueEndDebugUtilsLabelEXT, (VkQueue));
+  MOCK_METHOD(PFN_vkQueueInsertDebugUtilsLabelEXT, QueueInsertDebugUtilsLabelEXT, (VkQueue));
+  MOCK_METHOD(PFN_vkSetDebugUtilsObjectNameEXT, SetDebugUtilsObjectNameEXT, (VkDevice));
+  MOCK_METHOD(PFN_vkSetDebugUtilsObjectTagEXT, SetDebugUtilsObjectTagEXT, (VkDevice));
+  MOCK_METHOD(PFN_vkSubmitDebugUtilsMessageEXT, SubmitDebugUtilsMessageEXT, (VkInstance));
+  MOCK_METHOD(PFN_vkCmdDebugMarkerInsertEXT, CmdDebugMarkerInsertEXT, (VkCommandBuffer));
+  MOCK_METHOD(PFN_vkDebugMarkerSetObjectNameEXT, DebugMarkerSetObjectNameEXT, (VkDevice));
+  MOCK_METHOD(PFN_vkDebugMarkerSetObjectTagEXT, DebugMarkerSetObjectTagEXT, (VkDevice));
+  MOCK_METHOD(PFN_vkCreateDebugReportCallbackEXT, CreateDebugReportCallbackEXT, (VkInstance));
+  MOCK_METHOD(PFN_vkDebugReportMessageEXT, DebugReportMessageEXT, (VkInstance));
+  MOCK_METHOD(PFN_vkDestroyDebugReportCallbackEXT, DestroyDebugReportCallbackEXT, (VkInstance));
 };
 
 class MockDeviceManager {
@@ -124,9 +146,9 @@ class VulkanLayerControllerTest : public ::testing::Test {
   static constexpr VkExtensionProperties kDebugUtilsExtension{
       .extensionName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
       .specVersion = VK_EXT_DEBUG_UTILS_SPEC_VERSION};
-  static constexpr VkExtensionProperties kHostQueryResetExtension{
-      .extensionName = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
-      .specVersion = VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+  static constexpr VkExtensionProperties kDebugReportExtension{
+      .extensionName = VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+      .specVersion = VK_EXT_DEBUG_REPORT_SPEC_VERSION};
 
   static constexpr VkExtensionProperties kFakeExtension1{.extensionName = "Other Extension 1",
                                                          .specVersion = 3};
@@ -182,7 +204,7 @@ TEST_F(VulkanLayerControllerTest, CanEnumerateInstanceExtensionPropertiesForThis
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_THAT(actual_properties,
               UnorderedElementsAreArray({VkExtensionPropertiesAreEqual(kDebugUtilsExtension),
-                                         VkExtensionPropertiesAreEqual(kHostQueryResetExtension)}));
+                                         VkExtensionPropertiesAreEqual(kDebugReportExtension)}));
 }
 
 TEST_F(VulkanLayerControllerTest, ErrorOnEnumerateInstanceExtensionPropertiesForDifferentLayer) {
@@ -656,7 +678,9 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnQueuePresentKHRToSubmissionTracker) 
 TEST_F(VulkanLayerControllerTest,
        MarksDebugMarkerBeginButNotForwardIfDriverDoesNotSupportDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(false));
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerBegin).Times(1);
 
@@ -668,7 +692,9 @@ TEST_F(VulkanLayerControllerTest,
 
 TEST_F(VulkanLayerControllerTest, ForwardsOnBeginDebugLabelIfDriverSupportsDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(true));
 
   PFN_vkCmdBeginDebugUtilsLabelEXT fake_cmd_begin_debug_utils_label_ext =
       +[](VkCommandBuffer /*command_buffer*/, const VkDebugUtilsLabelEXT* /*label_info*/) {};
@@ -688,7 +714,9 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnBeginDebugLabelIfDriverSupportsDebug
 TEST_F(VulkanLayerControllerTest,
        MarksDebugMarkerEndButNotForwardIfDriverDoesNotSupportDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(false));
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerEnd).Times(1);
 
@@ -698,7 +726,9 @@ TEST_F(VulkanLayerControllerTest,
 
 TEST_F(VulkanLayerControllerTest, ForwardsOnEndDebugLabelIfDriverSupportsDebugUtils) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(true));
 
   PFN_vkCmdEndDebugUtilsLabelEXT fake_cmd_end_debug_utils_label_ext =
       +[](VkCommandBuffer /*command_buffer*/) {};
@@ -716,7 +746,9 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnEndDebugLabelIfDriverSupportsDebugUt
 TEST_F(VulkanLayerControllerTest,
        MarksDebugMarkerBeginButNotForwardIfDriverDoesNotSupportDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(false));
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerBegin).Times(1);
 
@@ -728,7 +760,9 @@ TEST_F(VulkanLayerControllerTest,
 
 TEST_F(VulkanLayerControllerTest, ForwardsBeginDebugLabelIfDriverSupportsDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(true));
 
   PFN_vkCmdDebugMarkerBeginEXT fake_cmd_debug_marker_begin_ext =
       +[](VkCommandBuffer /*command_buffer*/, const VkDebugMarkerMarkerInfoEXT* /*label_info*/) {};
@@ -748,7 +782,9 @@ TEST_F(VulkanLayerControllerTest, ForwardsBeginDebugLabelIfDriverSupportsDebugMa
 TEST_F(VulkanLayerControllerTest,
        MarksDebugMarkerEndButNotForwardIfDriverDoesNotSupportDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(false));
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(false));
   const MockSubmissionTracker* submission_tracker = controller_.submission_tracker();
   EXPECT_CALL(*submission_tracker, MarkDebugMarkerEnd).Times(1);
 
@@ -758,7 +794,9 @@ TEST_F(VulkanLayerControllerTest,
 
 TEST_F(VulkanLayerControllerTest, ForwardsEndDebugLabelIfDriverSupportsDebugMarkers) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
-  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(true));
 
   PFN_vkCmdDebugMarkerEndEXT fake_cmd_debug_marker_end_ext =
       +[](VkCommandBuffer /*command_buffer*/) {};
@@ -773,4 +811,326 @@ TEST_F(VulkanLayerControllerTest, ForwardsEndDebugLabelIfDriverSupportsDebugMark
   controller_.OnCmdDebugMarkerEndEXT(command_buffer);
 }
 
+TEST_F(VulkanLayerControllerTest, ForwardsInsertDebugUtilsLabelIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkCommandBuffer command_buffer = {};
+  controller_.OnCmdInsertDebugUtilsLabelEXT(command_buffer, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkCmdInsertDebugUtilsLabelEXT fake =
+      +[](VkCommandBuffer /*command_buffer*/, const VkDebugUtilsLabelEXT* /*label_info*/) {};
+  EXPECT_CALL(*dispatch_table, CmdInsertDebugUtilsLabelEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnCmdInsertDebugUtilsLabelEXT(command_buffer, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsCreateDebugUtilsMessengerEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkInstance instance = {};
+  controller_.OnCreateDebugUtilsMessengerEXT(instance, nullptr, nullptr, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkCreateDebugUtilsMessengerEXT fake =
+      +[](VkInstance /*instance*/, const VkDebugUtilsMessengerCreateInfoEXT* /*create_info*/,
+          const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT *
+          /*messenger*/) -> VkResult { return VK_SUCCESS; };
+  EXPECT_CALL(*dispatch_table, CreateDebugUtilsMessengerEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnCreateDebugUtilsMessengerEXT(instance, nullptr, nullptr, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsDestroyDebugUtilsMessengerEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkInstance instance = {};
+  VkDebugUtilsMessengerEXT messenger = {};
+  controller_.OnDestroyDebugUtilsMessengerEXT(instance, messenger, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkDestroyDebugUtilsMessengerEXT fake =
+      +[](VkInstance /*instance*/, VkDebugUtilsMessengerEXT /*messenger*/,
+          const VkAllocationCallbacks* /*allocator*/) {};
+  EXPECT_CALL(*dispatch_table, DestroyDebugUtilsMessengerEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnDestroyDebugUtilsMessengerEXT(instance, messenger, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsQueueBeginDebugUtilsLabelEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkQueue>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkQueue queue = {};
+  controller_.OnQueueBeginDebugUtilsLabelEXT(queue, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkQueue>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkQueueBeginDebugUtilsLabelEXT fake =
+      +[](VkQueue /*queue*/, const VkDebugUtilsLabelEXT* /*label_info*/) {};
+  EXPECT_CALL(*dispatch_table, QueueBeginDebugUtilsLabelEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnQueueBeginDebugUtilsLabelEXT(queue, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsQueueEndDebugUtilsLabelEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkQueue>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkQueue queue = {};
+  controller_.OnQueueEndDebugUtilsLabelEXT(queue);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkQueue>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkQueueEndDebugUtilsLabelEXT fake = +[](VkQueue /*queue*/) {};
+  EXPECT_CALL(*dispatch_table, QueueEndDebugUtilsLabelEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnQueueEndDebugUtilsLabelEXT(queue);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsQueueInsertDebugUtilsLabelEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkQueue>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkQueue queue = {};
+  controller_.OnQueueInsertDebugUtilsLabelEXT(queue, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkQueue>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkQueueInsertDebugUtilsLabelEXT fake =
+      +[](VkQueue /*queue*/, const VkDebugUtilsLabelEXT* /*label_info*/) {};
+  EXPECT_CALL(*dispatch_table, QueueInsertDebugUtilsLabelEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnQueueInsertDebugUtilsLabelEXT(queue, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsSetDebugUtilsObjectNameEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkDevice device = {};
+  controller_.OnSetDebugUtilsObjectNameEXT(device, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkSetDebugUtilsObjectNameEXT fake =
+      +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT * /*name_info*/) -> VkResult {
+    return VK_SUCCESS;
+  };
+  EXPECT_CALL(*dispatch_table, SetDebugUtilsObjectNameEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnSetDebugUtilsObjectNameEXT(device, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsSetDebugUtilsObjectTagEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkDevice device = {};
+  controller_.OnSetDebugUtilsObjectTagEXT(device, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkSetDebugUtilsObjectTagEXT fake =
+      +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT * /*tag_info*/) -> VkResult {
+    return VK_SUCCESS;
+  };
+  EXPECT_CALL(*dispatch_table, SetDebugUtilsObjectTagEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnSetDebugUtilsObjectTagEXT(device, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsSubmitDebugUtilsMessageEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkInstance device = {};
+  VkDebugUtilsMessageSeverityFlagBitsEXT message_severity = {};
+  VkDebugUtilsMessageTypeFlagsEXT message_types = {};
+  controller_.OnSubmitDebugUtilsMessageEXT(device, message_severity, message_types, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugUtilsExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkSubmitDebugUtilsMessageEXT fake =
+      +[](VkInstance /*instance*/, VkDebugUtilsMessageSeverityFlagBitsEXT /*message_severity*/,
+          VkDebugUtilsMessageTypeFlagsEXT /*message_types*/,
+          const VkDebugUtilsMessengerCallbackDataEXT* /*callback_data*/) {};
+  EXPECT_CALL(*dispatch_table, SubmitDebugUtilsMessageEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnSubmitDebugUtilsMessageEXT(device, message_severity, message_types, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsCmdDebugMarkerInsertEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkCommandBuffer command_buffer = {};
+  controller_.OnCmdDebugMarkerInsertEXT(command_buffer, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkCommandBuffer>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkCmdDebugMarkerInsertEXT fake =
+      +[](VkCommandBuffer /*command_buffer*/, const VkDebugMarkerMarkerInfoEXT* /*marker_info*/) {};
+  EXPECT_CALL(*dispatch_table, CmdDebugMarkerInsertEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnCmdDebugMarkerInsertEXT(command_buffer, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsDebugMarkerSetObjectNameEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkDevice device = {};
+  controller_.OnDebugMarkerSetObjectNameEXT(device, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkDebugMarkerSetObjectNameEXT fake =
+      +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT * /*name_info*/) -> VkResult {
+    return VK_SUCCESS;
+  };
+  EXPECT_CALL(*dispatch_table, DebugMarkerSetObjectNameEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnDebugMarkerSetObjectNameEXT(device, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsDebugMarkerSetObjectTagEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkDevice device = {};
+  controller_.OnDebugMarkerSetObjectTagEXT(device, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugMarkerExtensionSupported(A<VkDevice>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkDebugMarkerSetObjectTagEXT fake =
+      +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT * /*tag*/) -> VkResult {
+    return VK_SUCCESS;
+  };
+  EXPECT_CALL(*dispatch_table, DebugMarkerSetObjectTagEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnDebugMarkerSetObjectTagEXT(device, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsCreateDebugReportCallbackEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugReportExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkInstance instance = {};
+  controller_.OnCreateDebugReportCallbackEXT(instance, nullptr, nullptr, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugReportExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkCreateDebugReportCallbackEXT fake =
+      +[](VkInstance /*instance*/, const VkDebugReportCallbackCreateInfoEXT* /*create_info*/,
+          const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT *
+          /*callback*/) -> VkResult { return VK_SUCCESS; };
+  EXPECT_CALL(*dispatch_table, CreateDebugReportCallbackEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnCreateDebugReportCallbackEXT(instance, nullptr, nullptr, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsCreateDebugReportMessageEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugReportExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkInstance instance = {};
+  VkDebugReportFlagsEXT flags = {};
+  VkDebugReportObjectTypeEXT object_type = {};
+  controller_.OnDebugReportMessageEXT(instance, flags, object_type, 0, 0, 0, nullptr, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugReportExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkDebugReportMessageEXT fake =
+      +[](VkInstance /*instance*/, VkDebugReportFlagsEXT /*flags*/,
+          VkDebugReportObjectTypeEXT /*object_type*/, uint64_t /*object*/, size_t /*location*/,
+          int32_t /*message_code*/, const char* /*layer_prefix*/, const char* /*message*/) {};
+  EXPECT_CALL(*dispatch_table, DebugReportMessageEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnDebugReportMessageEXT(instance, flags, object_type, 0, 0, 0, nullptr, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, ForwardsDestroyDebugReportCallbackEXTIfExtensionSupported) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, IsDebugReportExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(false));
+
+  VkInstance instance = {};
+  VkDebugReportCallbackEXT callback = {};
+  controller_.OnDestroyDebugReportCallbackEXT(instance, callback, nullptr);
+
+  testing::Mock::VerifyAndClearExpectations(&dispatch_table);
+  EXPECT_CALL(*dispatch_table, IsDebugReportExtensionSupported(A<VkInstance>()))
+      .Times(1)
+      .WillOnce(Return(true));
+
+  PFN_vkDestroyDebugReportCallbackEXT fake =
+      +[](VkInstance /*instance*/, VkDebugReportCallbackEXT /*callback*/,
+          const VkAllocationCallbacks* /*allocator*/) {};
+  EXPECT_CALL(*dispatch_table, DestroyDebugReportCallbackEXT).Times(1).WillOnce(Return(fake));
+  controller_.OnDestroyDebugReportCallbackEXT(instance, callback, nullptr);
+}
 }  // namespace orbit_vulkan_layer
