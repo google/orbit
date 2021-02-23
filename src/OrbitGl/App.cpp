@@ -537,7 +537,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function) {
   const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
 
-  auto loaded_module = RetrieveModule(module);
+  auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
   loaded_module
       .ThenIfSuccess(
@@ -545,15 +545,6 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
           [this, module,
            function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
             const auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
-
-            if (elf_file.has_error()) return elf_file.error();
-
-            if (!elf_file.value()->HasDebugInfo()) {
-              return ErrorMessage{absl::StrFormat(
-                  "Module \"%s\" does not include debug info. Other sources are not yet supported.",
-                  module->file_path())};
-            }
-
             const auto line_info = elf_file.value()->GetLineInfo(function.address());
 
             if (line_info.has_error()) {
