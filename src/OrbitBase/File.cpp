@@ -6,6 +6,17 @@
 
 #include "OrbitBase/Logging.h"
 
+#if defined(__linux)
+#include <unistd.h>
+#elif defined(_WIN32)
+#include <io.h>
+#endif
+
+#if defined(_WIN32)
+// Windows never returns EINTR - so there is no need for TEMP_FAILURE_RETRY implementation
+#define TEMP_FAILURE_RETRY(expression) (expression)
+#endif
+
 namespace orbit_base {
 
 static void FdDeleter(int fd) {
@@ -59,6 +70,24 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
 
   CHECK(bytes_left == 0);
   return outcome::success();
+}
+
+ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size) {
+  size_t bytes_left = size;
+  auto current_position = static_cast<uint8_t*>(buffer);
+
+  int64_t result;
+  while (bytes_left != 0 &&
+         (result = TEMP_FAILURE_RETRY(read(fd, current_position, bytes_left))) > 0) {
+    bytes_left -= result;
+    current_position += result;
+  }
+
+  if (result == -1) {
+    return ErrorMessage{SafeStrerror(errno)};
+  }
+
+  return size - bytes_left;
 }
 
 }  // namespace orbit_base

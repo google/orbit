@@ -15,6 +15,17 @@
 #include "OrbitBase/SafeStrerror.h"
 #include "OrbitBase/UniqueResource.h"
 
+#if defined(__linux)
+#include <unistd.h>
+#elif defined(_WIN32)
+#include <io.h>
+#endif
+
+#if defined(_WIN32)
+// Windows never returns EINTR - so there is no need for TEMP_FAILURE_RETRY implementation
+#define TEMP_FAILURE_RETRY(expression) (expression)
+#endif
+
 namespace orbit_base {
 
 ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) noexcept {

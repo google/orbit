@@ -83,6 +83,7 @@ target_sources(OrbitBaseTests PRIVATE
         AnyInvocableTest.cpp
         AnyMovableTest.cpp
         ExecutablePathTest.cpp
+        FileTest.cpp
         FutureTest.cpp
         FutureHelpersTest.cpp
         ImmediateExecutorTest.cpp
