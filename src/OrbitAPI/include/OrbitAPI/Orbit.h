@@ -7,10 +7,6 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Orbit Manual Instrumentation API.
 //
 // While dynamic instrumentation is one of Orbit's core features, manual instrumentation can also be
@@ -57,7 +53,7 @@ extern "C" {
 
 #if ORBIT_API_ENABLED
 
-// Call once at application start.
+// Call once at application start, this is only needed when using the Api from pure C code.
 #define ORBIT_API_INIT() orbit_api_init()
 
 // Call once at application exit.
@@ -223,7 +219,7 @@ extern "C" {
 #define ORBIT_FLOAT_WITH_COLOR(name, value, color) orbit_api_track_float(name, value, color)
 #define ORBIT_DOUBLE_WITH_COLOR(name, value, color) orbit_api_track_double(name, value, color)
 
-#else
+#else  // ORBIT_API_ENABLED
 
 #define ORBIT_API_INIT()
 #define ORBIT_API_DEINIT()
@@ -251,10 +247,10 @@ extern "C" {
 #define ORBIT_FLOAT_WITH_COLOR(name, value, color)
 #define ORBIT_DOUBLE_WITH_COLOR(name, value, color)
 
-#endif
+#endif  // ORBIT_API_ENABLED
 
 // Material Design Colors #500
-enum orbit_api_color {
+typedef enum {
   kOrbitColorAuto = 0x00000000,
   kOrbitColorRed = 0xf44336ff,
   kOrbitColorPink = 0xe91e63ff,
@@ -275,149 +271,18 @@ enum orbit_api_color {
   kOrbitColorBrown = 0x795548ff,
   kOrbitColorGrey = 0x9e9e9eff,
   kOrbitColorBlueGrey = 0x607d8bff
-};
+} orbit_api_color;
 
-#if ORBIT_API_ENABLED
-
-#ifndef ORBIT_API_INTERNAL_IMPL
-
-#if __linux__
-
-#include <dlfcn.h>
-#include <stdio.h>
-
-inline void* orbit_api_get_lib_orbit() {
-  static void* liborbit = dlopen("./liborbit.so", RTLD_LAZY);
-  if (liborbit == 0) {
-    printf("%s", "ERROR. Could not find liborbit.so, Orbit API will be disabled.\n");
-  }
-  return liborbit;
-}
-
-inline void* orbit_api_get_proc_address(const char* name) {
-  static void* liborbit = orbit_api_get_lib_orbit();
-  void* address = liborbit != 0 ? dlsym(liborbit, name) : 0;
-  printf("orbit_api_get_proc_address for %s : %p\n", name, address);
-  return address;
-}
-
-#else
-
-inline void* orbit_api_get_proc_address(const char* name) { return nullptr; }
-
-#endif  // __linux__
-
-#define ORBIT_GET_PROC_ADDRESS(name) name##_get_proc_address()
-#define ORBIT_GET_PROC_ADDRESS_DECL(name)                  \
-  inline void* ORBIT_GET_PROC_ADDRESS(name) {              \
-    static void* func = orbit_api_get_proc_address(#name); \
-    return func;                                           \
-  }
-
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_start)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_stop)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_start_async)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_stop_async)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_async_string)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_track_int)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_track_int64)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_track_uint)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_track_uint64)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_track_float)
-ORBIT_GET_PROC_ADDRESS_DECL(orbit_api_track_double)
-
-inline void orbit_api_init() {
-  ORBIT_GET_PROC_ADDRESS(orbit_api_start);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_stop);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_start_async);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_stop_async);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_async_string);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_track_int);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_track_int64);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_track_uint);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_track_uint64);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_track_float);
-  ORBIT_GET_PROC_ADDRESS(orbit_api_track_double);
-}
-
-inline void orbit_api_deinit() {
-#if __linux__
-  void* liborbit = orbit_api_get_lib_orbit();
-  if (liborbit != 0) {
-    dlclose(liborbit);
-  }
-#endif
-}
-
-#define ORBIT_FUNCTION_OR_RETURN(var, function_name)        \
-  static void* var = ORBIT_GET_PROC_ADDRESS(function_name); \
-  if (var == 0) return
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+#ifndef __cplusplus
+// The C implementation of the API lives in Orbit.c.
+#define ORBIT_API_INTERNAL_IMPL 1
 #endif
 
-inline void orbit_api_start(const char* name, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_start);
-  ((void (*)(const char*, orbit_api_color))func)(name, color);
-}
+#ifdef ORBIT_API_INTERNAL_IMPL
 
-inline void orbit_api_stop() {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_stop);
-  ((void (*)())func)();
-}
-
-inline void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_start_async);
-  ((void (*)(const char*, uint64_t, orbit_api_color))func)(name, id, color);
-}
-
-inline void orbit_api_stop_async(uint64_t id) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_stop_async);
-  ((void (*)(uint64_t))func)(id);
-}
-
-inline void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_async_string);
-  ((void (*)(const char*, uint64_t, orbit_api_color))func)(str, id, color);
-}
-
-inline void orbit_api_track_int(const char* name, int value, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_track_int);
-  ((void (*)(const char*, int, orbit_api_color))func)(name, value, color);
-}
-
-inline void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_track_int64);
-  ((void (*)(const char*, int64_t, orbit_api_color))func)(name, value, color);
-}
-
-inline void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_track_uint);
-  ((void (*)(const char*, uint32_t, orbit_api_color))func)(name, value, color);
-}
-
-inline void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_track_uint64);
-  ((void (*)(const char*, uint64_t, orbit_api_color))func)(name, value, color);
-}
-
-inline void orbit_api_track_float(const char* name, float value, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_track_float);
-  ((void (*)(const char*, float, orbit_api_color))func)(name, value, color);
-}
-
-inline void orbit_api_track_double(const char* name, double value, orbit_api_color color) {
-  ORBIT_FUNCTION_OR_RETURN(func, orbit_api_track_double);
-  ((void (*)(const char*, double, orbit_api_color))func)(name, value, color);
-}
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#ifdef __cplusplus
+extern "C" {
 #endif
-
-#else
 
 void orbit_api_init();
 void orbit_api_deinit();
@@ -433,7 +298,127 @@ void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color co
 void orbit_api_track_float(const char* name, float value, orbit_api_color color);
 void orbit_api_track_double(const char* name, double value, orbit_api_color color);
 
+#ifdef __cplusplus
+}
 #endif
+
+#else  // ORBIT_API_INTERNAL_IMPL
+
+#if __linux__
+
+#include <dlfcn.h>
+#include <stdio.h>
+
+inline void* orbit_api_get_lib_orbit() {
+  static void* liborbit = dlopen("./liborbit.so", RTLD_LAZY);
+  if (liborbit == 0) printf("%s", "ERROR. liborbit.so not found, Orbit API will be disabled.\n");
+  return liborbit;
+}
+
+inline void* orbit_api_get_proc_address(const char* name) {
+  static void* liborbit = orbit_api_get_lib_orbit();
+  void* address = liborbit != 0 ? dlsym(liborbit, name) : 0;
+  printf("orbit_api_get_proc_address for %s : %p\n", name, address);
+  return address;
+}
+
+#else
+
+inline void* orbit_api_get_proc_address(const char*) {
+  printf("%s", "ERROR. Platform not supported, Orbit API will be disabled.\n");
+  return nullptr;
+}
+
+#endif
+
+template <typename OrbitFunctionType>
+class OrbitFunctor {
+ public:
+  OrbitFunctor() = delete;
+  explicit OrbitFunctor(const char* proc_name)
+      : func_(reinterpret_cast<OrbitFunctionType>(orbit_api_get_proc_address(proc_name))) {}
+
+  template <typename... Args>
+  inline void operator()(const Args&... args) {
+    if (func_ != nullptr) func_(args...);
+  }
+
+ private:
+  OrbitFunctionType func_;
+};
+
+extern "C" {
+
+inline void orbit_api_init() {}
+
+inline void orbit_api_deinit() {
+  void* liborbit = orbit_api_get_lib_orbit();
+  if (liborbit != nullptr) {
+    dlclose(liborbit);
+  }
+}
+
+inline void orbit_api_start(const char* name, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, orbit_api_color)> f("orbit_api_start");
+  f(name, color);
+}
+
+inline void orbit_api_stop() {
+  static OrbitFunctor<void (*)()> f("orbit_api_stop");
+  f();
+}
+
+inline void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, uint64_t, orbit_api_color)> f("orbit_api_start_async");
+  f(name, id, color);
+}
+
+inline void orbit_api_stop_async(uint64_t id) {
+  static OrbitFunctor<void (*)(uint64_t)> f("orbit_api_stop_async");
+  f(id);
+}
+
+inline void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, uint64_t, orbit_api_color)> f("orbit_api_async_string");
+  f(str, id, color);
+}
+
+inline void orbit_api_track_int(const char* name, int value, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, int, orbit_api_color)> f("orbit_api_track_int");
+  f(name, value, color);
+}
+
+inline void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, int64_t, orbit_api_color)> f("orbit_api_track_int64");
+  f(name, value, color);
+}
+
+inline void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, uint32_t, orbit_api_color)> f("orbit_api_track_uint");
+  f(name, value, color);
+}
+
+inline void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, uint64_t, orbit_api_color)> f("orbit_api_track_uint64");
+  f(name, value, color);
+}
+
+inline void orbit_api_track_float(const char* name, float value, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, float, orbit_api_color)> f("orbit_api_track_float");
+  f(name, value, color);
+}
+
+inline void orbit_api_track_double(const char* name, double value, orbit_api_color color) {
+  static OrbitFunctor<void (*)(const char*, double, orbit_api_color)> f("orbit_api_track_double");
+  f(name, value, color);
+}
+
+}  // extern "C"
+
+#endif  // ORBIT_API_INTERNAL_IMPL
+
+
+#ifdef __cplusplus
 
 // Internal macros.
 #define ORBIT_CONCAT_IND(x, y) (x##y)
@@ -441,19 +426,13 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
 #define ORBIT_VAR ORBIT_UNIQUE(ORB)
 
-#ifdef __cplusplus
 namespace orbit_api {
 struct Scope {
   Scope(const char* name, orbit_api_color color) { orbit_api_start(name, color); }
   ~Scope() { orbit_api_stop(); }
 };
 }  // namespace orbit_api
+
 #endif  // __cplusplus
-
-#endif  // ORBIT_API_ENABLED
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  // ORBIT_API_ORBIT_H
