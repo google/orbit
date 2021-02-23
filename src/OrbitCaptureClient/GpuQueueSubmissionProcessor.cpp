@@ -10,7 +10,6 @@ using orbit_client_protos::Color;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::GpuCommandBuffer;
-using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 
@@ -212,7 +211,10 @@ void GpuQueueSubmissionProcessor::DeleteSavedGpuJob(int32_t thread_id,
   if (!tid_to_submission_time_to_gpu_job_.contains(thread_id)) {
     return;
   }
-  auto& submission_time_to_gpu_job = tid_to_submission_time_to_gpu_job_.at(thread_id);
+  // This method might be called even when the "capture start" falls directly inside a GpuJob, and
+  // we thus don't have the job present in the map.
+  // For simplicity we "erase" it anyways (insert and remove it again).
+  auto& submission_time_to_gpu_job = tid_to_submission_time_to_gpu_job_[thread_id];
   submission_time_to_gpu_job.erase(submission_timestamp);
   if (submission_time_to_gpu_job.empty()) {
     tid_to_submission_time_to_gpu_job_.erase(thread_id);
@@ -348,25 +350,32 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       const GpuJob* matching_begin_job = FindMatchingGpuJob(
           begin_marker_thread_id, begin_marker_meta_info.pre_submission_cpu_timestamp(),
           begin_marker_post_submission_cpu_timestamp);
-      CHECK(matching_begin_job != nullptr);
 
-      // Convert the GPU time to CPU time, based on the CPU time of the HW execution begin and the
-      // GPU timestamp of the begin of the first command buffer. Note that we will assume that the
-      // first command buffer starts execution right away as an approximation.
-      marker_timer.set_start(completed_marker.begin_marker().gpu_timestamp_ns() +
-                             matching_begin_job->gpu_hardware_start_time_ns() -
-                             begin_submission_first_command_buffer->begin_gpu_timestamp_ns());
+      uint64_t begin_submission_time_ns = 0;
+      if (matching_begin_job != nullptr) {
+        // Convert the GPU time to CPU time, based on the CPU time of the HW execution begin and the
+        // GPU timestamp of the begin of the first command buffer. Note that we will assume that the
+        // first command buffer starts execution right away as an approximation.
+        marker_timer.set_start(completed_marker.begin_marker().gpu_timestamp_ns() +
+                               matching_begin_job->gpu_hardware_start_time_ns() -
+                               begin_submission_first_command_buffer->begin_gpu_timestamp_ns());
+        begin_submission_time_ns = matching_begin_job->amdgpu_cs_ioctl_time_ns();
+      } else {
+        // We might have bad luck and have captured the "begin" submission, but not the matching
+        // job.
+        marker_timer.set_start(begin_capture_time_ns_);
+      }
+
       if (begin_marker_thread_id == gpu_queue_submission.meta_info().tid()) {
         marker_timer.set_thread_id(begin_marker_thread_id);
       } else {
         marker_timer.set_thread_id(kUnknownThreadId);
       }
 
-      // Remember, it would not be safe to decrement (and thus possible erese) the "begin marker"
+      // Remember, it would not be safe to decrement (and thus possible erase) the "begin marker"
       // here right away, as its begin submission might be the same as "gpu_queue_submission",
       // which we still use afterwards.
-      begin_markers_to_decrement.emplace_back(begin_marker_thread_id,
-                                              matching_begin_job->amdgpu_cs_ioctl_time_ns(),
+      begin_markers_to_decrement.emplace_back(begin_marker_thread_id, begin_submission_time_ns,
                                               begin_marker_post_submission_cpu_timestamp);
     } else {
       marker_timer.set_start(begin_capture_time_ns_);
