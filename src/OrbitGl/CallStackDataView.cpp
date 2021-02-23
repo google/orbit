@@ -151,7 +151,7 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module);
       }
     }
-    app_->LoadModules(modules_to_load);
+    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
 
   } else if (action == kMenuActionSelect) {
     for (int i : item_indices) {

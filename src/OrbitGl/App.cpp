@@ -968,7 +968,7 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
-orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModuleOnRemote(
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
     const std::string& module_file_path) {
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
@@ -1006,12 +1006,12 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModuleOn
   return check_file_on_remote.Then(main_thread_executor_, std::move(download_file));
 }
 
-void OrbitApp::LoadModuleOnRemote(ModuleData* module_data,
-                                  std::vector<uint64_t> function_hashes_to_hook,
-                                  std::vector<uint64_t> frame_track_function_hashes,
-                                  std::string error_message_from_local) {
+void OrbitApp::RetrieveModuleFromRemote(ModuleData* module_data,
+                                        std::vector<uint64_t> function_hashes_to_hook,
+                                        std::vector<uint64_t> frame_track_function_hashes,
+                                        std::string error_message_from_local) {
   // This overload will be removed in a subsequent commit.
-  auto local_file_path = LoadModuleOnRemote(module_data->file_path());
+  auto local_file_path = RetrieveModuleFromRemote(module_data->file_path());
 
   auto load_symbols = [this, module_data,
                        function_hashes_to_hook = std::move(function_hashes_to_hook),
@@ -1058,12 +1058,13 @@ void OrbitApp::LoadModules(
           SelectFunctionsFromHashes(module, select_functions);
           EnableFrameTracksFromHashes(module, frame_tracks);
         };
-    LoadModuleAndSymbols(module).Then(main_thread_executor_,
-                                      std::move(handle_hooks_and_frame_tracks));
+    RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_,
+                                              std::move(handle_hooks_and_frame_tracks));
   }
 }
 
-orbit_base::Future<void> OrbitApp::LoadModules(absl::Span<const ModuleData* const> modules) {
+orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
+    absl::Span<const ModuleData* const> modules) {
   std::vector<orbit_base::Future<void>> futures;
   futures.reserve(modules.size());
 
@@ -1076,17 +1077,18 @@ orbit_base::Future<void> OrbitApp::LoadModules(absl::Span<const ModuleData* cons
 
   for (const auto& module : modules) {
     futures.emplace_back(
-        LoadModuleAndSymbols(module).Then(main_thread_executor_, std::move(handle_error)));
+        RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_, std::move(handle_error)));
   }
 
   return orbit_base::JoinFutures(futures);
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModuleAndSymbols(const ModuleData* module) {
-  return LoadModuleAndSymbols(module->file_path(), module->build_id());
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
+    const ModuleData* module) {
+  return RetrieveModuleAndLoadSymbols(module->file_path(), module->build_id());
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModuleAndSymbols(
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const std::string& module_path, const std::string& build_id) {
   const ModuleData* const module_data = GetModuleByPath(module_path);
   if (module_data == nullptr) {
@@ -1095,19 +1097,19 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadModuleAndSymbols(
   if (module_data->is_loaded()) return {outcome::success()};
 
   return orbit_base::UnwrapFuture(
-      LoadModule(module_path, build_id)
+      RetrieveModule(module_path, build_id)
           .ThenIfSuccess(main_thread_executor_,
                          [this, module_path](const std::filesystem::path& local_file_path) {
                            return LoadSymbols(local_file_path, module_path);
                          }));
 }
 
-orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModule(
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(
     const ModuleData* module) {
-  return LoadModule(module->file_path(), module->build_id());
+  return RetrieveModule(module->file_path(), module->build_id());
 }
 
-orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModule(
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(
     const std::string& module_path, const std::string& build_id) {
   const ModuleData* module_data = GetModuleByPath(module_path);
 
@@ -1133,7 +1135,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::LoadModule(
   }
 
   auto final_result =
-      LoadModuleOnRemote(module_path)
+      RetrieveModuleFromRemote(module_path)
           .Then(main_thread_executor_,
                 [this, module_path, local_error_message = local_symbols_path.error().message()](
                     const ErrorMessageOr<std::filesystem::path>& remote_result)
@@ -1301,7 +1303,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
     return outcome::success();
   };
 
-  return LoadModuleAndSymbols(module_data)
+  return RetrieveModuleAndLoadSymbols(module_data)
       .Then(main_thread_executor_, std::move(handle_hooks_and_frame_tracks));
 }
 

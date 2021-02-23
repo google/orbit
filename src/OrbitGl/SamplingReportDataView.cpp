@@ -263,7 +263,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
         modules_to_load.push_back(module);
       }
     }
-    app_->LoadModules(modules_to_load);
+    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
   } else if (action == kMenuActionDisassembly) {
     int32_t pid = app_->GetCaptureData().process_id();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {

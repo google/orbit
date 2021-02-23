@@ -292,16 +292,18 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   // LoadModule retrieves a module file and returns the local file path (potentially from the local
   // cache). Symbols won't be loaded.
-  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> LoadModule(const ModuleData* module);
-  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> LoadModule(
+  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
+      const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
       const std::string& module_path, const std::string& build_id);
-  orbit_base::Future<void> LoadModules(absl::Span<const ModuleData* const> modules);
+  orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
+      absl::Span<const ModuleData* const> modules);
 
   // LoadModuleAndSymbols is a helper function which first retrieves the module by calling
   // `LoadModule` and afterwards load the symbols by calling `LoadSymbols`.
-  orbit_base::Future<ErrorMessageOr<void>> LoadModuleAndSymbols(const ModuleData* module);
-  orbit_base::Future<ErrorMessageOr<void>> LoadModuleAndSymbols(const std::string& module_path,
-                                                                const std::string& build_id);
+  orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
+      const std::string& module_path, const std::string& build_id);
 
   // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
   // should not be necessary to have an argument here, since OrbitApp will always only have one
@@ -416,10 +418,11 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                    std::vector<uint64_t> function_hashes_to_hook,
                    std::vector<uint64_t> frame_track_function_hashes);
 
-  void LoadModuleOnRemote(ModuleData* module_data, std::vector<uint64_t> function_hashes_to_hook,
-                          std::vector<uint64_t> frame_track_function_hashes,
-                          std::string error_message_from_local);
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> LoadModuleOnRemote(
+  void RetrieveModuleFromRemote(ModuleData* module_data,
+                                std::vector<uint64_t> function_hashes_to_hook,
+                                std::vector<uint64_t> frame_track_function_hashes,
+                                std::string error_message_from_local);
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);
 
   void SelectFunctionsFromHashes(const ModuleData* module,
