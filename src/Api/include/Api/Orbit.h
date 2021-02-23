@@ -320,7 +320,7 @@ inline void* orbit_api_get_proc_address(const char* name) {
 #else
 
 inline void* orbit_api_get_proc_address(const char* /*name*/) {
-  fprintf(stderr, "ERROR: Platform not supported, Orbit API will be disabled.\n");
+  fprintf(stderr, "ERROR: Platform not supported, Orbit API is disabled.\n");
   return nullptr;
 }
 
@@ -344,7 +344,7 @@ class OrbitFunctor {
 
 extern "C" {
 
-// in C++, orbit_api_init() does nothing.
+// In C++, orbit_api_init() does nothing.
 inline void orbit_api_init() {}
 
 inline void orbit_api_start(const char* name, orbit_api_color color) {
