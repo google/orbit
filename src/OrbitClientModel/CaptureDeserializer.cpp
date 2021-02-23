@@ -10,11 +10,11 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <fstream>
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
@@ -43,39 +43,36 @@ using orbit_grpc_protos::ProcessInfo;
 
 namespace capture_deserializer {
 
-ErrorMessageOr<CaptureListener::CaptureOutcome> Load(const std::string& file_name,
+ErrorMessageOr<CaptureListener::CaptureOutcome> Load(const std::filesystem::path& file_name,
                                                      CaptureListener* capture_listener,
                                                      ModuleManager* module_manager,
                                                      std::atomic<bool>* cancellation_requested) {
-  SCOPED_TIMED_LOG("Loading capture from \"%s\"", file_name);
+  SCOPED_TIMED_LOG("Loading capture from \"%s\"", file_name.string());
 
-  // Binary
-  std::ifstream file(file_name, std::ios::binary);
-  if (file.fail()) {
-    std::string error = absl::StrFormat("Error opening file \"%s\" for reading", file_name);
-    ERROR("%s", error);
-    return ErrorMessage{error};
+  auto fd_or_error = orbit_base::OpenFileForReading(file_name);
+  if (fd_or_error.has_error()) {
+    ERROR("%s", fd_or_error.error().message());
+    return fd_or_error.error();
   }
 
-  return Load(file, file_name, capture_listener, module_manager, cancellation_requested);
-}
-
-ErrorMessageOr<CaptureListener::CaptureOutcome> Load(std::istream& stream,
-                                                     const std::string& file_name,
-                                                     CaptureListener* capture_listener,
-                                                     ModuleManager* module_manager,
-                                                     std::atomic<bool>* cancellation_requested) {
-  google::protobuf::io::IstreamInputStream input_stream(&stream);
+  google::protobuf::io::FileInputStream input_stream(fd_or_error.value());
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
+  return Load(&coded_input, file_name, capture_listener, module_manager, cancellation_requested);
+}
+
+ErrorMessageOr<CaptureListener::CaptureOutcome> Load(
+    google::protobuf::io::CodedInputStream* input_stream, const std::filesystem::path& file_name,
+    CaptureListener* capture_listener, ModuleManager* module_manager,
+    std::atomic<bool>* cancellation_requested) {
   std::string error_message = absl::StrFormat(
       "Error parsing the capture from \"%s\".\nNote: If the capture "
       "was taken with a previous Orbit version, it could be incompatible. "
       "Please check release notes for more information.",
-      file_name);
+      file_name.string());
 
   CaptureHeader header;
-  if (!internal::ReadMessage(&header, &coded_input) || header.version().empty()) {
+  if (!internal::ReadMessage(&header, input_stream) || header.version().empty()) {
     ERROR("%s", error_message);
     return ErrorMessage{std::move(error_message)};
   }
@@ -83,18 +80,18 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> Load(std::istream& stream,
     std::string incompatible_version_error_message = absl::StrFormat(
         "The format of capture \"%s\" is no longer supported but could be opened with "
         "Orbit version %s.",
-        file_name, header.version());
+        file_name.string(), header.version());
     ERROR("%s", incompatible_version_error_message);
     return ErrorMessage{std::move(incompatible_version_error_message)};
   }
 
   CaptureInfo capture_info;
-  if (!internal::ReadMessage(&capture_info, &coded_input)) {
+  if (!internal::ReadMessage(&capture_info, input_stream)) {
     ERROR("%s", error_message);
     return ErrorMessage{std::move(error_message)};
   }
 
-  return internal::LoadCaptureInfo(capture_info, capture_listener, module_manager, &coded_input,
+  return internal::LoadCaptureInfo(capture_info, capture_listener, module_manager, input_stream,
                                    cancellation_requested);
 }
 

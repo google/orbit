@@ -54,11 +54,13 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   }
 
   // NOLINTNEXTLINE
-  std::istringstream input_stream{std::move(buffer)};
+  google::protobuf::io::ArrayInputStream input_stream{buffer.data(),
+                                                      static_cast<int>(buffer.size())};
+  google::protobuf::io::CodedInputStream coded_input_stream{&input_stream};
   std::atomic<bool> cancellation_requested = false;
 
   MockCaptureListener capture_listener{};
   orbit_client_data::ModuleManager module_manager{};
-  (void)capture_deserializer::Load(input_stream, info.filename(), &capture_listener,
+  (void)capture_deserializer::Load(&coded_input_stream, info.filename(), &capture_listener,
                                    &module_manager, &cancellation_requested);
 }
