@@ -37,6 +37,9 @@ class SymbolHelper {
   [[nodiscard]] ErrorMessageOr<fs::path> FindDebugInfoFileLocally(std::string_view filename,
                                                                   uint32_t checksum) const;
 
+  [[nodiscard]] static ErrorMessageOr<fs::path> FindDebugInfoFileInDebugStore(
+      const fs::path& debug_directory, std::string_view build_id);
+
  private:
   const std::vector<fs::path> symbols_file_directories_;
   const fs::path cache_directory_;
