@@ -199,3 +199,49 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
   auto file_name = absl::StrReplaceAll(file_path.string(), {{"/", "_"}});
   return cache_directory_ / file_name;
 }
+
+[[nodiscard]] static bool IsMatchingDebugInfoFile(const std::filesystem::path& debuginfo_file_path,
+                                                  uint32_t checksum) {
+  std::error_code error;
+  bool exists = fs::exists(debuginfo_file_path, error);
+  if (error) {
+    ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(), error.message());
+    return false;
+  }
+
+  if (!exists) return false;
+
+  const auto checksum_or_error = ElfFile::CalculateDebuglinkChecksum(debuginfo_file_path);
+  if (checksum_or_error.has_error()) {
+    LOG("Unable to calculate checksum of \"%s\": \"%s\"", debuginfo_file_path.filename().string(),
+        checksum_or_error.error().message());
+    return false;
+  }
+
+  if (checksum_or_error.value() != checksum) {
+    LOG("Found file with matching name \"%s\", but the checksums do not match. Expected: %#x. "
+        "Actual: %#x",
+        debuginfo_file_path.string(), checksum, checksum_or_error.value());
+    return false;
+  }
+
+  LOG("Found debug info in file \"%s\"", debuginfo_file_path.string());
+  return true;
+}
+
+ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(std::string_view filename,
+                                                                uint32_t checksum) const {
+  std::set<fs::path> search_paths;
+  for (const auto& directory : symbols_file_directories_) {
+    search_paths.insert(directory / filename);
+  }
+
+  LOG("Trying to find debuginfo file with filename \"%s\"", filename);
+  for (const auto& debuginfo_file_path : search_paths) {
+    if (IsMatchingDebugInfoFile(debuginfo_file_path, checksum)) return debuginfo_file_path;
+  }
+
+  return ErrorMessage{
+      absl::StrFormat("Could not find a file with debug info with filename \"%s\" and checksum %#x",
+                      filename, checksum)};
+}

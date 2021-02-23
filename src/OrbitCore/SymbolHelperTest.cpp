@@ -172,3 +172,14 @@ TEST(SymbolHelper, VerifySymbolsFile) {
                 testing::HasSubstr("unable to load elf file"));
   }
 }
+
+TEST(SymbolHelper, FindDebugInfoFileLocally) {
+  SymbolHelper symbol_helper({testdata_directory}, "");
+  constexpr uint32_t kExpectedChecksum = 0x2bf887bf;
+
+  const auto symbols_path_result =
+      symbol_helper.FindDebugInfoFileLocally("hello_world_elf.debug", kExpectedChecksum);
+  ASSERT_TRUE(symbols_path_result) << symbols_path_result.error().message();
+  EXPECT_EQ(symbols_path_result.value().filename(), "hello_world_elf.debug");
+  EXPECT_EQ(symbols_path_result.value().parent_path(), testdata_directory);
+}
