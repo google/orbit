@@ -91,7 +91,8 @@ TEST(CaptureDeserializer, LoadFileNotExists) {
       "not_existing_test_file", &listener, &module_manager, &cancellation_requested);
   ASSERT_FALSE(result);
 
-  EXPECT_EQ("Error opening file \"not_existing_test_file\" for reading", result.error().message());
+  EXPECT_EQ(result.error().message(),
+            "Unable to open file \"not_existing_test_file\": No such file or directory");
 }
 
 TEST(CaptureDeserializer, LoadNoVersion) {
@@ -104,13 +105,18 @@ TEST(CaptureDeserializer, LoadNoVersion) {
   std::string serialized_header;
   header.SerializeToString(&serialized_header);
   int32_t size_of_header = serialized_header.size();
-  std::stringstream stream;
-  stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
-         << serialized_header;
+
+  std::string buffer;
+  buffer.append(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
+      .append(serialized_header);
+
+  google::protobuf::io::ArrayInputStream array_input_stream(buffer.data(),
+                                                            static_cast<int>(buffer.size()));
+  google::protobuf::io::CodedInputStream coded_input_stream(&array_input_stream);
 
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
-      stream, "file_name", &listener, &module_manager, &cancellation_requested);
+      &coded_input_stream, "file_name", &listener, &module_manager, &cancellation_requested);
   ASSERT_FALSE(result);
 
   std::string expected_error_message =
@@ -118,7 +124,7 @@ TEST(CaptureDeserializer, LoadNoVersion) {
       "was taken with a previous Orbit version, it could be incompatible. "
       "Please check release notes for more information.";
 
-  EXPECT_EQ(expected_error_message, result.error().message());
+  EXPECT_EQ(result.error().message(), expected_error_message);
 }
 
 TEST(CaptureDeserializer, LoadOldVersion) {
@@ -131,13 +137,18 @@ TEST(CaptureDeserializer, LoadOldVersion) {
   std::string serialized_header;
   header.SerializeToString(&serialized_header);
   int32_t size_of_header = serialized_header.size();
-  std::stringstream stream;
-  stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
-         << serialized_header;
+
+  std::string buffer;
+  buffer.append(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
+      .append(serialized_header);
+
+  google::protobuf::io::ArrayInputStream array_input_stream(buffer.data(),
+                                                            static_cast<int>(buffer.size()));
+  google::protobuf::io::CodedInputStream coded_input_stream(&array_input_stream);
 
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
-      stream, "file_name", &listener, &module_manager, &cancellation_requested);
+      &coded_input_stream, "file_name", &listener, &module_manager, &cancellation_requested);
   ASSERT_FALSE(result);
 
   EXPECT_THAT(result.error().message(), HasSubstr("1.51"));
@@ -153,13 +164,18 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
   std::string serialized_header;
   header.SerializeToString(&serialized_header);
   int32_t size_of_header = serialized_header.size();
-  std::stringstream stream;
-  stream << std::string(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
-         << serialized_header;
+
+  std::string buffer;
+  buffer.append(absl::bit_cast<char*>(&size_of_header), sizeof(size_of_header))
+      .append(serialized_header);
+
+  google::protobuf::io::ArrayInputStream array_input_stream(buffer.data(),
+                                                            static_cast<int>(buffer.size()));
+  google::protobuf::io::CodedInputStream coded_input_stream(&array_input_stream);
 
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
-      stream, "file_name", &listener, &module_manager, &cancellation_requested);
+      &coded_input_stream, "file_name", &listener, &module_manager, &cancellation_requested);
   EXPECT_FALSE(result);
 }
 
