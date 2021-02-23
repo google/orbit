@@ -407,7 +407,6 @@ inline void orbit_api_track_double(const char* name, double value, orbit_api_col
 
 #endif  // ORBIT_API_INTERNAL_IMPL
 
-
 #ifdef __cplusplus
 
 // Internal macros.
