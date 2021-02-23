@@ -211,8 +211,8 @@ void GpuQueueSubmissionProcessor::DeleteSavedGpuJob(int32_t thread_id,
   if (!tid_to_submission_time_to_gpu_job_.contains(thread_id)) {
     return;
   }
-  // This method might be called if the "capture start" falls directly inside a GpuJob, and we thus
-  // don't have the job present in the map.
+  // This method might be called even when the "capture start" falls directly inside a GpuJob, and
+  // we thus don't have the job present in the map.
   // For simplicity we "erase" it anyways (insert and remove it again).
   auto& submission_time_to_gpu_job = tid_to_submission_time_to_gpu_job_[thread_id];
   submission_time_to_gpu_job.erase(submission_timestamp);
