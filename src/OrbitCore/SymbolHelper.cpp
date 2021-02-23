@@ -14,6 +14,7 @@
 #include <memory>
 #include <outcome.hpp>
 #include <set>
+#include <system_error>
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
@@ -244,4 +245,24 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(std::string_view
   return ErrorMessage{
       absl::StrFormat("Could not find a file with debug info with filename \"%s\" and checksum %#x",
                       filename, checksum)};
+}
+
+ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
+    const fs::path& debug_directory, std::string_view build_id) {
+  if (build_id.size() < 3) {
+    return ErrorMessage{absl::StrFormat("The build-id \"%s\" is malformed.", build_id)};
+  }
+
+  auto full_file_path = debug_directory / ".build-id" / build_id.substr(0, 2) /
+                        absl::StrFormat("%s.debug", build_id.substr(2));
+
+  std::error_code error{};
+  if (fs::exists(full_file_path, error)) return full_file_path;
+
+  if (error.value() == 0) {
+    return ErrorMessage{absl::StrFormat("File does not exist: \"%s\"", full_file_path.string())};
+  }
+
+  return ErrorMessage{absl::StrFormat("Unable to stat the file \"%s\": %s", full_file_path.string(),
+                                      error.message())};
 }
