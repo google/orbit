@@ -24,7 +24,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
-#include <fstream>
 #include <memory>
 #include <outcome.hpp>
 #include <ratio>
@@ -45,6 +44,7 @@
 #include "ImGuiOrbit.h"
 #include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/ImmediateExecutor.h"
@@ -691,36 +691,43 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     filename_with_ext += ".opr";
   }
 
-  std::ofstream file(filename_with_ext, std::ios::binary);
-  if (file.fail()) {
-    ERROR("Saving preset in \"%s\": %s", filename_with_ext, "file.fail()");
-    return ErrorMessage(
-        absl::StrFormat("Error opening the file \"%s\" for writing", filename_with_ext));
+  auto open_result = orbit_base::OpenFileForWriting(filename_with_ext);
+  if (open_result.has_error()) {
+    std::string error_message = absl::StrFormat("Failed to open \"%s\": %s", filename_with_ext,
+                                                open_result.error().message());
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
-  LOG("Saving preset in \"%s\"", filename_with_ext);
-  preset.SerializeToOstream(&file);
+  LOG("Saving preset to \"%s\"", filename_with_ext);
+  if (!preset.SerializeToFileDescriptor(open_result.value())) {
+    std::string error_message =
+        absl::StrFormat("Failed to save preset to \"%s\"", filename_with_ext);
+    ERROR("%s", error_message);
+    return ErrorMessage(error_message);
+  }
 
   return outcome::success();
 }
 
 ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::path& filename) {
-  std::filesystem::path file_path = filename;
+  std::filesystem::path file_path =
+      filename.is_absolute() ? filename : Path::CreateOrGetPresetDir() / filename;
 
-  if (filename.parent_path().empty()) {
-    file_path = Path::CreateOrGetPresetDir() / filename;
-  }
-
-  std::ifstream file(file_path, std::ios::binary);
-  if (file.fail()) {
-    ERROR("Loading preset from \"%s\": file.fail()", file_path.string());
-    return ErrorMessage("Error opening the file for reading");
+  auto open_result = orbit_base::OpenFileForReading(file_path);
+  if (open_result.has_error()) {
+    std::string error_message = absl::StrFormat("Failed to open \"%s\": %s", file_path.string(),
+                                                open_result.error().message());
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
   PresetInfo preset_info;
-  if (!preset_info.ParseFromIstream(&file)) {
-    ERROR("Loading preset from \"%s\" failed", file_path.string());
-    return ErrorMessage(absl::StrFormat("Error reading the preset"));
+  if (!preset_info.ParseFromFileDescriptor(open_result.value())) {
+    std::string error_message =
+        absl::StrFormat("Failed to load preset from \"%s\"", file_path.string());
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
   return preset_info;
 }
