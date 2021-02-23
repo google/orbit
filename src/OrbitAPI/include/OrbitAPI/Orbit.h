@@ -56,9 +56,6 @@
 // Call once at application start, this is only needed when using the Api from pure C code.
 #define ORBIT_API_INIT() orbit_api_init()
 
-// Call once at application exit.
-#define ORBIT_API_DEINIT() orbit_api_deinit()
-
 // ORBIT_SCOPE: Profile current scope.
 //
 // Overview:
@@ -222,7 +219,6 @@
 #else  // ORBIT_API_ENABLED
 
 #define ORBIT_API_INIT()
-#define ORBIT_API_DEINIT()
 #define ORBIT_SCOPE(name)
 #define ORBIT_START(name)
 #define ORBIT_STOP()
@@ -285,7 +281,6 @@ extern "C" {
 #endif
 
 void orbit_api_init();
-void orbit_api_deinit();
 void orbit_api_start(const char* name, orbit_api_color color);
 void orbit_api_stop();
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color);
@@ -331,6 +326,8 @@ inline void* orbit_api_get_proc_address(const char*) {
 
 #endif
 
+#include <utility>
+
 template <typename OrbitFunctionType>
 class OrbitFunctor {
  public:
@@ -350,15 +347,6 @@ class OrbitFunctor {
 extern "C" {
 
 inline void orbit_api_init() {}
-
-inline void orbit_api_deinit() {
-#if __linux__
-  void* liborbit = orbit_api_get_lib_orbit();
-  if (liborbit != nullptr) {
-    dlclose(liborbit);
-  }
-#endif
-}
 
 inline void orbit_api_start(const char* name, orbit_api_color color) {
   static OrbitFunctor<void (*)(const char*, orbit_api_color)> f("orbit_api_start");
