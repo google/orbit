@@ -138,7 +138,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
         modules_to_load.push_back(module_data);
       }
     }
-    app_->LoadModules(modules_to_load);
+    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
 
   } else if (action == kMenuActionVerifyFramePointers) {
     std::vector<const ModuleData*> modules_to_validate;
@@ -160,7 +160,7 @@ void ModulesDataView::OnDoubleClicked(int index) {
   ModuleData* module_data = GetModule(index);
   if (!module_data->is_loaded()) {
     std::vector<ModuleData*> modules_to_load = {module_data};
-    app_->LoadModules(modules_to_load);
+    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
   }
 }
 
