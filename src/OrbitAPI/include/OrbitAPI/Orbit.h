@@ -352,10 +352,12 @@ extern "C" {
 inline void orbit_api_init() {}
 
 inline void orbit_api_deinit() {
+#if __linux__
   void* liborbit = orbit_api_get_lib_orbit();
   if (liborbit != nullptr) {
     dlclose(liborbit);
   }
+#endif
 }
 
 inline void orbit_api_start(const char* name, orbit_api_color color) {
