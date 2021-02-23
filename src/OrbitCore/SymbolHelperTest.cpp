@@ -19,13 +19,13 @@
 using orbit_grpc_protos::ModuleSymbols;
 namespace fs = std::filesystem;
 
-const std::filesystem::path executable_directory = orbit_base::GetExecutableDir() / "testdata";
+static const std::filesystem::path testdata_directory = orbit_base::GetExecutableDir() / "testdata";
 
 TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
-  SymbolHelper symbol_helper({executable_directory}, "");
+  SymbolHelper symbol_helper({testdata_directory}, "");
   {
-    const fs::path file_path = executable_directory / "no_symbols_elf";
-    const fs::path symbols_path = executable_directory / "no_symbols_elf.debug";
+    const fs::path file_path = testdata_directory / "no_symbols_elf";
+    const fs::path symbols_path = testdata_directory / "no_symbols_elf.debug";
 
     const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
         file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
@@ -43,7 +43,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
   }
 
   {
-    const fs::path file_path = executable_directory / "no_symbols_elf";
+    const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto symbols_path_result =
         symbol_helper.FindSymbolsWithSymbolsPathFile(file_path, "wrong build id");
     ASSERT_FALSE(symbols_path_result);
@@ -52,7 +52,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
   }
 
   {
-    const fs::path file_path = executable_directory / "no_symbols_elf";
+    const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(file_path, "");
     ASSERT_FALSE(symbols_path_result);
     EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
@@ -63,7 +63,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
 }
 
 TEST(SymbolHelper, FindSymbolsInCache) {
-  SymbolHelper symbol_helper({}, executable_directory);
+  SymbolHelper symbol_helper({}, testdata_directory);
 
   // This is more of a smoke test (looking for the same file)
   {
@@ -71,7 +71,7 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     const auto result =
         symbol_helper.FindSymbolsInCache(file, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
     ASSERT_TRUE(result) << result.error().message();
-    EXPECT_EQ(result.value(), executable_directory / file);
+    EXPECT_EQ(result.value(), testdata_directory / file);
   }
 
   // file in cache does not have symbols
@@ -97,7 +97,7 @@ TEST(SymbolHelper, FindSymbolsInCache) {
 TEST(SymbolHelper, LoadFromFile) {
   // contains symbols
   {
-    const fs::path file_path = executable_directory / "no_symbols_elf.debug";
+    const fs::path file_path = testdata_directory / "no_symbols_elf.debug";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
 
     ASSERT_TRUE(result) << result.error().message();
@@ -109,7 +109,7 @@ TEST(SymbolHelper, LoadFromFile) {
 
   // does not contain symbols
   {
-    const fs::path file_path = executable_directory / "no_symbols_elf";
+    const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
 
     ASSERT_FALSE(result);
@@ -119,7 +119,7 @@ TEST(SymbolHelper, LoadFromFile) {
 
   // invalid file
   {
-    const fs::path file_path = executable_directory / "file_does_not_exist";
+    const fs::path file_path = testdata_directory / "file_does_not_exist";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
 
     ASSERT_FALSE(result);
@@ -139,14 +139,14 @@ TEST(SymbolHelper, GenerateCachedFileName) {
 TEST(SymbolHelper, VerifySymbolsFile) {
   {
     // valid file containing symbols and matching build id
-    fs::path symbols_file = executable_directory / "no_symbols_elf.debug";
+    fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
     std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_TRUE(result);
   }
   {
     // valid file containing symbols, build id not matching;
-    fs::path symbols_file = executable_directory / "no_symbols_elf.debug";
+    fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
     std::string build_id = "incorrect build id";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_FALSE(result);
@@ -155,7 +155,7 @@ TEST(SymbolHelper, VerifySymbolsFile) {
   }
   {
     // valid file no symbols and matching build id
-    fs::path symbols_file = executable_directory / "no_symbols_elf";
+    fs::path symbols_file = testdata_directory / "no_symbols_elf";
     std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_FALSE(result);
