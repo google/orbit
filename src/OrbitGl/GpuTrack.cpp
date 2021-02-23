@@ -72,7 +72,8 @@ GpuTrack::GpuTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t time
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();
 
-  std::string timeline = app_->GetStringManager()->Get(timeline_hash).value_or("");
+  std::string timeline =
+      app_->GetStringManager()->Get(timeline_hash).value_or(std::to_string(timeline_hash));
   std::string label = orbit_gl::MapGpuTimelineToTrackLabel(timeline);
   SetName(timeline);
   SetLabel(label);

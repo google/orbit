@@ -338,11 +338,13 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
 
 GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
+  std::string timeline =
+      app_->GetStringManager()->Get(timeline_hash).value_or(std::to_string(timeline_hash));
+  std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline];
   if (track == nullptr) {
     track = std::make_shared<GpuTrack>(time_graph_, layout_, timeline_hash, app_, capture_data_);
     AddTrack(track);
-    gpu_tracks_[timeline_hash] = track;
+    gpu_tracks_[timeline] = track;
   }
   return track.get();
 }
