@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
