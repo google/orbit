@@ -488,7 +488,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
   pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -525,7 +525,7 @@ TEST_F(SubmissionTrackerTest,
   pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -552,7 +552,7 @@ TEST_F(SubmissionTrackerTest, StopCaptureBeforeSubmissionWillResetTheSlots) {
   tracker_.MarkCommandBufferEnd(command_buffer_);
   producer_->StopCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
 
@@ -585,7 +585,7 @@ TEST_F(SubmissionTrackerTest,
   pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   producer_->StopCapture();
@@ -621,7 +621,7 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
   pid_t pid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   producer_->StopCapture();
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
@@ -643,7 +643,7 @@ TEST_F(SubmissionTrackerTest, StartCaptureJustBeforeSubmissionWontWriteData) {
   tracker_.MarkCommandBufferEnd(command_buffer_);
   producer_->StartCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
 }
@@ -658,7 +658,7 @@ TEST_F(SubmissionTrackerTest, StartCaptureDuringSubmissionWontWriteData) {
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   producer_->StartCapture();
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
@@ -697,7 +697,7 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   // The results are not yet ready at this point in time.
   tracker_.CompleteSubmits(device_);
@@ -707,7 +707,7 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
   // Now the results are ready for all submissions.
   tracker_.CompleteSubmits(device_);
@@ -745,7 +745,7 @@ TEST_F(SubmissionTrackerTest, WillResetProperlyWhenStartStopAndStartACaptureWith
   tracker_.MarkCommandBufferEnd(command_buffer_);
   producer_->StartCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
 
@@ -764,7 +764,7 @@ TEST_F(SubmissionTrackerTest, CannotReuseCommandBufferWithoutReset) {
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
 
@@ -783,7 +783,7 @@ TEST_F(SubmissionTrackerTest, CanReuseCommandBufferAfterReset) {
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
   tracker_.ResetCommandBuffer(command_buffer_);
@@ -890,7 +890,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
   pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -947,7 +947,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenBeginNotCaptured)
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
 
@@ -1012,7 +1012,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -1089,7 +1089,7 @@ TEST_F(SubmissionTrackerTest,
   pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -1157,7 +1157,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
   tracker_.MarkCommandBufferEnd(command_buffer_);
   uint64_t pre_submit_time_1 = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   uint64_t post_submit_time_1 = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -1166,7 +1166,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
   tracker_.CompleteSubmits(device_);
 
@@ -1236,7 +1236,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
   producer_->StartCapture();
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   tracker_.CompleteSubmits(device_);
   tracker_.ResetCommandBuffer(command_buffer_);
@@ -1244,7 +1244,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
   tracker_.CompleteSubmits(device_);
 
@@ -1305,7 +1305,7 @@ TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenEnd
   tracker_.MarkDebugMarkerBegin(command_buffer_, text, expected_color);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   tracker_.CompleteSubmits(device_);
 
@@ -1315,7 +1315,7 @@ TEST_F(SubmissionTrackerTest, ResetSlotsOnDebugMarkerAcrossTwoSubmissionsWhenEnd
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
   tracker_.CompleteSubmits(device_);
 
@@ -1349,7 +1349,7 @@ TEST_F(SubmissionTrackerTest, ResetDebugMarkerSlotsWhenStopBeforeASubmission) {
   tracker_.MarkCommandBufferEnd(command_buffer_);
   producer_->StopCapture();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   tracker_.CompleteSubmits(device_);
 
@@ -1402,7 +1402,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
   uint64_t post_submit_time = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -1471,7 +1471,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   tracker_.MarkCommandBufferEnd(command_buffer_);  // timestamp 3
   uint64_t pre_submit_time_1 = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional_1 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_1);
   uint64_t post_submit_time_1 = orbit_base::CaptureTimestampNs();
   tracker_.CompleteSubmits(device_);
@@ -1482,7 +1482,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   tracker_.MarkDebugMarkerEnd(command_buffer_);      // timestamp 6
   tracker_.MarkCommandBufferEnd(command_buffer_);    // timestamp 7
   std::optional<QueueSubmission> queue_submission_optional_2 =
-      tracker_.PersistCommandBuffersOnSubmit(1, &submit_info_);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
   tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional_2);
   tracker_.CompleteSubmits(device_);
 

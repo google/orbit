@@ -66,6 +66,12 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   struct SubmittedCommandBuffer {
     std::optional<uint32_t> command_buffer_begin_slot_index;
     uint32_t command_buffer_end_slot_index;
+
+    // These are set when the timestamps were queried successfully. When these have values, the
+    // corresponding slot indices for timestamp queries have been reset. Do not query again in
+    // that case and only get the timestamps through these members.
+    std::optional<uint64_t> begin_timestamp;
+    std::optional<uint64_t> end_timestamp;
   };
 
   // A persistent version of a debug marker (either begin or end) that was submitted and its slot
@@ -78,6 +84,11 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   struct SubmittedMarker {
     SubmissionMetaInformation meta_information;
     uint32_t slot_index;
+
+    // This is set when the timestamp was queried successfully. When this has a value, the
+    // corresponding slot index for the timestamp query has been reset. Do not query again in
+    // that case and only get the timestamp through this member.
+    std::optional<uint64_t> timestamp;
   };
 
   // Represents a color to be used to in debug markers. The values are all in range [0.f, 1.f].
@@ -109,6 +120,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // `completed_markers` are all the debug markers that got completed (via "End") within this
   // submission. Their "Begin" might still be in a different submission.
   struct QueueSubmission {
+    VkQueue queue;
     SubmissionMetaInformation meta_information;
     std::vector<SubmitInfo> submit_infos;
     std::vector<SubmittedMarkerSlice> completed_markers;
@@ -296,7 +308,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // It also takes a timestamp before the execution of the driver code for the submission.
   // This allows us to map submissions from the Vulkan layer to the driver submissions.
   [[nodiscard]] std::optional<QueueSubmission> PersistCommandBuffersOnSubmit(
-      uint32_t submit_count, const VkSubmitInfo* submits) {
+      VkQueue queue, uint32_t submit_count, const VkSubmitInfo* submits) {
     if (!IsCapturing()) {
       // `PersistDebugMarkersOnSubmit` and `OnCaptureFinished` will take care of clean up and
       // slot resetting.
@@ -304,6 +316,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
 
     QueueSubmission queue_submission;
+    queue_submission.queue = queue;
     queue_submission.meta_information.pre_submission_cpu_timestamp =
         orbit_base::CaptureTimestampNs();
     queue_submission.meta_information.thread_id = orbit_base::GetCurrentThreadId();
@@ -413,7 +426,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
               // If there is a begin marker slot from a previous submission, this is our chance to
               // reset the slot.
               if (marker_state.begin_info.has_value() && !queue_submission_optional.has_value()) {
-                marker_slots_to_reset.push_back(marker_state.begin_info.value().slot_index);
+                marker_slots_to_reset.push_back(marker_state.begin_info->slot_index);
               }
 
               // If the begin marker was discarded for exceeding the maximum depth, but the end
@@ -481,17 +494,42 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         device_manager_->GetPhysicalDeviceProperties(physical_device).limits.timestampPeriod;
 
     std::vector<uint32_t> query_slots_to_reset = {};
-    for (const auto& completed_submission : completed_submissions) {
+    std::vector<QueueSubmission> submissions_to_send = {};
+
+    // The submits in completed_submissions are sorted by "pre submission CPU" timestamp and we want
+    // to make sure we send events to the client in that order. Therefore, we must retry all
+    // submissions after we encounter the first submission that we can't complete yet and push them
+    // back into the queue_to_submissions_ queue.
+    bool all_succeeded_so_far = true;
+    for (auto& completed_submission : completed_submissions) {
+      bool command_buffer_queries_succeeded = QueryCommandBufferTimestamps(
+          &completed_submission, &query_slots_to_reset, device, query_pool, timestamp_period);
+      bool marker_queries_succeeded = QueryDebugMarkerTimestamps(
+          &completed_submission, &query_slots_to_reset, device, query_pool, timestamp_period);
+
+      all_succeeded_so_far &= command_buffer_queries_succeeded && marker_queries_succeeded;
+
+      if (all_succeeded_so_far) {
+        submissions_to_send.push_back(completed_submission);
+      } else {
+        VkQueue queue = completed_submission.queue;
+
+        if (!queue_to_submissions_.contains(queue)) {
+          queue_to_submissions_[queue] = {};
+        }
+        CHECK(queue_to_submissions_.contains(queue));
+        queue_to_submissions_.at(queue).emplace_back(std::move(completed_submission));
+      }
+    }
+
+    for (const auto& completed_submission : submissions_to_send) {
       orbit_grpc_protos::ProducerCaptureEvent capture_event;
       orbit_grpc_protos::GpuQueueSubmission* submission_proto =
           capture_event.mutable_gpu_queue_submission();
+
       WriteMetaInfo(completed_submission.meta_information, submission_proto->mutable_meta_info());
-
-      WriteCommandBufferTimings(completed_submission, submission_proto, &query_slots_to_reset,
-                                device, query_pool, timestamp_period);
-
-      WriteDebugMarkers(completed_submission, submission_proto, &query_slots_to_reset, device,
-                        query_pool, timestamp_period);
+      WriteCommandBufferTimings(completed_submission, submission_proto);
+      WriteDebugMarkers(completed_submission, submission_proto);
 
       if (vulkan_layer_producer_ != nullptr) {
         vulkan_layer_producer_->EnqueueCaptureEvent(std::move(capture_event));
@@ -709,15 +747,18 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     return completed_submissions;
   }
 
-  uint64_t QueryGpuTimestampNs(VkDevice device, VkQueryPool query_pool, uint32_t slot_index,
-                               float timestamp_period) {
+  std::optional<uint64_t> QueryGpuTimestampNs(VkDevice device, VkQueryPool query_pool,
+                                              uint32_t slot_index, float timestamp_period) {
     static constexpr VkDeviceSize kResultStride = sizeof(uint64_t);
 
     uint64_t timestamp = 0;
     VkResult result_status = dispatch_table_->GetQueryPoolResults(device)(
         device, query_pool, slot_index, 1, sizeof(timestamp), &timestamp, kResultStride,
         VK_QUERY_RESULT_64_BIT);
-    CHECK(result_status == VK_SUCCESS);
+
+    if (result_status != VK_SUCCESS) {
+      return std::nullopt;
+    }
 
     return static_cast<uint64_t>(static_cast<double>(timestamp) * timestamp_period);
   }
@@ -729,10 +770,109 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     target_proto->set_post_submission_cpu_timestamp(meta_info.post_submission_cpu_timestamp);
   }
 
+  [[nodiscard]] bool QuerySingleCommandBufferTimestamps(SubmittedCommandBuffer* command_buffer,
+                                                        std::vector<uint32_t>* query_slots_to_reset,
+                                                        VkDevice device, VkQueryPool query_pool,
+                                                        float timestamp_period) {
+    CHECK(command_buffer != nullptr);
+    bool queries_succeeded = true;
+
+    if (!command_buffer->end_timestamp.has_value()) {
+      uint32_t slot_index = command_buffer->command_buffer_end_slot_index;
+      std::optional<uint64_t> end_timestamp =
+          QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
+      if (end_timestamp.has_value()) {
+        command_buffer->end_timestamp = end_timestamp;
+        query_slots_to_reset->push_back(slot_index);
+      } else {
+        queries_succeeded = false;
+      }
+    }
+
+    // It's possible that the command begin was not recorded, so we have to check if there is even
+    // a query slot index for the begin timestamp before we try to query it.
+    if (!command_buffer->command_buffer_begin_slot_index.has_value()) {
+      return queries_succeeded;
+    }
+
+    if (!command_buffer->begin_timestamp.has_value()) {
+      uint32_t slot_index = command_buffer->command_buffer_begin_slot_index.value();
+      std::optional<uint64_t> begin_timestamp =
+          QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
+      if (begin_timestamp.has_value()) {
+        command_buffer->begin_timestamp = begin_timestamp;
+        query_slots_to_reset->push_back(slot_index);
+      } else {
+        queries_succeeded = false;
+      }
+    }
+
+    return queries_succeeded;
+  }
+
+  [[nodiscard]] bool QueryCommandBufferTimestamps(QueueSubmission* completed_submission,
+                                                  std::vector<uint32_t>* query_slots_to_reset,
+                                                  VkDevice device, VkQueryPool query_pool,
+                                                  float timestamp_period) {
+    bool all_queries_succeeded = true;
+    for (auto& completed_submit : completed_submission->submit_infos) {
+      for (auto& completed_command_buffer : completed_submit.command_buffers) {
+        all_queries_succeeded &= QuerySingleCommandBufferTimestamps(
+            &completed_command_buffer, query_slots_to_reset, device, query_pool, timestamp_period);
+      }
+    }
+    return all_queries_succeeded;
+  }
+
+  [[nodiscard]] bool QuerySingleDebugMarkerTimestamps(SubmittedMarkerSlice* marker_slice,
+                                                      std::vector<uint32_t>* query_slots_to_reset,
+                                                      VkDevice device, VkQueryPool query_pool,
+                                                      float timestamp_period) {
+    CHECK(marker_slice != nullptr);
+    bool queries_succeeded = true;
+
+    if (!marker_slice->end_info.timestamp.has_value()) {
+      std::optional<uint64_t> end_timestamp = QueryGpuTimestampNs(
+          device, query_pool, marker_slice->end_info.slot_index, timestamp_period);
+      if (end_timestamp.has_value()) {
+        marker_slice->end_info.timestamp = end_timestamp;
+        query_slots_to_reset->push_back(marker_slice->end_info.slot_index);
+      } else {
+        queries_succeeded = false;
+      }
+    }
+
+    if (!marker_slice->begin_info.has_value()) {
+      return queries_succeeded;
+    }
+
+    if (!marker_slice->begin_info->timestamp.has_value()) {
+      std::optional<uint64_t> begin_timestamp = QueryGpuTimestampNs(
+          device, query_pool, marker_slice->begin_info->slot_index, timestamp_period);
+      if (begin_timestamp.has_value()) {
+        marker_slice->begin_info->timestamp = begin_timestamp;
+        query_slots_to_reset->push_back(marker_slice->begin_info->slot_index);
+      } else {
+        queries_succeeded = false;
+      }
+    }
+    return queries_succeeded;
+  }
+
+  [[nodiscard]] bool QueryDebugMarkerTimestamps(QueueSubmission* completed_submission,
+                                                std::vector<uint32_t>* query_slots_to_reset,
+                                                VkDevice device, VkQueryPool query_pool,
+                                                float timestamp_period) {
+    bool all_queries_succeeded = true;
+    for (auto& marker_slice : completed_submission->completed_markers) {
+      all_queries_succeeded &= QuerySingleDebugMarkerTimestamps(
+          &marker_slice, query_slots_to_reset, device, query_pool, timestamp_period);
+    }
+    return all_queries_succeeded;
+  }
+
   void WriteCommandBufferTimings(const QueueSubmission& completed_submission,
-                                 orbit_grpc_protos::GpuQueueSubmission* submission_proto,
-                                 std::vector<uint32_t>* query_slots_to_reset, VkDevice device,
-                                 VkQueryPool query_pool, float timestamp_period) {
+                                 orbit_grpc_protos::GpuQueueSubmission* submission_proto) {
     for (const auto& completed_submit : completed_submission.submit_infos) {
       orbit_grpc_protos::GpuSubmitInfo* submit_info_proto = submission_proto->add_submit_infos();
       for (const auto& completed_command_buffer : completed_submit.command_buffers) {
@@ -740,33 +880,28 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
             submit_info_proto->add_command_buffers();
 
         if (completed_command_buffer.command_buffer_begin_slot_index.has_value()) {
-          uint32_t slot_index = completed_command_buffer.command_buffer_begin_slot_index.value();
-          uint64_t begin_timestamp =
-              QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
-          command_buffer_proto->set_begin_gpu_timestamp_ns(begin_timestamp);
-
-          query_slots_to_reset->push_back(slot_index);
+          // This function must only be called once queries have actually succeeded. If this command
+          // buffer has a slot index for the begin timestamp, we must have a value here.
+          CHECK(completed_command_buffer.begin_timestamp.has_value());
+          command_buffer_proto->set_begin_gpu_timestamp_ns(
+              completed_command_buffer.begin_timestamp.value());
         }
 
-        uint32_t slot_index = completed_command_buffer.command_buffer_end_slot_index;
-        uint64_t end_timestamp =
-            QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
-
-        command_buffer_proto->set_end_gpu_timestamp_ns(end_timestamp);
-        query_slots_to_reset->push_back(slot_index);
+        // Similarly here, this function must only be called once timestamp queries have succeeded,
+        // and therefore we must have an end timestamp here.
+        CHECK(completed_command_buffer.end_timestamp.has_value());
+        command_buffer_proto->set_end_gpu_timestamp_ns(
+            completed_command_buffer.end_timestamp.value());
       }
     }
   }
 
   void WriteDebugMarkers(const QueueSubmission& completed_submission,
-                         orbit_grpc_protos::GpuQueueSubmission* submission_proto,
-                         std::vector<uint32_t>* query_slots_to_reset, VkDevice device,
-                         VkQueryPool query_pool, const float timestamp_period) {
+                         orbit_grpc_protos::GpuQueueSubmission* submission_proto) {
     submission_proto->set_num_begin_markers(completed_submission.num_begin_markers);
     for (const auto& marker_state : completed_submission.completed_markers) {
-      uint64_t end_timestamp = QueryGpuTimestampNs(
-          device, query_pool, marker_state.end_info.slot_index, timestamp_period);
-      query_slots_to_reset->push_back(marker_state.end_info.slot_index);
+      CHECK(marker_state.end_info.timestamp.has_value());
+      uint64_t end_timestamp = marker_state.end_info.timestamp.value();
 
       orbit_grpc_protos::GpuDebugMarker* marker_proto = submission_proto->add_completed_markers();
       if (vulkan_layer_producer_ != nullptr) {
@@ -793,10 +928,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       WriteMetaInfo(marker_state.begin_info->meta_information,
                     begin_debug_marker_proto->mutable_meta_info());
 
-      uint64_t begin_timestamp = QueryGpuTimestampNs(
-          device, query_pool, marker_state.begin_info->slot_index, timestamp_period);
-      query_slots_to_reset->push_back(marker_state.begin_info->slot_index);
-
+      CHECK(marker_state.begin_info->timestamp.has_value());
+      uint64_t begin_timestamp = marker_state.begin_info->timestamp.value();
       begin_debug_marker_proto->set_gpu_timestamp_ns(begin_timestamp);
     }
   }
@@ -807,6 +940,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   absl::flat_hash_map<VkCommandBuffer, CommandBufferState> command_buffer_to_state_;
   absl::flat_hash_map<VkQueue, std::vector<QueueSubmission>> queue_to_submissions_;
+
   absl::flat_hash_map<VkQueue, QueueMarkerState> queue_to_markers_;
 
   DispatchTable* dispatch_table_;

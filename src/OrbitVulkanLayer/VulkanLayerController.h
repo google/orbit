@@ -244,7 +244,7 @@ class VulkanLayerController {
   [[nodiscard]] VkResult OnQueueSubmit(VkQueue queue, uint32_t submit_count,
                                        const VkSubmitInfo* submits, VkFence fence) {
     std::optional<typename SubmissionTracker::QueueSubmission> queue_submission_optional =
-        submission_tracker_.PersistCommandBuffersOnSubmit(submit_count, submits);
+        submission_tracker_.PersistCommandBuffersOnSubmit(queue, submit_count, submits);
     VkResult result = dispatch_table_.QueueSubmit(queue)(queue, submit_count, submits, fence);
 
     // Only persist the submission, if the submit was successful.
