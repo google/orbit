@@ -18,9 +18,11 @@ namespace fs = std::filesystem;
 class SymbolHelper {
  public:
   SymbolHelper();
-  explicit SymbolHelper(std::vector<fs::path> symbols_file_directories, fs::path cache_directory)
+  explicit SymbolHelper(std::vector<fs::path> symbols_file_directories, fs::path cache_directory,
+                        std::vector<fs::path> structured_debug_directories)
       : symbols_file_directories_(std::move(symbols_file_directories)),
-        cache_directory_(std::move(cache_directory)){};
+        cache_directory_(std::move(cache_directory)),
+        structured_debug_directories_{std::move(structured_debug_directories)} {};
 
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsWithSymbolsPathFile(
       const fs::path& module_path, const std::string& build_id) const;
@@ -37,12 +39,15 @@ class SymbolHelper {
   [[nodiscard]] ErrorMessageOr<fs::path> FindDebugInfoFileLocally(std::string_view filename,
                                                                   uint32_t checksum) const;
 
+  // Check out GDB's documentation for how a debug directory is structured:
+  // https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html
   [[nodiscard]] static ErrorMessageOr<fs::path> FindDebugInfoFileInDebugStore(
       const fs::path& debug_directory, std::string_view build_id);
 
  private:
   const std::vector<fs::path> symbols_file_directories_;
   const fs::path cache_directory_;
+  const std::vector<fs::path> structured_debug_directories_;
 };
 
 #endif  // SYMBOL_HELPER_H_

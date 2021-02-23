@@ -17,6 +17,7 @@
 #include <system_error>
 
 #include "ElfUtils/ElfFile.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -92,6 +93,35 @@ std::vector<fs::path> ReadSymbolsFile() {
   return directories;
 }
 
+std::vector<fs::path> FindStructuredDebugDirectories() {
+  std::vector<fs::path> directories;
+
+  const auto add_dir_if_exists = [&](std::filesystem::path&& dir) {
+    std::error_code error{};
+    if (!std::filesystem::is_directory(dir, error)) return;
+    directories.emplace_back(std::move(dir));
+    LOG("Found structured debug store: %s", directories.back().string());
+  };
+
+#ifndef _WIN32
+  add_dir_if_exists(std::filesystem::path{"/usr/lib/debug"});
+#endif
+
+  const char* const ggp_sdk_path = std::getenv("GGP_SDK_PATH");
+  if (ggp_sdk_path != nullptr) {
+    auto path = std::filesystem::path{ggp_sdk_path} / "sysroot" / "usr" / "lib" / "debug";
+    add_dir_if_exists(std::move(path));
+  }
+
+  {
+    auto path = orbit_base::GetExecutableDir().parent_path().parent_path() / "sysroot" / "usr" /
+                "lib" / "debug";
+    add_dir_if_exists(std::move(path));
+  }
+
+  return directories;
+}
+
 }  // namespace
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
@@ -116,7 +146,9 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 }
 
 SymbolHelper::SymbolHelper()
-    : symbols_file_directories_(ReadSymbolsFile()), cache_directory_(Path::CreateOrGetCacheDir()) {}
+    : symbols_file_directories_(ReadSymbolsFile()),
+      cache_directory_(Path::CreateOrGetCacheDir()),
+      structured_debug_directories_(FindStructuredDebugDirectories()) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
     const fs::path& module_path, const std::string& build_id) const {
@@ -124,6 +156,12 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
     return ErrorMessage(absl::StrFormat(
         "Could not find symbols file for module \"%s\", because it does not contain a build id",
         module_path.string()));
+  }
+
+  for (const auto& structured_debug_directory : structured_debug_directories_) {
+    auto result = FindDebugInfoFileInDebugStore(structured_debug_directory, build_id);
+    if (result.has_value()) return result;
+    LOG("Debug file search was unsuccessful: %s", result.error().message());
   }
 
   const fs::path& filename = module_path.filename();
@@ -249,6 +287,8 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(std::string_view
 
 ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
     const fs::path& debug_directory, std::string_view build_id) {
+  // Since the first two digits form the name of a sub-directory, we will need at least 3 digits to
+  // generate a proper filename: build_id[0:2]/build_id[2:].debug
   if (build_id.size() < 3) {
     return ErrorMessage{absl::StrFormat("The build-id \"%s\" is malformed.", build_id)};
   }
