@@ -56,9 +56,6 @@
 // Call once at application start, this is only needed when using the Api from pure C code.
 #define ORBIT_API_INIT() orbit_api_init()
 
-// Call once at application exit.
-#define ORBIT_API_DEINIT() orbit_api_deinit()
-
 // ORBIT_SCOPE: Profile current scope.
 //
 // Overview:
@@ -222,7 +219,6 @@
 #else  // ORBIT_API_ENABLED
 
 #define ORBIT_API_INIT()
-#define ORBIT_API_DEINIT()
 #define ORBIT_SCOPE(name)
 #define ORBIT_START(name)
 #define ORBIT_STOP()
@@ -285,7 +281,6 @@ extern "C" {
 #endif
 
 void orbit_api_init();
-void orbit_api_deinit();
 void orbit_api_start(const char* name, orbit_api_color color);
 void orbit_api_stop();
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color);
@@ -311,21 +306,21 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
 
 inline void* orbit_api_get_lib_orbit() {
   static void* liborbit = dlopen("./liborbit.so", RTLD_LAZY);
-  if (liborbit == nullptr) printf("%s", "ERROR. liborbit.so not found, Orbit API is disabled.\n");
+  if (liborbit == nullptr) printf("ERROR: liborbit.so not found, Orbit API is disabled.\n");
   return liborbit;
 }
 
 inline void* orbit_api_get_proc_address(const char* name) {
   static void* liborbit = orbit_api_get_lib_orbit();
   void* address = liborbit != nullptr ? dlsym(liborbit, name) : nullptr;
-  printf("orbit_api_get_proc_address for %s : %p\n", name, address);
+  fprintf(stderr, "orbit_api_get_proc_address for \"%s\": %p\n", name, address);
   return address;
 }
 
 #else
 
-inline void* orbit_api_get_proc_address(const char*) {
-  printf("%s", "ERROR. Platform not supported, Orbit API will be disabled.\n");
+inline void* orbit_api_get_proc_address(const char* /*name*/) {
+  fprintf(stderr, "ERROR: Platform not supported, Orbit API will be disabled.\n");
   return nullptr;
 }
 
@@ -351,15 +346,6 @@ extern "C" {
 
 // in C++, orbit_api_init() does nothing.
 inline void orbit_api_init() {}
-
-inline void orbit_api_deinit() {
-#if __linux__
-  void* liborbit = orbit_api_get_lib_orbit();
-  if (liborbit != nullptr) {
-    dlclose(liborbit);
-  }
-#endif
-}
 
 inline void orbit_api_start(const char* name, orbit_api_color color) {
   static OrbitFunctor<void (*)(const char*, orbit_api_color)> f("orbit_api_start");

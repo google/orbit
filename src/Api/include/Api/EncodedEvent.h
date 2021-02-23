@@ -39,7 +39,7 @@ struct Event {
   uint64_t data;                   // 8
 };
 
-// EncodedEvent is used for encoding an Orbit API event into the 6 integer register of the LInux
+// EncodedEvent is used for encoding an Orbit API event into the 6 integer register of the Linux
 // x64 ABI. This is useful for the version of the manual instrumentation API that relies on uprobes.
 union EncodedEvent {
   EncodedEvent() = default;

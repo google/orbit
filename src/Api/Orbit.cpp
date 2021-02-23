@@ -17,7 +17,7 @@ static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullpt
                             uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   static pid_t pid = orbit_base::GetCurrentProcessId();
-  thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
+  thread_local pid_t tid = orbit_base::GetCurrentThreadId();
 
   orbit_api::ApiEvent api_event(pid, tid, timestamp_ns, type, name, data, color);
   EnqueueIntermediateEvent(api_event);
@@ -26,7 +26,7 @@ static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullpt
 extern "C" {
 
 void orbit_api_start(const char* name, orbit_api_color color) {
-  EnqueueApiEvent(orbit_api::EventType::kScopeStart, name, /*data*/ 0, color);
+  EnqueueApiEvent(orbit_api::EventType::kScopeStart, name, /*data=*/0, color);
 }
 
 void orbit_api_stop() { EnqueueApiEvent(orbit_api::EventType::kScopeStop); }
@@ -36,7 +36,7 @@ void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color)
 }
 
 void orbit_api_stop_async(uint64_t id) {
-  EnqueueApiEvent(orbit_api::EventType::kScopeStopAsync, /*name*/ nullptr, id);
+  EnqueueApiEvent(orbit_api::EventType::kScopeStopAsync, /*name=*/nullptr, id);
 }
 
 void orbit_api_track_int(const char* name, int value, orbit_api_color color) {
