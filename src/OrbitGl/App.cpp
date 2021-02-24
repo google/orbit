@@ -1223,6 +1223,52 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   return final_result;
 }
 
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
+    const ModuleData* module_data) {
+  return RetrieveModuleWithDebugInfo(module_data->file_path(), module_data->build_id());
+}
+
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
+    const std::string& module_path, const std::string& build_id) {
+  auto loaded_module = RetrieveModule(module_path, build_id);
+  return loaded_module.ThenIfSuccess(
+      main_thread_executor_,
+      [this, module_path](
+          const std::filesystem::path& local_file_path) -> ErrorMessageOr<std::filesystem::path> {
+        auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
+
+        if (elf_file.has_error()) return elf_file.error();
+
+        if (elf_file.value()->HasDebugInfo()) return local_file_path;
+
+        if (!elf_file.value()->HasGnuDebuglink()) {
+          return ErrorMessage{
+              absl::StrFormat("Module \"%s\" neither includes debug info, nor does it contain "
+                              "a .gnu_debuglink section which could refer to a separate debug "
+                              "info file.",
+                              module_path)};
+        }
+
+        const auto debuglink = elf_file.value()->GetGnuDebugLinkInfo().value();
+        ErrorMessageOr<std::filesystem::path> local_debuginfo_path =
+            symbol_helper_.FindDebugInfoFileLocally(debuglink.path.filename().string(),
+                                                    debuglink.crc32_checksum);
+        if (local_debuginfo_path.has_error()) {
+          return ErrorMessage{absl::StrFormat(
+              "Module \"%s\" doesn't include debug info, and a separate "
+              "debuginfo file wasn't found on this machine, when searching "
+              "the paths from your SymbolsPath.txt. Please make sure the "
+              "debuginfo file can be found in one of the listed directories. According to "
+              "the .gnu_debuglink section, the debuginfo file must be called \"%s\".",
+              module_path, debuglink.path.string())};
+        }
+
+        elf_file = orbit_elf_utils::ElfFile::Create(local_debuginfo_path.value());
+        if (elf_file.has_error()) return elf_file.error();
+        return local_debuginfo_path;
+      });
+}
+
 static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     const SymbolHelper& symbol_helper, const std::filesystem::path& module_path,
     const std::string& build_id) {
