@@ -13,7 +13,8 @@ target_compile_options(OrbitBase PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(OrbitBase PUBLIC cxx_std_17)
 
 target_include_directories(OrbitBase PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/include)
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        ${CMAKE_CURRENT_LIST_DIR}/../Api/include/)
 
 target_include_directories(OrbitBase PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})

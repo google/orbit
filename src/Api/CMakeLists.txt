@@ -19,6 +19,7 @@ target_include_directories(Api PUBLIC
 
 target_sources(Api PUBLIC
         include/Api/EncodedEvent.h
+        include/Api/LockFreeApiEventProducer.h
         include/Api/Orbit.h)
 
 target_sources(Api PRIVATE

@@ -7,7 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 
-#include "../OrbitAPI/include/OrbitAPI/EncodedEvent.h"  // IWYU pragma: export
+#include "Api/EncodedEvent.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 

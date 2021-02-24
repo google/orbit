@@ -15,7 +15,7 @@
 #include <string>
 #include <thread>
 
-#include "../OrbitAPI/include/OrbitAPI/Orbit.h"
+#include "Api/Orbit.h"
 #include "absl/strings/str_format.h"
 
 #if __linux__
