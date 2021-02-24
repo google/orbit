@@ -200,8 +200,8 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
   return cache_directory_ / file_name;
 }
 
-[[nodiscard]] static bool IsMatchingDebugInfoFile(const std::filesystem::path& debuginfo_file_path,
-                                                  uint32_t checksum) {
+[[nodiscard]] bool SymbolHelper::IsMatchingDebugInfoFile(
+    const std::filesystem::path& debuginfo_file_path, uint32_t checksum) {
   std::error_code error;
   bool exists = fs::exists(debuginfo_file_path, error);
   if (error) {
