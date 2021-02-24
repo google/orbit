@@ -11,6 +11,7 @@
 
 using ::testing::AllOf;
 using ::testing::Field;
+using ::testing::Invoke;
 using ::testing::IsSubsetOf;
 using ::testing::Matcher;
 using ::testing::Return;
@@ -103,9 +104,15 @@ class MockSubmissionTracker {
   MOCK_METHOD(void, MarkDebugMarkerEnd, (VkCommandBuffer));
 };
 
+class MockVulkanWrapper {
+ public:
+  MOCK_METHOD(VkResult, CallVkEnumerateInstanceExtensionProperties,
+              (const char*, uint32_t*, VkExtensionProperties*));
+};
+
 using VulkanLayerControllerImpl =
     VulkanLayerController<MockDispatchTable, MockQueueManager, MockDeviceManager,
-                          MockTimerQueryPool, MockSubmissionTracker>;
+                          MockTimerQueryPool, MockSubmissionTracker, MockVulkanWrapper>;
 
 Matcher<VkExtensionProperties> VkExtensionPropertiesAreEqual(
     const VkExtensionProperties& expected) {
@@ -325,18 +332,45 @@ TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateInstanceWithNoInfo)
   EXPECT_EQ(result, VK_ERROR_INITIALIZATION_FAILED);
 }
 
-TEST_F(VulkanLayerControllerTest,
-       WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateInstance) {
+TEST_F(
+    VulkanLayerControllerTest,
+    WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateInstanceWithGameNotEnablingRequiredExtensions) {
   std::unique_ptr<VulkanLayerControllerImpl> controller =
       std::make_unique<VulkanLayerControllerImpl>();
   const MockDispatchTable* dispatch_table = controller->dispatch_table();
   const MockSubmissionTracker* submission_tracker = controller->submission_tracker();
+  const MockVulkanWrapper* vulkan_wrapper = controller->vulkan_wrapper();
   EXPECT_CALL(*dispatch_table, CreateInstanceDispatchTable).Times(1);
   EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer).Times(1);
 
+  EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
+      .Times(2)
+      .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
+                                VkExtensionProperties* properties) -> VkResult {
+        CHECK(property_count != nullptr);
+        if (properties == nullptr) {
+          *property_count = 1;
+          return VK_SUCCESS;
+        }
+        *properties = {.extensionName = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                       .specVersion = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        return VK_SUCCESS;
+      }));
+
   static constexpr PFN_vkCreateInstance kMockDriverCreateInstance =
-      +[](const VkInstanceCreateInfo* /*create_info*/, const VkAllocationCallbacks* /*allocator*/,
-          VkInstance* /*instance*/) { return VK_SUCCESS; };
+      +[](const VkInstanceCreateInfo* create_info, const VkAllocationCallbacks* /*allocator*/,
+          VkInstance* /*instance*/) {
+        bool requested_get_physical_device_properties_extension = false;
+        for (uint32_t i = 0; i < create_info->enabledExtensionCount; ++i) {
+          if (strcmp(create_info->ppEnabledExtensionNames[i],
+                     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) == 0) {
+            requested_get_physical_device_properties_extension = true;
+            break;
+          }
+        }
+        EXPECT_TRUE(requested_get_physical_device_properties_extension);
+        return VK_SUCCESS;
+      };
 
   PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
@@ -354,12 +388,90 @@ TEST_F(VulkanLayerControllerTest,
       .function = VK_LAYER_LINK_INFO,
       .u.pLayerInfo = &layer_link_2};
   VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-                                   .pNext = &layer_create_info};
+                                   .pNext = &layer_create_info,
+                                   .enabledExtensionCount = 0,
+                                   .ppEnabledExtensionNames = nullptr};
+
   VkInstance created_instance;
   VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_EQ(layer_create_info.u.pLayerInfo, &layer_link_1);
 
+  ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
+  // There will be a call in the destructor.
+  auto actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
+  EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_producer));
+  controller.reset();
+  EXPECT_EQ(actual_producer, nullptr);
+}
+
+TEST_F(
+    VulkanLayerControllerTest,
+    WillCreateDispatchTableAndVulkanLayerProducerOnCreateInstanceWithGameAlreadyEnablingRequiredExtensions) {
+  std::unique_ptr<VulkanLayerControllerImpl> controller =
+      std::make_unique<VulkanLayerControllerImpl>();
+  const MockDispatchTable* dispatch_table = controller->dispatch_table();
+  const MockSubmissionTracker* submission_tracker = controller->submission_tracker();
+  const MockVulkanWrapper* vulkan_wrapper = controller->vulkan_wrapper();
+  EXPECT_CALL(*dispatch_table, CreateInstanceDispatchTable).Times(1);
+  EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer).Times(1);
+
+  EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
+      .Times(2)
+      .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
+                                VkExtensionProperties* properties) -> VkResult {
+        CHECK(property_count != nullptr);
+        if (properties == nullptr) {
+          *property_count = 1;
+          return VK_SUCCESS;
+        }
+        *properties = {.extensionName = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                       .specVersion = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        return VK_SUCCESS;
+      }));
+
+  static constexpr PFN_vkCreateInstance kMockDriverCreateInstance =
+      +[](const VkInstanceCreateInfo* create_info, const VkAllocationCallbacks* /*allocator*/,
+          VkInstance* /*instance*/) {
+        bool requested_get_physical_device_properties_extension = false;
+        for (uint32_t i = 0; i < create_info->enabledExtensionCount; ++i) {
+          if (strcmp(create_info->ppEnabledExtensionNames[i],
+                     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) == 0) {
+            requested_get_physical_device_properties_extension = true;
+            break;
+          }
+        }
+        EXPECT_TRUE(requested_get_physical_device_properties_extension);
+        return VK_SUCCESS;
+      };
+
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
+      +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
+    if (strcmp(name, "vkCreateInstance") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateInstance);
+    }
+    return nullptr;
+  };
+
+  std::string requested_extension_name = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME;
+  std::vector<const char*> requested_extensions{};
+  requested_extensions.push_back(requested_extension_name.c_str());
+
+  VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerInstanceCreateInfo layer_create_info{
+      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO,
+      .function = VK_LAYER_LINK_INFO,
+      .u.pLayerInfo = &layer_link_1};
+  VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                                   .pNext = &layer_create_info,
+                                   .enabledExtensionCount = 1,
+                                   .ppEnabledExtensionNames = requested_extensions.data()};
+
+  VkInstance created_instance;
+  VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
+  EXPECT_EQ(result, VK_SUCCESS);
   ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
   // There will be a call in the destructor.
   auto actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
@@ -392,8 +504,9 @@ TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetDeviceProcAddr) {
   EXPECT_EQ(result, kExpectedFunction);
 }
 
-TEST_F(VulkanLayerControllerTest,
-       WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateDevice) {
+TEST_F(
+    VulkanLayerControllerTest,
+    WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateDeviceWithGameNotEnablingRequiredExtensions) {
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, CreateDeviceDispatchTable).Times(1);
   const MockDeviceManager* device_manager = controller_.device_manager();
@@ -402,9 +515,32 @@ TEST_F(VulkanLayerControllerTest,
   EXPECT_CALL(*timer_query_pool, InitializeTimerQueryPool).Times(1);
 
   static constexpr PFN_vkCreateDevice kMockDriverCreateDevice =
-      +[](VkPhysicalDevice /*physical_device*/, const VkDeviceCreateInfo* /*create_info*/,
-          const VkAllocationCallbacks* /*allocator*/,
-          VkDevice* /*instance*/) { return VK_SUCCESS; };
+      +[](VkPhysicalDevice /*physical_device*/, const VkDeviceCreateInfo* create_info,
+          const VkAllocationCallbacks* /*allocator*/, VkDevice* /*instance*/) {
+        bool requested_host_extension = false;
+        for (uint32_t i = 0; i < create_info->enabledExtensionCount; ++i) {
+          if (strcmp(create_info->ppEnabledExtensionNames[i],
+                     VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME) == 0) {
+            requested_host_extension = true;
+            break;
+          }
+        }
+        EXPECT_TRUE(requested_host_extension);
+        return VK_SUCCESS;
+      };
+  static constexpr PFN_vkEnumerateDeviceExtensionProperties
+      kFakeEnumerateDeviceExtensionProperties =
+          +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
+              uint32_t* property_count, VkExtensionProperties* properties) -> VkResult {
+    CHECK(property_count != nullptr);
+    if (properties == nullptr) {
+      *property_count = 1;
+      return VK_SUCCESS;
+    }
+    *properties = {.extensionName = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
+                   .specVersion = VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+    return VK_SUCCESS;
+  };
 
   PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
       +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
@@ -413,6 +549,9 @@ TEST_F(VulkanLayerControllerTest,
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCreateDevice") == 0) {
       return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateDevice);
+    }
+    if (strcmp(name, "vkEnumerateDeviceExtensionProperties") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kFakeEnumerateDeviceExtensionProperties);
     }
     return nullptr;
   };
@@ -426,13 +565,85 @@ TEST_F(VulkanLayerControllerTest,
                                             .function = VK_LAYER_LINK_INFO,
                                             .u.pLayerInfo = &layer_link_2};
   VkDeviceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                                 .pNext = &layer_create_info};
+                                 .pNext = &layer_create_info,
+                                 .enabledExtensionCount = 0,
+                                 .ppEnabledExtensionNames = nullptr};
   VkDevice created_device;
   VkPhysicalDevice physical_device = {};
   VkResult result =
       controller_.OnCreateDevice(physical_device, &create_info, nullptr, &created_device);
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_EQ(layer_create_info.u.pLayerInfo, &layer_link_1);
+}
+
+TEST_F(VulkanLayerControllerTest,
+       WillCreateDispatchTableOnCreateDeviceWithGameAlreadyEnablingRequiredExtensions) {
+  const MockDispatchTable* dispatch_table = controller_.dispatch_table();
+  EXPECT_CALL(*dispatch_table, CreateDeviceDispatchTable).Times(1);
+  const MockDeviceManager* device_manager = controller_.device_manager();
+  EXPECT_CALL(*device_manager, TrackLogicalDevice).Times(1);
+  const MockTimerQueryPool* timer_query_pool = controller_.timer_query_pool();
+  EXPECT_CALL(*timer_query_pool, InitializeTimerQueryPool).Times(1);
+
+  static constexpr PFN_vkCreateDevice kMockDriverCreateDevice =
+      +[](VkPhysicalDevice /*physical_device*/, const VkDeviceCreateInfo* create_info,
+          const VkAllocationCallbacks* /*allocator*/, VkDevice* /*instance*/) {
+        bool requested_host_extension = false;
+        for (uint32_t i = 0; i < create_info->enabledExtensionCount; ++i) {
+          if (strcmp(create_info->ppEnabledExtensionNames[i],
+                     VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME) == 0) {
+            requested_host_extension = true;
+            break;
+          }
+        }
+        EXPECT_TRUE(requested_host_extension);
+        return VK_SUCCESS;
+      };
+  static constexpr PFN_vkEnumerateDeviceExtensionProperties
+      kFakeEnumerateDeviceExtensionProperties =
+          +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
+              uint32_t* property_count, VkExtensionProperties* properties) -> VkResult {
+    CHECK(property_count != nullptr);
+    if (properties == nullptr) {
+      *property_count = 1;
+      return VK_SUCCESS;
+    }
+    *properties = {.extensionName = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
+                   .specVersion = VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+    return VK_SUCCESS;
+  };
+
+  PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
+      +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
+      +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
+    if (strcmp(name, "vkCreateDevice") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateDevice);
+    }
+    if (strcmp(name, "vkEnumerateDeviceExtensionProperties") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kFakeEnumerateDeviceExtensionProperties);
+    }
+    return nullptr;
+  };
+
+  VkLayerDeviceLink layer_link_1 = {.pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
+                                    .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerDeviceCreateInfo layer_create_info{.sType = VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO,
+                                            .function = VK_LAYER_LINK_INFO,
+                                            .u.pLayerInfo = &layer_link_1};
+  std::string requested_extension_name = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME;
+  std::vector<const char*> requested_extensions{};
+  requested_extensions.push_back(requested_extension_name.c_str());
+  VkDeviceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+                                 .pNext = &layer_create_info,
+                                 .enabledExtensionCount = 1,
+                                 .ppEnabledExtensionNames = requested_extensions.data()};
+  VkDevice created_device;
+  VkPhysicalDevice physical_device = {};
+  VkResult result =
+      controller_.OnCreateDevice(physical_device, &create_info, nullptr, &created_device);
+  EXPECT_EQ(result, VK_SUCCESS);
 }
 
 TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetInstanceProcAddr) {

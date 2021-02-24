@@ -30,7 +30,7 @@ namespace orbit_vulkan_layer {
  * and if we do the proper bootstrapping.
  */
 template <class DispatchTable, class QueueManager, class DeviceManager, class TimerQueryPool,
-          class SubmissionTracker>
+          class SubmissionTracker, typename VulkanWrapper>
 class VulkanLayerController {
  public:
   // Layer metadata. This must be in sync with the json file in the resources.
@@ -87,11 +87,29 @@ class VulkanLayerController {
     // Advance linkage for next layer.
     layer_create_info->u.pLayerInfo = layer_create_info->u.pLayerInfo->pNext;
 
+    std::vector<std::string> all_extension_names{};
+    all_extension_names.assign(
+        create_info->ppEnabledExtensionNames,
+        create_info->ppEnabledExtensionNames + create_info->enabledExtensionCount);
+
+    AddRequiredInstanceExtensionNameIfMissing(
+        create_info, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, &all_extension_names);
+
+    std::vector<const char*> all_extension_names_cstr{};
+    all_extension_names_cstr.reserve(all_extension_names.size());
+    for (const std::string& extension : all_extension_names) {
+      all_extension_names_cstr.push_back(extension.c_str());
+    }
+
+    VkInstanceCreateInfo create_info_modified = *create_info;
+    create_info_modified.enabledExtensionCount = all_extension_names_cstr.size();
+    create_info_modified.ppEnabledExtensionNames = all_extension_names_cstr.data();
+
     // Need to call vkCreateInstance down the chain to actually create the
     // instance, as we need the instance to be alive in the create instance dispatch table.
     auto create_instance = absl::bit_cast<PFN_vkCreateInstance>(
         next_get_instance_proc_addr_function(VK_NULL_HANDLE, "vkCreateInstance"));
-    VkResult result = create_instance(create_info, allocator, instance);
+    VkResult result = create_instance(&create_info_modified, allocator, instance);
 
     // Only create our dispatch table, if the instance was successfully created.
     if (result == VK_SUCCESS) {
@@ -125,11 +143,31 @@ class VulkanLayerController {
     // Advance linkage for next layer
     layer_create_info->u.pLayerInfo = layer_create_info->u.pLayerInfo->pNext;
 
+    std::vector<std::string> all_extension_names{};
+    all_extension_names.assign(
+        create_info->ppEnabledExtensionNames,
+        create_info->ppEnabledExtensionNames + create_info->enabledExtensionCount);
+
+    AddRequiredDeviceExtensionNameIfMissing(
+        create_info, physical_device, next_get_instance_proc_addr_function,
+        VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME, &all_extension_names);
+
+    std::vector<const char*> all_extension_names_cstr{};
+    all_extension_names_cstr.reserve(all_extension_names.size());
+    for (const std::string& extension : all_extension_names) {
+      all_extension_names_cstr.push_back(extension.c_str());
+    }
+
+    VkDeviceCreateInfo create_info_modified = *create_info;
+    create_info_modified.enabledExtensionCount = all_extension_names_cstr.size();
+    create_info_modified.ppEnabledExtensionNames = all_extension_names_cstr.data();
+
     // Need to call vkCreateInstance down the chain to actually create the
     // instance, as we need it to be alive in the create instance dispatch table.
     auto create_device_function = absl::bit_cast<PFN_vkCreateDevice>(
         next_get_instance_proc_addr_function(VK_NULL_HANDLE, "vkCreateDevice"));
-    VkResult result = create_device_function(physical_device, create_info, allocator, device);
+    VkResult result =
+        create_device_function(physical_device, &create_info_modified, allocator, device);
 
     // Only create our dispatch table and do the initialization of this device, if the it was
     // actually created.
@@ -437,6 +475,8 @@ class VulkanLayerController {
 
   [[nodiscard]] const QueueManager* queue_manager() const { return &queue_manager_; }
 
+  [[nodiscard]] const VulkanWrapper* vulkan_wrapper() const { return &vulkan_wrapper_; }
+
  private:
   void InitVulkanLayerProducerIfNecessary() {
     absl::MutexLock lock{&vulkan_layer_producer_mutex_};
@@ -460,6 +500,73 @@ class VulkanLayerController {
     }
   }
 
+  template <typename T>
+  void AddRequiredExtensionNameIfMissing(
+      const T* create_info,
+      const std::function<VkResult(uint32_t*, VkExtensionProperties*)>&
+          enumerate_extension_properties_function,
+      const char* extension_name, std::vector<std::string>* output) {
+    bool host_query_reset_extension_enabled = false;
+    for (uint32_t i = 0; i < create_info->enabledExtensionCount; ++i) {
+      const char* enabled_extension = create_info->ppEnabledExtensionNames[i];
+      if (strcmp(enabled_extension, extension_name) == 0) {
+        host_query_reset_extension_enabled = true;
+        break;
+      }
+    }
+    if (!host_query_reset_extension_enabled) {
+      bool host_query_reset_extension_supported = false;
+      uint32_t count = 0;
+      VkResult result = enumerate_extension_properties_function(&count, nullptr);
+      LOG("%u, %u, %u", VK_SUCCESS, VK_ERROR_LAYER_NOT_PRESENT, result);
+      CHECK(result == VK_SUCCESS);
+      std::vector<VkExtensionProperties> extension_properties(count);
+      result = enumerate_extension_properties_function(&count, extension_properties.data());
+      CHECK(result == VK_SUCCESS);
+      for (const auto& properties : extension_properties) {
+        if (strcmp(properties.extensionName, extension_name) == 0) {
+          host_query_reset_extension_supported = true;
+          break;
+        }
+      }
+      if (!host_query_reset_extension_supported) {
+        ERROR("Orbit's Vulkan layer requires the %s extension to be supported.", extension_name);
+        CHECK(false);
+      }
+      output->emplace_back(extension_name);
+    }
+  }
+
+  void AddRequiredDeviceExtensionNameIfMissing(
+      const VkDeviceCreateInfo* create_info, VkPhysicalDevice physical_device,
+      PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function, const char* extension_name,
+      std::vector<std::string>* output) {
+    auto raw_enumerate_device_extension_properties_function =
+        absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
+            next_get_instance_proc_addr_function(VK_NULL_HANDLE,
+                                                 "vkEnumerateDeviceExtensionProperties"));
+    auto enumerate_device_extension_properties =
+        [&raw_enumerate_device_extension_properties_function, physical_device](
+            uint32_t* count, VkExtensionProperties* properties) -> VkResult {
+      return raw_enumerate_device_extension_properties_function(physical_device, nullptr, count,
+                                                                properties);
+    };
+    AddRequiredExtensionNameIfMissing(create_info, enumerate_device_extension_properties,
+                                      extension_name, output);
+  }
+
+  void AddRequiredInstanceExtensionNameIfMissing(const VkInstanceCreateInfo* create_info,
+
+                                                 const char* extension_name,
+                                                 std::vector<std::string>* output) {
+    auto enumerate_instance_extension_properties =
+        [this](uint32_t* count, VkExtensionProperties* properties) -> VkResult {
+      return vulkan_wrapper_.CallVkEnumerateInstanceExtensionProperties(nullptr, count, properties);
+    };
+    AddRequiredExtensionNameIfMissing(create_info, enumerate_instance_extension_properties,
+                                      extension_name, output);
+  }
+
   std::unique_ptr<VulkanLayerProducer> vulkan_layer_producer_ = nullptr;
   absl::Mutex vulkan_layer_producer_mutex_;
 
@@ -468,6 +575,7 @@ class VulkanLayerController {
   TimerQueryPool timer_query_pool_;
   SubmissionTracker submission_tracker_;
   QueueManager queue_manager_;
+  VulkanWrapper vulkan_wrapper_;
 
   // The number of timer query slots is chosen arbitrary such that it is large enough.
   static constexpr uint32_t kNumTimerQuerySlots = 65536;
