@@ -39,13 +39,15 @@ class VulkanLayerController {
   static constexpr uint32_t kLayerImplVersion = 1;
   static constexpr uint32_t kLayerSpecVersion = VK_API_VERSION_1_1;
 
-  static constexpr std::array<VkExtensionProperties, 3> kRequiredDeviceExtensions = {
+  static constexpr std::array<VkExtensionProperties, 1> kImplementedDeviceExtensions = {
       VkExtensionProperties{.extensionName = VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
-                            .specVersion = VK_EXT_DEBUG_MARKER_SPEC_VERSION},
+                            .specVersion = VK_EXT_DEBUG_MARKER_SPEC_VERSION}};
+
+  static constexpr std::array<VkExtensionProperties, 2> kImplementedInstanceExtensions = {
       VkExtensionProperties{.extensionName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
                             .specVersion = VK_EXT_DEBUG_UTILS_SPEC_VERSION},
-      VkExtensionProperties{.extensionName = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
-                            .specVersion = VK_EXT_HOST_QUERY_RESET_SPEC_VERSION}};
+      VkExtensionProperties{.extensionName = VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+                            .specVersion = VK_EXT_DEBUG_REPORT_SPEC_VERSION}};
 
   VulkanLayerController()
       : device_manager_(&dispatch_table_),
@@ -307,6 +309,130 @@ class VulkanLayerController {
   }
 
   // ----------------------------------------------------------------------------
+  // Unused but implemented extension methods (need to implement all methods of
+  // an extension)
+  // ----------------------------------------------------------------------------
+  void OnCmdInsertDebugUtilsLabelEXT(VkCommandBuffer command_buffer,
+                                     const VkDebugUtilsLabelEXT* label_info) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(command_buffer)) {
+      dispatch_table_.CmdInsertDebugUtilsLabelEXT(command_buffer)(command_buffer, label_info);
+    }
+  }
+
+  VkResult OnCreateDebugUtilsMessengerEXT(VkInstance instance,
+                                          const VkDebugUtilsMessengerCreateInfoEXT* create_info,
+                                          const VkAllocationCallbacks* allocator,
+                                          VkDebugUtilsMessengerEXT* messenger) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(instance)) {
+      return dispatch_table_.CreateDebugUtilsMessengerEXT(instance)(instance, create_info,
+                                                                    allocator, messenger);
+    }
+    return VK_SUCCESS;
+  }
+
+  void OnDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
+                                       const VkAllocationCallbacks* allocator) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(instance)) {
+      dispatch_table_.DestroyDebugUtilsMessengerEXT(instance)(instance, messenger, allocator);
+    }
+  }
+
+  void OnQueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* label_info) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(queue)) {
+      dispatch_table_.QueueBeginDebugUtilsLabelEXT(queue)(queue, label_info);
+    }
+  }
+
+  void OnQueueEndDebugUtilsLabelEXT(VkQueue queue) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(queue)) {
+      dispatch_table_.QueueEndDebugUtilsLabelEXT(queue)(queue);
+    }
+  }
+
+  void OnQueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* label_info) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(queue)) {
+      dispatch_table_.QueueInsertDebugUtilsLabelEXT(queue)(queue, label_info);
+    }
+  }
+
+  VkResult OnSetDebugUtilsObjectNameEXT(VkDevice device,
+                                        const VkDebugUtilsObjectNameInfoEXT* name_info) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(device)) {
+      return dispatch_table_.SetDebugUtilsObjectNameEXT(device)(device, name_info);
+    }
+    return VK_SUCCESS;
+  }
+
+  VkResult OnSetDebugUtilsObjectTagEXT(VkDevice device,
+                                       const VkDebugUtilsObjectTagInfoEXT* tag_info) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(device)) {
+      return dispatch_table_.SetDebugUtilsObjectTagEXT(device)(device, tag_info);
+    }
+    return VK_SUCCESS;
+  }
+
+  void OnSubmitDebugUtilsMessageEXT(VkInstance instance,
+                                    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+                                    VkDebugUtilsMessageTypeFlagsEXT message_types,
+                                    const VkDebugUtilsMessengerCallbackDataEXT* callback_data) {
+    if (dispatch_table_.IsDebugUtilsExtensionSupported(instance)) {
+      dispatch_table_.SubmitDebugUtilsMessageEXT(instance)(instance, message_severity,
+                                                           message_types, callback_data);
+    }
+  }
+
+  void OnCmdDebugMarkerInsertEXT(VkCommandBuffer command_buffer,
+                                 const VkDebugMarkerMarkerInfoEXT* marker_info) {
+    if (dispatch_table_.IsDebugMarkerExtensionSupported(command_buffer)) {
+      dispatch_table_.CmdDebugMarkerInsertEXT(command_buffer)(command_buffer, marker_info);
+    }
+  }
+
+  VkResult OnDebugMarkerSetObjectNameEXT(VkDevice device,
+                                         const VkDebugMarkerObjectNameInfoEXT* name_info) {
+    if (dispatch_table_.IsDebugMarkerExtensionSupported(device)) {
+      return dispatch_table_.DebugMarkerSetObjectNameEXT(device)(device, name_info);
+    }
+    return VK_SUCCESS;
+  }
+
+  VkResult OnDebugMarkerSetObjectTagEXT(VkDevice device,
+                                        const VkDebugMarkerObjectTagInfoEXT* tag_info) {
+    if (dispatch_table_.IsDebugMarkerExtensionSupported(device)) {
+      return dispatch_table_.DebugMarkerSetObjectTagEXT(device)(device, tag_info);
+    }
+    return VK_SUCCESS;
+  }
+
+  VkResult OnCreateDebugReportCallbackEXT(VkInstance instance,
+                                          const VkDebugReportCallbackCreateInfoEXT* create_info,
+                                          const VkAllocationCallbacks* allocator,
+                                          VkDebugReportCallbackEXT* callback) {
+    if (dispatch_table_.IsDebugReportExtensionSupported(instance)) {
+      return dispatch_table_.CreateDebugReportCallbackEXT(instance)(instance, create_info,
+                                                                    allocator, callback);
+    }
+    return VK_SUCCESS;
+  }
+
+  void OnDebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags,
+                               VkDebugReportObjectTypeEXT object_type, uint64_t object,
+                               size_t location, int32_t message_code, const char* layer_prefix,
+                               const char* message) {
+    if (dispatch_table_.IsDebugReportExtensionSupported(instance)) {
+      dispatch_table_.DebugReportMessageEXT(instance)(
+          instance, flags, object_type, object, location, message_code, layer_prefix, message);
+    }
+  }
+
+  void OnDestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback,
+                                       const VkAllocationCallbacks* allocator) {
+    if (dispatch_table_.IsDebugReportExtensionSupported(instance)) {
+      dispatch_table_.DestroyDebugReportCallbackEXT(instance)(instance, callback, allocator);
+    }
+  }
+
+  // ----------------------------------------------------------------------------
   // Layer enumeration functions
   // ----------------------------------------------------------------------------
 
@@ -326,19 +452,23 @@ class VulkanLayerController {
     return VK_SUCCESS;
   }
 
-  [[nodiscard]] VkResult OnEnumerateInstanceExtensionProperties(
-      const char* layer_name, uint32_t* property_count, VkExtensionProperties* /*properties*/) {
-    // Inform the client that we have no extension properties if this layer
-    // specifically is being queried.
-    if (layer_name != nullptr && strcmp(layer_name, kLayerName) == 0) {
-      if (property_count != nullptr) {
-        *property_count = 0;
-      }
-      return VK_SUCCESS;
+  [[nodiscard]] VkResult OnEnumerateInstanceExtensionProperties(const char* layer_name,
+                                                                uint32_t* property_count,
+                                                                VkExtensionProperties* properties) {
+    if (layer_name == nullptr || strcmp(layer_name, kLayerName) != 0) {
+      // Vulkan spec mandates returning this when this layer isn't being queried.
+      return VK_ERROR_LAYER_NOT_PRESENT;
     }
 
-    // Vulkan spec mandates returning this when this layer isn't being queried.
-    return VK_ERROR_LAYER_NOT_PRESENT;
+    CHECK(property_count != nullptr);
+    if (property_count != nullptr) {
+      *property_count = kImplementedInstanceExtensions.size();
+    }
+    if (properties != nullptr) {
+      memcpy(properties, kImplementedInstanceExtensions.data(),
+             kImplementedInstanceExtensions.size() * sizeof(VkExtensionProperties));
+    }
+    return VK_SUCCESS;
   }
 
   [[nodiscard]] VkResult OnEnumerateDeviceExtensionProperties(VkPhysicalDevice physical_device,
@@ -350,20 +480,20 @@ class VulkanLayerController {
     if (layer_name != nullptr && strcmp(layer_name, kLayerName) == 0) {
       // If properties == nullptr, only the number of extensions is queried.
       if (properties == nullptr) {
-        *property_count = kRequiredDeviceExtensions.size();
+        *property_count = kImplementedDeviceExtensions.size();
         return VK_SUCCESS;
       }
-      uint32_t num_extensions_to_copy = kRequiredDeviceExtensions.size();
+      uint32_t num_extensions_to_copy = kImplementedDeviceExtensions.size();
       // In the case that less extensions are queried then the layer uses, we copy on this number
       // and return VK_INCOMPLETE, according to the specification.
       if (*property_count < num_extensions_to_copy) {
         num_extensions_to_copy = *property_count;
       }
-      memcpy(properties, kRequiredDeviceExtensions.data(),
+      memcpy(properties, kImplementedDeviceExtensions.data(),
              num_extensions_to_copy * sizeof(VkExtensionProperties));
       *property_count = num_extensions_to_copy;
 
-      if (num_extensions_to_copy < kRequiredDeviceExtensions.size()) {
+      if (num_extensions_to_copy < kImplementedDeviceExtensions.size()) {
         return VK_INCOMPLETE;
       }
       return VK_SUCCESS;
@@ -393,7 +523,7 @@ class VulkanLayerController {
 
     // Append all of our extensions, that are not yet listed.
     // Note as this list of our extensions is very small, we are fine with O(N*M) runtime.
-    for (const auto& extension : kRequiredDeviceExtensions) {
+    for (const auto& extension : kImplementedDeviceExtensions) {
       bool already_present = false;
       for (const auto& other_extension : extensions) {
         if (strcmp(extension.extensionName, other_extension.extensionName) == 0) {

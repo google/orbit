@@ -264,6 +264,79 @@ class DispatchTable {
     }
   }
 
+  // ----------------------------------------------------------------------------
+  // Debug marker extension:
+  // ----------------------------------------------------------------------------
+  template <typename DispatchableType>
+  PFN_vkCmdDebugMarkerBeginEXT CmdDebugMarkerBeginEXT(DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT != nullptr);
+      return device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkCmdDebugMarkerEndEXT CmdDebugMarkerEndEXT(DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerEndEXT != nullptr);
+      return device_dispatch_table_.at(key).CmdDebugMarkerEndEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkCmdDebugMarkerInsertEXT CmdDebugMarkerInsertEXT(DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerInsertEXT != nullptr);
+      return device_dispatch_table_.at(key).CmdDebugMarkerInsertEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkDebugMarkerSetObjectTagEXT DebugMarkerSetObjectTagEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).DebugMarkerSetObjectTagEXT != nullptr);
+      return device_dispatch_table_.at(key).DebugMarkerSetObjectTagEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkDebugMarkerSetObjectNameEXT DebugMarkerSetObjectNameEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).DebugMarkerSetObjectNameEXT != nullptr);
+      return device_dispatch_table_.at(key).DebugMarkerSetObjectNameEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  bool IsDebugMarkerExtensionSupported(DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_supports_debug_marker_extension_.contains(key));
+      return device_supports_debug_marker_extension_.at(key);
+    }
+  }
+
+  // ----------------------------------------------------------------------------
+  // Debug utils extension:
+  // ----------------------------------------------------------------------------
   template <typename DispatchableType>
   PFN_vkCmdBeginDebugUtilsLabelEXT CmdBeginDebugUtilsLabelEXT(
       DispatchableType dispatchable_object) {
@@ -288,34 +361,109 @@ class DispatchTable {
   }
 
   template <typename DispatchableType>
-  PFN_vkCmdDebugMarkerBeginEXT CmdDebugMarkerBeginEXT(DispatchableType dispatchable_object) {
+  PFN_vkCmdInsertDebugUtilsLabelEXT CmdInsertDebugUtilsLabelEXT(
+      DispatchableType dispatchable_object) {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
       CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT != nullptr);
-      return device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT;
+      CHECK(device_dispatch_table_.at(key).CmdInsertDebugUtilsLabelEXT != nullptr);
+      return device_dispatch_table_.at(key).CmdInsertDebugUtilsLabelEXT;
     }
   }
 
   template <typename DispatchableType>
-  PFN_vkCmdDebugMarkerEndEXT CmdDebugMarkerEndEXT(DispatchableType dispatchable_object) {
+  PFN_vkSetDebugUtilsObjectNameEXT SetDebugUtilsObjectNameEXT(
+      DispatchableType dispatchable_object) {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
       CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerEndEXT != nullptr);
-      return device_dispatch_table_.at(key).CmdDebugMarkerEndEXT;
+      CHECK(device_dispatch_table_.at(key).SetDebugUtilsObjectNameEXT != nullptr);
+      return device_dispatch_table_.at(key).SetDebugUtilsObjectNameEXT;
     }
   }
 
   template <typename DispatchableType>
-  bool IsDebugMarkerExtensionSupported(DispatchableType dispatchable_object) {
+  PFN_vkSetDebugUtilsObjectTagEXT SetDebugUtilsObjectTagEXT(DispatchableType dispatchable_object) {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_supports_debug_marker_extension_.contains(key));
-      return device_supports_debug_marker_extension_.at(key);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).SetDebugUtilsObjectTagEXT != nullptr);
+      return device_dispatch_table_.at(key).SetDebugUtilsObjectTagEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkQueueBeginDebugUtilsLabelEXT QueueBeginDebugUtilsLabelEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).QueueBeginDebugUtilsLabelEXT != nullptr);
+      return device_dispatch_table_.at(key).QueueBeginDebugUtilsLabelEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkQueueEndDebugUtilsLabelEXT QueueEndDebugUtilsLabelEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).QueueEndDebugUtilsLabelEXT != nullptr);
+      return device_dispatch_table_.at(key).QueueEndDebugUtilsLabelEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkQueueInsertDebugUtilsLabelEXT QueueInsertDebugUtilsLabelEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).QueueInsertDebugUtilsLabelEXT != nullptr);
+      return device_dispatch_table_.at(key).QueueInsertDebugUtilsLabelEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkCreateDebugUtilsMessengerEXT CreateDebugUtilsMessengerEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatch_table_.contains(key));
+      CHECK(instance_dispatch_table_.at(key).CreateDebugUtilsMessengerEXT != nullptr);
+      return instance_dispatch_table_.at(key).CreateDebugUtilsMessengerEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatch_table_.contains(key));
+      CHECK(instance_dispatch_table_.at(key).DestroyDebugUtilsMessengerEXT != nullptr);
+      return instance_dispatch_table_.at(key).DestroyDebugUtilsMessengerEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkSubmitDebugUtilsMessageEXT SubmitDebugUtilsMessageEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatch_table_.contains(key));
+      CHECK(instance_dispatch_table_.at(key).SubmitDebugUtilsMessageEXT != nullptr);
+      return instance_dispatch_table_.at(key).SubmitDebugUtilsMessageEXT;
     }
   }
 
@@ -326,6 +474,62 @@ class DispatchTable {
       absl::ReaderMutexLock lock(&mutex_);
       CHECK(device_supports_debug_utils_extension_.contains(key));
       return device_supports_debug_utils_extension_.at(key);
+    }
+  }
+
+  bool IsDebugUtilsExtensionSupported(VkInstance instance) {
+    void* key = GetDispatchTableKey(instance);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_supports_debug_utils_extension_.contains(key));
+      return instance_supports_debug_utils_extension_.at(key);
+    }
+  }
+
+  // ----------------------------------------------------------------------------
+  // Debug report extension:
+  // ----------------------------------------------------------------------------
+  template <typename DispatchableType>
+  PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallbackEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatch_table_.contains(key));
+      CHECK(instance_dispatch_table_.at(key).CreateDebugReportCallbackEXT != nullptr);
+      return instance_dispatch_table_.at(key).CreateDebugReportCallbackEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallbackEXT(
+      DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatch_table_.contains(key));
+      CHECK(instance_dispatch_table_.at(key).DestroyDebugReportCallbackEXT != nullptr);
+      return instance_dispatch_table_.at(key).DestroyDebugReportCallbackEXT;
+    }
+  }
+
+  template <typename DispatchableType>
+  PFN_vkDebugReportMessageEXT DebugReportMessageEXT(DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatch_table_.contains(key));
+      CHECK(instance_dispatch_table_.at(key).DebugReportMessageEXT != nullptr);
+      return instance_dispatch_table_.at(key).DebugReportMessageEXT;
+    }
+  }
+
+  bool IsDebugReportExtensionSupported(VkInstance instance) {
+    void* key = GetDispatchTableKey(instance);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_supports_debug_report_extension_.contains(key));
+      return instance_supports_debug_report_extension_.at(key);
     }
   }
 
@@ -350,6 +554,8 @@ class DispatchTable {
   absl::flat_hash_map<void*, VkLayerDispatchTable> device_dispatch_table_;
   absl::flat_hash_map<void*, bool> device_supports_debug_marker_extension_;
   absl::flat_hash_map<void*, bool> device_supports_debug_utils_extension_;
+  absl::flat_hash_map<void*, bool> instance_supports_debug_utils_extension_;
+  absl::flat_hash_map<void*, bool> instance_supports_debug_report_extension_;
 
   // Must protect access to dispatch tables above by mutex since the Vulkan
   // application may be calling these functions from different threads.
