@@ -129,7 +129,7 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitQueuePresentKHR(VkQueue queue,
 }
 
 // ----------------------------------------------------------------------------
-// Implemented extension methods
+// Implemented and used extension methods
 // ----------------------------------------------------------------------------
 
 VKAPI_ATTR void VKAPI_CALL OrbitCmdBeginDebugUtilsLabelEXT(VkCommandBuffer command_buffer,
@@ -151,8 +151,8 @@ VKAPI_ATTR void VKAPI_CALL OrbitCmdDebugMarkerEndEXT(VkCommandBuffer command_buf
 }
 
 // ----------------------------------------------------------------------------
-// Unused but implemented extension methods (need to implement all methods of a
-// extension)
+// Unused but implemented extension methods (need to implement all methods of
+// an extension)
 // ----------------------------------------------------------------------------
 VKAPI_ATTR void VKAPI_CALL OrbitCmdInsertDebugUtilsLabelEXT(
     VkCommandBuffer command_buffer, const VkDebugUtilsLabelEXT* label_info) {

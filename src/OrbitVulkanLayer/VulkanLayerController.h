@@ -309,8 +309,8 @@ class VulkanLayerController {
   }
 
   // ----------------------------------------------------------------------------
-  // Unused but implemented extension methods (need to implement all methods of a
-  // extension)
+  // Unused but implemented extension methods (need to implement all methods of
+  // an extension)
   // ----------------------------------------------------------------------------
   void OnCmdInsertDebugUtilsLabelEXT(VkCommandBuffer command_buffer,
                                      const VkDebugUtilsLabelEXT* label_info) {
