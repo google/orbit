@@ -1,5 +1,6 @@
 // HFManager is going to have a couple of jobs in the future, but at the moment
 // We're just going to keep it in charge of the call stack.
+// HFTest file written & modified - 02/23/2023
 
 #ifndef HFTEST_MANAGER_H_
 #define HFTEST_MANAGER_H
@@ -8,20 +9,12 @@
 #include <stack>
 
 namespace HFManager {
+    
  void AddStackFrame(std::shared_ptr<HFStack>) { stackframes.push(stack); }
  [[nodiscard]] std::shared_ptr<HFStack> PopStackFrame() { return stackframes.pop(); }
  [[nodiscard]] int GetTotalStacks() { return stackframes.size(); }
- 
- // Deallocate all of our frames
- void ClearStackFrames() {
-   while (!stackframes.empty()) {
-     stack.pop();
-   }
- }
+ void ClearStackFrames();
 
- namespace {
-   std::stack<std::shared_ptr<HFStack>> stackframes;
- }
-}
+} // namespace HFManager
 
 #endif // HFTEST_MANAGER_H_

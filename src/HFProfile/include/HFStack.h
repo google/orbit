@@ -1,12 +1,11 @@
 // Keeps a miniature, more lightweight callstack that is populated
 // and emptied between the detection of a particular function signature
-// Written by Matthew Smalley
+// HFTest file written & modified - 02/23/2023
 
 #ifndef HFTEST_CALLSTACK_DATA_H_
 #define HFTEST_CALLSTACK_DATA_H_
 
 #include "OrbitClientData/FunctionUtils.h"
-#include <vector>
 
 class HFStack {
  public:
