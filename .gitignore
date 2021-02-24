@@ -8,5 +8,6 @@ corpora/
 __pycache__
 /conan.log
 
-# Ignore generated Python protobuffer code
+# Ignore generated Python code
 *_pb2.py
+*.egg-info

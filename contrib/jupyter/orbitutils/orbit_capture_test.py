@@ -4,12 +4,15 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
+import os
 import unittest
 import orbitutils.orbit_capture
 
 class TestOrbitCapture(unittest.TestCase):
     def test_opening_capture(self):
-        with open('./orbitutils/testdata/OrbitTest_capture.orbit', 'rb') as f:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(dir_path, "testdata/OrbitTest_capture.orbit")
+        with open(file_path, 'rb') as f:
             capture = orbitutils.orbit_capture.OrbitCapture(f.read())
             min_ns = capture.compute_min_time_ns()
             max_ns = capture.compute_max_time_ns()
