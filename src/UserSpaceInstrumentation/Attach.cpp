@@ -81,7 +81,7 @@ ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
         continue;
       }
       auto result = AttachAndStopThread(tid);
-      if (!result) {
+      if (result.has_error()) {
         // Try to detach and return an error.
         for (const auto t : halted_tids) {
           if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {
