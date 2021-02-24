@@ -66,19 +66,23 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
       outer_->ClearStringInternPool();
     }
 
-    orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
-        orbit_grpc_protos::ProducerCaptureEvent&& intermediate_event,
+    std::vector<orbit_grpc_protos::ProducerCaptureEvent*> TranslateIntermediateEvents(
+        orbit_grpc_protos::ProducerCaptureEvent* moveable_intermediate_events, size_t num_events,
         google::protobuf::Arena* arena) override {
-      auto* capture_event =
-          google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
-      // Note that, as capture_event is in the Arena and intermediate_event is on the heap, this
-      // std::move will actually end up being a copy, as it will use CopyFrom internally.
-      // For the amount of events that this Vulkan layer produces, this is fine performance-wise.
-      // This is also in line with the principle of this method, which in general expects a
-      // transformation from any type that intermediate_event could be to the ProducerCaptureEvent
-      // protobuf.
-      *capture_event = std::move(intermediate_event);
-      return capture_event;
+      std::vector<orbit_grpc_protos::ProducerCaptureEvent*> translated_events(num_events);
+      for (size_t i = 0; i < num_events; ++i) {
+        auto* capture_event =
+            google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+        // Note that, as capture_event is in the Arena and intermediate_event is on the heap, this
+        // std::move will actually end up being a copy, as it will use CopyFrom internally.
+        // For the amount of events that this Vulkan layer produces, this is fine performance-wise.
+        // This is also in line with the principle of this method, which in general expects a
+        // transformation from any type that intermediate_event could be to the ProducerCaptureEvent
+        // protobuf.
+        *capture_event = std::move(moveable_intermediate_events[i]);
+        translated_events.push_back(capture_event);
+      }
+      return translated_events;
     }
 
    private:

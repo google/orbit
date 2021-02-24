@@ -25,8 +25,8 @@ namespace orbit_producer {
 // The type of the events stored in the lock-free queue is specified by the type parameter
 // IntermediateEventT. These events don't need to be ProducerCaptureEvents, nor protobufs at all.
 // This is to allow enqueuing objects that are faster to produce than protobufs.
-// ProducerCaptureEvents are then built from IntermediateEventT in TranslateIntermediateEvent, which
-// subclasses need to implement.
+// ProducerCaptureEvents are then built from IntermediateEventT in TranslateIntermediateEvents,
+// which subclasses need to implement.
 //
 // In particular, when hundreds of thousands of events are produced per second, it is recommended
 // that IntermediateEventT not be a protobuf or another type that involves heap allocations, as the
@@ -92,8 +92,9 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   // - If `IntermediateEventT` is itself a `ProducerCaptureEvent`, or the type of one of its fields,
   //   attempting to move from it into the Arena-allocated `ProducerCaptureEvent` will silently
   //   result in a deep copy.
-  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
-      IntermediateEventT&& intermediate_event, google::protobuf::Arena* arena) = 0;
+  [[nodiscard]] virtual std::vector<orbit_grpc_protos::ProducerCaptureEvent*>
+  TranslateIntermediateEvents(IntermediateEventT* moveable_intermediate_events, size_t num_events,
+                              google::protobuf::Arena* arena) = 0;
 
  private:
   void ForwarderThread() {
@@ -132,13 +133,15 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
           google::protobuf::Arena arena{arena_options};
           auto* send_request = google::protobuf::Arena::CreateMessage<
               orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>(&arena);
+
+          std::vector<orbit_grpc_protos::ProducerCaptureEvent*> translated_events =
+              TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count, &arena);
+
           auto* capture_events =
               send_request->mutable_buffered_capture_events()->mutable_capture_events();
-          capture_events->Reserve(dequeued_event_count);
-
-          for (size_t i = 0; i < dequeued_event_count; ++i) {
-            capture_events->AddAllocated(
-                TranslateIntermediateEvent(std::move(dequeued_events[i]), &arena));
+          capture_events->Reserve(translated_events.size());
+          for (orbit_grpc_protos::ProducerCaptureEvent* translated_event : translated_events) {
+            capture_events->AddAllocated(translated_event);
           }
 
           if (!SendCaptureEvents(*send_request)) {
