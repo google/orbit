@@ -29,9 +29,15 @@ namespace {
 class LockFreeBufferCaptureEventProducerImpl
     : public LockFreeBufferCaptureEventProducer<std::string> {
  protected:
-  orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
-      std::string&& /*intermediate_event*/, google::protobuf::Arena* arena) override {
-    return google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent*> TranslateIntermediateEvents(
+      std::string* /*moveable_intermediate_events*/, size_t num_events,
+      google::protobuf::Arena* arena) override {
+    std::vector<orbit_grpc_protos::ProducerCaptureEvent*> capture_events(num_events);
+    for (size_t i = 0; i < num_events; ++i) {
+      capture_events[i] =
+          google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+    }
+    return capture_events;
   }
 };
 

@@ -12,14 +12,15 @@
 
 static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
                             uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
-  static orbit_api::LockFreeApiEventBulkProducer producer;
-  // static orbit_api::LockFreeApiEventProducer producer;
+  static orbit_api::LockFreeApiEventProducer producer;
+  if (!producer.IsCapturing()) return;
+
   static pid_t pid = orbit_base::GetCurrentProcessId();
   thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
 
-  orbit_api::ApiEvent api_event(pid, tid, orbit_base::CaptureTimestampNs(), type, name, data,
-                                color);
-  producer.EnqueueIntermediateEventIfCapturing(api_event);
+  orbit_api::ApiEvent api_event(pid, tid, timestamp_ns, type, name, data, color);
+  producer.EnqueueIntermediateEvent(api_event);
 }
 
 extern "C" {
