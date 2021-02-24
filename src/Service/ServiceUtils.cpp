@@ -41,36 +41,63 @@ using ::orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
-static const char* kLinuxTracingEvents = "/sys/kernel/debug/tracing/events/";
+static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
   std::vector<TracepointInfo> result;
 
-  std::error_code error_code_category, error_code_name;
-  std::error_code no_err;
-  std::string error_category_message, error_name_message;
+  std::error_code error;
+  auto category_directory_iterator = fs::directory_iterator(kLinuxTracingEventsDirectory, error);
+  if (error) {
+    return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
+                                        kLinuxTracingEventsDirectory, error.message())};
+  }
 
-  for (const auto& category : fs::directory_iterator(kLinuxTracingEvents, error_code_category)) {
-    if (fs::is_directory(category)) {
-      for (const auto& name : fs::directory_iterator(category, error_code_name)) {
-        if (fs::path(name).filename() == "enable" || fs::path(name).filename() == "filter") {
-          continue;
-        }
-        TracepointInfo tracepoint_info;
-        tracepoint_info.set_name(fs::path(name).filename());
-        tracepoint_info.set_category(fs::path(category).filename());
-        result.emplace_back(tracepoint_info);
-      }
+  for (auto category_it = fs::begin(category_directory_iterator),
+            category_end = fs::end(category_directory_iterator);
+       category_it != category_end; category_it.increment(error)) {
+    if (error) {
+      return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
+                                          kLinuxTracingEventsDirectory, error.message())};
     }
-  }
 
-  error_category_message = error_code_category.message();
-  error_name_message = error_code_name.message();
-  if (error_category_message.compare(no_err.message()) != 0) {
-    return ErrorMessage(error_category_message.c_str());
-  }
-  if (error_name_message.compare(no_err.message()) != 0) {
-    return ErrorMessage(error_name_message.c_str());
+    const fs::path& category_path = category_it->path();
+    bool is_directory = fs::is_directory(category_path, error);
+    if (error) {
+      return ErrorMessage{
+          absl::StrFormat("Unable to stat \"%s\": %s", category_path.string(), error.message())};
+    }
+
+    if (!is_directory) continue;
+
+    auto name_directory_iterator = fs::directory_iterator(category_path, error);
+    if (error) {
+      return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
+                                          category_path.string(), error.message())};
+    }
+
+    for (auto it = fs::begin(name_directory_iterator), end = fs::end(name_directory_iterator);
+         it != end; it.increment(error)) {
+      if (error) {
+        return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
+                                            category_path.string(), error.message())};
+      }
+
+      bool is_directory = it->is_directory(error);
+      if (error) {
+        return ErrorMessage{
+            absl::StrFormat("Unable to stat \"%s\": %s", it->path().string(), error.message())};
+      }
+
+      if (!is_directory) {
+        continue;
+      }
+
+      TracepointInfo tracepoint_info;
+      tracepoint_info.set_name(it->path().filename());
+      tracepoint_info.set_category(category_path.filename());
+      result.emplace_back(tracepoint_info);
+    }
   }
 
   return result;
