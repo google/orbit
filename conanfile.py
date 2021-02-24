@@ -12,6 +12,7 @@ import os
 import shutil
 from io import StringIO
 from contrib.python import conan_helpers
+from contrib.jupyter import build as build_python
 import csv
 
 
@@ -29,6 +30,7 @@ class OrbitConan(ConanFile):
                "crashdump_server": "ANY",
                "with_crash_handling": [True, False],
                "run_tests": [True, False],
+               "run_python_tests": [True, False],
                "with_vulkan_layer": [True, False],
                "build_target": "ANY"}
     default_options = {"system_mesa": True,
@@ -39,6 +41,7 @@ class OrbitConan(ConanFile):
                        "with_crash_handling": True,
                        "with_vulkan_layer": False,
                        "run_tests": True,
+                       "run_python_tests": False,
                        "build_target": None}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
@@ -161,6 +164,8 @@ class OrbitConan(ConanFile):
         cmake.build(target=str(self.options.build_target) if self.options.build_target else None)
         if self.options.run_tests and not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":
             cmake.test(output_on_failure=True)
+        if self.options.run_python_tests:
+            build_python.main()
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")

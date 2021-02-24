@@ -4,11 +4,12 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
-import sys
+import sys, os
 import unittest
 
 def main():
-    tests = unittest.TestLoader().discover('.', '*test.py', '.')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    tests = unittest.TestLoader().discover(dir_path, '*test.py', dir_path)
     result = unittest.TextTestRunner().run(tests)
     if result.wasSuccessful():
         return 0
