@@ -291,8 +291,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
       absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map);
 
-  // LoadModule retrieves a module file and returns the local file path (potentially from the local
-  // cache). Symbols won't be loaded.
+  // RetrieveModule retrieves a module file and returns the local file path (potentially from the
+  // local cache). Only modules with a .symtab section will be considered.
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
       const ModuleData* module);
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
@@ -304,6 +304,13 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   // `LoadModule` and afterwards load the symbols by calling `LoadSymbols`.
   orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(const ModuleData* module);
   orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
+      const std::string& module_path, const std::string& build_id);
+
+  // This method is pretty similar to `RetrieveModule`, but it also requires debug information to be
+  // present.
+  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
+      const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const std::string& module_path, const std::string& build_id);
 
   // TODO(177304549): This is still the way it is because of the old UI. Refactor: clean this up (it
