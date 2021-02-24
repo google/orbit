@@ -35,10 +35,11 @@ std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
             end = std::filesystem::end(directory_iterator);
        it != end; it.increment(error)) {
     if (error) {
-      ERROR("directory_iterator::increment failed for \"%s\": %s (will ignore)", dir.string(),
+      ERROR("directory_iterator::increment failed for \"%s\": %s (stopping)", dir.string(),
             error.message());
-      continue;
+      break;
     }
+
     bool is_regular_file = it->is_regular_file(error);
     if (error) {
       ERROR("Unable to stat \"%s\": %s (will ignore)", it->path().string(), error.message());

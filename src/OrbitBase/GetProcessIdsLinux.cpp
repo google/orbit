@@ -51,8 +51,8 @@ std::vector<pid_t> GetAllPids() {
 
   for (auto it = fs::begin(proc), end = fs::end(proc); it != end; it.increment(error)) {
     if (error) {
-      ERROR("directory_iterator::increment failed with: %s (will ignore)", error.message());
-      continue;
+      ERROR("directory_iterator::increment failed with: %s (stopping)", error.message());
+      break;
     }
     auto pid = ProcEntryToPid(*it);
     if (pid.has_value()) {
@@ -76,8 +76,8 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
   for (auto it = fs::begin(proc_pid_task), end = fs::end(proc_pid_task); it != end;
        it.increment(error)) {
     if (error) {
-      ERROR("directory_iterator::increment failed with: %s (will ignore)", error.message());
-      continue;
+      ERROR("directory_iterator::increment failed with: %s (stopping)", error.message());
+      break;
     }
     if (auto tid = ProcEntryToPid(*it); tid.has_value()) {
       tids.emplace_back(tid.value());

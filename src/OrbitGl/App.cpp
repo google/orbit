@@ -387,13 +387,38 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
     const std::filesystem::path& directory, std::string_view extension) {
   std::vector<std::filesystem::path> files;
 
-  for (const auto& file : std::filesystem::directory_iterator(directory)) {
-    if (std::filesystem::is_regular_file(file)) {
-      const auto& path = file.path();
-      if (path.extension().string() == extension) {
-        files.push_back(path);
-      }
+  std::error_code error;
+  auto directory_iterator = std::filesystem::directory_iterator(directory, error);
+  if (error) {
+    ERROR("Unable to list files in directory \"%s\": %s", directory.string(), error.message());
+    return {};
+  }
+
+  for (auto it = std::filesystem::begin(directory_iterator),
+            end = std::filesystem::end(directory_iterator);
+       it != end; it.increment(error)) {
+    if (error) {
+      ERROR("Iterating directory \"%s\": %s (increment failed, stopping)", directory.string(),
+            error.message());
+      break;
     }
+
+    const auto& path = it->path();
+    bool is_regular_file = std::filesystem::is_regular_file(path, error);
+    if (error) {
+      ERROR("Unable to stat \"%s\": %s (ignoring)", path.string(), error.message());
+      continue;
+    }
+
+    if (!is_regular_file) {
+      continue;
+    }
+
+    if (path.extension().string() != extension) {
+      continue;
+    }
+
+    files.push_back(path);
   }
 
   return files;
