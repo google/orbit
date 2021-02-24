@@ -25,7 +25,18 @@ template <typename T, typename E>
 using Result = outcome::result<T, E, outcome::policy::terminate>;
 
 template <typename T>
-using ErrorMessageOr = Result<T, ErrorMessage>;
+class ErrorMessageOr : public Result<T, ErrorMessage> {
+ public:
+  using Result<T, ErrorMessage>::Result;
+};
+
+template <>
+class ErrorMessageOr<bool> : public Result<bool, ErrorMessage> {
+ public:
+  using Result<bool, ErrorMessage>::Result;
+  operator bool() = delete;
+  operator bool() const = delete;
+};
 
 template <typename T>
 struct IsErrorMessageOr : std::false_type {};
