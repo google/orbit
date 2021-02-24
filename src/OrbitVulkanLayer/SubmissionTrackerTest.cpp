@@ -53,10 +53,14 @@ class MockVulkanLayerProducer : public VulkanLayerProducer {
 
   MOCK_METHOD(void, SetCaptureStatusListener, (CaptureStatusListener*), (override));
 
-  void StartCapture() {
+  void StartCapture(
+      uint64_t max_local_marker_depth_per_command_buffer = std::numeric_limits<uint64_t>::max()) {
     is_capturing_ = true;
     ASSERT_NE(listener_, nullptr);
-    listener_->OnCaptureStart(orbit_grpc_protos::CaptureOptions{});
+    orbit_grpc_protos::CaptureOptions capture_options{};
+    capture_options.set_max_local_marker_depth_per_command_buffer(
+        max_local_marker_depth_per_command_buffer);
+    listener_->OnCaptureStart(capture_options);
   }
 
   void StopCapture() {
@@ -1354,8 +1358,6 @@ TEST_F(SubmissionTrackerTest, ResetDebugMarkerSlotsWhenStopBeforeASubmission) {
 }
 
 TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
-  tracker_.SetMaxLocalMarkerDepthPerCommandBuffer(1);
-
   ExpectFourNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
@@ -1388,7 +1390,8 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
 
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
-  producer_->StartCapture();
+  constexpr uint64_t kMaxDepth = 1;
+  producer_->StartCapture(kMaxDepth);
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkDebugMarkerBegin(command_buffer_, text_outer.c_str(), expected_color);
@@ -1421,7 +1424,6 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
 }
 
 TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcrossSubmissions) {
-  tracker_.SetMaxLocalMarkerDepthPerCommandBuffer(1);
   ExpectSevenNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
       .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
@@ -1459,7 +1461,8 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
 
   pid_t tid = orbit_base::GetCurrentThreadId();
 
-  producer_->StartCapture();
+  constexpr uint64_t kMaxDepth = 1;
+  producer_->StartCapture(kMaxDepth);
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);  // timestamp 1
   tracker_.MarkDebugMarkerBegin(command_buffer_, text_outer.c_str(),
