@@ -9,10 +9,10 @@
 #include <stack>
 
 namespace HFManager {
-    
- void AddStackFrame(std::shared_ptr<HFStack>) { stackframes.push(stack); }
- [[nodiscard]] std::shared_ptr<HFStack> PopStackFrame() { return stackframes.pop(); }
- [[nodiscard]] int GetTotalStacks() { return stackframes.size(); }
+
+ void AddStackFrame(std::shared_ptr<HFStack>);
+ [[nodiscard]] std::shared_ptr<HFStack> PopStackFrame();
+ [[nodiscard]] int GetTotalStacks() const;
  void ClearStackFrames();
 
 } // namespace HFManager
