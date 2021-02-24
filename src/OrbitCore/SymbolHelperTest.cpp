@@ -183,3 +183,14 @@ TEST(SymbolHelper, FindDebugInfoFileLocally) {
   EXPECT_EQ(symbols_path_result.value().filename(), "hello_world_elf.debug");
   EXPECT_EQ(symbols_path_result.value().parent_path(), testdata_directory);
 }
+
+TEST(SymbolHelper, IsMatchingDebugInfoFile) {
+  constexpr uint32_t kExpectedChecksum = 0x2bf887bf;
+  auto correct_file_path = testdata_directory / "hello_world_elf.debug";
+  auto existing_but_wrong_file_path = testdata_directory / "hello_world_elf";
+  auto non_existing_file_path = testdata_directory / "hello_world_elf.does_not_exist";
+  EXPECT_TRUE(SymbolHelper::IsMatchingDebugInfoFile(correct_file_path, kExpectedChecksum));
+  EXPECT_FALSE(
+      SymbolHelper::IsMatchingDebugInfoFile(existing_but_wrong_file_path, kExpectedChecksum));
+  EXPECT_FALSE(SymbolHelper::IsMatchingDebugInfoFile(non_existing_file_path, kExpectedChecksum));
+}

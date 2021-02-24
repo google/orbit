@@ -33,6 +33,7 @@ class SymbolHelper {
 
   [[nodiscard]] fs::path GenerateCachedFileName(const fs::path& file_path) const;
 
+  [[nodiscard]] static bool IsMatchingDebugInfoFile(const fs::path& file_path, uint32_t checksum);
   [[nodiscard]] ErrorMessageOr<fs::path> FindDebugInfoFileLocally(std::string_view filename,
                                                                   uint32_t checksum) const;
 
