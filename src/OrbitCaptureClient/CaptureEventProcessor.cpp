@@ -79,6 +79,11 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kModuleUpdateEvent:
       // TODO (http://b/168797897): Process module update events
       break;
+    case ClientCaptureEvent::kApiEvent:
+      // Will be enabled in next PR.
+      // api_event_processor_.ProcessApiEvent(event.api_event());
+      break;
+
     case ClientCaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;

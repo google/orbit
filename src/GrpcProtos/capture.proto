@@ -92,6 +92,11 @@ message IntrospectionScope {
   repeated uint64 registers = 6;
 }
 
+message ApiEvent {
+  uint64 num_raw_events = 1;
+  bytes raw_data = 2;
+}
+
 message Callstack {
   repeated uint64 pcs = 1;
 }
@@ -275,6 +280,7 @@ message ClientCaptureEvent {
   oneof event {
     // Please keep these alphabetically ordered.
     AddressInfo address_info = 1;
+    ApiEvent api_event = 15;
     CallstackSample callstack_sample = 2;
     FunctionCall function_call = 3;
     GpuJob gpu_job = 4;
@@ -294,6 +300,7 @@ message ClientCaptureEvent {
 message ProducerCaptureEvent {
   oneof event {
     // Please keep these alphabetically ordered.
+    ApiEvent api_event = 15;
     CallstackSample callstack_sample = 1;
     FullCallstackSample full_callstack_sample = 2;
     FullAddressInfo full_address_info = 3;
