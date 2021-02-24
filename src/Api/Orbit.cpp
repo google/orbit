@@ -19,7 +19,7 @@ static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullpt
 
   orbit_api::ApiEvent api_event(pid, tid, orbit_base::CaptureTimestampNs(), type, name, data,
                                 color);
-  producer.EnqueueIntermediateEvent(api_event);
+  producer.EnqueueIntermediateEventIfCapturing(api_event);
 }
 
 extern "C" {

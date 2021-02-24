@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_PRODUCER_LOCK_FREE_BUFFER_BULKED_CAPTURE_EVENT_PRODUCER_H_
-#define ORBIT_PRODUCER_LOCK_FREE_BUFFER_BULKED_CAPTURE_EVENT_PRODUCER_H_
+#ifndef ORBIT_PRODUCER_LOCK_FREE_BUFFER_BULK_CAPTURE_EVENT_PRODUCER_H_
+#define ORBIT_PRODUCER_LOCK_FREE_BUFFER_BULK_CAPTURE_EVENT_PRODUCER_H_
 
 #include <chrono>
 #include <vector>
@@ -24,10 +24,10 @@ namespace orbit_producer {
 // Note that the events stored in the lock-free queue, whose type is specified by the
 // type parameter IntermediateEventT, don't need to be CaptureEvents, nor protobufs at all.
 // This is to allow enqueuing objects that are faster to produce than protobufs.
-// The translation from IntermediateEventT to CaptureEvent is handled by
-// TranslateIntermediateEvent, which subclasses need to implement.
+// The translation from IntermediateEventT to CaptureEvent is done in bulk by
+// TranslateIntermediateEvents, which subclasses need to implement.
 template <typename IntermediateEventT>
-class LockFreeBufferBulkedCaptureEventProducer : public CaptureEventProducer {
+class LockFreeBufferBulkCaptureEventProducer : public CaptureEventProducer {
  public:
   void BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) override {
     CaptureEventProducer::BuildAndStart(channel);
