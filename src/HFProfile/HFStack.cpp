@@ -1,10 +1,11 @@
 #include "HFStack/HFStack.h"
 
-void HFStack::AddFunctionInfo(const orbit_client_protos::FunctionInfo& func) {
+bool HFStack::AddFunctionInfo(const orbit_client_protos::FunctionInfo& func) {
+  if (_locked) return false;
   std::string name(function_utils::GetDisplayName(func));
   if (name == _triggerName) {
-    _lookupTable.clear();
-    return;
+    _locked = true;
+    return false;
   }
   _lookupTable.try_emplace(name, func);
 }
