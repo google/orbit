@@ -20,17 +20,25 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
+// Some notes reguarding the calls to cpuid below:
+// Cpuid takes one parameter in eax. In Intel's terminology, this is called the Cpuid "leaf". Some
+// leaves have "sub-leafs" i.e. they take a second paramter in ecx. The sub-leaf is sometimes called
+// "count". The return values end up in registers eax, ... , edx.
+// The wrappers from cpuid.h simplify error and parameter handling. cpuid.h also has some defines
+// and useful comments to figure out what can be queried. More comprehensive info:
+// https://www.sandpile.org/x86/cpuid.htm
+
 // Return the size of the XSave area on this cpu.
 [[nodiscard]] ErrorMessageOr<size_t> GetXSaveAreaSize() {
   uint32_t eax = 0;
   uint32_t ebx = 0;
   uint32_t ecx = 0;
   uint32_t edx = 0;
-  if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx) || !(ecx & bit_XSAVE)) {
-    return ErrorMessage("XSAVE is not supported by Cpu.");
+  if (!__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) || !(ecx & bit_XSAVE)) {
+    return ErrorMessage("XSAVE is not supported by the Cpu.");
   }
   if (!__get_cpuid_count(0x0d, 0x00, &eax, &ebx, &ecx, &edx)) {
-    return ErrorMessage("XSAVE is not supported by Cpu.");
+    return ErrorMessage("XSAVE is not supported by the Cpu.");
   }
   return static_cast<size_t>(ecx);
 }
@@ -42,7 +50,7 @@ namespace {
   uint32_t ecx = 0;
   uint32_t edx = 0;
   if (!__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) || !(ecx & bit_AVX)) {
-    return ErrorMessage("AVX is not supported by Cpu.");
+    return ErrorMessage("AVX is not supported by the Cpu.");
   }
   if (!__get_cpuid_count(0x0d, 0x02, &eax, &ebx, &ecx, &edx)) {
     return ErrorMessage("AVX offset query failed.");
@@ -67,7 +75,7 @@ bool RegisterState::HasAvxDataStored() {
           static_cast<uint64_t>(XSaveHeader::StateComponents::kAvx)) != 0;
 }
 
-[[nodiscard]] ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
+ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   tid_ = tid;
 
   iovec iov;
@@ -84,7 +92,7 @@ bool RegisterState::HasAvxDataStored() {
   } else if (iov.iov_len == sizeof(GeneralPurposeRegisters64)) {
     bitness_ = Bitness::k64Bit;
   } else {
-    CHECK(false);
+    FATAL("Bitness is neither 32 or 64 bit.");
   }
 
   auto xsave_area_size = GetXSaveAreaSize();
@@ -104,21 +112,19 @@ bool RegisterState::HasAvxDataStored() {
   auto avx_offset = GetAvxOffset();
   if (!avx_offset.has_error()) {
     avx_offset_ = avx_offset.value();
-  } else {
-    avx_offset_ = 0;
   }
 
   return outcome::success();
 }
 
-[[nodiscard]] ErrorMessageOr<void> RegisterState::RestoreRegisters() {
+ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   // BackupRegisters needs to be called before RestoreRegisters.
   CHECK(tid_ != -1);
 
   iovec iov;
   iov.iov_base = &general_purpose_registers_;
-  iov.iov_len = bitness_ == Bitness::k32Bit ? sizeof(GeneralPurposeRegisters32)
-                                            : sizeof(GeneralPurposeRegisters64);
+  iov.iov_len = (bitness_ == Bitness::k32Bit) ? sizeof(GeneralPurposeRegisters32)
+                                              : sizeof(GeneralPurposeRegisters64);
   auto result = ptrace(PTRACE_SETREGSET, tid_, NT_PRSTATUS, &iov);
   if (result == -1) {
     return ErrorMessage(

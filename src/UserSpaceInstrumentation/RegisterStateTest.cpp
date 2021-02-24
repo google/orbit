@@ -86,7 +86,7 @@ TEST(RegisterStateTest, BackupModifyRestore) {
   // Continue child.
   CHECK(ptrace(PT_CONTINUE, pid, 1, 0) == 0);
 
-  // Wait for the child to exit. Exit status is zero if the modified register could be verified.
+  // Wait for the child to exit. Exit status is zero if the modified registers could be verified.
   waited = waitpid(pid, &status, 0);
   CHECK(waited == pid);
   CHECK(WIFEXITED(status));
