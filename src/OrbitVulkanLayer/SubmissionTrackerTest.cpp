@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <array>
+
 #include "OrbitBase/ThreadUtils.h"
 #include "SubmissionTracker.h"
 #include "VulkanLayerProducer.h"
@@ -534,6 +536,97 @@ TEST_F(SubmissionTrackerTest,
   EXPECT_THAT(actual_reset_slots, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
                                         pid, kTimestamp1, kTimestamp2);
+}
+
+TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFails) {
+  // We are persisting two submits with two different command buffers for completion, where
+  // on the second submit one of the timestamps query calls is intended to fail for the
+  // purpose of the test. This submit must be tried again and successfully completed on the
+  // second attempt.
+
+  ExpectFourNextReadyQuerySlotCalls();
+  EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
+      // First two calls should succeed in PullCompletedSubmissions.
+      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
+      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
+      // Next two calls should succeed to complete the first submission.
+      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
+      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
+      // Fail on the second submission so that we retry on the second call.
+      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
+      .WillOnce(Return(mock_get_query_pool_results_function_not_ready_))
+      .WillRepeatedly(Return(mock_get_query_pool_results_function_all_ready_));
+
+  std::vector<uint32_t> actual_reset_slots1;
+  std::vector<uint32_t> actual_reset_slots2;
+  EXPECT_CALL(timer_query_pool_, ResetQuerySlots)
+      .Times(2)
+      .WillOnce(SaveArg<1>(&actual_reset_slots1))
+      .WillOnce(SaveArg<1>(&actual_reset_slots2));
+
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> actual_capture_events;
+  auto mock_enqueue_capture_event =
+      [&actual_capture_events](orbit_grpc_protos::ProducerCaptureEvent&& capture_event) {
+        actual_capture_events.push_back(std::move(capture_event));
+        return true;
+      };
+  EXPECT_CALL(*producer_, EnqueueCaptureEvent)
+      .Times(2)
+      .WillRepeatedly(Invoke(mock_enqueue_capture_event));
+
+  producer_->StartCapture();
+
+  // VkCommandBuffer's are opaque handles and we can't allocate them properly as we can't create
+  // a device in the context of the text. Using absl::bit_cast is a workaround to get two
+  // VkCommandBuffer's that are different, which is needed for this test.
+  std::array<VkCommandBuffer, 2> command_buffers{absl::bit_cast<VkCommandBuffer>(1L),
+                                                 absl::bit_cast<VkCommandBuffer>(2L)};
+  CHECK(command_buffers[0] != command_buffers[1]);
+
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffers[0], 2);
+  tracker_.MarkCommandBufferBegin(command_buffers[0]);
+  tracker_.MarkCommandBufferEnd(command_buffers[0]);
+  tracker_.MarkCommandBufferBegin(command_buffers[1]);
+  tracker_.MarkCommandBufferEnd(command_buffers[1]);
+
+  std::array<VkSubmitInfo, 2> submit_infos{VkSubmitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                                                        .pNext = nullptr,
+                                                        .pCommandBuffers = &command_buffers[0],
+                                                        .commandBufferCount = 1},
+                                           VkSubmitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                                                        .pNext = nullptr,
+                                                        .pCommandBuffers = &command_buffers[1],
+                                                        .commandBufferCount = 1}};
+
+  pid_t pid = orbit_base::GetCurrentThreadId();
+  std::array<uint64_t, 2> pre_submit_times;
+  std::array<uint64_t, 2> post_submit_times;
+
+  pre_submit_times[0] = orbit_base::CaptureTimestampNs();
+  std::optional<QueueSubmission> queue_submission_optional =
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_infos[0]);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_infos[0], queue_submission_optional);
+  post_submit_times[0] = orbit_base::CaptureTimestampNs();
+
+  pre_submit_times[1] = orbit_base::CaptureTimestampNs();
+  std::optional<QueueSubmission> queue_submission_optional2 =
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_infos[1]);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_infos[1], queue_submission_optional2);
+  post_submit_times[1] = orbit_base::CaptureTimestampNs();
+
+  tracker_.CompleteSubmits(device_);
+  tracker_.CompleteSubmits(device_);
+
+  EXPECT_THAT(actual_reset_slots1, UnorderedElementsAre(kSlotIndex1, kSlotIndex2, kSlotIndex4));
+  // We failed on the 4th GetQuerySlots call above, which belongs to the "begin" timestamp of the
+  // second command buffer (note that the order of calls when querying for timestamps is to query
+  // for the end timestamp first). Therefore, this must be kSlotIndex3.
+  EXPECT_THAT(actual_reset_slots2, UnorderedElementsAre(kSlotIndex3));
+
+  ExpectSingleCommandBufferSubmissionEq(actual_capture_events[0], pre_submit_times[0],
+                                        post_submit_times[0], pid, kTimestamp1, kTimestamp2);
+  ExpectSingleCommandBufferSubmissionEq(actual_capture_events[1], pre_submit_times[1],
+                                        post_submit_times[1], pid, kTimestamp3, kTimestamp4);
 }
 
 TEST_F(SubmissionTrackerTest, StopCaptureBeforeSubmissionWillResetTheSlots) {
