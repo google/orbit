@@ -9,16 +9,26 @@ add_library(SourcePathsMapping STATIC)
 
 target_compile_options(SourcePathsMapping PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(SourcePathsMapping PUBLIC include/)
-target_link_libraries(SourcePathsMapping PUBLIC OrbitBase Qt5::Core)
+target_link_libraries(SourcePathsMapping PUBLIC OrbitBase
+                                                QtUtils
+                                                Qt5::Core
+                                                Qt5::Test)
 
 target_sources(
   SourcePathsMapping PUBLIC include/SourcePathsMapping/Mapping.h
+                            include/SourcePathsMapping/MappingItemModel.h
                             include/SourcePathsMapping/MappingManager.h)
-target_sources(SourcePathsMapping PRIVATE Mapping.cpp MappingManager.cpp)
+target_sources(SourcePathsMapping PRIVATE Mapping.cpp
+                                          MappingItemModel.cpp
+                                          MappingManager.cpp)
+
+set_target_properties(SourcePathsMapping PROPERTIES AUTOMOC ON)
 
 add_executable(SourcePathsMappingTests)
 target_compile_options(SourcePathsMappingTests PRIVATE ${STRICT_COMPILE_FLAGS})
-target_sources(SourcePathsMappingTests PRIVATE MappingTest.cpp MappingManagerTest.cpp)
+target_sources(SourcePathsMappingTests PRIVATE MappingTest.cpp
+                                               MappingItemModelTest.cpp
+                                               MappingManagerTest.cpp)
 target_link_libraries(SourcePathsMappingTests PRIVATE SourcePathsMapping
                                                       GTest::QtCoreMain)
 

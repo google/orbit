@@ -28,6 +28,8 @@ struct Mapping {
   }
 
   friend bool operator!=(const Mapping& lhs, const Mapping& rhs) { return !(lhs == rhs); }
+
+  [[nodiscard]] bool IsValid() const { return !source_path.empty() && !target_path.empty(); }
 };
 
 [[nodiscard]] std::optional<std::filesystem::path> MapToFirstMatchingTarget(
