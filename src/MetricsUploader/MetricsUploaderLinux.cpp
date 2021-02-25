@@ -7,12 +7,8 @@
 
 namespace orbit_metrics_uploader {
 
-MetricsUploader::MetricsUploader() = default;
-MetricsUploader::~MetricsUploader() = default;
-MetricsUploader::MetricsUploader(MetricsUploader&& other) = default;
-MetricsUploader& MetricsUploader::operator=(MetricsUploader&& other) = default;
-
-ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string) {
+ErrorMessageOr<std::unique_ptr<MetricsUploader>> MetricsUploader::CreateMetricsUploader(
+    std::string) {
   return ErrorMessage("MetricsUploader is not implemented on Linux");
 }
 

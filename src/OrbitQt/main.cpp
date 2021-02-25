@@ -89,13 +89,14 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
   std::optional<orbit_qt::TargetConfiguration> target_config;
 
-  ErrorMessageOr<orbit_metrics_uploader::MetricsUploader> metrics_uploader = ErrorMessage("");
+  std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader;
   if (absl::GetFlag(FLAGS_enable_metrics)) {
-    metrics_uploader = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
-    if (metrics_uploader.has_value()) {
+    auto metrics_uploader_result = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
+    if (metrics_uploader_result.has_value()) {
+      metrics_uploader = std::move(metrics_uploader_result.value());
       LOG("MetricsUploader was initialized successfully");
     } else {
-      ERROR("%s", metrics_uploader.error().message());
+      ERROR("%s", metrics_uploader_result.error().message());
     }
   }
 
@@ -126,8 +127,7 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
     {  // Scoping of QT UI Resources
 
-      OrbitMainWindow w(std::move(target_config.value()), crash_handler,
-                        metrics_uploader.has_value() ? &metrics_uploader.value() : nullptr,
+      OrbitMainWindow w(std::move(target_config.value()), crash_handler, metrics_uploader.get(),
                         command_line_flags);
 
       // "resize" is required to make "showMaximized" work properly.

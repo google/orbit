@@ -41,12 +41,12 @@ TEST(MetricsUploader, SendLogEvent) {
   auto metrics_uploader = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
   ASSERT_TRUE(metrics_uploader.has_value());
   bool result =
-      metrics_uploader.value().SendLogEvent(OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
+      metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
   EXPECT_FALSE(result);
-  result = metrics_uploader.value().SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
+  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
   EXPECT_TRUE(result);
-  result = metrics_uploader.value().SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
-                                                 std::chrono::milliseconds(100));
+  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
+                                                  std::chrono::milliseconds(100));
   EXPECT_TRUE(result);
 }
 
