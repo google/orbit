@@ -220,18 +220,20 @@ class RegisterState {
     k32Bit,
     k64Bit,
   };
-  Bitness GetBitness() const { return bitness_; }
+  [[nodiscard]] Bitness GetBitness() const { return bitness_; }
 
   // Returns a pointer to a union of 32 and 64 bit general purpose registers. Call "GetBitness" to
   // determine which member of the union is valid.
-  GeneralPurposeRegisters* GetGeneralPurposeRegisters() { return &general_purpose_registers_; }
+  [[nodiscard]] GeneralPurposeRegisters* GetGeneralPurposeRegisters() {
+    return &general_purpose_registers_;
+  }
 
   // Some registers do not get stored in RegisterState. The Cpu might not support them or they might
   // be in their initial state. So before accessing this data one needs to call the "Has*DataStored"
   // methods first.
-  bool Hasx87DataStored();
-  bool HasSseDataStored();
-  bool HasAvxDataStored();
+  [[nodiscard]] bool Hasx87DataStored();
+  [[nodiscard]] bool HasSseDataStored();
+  [[nodiscard]] bool HasAvxDataStored();
 
   // Structure access to the different parts of the XSave area. Details, again, can be found at
   // "Intel 64 and IA-32 Architectures Software Developer’s Manual, Volume 1", section 13.
