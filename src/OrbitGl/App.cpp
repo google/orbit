@@ -823,7 +823,6 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
-  string_manager_.Clear();
   auto load_future = thread_pool_->Schedule([this, file_name]() mutable {
     capture_loading_cancellation_requested_ = false;
 
@@ -949,6 +948,9 @@ void OrbitApp::ClearCapture() {
     capture_window_->ClearTimeGraph();
   }
   capture_data_.reset();
+
+  string_manager_.Clear();
+
   set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
   SelectTextBox(nullptr);
 

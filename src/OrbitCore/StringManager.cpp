@@ -8,11 +8,13 @@
 #include <absl/strings/string_view.h>
 #include <absl/synchronization/mutex.h>
 
-#include <utility>
+#include "OrbitBase/Logging.h"
 
+// TODO(b/181207737): Make this assert that it is not present and rename to "Add".
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
   if (key_to_string_.contains(key)) {
+    ERROR("String collision for key: %ul and string: %s.", key, str);
     return false;
   }
   key_to_string_.emplace(key, str);
