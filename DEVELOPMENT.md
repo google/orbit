@@ -186,23 +186,34 @@ or directly.
 
 A `.clang-format` file which defines our specific code style lives in the
 top level directory of the repository. The style is identical to the Google
-style. The Google c++ style guide can be found [here](https://google.github.io/styleguide/cppguide.html).
-It includes brief discussions or rationales for all the style decisions.
+style. 
+
+## Code Style
+
+As mentioned above we use `clang-format` to enforce certain aspects of code
+style. The Google C++ style guide we are following in that can be found
+[here](https://google.github.io/styleguide/cppguide.html). It includes brief
+discussions or rationales for all the style decisions.
 
 Beyond what it is in the style guide we agreed to a few more additional rules
 specific to the Orbit project:
 
 ### [[nodiscard]]
-We use "[[nodiscard]]" for all accessors of new classes. We do not touch
-existing code merely to add "[[nodiscard]]" though.
+We use `[[nodiscard]]` for (almost) all methods that return a value in new
+classes. If you encouter a use case where it makes no sense or hurts
+readability feel free to skip it though.
+
+We do not touch existing code merely to add `[[nodiscard]]` though.
 
 ### Error handling
-For error handling we use "ErrorMessageOr<T>" from 
+For error handling we use `ErrorMessageOr<T>` from 
 [Result.h](https://github.com/google/orbit/blob/main/src/OrbitBase/include/OrbitBase/Result.h).
-This class serves the same purpose as "absl::StatusOr<T>". We thought about
+This class serves the same purpose as `absl::StatusOr<T>`. We thought about
 switching to absl but currently the advantage does not seem large enough to
-warrant the effort. We discourage the use of the "OUTCOME_TRY" macro that comes
-with outcome.hpp that "ErrorMessageOr<T>" is based on.
+warrant the effort. So for now we stick with `ErrorMessageOr<T>`. 
+
+In cases where no error message needs to be returned it is perfectly fine to
+use `std::optional`.
 
 ### Exceptions
 Currently our code is compiled with exceptions but we strive to towards a world
