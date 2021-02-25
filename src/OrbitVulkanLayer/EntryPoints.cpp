@@ -8,6 +8,7 @@
 #include "SubmissionTracker.h"
 #include "TimerQueryPool.h"
 #include "VulkanLayerController.h"
+#include "VulkanWrapper.h"
 #include "absl/base/casts.h"
 #include "vulkan/vk_layer.h"
 #include "vulkan/vulkan.h"
@@ -42,7 +43,7 @@ using TimerQueryPoolImpl = TimerQueryPool<DispatchTable>;
 using SubmissionTrackerImpl =
     SubmissionTracker<DispatchTable, DeviceMangerImpl, TimerQueryPoolImpl>;
 static VulkanLayerController<DispatchTable, QueueManager, DeviceMangerImpl, TimerQueryPoolImpl,
-                             SubmissionTrackerImpl>
+                             SubmissionTrackerImpl, VulkanWrapper>
     controller;
 
 // ----------------------------------------------------------------------------

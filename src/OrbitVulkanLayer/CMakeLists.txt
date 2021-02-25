@@ -25,7 +25,8 @@ target_sources(OrbitVulkanLayer PRIVATE
         VulkanLayerController.h
         VulkanLayerProducer.h
         VulkanLayerProducerImpl.cpp
-        VulkanLayerProducerImpl.h)
+        VulkanLayerProducerImpl.h
+        VulkanWrapper.h)
 
 add_custom_command(TARGET OrbitVulkanLayer POST_BUILD COMMAND ${CMAKE_COMMAND}
                    -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/VkLayer_Orbit_implicit.json
