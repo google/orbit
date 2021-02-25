@@ -200,7 +200,7 @@ existing code merely to add "[[nodiscard]]" though.
 For error handling we use "ErrorMessageOr<T>" from 
 [Result.h](https://github.com/google/orbit/blob/main/src/OrbitBase/include/OrbitBase/Result.h).
 This class serves he same purpose as "absl::StatusOr<T>". We thought about
-switching to absl but currently the advantage does not seem large enought to
+switching to absl but currently the advantage does not seem large enough to
 warrant the effort. We discourage the use of the "OUTCOME_TRY" macro that comes
 with outcome.hpp that "ErrorMessageOr<T>" is based on.
 
