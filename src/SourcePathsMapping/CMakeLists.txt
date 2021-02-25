@@ -14,12 +14,12 @@ target_link_libraries(SourcePathsMapping PUBLIC OrbitBase Qt5::Core)
 target_sources(
   SourcePathsMapping PUBLIC include/SourcePathsMapping/Mapping.h
                             include/SourcePathsMapping/MappingManager.h)
-target_sources(SourcePathsMapping PRIVATE Mapping.cpp)
+target_sources(SourcePathsMapping PRIVATE Mapping.cpp MappingManager.cpp)
 
 add_executable(SourcePathsMappingTests)
 target_compile_options(SourcePathsMappingTests PRIVATE ${STRICT_COMPILE_FLAGS})
-target_sources(SourcePathsMappingTests PRIVATE MappingTest.cpp)
+target_sources(SourcePathsMappingTests PRIVATE MappingTest.cpp MappingManagerTest.cpp)
 target_link_libraries(SourcePathsMappingTests PRIVATE SourcePathsMapping
-                                                      GTest::Main)
+                                                      GTest::QtCoreMain)
 
 register_test(SourcePathsMappingTests)
