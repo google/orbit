@@ -199,9 +199,9 @@ Beyond what it is in the style guide we agreed to a few more additional rules
 specific to the Orbit project:
 
 ### [[nodiscard]]
-We use `[[nodiscard]]` for (almost) all methods that return a value in new
-classes. If you encouter a use case where it makes no sense or hurts
-readability feel free to skip it though.
+We use `[[nodiscard]]` for (almost) all new class methods and free functions
+that return a value. If you encouter a use case where it makes no sense or
+hurts readability feel free to skip it though.
 
 We do not touch existing code merely to add `[[nodiscard]]` though.
 
@@ -219,7 +219,7 @@ use `std::optional`.
 Currently our code is compiled with exceptions but we strive to towards a world
 with no exceptions. Particularly we don't use methods from std that throw
 exceptions but prefer the variants returning error codes (e.g. in 
-std::filesystem).
+`std::filesystem`).
 
 ## FAQ
 
