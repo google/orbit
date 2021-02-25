@@ -188,6 +188,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       // If we would not reset them here and clear the state, we would try to reset those command
       // buffers there. However, the mapping to the device (which is needed) would be missing.
       if (command_buffer_to_state_.contains(command_buffer)) {
+        // Note: This will "rollback" the slot indices (rather then actually resetting them on the
+        // Gpu). This is fine, as we remove the command buffer state right after submission. Thus,
+        // There can not be a value in the respective slot.
         ResetCommandBufferUnsafe(command_buffer);
 
         command_buffer_to_state_.erase(command_buffer);
