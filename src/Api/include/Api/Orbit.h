@@ -305,7 +305,7 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
 #include <stdio.h>
 
 inline void* orbit_api_get_lib_orbit() {
-  static void* liborbit = dlopen("./liborbit.so", RTLD_LAZY);
+  static void* liborbit = dlopen("./liborbit.so", RTLD_NOW);
   if (liborbit == nullptr) printf("ERROR: liborbit.so not found, Orbit API is disabled.\n");
   return liborbit;
 }
