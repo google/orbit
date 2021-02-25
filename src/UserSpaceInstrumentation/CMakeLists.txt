@@ -19,10 +19,12 @@ target_include_directories(UserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(UserSpaceInstrumentation PUBLIC
-        include/UserSpaceInstrumentation/Attach.h)
+        include/UserSpaceInstrumentation/Attach.h
+        include/UserSpaceInstrumentation/RegisterState.h)
 
 target_sources(UserSpaceInstrumentation PRIVATE
-        Attach.cpp)
+        Attach.cpp
+        RegisterState.cpp)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
         LinuxTracing
@@ -38,6 +40,7 @@ target_include_directories(UserSpaceInstrumentationTests PRIVATE
 
 target_sources(UserSpaceInstrumentationTests PRIVATE
         AttachTest.cpp
+        RegisterStateTest.cpp
         TestProcess.cpp)
 
 target_link_libraries(UserSpaceInstrumentationTests PRIVATE

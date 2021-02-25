@@ -36,5 +36,4 @@ class TestProcess {
   std::filesystem::path flag_file_run_child_;
   std::filesystem::path flag_file_child_started_;
 };
-
 }  // namespace orbit_user_space_instrumentation
