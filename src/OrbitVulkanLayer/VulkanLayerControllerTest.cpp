@@ -333,11 +333,11 @@ TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateInstanceWithNoInfo)
 }
 
 // This will test the good case of a call to CreateInstance.
-// It ensures, that the dispatch table and the producer are created. Further, it checks that the
+// It ensures that the dispatch table and the producer are created. Further, it checks that the
 // linkage in the VkLayerInstanceCreateInfo chain gets advanced, such that the next layer does not
 // need to process all the previous layers.
 // It tests that the required extensions are enabled in the actual call to the next
-// vkCreateInstance. In this case, the game does not already requested the extensions.
+// vkCreateInstance. In this case, the game has not already requested the extensions.
 TEST_F(
     VulkanLayerControllerTest,
     WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateInstanceWithGameNotEnablingRequiredExtensions) {
@@ -514,11 +514,11 @@ TEST_F(VulkanLayerControllerTest, CallInDispatchTableOnGetDeviceProcAddr) {
 }
 
 // This will test the good case of a call to CreateDevice.
-// It ensures, that the dispatch tableis created and checks that the
+// It ensures that the dispatch table is created and checks that the
 // linkage in the VkLayerDeviceCreateInfo chain gets advanced, such that the next layer does not
 // need to process all the previous layers.
 // It tests that the required extensions are enabled in the actual call to the next
-// vkCreateDevice. In this case, the game does not already requested the extensions.
+// vkCreateDevice. In this case, the game has not already requested the extensions.
 TEST_F(
     VulkanLayerControllerTest,
     WillCreateDispatchTableAndVulkanLayerProducerAndAdvanceLinkageOnCreateDeviceWithGameNotEnablingRequiredExtensions) {
@@ -590,6 +590,7 @@ TEST_F(
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_EQ(layer_create_info.u.pLayerInfo, &layer_link_1);
 }
+
 // This will test the good case of a call to CreateDevice. Similar to the test case above, but
 // this time the game already requested the required extensions. We still ensure that those are
 // requested in the next layer's vkCreateDevice.

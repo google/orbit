@@ -11,8 +11,8 @@ namespace orbit_vulkan_layer {
 
 // This class provides a wrapper for calls directly into the Vulkan loader.
 // It is used, such that we can fake the called Vulkan functions in the tests.
-
-// Note, in most cases we use the function pointers returned by "GetDevice/InstanceProcAddr",
+//
+// Note: in most cases we use the function pointers returned by "GetDevice/InstanceProcAddr",
 // which directly point to the implementation in the next layer or ICD. So most used Vulkan
 // functions don't need to show up here.
 // See `DispatchTable` and `VulkanLayerController`.

@@ -95,8 +95,7 @@ class VulkanLayerController {
         create_info->ppEnabledExtensionNames,
         create_info->ppEnabledExtensionNames + create_info->enabledExtensionCount);
 
-    // To the extensions, requested by the game, add our required extension (if not already
-    // present).
+    // Add our required extension (if not already present), to the extensions requested by the game.
     AddRequiredInstanceExtensionNameIfMissing(
         create_info, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, &all_extension_names);
 
@@ -158,8 +157,7 @@ class VulkanLayerController {
         create_info->ppEnabledExtensionNames,
         create_info->ppEnabledExtensionNames + create_info->enabledExtensionCount);
 
-    // To the extensions, requested by the game, add our required extension (if not already
-    // present).
+    // Add our required extension (if not already present), to the extensions requested by the game.
     AddRequiredDeviceExtensionNameIfMissing(
         create_info, physical_device, next_get_instance_proc_addr_function,
         VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME, &all_extension_names);
