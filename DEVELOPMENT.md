@@ -216,7 +216,7 @@ In cases where no error message needs to be returned it is perfectly fine to
 use `std::optional`.
 
 ### Exceptions
-Currently our code is compiled with exceptions but we strive to towards a world
+Currently our code is compiled with exceptions but we strive towards a world
 with no exceptions. Particularly we don't use methods from std that throw
 exceptions but prefer the variants returning error codes (e.g. in 
 `std::filesystem`).
