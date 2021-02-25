@@ -8,6 +8,7 @@
 #include <absl/types/span.h>
 
 #include <filesystem>
+#include <optional>
 #include <tuple>
 
 namespace orbit_source_paths_mapping {
@@ -33,6 +34,11 @@ struct Mapping {
     absl::Span<const Mapping> mappings, const std::filesystem::path& source_path);
 [[nodiscard]] std::optional<std::filesystem::path> MapToFirstExistingTarget(
     absl::Span<const Mapping> mappings, const std::filesystem::path& source_path);
+
+// Tries to create a mapping by finding the longest common suffix between source and target. The
+// remaining prefixes will construct the mapping.
+[[nodiscard]] std::optional<Mapping> InferMappingFromExample(
+    const std::filesystem::path& source_path, const std::filesystem::path& target_path);
 
 }  // namespace orbit_source_paths_mapping
 

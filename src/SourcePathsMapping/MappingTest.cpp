@@ -70,4 +70,30 @@ TEST(Mapping, MapToFirstExistingTargetMultiple) {
       MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/build/project/other.txt");
   ASSERT_FALSE(other_txt.has_value());
 }
+
+TEST(Mapping, InferMappingFromExampleSimple) {
+  const std::filesystem::path source_path = "/build/libc/glibc.c";
+  const std::filesystem::path target_path = "C:/src/sysroot/usr/src/libc/glibc.c";
+
+  auto maybe_mapping = InferMappingFromExample(source_path, target_path);
+  ASSERT_TRUE(maybe_mapping);
+  EXPECT_EQ(maybe_mapping.value().source_path, "/build");
+  EXPECT_EQ(maybe_mapping.value().target_path, "C:/src/sysroot/usr/src");
+}
+
+TEST(Mapping, InferMappingFromExampleMismatchingFilename) {
+  const std::filesystem::path source_path = "/build/libc/glibc.c";
+  const std::filesystem::path target_path = "C:/src/sysroot/usr/src/libc/glibc.cpp";
+
+  auto maybe_mapping = InferMappingFromExample(source_path, target_path);
+  ASSERT_FALSE(maybe_mapping);
+}
+
+TEST(Mapping, InferMappingFromExampleIdentity) {
+  const std::filesystem::path source_path = "C:/build/libc/glibc.c";
+  const std::filesystem::path target_path = "C:/build/libc/glibc.c";
+
+  auto maybe_mapping = InferMappingFromExample(source_path, target_path);
+  ASSERT_FALSE(maybe_mapping);
+}
 }  // namespace orbit_source_paths_mapping
