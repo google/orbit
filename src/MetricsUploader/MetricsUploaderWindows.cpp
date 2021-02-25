@@ -10,6 +10,7 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitVersion/OrbitVersion.h"
 
 namespace orbit_metrics_uploader {
 
@@ -18,17 +19,43 @@ constexpr const char* kSetupConnectionFunctionName = "SetupConnection";
 constexpr const char* kShutdownConnectionFunctionName = "ShutdownConnection";
 constexpr const char* kClientLogFileSuffix = "Orbit";
 
-MetricsUploader::MetricsUploader(std::string client_name, std::string session_uuid,
-                                 Result (*send_log_event_addr)(const uint8_t*, int),
-                                 Result (*shutdown_connection_addr)(),
-                                 HMODULE metrics_uploader_client_dll)
+class MetricsUploaderImpl : public MetricsUploader {
+ public:
+  explicit MetricsUploaderImpl(std::string client_name, std::string session_uuid,
+                               Result (*send_log_event_addr)(const uint8_t*, int),
+                               Result (*shutdown_connection)(),
+                               HMODULE metrics_uploader_client_dll);
+  MetricsUploaderImpl(const MetricsUploaderImpl& other) = delete;
+  MetricsUploaderImpl(MetricsUploaderImpl&& other) noexcept;
+  MetricsUploaderImpl& operator=(const MetricsUploaderImpl& other) = delete;
+  MetricsUploaderImpl& operator=(MetricsUploaderImpl&& other) noexcept;
+
+  // Unload metrics_uploader_client.dll
+  ~MetricsUploaderImpl();
+
+  bool SendLogEvent(
+      OrbitLogEvent_LogEventType log_event_type,
+      std::chrono::milliseconds event_duration = std::chrono::milliseconds::zero()) override;
+
+ private:
+  HMODULE metrics_uploader_client_dll_;
+  Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
+  Result (*shutdown_connection_addr_)() = nullptr;
+  std::string client_name_;
+  std::string session_uuid_;
+};
+
+MetricsUploaderImpl::MetricsUploaderImpl(std::string client_name, std::string session_uuid,
+                                         Result (*send_log_event_addr)(const uint8_t*, int),
+                                         Result (*shutdown_connection_addr)(),
+                                         HMODULE metrics_uploader_client_dll)
     : client_name_(std::move(client_name)),
       session_uuid_(std::move(session_uuid)),
       send_log_event_addr_(send_log_event_addr),
       shutdown_connection_addr_(shutdown_connection_addr),
       metrics_uploader_client_dll_(metrics_uploader_client_dll) {}
 
-MetricsUploader::MetricsUploader(MetricsUploader&& other)
+MetricsUploaderImpl::MetricsUploaderImpl(MetricsUploaderImpl&& other) noexcept
     : client_name_(std::move(other.client_name_)),
       session_uuid_(std::move(other.session_uuid_)),
       metrics_uploader_client_dll_(other.metrics_uploader_client_dll_),
@@ -39,7 +66,7 @@ MetricsUploader::MetricsUploader(MetricsUploader&& other)
   other.shutdown_connection_addr_ = nullptr;
 }
 
-MetricsUploader& MetricsUploader::operator=(MetricsUploader&& other) {
+MetricsUploaderImpl& MetricsUploaderImpl::operator=(MetricsUploaderImpl&& other) noexcept {
   if (&other == this) {
     return *this;
   }
@@ -58,7 +85,7 @@ MetricsUploader& MetricsUploader::operator=(MetricsUploader&& other) {
   return *this;
 }
 
-MetricsUploader::~MetricsUploader() {
+MetricsUploaderImpl::~MetricsUploaderImpl() {
   if (nullptr != shutdown_connection_addr_) {
     Result result = shutdown_connection_addr_();
     if (result != kNoError) {
@@ -73,7 +100,8 @@ MetricsUploader::~MetricsUploader() {
   // }
 }
 
-ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string client_name) {
+ErrorMessageOr<std::unique_ptr<MetricsUploader>> MetricsUploader::CreateMetricsUploader(
+    std::string client_name) {
   HMODULE metrics_uploader_client_dll;
   if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, client_name.c_str(),
                          &metrics_uploader_client_dll) != 0) {
@@ -126,8 +154,9 @@ ErrorMessageOr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::stri
                                         GetErrorMessage(result)));
   }
 
-  return MetricsUploader(client_name, session_uuid, send_log_event_addr, shutdown_connection_addr,
-                         metrics_uploader_client_dll);
+  return std::make_unique<MetricsUploaderImpl>(client_name, session_uuid, send_log_event_addr,
+                                               shutdown_connection_addr,
+                                               metrics_uploader_client_dll);
 }
 
 ErrorMessageOr<std::string> GenerateUUID() {
@@ -149,6 +178,28 @@ ErrorMessageOr<std::string> GenerateUUID() {
   RpcStringFreeA(&uuid_c_str);
 
   return uuid_string;
+}
+
+bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                                       std::chrono::milliseconds event_duration) {
+  if (send_log_event_addr_ != nullptr) {
+    OrbitLogEvent log_event;
+    log_event.set_log_event_type(log_event_type);
+    log_event.set_orbit_version(orbit_core::GetVersion());
+    log_event.set_event_duration_milliseconds(event_duration.count());
+    log_event.set_session_uuid(session_uuid_);
+
+    int message_size = log_event.ByteSize();
+    std::vector<uint8_t> buffer(message_size);
+    log_event.SerializeToArray(buffer.data(), message_size);
+
+    Result result = send_log_event_addr_(buffer.data(), message_size);
+    if (result == kNoError) {
+      return true;
+    }
+    ERROR("Can't start the metrics uploader client: %s", GetErrorMessage(result));
+  }
+  return false;
 }
 
 }  // namespace orbit_metrics_uploader

@@ -36,39 +36,20 @@ const std::string kMetricsUploaderClientDllName = "metrics_uploader_client";
 //
 class MetricsUploader {
  public:
+  MetricsUploader() = default;
+  virtual ~MetricsUploader() = default;
+
   // Create a MetricsUploader instance, load metrics uploader client library if available and starts
   // metrics uploader client when called first time. Return the instance if there are no errors and
   // ErrorMessage otherwise.
-  [[nodiscard]] static ErrorMessageOr<MetricsUploader> CreateMetricsUploader(
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<MetricsUploader>> CreateMetricsUploader(
       std::string client_name = kMetricsUploaderClientDllName);
-
-  // Unload metrics_uploader_client.dll
-  ~MetricsUploader();
-
-  MetricsUploader(const MetricsUploader& other) = delete;
-  MetricsUploader(MetricsUploader&& other);
-  MetricsUploader& operator=(const MetricsUploader& other) = delete;
-  MetricsUploader& operator=(MetricsUploader&& other);
 
   // Send log events to the server using metrics_uploader.
   // Returns true on success and false otherwise.
-  bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
-                    std::chrono::milliseconds event_duration = std::chrono::milliseconds::zero());
-
- private:
-#ifdef _WIN32
-  HMODULE metrics_uploader_client_dll_;
-  explicit MetricsUploader(std::string client_name, std::string session_uuid,
-                           Result (*send_log_event_addr)(const uint8_t*, int),
-                           Result (*shutdown_connection)(), HMODULE metrics_uploader_client_dll);
-#else
-  MetricsUploader();
-#endif
-
-  Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
-  Result (*shutdown_connection_addr_)() = nullptr;
-  std::string client_name_;
-  std::string session_uuid_;
+  virtual bool SendLogEvent(
+      OrbitLogEvent_LogEventType log_event_type,
+      std::chrono::milliseconds event_duration = std::chrono::milliseconds::zero()) = 0;
 };
 
 [[nodiscard]] ErrorMessageOr<std::string> GenerateUUID();

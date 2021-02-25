@@ -17,8 +17,7 @@ target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_LIST_DIR}/incl
 
 target_sources(MetricsUploader PUBLIC include/MetricsUploader/MetricsUploader.h
                                       include/MetricsUploader/Result.h
-                               PRIVATE MetricsUploader.cpp
-                                       Result.cpp)
+                               PRIVATE Result.cpp)
 
 if (WIN32)
 target_sources(MetricsUploader PRIVATE MetricsUploaderWindows.cpp)
