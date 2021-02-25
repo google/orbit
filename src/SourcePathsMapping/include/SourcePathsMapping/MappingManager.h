@@ -21,6 +21,16 @@ class MappingManager {
   void SetMappings(std::vector<Mapping> mappings);
   void AppendMapping(Mapping mapping);
 
+  [[nodiscard]] std::optional<std::filesystem::path> MapToFirstMatchingTarget(
+      const std::filesystem::path& source_path) const {
+    return orbit_source_paths_mapping::MapToFirstMatchingTarget(mappings_, source_path);
+  }
+
+  [[nodiscard]] std::optional<std::filesystem::path> MapToFirstExistingTarget(
+      const std::filesystem::path& source_path) const {
+    return orbit_source_paths_mapping::MapToFirstExistingTarget(mappings_, source_path);
+  }
+
  private:
   void SaveMappings();
   void LoadMappings();
