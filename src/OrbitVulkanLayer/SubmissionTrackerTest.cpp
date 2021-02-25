@@ -361,6 +361,25 @@ TEST_F(SubmissionTrackerTest, CanTrackCommandBufferAgainAfterUntrack) {
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
 }
 
+TEST_F(SubmissionTrackerTest, UntrackingACommandBufferWillRollbackTheSlots) {
+  std::vector<uint32_t> actual_slots_to_rollback;
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
+
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
+      .Times(1)
+      .WillOnce(Invoke(MockNextReadyQuerySlot1));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.UntrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  producer_->StopCapture();
+
+  EXPECT_THAT(actual_slots_to_rollback, ElementsAre(kSlotIndex1));
+}
+
 TEST_F(SubmissionTrackerTest, MarkCommandBufferBeginWontWriteTimestampsWhenNotCapturing) {
   EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot).Times(0);
 
