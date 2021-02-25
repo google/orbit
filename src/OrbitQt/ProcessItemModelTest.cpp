@@ -12,46 +12,8 @@
 
 #include "OrbitBase/Logging.h"
 #include "ProcessItemModel.h"
+#include "QtUtils/AssertNoQtLogWarnings.h"
 #include "process.pb.h"
-
-namespace {
-
-class AssertNoQtLogWarnings {
-  static void MessageHandlerTest(QtMsgType type, const QMessageLogContext& context,
-                                 const QString& msg) {
-    static bool NO_WARNING_MSG = true;
-    QByteArray localMsg = msg.toLocal8Bit();
-    const char* file = context.file ? context.file : "";
-    const char* function = context.function ? context.function : "";
-    switch (type) {
-      case QtDebugMsg:
-        LOG("Qt debug message: %s (%s:%u, %s)", localMsg.constData(), file, context.line, function);
-        break;
-      case QtInfoMsg:
-        LOG("Qt info message: %s (%s:%u, %s)", localMsg.constData(), file, context.line, function);
-        break;
-      case QtWarningMsg:
-        EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();
-        break;
-      case QtCriticalMsg:
-        EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();
-        break;
-      case QtFatalMsg:
-        EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();
-        break;
-    }
-  }
-
- public:
-  AssertNoQtLogWarnings() { qInstallMessageHandler(MessageHandlerTest); }
-
-  ~AssertNoQtLogWarnings() {
-    // Install default message handler
-    qInstallMessageHandler(nullptr);
-  }
-};
-
-}  // namespace
 
 namespace orbit_qt {
 
@@ -61,7 +23,7 @@ TEST(ProcessItemModel, ProcessItemModel) {
   // printed, but do not lead to a fail). In this scope QAbstractItemModelTester is used to
   // automatically test the ProcessItemModel. This QAbstractModelTester produces these messages and
   // AssertNoQtLogWarnings is necessary to bridge a Qt message to a GTest failure.
-  AssertNoQtLogWarnings log_qt_test;
+  orbit_qt_utils::AssertNoQtLogWarnings log_qt_test;
 
   ProcessItemModel model;
   QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);

@@ -9,9 +9,10 @@ add_library(QtUtils STATIC)
 
 target_compile_options(QtUtils PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(QtUtils PUBLIC include/)
-target_link_libraries(QtUtils PUBLIC OrbitBase OrbitGl Qt5::Core CONAN_PKG::abseil)
+target_link_libraries(QtUtils PUBLIC OrbitBase OrbitGl Qt5::Core CONAN_PKG::abseil GTest::GTest)
 
-target_sources(QtUtils PUBLIC include/QtUtils/FutureWatcher.h
+target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
+                              include/QtUtils/FutureWatcher.h
                               include/QtUtils/MainThreadExecutorImpl.h)
 
 target_sources(QtUtils PRIVATE FutureWatcher.cpp
