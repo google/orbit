@@ -182,6 +182,11 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       VkCommandBuffer command_buffer = command_buffers[i];
       associated_command_buffers.erase(command_buffer);
 
+      // vkFreeCommandBuffers (and thus this method) can be also called on command bufers in
+      // "recording" or executable state and has similar effect as vkResetCommandBuffer has.
+      // In `OnCaptureFinished`, we reset all the timer slots left in `command_buffer_to_state_`.
+      // If we would not reset them here and clear the state, we would try to reset those command
+      // buffers there. However, the mapping to the device (which is needed) would be missing.
       if (command_buffer_to_state_.contains(command_buffer)) {
         ResetCommandBufferUnsafe(command_buffer);
 
