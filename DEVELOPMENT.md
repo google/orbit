@@ -186,7 +186,29 @@ or directly.
 
 A `.clang-format` file which defines our specific code style lives in the
 top level directory of the repository. The style is identical to the Google
-style.
+style. The Google c++ style guide can be found [here](https://google.github.io/styleguide/cppguide.html).
+It includes brief discussions or rationales for all the style decisions.
+
+Beyond what it is in the style guide we agreed to a few more additional rules
+specific to the Orbit project:
+
+### [[nodiscard]]
+We use "[[nodiscard]]" for all accessors of new classes. We do not touch
+existing code merely to add "[[nodiscard]]" though.
+
+### Error handling
+For error handling we use "ErrorMessageOr<T>" from 
+[Result.h](https://github.com/google/orbit/blob/main/src/OrbitBase/include/OrbitBase/Result.h).
+This class serves he same purpose as "absl::StatusOr<T>". We thought about
+switching to absl but currently the advantage does not seem large enought to
+warrant the effort. We discourage the use of the "OUTCOME_TRY" macro that comes
+with outcome.hpp that "ErrorMessageOr<T>" is based on.
+
+### Exceptions
+Currently our code is compiled with exceptions but we strive to towards a world
+with no exceptions. Particularly we don't use methods from std that throw
+exceptions but prefer the variants returning error codes (e.g. in 
+std::filesystem).
 
 ## FAQ
 
