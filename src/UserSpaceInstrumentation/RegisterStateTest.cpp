@@ -15,10 +15,10 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-// Let the parent trace us, write into rax and ymm0, then break. While the child is breaked the
-// parent modifies the register and continues the child. The child then reads back the registers and
-// verifies the modifications done by the parent. The exit code indicates the outcome of that
-// verification.
+// Let the parent trace us, write into rax and ymm0, then enter a breakpoint. While the child is
+// stopped the parent modifies the register and continues the child. The child then reads back the
+// registers and verifies the modifications done by the parent. The exit code indicates the outcome
+// of that verification.
 void Child() {
   CHECK(ptrace(PTRACE_TRACEME, 0, NULL, 0) != -1);
 
@@ -27,6 +27,10 @@ void Child() {
   for (int i = 0; i < 32; ++i) {
     avx_bytes[i] = i;
   }
+  // The first two lines move the memory to the registers. The "%0" and "%1" refer to the adresses
+  // of "rax" and "avx_bytes" given in the second line from the bottom. "int3" just is the
+  // breakpoint. The parent does "waitpid" for that. line four and five move the registers back into
+  // memory so they are available for verification below.
   __asm__ __volatile__(
       "mov (%0), %%rax\n\t"
       "vmovups (%1), %%ymm0\n\t"

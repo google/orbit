@@ -158,7 +158,7 @@ PACKED_END
 // correspond to sets of registers introduced for different processor features (e.g. Avx, Avx-512,
 // ...). The processor organizes the state components in a region of memory called an XSave area.
 // The XSave area comprises the legacy region (roughly: storing everything up to SSE2), the XSave
-// header (roughly: flags indicating what is in the xtended region) and the extended region itself
+// header (roughly: flags indicating what is in the extended region) and the extended region itself
 // (roughly: storing everything from Avx onwards).
 // We don't invoke the XSave instruction ourselfs but call ptrace to have the kernel do that for us.
 //
@@ -179,7 +179,7 @@ PACKED_END
 // Different registers may or may not be present on a specific Cpu (e.g. the Cpu may or may not
 // support Avx). Even if the Cpu has the respective registers they might not have been saved by
 // "BackupRegisters" since they are in their initial state (e.g. Avx registers are initialized with
-// zeros on process startup; if the process makes no use of Avx storing these registers is skipped
+// zeros on process startup; if the process makes no use of Avx storing these registers are skipped
 // as an optimization). Hence every meaningful access to this data needs to call the
 // "Has*DataStored" functions first.
 //
@@ -233,13 +233,17 @@ class RegisterState {
   bool HasSseDataStored();
   bool HasAvxDataStored();
 
-  // Structure access to the different parts of the XSave area. Detail, again, can be found at
+  // Structure access to the different parts of the XSave area. Details, again, can be found at
   // "Intel 64 and IA-32 Architectures Software Developer’s Manual, Volume 1", section 13.
   // "GetFxSave" can be used to access fpu, mmx, sse registers. "GetAvxHiRegisters" give access to
   // the upper half of the avx registers (lower half is stored in the sse registers).
   [[nodiscard]] FxSave* GetFxSave() { return reinterpret_cast<FxSave*>(xsave_area_.data()); }
-  [[nodiscard]] XSaveHeader* GetXSaveHeader() { return reinterpret_cast<XSaveHeader*>(xsave_area_.data() + 512); }
-  [[nodiscard]] YmmHi* GetAvxHiRegisters() { return reinterpret_cast<YmmHi*>(xsave_area_.data() + avx_offset_); }
+  [[nodiscard]] XSaveHeader* GetXSaveHeader() {
+    return reinterpret_cast<XSaveHeader*>(xsave_area_.data() + 512);
+  }
+  [[nodiscard]] YmmHi* GetAvxHiRegisters() {
+    return reinterpret_cast<YmmHi*>(xsave_area_.data() + avx_offset_);
+  }
 
  private:
   pid_t tid_ = -1;

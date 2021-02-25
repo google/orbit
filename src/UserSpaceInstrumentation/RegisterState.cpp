@@ -21,11 +21,12 @@ namespace orbit_user_space_instrumentation {
 namespace {
 
 // Some notes reguarding the calls to cpuid below:
-// Cpuid takes one parameter in eax. In Intel's terminology, this is called the Cpuid "leaf". Some
-// leaves have "sub-leafs" i.e. they take a second paramter in ecx. The sub-leaf is sometimes called
-// "count". The return values end up in registers eax, ... , edx.
-// The wrappers from cpuid.h simplify error and parameter handling. cpuid.h also has some defines
-// and useful comments to figure out what can be queried. More comprehensive info:
+// Cpuid can be used to query all sorts of information about the cpu (presence of features,
+// specifications, ...). Cpuid takes one parameter in eax. In Intel's terminology, this is called
+// the Cpuid "leaf". Some leaves have "sub-leafs" i.e. they take a second paramter in ecx. The
+// sub-leaf is sometimes called "count". The return values end up in registers eax, ... , edx. The
+// wrappers from cpuid.h simplify error and parameter handling. cpuid.h also has some defines and
+// useful comments to figure out what can be queried. More comprehensive info:
 // https://www.sandpile.org/x86/cpuid.htm
 
 // Return the size of the XSave area on this cpu.
