@@ -30,7 +30,7 @@ namespace orbit_vulkan_layer {
  * and if we do the proper bootstrapping.
  */
 template <class DispatchTable, class QueueManager, class DeviceManager, class TimerQueryPool,
-          class SubmissionTracker, typename VulkanWrapper>
+          class SubmissionTracker, class VulkanWrapper>
 class VulkanLayerController {
  public:
   // Layer metadata. This must be in sync with the json file in the resources.
@@ -87,20 +87,27 @@ class VulkanLayerController {
     // Advance linkage for next layer.
     layer_create_info->u.pLayerInfo = layer_create_info->u.pLayerInfo->pNext;
 
+    // Ensure that the extensions that the layer uses are requested in the CreateInstance call.
+    // As we can and should not modify the given create_info, we need to create a modified version
+    // containing the required extension. So first create a copy of the given extension names.
     std::vector<std::string> all_extension_names{};
     all_extension_names.assign(
         create_info->ppEnabledExtensionNames,
         create_info->ppEnabledExtensionNames + create_info->enabledExtensionCount);
 
+    // To the extensions, requested by the game, add our required extension (if not already
+    // present).
     AddRequiredInstanceExtensionNameIfMissing(
         create_info, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, &all_extension_names);
 
+    // Expose the c-strings (but ensure, the std::strings stay in memory!).
     std::vector<const char*> all_extension_names_cstr{};
     all_extension_names_cstr.reserve(all_extension_names.size());
     for (const std::string& extension : all_extension_names) {
       all_extension_names_cstr.push_back(extension.c_str());
     }
 
+    // Copy the given create_info and set the modified requested extensions.
     VkInstanceCreateInfo create_info_modified = *create_info;
     create_info_modified.enabledExtensionCount = all_extension_names_cstr.size();
     create_info_modified.ppEnabledExtensionNames = all_extension_names_cstr.data();
@@ -143,21 +150,28 @@ class VulkanLayerController {
     // Advance linkage for next layer
     layer_create_info->u.pLayerInfo = layer_create_info->u.pLayerInfo->pNext;
 
+    // Ensure that the extensions that the layer uses are requested in the CreateDevice call.
+    // As we can and should not modify the given create_info, we need to create a modified version
+    // containing the required extension. So first create a copy of the given extension names.
     std::vector<std::string> all_extension_names{};
     all_extension_names.assign(
         create_info->ppEnabledExtensionNames,
         create_info->ppEnabledExtensionNames + create_info->enabledExtensionCount);
 
+    // To the extensions, requested by the game, add our required extension (if not already
+    // present).
     AddRequiredDeviceExtensionNameIfMissing(
         create_info, physical_device, next_get_instance_proc_addr_function,
         VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME, &all_extension_names);
 
+    // Expose the c-strings (but ensure, the std::strings stay in memory!).
     std::vector<const char*> all_extension_names_cstr{};
     all_extension_names_cstr.reserve(all_extension_names.size());
     for (const std::string& extension : all_extension_names) {
       all_extension_names_cstr.push_back(extension.c_str());
     }
 
+    // Copy the given create_info and set the modified requested extensions.
     VkDeviceCreateInfo create_info_modified = *create_info;
     create_info_modified.enabledExtensionCount = all_extension_names_cstr.size();
     create_info_modified.ppEnabledExtensionNames = all_extension_names_cstr.data();
@@ -500,39 +514,41 @@ class VulkanLayerController {
     }
   }
 
-  template <typename T>
+  template <typename CreateInfoT>
   void AddRequiredExtensionNameIfMissing(
-      const T* create_info,
+      const CreateInfoT* create_info,
       const std::function<VkResult(uint32_t*, VkExtensionProperties*)>&
           enumerate_extension_properties_function,
       const char* extension_name, std::vector<std::string>* output) {
-    bool host_query_reset_extension_enabled = false;
+    bool extension_already_enabled = false;
+
     for (uint32_t i = 0; i < create_info->enabledExtensionCount; ++i) {
       const char* enabled_extension = create_info->ppEnabledExtensionNames[i];
       if (strcmp(enabled_extension, extension_name) == 0) {
-        host_query_reset_extension_enabled = true;
+        extension_already_enabled = true;
         break;
       }
     }
-    if (!host_query_reset_extension_enabled) {
-      bool host_query_reset_extension_supported = false;
+
+    if (!extension_already_enabled) {
+      bool extension_supported = false;
       uint32_t count = 0;
       VkResult result = enumerate_extension_properties_function(&count, nullptr);
-      LOG("%u, %u, %u", VK_SUCCESS, VK_ERROR_LAYER_NOT_PRESENT, result);
       CHECK(result == VK_SUCCESS);
+
       std::vector<VkExtensionProperties> extension_properties(count);
       result = enumerate_extension_properties_function(&count, extension_properties.data());
       CHECK(result == VK_SUCCESS);
+
       for (const auto& properties : extension_properties) {
         if (strcmp(properties.extensionName, extension_name) == 0) {
-          host_query_reset_extension_supported = true;
+          extension_supported = true;
           break;
         }
       }
-      if (!host_query_reset_extension_supported) {
-        ERROR("Orbit's Vulkan layer requires the %s extension to be supported.", extension_name);
-        CHECK(false);
-      }
+
+      FAIL_IF(!extension_supported,
+              "Orbit's Vulkan layer requires the %s extension to be supported.", extension_name);
       output->emplace_back(extension_name);
     }
   }
