@@ -181,6 +181,21 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     for (uint32_t i = 0; i < count; ++i) {
       VkCommandBuffer command_buffer = command_buffers[i];
       associated_command_buffers.erase(command_buffer);
+
+      // vkFreeCommandBuffers (and thus this method) can be also called on command bufers in
+      // "recording" or executable state and has similar effect as vkResetCommandBuffer has.
+      // In `OnCaptureFinished`, we reset all the timer slots left in `command_buffer_to_state_`.
+      // If we would not reset them here and clear the state, we would try to reset those command
+      // buffers there. However, the mapping to the device (which is needed) would be missing.
+      if (command_buffer_to_state_.contains(command_buffer)) {
+        // Note: This will "rollback" the slot indices (rather then actually resetting them on the
+        // Gpu). This is fine, as we remove the command buffer state right after submission. Thus,
+        // There can not be a value in the respective slot.
+        ResetCommandBufferUnsafe(command_buffer);
+
+        command_buffer_to_state_.erase(command_buffer);
+      }
+
       CHECK(command_buffer_to_device_.contains(command_buffer));
       CHECK(command_buffer_to_device_.at(command_buffer) == device);
       command_buffer_to_device_.erase(command_buffer);
@@ -541,28 +556,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   void ResetCommandBuffer(VkCommandBuffer command_buffer) {
     absl::WriterMutexLock lock(&mutex_);
-    if (!command_buffer_to_state_.contains(command_buffer)) {
-      return;
-    }
-    CHECK(command_buffer_to_state_.contains(command_buffer));
-    CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-    CHECK(command_buffer_to_device_.contains(command_buffer));
-    VkDevice device = command_buffer_to_device_.at(command_buffer);
-    std::vector<uint32_t> marker_slots_to_rollback = {};
-    if (state.command_buffer_begin_slot_index.has_value()) {
-      marker_slots_to_rollback.push_back(state.command_buffer_begin_slot_index.value());
-    }
-    if (state.command_buffer_end_slot_index.has_value()) {
-      marker_slots_to_rollback.push_back(state.command_buffer_end_slot_index.value());
-    }
-    for (const Marker& marker : state.markers) {
-      if (marker.slot_index.has_value()) {
-        marker_slots_to_rollback.push_back(marker.slot_index.value());
-      }
-    }
-    timer_query_pool_->RollbackPendingQuerySlots(device, marker_slots_to_rollback);
-
-    command_buffer_to_state_.erase(command_buffer);
+    ResetCommandBufferUnsafe(command_buffer);
   }
 
   void ResetCommandPool(VkCommandPool command_pool) {
@@ -932,6 +926,32 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       uint64_t begin_timestamp = marker_state.begin_info->timestamp.value();
       begin_debug_marker_proto->set_gpu_timestamp_ns(begin_timestamp);
     }
+  }
+
+  // This method does not acquire a lock and MUST NOT be called without holding the `mutex_`.
+  void ResetCommandBufferUnsafe(VkCommandBuffer command_buffer) {
+    if (!command_buffer_to_state_.contains(command_buffer)) {
+      return;
+    }
+    CHECK(command_buffer_to_state_.contains(command_buffer));
+    CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
+    CHECK(command_buffer_to_device_.contains(command_buffer));
+    VkDevice device = command_buffer_to_device_.at(command_buffer);
+    std::vector<uint32_t> marker_slots_to_rollback = {};
+    if (state.command_buffer_begin_slot_index.has_value()) {
+      marker_slots_to_rollback.push_back(state.command_buffer_begin_slot_index.value());
+    }
+    if (state.command_buffer_end_slot_index.has_value()) {
+      marker_slots_to_rollback.push_back(state.command_buffer_end_slot_index.value());
+    }
+    for (const Marker& marker : state.markers) {
+      if (marker.slot_index.has_value()) {
+        marker_slots_to_rollback.push_back(marker.slot_index.value());
+      }
+    }
+    timer_query_pool_->RollbackPendingQuerySlots(device, marker_slots_to_rollback);
+
+    command_buffer_to_state_.erase(command_buffer);
   }
 
   absl::Mutex mutex_;
