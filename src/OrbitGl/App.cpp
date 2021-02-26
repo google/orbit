@@ -829,21 +829,35 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_n
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
     const std::string& file_name) {
+  ScopedMetric metric{metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_LOAD};
   if (capture_window_ != nullptr) {
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
-  auto load_future = thread_pool_->Schedule([this, file_name]() mutable {
-    capture_loading_cancellation_requested_ = false;
+  auto load_future =
+      thread_pool_->Schedule([this, file_name, metric = std::move(metric)]() mutable {
+        capture_loading_cancellation_requested_ = false;
 
-    ErrorMessageOr<CaptureListener::CaptureOutcome> load_result = capture_deserializer::Load(
-        file_name, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result = capture_deserializer::Load(
+            file_name, this, module_manager_.get(), &capture_loading_cancellation_requested_);
 
-    if (load_result.has_value() && load_result.value() == CaptureOutcome::kComplete) {
-      OnCaptureComplete();
-    }
-    return load_result;
-  });
+        if (load_result.has_error()) {
+          metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+          return load_result;
+        }
+
+        switch (load_result.value()) {
+          case CaptureOutcome::kCancelled:
+            metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
+            break;
+          case CaptureOutcome::kComplete:
+            OnCaptureComplete();
+            break;
+        }
+
+        return load_result;
+      });
 
   DoZoom = true;  // TODO: remove global, review logic
 
