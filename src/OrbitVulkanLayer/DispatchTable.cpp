@@ -52,6 +52,9 @@ void DispatchTable::CreateInstanceDispatchTable(
         dispatch_table.CreateDebugReportCallbackEXT != nullptr &&
         dispatch_table.DestroyDebugReportCallbackEXT != nullptr &&
         dispatch_table.DebugReportMessageEXT != nullptr;
+
+    CHECK(!instance_dispatchable_object_to_instance_.contains(key));
+    instance_dispatchable_object_to_instance_[key] = instance;
   }
 }
 
@@ -67,6 +70,9 @@ void DispatchTable::RemoveInstanceDispatchTable(VkInstance instance) {
 
     CHECK(instance_supports_debug_report_extension_.contains(key));
     instance_supports_debug_report_extension_.erase(key);
+
+    CHECK(instance_dispatchable_object_to_instance_.contains(key));
+    instance_dispatchable_object_to_instance_.erase(key);
   }
 }
 

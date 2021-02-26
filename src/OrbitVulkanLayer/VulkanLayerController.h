@@ -686,8 +686,9 @@ class VulkanLayerController {
       PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function, const char* extension_name,
       std::vector<std::string>* output) {
     auto raw_enumerate_device_extension_properties_function =
+        // Pass a valid instance, as following the spec. we are not allowed to use nullptr here.
         absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-            next_get_instance_proc_addr_function(VK_NULL_HANDLE,
+            next_get_instance_proc_addr_function(dispatch_table_.GetInstance(physical_device),
                                                  "vkEnumerateDeviceExtensionProperties"));
     auto enumerate_device_extension_properties =
         [&raw_enumerate_device_extension_properties_function, physical_device](
