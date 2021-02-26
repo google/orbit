@@ -1,0 +1,64 @@
+
+Summary:
+On a benchmark test, creating capture events in bulk takes ~50% of the time it takes to create capture events individually
+In a real-life scenario, creating capture events in bulk takes ~20% of the time it takes to create capture events individually
+
+Creating events individually: using arena and "fixed64"
+Creating events in bulk: using arena and "repeated fixed64"
+
+Note: this is the creation of the capture events alone, there is possibly more overhead later down the line
+      for sending lots of individual events vs bulking them.
+
+1. Benchmark
+On gamelet (orbit/src/OrbitProducer/LockFreeBufferCaptureEventProducerTest.cpp)
+./OrbitProducerTests --gtest_filter=ApiEvent*
+
+[2021-02-26T06:39:32.950750] [OrbitProducer/LockFreeBufferCaptureEventProducer.h:51] Creating 10000 individual fixed events (arena=0x7ffcfbbda598) avg:0.983135 ms min:0.941720 ms max:1.117597 ms num_samples:100
+[2021-02-26T06:39:32.950757] [OrbitProducer/LockFreeBufferCaptureEventProducer.h:51] Creating 10000 bulked api events (arena=0x7ffcfbbda598) avg:0.471031 ms min:0.444609 ms max:0.528113 ms num_samples:100
+
+2. Real-life manual instrumentation
+On gamelet, in real life scenario (manual instrumentation from OrbitTest, see orbit/src/OrbitProducer/include/OrbitProducer/LockFreeBufferCaptureEventProducer.h, forwarderthread)
+./OrbitTest 32 32 100
+
+=================
+ScopeTimer Report
+=================
+TranslateIntermediateEvents one by one avg:0.207578 ms min:0.001985 ms max:0.568188 ms num_samples:378
+TranslateIntermediateEvents    in bulk avg:0.037958 ms min:0.001004 ms max:0.514583 ms num_samples:378
+
+ /====
+TranslateIntermediateEvents one by one took 0.193866 ms
+TranslateIntermediateEvents in bulk took 0.034879 ms
+ num_events: 4432
+ \====
+ /====
+TranslateIntermediateEvents one by one took 0.183162 ms
+TranslateIntermediateEvents in bulk took 0.042527 ms
+ num_events: 3784
+ \====
+ /====
+TranslateIntermediateEvents one by one took 0.245752 ms
+TranslateIntermediateEvents in bulk took 0.034087 ms
+ num_events: 4177
+ \====
+ /====
+TranslateIntermediateEvents one by one took 0.223240 ms
+TranslateIntermediateEvents in bulk took 0.035886 ms
+ num_events: 4303
+ \====
+ /====
+TranslateIntermediateEvents one by one took 0.274820 ms
+TranslateIntermediateEvents in bulk took 0.032816 ms
+ num_events: 4219
+ \====
+ /====
+TranslateIntermediateEvents one by one took 0.196401 ms
+TranslateIntermediateEvents in bulk took 0.033705 ms
+ num_events: 4059
+ \====
+ /====
+TranslateIntermediateEvents one by one took 0.209118 ms
+TranslateIntermediateEvents in bulk took 0.035475 ms
+ num_events: 4231
+ \====
+

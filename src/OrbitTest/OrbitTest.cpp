@@ -61,12 +61,14 @@ void OrbitTest::Loop() {
 }
 
 void NO_INLINE OrbitTest::TestFunc(uint32_t a_Depth) {
+  ORBIT_SCOPE("TestFunc");
   if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
   std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
 }
 
 void NO_INLINE OrbitTest::TestFunc2(uint32_t a_Depth) {
+  ORBIT_SCOPE("TestFunc2");
   if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
   BusyWork(sleep_us_);

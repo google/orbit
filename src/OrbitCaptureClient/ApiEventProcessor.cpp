@@ -37,7 +37,7 @@ void ApiEventProcessor::ProcessApiEvent(const ApiEvent& event_buffer) {
   const orbit_api::ApiEvent* raw_event_buffer =
       reinterpret_cast<const orbit_api::ApiEvent*>(event_buffer.raw_data().data());
   CHECK(event_buffer.num_raw_events() * sizeof(orbit_api::ApiEvent) ==
-        event_buffer.raw_data().size());
+        event_buffer.raw_data().size() * sizeof(uint64_t));
 
   for (size_t i = 0; i < event_buffer.num_raw_events(); ++i) {
     const orbit_api::ApiEvent& api_event = raw_event_buffer[i];

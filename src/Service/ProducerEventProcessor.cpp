@@ -379,6 +379,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessApiEvent(event.mutable_api_event());
       break;
     }
+    case ProducerCaptureEvent::kApiEventFixed: {
+      break;
+    }
     case ProducerCaptureEvent::EVENT_NOT_SET:
       UNREACHABLE();
   }

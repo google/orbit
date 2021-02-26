@@ -31,12 +31,32 @@ class LockFreeApiEventProducer
       google::protobuf::Arena* arena) override {
     auto* capture_event =
         google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
-    auto* api_event = google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ApiEvent>(arena);
 
+    auto* api_event = capture_event->mutable_api_event();
     api_event->set_num_raw_events(num_events);
-    api_event->set_raw_data(intermediate_events, num_events * sizeof(orbit_api::ApiEvent));
-    *capture_event->mutable_api_event() = std::move(*api_event);
+    api_event->mutable_raw_data()->Resize(
+        num_events * sizeof(orbit_api::ApiEvent) / sizeof(uint64_t), 0);
+    void* buffer = api_event->mutable_raw_data()->mutable_data();
+    std::memcpy(buffer, intermediate_events, num_events * sizeof(orbit_api::ApiEvent));
     return {capture_event};
+  }
+
+  [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent* TranslateSingleIntermediateEvent(
+      orbit_api::ApiEvent&& intermediate_event, google::protobuf::Arena* arena) override {
+    auto* capture_event =
+        google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+    auto* api_event = capture_event->mutable_api_event_fixed();
+    (void)api_event;
+    (void)intermediate_event;
+    api_event->set_a0(0);
+    api_event->set_a1(1);
+    api_event->set_a2(2);
+    api_event->set_a3(3);
+    api_event->set_a4(4);
+    api_event->set_a5(5);
+    api_event->set_a6(6);
+    api_event->set_a7(7);
+    return capture_event;
   }
 };
 

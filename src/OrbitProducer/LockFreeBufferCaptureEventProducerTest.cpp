@@ -17,6 +17,8 @@
 #include <utility>
 #include <vector>
 
+#include "Api/EncodedEvent.h"
+#include "Api/LockFreeApiEventProducer.h"
 #include "OrbitProducer/FakeProducerSideService.h"
 #include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
 #include "capture.pb.h"
@@ -40,6 +42,81 @@ class LockFreeBufferCaptureEventProducerImpl
     return capture_events;
   }
 };
+
+orbit_grpc_protos::ProducerCaptureEvent* CreateCaptureEventFixed(orbit_api::ApiEvent* event,
+                                                                 google::protobuf::Arena* arena) {
+  orbit_grpc_protos::ProducerCaptureEvent* capture_event =
+      google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+
+  auto* api_event = capture_event->mutable_api_event_fixed();
+  api_event->set_a0(event->encoded_event.args[0]);
+  api_event->set_a1(event->encoded_event.args[1]);
+  api_event->set_a2(event->encoded_event.args[2]);
+  api_event->set_a3(event->encoded_event.args[3]);
+  api_event->set_a4(event->encoded_event.args[4]);
+  api_event->set_a5(event->encoded_event.args[5]);
+  api_event->set_a6(event->encoded_event.args[0]);
+  api_event->set_a7(event->encoded_event.args[1]);
+  return capture_event;
+}
+
+orbit_grpc_protos::ProducerCaptureEvent* CreateCaptureEvent(orbit_api::ApiEvent* events,
+                                                            size_t num_events,
+                                                            google::protobuf::Arena* arena) {
+  orbit_grpc_protos::ProducerCaptureEvent* capture_event =
+      google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
+
+  auto* api_event = capture_event->mutable_api_event();
+  api_event->set_num_raw_events(num_events);
+  api_event->mutable_raw_data()->Resize(num_events * sizeof(orbit_api::ApiEvent) / sizeof(uint64_t),
+                                        0);
+  void* buffer = api_event->mutable_raw_data()->mutable_data();
+  std::memcpy(buffer, events, num_events * sizeof(orbit_api::ApiEvent));
+
+  return capture_event;
+}
+
+TEST(ApiEvent, Performance) {
+  size_t kNumApiEvents = 10000;
+  std::vector<orbit_api::ApiEvent> api_events(kNumApiEvents);
+
+  // Pre-allocate and always reuse the same 1 MB chunk of memory as the first block of each Arena
+  // instance in the loop below. This is a small but measurable performance improvement.
+  google::protobuf::ArenaOptions arena_options;
+  constexpr size_t kArenaInitialBlockSize = 1024 * 1024;
+  auto arena_initial_block = make_unique_for_overwrite<char[]>(kArenaInitialBlockSize);
+  arena_options.initial_block = arena_initial_block.get();
+  arena_options.initial_block_size = kArenaInitialBlockSize;
+  google::protobuf::Arena arena_{arena_options};
+
+  auto* arena = &arena_;
+  // arena = nullptr;
+
+  constexpr size_t kNumIterations = 100;
+
+  for (size_t i = 0; i < kNumIterations; ++i) {
+    LOG("iteration %u", i);
+    // Create 10'000 capture events individually.
+    {
+      std::string msg = absl::StrFormat("Creating %u individual fixed events (arena=%p)",
+                                        api_events.size(), arena);
+      ScopeTimer t(msg);
+      for (size_t i = 0; i < api_events.size(); ++i) {
+        CreateCaptureEventFixed(&api_events[i], arena);
+      }
+    }
+
+    // Create 10'000 capture events in bulk.
+    {
+      std::string msg =
+          absl::StrFormat("Creating %u bulked api events (arena=%p)", api_events.size(), arena);
+      ScopeTimer t(msg);
+      CreateCaptureEvent(api_events.data(), api_events.size(), arena);
+    }
+  }
+
+  ScopeTimer::OutputReport();
+}
 
 class LockFreeBufferCaptureEventProducerTest : public ::testing::Test {
  protected:

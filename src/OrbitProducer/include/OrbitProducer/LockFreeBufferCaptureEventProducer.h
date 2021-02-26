@@ -5,13 +5,59 @@
 #ifndef ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
 #define ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <google/protobuf/arena.h>
+
+#include <limits>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitProducer/CaptureEventProducer.h"
 #include "concurrentqueue.h"
+
+class ScopeTimer {
+ public:
+  ScopeTimer(std::string_view name) {
+    name_ = name;
+    start_ = orbit_base::CaptureTimestampNs();
+  }
+  ~ScopeTimer() {
+    uint64_t end = orbit_base::CaptureTimestampNs();
+    uint64_t duration = end - start_;
+    LOG("%s took %.6f ms", name_, static_cast<double>(duration) / 1'000'000);
+    messages_to_timers[name_].push_back(duration);
+  }
+  static void OutputReport() {
+    uint64_t now = orbit_base::CaptureTimestampNs();
+    if (now - last_report < 1'000'000'000) return;
+    LOG("=================");
+    LOG("ScopeTimer Report");
+    LOG("=================");
+    last_report = now;
+    for (auto& [name, timers] : messages_to_timers) {
+      double avg = 0;
+      double min = std::numeric_limits<double>::max();
+      double max = 0;
+      double num_timers = static_cast<double>(timers.size());
+      for (auto timer : timers) {
+        double duration_ms = static_cast<double>(timer) / 1'000'000;
+        avg += duration_ms / num_timers;
+        min = std::min(duration_ms, min);
+        max = std::max(duration_ms, max);
+      }
+      LOG("%s avg:%.6f ms min:%.6f ms max:%.6f ms num_samples:%u", name, avg, min, max,
+          timers.size());
+    }
+  }
+
+ private:
+  uint64_t start_;
+  std::string name_;
+  static inline absl::flat_hash_map<std::string, std::vector<uint64_t>> messages_to_timers;
+  static inline uint64_t last_report = 0;
+};
 
 namespace orbit_producer {
 
@@ -96,6 +142,13 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   TranslateIntermediateEvents(IntermediateEventT* moveable_intermediate_events, size_t num_events,
                               google::protobuf::Arena* arena) = 0;
 
+  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent* TranslateSingleIntermediateEvent(
+      IntermediateEventT&& intermediate_event, google::protobuf::Arena* arena) {
+    (void)intermediate_event;
+    (void)arena;
+    return nullptr;
+  }
+
  private:
   void ForwarderThread() {
     orbit_base::SetCurrentThreadName("ForwarderThread");
@@ -134,8 +187,32 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
           auto* send_request = google::protobuf::Arena::CreateMessage<
               orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>(&arena);
 
-          std::vector<orbit_grpc_protos::ProducerCaptureEvent*> translated_events =
-              TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count, &arena);
+          std::vector<orbit_grpc_protos::ProducerCaptureEvent*> translated_events;
+          translated_events.resize(dequeued_event_count);
+          LOG("/====");
+
+          {
+            ScopeTimer t("TranslateIntermediateEvents one by one");
+            for (size_t i = 0; i < dequeued_event_count; ++i) {
+              auto single_event =
+                  TranslateSingleIntermediateEvent(std::move(dequeued_events[i]), &arena);
+              translated_events[i] = single_event;
+            }
+          }
+
+          translated_events.clear();
+          translated_events.reserve(dequeued_event_count);
+
+          {
+            ScopeTimer t("TranslateIntermediateEvents in bulk");
+            translated_events =
+                TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count, &arena);
+          }
+
+          LOG("num_events: %u", dequeued_event_count);
+          LOG("\\====");
+
+          ScopeTimer::OutputReport();
 
           auto* capture_events =
               send_request->mutable_buffered_capture_events()->mutable_capture_events();
@@ -167,7 +244,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
         }
       }
 
-      static constexpr std::chrono::duration kSleepOnEmptyQueue = std::chrono::microseconds{1000};
+      static constexpr std::chrono::duration kSleepOnEmptyQueue = std::chrono::milliseconds{10};
       // Wait for lock_free_queue_ to fill up with new CaptureEvents.
       std::this_thread::sleep_for(kSleepOnEmptyQueue);
     }
