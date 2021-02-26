@@ -27,6 +27,10 @@ std::string GetErrorMessage(Result result) {
       return "Connection to metrics uploader wasn't closed";
     case kNoError:
       return "No errors";
+    case kUnknownStatusCode:
+      return "Unknown status code (metrics_uploader_client.dll does not know the status code)";
+    case kStatusCodeMismatch:
+      return "The sent status code cannot be matched to an internal status code";
     default:
       return "Unexpected error occured. See metrics_uploader_client log for details";
   }
