@@ -29,14 +29,14 @@ void LogFileContents(const std::filesystem::path& file_path) {
     return;
   }
 
-  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(file_path);
-  if (!file_content) {
+  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(file_path);
+  if (file_content_or_error.has_error()) {
     ERROR("Unable to print contents of file \"%s\": %s", file_path.string(),
-          file_content.error().message());
+          file_content_or_error.error().message());
     return;
   }
 
-  LOG("Contents of file \"%s\":\n%s", file_path.string(), file_content.value());
+  LOG("Contents of file \"%s\":\n%s", file_path.string(), file_content_or_error.value());
 }
 
 }  // namespace

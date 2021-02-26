@@ -216,14 +216,15 @@ void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
     return;
   }
 
-  ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_result = orbit_elf_utils::CreateModule(
-      event->filename(), event->address(), event->address() + event->length());
-  if (!module_info_result) {
-    ERROR("Unable to create module: %s", module_info_result.error().message());
+  ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
+      orbit_elf_utils::CreateModule(event->filename(), event->address(),
+                                    event->address() + event->length());
+  if (module_info_or_error.has_error()) {
+    ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;
   }
 
-  auto& module_info = module_info_result.value();
+  auto& module_info = module_info_or_error.value();
 
   // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
   current_maps_->Add(module_info.address_start(), module_info.address_end(), event->page_offset(),

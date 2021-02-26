@@ -241,7 +241,7 @@ TEST(ProcessData, FindModuleByAddress) {
   {
     // no modules loaded yet
     const auto result = process.FindModuleByAddress(0);
-    ASSERT_FALSE(result);
+    ASSERT_TRUE(result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("unable to find module for address"));
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
@@ -258,7 +258,7 @@ TEST(ProcessData, FindModuleByAddress) {
   {
     // before start address
     const auto result = process.FindModuleByAddress(start_address - 10);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("unable to find module for address"));
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
@@ -267,28 +267,28 @@ TEST(ProcessData, FindModuleByAddress) {
   {
     // start address
     const auto result = process.FindModuleByAddress(start_address);
-    ASSERT_TRUE(result);
+    ASSERT_FALSE(result.has_error());
     EXPECT_EQ(result.value().first, module_path);
     EXPECT_EQ(result.value().second, start_address);
   }
   {
     // after start address
     const auto result = process.FindModuleByAddress(start_address + 10);
-    ASSERT_TRUE(result);
+    ASSERT_FALSE(result.has_error());
     EXPECT_EQ(result.value().first, module_path);
     EXPECT_EQ(result.value().second, start_address);
   }
   {
     // exactly end address
     const auto result = process.FindModuleByAddress(end_address);
-    ASSERT_TRUE(result);
+    ASSERT_FALSE(result.has_error());
     EXPECT_EQ(result.value().first, module_path);
     EXPECT_EQ(result.value().second, start_address);
   }
   {
     // after end address
     const auto result = process.FindModuleByAddress(end_address + 10);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("unable to find module for address"));
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),

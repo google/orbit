@@ -30,7 +30,7 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
   // fine with doing some extra work, and read it from the elf file.
   auto elf_file_result = orbit_elf_utils::ElfFile::Create(request->module_path());
 
-  if (!elf_file_result) {
+  if (elf_file_result.has_error()) {
     return grpc::Status(grpc::StatusCode::INTERNAL,
                         absl::StrFormat("Unable to load module \"%s\": %s", request->module_path(),
                                         elf_file_result.error().message()));

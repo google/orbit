@@ -28,12 +28,7 @@ template <typename T>
 class ErrorMessageOr : public Result<T, ErrorMessage> {
  public:
   using Result<T, ErrorMessage>::Result;
-};
 
-template <>
-class ErrorMessageOr<bool> : public Result<bool, ErrorMessage> {
- public:
-  using Result<bool, ErrorMessage>::Result;
   operator bool() = delete;
   operator bool() const = delete;
 };

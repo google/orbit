@@ -89,7 +89,7 @@ TEST(CaptureDeserializer, LoadFileNotExists) {
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
       "not_existing_test_file", &listener, &module_manager, &cancellation_requested);
-  ASSERT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
 
   EXPECT_EQ(result.error().message(),
             "Unable to open file \"not_existing_test_file\": No such file or directory");
@@ -117,7 +117,7 @@ TEST(CaptureDeserializer, LoadNoVersion) {
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
       &coded_input_stream, "file_name", &listener, &module_manager, &cancellation_requested);
-  ASSERT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
 
   std::string expected_error_message =
       "Error parsing the capture from \"file_name\".\nNote: If the capture "
@@ -149,7 +149,7 @@ TEST(CaptureDeserializer, LoadOldVersion) {
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
       &coded_input_stream, "file_name", &listener, &module_manager, &cancellation_requested);
-  ASSERT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
 
   EXPECT_THAT(result.error().message(), HasSubstr("1.51"));
 }
@@ -176,7 +176,7 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result = capture_deserializer::Load(
       &coded_input_stream, "file_name", &listener, &module_manager, &cancellation_requested);
-  EXPECT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
@@ -236,7 +236,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_FALSE(result.has_error()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
@@ -270,7 +270,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   const ModuleData* module = module_manager.GetModuleByPath(module_path);
@@ -316,7 +316,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoAddressInfos) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   EXPECT_EQ(actual_address_info_1.function_name(), address_info_1.function_name());
@@ -352,7 +352,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadNames) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
@@ -391,7 +391,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoThreadStateSlices) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
@@ -418,7 +418,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoKeysAndStrings) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 }
 
@@ -504,7 +504,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   EXPECT_TRUE(hash_added_1);
@@ -598,7 +598,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoTracepoints) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   EXPECT_TRUE(hash_added_1);
@@ -664,7 +664,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoTimers) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(
           empty_capture_info, &listener, &module_manager, &coded_input, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   EXPECT_EQ(timer_1.start(), actual_timer_1.start());
@@ -698,7 +698,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
   ASSERT_EQ(1, actual_frame_track_function_ids.size());

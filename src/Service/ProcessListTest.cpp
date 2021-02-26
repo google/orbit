@@ -20,10 +20,10 @@ namespace orbit_service {
 TEST(ProcessList, ProcessList) {
   ProcessList process_list;
   const auto result1 = process_list.Refresh();
-  ASSERT_TRUE(result1) << result1.error().message();
+  ASSERT_TRUE(result1.has_value()) << result1.error().message();
 
   const auto process1 = process_list.GetProcessByPid(getpid());
-  EXPECT_TRUE(process1);
+  EXPECT_TRUE(process1.has_value());
 
   const auto total_cpu_cycles = utils::GetCumulativeTotalCpuTime().value();
 
@@ -35,10 +35,10 @@ TEST(ProcessList, ProcessList) {
   }
 
   const auto result2 = process_list.Refresh();
-  ASSERT_TRUE(result2) << result2.error().message();
+  ASSERT_TRUE(result2.has_value()) << result2.error().message();
 
   const auto process2 = process_list.GetProcessByPid(getpid());
-  EXPECT_TRUE(process2);
+  EXPECT_TRUE(process2.has_value());
 }
 
 }  // namespace orbit_service

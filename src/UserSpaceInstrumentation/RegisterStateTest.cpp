@@ -70,7 +70,7 @@ TEST(RegisterStateTest, BackupModifyRestore) {
 
   // Read child's registers and check values.
   RegisterState s;
-  EXPECT_TRUE(s.BackupRegisters(pid));
+  EXPECT_TRUE(s.BackupRegisters(pid).has_value());
   EXPECT_EQ(s.GetGeneralPurposeRegisters()->x86_64.rax, 0xaabbccdd);
   EXPECT_TRUE(s.HasSseDataStored());
   EXPECT_TRUE(s.HasAvxDataStored());
@@ -85,7 +85,7 @@ TEST(RegisterStateTest, BackupModifyRestore) {
     s.GetFxSave()->xmm[0].bytes[i] += 0x10;
     s.GetAvxHiRegisters()->ymm[0].bytes[i] += 0x10;
   }
-  EXPECT_TRUE(s.RestoreRegisters());
+  EXPECT_TRUE(s.RestoreRegisters().has_value());
 
   // Continue child.
   CHECK(ptrace(PT_CONTINUE, pid, 1, 0) == 0);

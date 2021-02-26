@@ -30,7 +30,7 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
-  ASSERT_TRUE(result) << result.error().message();
+  ASSERT_FALSE(result.has_error()) << result.error().message();
 
   EXPECT_EQ(result.value().name(), "hello_world_elf");
   EXPECT_EQ(result.value().file_path(), hello_world_path);
@@ -50,7 +50,7 @@ TEST(LinuxMap, CreateModuleOnDev) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto result = CreateModule(dev_zero_path, kStartAddress, kEndAddress);
-  ASSERT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
   EXPECT_EQ(result.error().message(),
             "The module \"/dev/zero\" is a character or block device (is in /dev/)");
 }
@@ -65,7 +65,7 @@ TEST(LinuxMap, CreateModuleNotElf) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto result = CreateModule(text_file, kStartAddress, kEndAddress);
-  ASSERT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
   EXPECT_THAT(result.error().message(),
               testing::HasSubstr("The file was not recognized as a valid object file"));
 }
@@ -79,13 +79,13 @@ TEST(LinuxMap, CreateModuleFileDoesNotExist) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto result = CreateModule(file_path, kStartAddress, kEndAddress);
-  ASSERT_FALSE(result);
+  ASSERT_TRUE(result.has_error());
   EXPECT_EQ(result.error().message(), "The module file \"/not/a/valid/file/path\" does not exist");
 }
 
 TEST(LinuxMap, ReadModules) {
   const auto result = orbit_elf_utils::ReadModules(getpid());
-  EXPECT_TRUE(result) << result.error().message();
+  EXPECT_FALSE(result.has_error()) << result.error().message();
 }
 
 TEST(LinuxMap, ParseMaps) {
@@ -95,7 +95,7 @@ TEST(LinuxMap, ParseMaps) {
   {
     // Empty data
     const auto result = ParseMaps(std::string_view{""});
-    ASSERT_TRUE(result) << result.error().message();
+    ASSERT_FALSE(result.has_error()) << result.error().message();
     EXPECT_TRUE(result.value().empty());
   }
 
@@ -114,7 +114,7 @@ TEST(LinuxMap, ParseMaps) {
         "7f6874290001-7f6874297002 r-dp 00000000 fe:01 661214                     %s\n",
         hello_world_path, text_file)};
     const auto result = ParseMaps(data);
-    ASSERT_TRUE(result) << result.error().message();
+    ASSERT_FALSE(result.has_error()) << result.error().message();
     EXPECT_EQ(result.value().size(), 1);
   }
 
@@ -132,11 +132,12 @@ TEST(LinuxMap, ParseMaps) {
         no_symbols_path)};
 
     const auto result = ParseMaps(data);
-    ASSERT_TRUE(result) << result.error().message();
+    ASSERT_FALSE(result.has_error()) << result.error().message();
     ASSERT_EQ(result.value().size(), 2);
 
-    const ModuleInfo* hello_module_info;
-    const ModuleInfo* no_symbols_module_info;
+    const ModuleInfo* hello_module_info = nullptr;
+    const ModuleInfo* no_symbols_module_info = nullptr;
+    ;
     if (result.value()[0].name() == "hello_world_elf") {
       hello_module_info = &result.value()[0];
       no_symbols_module_info = &result.value()[1];

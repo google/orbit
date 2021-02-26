@@ -69,7 +69,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     // same file
     const Path hello_world_path = test_path / "hello_world_elf";
     const auto result = FindSymbolsFilePath(hello_world_path, {test_path});
-    ASSERT_TRUE(result) << result.error().message();
+    ASSERT_TRUE(result.has_value()) << result.error().message();
     EXPECT_EQ(result.value(), hello_world_path);
   }
 
@@ -78,7 +78,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     const Path no_symbols_path = test_path / "no_symbols_elf";
     const Path symbols_path = test_path / "no_symbols_elf.debug";
     const auto result = FindSymbolsFilePath(no_symbols_path, {test_path});
-    ASSERT_TRUE(result) << result.error().message();
+    ASSERT_TRUE(result.has_value()) << result.error().message();
     EXPECT_EQ(result.value(), symbols_path);
   }
 
@@ -86,7 +86,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     // non exising elf_file
     const Path not_existing_file = test_path / "not_existing_file";
     const auto result = FindSymbolsFilePath(not_existing_file, {test_path});
-    ASSERT_FALSE(result);
+    ASSERT_TRUE(result.has_error());
     EXPECT_THAT(result.error().message(), testing::HasSubstr("Unable to load ELF file"));
   }
 
@@ -94,7 +94,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     // no build id, but does include symbols
     const Path hello_world_elf_no_build_id = test_path / "hello_world_elf_no_build_id";
     const auto result = FindSymbolsFilePath(hello_world_elf_no_build_id, {test_path});
-    ASSERT_TRUE(result) << result.error().message();
+    ASSERT_TRUE(result.has_value()) << result.error().message();
     EXPECT_EQ(result.value(), hello_world_elf_no_build_id);
   }
 
@@ -102,7 +102,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     // no build id, no symbols
     const Path no_symbols_no_build_id = test_path / "no_symbols_no_build_id";
     const auto result = FindSymbolsFilePath(no_symbols_no_build_id, {test_path});
-    ASSERT_FALSE(result);
+    ASSERT_TRUE(result.has_error());
     EXPECT_THAT(result.error().message(), testing::HasSubstr("Module does not contain a build id"));
   }
 }
@@ -121,7 +121,7 @@ TEST(ServiceUtils, CategoriesTracepoints) {
                  std::back_inserter(categories),
                  [](const TracepointInfo& value) { return value.category(); });
 
-  ASSERT_TRUE(categories.size() > 0);
+  ASSERT_GT(categories.size(), 0);
   static const std::array<std::string, 10> kCategoriesAvailable = {
       "sched",    "task",    "module",       "signal",     "sock",
       "syscalls", "migrate", "raw_syscalls", "exceptions", "iomap"};

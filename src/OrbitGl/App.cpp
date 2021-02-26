@@ -1044,7 +1044,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   auto download_file =
       [this, module_file_path, scoped_status = std::move(scoped_status)](
           ErrorMessageOr<std::string> result) mutable -> ErrorMessageOr<std::filesystem::path> {
-    if (!result) return result.error();
+    if (result.has_error()) return result.error();
 
     const std::string& debug_file_path = result.value();
     LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
@@ -1058,7 +1058,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
     auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path.string());
 
-    if (!scp_result) {
+    if (scp_result.has_error()) {
       return ErrorMessage{absl::StrFormat("Could not copy debug info file from the remote: %s",
                                           scp_result.error().message())};
     }
@@ -1187,7 +1187,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   auto local_symbols_path = FindModuleLocally(module_path, build_id);
 
-  if (local_symbols_path) {
+  if (local_symbols_path.has_value()) {
     return local_symbols_path;
   }
 
@@ -1273,7 +1273,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
   std::string error_message;
   {
     const auto symbols_path = symbol_helper.FindSymbolsWithSymbolsPathFile(module_path, build_id);
-    if (symbols_path) {
+    if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
           "\"%s\"",
           module_path.string(), symbols_path.value().string());
@@ -1283,7 +1283,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
   }
   {
     const auto symbols_path = symbol_helper.FindSymbolsInCache(module_path, build_id);
-    if (symbols_path) {
+    if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in cache. Symbols filename: \"%s\"",
           module_path.string(), symbols_path.value().string());
       return symbols_path.value();
@@ -1292,7 +1292,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
   }
   if (absl::GetFlag(FLAGS_local)) {
     const auto symbols_included_in_module = SymbolHelper::VerifySymbolsFile(module_path, build_id);
-    if (symbols_included_in_module) {
+    if (symbols_included_in_module.has_value()) {
       LOG("Found symbols included in module: \"%s\"", module_path.string());
       return module_path;
     }
@@ -1341,7 +1341,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       [this, module_file_path, scoped_status = std::move(scoped_status)](
           const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& symbols_result) mutable
       -> ErrorMessageOr<void> {
-    if (!symbols_result) return symbols_result.error();
+    if (symbols_result.has_error()) return symbols_result.error();
 
     AddSymbols(module_file_path, symbols_result.value());
 
@@ -1616,7 +1616,7 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   if (process == nullptr) return false;
 
   const auto result = process->FindModuleByAddress(absolute_address);
-  if (!result) return false;
+  if (result.has_error()) return false;
 
   const std::string& module_path = result.value().first;
   const uint64_t module_base_address = result.value().second;

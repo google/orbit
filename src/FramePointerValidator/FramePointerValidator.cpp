@@ -35,9 +35,9 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
-  ErrorMessageOr<std::string> binary = orbit_base::ReadFileToString(file_name);
-  if (!binary) {
-    ERROR("%s", binary.error().message());
+  ErrorMessageOr<std::string> binary_or_error = orbit_base::ReadFileToString(file_name);
+  if (binary_or_error.has_error()) {
+    ERROR("%s", binary_or_error.error().message());
     return {};
   }
 
@@ -47,7 +47,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
       continue;
     }
 
-    const std::string& content = binary.value();
+    const std::string& content = binary_or_error.value();
     FunctionFramePointerValidator validator{handle, content.data() + function.offset(),
                                             static_cast<size_t>(function.size())};
 

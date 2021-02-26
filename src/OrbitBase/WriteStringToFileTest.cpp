@@ -22,10 +22,10 @@ TEST(WriteStringToFile, Smoke) {
   std::string_view content(full_content, kContentSize);
 
   ErrorMessageOr<void> result = WriteStringToFile(temp_file_name, content);
-  ASSERT_TRUE(result) << result.error().message();
-  ErrorMessageOr<std::string> actual_content = ReadFileToString(temp_file_name);
-  ASSERT_TRUE(actual_content) << actual_content.error().message();
-  EXPECT_EQ(actual_content.value(), expected_content);
+  ASSERT_FALSE(result.has_error()) << result.error().message();
+  ErrorMessageOr<std::string> actual_content_or_error = ReadFileToString(temp_file_name);
+  ASSERT_FALSE(actual_content_or_error.has_error()) << actual_content_or_error.error().message();
+  EXPECT_EQ(actual_content_or_error.value(), expected_content);
   remove(temp_file_name);  // TODO(http://b/180574275): see above
 }
 }  // namespace orbit_base

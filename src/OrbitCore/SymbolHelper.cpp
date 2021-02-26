@@ -58,7 +58,7 @@ std::vector<fs::path> ReadSymbolsFile() {
 #endif
     );
 
-    if (!result) {
+    if (result.has_error()) {
       ERROR("Unable to create symbols file: %s", result.error().message());
     }
     // Since file is empty - return empty list
@@ -66,13 +66,14 @@ std::vector<fs::path> ReadSymbolsFile() {
   }
 
   std::vector<fs::path> directories;
-  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(file_name);
-  if (!file_content) {
-    ERROR("%s", file_content.error().message());
+  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(file_name);
+  if (file_content_or_error.has_error()) {
+    ERROR("%s", file_content_or_error.error().message());
     return {};
   }
 
-  std::vector<std::string> lines = absl::StrSplit(file_content.value(), absl::ByAnyChar("\r\n"));
+  std::vector<std::string> lines =
+      absl::StrSplit(file_content_or_error.value(), absl::ByAnyChar("\r\n"));
   for (const std::string& line : lines) {
     if (absl::StartsWith(line, "//") || line.empty()) continue;
 
@@ -189,7 +190,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
     if (!exists) continue;
 
     const auto verification_result = VerifySymbolsFile(symbols_path, build_id);
-    if (!verification_result) {
+    if (verification_result.has_error()) {
       LOG("Existing file \"%s\" is not the symbols file for module \"%s\", error: %s",
           symbols_path.string(), module_path.string(), verification_result.error().message());
       continue;
@@ -224,14 +225,14 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path) {
   ORBIT_SCOPE_FUNCTION;
   SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result = ElfFile::Create(file_path.string());
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = ElfFile::Create(file_path.string());
 
-  if (!elf_file_result) {
+  if (elf_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load debug symbols from \"%s\": %s",
-                                        file_path.string(), elf_file_result.error().message()));
+                                        file_path.string(), elf_file_or_error.error().message()));
   }
 
-  return elf_file_result.value()->LoadSymbols();
+  return elf_file_or_error.value()->LoadSymbols();
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
