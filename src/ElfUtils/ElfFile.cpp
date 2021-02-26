@@ -294,8 +294,8 @@ std::filesystem::path ElfFileImpl<ElfT>::GetFilePath() const {
 template <typename ElfT>
 ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_t address) {
   CHECK(has_debug_info_section_);
-  auto line_info_or_error = symbolizer_.symbolizeCode(
-      *object_file_, {address, llvm::object::SectionedAddress::UndefSection});
+  auto line_info_or_error = symbolizer_.symbolizeInlinedCode(
+      object_file_->getFileName(), {address, llvm::object::SectionedAddress::UndefSection});
   if (!line_info_or_error) {
     return ErrorMessage(absl::StrFormat(
         "Unable to get line number info for \"%s\", address=0x%x: %s", object_file_->getFileName(),
@@ -303,16 +303,23 @@ ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_
   }
 
   auto& symbolizer_line_info = line_info_or_error.get();
+  const uint32_t number_of_frames = symbolizer_line_info.getNumberOfFrames();
+
+  // Getting back zero frames means there was some kind of problem. We will return a error.
+  if (number_of_frames == 0) {
+    return ErrorMessage(absl::StrFormat("Unable to get line info for address=0x%x", address));
+  }
+
+  const auto& last_frame = symbolizer_line_info.getFrame(number_of_frames - 1);
 
   // This is what symbolizer returns in case of an error. We convert it to a ErrorMessage here.
-  if (symbolizer_line_info.FileName == "<invalid>" && symbolizer_line_info.Line == 0) {
+  if (last_frame.FileName == "<invalid>" && last_frame.Line == 0) {
     return ErrorMessage(absl::StrFormat("Unable to get line info for address=0x%x", address));
   }
 
   LineInfo line_info;
-  line_info.set_source_file(symbolizer_line_info.FileName);
-  line_info.set_source_line(symbolizer_line_info.Line);
-
+  line_info.set_source_file(last_frame.FileName);
+  line_info.set_source_line(last_frame.Line);
   return line_info;
 }
 
