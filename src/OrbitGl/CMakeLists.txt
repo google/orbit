@@ -52,6 +52,7 @@ target_sources(
          SamplingReportDataView.h
          SchedulerTrack.h
          ScopeTree.h
+         SourceCodeReport.h
          StatusListener.h
          TextBox.h
          TextRenderer.h
@@ -106,6 +107,7 @@ target_sources(
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
+          SourceCodeReport.cpp
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
