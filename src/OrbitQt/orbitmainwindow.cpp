@@ -1370,7 +1370,8 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
   return std::nullopt;
 }
 
-void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, size_t line_number) {
+void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
+                                     std::optional<std::unique_ptr<CodeReport>> maybe_code_report) {
   orbit_code_viewer::Dialog code_viewer_dialog{this};
 
   code_viewer_dialog.SetEnableLineNumbers(true);
@@ -1383,6 +1384,12 @@ void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, siz
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
   code_viewer_dialog.SetSourceCode(source_code.value(), std::move(syntax_highlighter));
+  constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
+
+  if (maybe_code_report.has_value()) {
+    CHECK(maybe_code_report->get() != nullptr);
+    code_viewer_dialog.SetHeatmap(kHeatmapAreaWidth, maybe_code_report->get());
+  }
 
   code_viewer_dialog.GoToLineNumber(line_number);
   code_viewer_dialog.exec();
