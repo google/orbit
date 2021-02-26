@@ -182,24 +182,28 @@ ErrorMessageOr<std::string> GenerateUUID() {
 
 bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
                                        std::chrono::milliseconds event_duration) {
-  if (send_log_event_addr_ != nullptr) {
-    OrbitLogEvent log_event;
-    log_event.set_log_event_type(log_event_type);
-    log_event.set_orbit_version(orbit_core::GetVersion());
-    log_event.set_event_duration_milliseconds(event_duration.count());
-    log_event.set_session_uuid(session_uuid_);
-
-    int message_size = log_event.ByteSize();
-    std::vector<uint8_t> buffer(message_size);
-    log_event.SerializeToArray(buffer.data(), message_size);
-
-    Result result = send_log_event_addr_(buffer.data(), message_size);
-    if (result == kNoError) {
-      return true;
-    }
-    ERROR("Can't start the metrics uploader client: %s", GetErrorMessage(result));
+  if (send_log_event_addr_ == nullptr) {
+    ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
+    return false;
   }
-  return false;
+
+  OrbitLogEvent log_event;
+  log_event.set_log_event_type(log_event_type);
+  log_event.set_orbit_version(orbit_core::GetVersion());
+  log_event.set_event_duration_milliseconds(event_duration.count());
+  log_event.set_session_uuid(session_uuid_);
+
+  int message_size = log_event.ByteSize();
+  std::vector<uint8_t> buffer(message_size);
+  log_event.SerializeToArray(buffer.data(), message_size);
+
+  Result result = send_log_event_addr_(buffer.data(), message_size);
+  if (result != kNoError) {
+    ERROR("Unable to send metrics event: %s", GetErrorMessage(result));
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace orbit_metrics_uploader
