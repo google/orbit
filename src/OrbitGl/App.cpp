@@ -1399,10 +1399,17 @@ void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
     const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
+  if (!GetTargetProcess()->IsModuleLoaded(module_path)) {
+    return ErrorMessage{"Module not loaded by process."};
+  }
   ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
   if (module_data == nullptr) {
-    return {ErrorMessage{"Module not found"}};
+    ERROR("module \"%s\" was loaded by the process, but is not part of module manager",
+          module_path);
+    crash_handler_->DumpWithoutCrash();
+    return ErrorMessage{"Unexpected error while loading preset."};
   }
+
   auto handle_hooks_and_frame_tracks =
       [this, module_data,
        preset_module](const ErrorMessageOr<void>& result) -> ErrorMessageOr<void> {
@@ -1456,10 +1463,9 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
     auto future = load_preset_result.Then(
         &immediate_executor,
         [module_path = module_path](const ErrorMessageOr<void>& result) -> std::string {
-          // We will return the module_path in case loading fails. We need the path for the error
-          // message.
-          if (result.has_error()) return module_path;
-          return {};
+          if (!result.has_error()) return {};
+          // We will return the module_path plus error message in case loading fails.
+          return absl::StrFormat("%s, error: \"%s\"", module_path, result.error().message());
         });
 
     load_module_results.emplace_back(std::move(future));
@@ -1469,16 +1475,23 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
   // error message.
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
   results.Then(main_thread_executor_, [this](std::vector<std::string> module_paths_not_found) {
+    size_t tried_to_load_amount = module_paths_not_found.size();
     module_paths_not_found.erase(
         std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
                        [](const std::string& path) { return path.empty(); }),
         module_paths_not_found.end());
 
+    if (tried_to_load_amount == module_paths_not_found.size()) {
+      SendErrorToUi("Preset loading failed",
+                    absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
+                                    absl::StrJoin(module_paths_not_found, "\n* ")));
+      return;
+    }
+
     if (!module_paths_not_found.empty()) {
-      // Note that unloadable presets are disabled.
       SendWarningToUi("Preset only partially loaded",
-                      absl::StrFormat("The following modules were not loaded:\n\"%s\"",
-                                      absl::StrJoin(module_paths_not_found, "\"\n\"")));
+                      absl::StrFormat("The following modules were not loaded:\n* %s",
+                                      absl::StrJoin(module_paths_not_found, "\n* ")));
     }
 
     FireRefreshCallbacks();
