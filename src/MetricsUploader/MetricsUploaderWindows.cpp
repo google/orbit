@@ -181,7 +181,8 @@ ErrorMessageOr<std::string> GenerateUUID() {
 }
 
 bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
-                                       std::chrono::milliseconds event_duration) {
+                                       std::chrono::milliseconds event_duration,
+                                       OrbitLogEvent_StatusCode status_code) {
   if (send_log_event_addr_ == nullptr) {
     ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
     return false;
@@ -192,6 +193,7 @@ bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type
   log_event.set_orbit_version(orbit_core::GetVersion());
   log_event.set_event_duration_milliseconds(event_duration.count());
   log_event.set_session_uuid(session_uuid_);
+  log_event.set_status_code(status_code);
 
   int message_size = log_event.ByteSize();
   std::vector<uint8_t> buffer(message_size);

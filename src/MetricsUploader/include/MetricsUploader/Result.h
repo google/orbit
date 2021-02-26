@@ -21,7 +21,9 @@ enum Result {
   kConnectionNotInitialized,
   kCannotUnmarshalLogEvent,
   kCannotCloseConnection,
-  kOtherError
+  kOtherError,
+  kUnknownStatusCode,
+  kStatusCodeMismatch
 };
 
 std::string GetErrorMessage(Result result);
