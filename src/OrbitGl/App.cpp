@@ -44,6 +44,7 @@
 #include "GrpcProtos/Constants.h"
 #include "ImGuiOrbit.h"
 #include "MainThreadExecutor.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
@@ -106,6 +107,8 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 using orbit_base::Future;
+
+using orbit_metrics_uploader::ScopedMetric;
 
 namespace {
 PresetLoadState GetPresetLoadStateForProcess(
@@ -805,6 +808,8 @@ PresetLoadState OrbitApp::GetPresetLoadState(
 }
 
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_name) {
+  ScopedMetric metric{metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_SAVE};
   const auto& key_to_string_map = string_manager_.GetKeyToStringMap();
 
   std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllSerializableTimerChains();
@@ -813,8 +818,13 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_n
   TimerInfosIterator timers_it_end(chains.end(), chains.end());
   const CaptureData& capture_data = GetCaptureData();
 
-  return capture_serializer::Save(file_name, capture_data, key_to_string_map, timers_it_begin,
-                                  timers_it_end);
+  auto save_result = capture_serializer::Save(file_name, capture_data, key_to_string_map,
+                                              timers_it_begin, timers_it_end);
+  if (save_result.has_error()) {
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_COMMAND_FAILURE);
+  }
+
+  return save_result;
 }
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
