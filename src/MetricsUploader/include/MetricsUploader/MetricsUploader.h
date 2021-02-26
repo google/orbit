@@ -45,11 +45,18 @@ class MetricsUploader {
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<MetricsUploader>> CreateMetricsUploader(
       std::string client_name = kMetricsUploaderClientDllName);
 
-  // Send log events to the server using metrics_uploader.
-  // Returns true on success and false otherwise.
-  virtual bool SendLogEvent(
-      OrbitLogEvent_LogEventType log_event_type,
-      std::chrono::milliseconds event_duration = std::chrono::milliseconds::zero()) = 0;
+  // Send a log event to the server using metrics_uploader. Returns true on success and false
+  // otherwise.
+  virtual bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type) = 0;
+  // Send a log event with an associated duration using metrics_uploader. Returns true on success
+  // and false otherwise.
+  virtual bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                            std::chrono::milliseconds event_duration) = 0;
+  // Send a log event with an associated duration and status code using metrics_uploader. Returns
+  // true on success and false otherwise.
+  virtual bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                            std::chrono::milliseconds event_duration,
+                            OrbitLogEvent_StatusCode status_code) = 0;
 };
 
 [[nodiscard]] ErrorMessageOr<std::string> GenerateUUID();

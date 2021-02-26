@@ -11,6 +11,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
+#include "orbit_log_event.pb.h"
 
 namespace orbit_metrics_uploader {
 
@@ -31,13 +32,18 @@ class MetricsUploaderImpl : public MetricsUploader {
   MetricsUploaderImpl& operator=(MetricsUploaderImpl&& other) noexcept;
 
   // Unload metrics_uploader_client.dll
-  ~MetricsUploaderImpl();
+  ~MetricsUploaderImpl() override;
 
-  bool SendLogEvent(
-      OrbitLogEvent_LogEventType log_event_type,
-      std::chrono::milliseconds event_duration = std::chrono::milliseconds::zero()) override;
+  bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type) override;
+  bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                    std::chrono::milliseconds event_duration) override;
+  bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                    std::chrono::milliseconds event_duration,
+                    OrbitLogEvent_StatusCode status_code) override;
 
  private:
+  bool FillAndSendLogEvent(OrbitLogEvent partial_filled_event);
+
   HMODULE metrics_uploader_client_dll_;
   Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
   Result (*shutdown_connection_addr_)() = nullptr;
@@ -180,22 +186,18 @@ ErrorMessageOr<std::string> GenerateUUID() {
   return uuid_string;
 }
 
-bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
-                                       std::chrono::milliseconds event_duration) {
+bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event) {
   if (send_log_event_addr_ == nullptr) {
     ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
     return false;
   }
 
-  OrbitLogEvent log_event;
-  log_event.set_log_event_type(log_event_type);
-  log_event.set_orbit_version(orbit_core::GetVersion());
-  log_event.set_event_duration_milliseconds(event_duration.count());
-  log_event.set_session_uuid(session_uuid_);
+  partial_filled_event.set_orbit_version(orbit_core::GetVersion());
+  partial_filled_event.set_session_uuid(session_uuid_);
 
-  int message_size = log_event.ByteSize();
+  int message_size = partial_filled_event.ByteSize();
   std::vector<uint8_t> buffer(message_size);
-  log_event.SerializeToArray(buffer.data(), message_size);
+  partial_filled_event.SerializeToArray(buffer.data(), message_size);
 
   Result result = send_log_event_addr_(buffer.data(), message_size);
   if (result != kNoError) {
@@ -204,6 +206,30 @@ bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type
   }
 
   return true;
+}
+
+bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type) {
+  OrbitLogEvent log_event;
+  log_event.set_log_event_type(log_event_type);
+  return FillAndSendLogEvent(std::move(log_event));
+}
+
+bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                                       std::chrono::milliseconds event_duration) {
+  OrbitLogEvent log_event;
+  log_event.set_log_event_type(log_event_type);
+  log_event.set_event_duration_milliseconds(event_duration.count());
+  return FillAndSendLogEvent(std::move(log_event));
+}
+
+bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
+                                       std::chrono::milliseconds event_duration,
+                                       OrbitLogEvent_StatusCode status_code) {
+  OrbitLogEvent log_event;
+  log_event.set_log_event_type(log_event_type);
+  log_event.set_event_duration_milliseconds(event_duration.count());
+  log_event.set_status_code(status_code);
+  return FillAndSendLogEvent(log_event);
 }
 
 }  // namespace orbit_metrics_uploader

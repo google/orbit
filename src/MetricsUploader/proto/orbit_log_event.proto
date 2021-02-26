@@ -15,9 +15,16 @@ message OrbitLogEvent {
     ORBIT_INITIALIZED = 1;
     ORBIT_CAPTURE_DURATION = 2;
   }
+  enum StatusCode {
+    UNKNOWN_STATUS = 0;
+    SUCCESS = 1;
+    CANCELLED = 2;
+    INTERNAL_ERROR = 3;
+  }
   LogEventType log_event_type = 1;
 
   string orbit_version = 2;
   int64 event_duration_milliseconds = 3;
   string session_uuid = 4;
+  StatusCode status_code = 5;
 }
