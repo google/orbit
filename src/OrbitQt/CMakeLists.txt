@@ -105,6 +105,7 @@ target_link_libraries(
           OrbitSshQt
           OrbitVersion
           QtUtils
+          SourcePathsMapping
           Qt5::Widgets
           Qt5::Core
           SyntaxHighlighter
