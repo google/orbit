@@ -723,7 +723,13 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
-  OUTCOME_TRY(SavePreset(filename));
+  ScopedMetric metric{metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_SAVE};
+  auto save_result = SavePreset(filename);
+  if (save_result.has_error()) {
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_COMMAND_FAILURE);
+    return save_result.error();
+  }
   ListPresets();
   Refresh(DataViewType::kPresets);
   return outcome::success();
