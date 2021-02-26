@@ -17,6 +17,7 @@ message OrbitLogEvent {
     ORBIT_CAPTURE_SAVE = 3;
     ORBIT_CAPTURE_LOAD = 4;
     ORBIT_PRESET_SAVE = 5;
+    ORBIT_PRESET_LOAD = 6;
   }
   enum StatusCode {
     UNKNOWN_STATUS = 0;
