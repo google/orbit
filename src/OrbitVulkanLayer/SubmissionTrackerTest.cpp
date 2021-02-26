@@ -112,6 +112,12 @@ class SubmissionTrackerTest : public ::testing::Test {
         .WillRepeatedly(Return(dummy_write_timestamp_function));
   }
 
+  void TearDown() override {
+    EXPECT_CALL(*producer_, SetCaptureStatusListener(nullptr)).Times(1);
+    tracker_.SetVulkanLayerProducer(nullptr);
+    producer_.reset();
+  }
+
   MockDispatchTable dispatch_table_;
   MockTimerQueryPool timer_query_pool_;
   MockDeviceManager device_manager_;

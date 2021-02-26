@@ -143,11 +143,14 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // We will also register ourselves as CaptureStatusListener, in order to get notified on
   // capture finish (OnCaptureFinished). That's when we will reset the open query slots.
   void SetVulkanLayerProducer(VulkanLayerProducer* vulkan_layer_producer) {
+    // De-register from the previous VulkanLayerProducer.
+    if (vulkan_layer_producer_ != nullptr) {
+      vulkan_layer_producer_->SetCaptureStatusListener(nullptr);
+    }
     vulkan_layer_producer_ = vulkan_layer_producer;
+    // Register to the new VulkanLayerProducer.
     if (vulkan_layer_producer_ != nullptr) {
       vulkan_layer_producer_->SetCaptureStatusListener(this);
-    } else {
-      vulkan_layer_producer->SetCaptureStatusListener(nullptr);
     }
   }
 
@@ -974,7 +977,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   [[nodiscard]] bool IsCapturing() {
     return vulkan_layer_producer_ != nullptr && vulkan_layer_producer_->IsCapturing();
   }
-  VulkanLayerProducer* vulkan_layer_producer_;
+  VulkanLayerProducer* vulkan_layer_producer_ = nullptr;
 };
 
 }  // namespace orbit_vulkan_layer

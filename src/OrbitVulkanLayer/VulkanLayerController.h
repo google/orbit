@@ -637,8 +637,8 @@ class VulkanLayerController {
       //  CreateInstance.
       LOG("Taking down VulkanLayerProducer");
       vulkan_layer_producer_->TakeDown();
-      vulkan_layer_producer_.reset();
       submission_tracker_.SetVulkanLayerProducer(nullptr);
+      vulkan_layer_producer_.reset();
     }
   }
 
