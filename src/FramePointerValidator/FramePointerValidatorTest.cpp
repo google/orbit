@@ -31,10 +31,10 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   const std::filesystem::path test_elf_file = executable_dir / "testdata" / "hello_world_elf";
 
   auto elf_file = orbit_elf_utils::ElfFile::Create(test_elf_file);
-  ASSERT_TRUE(elf_file) << elf_file.error().message();
+  ASSERT_FALSE(elf_file.has_error()) << elf_file.error().message();
 
   const auto symbols_result = elf_file.value()->LoadSymbols();
-  ASSERT_TRUE(symbols_result) << symbols_result.error().message();
+  ASSERT_FALSE(symbols_result.has_error()) << symbols_result.error().message();
   uint64_t load_bias = symbols_result.value().load_bias();
   const std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                              symbols_result.value().symbol_infos().end());

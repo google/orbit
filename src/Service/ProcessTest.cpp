@@ -18,7 +18,7 @@ namespace orbit_service {
 
 TEST(Process, FromPid) {
   auto potential_process = Process::FromPid(getpid());
-  ASSERT_TRUE(potential_process);
+  ASSERT_TRUE(potential_process.has_value()) << potential_process.error().message();
 
   auto& process = potential_process.value();
 

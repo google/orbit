@@ -43,7 +43,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRe
     absl::MutexLock lock(&mutex_);
 
     const auto refresh_result = process_list_.Refresh();
-    if (!refresh_result) {
+    if (refresh_result.has_error()) {
       return Status(StatusCode::INTERNAL, refresh_result.error().message());
     }
   }
@@ -67,7 +67,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   LOG("Sending modules for process %d", pid);
 
   const auto module_infos = orbit_elf_utils::ReadModules(pid);
-  if (!module_infos) {
+  if (module_infos.has_error()) {
     return Status(StatusCode::NOT_FOUND, module_infos.error().message());
   }
 
@@ -100,7 +100,7 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
 Status ProcessServiceImpl::GetDebugInfoFile(ServerContext*, const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
   const auto symbols_path = utils::FindSymbolsFilePath(request->module_path());
-  if (!symbols_path) {
+  if (symbols_path.has_error()) {
     return Status(StatusCode::NOT_FOUND, symbols_path.error().message());
   }
 

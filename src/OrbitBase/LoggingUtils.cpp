@@ -76,13 +76,13 @@ std::vector<std::filesystem::path> FindOldLogFiles(
   std::vector<std::filesystem::path> old_files;
   absl::Time expiration_time = absl::Now() - kLogFileLifetime;
   for (const std::filesystem::path& log_file_path : file_paths) {
-    ErrorMessageOr<absl::Time> timestamp_result =
+    ErrorMessageOr<absl::Time> timestamp_or_error =
         ParseLogFileTimestamp(log_file_path.filename().string());
-    if (!timestamp_result) {
-      LOG("Warning: %s", timestamp_result.error().message());
+    if (timestamp_or_error.has_error()) {
+      LOG("Warning: %s", timestamp_or_error.error().message());
       continue;
     }
-    if (timestamp_result.value() < expiration_time) {
+    if (timestamp_or_error.value() < expiration_time) {
       old_files.push_back(log_file_path);
     }
   }

@@ -28,29 +28,30 @@ TEST(LoggingUtils, ParseLogFileTimestamp) {
   const std::string kFilenameValid = "Orbit-2021_01_31_10_21_33-7188.log";
 
   {
-    ErrorMessageOr<absl::Time> parse_result = ParseLogFileTimestamp(kFilenameInvalidNoTimestamp);
-    ASSERT_FALSE(parse_result);
-    EXPECT_EQ(parse_result.error().message(),
+    ErrorMessageOr<absl::Time> timestamp_or_error =
+        ParseLogFileTimestamp(kFilenameInvalidNoTimestamp);
+    ASSERT_TRUE(timestamp_or_error.has_error());
+    EXPECT_EQ(timestamp_or_error.error().message(),
               absl::StrFormat("Unable to extract time information from log file: %s",
                               kFilenameInvalidNoTimestamp));
   }
 
   {
-    ErrorMessageOr<absl::Time> parse_result =
+    ErrorMessageOr<absl::Time> timestamp_or_error =
         ParseLogFileTimestamp(kFilenameInvalidValidTimestampWrongFormat);
-    ASSERT_FALSE(parse_result);
+    ASSERT_TRUE(timestamp_or_error.has_error());
     EXPECT_THAT(
-        parse_result.error().message(),
+        timestamp_or_error.error().message(),
         testing::HasSubstr(absl::StrFormat("Error while parsing time information from log file %s",
                                            kFilenameInvalidValidTimestampWrongFormat)));
   }
 
   {
-    ErrorMessageOr<absl::Time> parse_result = ParseLogFileTimestamp(kFilenameValid);
+    ErrorMessageOr<absl::Time> timestamp_or_error = ParseLogFileTimestamp(kFilenameValid);
     absl::Time expected_result =
         absl::FromCivil(absl::CivilSecond(2021, 1, 31, 10, 21, 33), absl::UTCTimeZone());
-    ASSERT_TRUE(parse_result) << parse_result.error().message();
-    EXPECT_EQ(parse_result.value(), expected_result);
+    ASSERT_FALSE(timestamp_or_error.has_error()) << timestamp_or_error.error().message();
+    EXPECT_EQ(timestamp_or_error.value(), expected_result);
   }
 }
 

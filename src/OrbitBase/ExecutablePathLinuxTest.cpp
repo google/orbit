@@ -13,14 +13,14 @@
 #include "OrbitBase/Result.h"
 
 TEST(ExecutablePathLinux, GetExecutablePathWithPid) {
-  const auto result = orbit_base::GetExecutablePath(getpid());
-  ASSERT_TRUE(result) << result.error().message();
-  EXPECT_EQ(result.value().filename(), "OrbitBaseTests");
+  const auto path_or_error = orbit_base::GetExecutablePath(getpid());
+  ASSERT_FALSE(path_or_error.has_error()) << path_or_error.error().message();
+  EXPECT_EQ(path_or_error.value().filename(), "OrbitBaseTests");
 }
 
 TEST(ExecutablePathLinux, GetExecutablePathWithInvalidPid) {
-  const auto result = orbit_base::GetExecutablePath(0);
-  ASSERT_FALSE(result);
-  EXPECT_EQ(result.error().message(),
+  const auto path_or_error = orbit_base::GetExecutablePath(0);
+  ASSERT_TRUE(path_or_error.has_error());
+  EXPECT_EQ(path_or_error.error().message(),
             "Unable to get executable path of process with pid 0: No such file or directory");
 }

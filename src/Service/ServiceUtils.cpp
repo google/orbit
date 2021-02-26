@@ -38,7 +38,6 @@ namespace orbit_service::utils {
 namespace fs = std::filesystem;
 
 using ::orbit_elf_utils::ElfFile;
-using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
@@ -123,13 +122,14 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept {
     return std::nullopt;
   }
 
-  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(stat);
-  if (!file_content) {
-    ERROR("Could not read \"%s\": %s", stat.string(), file_content.error().message());
+  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(stat);
+  if (file_content_or_error.has_error()) {
+    ERROR("Could not read \"%s\": %s", stat.string(), file_content_or_error.error().message());
     return std::nullopt;
   }
 
-  std::vector<std::string> lines = absl::StrSplit(file_content.value(), absl::MaxSplits('\n', 1));
+  std::vector<std::string> lines =
+      absl::StrSplit(file_content_or_error.value(), absl::MaxSplits('\n', 1));
   if (lines.empty()) {
     ERROR("\"%s\" file is empty", stat.string());
     return std::nullopt;
@@ -172,13 +172,13 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept {
 }
 
 std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept {
-  ErrorMessageOr<std::string> stat_content = orbit_base::ReadFileToString("/proc/stat");
-  if (!stat_content) {
-    ERROR("%s", stat_content.error().message());
+  ErrorMessageOr<std::string> stat_content_or_error = orbit_base::ReadFileToString("/proc/stat");
+  if (stat_content_or_error.has_error()) {
+    ERROR("%s", stat_content_or_error.error().message());
     return std::nullopt;
   }
 
-  std::vector<std::string> lines = absl::StrSplit(stat_content.value(), '\n');
+  std::vector<std::string> lines = absl::StrSplit(stat_content_or_error.value(), '\n');
   if (lines.empty()) {
     return std::nullopt;
   }
@@ -320,30 +320,34 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
 
     if (!path_exists) continue;
 
-    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file = ElfFile::Create(symbols_path.string());
-    if (!symbols_file) {
+    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file_or_error =
+        ElfFile::Create(symbols_path.string());
+    if (symbols_file_or_error.has_error()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" cannot be read as an elf file: %s",
-                          symbols_path, symbols_file.error().message());
+                          symbols_path, symbols_file_or_error.error().message());
       ERROR("%s", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
-    if (!symbols_file.value()->HasSymtab()) {
+
+    std::unique_ptr<ElfFile>& symbols_file = symbols_file_or_error.value();
+
+    if (!symbols_file->HasSymtab()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" does not contain symbols.", symbols_path);
       ERROR("%s (It does not contain a .symtab section)", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
-    if (symbols_file.value()->GetBuildId().empty()) {
+    if (symbols_file->GetBuildId().empty()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" does not have a build id", symbols_path);
       ERROR("%s", error_message);
       error_messages.emplace_back("* " + std::move(error_message));
       continue;
     }
-    const std::string& build_id = symbols_file.value()->GetBuildId();
+    const std::string& build_id = symbols_file->GetBuildId();
     if (build_id != module_elf_file->GetBuildId()) {
       std::string error_message = absl::StrFormat(
           "Potential symbols file \"%s\" has a different build id than the module requested by the "

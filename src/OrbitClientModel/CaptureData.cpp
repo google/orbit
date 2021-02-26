@@ -163,10 +163,10 @@ const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address
 
 const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address,
                                                        bool is_exact) const {
-  const auto result = process_.FindModuleByAddress(absolute_address);
-  if (!result) return nullptr;
-  const std::string& module_path = result.value().first;
-  const uint64_t module_base_address = result.value().second;
+  const auto module_or_error = process_.FindModuleByAddress(absolute_address);
+  if (module_or_error.has_error()) return nullptr;
+  const std::string& module_path = module_or_error.value().first;
+  const uint64_t module_base_address = module_or_error.value().second;
 
   const ModuleData* module = module_manager_->GetModuleByPath(module_path);
   if (module == nullptr) return nullptr;
@@ -177,7 +177,7 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 
 [[nodiscard]] ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
   const auto result = process_.FindModuleByAddress(absolute_address);
-  if (!result) return nullptr;
+  if (result.has_error()) return nullptr;
   return module_manager_->GetMutableModuleByPath(result.value().first);
 }
 

@@ -21,7 +21,7 @@ grpc::Status TracepointServiceImpl::GetTracepointList(grpc::ServerContext*,
   LOG("Sending tracepoints");
 
   const auto tracepoint_infos = utils::ReadTracepoints();
-  if (!tracepoint_infos) {
+  if (tracepoint_infos.has_error()) {
     return grpc::Status(grpc::StatusCode::NOT_FOUND, tracepoint_infos.error().message());
   }
 

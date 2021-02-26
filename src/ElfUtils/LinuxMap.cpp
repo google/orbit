@@ -45,15 +45,16 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
         absl::StrFormat("Unable to get size of \"%s\": %s", module_path, error.message()));
   }
 
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file = ElfFile::Create(module_path);
-  if (!elf_file) {
-    return ErrorMessage(absl::StrFormat("Unable to load module: %s", elf_file.error().message()));
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = ElfFile::Create(module_path);
+  if (elf_file_or_error.has_error()) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to load module: %s", elf_file_or_error.error().message()));
   }
 
-  ErrorMessageOr<uint64_t> load_bias = elf_file.value()->GetLoadBias();
+  ErrorMessageOr<uint64_t> load_bias_or_error = elf_file_or_error.value()->GetLoadBias();
   // Every loadable module contains a load bias.
-  if (!load_bias) {
-    return load_bias.error();
+  if (load_bias_or_error.has_error()) {
+    return load_bias_or_error.error();
   }
 
   ModuleInfo module_info;
@@ -62,8 +63,8 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   module_info.set_file_size(file_size);
   module_info.set_address_start(start_address);
   module_info.set_address_end(end_address);
-  module_info.set_build_id(elf_file.value()->GetBuildId());
-  module_info.set_load_bias(load_bias.value());
+  module_info.set_build_id(elf_file_or_error.value()->GetBuildId());
+  module_info.set_load_bias(load_bias_or_error.value());
 
   return module_info;
 }
@@ -115,14 +116,14 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
 
-    ErrorMessageOr<ModuleInfo> module_info =
+    ErrorMessageOr<ModuleInfo> module_info_or_error =
         CreateModule(module_path, address_range.start_address, address_range.end_address);
-    if (!module_info) {
-      ERROR("Unable to create module: %s", module_info.error().message());
+    if (module_info_or_error.has_error()) {
+      ERROR("Unable to create module: %s", module_info_or_error.error().message());
       continue;
     }
 
-    result.push_back(std::move(module_info.value()));
+    result.push_back(std::move(module_info_or_error.value()));
   }
 
   return result;

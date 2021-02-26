@@ -13,13 +13,13 @@
 #include "OrbitBase/Result.h"
 
 TEST(ReadFileToString, InvalidFile) {
-  const auto result = orbit_base::ReadFileToString("non/existing/filename");
-  ASSERT_FALSE(result);
+  const auto fd_or_error = orbit_base::ReadFileToString("non/existing/filename");
+  ASSERT_TRUE(fd_or_error.has_error());
 }
 
 TEST(ReadFileToString, Smoke) {
-  const auto result = orbit_base::ReadFileToString(orbit_base::GetExecutableDir() / "testdata" /
-                                                   "OrbitBase" / "textfile.bin");
-  ASSERT_TRUE(result) << result.error().message();
-  EXPECT_EQ(result.value(), "content\nnew line");
+  const auto fd_or_error = orbit_base::ReadFileToString(orbit_base::GetExecutableDir() /
+                                                        "testdata" / "OrbitBase" / "textfile.bin");
+  ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
+  EXPECT_EQ(fd_or_error.value(), "content\nnew line");
 }

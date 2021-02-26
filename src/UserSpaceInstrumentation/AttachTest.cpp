@@ -20,7 +20,7 @@ TEST(AttachTest, AttachAndStopProcess) {
   const pid_t pid = test_process.pid();
 
   const auto result = AttachAndStopProcess(pid);
-  ASSERT_TRUE(result) << result.error().message();
+  ASSERT_FALSE(result.has_error()) << result.error().message();
 
   // TestProcess is continuously spawning new threads when it is running. Verify that no new threads
   // get spawned - i.e. the process is not running anymore.
@@ -31,7 +31,7 @@ TEST(AttachTest, AttachAndStopProcess) {
             std::set<pid_t>(tids_new.begin(), tids_new.end()));
 
   const auto result_detach = DetachAndContinueProcess(pid);
-  ASSERT_TRUE(result_detach) << result_detach.error().message();
+  ASSERT_FALSE(result_detach.has_error()) << result_detach.error().message();
 }
 
 }  // namespace orbit_user_space_instrumentation

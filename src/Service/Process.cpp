@@ -54,7 +54,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
 
   const std::filesystem::path name_file_path = path / "comm";
   auto name_file_result = orbit_base::ReadFileToString(name_file_path);
-  if (!name_file_result) {
+  if (name_file_result.has_error()) {
     return ErrorMessage{absl::StrFormat("Failed to read %s: %s", name_file_path.string(),
                                         name_file_result.error().message())};
   }
@@ -82,7 +82,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   // separated by null bytes ('\0')".
   const std::filesystem::path cmdline_file_path = path / "cmdline";
   auto cmdline_file_result = orbit_base::ReadFileToString(cmdline_file_path);
-  if (!cmdline_file_result) {
+  if (cmdline_file_result.has_error()) {
     return ErrorMessage{absl::StrFormat("Failed to read %s: %s", cmdline_file_path.string(),
                                         cmdline_file_result.error().message())};
   }
@@ -92,11 +92,11 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   process.set_command_line(cmdline);
 
   auto file_path_result = orbit_base::GetExecutablePath(pid);
-  if (file_path_result) {
+  if (!file_path_result.has_error()) {
     process.set_full_path(file_path_result.value());
 
     const auto& elf_file = orbit_elf_utils::ElfFile::Create(file_path_result.value());
-    if (elf_file) {
+    if (!elf_file.has_error()) {
       process.set_is_64_bit(elf_file.value()->Is64Bit());
     } else {
       LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %d)",

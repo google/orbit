@@ -68,15 +68,17 @@ ErrorMessageOr<void> ProcessList::Refresh() {
       continue;
     }
 
-    auto process = Process::FromPid(pid);
+    auto process_or_error = Process::FromPid(pid);
 
-    if (process) {
-      updated_processes.emplace(pid, std::move(process.value()));
-    } else {
+    if (process_or_error.has_error()) {
       // We don't fail in this case. This could be a permission problem which is restricted to a
       // small amount of processes.
-      ERROR("Could not create process list entry for pid %d: %s", pid, process.error().message());
+      ERROR("Could not create process list entry for pid %d: %s", pid,
+            process_or_error.error().message());
+      continue;
     }
+
+    updated_processes.emplace(pid, std::move(process_or_error.value()));
   }
 
   processes_ = std::move(updated_processes);

@@ -33,12 +33,12 @@ namespace fs = std::filesystem;
 
 std::string ReadMaps(pid_t pid) {
   std::string maps_filename = absl::StrFormat("/proc/%d/maps", pid);
-  ErrorMessageOr<std::string> maps_content = orbit_base::ReadFileToString(maps_filename);
-  if (!maps_content) {
+  ErrorMessageOr<std::string> maps_content_or_error = orbit_base::ReadFileToString(maps_filename);
+  if (maps_content_or_error.has_error()) {
     return {};
   }
 
-  return maps_content.value();
+  return maps_content_or_error.value();
 }
 
 std::optional<char> GetThreadState(pid_t tid) {
@@ -47,13 +47,14 @@ std::optional<char> GetThreadState(pid_t tid) {
     return std::nullopt;
   }
 
-  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(stat);
-  if (!file_content) {
-    ERROR("Could not open \"%s\": %s", stat.string(), file_content.error().message());
+  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(stat);
+  if (file_content_or_error.has_error()) {
+    ERROR("Could not open \"%s\": %s", stat.string(), file_content_or_error.error().message());
     return std::nullopt;
   }
 
-  std::vector<std::string> lines = absl::StrSplit(file_content.value(), absl::MaxSplits('\n', 1));
+  std::vector<std::string> lines =
+      absl::StrSplit(file_content_or_error.value(), absl::MaxSplits('\n', 1));
   if (lines.empty()) {
     ERROR("Empty \"%s\" file", stat.string());
     return std::nullopt;
@@ -146,40 +147,41 @@ std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content) {
 // An empty result indicates an error, as trying to start a process with an
 // empty cpuset fails with message "cgroup change of group failed".
 std::vector<int> GetCpusetCpus(pid_t pid) {
-  ErrorMessageOr<std::string> cgroup_content = ReadCgroupContent(pid);
-  if (!cgroup_content) {
+  ErrorMessageOr<std::string> cgroup_content_or_error = ReadCgroupContent(pid);
+  if (cgroup_content_or_error.has_error()) {
     return {};
   }
 
   // For example "/" or "/game".
-  std::optional<std::string> cgroup_cpuset_opt = ExtractCpusetFromCgroup(cgroup_content.value());
+  std::optional<std::string> cgroup_cpuset_opt =
+      ExtractCpusetFromCgroup(cgroup_content_or_error.value());
   if (!cgroup_cpuset_opt.has_value()) {
     return {};
   }
 
   // For example "0-2,7,12-14".
-  ErrorMessageOr<std::string> cpuset_cpus_content =
+  ErrorMessageOr<std::string> cpuset_cpus_content_or_error =
       ReadCpusetCpusContent(cgroup_cpuset_opt.value());
-  if (!cpuset_cpus_content) {
+  if (cpuset_cpus_content_or_error.has_error()) {
     return {};
   }
 
-  return ParseCpusetCpus(cpuset_cpus_content.value());
+  return ParseCpusetCpus(cpuset_cpus_content_or_error.value());
 }
 
 int GetTracepointId(const char* tracepoint_category, const char* tracepoint_name) {
   std::string filename = absl::StrFormat("/sys/kernel/debug/tracing/events/%s/%s/id",
                                          tracepoint_category, tracepoint_name);
 
-  ErrorMessageOr<std::string> file_content = orbit_base::ReadFileToString(filename);
-  if (!file_content) {
+  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(filename);
+  if (file_content_or_error.has_error()) {
     ERROR("Reading tracepoint id of %s:%s: %s", tracepoint_category, tracepoint_name,
-          file_content.error().message());
+          file_content_or_error.error().message());
     return -1;
   }
 
   int tp_id = -1;
-  if (!absl::SimpleAtoi(file_content.value(), &tp_id)) {
+  if (!absl::SimpleAtoi(file_content_or_error.value(), &tp_id)) {
     ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category, tracepoint_name);
     return -1;
   }
@@ -187,7 +189,7 @@ int GetTracepointId(const char* tracepoint_category, const char* tracepoint_name
 }
 
 uint64_t GetMaxOpenFilesHardLimit() {
-  rlimit limit;
+  rlimit limit{};
   int ret = getrlimit(RLIMIT_NOFILE, &limit);
   if (ret != 0) {
     ERROR("getrlimit: %s", SafeStrerror(errno));

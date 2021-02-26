@@ -189,7 +189,7 @@ absl::flat_hash_set<std::string> SamplingReportDataView::GetModulePathsFromIndic
     const SampledFunction& sampled_function = GetSampledFunction(index);
     CHECK(sampled_function.absolute_address != 0);
     auto result = process->FindModuleByAddress(sampled_function.absolute_address);
-    if (!result) {
+    if (result.has_error()) {
       ERROR("result %s", result.error().message());
     } else {
       module_paths.insert(result.value().first);
