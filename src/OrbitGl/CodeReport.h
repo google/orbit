@@ -5,8 +5,8 @@
 #ifndef ORBIT_GL_CODE_REPORT_H_
 #define ORBIT_GL_CODE_REPORT_H_
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 
 class CodeReport {
  public:
