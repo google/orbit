@@ -73,6 +73,7 @@ class MockDispatchTable {
   MOCK_METHOD(PFN_vkCreateDebugReportCallbackEXT, CreateDebugReportCallbackEXT, (VkInstance));
   MOCK_METHOD(PFN_vkDebugReportMessageEXT, DebugReportMessageEXT, (VkInstance));
   MOCK_METHOD(PFN_vkDestroyDebugReportCallbackEXT, DestroyDebugReportCallbackEXT, (VkInstance));
+  MOCK_METHOD(VkInstance, GetInstance, (VkPhysicalDevice), (const));
 };
 
 class MockDeviceManager {

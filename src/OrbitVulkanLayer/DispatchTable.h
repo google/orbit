@@ -533,6 +533,16 @@ class DispatchTable {
     }
   }
 
+  template <typename DispatchableType>
+  VkInstance GetInstance(DispatchableType instance_dispatchable_object) {
+    void* key = GetDispatchTableKey(instance_dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(instance_dispatchable_object_to_instance_.contains(key));
+      return instance_dispatchable_object_to_instance_.at(key);
+    }
+  }
+
  private:
   // Vulkan has the concept of "dispatchable types". Basically every Vulkan type whose objects can
   // be associated with a VkInstance or VkDevice are "dispatchable". As an example, both a device
@@ -552,10 +562,13 @@ class DispatchTable {
   // layer in the dispatch chain among our handling of functions we intercept.
   absl::flat_hash_map<void*, VkLayerInstanceDispatchTable> instance_dispatch_table_;
   absl::flat_hash_map<void*, VkLayerDispatchTable> device_dispatch_table_;
+
   absl::flat_hash_map<void*, bool> device_supports_debug_marker_extension_;
   absl::flat_hash_map<void*, bool> device_supports_debug_utils_extension_;
   absl::flat_hash_map<void*, bool> instance_supports_debug_utils_extension_;
   absl::flat_hash_map<void*, bool> instance_supports_debug_report_extension_;
+
+  absl::flat_hash_map<void*, VkInstance> instance_dispatchable_object_to_instance_;
 
   // Must protect access to dispatch tables above by mutex since the Vulkan
   // application may be calling these functions from different threads.

@@ -21,6 +21,7 @@ TEST(DispatchTable, CanInitializeInstance) {
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
+  EXPECT_EQ(instance, dispatch_table.GetInstance(instance));
 }
 
 TEST(DispatchTable, CannotInitializeInstanceTwice) {
