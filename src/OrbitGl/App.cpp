@@ -1482,6 +1482,8 @@ void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
 }
 
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
+  ScopedMetric metric{metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
   load_module_results.reserve(preset_file->preset_info().path_to_module().size());
 
@@ -1504,7 +1506,8 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
-  results.Then(main_thread_executor_, [this](std::vector<std::string> module_paths_not_found) {
+  results.Then(main_thread_executor_, [this, metric = std::move(metric)](
+                                          std::vector<std::string> module_paths_not_found) mutable {
     size_t tried_to_load_amount = module_paths_not_found.size();
     module_paths_not_found.erase(
         std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
@@ -1512,6 +1515,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
         module_paths_not_found.end());
 
     if (tried_to_load_amount == module_paths_not_found.size()) {
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_COMMAND_FAILURE);
       SendErrorToUi("Preset loading failed",
                     absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
                                     absl::StrJoin(module_paths_not_found, "\n* ")));
