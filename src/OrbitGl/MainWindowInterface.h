@@ -8,7 +8,10 @@
 #include <stdint.h>
 
 #include <filesystem>
+#include <optional>
 #include <string_view>
+
+#include "CodeReport.h"
 
 namespace orbit_gl {
 
@@ -20,7 +23,8 @@ namespace orbit_gl {
 class MainWindowInterface {
  public:
   virtual void ShowTooltip(std::string_view message) = 0;
-  virtual void ShowSourceCode(const std::filesystem::path& file_path, size_t line_number) = 0;
+  virtual void ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
+                              std::optional<std::unique_ptr<CodeReport>> code_report) = 0;
 
   virtual ~MainWindowInterface() = default;
 };

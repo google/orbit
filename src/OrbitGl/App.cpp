@@ -69,6 +69,7 @@
 #include "Path.h"
 #include "PresetsDataView.h"
 #include "SamplingReport.h"
+#include "SourceCodeReport.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "TimeGraph.h"
@@ -548,16 +549,32 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
           [this, module,
            function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
             const auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
-            const auto line_info = elf_file.value()->GetLineInfo(function.address());
+            const auto first_line_info_or_error = elf_file.value()->GetLineInfo(function.address());
 
-            if (line_info.has_error()) {
+            if (first_line_info_or_error.has_error()) {
               return ErrorMessage{absl::StrFormat(
                   "Could not find source code line info for function \"%s\" in module \"%s\": %s",
-                  function.pretty_name(), module->file_path(), line_info.error().message())};
+                  function.pretty_name(), module->file_path(),
+                  first_line_info_or_error.error().message())};
+            }
+            const auto& line_info = first_line_info_or_error.value();
+            auto source_file_path =
+                std::filesystem::path{line_info.source_file()}.lexically_normal();
+
+            std::optional<std::unique_ptr<CodeReport>> code_report;
+
+            if (GetCaptureData().has_post_processed_sampling_data()) {
+              const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
+              const auto absolute_address =
+                  function_utils::GetAbsoluteAddress(function, *process_, *module);
+
+              code_report = std::make_unique<orbit_gl::SourceCodeReport>(
+                  line_info.source_file(), function, absolute_address, elf_file.value().get(),
+                  sampling_data, GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
             }
 
-            main_window_->ShowSourceCode(std::filesystem::path{line_info.value().source_file()},
-                                         line_info.value().source_line());
+            main_window_->ShowSourceCode(source_file_path, line_info.source_line(),
+                                         std::move(code_report));
             return outcome::success();
           })
       .Then(main_thread_executor_, [this](const ErrorMessageOr<void>& maybe_error) {
