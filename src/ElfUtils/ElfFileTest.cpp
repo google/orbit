@@ -273,3 +273,20 @@ TEST(ElfFile, CalculateDebuglinkChecksumNotFound) {
       ElfFile::CalculateDebuglinkChecksum(debuglink_file_path);
   EXPECT_TRUE(checksum_or_error.has_error());
 }
+
+TEST(ElfFile, LineInfoInlining) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary";
+
+  auto program = ElfFile::Create(file_path);
+  ASSERT_TRUE(program.has_value()) << program.error().message();
+
+  constexpr uint64_t kFirstInstructionOfInlinedPrintHelloWorld = 0x401141;
+  ErrorMessageOr<orbit_grpc_protos::LineInfo> line_info =
+      program.value()->GetLineInfo(kFirstInstructionOfInlinedPrintHelloWorld);
+  ASSERT_TRUE(line_info.has_value()) << line_info.error().message();
+
+  EXPECT_EQ(line_info.value().source_line(), 13);
+  EXPECT_EQ(std::filesystem::path{line_info.value().source_file()}.filename().string(),
+            "LineInfoTestBinary.cpp");
+}
