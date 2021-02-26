@@ -17,7 +17,9 @@ target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_LIST_DIR}/incl
 
 target_sources(MetricsUploader PUBLIC include/MetricsUploader/MetricsUploader.h
                                       include/MetricsUploader/Result.h
-                               PRIVATE Result.cpp)
+                                      include/MetricsUploader/ScopedMetric.h
+                               PRIVATE Result.cpp
+                                       ScopedMetric.cpp)
 
 if (WIN32)
 target_sources(MetricsUploader PRIVATE MetricsUploaderWindows.cpp)
@@ -63,16 +65,21 @@ add_library(MetricsUploaderSetupWithErrorClient SHARED TestClients/SetupWithErro
 target_link_libraries(MetricsUploaderSetupWithErrorClient PRIVATE MetricsUploader)
 set_target_properties(MetricsUploaderSetupWithErrorClient PROPERTIES FOLDER "MetricsUploaderTestClients")
 
+endif()
+
 # add tests
 add_executable(MetricsUploaderTests)
 
 target_compile_options(MetricsUploaderTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
+target_sources(MetricsUploaderTests PRIVATE ScopedMetricTest.cpp)
+
+if (WIN32)
 target_sources(MetricsUploaderTests PRIVATE MetricsUploaderWindowsTest.cpp)
+endif()
 
 target_link_libraries(MetricsUploaderTests PRIVATE MetricsUploader
                                                    GTest::GTest
                                                    GTest::Main)
 
 register_test(MetricsUploaderTests)
-endif()
