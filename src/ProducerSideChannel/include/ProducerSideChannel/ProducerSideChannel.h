@@ -22,7 +22,19 @@ constexpr std::string_view kProducerSideUnixDomainSocketPath = "/tmp/orbit-produ
 inline std::shared_ptr<grpc::Channel> CreateProducerSideChannel(
     std::string_view unix_domain_socket_path = kProducerSideUnixDomainSocketPath) {
   std::string server_address = absl::StrFormat("unix:%s", unix_domain_socket_path);
-  return grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials());
+
+  grpc::ChannelArguments channel_arguments;
+  // Significantly reduce the gRPC channel's reconnection backoff time. Defaults for min and max
+  // would be 20 seconds and 2 minutes. That's too much for us, as we want a producer to quickly
+  // connect to OrbitService after Orbit is started, so that when starting a capture the producer
+  // can already send data.
+  constexpr int kMinReconnectBackoffMs = 1000;
+  constexpr int kMaxReconnectBackoffMs = 1000;
+  channel_arguments.SetInt(GRPC_ARG_MIN_RECONNECT_BACKOFF_MS, kMinReconnectBackoffMs);
+  channel_arguments.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, kMaxReconnectBackoffMs);
+
+  return grpc::CreateCustomChannel(server_address, grpc::InsecureChannelCredentials(),
+                                   channel_arguments);
 }
 
 }  // namespace orbit_producer_side_channel
