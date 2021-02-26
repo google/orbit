@@ -28,6 +28,7 @@ inline const QString testing_example =
   m_PascalCase = 5;
   Track::SortTracks();
   class TrackManager {};
+  int pam_value; // not a class member
 
   // Function unit tests
   int my_function(void);

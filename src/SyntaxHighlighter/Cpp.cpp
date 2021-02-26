@@ -51,7 +51,7 @@ const char* const kNamespaceVariablesRegex = "(?<=::)[A-Za-z_]\\w*(?=\\b)";
 const char* const kNamespaceRegex = "[A-Za-z_]\\w*::";
 const char* const kClassNameRegex = "\\b(?:class|concept|enum|namespace|struct|typename)\\s+(\\w+)";
 // Variables starting with lowercase and finishing with _ (e.g. tracks_) or starting with "m_"
-const char* const kClassMemberRegex = "\\b[a-z]\\w*\\_(?<=\\b)|m_\\w*";
+const char* const kClassMemberRegex = "\\b[a-z]\\w*\\_(?<=\\b)|(?<=\\b)m_\\w*";
 const char* const kPreprocessorRegex = "(^\\s*)#\\s*[A-Za-z_]\\w*";
 // Match with <word> after #include
 const char* const kIncludeFileRegex = "(?<=#include)\\s*<[^>]*>";
