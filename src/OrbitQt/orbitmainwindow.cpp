@@ -6,6 +6,7 @@
 
 #include <absl/flags/declare.h>
 
+#include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
@@ -84,6 +85,8 @@
 #include "Path.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SamplingReport.h"
+#include "SourcePathsMapping/Mapping.h"
+#include "SourcePathsMapping/MappingManager.h"
 #include "StatusListenerImpl.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -1269,21 +1272,117 @@ void OrbitMainWindow::ShowTooltip(std::string_view message) {
                      QString::fromUtf8(message.data(), static_cast<int>(message.size())), this);
 }
 
+static std::optional<QString> TryReadSourceFile(const QString& file_path) {
+  QFile source_code_file{file_path};
+  if (!source_code_file.open(QIODevice::ReadOnly)) return std::nullopt;
+
+  return source_code_file.readAll();
+}
+
+static std::optional<QString> TryApplyMappingAndReadSourceFile(
+    const std::filesystem::path& file_path) {
+  orbit_source_paths_mapping::MappingManager mapping_manager{};
+  const auto maybe_mapping_file_path = mapping_manager.MapToFirstExistingTarget(file_path);
+  if (maybe_mapping_file_path.has_value()) {
+    return TryReadSourceFile(QString::fromStdString(maybe_mapping_file_path->string()));
+  }
+
+  return std::nullopt;
+}
+
+static std::optional<QString> TryAskingTheUserAndReadSourceFile(
+    QWidget* parent, const std::filesystem::path& file_path) {
+  QMessageBox message_box{QMessageBox::Warning, "Source code file not found",
+                          QString("Could not find the source code file \"%1\" on this machine.")
+                              .arg(QString::fromStdString(file_path.string())),
+                          QMessageBox::Cancel, parent};
+  auto* pick_file_button = message_box.addButton("Choose file...", QMessageBox::ActionRole);
+
+  constexpr const char* kAutocreateMappingKey = "auto_create_mapping";
+  constexpr const char* kPreviousSourcePathsMappingDirectoryKey =
+      "previous_source_paths_mapping_directory";
+  auto checkbox = std::make_unique<QCheckBox>(
+      "Automatically create a source paths mapping from my selected file.");
+  checkbox->setToolTip(
+      "If enabled Orbit will automatically try to create a source paths mapping from it. The "
+      "common suffix between the path given in the debug information and the local file path will "
+      "be stripped. From the rest a mapping will be created.");
+  QSettings settings{};
+  checkbox->setCheckState(settings.value(kAutocreateMappingKey, true).toBool() ? Qt::Checked
+                                                                               : Qt::Unchecked);
+
+  // Ownership will be transferred to message_box
+  message_box.setCheckBox(checkbox.release());
+
+  QString user_chosen_file;
+  QObject::connect(pick_file_button, &QAbstractButton::clicked, parent, [&]() {
+    QDir previous_directory{
+        settings.value(kPreviousSourcePathsMappingDirectoryKey, QDir::currentPath()).toString()};
+    const QString file_name = QString::fromStdString(file_path.filename().string());
+
+    user_chosen_file = QFileDialog::getOpenFileName(
+        parent, QString{"Choose %1"}.arg(QString::fromStdString(file_path.string())),
+        previous_directory.filePath(file_name), file_name);
+    if (user_chosen_file.isEmpty()) {
+      message_box.reject();
+      return;
+    }
+    message_box.accept();
+  });
+
+  const int return_code = message_box.exec();
+  if (return_code == QDialog::Rejected) return std::nullopt;
+
+  settings.setValue(kAutocreateMappingKey, message_box.checkBox()->isChecked());
+  settings.setValue(kPreviousSourcePathsMappingDirectoryKey, QFileInfo{user_chosen_file}.path());
+
+  auto maybe_source_code = TryReadSourceFile(user_chosen_file);
+  if (!maybe_source_code.has_value()) {
+    QMessageBox::critical(
+        parent, "Could not open source file",
+        QString{"The selected source file \"%1\" could not be opened for reading."}.arg(
+            user_chosen_file));
+    return std::nullopt;
+  }
+
+  if (message_box.checkBox()->isChecked()) {
+    auto maybe_mapping = orbit_source_paths_mapping::InferMappingFromExample(
+        file_path, std::filesystem::path{user_chosen_file.toStdString()});
+    if (maybe_mapping.has_value()) {
+      orbit_source_paths_mapping::MappingManager mapping_manager{};
+      mapping_manager.AppendMapping(maybe_mapping.value());
+    }
+  }
+
+  return maybe_source_code.value();
+}
+
+std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path) {
+  auto maybe_source_code = TryReadSourceFile(QString::fromStdString(file_path.string()));
+  if (maybe_source_code.has_value()) return maybe_source_code.value();
+
+  maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
+  if (maybe_source_code.has_value()) return maybe_source_code.value();
+
+  maybe_source_code = TryAskingTheUserAndReadSourceFile(this, file_path);
+  if (maybe_source_code.has_value()) return maybe_source_code.value();
+
+  return std::nullopt;
+}
+
 void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, size_t line_number) {
   orbit_code_viewer::Dialog code_viewer_dialog{this};
 
   code_viewer_dialog.SetEnableLineNumbers(true);
   code_viewer_dialog.SetHighlightCurrentLine(true);
+  code_viewer_dialog.setWindowTitle(QString::fromStdString(file_path.filename().string()));
 
-  QFile source_code_file{QString::fromStdString(file_path.string())};
+  const auto source_code = LoadSourceCode(file_path.lexically_normal());
 
-  if (!source_code_file.open(QIODevice::ReadOnly)) {
-    ERROR("Could not open file: \"%s\"", file_path.string());
-    return;
-  }
+  if (!source_code.has_value()) return;
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
-  code_viewer_dialog.SetSourceCode(source_code_file.readAll(), std::move(syntax_highlighter));
+  code_viewer_dialog.SetSourceCode(source_code.value(), std::move(syntax_highlighter));
 
   code_viewer_dialog.GoToLineNumber(line_number);
   code_viewer_dialog.exec();
