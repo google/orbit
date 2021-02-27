@@ -25,14 +25,13 @@ static void FdDeleter(int fd) {
 
 ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path) {
 #if defined(__linux)
-  constexpr int open_flags = O_RDONLY | O_CLOEXEC;
+  constexpr int kOpenFlags = O_RDONLY | O_CLOEXEC;
 #elif defined(_WIN32)
-  constexpr int open_flags = O_RDONLY | O_BINARY;
+  constexpr int kOpenFlags = O_RDONLY | O_BINARY;
 #endif  // defined(__linux)
-  int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), open_flags));
+  int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), kOpenFlags));
   if (fd == -1) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)));
+    return ErrorMessage{"Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)};
   }
 
   return unique_fd{fd, FdDeleter};
@@ -49,8 +48,7 @@ ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path) 
   int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), open_flags, open_mode));
 
   if (fd == -1) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)));
+    return ErrorMessage{"Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)};
   }
 
   return unique_fd{fd, FdDeleter};

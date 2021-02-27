@@ -5,6 +5,8 @@
 #ifndef ORBIT_BASE_RESULT_H_
 #define ORBIT_BASE_RESULT_H_
 
+#include <absl/strings/str_format.h>
+
 #include <string>
 #include <type_traits>
 
@@ -13,7 +15,10 @@
 class ErrorMessage final {
  public:
   ErrorMessage() = default;
-  explicit ErrorMessage(std::string message) : message_(std::move(message)) {}
+  explicit ErrorMessage(std::string message) : message_{std::move(message)} {}
+  template <typename... Args>
+  explicit constexpr ErrorMessage(const absl::FormatSpec<Args...>& format, const Args&... args)
+      : message_{absl::StrFormat(format, args...)} {}
 
   [[nodiscard]] const std::string& message() const { return message_; }
 
