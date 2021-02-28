@@ -47,7 +47,6 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         TestProcess.cpp)
 
 target_link_libraries(UserSpaceInstrumentationTests PRIVATE
-        ElfUtils
         LinuxTracing
         UserSpaceInstrumentation
         CONAN_PKG::abseil
