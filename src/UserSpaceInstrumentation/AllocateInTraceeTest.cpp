@@ -27,8 +27,8 @@ namespace {
 using orbit_base::ReadFileToString;
 using orbit_base::WriteStringToFile;
 
-// Let the parent trace us, write address of "go_on" into file, then enter a breakpoint. While the
-// child is stopped the parent can modify "go_on" in which case the child exits the endless loop
+// Let the parent trace us, write address of `go_on` into file, then enter a breakpoint. While the
+// child is stopped the parent can modify `go_on` in which case the child exits the endless loop
 // when continued.
 void Child(std::filesystem::path p) {
   CHECK(ptrace(PTRACE_TRACEME, 0, NULL, 0) != -1);
@@ -78,7 +78,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
     Child(p);
   }
 
-  // Wait for child to break and get the address of the "go_on" variable on the child side.
+  // Wait for child to break and get the address of the `go_on` variable on the child side.
   waitpid(pid, NULL, 0);
   auto result_go_on = ReadFileToString(p);
   CHECK(result_go_on);
@@ -101,7 +101,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
 
   EXPECT_FALSE(DoesAddressRangeExit(pid, result_allocate.value()));
 
-  // Alter "go_on" so that the child will exit, continue, and wait for the exit to happen.
+  // Alter `go_on` so that the child will exit, continue, and wait for the exit to happen.
   CHECK(ptrace(PTRACE_POKEDATA, pid, address_go_on, 54) != -1);
   CHECK(DetachAndContinueProcess(pid));
   waitpid(pid, NULL, 0);
