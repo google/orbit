@@ -68,7 +68,10 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   } while (pos < bytes.size());
 }
 
-// Execute a single syscall instruction in tracee `pid`. `syscall` identifies the
+// Execute a single syscall instruction in tracee `pid`. `syscall` identifies the syscall as in this
+// list: https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl
+// The parameters and the ordering is the same as in the c wrapper:
+// https://man7.org/linux/man-pages/dir_section_2.html
 [[nodiscard]] ErrorMessageOr<uint64_t> SyscallInTracee(pid_t pid, uint64_t syscall, uint64_t arg_0,
                                                        uint64_t arg_1 = 0, uint64_t arg_2 = 0,
                                                        uint64_t arg_3 = 0, uint64_t arg_4 = 0,
@@ -107,7 +110,8 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   RegisterState registers_for_syscall = original_registers;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rip = address_start;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rax = syscall;
-  // The six arguments to syscall go intp these registers: rdi, rsi, rdx, r10, r8, r9.
+  // Register list for arguments can be found e.g. in the glibc wrapper:
+  // https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86_64/syscall.S#L30
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rdi = arg_0;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rsi = arg_1;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rdx = arg_2;
