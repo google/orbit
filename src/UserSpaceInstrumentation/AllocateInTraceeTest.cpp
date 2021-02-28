@@ -83,7 +83,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   auto result_go_on = ReadFileToString(p);
   CHECK(result_go_on);
   const uint64_t address_go_on = std::stoull(result_go_on.value(), nullptr, 16);
-  
+
   // Continue child by detaching.
   CHECK(ptrace(PTRACE_DETACH, pid, nullptr, nullptr) != -1);
 
