@@ -4,6 +4,7 @@
 
 #include "AllocateInTracee.h"
 
+#include <absl/base/casts.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -144,7 +145,7 @@ void WriteBytesIntoTraceesMemory(pid_t pid, uint64_t address_start,
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
   // Syscalls return -4095, ..., -1 on failure.
-  const int64_t result_as_int = reinterpret_cast<uint64_t>(result);
+  const int64_t result_as_int = absl::bit_cast<uint64_t>(result);
   if (result_as_int > -4096 && result_as_int < 0) {
     return ErrorMessage(absl::StrFormat("syscall failed. Return value: %u", result));
   }
