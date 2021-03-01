@@ -100,10 +100,14 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
        block = block.next()) {
     if (!block.isVisible() || bottom_of(block) < event->rect().top()) continue;
 
-    if (heatmap_bar_width_.Value() > 0.0 && heatmap_source_) {
+    if (heatmap_bar_width_.Value() > 0.0 && code_report_ != nullptr) {
       const QRect heatmap_rect{0, top_of(block), heatmap_bar_width_.ToPixels(fontMetrics()),
                                fontMetrics().height()};
-      const float intensity = std::clamp(heatmap_source_(block.blockNumber()), 0.0f, 1.0f);
+
+      const size_t num_samples_in_line = code_report_->GetNumSamplesAtLine(block.blockNumber() + 1);
+      const size_t num_samples_in_function = code_report_->GetNumSamplesInFunction();
+      const float intensity =
+          std::clamp(static_cast<float>(num_samples_in_line) / num_samples_in_function, 0.0f, 1.0f);
       const auto scaled_intensity = static_cast<int>(std::sqrt(intensity) * 255);
       QColor color = kHeatmapColor;
       color.setAlpha(scaled_intensity);
@@ -155,13 +159,13 @@ void Viewer::SetHeatmapBarWidth(FontSizeInEm width) {
   UpdateLeftSidebarWidth();
 }
 
-void Viewer::SetHeatmapSource(HeatmapSource heatmap_source) {
-  heatmap_source_ = std::move(heatmap_source);
+void Viewer::SetHeatmapSource(const CodeReport* code_report) {
+  code_report_ = code_report;
   UpdateLeftSidebarWidth();
 }
 
 void Viewer::ClearHeatmapSource() {
-  heatmap_source_ = {};
+  code_report_ = nullptr;
   UpdateLeftSidebarWidth();
 }
 

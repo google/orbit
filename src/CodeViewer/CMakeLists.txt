@@ -9,7 +9,7 @@ add_library(CodeViewer STATIC)
 
 target_compile_options(CodeViewer PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(CodeViewer PUBLIC include/)
-target_link_libraries(CodeViewer PUBLIC OrbitBase Qt5::Widgets)
+target_link_libraries(CodeViewer PUBLIC OrbitBase OrbitGl Qt5::Widgets)
 
 target_sources(CodeViewer PUBLIC include/CodeViewer/Dialog.h
                                  include/CodeViewer/FontSizeInEm.h
