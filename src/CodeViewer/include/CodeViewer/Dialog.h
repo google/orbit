@@ -5,13 +5,14 @@
 #ifndef CODE_VIEWER_DIALOG_H_
 #define CODE_VIEWER_DIALOG_H_
 
-#include <CodeViewer/FontSizeInEm.h>
-#include <CodeViewer/Viewer.h>
-
 #include <QDialog>
 #include <QSyntaxHighlighter>
 #include <memory>
 #include <optional>
+
+#include "CodeReport.h"
+#include "CodeViewer/FontSizeInEm.h"
+#include "CodeViewer/Viewer.h"
 
 namespace Ui {
 class CodeViewerDialog;  // IWYU pragma: keep
@@ -50,7 +51,7 @@ class Dialog : public QDialog {
   void SetSourceCode(const QString& code);
   void SetSourceCode(const QString& code, std::unique_ptr<QSyntaxHighlighter> syntax_highlighter);
 
-  void SetHeatmap(FontSizeInEm heatmap_bar_width, Viewer::HeatmapSource heatmap_source);
+  void SetHeatmap(FontSizeInEm heatmap_bar_width, const CodeReport* code_report);
   void ClearHeatmap();
 
   void SetEnableLineNumbers(bool enabled);

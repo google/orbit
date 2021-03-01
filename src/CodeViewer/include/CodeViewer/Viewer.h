@@ -11,6 +11,7 @@
 #include <QWheelEvent>
 #include <functional>
 
+#include "CodeReport.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/PlaceHolderWidget.h"
 
@@ -53,9 +54,7 @@ class Viewer : public QPlainTextEdit {
 
   void SetHeatmapBarWidth(FontSizeInEm width);
 
-  // Takes a line number and returns an intensity value between 0.0 and 1.0.
-  using HeatmapSource = std::function<float(int)>;
-  void SetHeatmapSource(HeatmapSource heatmap_source);
+  void SetHeatmapSource(const CodeReport* code_report);
   void ClearHeatmapSource();
 
   void SetHighlightCurrentLine(bool is_enabled);
@@ -74,7 +73,7 @@ class Viewer : public QPlainTextEdit {
   FontSizeInEm right_margin_ = FontSizeInEm{0.3f};
 
   FontSizeInEm heatmap_bar_width_ = FontSizeInEm{0.0f};
-  HeatmapSource heatmap_source_;
+  const CodeReport* code_report_ = nullptr;
 
   bool is_current_line_highlighted_ = false;
 };

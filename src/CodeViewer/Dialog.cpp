@@ -32,9 +32,9 @@ void Dialog::SetSourceCode(const QString& code,
   syntax_highlighter_->setDocument(ui_->viewer->document());
 }
 
-void Dialog::SetHeatmap(FontSizeInEm heatmap_bar_width, Viewer::HeatmapSource heatmap_source) {
+void Dialog::SetHeatmap(FontSizeInEm heatmap_bar_width, const CodeReport* code_report) {
   ui_->viewer->SetHeatmapBarWidth(heatmap_bar_width);
-  ui_->viewer->SetHeatmapSource(std::move(heatmap_source));
+  ui_->viewer->SetHeatmapSource(code_report);
 }
 
 void Dialog::ClearHeatmap() {

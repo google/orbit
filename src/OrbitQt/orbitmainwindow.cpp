@@ -141,13 +141,7 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
   dialog.SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
 
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
-  dialog.SetHeatmap(kHeatmapAreaWidth, [&report](int line_number) {
-    if (report.GetNumSamples() == 0) return 0.0f;
-
-    return static_cast<float>(report.GetNumSamplesAtLine(line_number)) /
-           static_cast<float>(report.GetNumSamples());
-  });
-
+  dialog.SetHeatmap(kHeatmapAreaWidth, &report);
   dialog.exec();
 }
 }  // namespace
