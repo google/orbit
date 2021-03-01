@@ -159,6 +159,13 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
   std::optional<GpuCommandBuffer> first_command_buffer =
       ExtractFirstCommandBuffer(gpu_queue_submission);
 
+  // The first command buffer acts as our reference needed to align GPU time based events in the
+  // CPU timeline. If we are missing the first timestamp of the submission -- which is the case if
+  // we started capturing within its execution -- we need to discard the submission.
+  if (first_command_buffer.has_value() && first_command_buffer->begin_gpu_timestamp_ns() == 0) {
+    return result;
+  }
+
   std::vector<TimerInfo> command_buffer_timers =
       ProcessGpuCommandBuffers(gpu_queue_submission, matching_gpu_job, first_command_buffer,
                                timeline_key, get_string_hash_and_send_to_listener_if_necessary);
