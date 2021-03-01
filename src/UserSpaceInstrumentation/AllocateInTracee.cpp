@@ -34,7 +34,7 @@ using orbit_base::ReadFileToString;
 [[nodiscard]] ErrorMessageOr<void> GetFirstExecutableMemoryRegion(pid_t pid, uint64_t* addr_start,
                                                                   uint64_t* addr_end) {
   auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  if (!result_read_maps) {
+  if (result_read_maps.has_error()) {
     return result_read_maps.error();
   }
   const std::vector<std::string> lines =
@@ -79,7 +79,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
                                                        uint64_t arg_5 = 0) {
   RegisterState original_registers;
   auto result_backup = original_registers.BackupRegisters(pid);
-  if (!result_backup) {
+  if (result_backup.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to backup original register state: \"%s\"",
                                         result_backup.error().message()));
   }
@@ -92,7 +92,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   uint64_t address_start = 0;
   uint64_t address_end = 0;
   auto result_memory_region = GetFirstExecutableMemoryRegion(pid, &address_start, &address_end);
-  if (!result_memory_region) {
+  if (result_memory_region.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
                                         result_memory_region.error().message()));
   }
@@ -120,7 +120,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.r8 = arg_4;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.r9 = arg_5;
   auto result_restore_registers = registers_for_syscall.RestoreRegisters();
-  if (!result_restore_registers) {
+  if (result_restore_registers.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to set registers with syscall parameters: \"%s\"",
                                         result_restore_registers.error().message()));
   }
@@ -138,7 +138,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   // Return value of syscalls is in rax.
   RegisterState return_value;
   auto result_backup_return_value = return_value.BackupRegisters(pid);
-  if (!result_backup_return_value) {
+  if (result_backup_return_value.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to get registers with mmap result: \"%s\"",
                                         result_backup_return_value.error().message()));
   }
@@ -154,7 +154,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
     FATAL("Unable to restore memory state of tracee");
   }
   result_restore_registers = original_registers.RestoreRegisters();
-  if (!result_restore_registers) {
+  if (result_restore_registers.has_error()) {
     FATAL("Unable to restore register state of tracee : \"%s\"",
           result_restore_registers.error().message());
   }
@@ -171,7 +171,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, static_cast<uint64_t>(NULL), size,
                                          PROT_READ | PROT_WRITE | PROT_EXEC,
                                          MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0);
-  if (!result_or_error) {
+  if (result_or_error.has_error()) {
     ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
                                  result_or_error.error().message()));
   }
@@ -183,7 +183,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   // `munmap(address, size)`
   constexpr uint64_t kSyscallNumberMunmap = 11;
   auto result_or_error = SyscallInTracee(pid, kSyscallNumberMunmap, address, size);
-  if (!result_or_error) {
+  if (result_or_error.has_error()) {
     ErrorMessage(absl::StrFormat("Failed to execute munmap syscall: \"%s\"",
                                  result_or_error.error().message()));
   }

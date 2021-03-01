@@ -31,7 +31,7 @@ using orbit_base::WriteStringToFile;
 // Returns true if `pid` has a readable, writeable, and executable memory segment at `address`.
 bool ProcessHasRwxMapAtAddress(pid_t pid, uint64_t address) {
   auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(result_read_maps);
+  CHECK(result_read_maps.has_value());
   std::vector<std::string> lines =
       absl::StrSplit(result_read_maps.value(), '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
@@ -63,22 +63,22 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   }
 
   // Stop the process using our tooling.
-  CHECK(AttachAndStopProcess(pid));
+  CHECK(AttachAndStopProcess(pid).has_value());
 
   // Allocate a megabyte in the tracee.
   uint64_t kMemorySize = 1024 * 1024;
   auto result_allocate = AllocateInTracee(pid, kMemorySize);
-  CHECK(result_allocate);
+  CHECK(result_allocate.has_value());
 
   EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
   // Free the memory.
-  CHECK(FreeInTracee(pid, result_allocate.value(), kMemorySize));
+  CHECK(FreeInTracee(pid, result_allocate.value(), kMemorySize).has_value());
 
   EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
   // Detach and end child.
-  CHECK(DetachAndContinueProcess(pid));
+  CHECK(DetachAndContinueProcess(pid).has_value());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
