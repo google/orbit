@@ -591,7 +591,11 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   effective_capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
 
   // Get the initial thread names and notify the listener_.
-  RetrieveThreadNamesSystemWide();
+  // All ThreadName events generate by this call will have effective_capture_start_timestamp_ns_ as
+  // timestamp. As these events will be the first events of the capture, this prevents later events
+  // from having a lower timestamp. After all, the timestamp of the initial ThreadName events is
+  // approximate.
+  RetrieveInitialThreadNamesSystemWideAndNotifyListener(effective_capture_start_timestamp_ns_);
 
   // Get the initial association of tids to pids and pass it to switches_states_names_visitor_.
   RetrieveTidToPidAssociationSystemWide();
@@ -988,8 +992,8 @@ void TracerThread::ProcessDeferredEvents() {
   }
 }
 
-void TracerThread::RetrieveThreadNamesSystemWide() {
-  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+void TracerThread::RetrieveInitialThreadNamesSystemWideAndNotifyListener(
+    uint64_t initial_timestamp_ns) {
   for (pid_t pid : GetAllPids()) {
     for (pid_t tid : GetTidsOfProcess(pid)) {
       std::string name = orbit_base::GetThreadName(tid);
@@ -1001,7 +1005,7 @@ void TracerThread::RetrieveThreadNamesSystemWide() {
       thread_name.set_pid(pid);
       thread_name.set_tid(tid);
       thread_name.set_name(std::move(name));
-      thread_name.set_timestamp_ns(timestamp_ns);
+      thread_name.set_timestamp_ns(initial_timestamp_ns);
       listener_->OnThreadName(std::move(thread_name));
     }
   }

@@ -95,7 +95,7 @@ class TracerThread {
   std::vector<std::unique_ptr<PerfEvent>> ConsumeDeferredEvents();
   void ProcessDeferredEvents();
 
-  void RetrieveThreadNamesSystemWide();
+  void RetrieveInitialThreadNamesSystemWideAndNotifyListener(uint64_t initial_timestamp_ns);
   void RetrieveTidToPidAssociationSystemWide();
   void RetrieveThreadStatesOfTarget();
 
