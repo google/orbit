@@ -87,6 +87,7 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
       break;
     }
     case ClientCaptureEvent::kApiEventFixed:
+      api_event_processor_.ProcessApiEvent(event.api_event_fixed());
       break;
     case ClientCaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");

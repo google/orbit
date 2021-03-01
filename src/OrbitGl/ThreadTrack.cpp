@@ -168,8 +168,8 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
-        auto user_data = std::make_unique<PickingUserData>(
-            &text_box, [&](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
+        auto user_data =
+            std::make_unique<PickingUserData>(&text_box, [&](PickingId) { return ""; });
 
         if (is_visible_width) {
           if (!is_collapsed) {

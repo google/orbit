@@ -15,8 +15,10 @@ class ApiEventProcessor {
  public:
   ApiEventProcessor(CaptureListener* listener);
   void ProcessApiEvent(const orbit_grpc_protos::ApiEvent& event_buffer);
+  void ProcessApiEvent(const orbit_grpc_protos::ApiEventFixed& event_fixed);
 
  private:
+  void ProcessApiEvent(const orbit_api::ApiEvent& api_event);
   void ProcessStartEvent(const orbit_api::ApiEvent& api_event);
   void ProcessStopEvent(const orbit_api::ApiEvent& api_event);
   void ProcessAsyncStartEvent(const orbit_api::ApiEvent& api_event);

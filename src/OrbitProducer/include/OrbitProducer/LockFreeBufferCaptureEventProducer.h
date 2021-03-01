@@ -189,28 +189,29 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
 
           std::vector<orbit_grpc_protos::ProducerCaptureEvent*> translated_events;
           translated_events.resize(dequeued_event_count);
-          LOG("/====");
+          // LOG("/====");
+
+          // {
+          //   //ScopeTimer t("TranslateIntermediateEvents one by one");
+          for (size_t i = 0; i < dequeued_event_count; ++i) {
+            auto single_event =
+                TranslateSingleIntermediateEvent(std::move(dequeued_events[i]), &arena);
+            translated_events[i] = single_event;
+          }
+          // }
+
+          // translated_events.clear();
+          // translated_events.reserve(dequeued_event_count);
 
           {
-            ScopeTimer t("TranslateIntermediateEvents one by one");
-            for (size_t i = 0; i < dequeued_event_count; ++i) {
-              auto single_event =
-                  TranslateSingleIntermediateEvent(std::move(dequeued_events[i]), &arena);
-              translated_events[i] = single_event;
-            }
+            // ScopeTimer t("TranslateIntermediateEvents in bulk");
+            // translated_events =
+            //     TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count,
+            //     &arena);
           }
 
-          translated_events.clear();
-          translated_events.reserve(dequeued_event_count);
-
-          {
-            ScopeTimer t("TranslateIntermediateEvents in bulk");
-            translated_events =
-                TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count, &arena);
-          }
-
-          LOG("num_events: %u", dequeued_event_count);
-          LOG("\\====");
+          // LOG("num_events: %u", dequeued_event_count);
+          // LOG("\\====");
 
           ScopeTimer::OutputReport();
 

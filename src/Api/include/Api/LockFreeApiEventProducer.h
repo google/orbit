@@ -42,20 +42,23 @@ class LockFreeApiEventProducer
   }
 
   [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent* TranslateSingleIntermediateEvent(
-      orbit_api::ApiEvent&& intermediate_event, google::protobuf::Arena* arena) override {
+      orbit_api::ApiEvent&& event, google::protobuf::Arena* arena) override {
     auto* capture_event =
         google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
     auto* api_event = capture_event->mutable_api_event_fixed();
     (void)api_event;
-    (void)intermediate_event;
-    api_event->set_a0(0);
-    api_event->set_a1(1);
-    api_event->set_a2(2);
-    api_event->set_a3(3);
-    api_event->set_a4(4);
-    api_event->set_a5(5);
-    api_event->set_a6(6);
-    api_event->set_a7(7);
+    api_event->set_timestamp_ns(event.timestamp_ns);
+    api_event->set_pid(event.pid);
+    api_event->set_tid(event.tid);
+    api_event->set_type(event.encoded_event.event.type);
+    api_event->set_color(event.encoded_event.event.color);
+    api_event->set_data(event.encoded_event.event.data);
+    char* str = event.encoded_event.event.name;
+    uint64_t* str_as_uint64 = reinterpret_cast<uint64_t*>(str);
+    api_event->set_d0(str_as_uint64[0]);
+    api_event->set_d1(str_as_uint64[1]);
+    api_event->set_d2(str_as_uint64[2]);
+    api_event->set_d3(str_as_uint64[3]);
     return capture_event;
   }
 };

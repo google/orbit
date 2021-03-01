@@ -41,39 +41,78 @@ void ApiEventProcessor::ProcessApiEvent(const ApiEvent& event_buffer) {
 
   for (size_t i = 0; i < event_buffer.num_raw_events(); ++i) {
     const orbit_api::ApiEvent& api_event = raw_event_buffer[i];
-    orbit_api::EventType event_type = api_event.Type();
+    ProcessApiEvent(api_event);
+  }
+}
 
-    CheckThreadMonotonicity(api_event);
+/*
+message ApiEventFixed {
+  uint64 timestamp_ns = 1;
+  int32 pid = 2;
+  int32 tid = 3;
+  uint32 type = 4;
+  uint32 color = 5;
+  uint64 data = 6;
+  fixed64 d0 = 7;
+  fixed64 d1 = 8;
+  fixed64 d2 = 9;
+  fixed64 d3 = 10;
+  fixed64 d4 = 11;
+}
+*/
+void ApiEventProcessor::ProcessApiEvent(const orbit_grpc_protos::ApiEventFixed& event_fixed) {
+  orbit_api::ApiEvent event;
+  event.timestamp_ns = event_fixed.timestamp_ns();
+  event.pid = event_fixed.pid();
+  event.tid = event_fixed.tid();
+  event.encoded_event.event.type = event_fixed.type();
+  event.encoded_event.event.color = static_cast<orbit_api_color>(event_fixed.color());
+  event.encoded_event.event.data = event_fixed.data();
+  uint64_t str_as_uint64[4];
+  str_as_uint64[0] = event_fixed.d0();
+  str_as_uint64[1] = event_fixed.d1();
+  str_as_uint64[2] = event_fixed.d2();
+  str_as_uint64[3] = event_fixed.d3();
+  size_t num_chars = sizeof(str_as_uint64);
+  CHECK(num_chars < orbit_api::kMaxEventStringSize);
+  std::memcpy(event.encoded_event.event.name, &str_as_uint64, num_chars);
+  event.encoded_event.event.name[num_chars] = '\0';
+  ProcessApiEvent(event);
+}
 
-    switch (event_type) {
-      case orbit_api::kScopeStart:
-        ProcessStartEvent(api_event);
-        break;
-      case orbit_api::kScopeStop:
-        ProcessStopEvent(api_event);
-        break;
-      case orbit_api::kScopeStartAsync:
-        ProcessAsyncStartEvent(api_event);
-        break;
-      case orbit_api::kScopeStopAsync:
-        ProcessAsyncStopEvent(api_event);
-        break;
+void ApiEventProcessor::ProcessApiEvent(const orbit_api::ApiEvent& api_event) {
+  orbit_api::EventType event_type = api_event.Type();
 
-      case orbit_api::kTrackInt:
-      case orbit_api::kTrackInt64:
-      case orbit_api::kTrackUint:
-      case orbit_api::kTrackUint64:
-      case orbit_api::kTrackFloat:
-      case orbit_api::kTrackDouble:
-      case orbit_api::kString:
-        ProcessTrackingEvent(api_event);
-        break;
-      case orbit_api::kNone:
-        LOG("orbit_api::kNone");
-        break;
-      default:
-        ERROR("ApiEvent::EVENT_NOT_SET read from Capture's gRPC stream");
-    }
+  CheckThreadMonotonicity(api_event);
+
+  switch (event_type) {
+    case orbit_api::kScopeStart:
+      ProcessStartEvent(api_event);
+      break;
+    case orbit_api::kScopeStop:
+      ProcessStopEvent(api_event);
+      break;
+    case orbit_api::kScopeStartAsync:
+      ProcessAsyncStartEvent(api_event);
+      break;
+    case orbit_api::kScopeStopAsync:
+      ProcessAsyncStopEvent(api_event);
+      break;
+
+    case orbit_api::kTrackInt:
+    case orbit_api::kTrackInt64:
+    case orbit_api::kTrackUint:
+    case orbit_api::kTrackUint64:
+    case orbit_api::kTrackFloat:
+    case orbit_api::kTrackDouble:
+    case orbit_api::kString:
+      ProcessTrackingEvent(api_event);
+      break;
+    case orbit_api::kNone:
+      LOG("orbit_api::kNone");
+      break;
+    default:
+      ERROR("ApiEvent::EVENT_NOT_SET read from Capture's gRPC stream");
   }
 }
 

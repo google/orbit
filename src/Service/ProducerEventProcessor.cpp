@@ -15,6 +15,7 @@ namespace {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiEvent;
+using orbit_grpc_protos::ApiEventFixed;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::ClientCaptureEvent;
@@ -94,7 +95,11 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage);
 =======
   void ProcessApiEvent(ApiEvent* api_event);
+<<<<<<< HEAD
 >>>>>>> a5c36ef0 (Rebase and adapt to latest changes)
+=======
+  void ProcessApiEventFixed(ApiEventFixed* api_event);
+>>>>>>> 32492373 (Add ApiEventFixed for perf investigation)
 
   void SendInternedStringEvent(uint64_t key, std::string value);
 
@@ -328,6 +333,12 @@ void ProducerEventProcessorImpl::ProcessApiEvent(ApiEvent* api_event) {
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessApiEventFixed(ApiEventFixed* api_event_fixed) {
+  ClientCaptureEvent event;
+  *event.mutable_api_event_fixed() = std::move(*api_event_fixed);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) {
   switch (event.event_case()) {
     case ProducerCaptureEvent::kInternedCallstack:
@@ -380,6 +391,7 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     }
     case ProducerCaptureEvent::kApiEventFixed: {
+      ProcessApiEventFixed(event.mutable_api_event_fixed());
       break;
     }
     case ProducerCaptureEvent::EVENT_NOT_SET:
