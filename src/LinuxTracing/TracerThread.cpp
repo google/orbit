@@ -598,11 +598,11 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   RetrieveInitialThreadNamesSystemWideAndNotifyListener(effective_capture_start_timestamp_ns_);
 
   // Get the initial association of tids to pids and pass it to switches_states_names_visitor_.
-  RetrieveTidToPidAssociationSystemWide();
+  RetrieveInitialTidToPidAssociationSystemWide();
 
   if (trace_thread_state_) {
     // Get the initial thread states and pass them to switches_states_names_visitor_.
-    RetrieveThreadStatesOfTarget();
+    RetrieveInitialThreadStatesOfTarget();
   }
 
   stats_.Reset();
@@ -1011,7 +1011,7 @@ void TracerThread::RetrieveInitialThreadNamesSystemWideAndNotifyListener(
   }
 }
 
-void TracerThread::RetrieveTidToPidAssociationSystemWide() {
+void TracerThread::RetrieveInitialTidToPidAssociationSystemWide() {
   for (pid_t pid : GetAllPids()) {
     for (pid_t tid : GetTidsOfProcess(pid)) {
       switches_states_names_visitor_->ProcessInitialTidToPidAssociation(tid, pid);
@@ -1019,7 +1019,7 @@ void TracerThread::RetrieveTidToPidAssociationSystemWide() {
   }
 }
 
-void TracerThread::RetrieveThreadStatesOfTarget() {
+void TracerThread::RetrieveInitialThreadStatesOfTarget() {
   for (pid_t tid : GetTidsOfProcess(target_pid_)) {
     uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
     std::optional<char> state = GetThreadState(tid);

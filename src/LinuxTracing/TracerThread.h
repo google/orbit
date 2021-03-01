@@ -96,8 +96,8 @@ class TracerThread {
   void ProcessDeferredEvents();
 
   void RetrieveInitialThreadNamesSystemWideAndNotifyListener(uint64_t initial_timestamp_ns);
-  void RetrieveTidToPidAssociationSystemWide();
-  void RetrieveThreadStatesOfTarget();
+  void RetrieveInitialTidToPidAssociationSystemWide();
+  void RetrieveInitialThreadStatesOfTarget();
 
   void PrintStatsIfTimerElapsed();
 
