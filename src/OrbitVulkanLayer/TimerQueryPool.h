@@ -55,6 +55,19 @@ class TimerQueryPool {
     }
   }
 
+  // Destroys the VkQueryPool for the given device
+  void DestroyTimerQueryPool(VkDevice device) {
+    absl::WriterMutexLock lock(&mutex_);
+    CHECK(device_to_query_pool_.contains(device));
+    VkQueryPool query_pool = device_to_query_pool_.at(device);
+    device_to_query_slots_.erase(device);
+    device_to_potential_next_free_index_.erase(device);
+
+    dispatch_table_->DestroyQueryPool(device)(device, query_pool, nullptr);
+
+    device_to_query_pool_.erase(device);
+  }
+
   // Retrieves the query pool for a given device. Note that the pool must be initialized using
   // `InitializeTimerQueryPool` before.
   [[nodiscard]] VkQueryPool GetQueryPool(VkDevice device) {

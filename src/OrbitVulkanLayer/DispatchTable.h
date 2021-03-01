@@ -232,6 +232,17 @@ class DispatchTable {
   }
 
   template <typename DispatchableType>
+  PFN_vkDestroyQueryPool DestroyQueryPool(DispatchableType dispatchable_object) {
+    void* key = GetDispatchTableKey(dispatchable_object);
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      CHECK(device_dispatch_table_.contains(key));
+      CHECK(device_dispatch_table_.at(key).DestroyQueryPool != nullptr);
+      return device_dispatch_table_.at(key).DestroyQueryPool;
+    }
+  }
+
+  template <typename DispatchableType>
   PFN_vkResetQueryPoolEXT ResetQueryPoolEXT(DispatchableType dispatchable_object) {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
