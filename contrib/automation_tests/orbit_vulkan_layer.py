@@ -13,7 +13,7 @@ from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToS
 """Basic smoke test for the Vulkan layer functionality using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
-"benchmark" has to be started with the "--orbit" option.
+"UE4Game.elf" has to be started with the "--orbit" option.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
@@ -29,7 +29,7 @@ This automation script covers a basic workflow:
 def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
-        FilterAndSelectFirstProcess(process_filter="benchmark"),
+        FilterAndSelectFirstProcess(process_filter="UE4Game"),
         Capture(),
         MatchTracks(expected_names=["gfx", "gfx_marker"], allow_additional_tracks=True)]
     suite = E2ETestSuite(test_name="Vulkan Layer", test_cases=test_cases)
