@@ -111,6 +111,8 @@ void DispatchTable::CreateDeviceDispatchTable(
 
   dispatch_table.CreateQueryPool = absl::bit_cast<PFN_vkCreateQueryPool>(
       next_get_device_proc_addr_function(device, "vkCreateQueryPool"));
+  dispatch_table.DestroyQueryPool = absl::bit_cast<PFN_vkDestroyQueryPool>(
+      next_get_device_proc_addr_function(device, "vkDestroyQueryPool"));
   dispatch_table.ResetQueryPoolEXT = absl::bit_cast<PFN_vkResetQueryPoolEXT>(
       next_get_device_proc_addr_function(device, "vkResetQueryPoolEXT"));
 

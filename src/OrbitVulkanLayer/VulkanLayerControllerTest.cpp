@@ -93,6 +93,7 @@ class MockTimerQueryPool {
  public:
   explicit MockTimerQueryPool(MockDispatchTable* /*dispatch_table*/, uint32_t /*num_slots*/) {}
   MOCK_METHOD(void, InitializeTimerQueryPool, (VkDevice));
+  MOCK_METHOD(void, DestroyTimerQueryPool, (VkDevice));
 };
 
 struct Color {
@@ -718,6 +719,8 @@ TEST_F(VulkanLayerControllerTest, WillCleanUpOnDestroyDevice) {
   EXPECT_CALL(*dispatch_table, RemoveDeviceDispatchTable).Times(1);
   const MockDeviceManager* device_manager = controller_.device_manager();
   EXPECT_CALL(*device_manager, UntrackLogicalDevice).Times(1);
+  const MockTimerQueryPool* query_pool = controller_.timer_query_pool();
+  EXPECT_CALL(*query_pool, DestroyTimerQueryPool).Times(1);
 
   VkDevice device = {};
 

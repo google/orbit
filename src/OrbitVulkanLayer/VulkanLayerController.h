@@ -218,6 +218,7 @@ class VulkanLayerController {
     PFN_vkDestroyDevice destroy_device_function = dispatch_table_.DestroyDevice(device);
     CHECK(destroy_device_function != nullptr);
     device_manager_.UntrackLogicalDevice(device);
+    timer_query_pool_.DestroyTimerQueryPool(device);
     dispatch_table_.RemoveDeviceDispatchTable(device);
 
     destroy_device_function(device, allocator);

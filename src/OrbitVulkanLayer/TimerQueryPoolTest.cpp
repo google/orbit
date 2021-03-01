@@ -16,6 +16,7 @@ class MockDispatchTable {
  public:
   MOCK_METHOD(PFN_vkCreateQueryPool, CreateQueryPool, (VkDevice), ());
   MOCK_METHOD(PFN_vkResetQueryPoolEXT, ResetQueryPoolEXT, (VkDevice), ());
+  MOCK_METHOD(PFN_vkDestroyQueryPool, DestroyQueryPool, (VkDevice), ());
 };
 
 PFN_vkCreateQueryPool dummy_create_query_pool_function =
@@ -77,6 +78,33 @@ TEST(TimerQueryPool, InitializationWillCreateAndResetAPool) {
       .WillOnce(Return(mock_reset_query_pool_function));
 
   query_pool.InitializeTimerQueryPool(device);
+}
+
+TEST(TimerQueryPool, DestroyPoolForDeviceWillCallDestroyQueryPool) {
+  MockDispatchTable dispatch_table;
+
+  static constexpr uint32_t kNumSlots = 4;
+  TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, kNumSlots);
+  VkDevice device = {};
+
+  EXPECT_CALL(dispatch_table, CreateQueryPool)
+      .WillRepeatedly(Return(dummy_create_query_pool_function));
+  EXPECT_CALL(dispatch_table, ResetQueryPoolEXT)
+      .WillRepeatedly(Return(dummy_reset_query_pool_function));
+
+  static bool was_called = false;
+  PFN_vkDestroyQueryPool mock_destroy_query_pool_function =
+      +[](VkDevice /*device*/, VkQueryPool /*query_pool*/,
+          const VkAllocationCallbacks* /*allocator*/
+       ) { was_called = true; };
+
+  EXPECT_CALL(dispatch_table, DestroyQueryPool)
+      .Times(1)
+      .WillOnce(Return(mock_destroy_query_pool_function));
+
+  query_pool.InitializeTimerQueryPool(device);
+  query_pool.DestroyTimerQueryPool(device);
+  EXPECT_TRUE(was_called);
 }
 
 TEST(TimerQueryPool, QueryPoolCanBeRetrievedAfterInitialization) {
