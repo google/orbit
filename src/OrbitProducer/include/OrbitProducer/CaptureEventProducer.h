@@ -32,7 +32,7 @@ class CaptureEventProducer {
   }
 
   // This method allows to specify how frequently a reconnection with the service should
-  // be attempted when the connection fails or is interrupted. The default is 5 seconds.
+  // be attempted when the connection fails or is interrupted. The default is 4 seconds.
   void SetReconnectionDelayMs(uint64_t ms) { reconnection_delay_ms_ = ms; }
 
  protected:
@@ -80,7 +80,7 @@ class CaptureEventProducer {
   bool shutdown_requested_ = false;
   absl::Mutex shutdown_requested_mutex_;
 
-  std::atomic<uint64_t> reconnection_delay_ms_ = 5000;
+  std::atomic<uint64_t> reconnection_delay_ms_ = 4000;
 };
 
 }  // namespace orbit_producer
