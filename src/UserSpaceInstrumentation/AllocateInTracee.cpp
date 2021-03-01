@@ -12,6 +12,7 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -70,7 +71,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
 
 // Execute a single syscall instruction in tracee `pid`. `syscall` identifies the syscall as in this
 // list: https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl
-// The parameters and the ordering is the same as in the c wrapper:
+// The parameters and the ordering are the same as in the C wrapper:
 // https://man7.org/linux/man-pages/dir_section_2.html
 [[nodiscard]] ErrorMessageOr<uint64_t> SyscallInTracee(pid_t pid, uint64_t syscall, uint64_t arg_0,
                                                        uint64_t arg_1 = 0, uint64_t arg_2 = 0,
@@ -99,7 +100,7 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   // Backup first 8 bytes.
   const uint64_t backup_module_code = ptrace(PTRACE_PEEKDATA, pid, address_start, NULL);
   if (errno) {
-    return ErrorMessage(absl::StrFormat("Failed to PTRACE_PEEKDATA with errno: %d \"%s\"", errno,
+    return ErrorMessage(absl::StrFormat("Failed to PTRACE_PEEKDATA with errno %d: \"%s\"", errno,
                                         SafeStrerror(errno)));
   }
 
@@ -164,25 +165,27 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
 }  // namespace
 
 [[nodiscard]] ErrorMessageOr<uint64_t> AllocateInTracee(pid_t pid, uint64_t size) {
-  // Syscall will equivalent to:
+  // Syscall will be equivalent to:
   // `mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`
-  auto result_or_error =
-      SyscallInTracee(pid, 9, static_cast<uint64_t>(NULL), size, PROT_READ | PROT_WRITE | PROT_EXEC,
-                      MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0);
+  constexpr uint64_t kSyscallNumberMmap = 9;
+  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, static_cast<uint64_t>(NULL), size,
+                                         PROT_READ | PROT_WRITE | PROT_EXEC,
+                                         MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0);
   if (!result_or_error) {
-    ErrorMessage(
-        absl::StrFormat("Failed to do mmap syscall: \"%s\"", result_or_error.error().message()));
+    ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
+                                 result_or_error.error().message()));
   }
   return result_or_error.value();
 }
 
 [[nodiscard]] ErrorMessageOr<void> FreeInTracee(pid_t pid, uint64_t address, uint64_t size) {
-  // Syscall will equivalent to:
+  // Syscall will be equivalent to:
   // `munmap(address, size)`
-  auto result_or_error = SyscallInTracee(pid, 11, address, size);
+  constexpr uint64_t kSyscallNumberMunmap = 11;
+  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMunmap, address, size);
   if (!result_or_error) {
-    ErrorMessage(
-        absl::StrFormat("Failed to do munmap syscall: \"%s\"", result_or_error.error().message()));
+    ErrorMessage(absl::StrFormat("Failed to execute munmap syscall: \"%s\"",
+                                 result_or_error.error().message()));
   }
   return outcome::success();
 }

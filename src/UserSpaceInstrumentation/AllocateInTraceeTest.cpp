@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <csignal>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -27,27 +28,9 @@ namespace {
 using orbit_base::ReadFileToString;
 using orbit_base::WriteStringToFile;
 
-// Let the parent trace us, write address of `go_on` into file, then enter a breakpoint. While the
-// child is stopped the parent can modify `go_on` in which case the child exits the endless loop
-// when continued.
-void Child(std::filesystem::path p) {
-  CHECK(ptrace(PTRACE_TRACEME, 0, NULL, 0) != -1);
-  volatile uint64_t go_on = 42;
-  std::string s = absl::StrFormat("%p", &go_on);
-  CHECK(WriteStringToFile(p, s));
-
-  __asm__ __volatile__("int3\n\t");
-
-  uint64_t data = 0;
-  while (go_on == 42) {
-    data++;
-  }
-  exit(0);
-}
-
-// Returns true if `tid` has a readable, writeable, and executable memory segment at `address`.
-bool DoesAddressRangeExit(pid_t tid, uint64_t address) {
-  auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", tid));
+// Returns true if `pid` has a readable, writeable, and executable memory segment at `address`.
+bool ProcessHasRwxMapAtAddress(pid_t pid, uint64_t address) {
+  auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   CHECK(result_read_maps);
   std::vector<std::string> lines =
       absl::StrSplit(result_read_maps.value(), '\n', absl::SkipEmpty());
@@ -71,23 +54,15 @@ bool DoesAddressRangeExit(pid_t tid, uint64_t address) {
 }  // namespace
 
 TEST(AllocateInTraceeTest, AllocateAndFree) {
-  std::filesystem::path p = std::tmpnam(nullptr);
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
-    Child(p);
+    // Child just runs an endless loop.
+    while (true) {
+    }
   }
 
-  // Wait for child to break and get the address of the `go_on` variable on the child side.
-  waitpid(pid, NULL, 0);
-  auto result_go_on = ReadFileToString(p);
-  CHECK(result_go_on);
-  const uint64_t address_go_on = std::stoull(result_go_on.value(), nullptr, 16);
-
-  // Continue child by detaching.
-  CHECK(ptrace(PTRACE_DETACH, pid, nullptr, nullptr) != -1);
-
-  // Stop the process again using our tooling.
+  // Stop the process using our tooling.
   CHECK(AttachAndStopProcess(pid));
 
   // Allocate a megabyte in the tracee.
@@ -95,15 +70,16 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   auto result_allocate = AllocateInTracee(pid, kMemorySize);
   CHECK(result_allocate);
 
-  EXPECT_TRUE(DoesAddressRangeExit(pid, result_allocate.value()));
+  EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
+  // Free the memory.
   CHECK(FreeInTracee(pid, result_allocate.value(), kMemorySize));
 
-  EXPECT_FALSE(DoesAddressRangeExit(pid, result_allocate.value()));
+  EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
-  // Alter `go_on` so that the child will exit, continue, and wait for the exit to happen.
-  CHECK(ptrace(PTRACE_POKEDATA, pid, address_go_on, 54) != -1);
+  // Detach and end child.
   CHECK(DetachAndContinueProcess(pid));
+  kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
 
