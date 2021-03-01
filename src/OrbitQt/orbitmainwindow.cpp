@@ -139,6 +139,7 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
   orbit_code_viewer::Dialog dialog{};
   dialog.setWindowTitle("Orbit Disassembly");
   dialog.SetEnableLineNumbers(true);
+  dialog.SetEnableSampleCounters(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
   dialog.SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
@@ -1388,6 +1389,7 @@ void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, siz
 
   if (maybe_code_report.has_value()) {
     CHECK(maybe_code_report->get() != nullptr);
+    code_viewer_dialog.SetEnableSampleCounters(true);
     code_viewer_dialog.SetHeatmap(kHeatmapAreaWidth, maybe_code_report->get());
   }
 

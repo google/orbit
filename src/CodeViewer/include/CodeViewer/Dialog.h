@@ -55,6 +55,8 @@ class Dialog : public QDialog {
   void ClearHeatmap();
 
   void SetEnableLineNumbers(bool enabled);
+  void SetEnableSampleCounters(bool enabled);
+
   void SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right);
 
   void GoToLineNumber(size_t line_number);
