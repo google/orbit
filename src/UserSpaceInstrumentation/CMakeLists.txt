@@ -24,6 +24,8 @@ target_sources(UserSpaceInstrumentation PUBLIC
 
 target_sources(UserSpaceInstrumentation PRIVATE
         Attach.cpp
+        AllocateInTracee.cpp
+        AllocateInTracee.h
         RegisterState.cpp)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
@@ -40,6 +42,7 @@ target_include_directories(UserSpaceInstrumentationTests PRIVATE
 
 target_sources(UserSpaceInstrumentationTests PRIVATE
         AttachTest.cpp
+        AllocateInTraceeTest.cpp
         RegisterStateTest.cpp
         TestProcess.cpp)
 
