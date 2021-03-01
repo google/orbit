@@ -18,7 +18,6 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/WriteStringToFile.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
@@ -26,10 +25,9 @@ namespace orbit_user_space_instrumentation {
 namespace {
 
 using orbit_base::ReadFileToString;
-using orbit_base::WriteStringToFile;
 
 // Returns true if `pid` has a readable, writeable, and executable memory segment at `address`.
-bool ProcessHasRwxMapAtAddress(pid_t pid, uint64_t address) {
+[[nodiscard]] bool ProcessHasRwxMapAtAddress(pid_t pid, uint64_t address) {
   auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   CHECK(result_read_maps.has_value());
   std::vector<std::string> lines =

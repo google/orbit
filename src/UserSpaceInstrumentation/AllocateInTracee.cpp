@@ -29,8 +29,8 @@ using orbit_base::ReadFileToString;
 
 // Returns the address range of the first executable memory region. In every case I encountered this
 // was the second line in the `maps` file corresponding to the code of the process we look at.
-// However we don't really care. So keeping it general and just search for a executable region is
-// probalby helping stability.
+// However we don't really care. So keeping it general and just searching for an executable region
+// is probably helping stability.
 [[nodiscard]] ErrorMessageOr<void> GetFirstExecutableMemoryRegion(pid_t pid, uint64_t* addr_start,
                                                                   uint64_t* addr_end) {
   auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
@@ -51,20 +51,20 @@ using orbit_base::ReadFileToString;
   return ErrorMessage(absl::StrFormat("Unable to locate executable memory area in pid: %d", pid));
 }
 
-// Write `bytes` into memory of thread `tid` starting from `address_start`.
+// Write `bytes` into memory of process `pid` starting from `address_start`.
 // Note that we write multiples of eight bytes at once. If length of `bytes` is not a multiple of
 // eight the remaining bytes are zeroed out.
-void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
+void WriteBytesIntoTraceesMemory(pid_t pid, uint64_t address_start,
                                  const std::vector<uint8_t>& bytes) {
   size_t pos = 0;
   do {
     // Pack 8 byte for writing into `data`.
     uint64_t data = 0;
-    for (size_t i = 0; i < 8 && pos + i < bytes.size(); i++) {
+    for (size_t i = 0; i < sizeof(data) && pos + i < bytes.size(); i++) {
       uint64_t t = bytes[pos + i];
       data |= t << (8 * i);
     }
-    CHECK(ptrace(PTRACE_POKEDATA, tid, address_start + pos, data) != -1);
+    CHECK(ptrace(PTRACE_POKEDATA, pid, address_start + pos, data) != -1);
     pos += 8;
   } while (pos < bytes.size());
 }
@@ -144,7 +144,8 @@ void WriteBytesIntoTraceesMemory(pid_t tid, uint64_t address_start,
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
   // Syscalls return -4095, ..., -1 on failure.
-  if (result >= 0xfffffffffffff001) {
+  const int64_t result_as_int = reinterpret_cast<uint64_t>(result);
+  if (result_as_int > -4096 && result_as_int < 0) {
     return ErrorMessage(absl::StrFormat("syscall failed. Return value: %u", result));
   }
 
