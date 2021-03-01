@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
   dialog.SetHeatmap(orbit_code_viewer::FontSizeInEm{1.2f}, &code_report);
 
   dialog.SetEnableLineNumbers(true);
+  dialog.SetEnableSampleCounters(true);
   dialog.GoToLineNumber(10);
   dialog.SetHighlightCurrentLine(true);
 

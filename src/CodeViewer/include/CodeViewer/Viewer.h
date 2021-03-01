@@ -50,6 +50,7 @@ class Viewer : public QPlainTextEdit {
   explicit Viewer(QWidget* parent);
 
   void SetEnableLineNumbers(bool enabled);
+  void SetEnableSampleCounters(bool is_enabled);
   void SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right);
 
   void SetHeatmapBarWidth(FontSizeInEm width);
@@ -64,11 +65,19 @@ class Viewer : public QPlainTextEdit {
   void resizeEvent(QResizeEvent* ev) override;
   void wheelEvent(QWheelEvent* ev) override;
   void DrawLineNumbers(QPaintEvent* event);
-  void UpdateLeftSidebarWidth();
+  void DrawSampleCounters(QPaintEvent* event);
+
+  void UpdateSidebarsWidth();
+  void UpdateSidebarPositions();
   void HighlightCurrentLine();
+  [[nodiscard]] int WidthPercentageColumn() const;
+  [[nodiscard]] int WidthSampleCounterColumn() const;
+  [[nodiscard]] int WidthMarginBetweenColumns() const;
 
   PlaceHolderWidget left_sidebar_widget_;
+  PlaceHolderWidget right_sidebar_widget_;
   bool line_numbers_enabled_ = false;
+  bool sample_counters_enabled_ = false;
   FontSizeInEm left_margin_ = FontSizeInEm{0.3f};
   FontSizeInEm right_margin_ = FontSizeInEm{0.3f};
 
