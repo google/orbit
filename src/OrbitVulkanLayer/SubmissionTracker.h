@@ -209,6 +209,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   void MarkCommandBufferBegin(VkCommandBuffer command_buffer) {
+    absl::WriterMutexLock lock(&mutex_);
     // Even when we are not capturing we create state for this command buffer to allow the
     // debug marker tracking. In order to compute the correct depth of a debug marker and being able
     // to match an "end" marker with the corresponding "begin" marker, we maintain a stack of all
@@ -218,17 +219,15 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     // submission. We will not write timestamps in this case and thus don't store any information
     // other than the debug markers then.
     {
-      absl::WriterMutexLock lock(&mutex_);
       CHECK(!command_buffer_to_state_.contains(command_buffer));
       command_buffer_to_state_[command_buffer] = {};
     }
-    if (!IsCapturing()) {
+    if (!is_capturing_) {
       return;
     }
 
     uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     {
-      absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       command_buffer_to_state_.at(command_buffer).command_buffer_begin_slot_index =
           std::make_optional(slot_index);
@@ -236,30 +235,28 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   void MarkCommandBufferEnd(VkCommandBuffer command_buffer) {
-    if (!IsCapturing()) {
+    absl::WriterMutexLock lock(&mutex_);
+    if (!is_capturing_) {
       return;
     }
 
     uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
 
     {
-      absl::ReaderMutexLock lock(&mutex_);
       // MarkCommandBufferBegin/End are called from within the same submit, and as the
       // `MarkCommandBufferBegin` will always insert the state, we can assume that it is there.
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& command_buffer_state = command_buffer_to_state_.at(command_buffer);
-      // Writing to this field is safe, as there can't be any operation on this command buffer
-      // in parallel.
       command_buffer_state.command_buffer_end_slot_index = std::make_optional(slot_index);
     }
   }
 
   void MarkDebugMarkerBegin(VkCommandBuffer command_buffer, const char* text, Color color) {
+    absl::WriterMutexLock lock(&mutex_);
     // It is ensured by the Vulkan spec. that `text` must not be nullptr.
     CHECK(text != nullptr);
     bool marker_depth_exceeds_maximum;
     {
-      absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       ++state.local_marker_stack_size;
@@ -272,14 +269,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       state.markers.emplace_back(std::move(marker));
     }
 
-    if (!IsCapturing() || marker_depth_exceeds_maximum) {
+    if (!is_capturing_ || marker_depth_exceeds_maximum) {
       return;
     }
 
     uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
     {
-      absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       state.markers.back().slot_index = std::make_optional(slot_index);
@@ -287,9 +283,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   void MarkDebugMarkerEnd(VkCommandBuffer command_buffer) {
+    absl::WriterMutexLock lock(&mutex_);
     bool marker_depth_exceeds_maximum;
     {
-      absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       marker_depth_exceeds_maximum =
@@ -303,13 +299,12 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       }
     }
 
-    if (!IsCapturing() || marker_depth_exceeds_maximum) {
+    if (!is_capturing_ || marker_depth_exceeds_maximum) {
       return;
     }
 
     uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     {
-      absl::WriterMutexLock lock(&mutex_);
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       state.markers.back().slot_index = std::make_optional(slot_index);
@@ -327,9 +322,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // This allows us to map submissions from the Vulkan layer to the driver submissions.
   [[nodiscard]] std::optional<QueueSubmission> PersistCommandBuffersOnSubmit(
       VkQueue queue, uint32_t submit_count, const VkSubmitInfo* submits) {
-    if (!IsCapturing()) {
-      // `PersistDebugMarkersOnSubmit` and `OnCaptureFinished` will take care of clean up and
-      // slot resetting.
+    absl::WriterMutexLock lock(&mutex_);
+    if (!is_capturing_) {
+      // `OnCaptureFinished` has already been called and has taken care of resetting slots.
       return std::nullopt;
     }
 
@@ -499,6 +494,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // This method also resets all the timer slots that have been read.
   // It is assumed to be called periodically, e.g. on `vkQueuePresentKHR`.
   void CompleteSubmits(VkDevice device) {
+    absl::WriterMutexLock lock(&mutex_);
     VkQueryPool query_pool = timer_query_pool_->GetQueryPool(device);
     std::vector<QueueSubmission> completed_submissions =
         PullCompletedSubmissions(device, query_pool);
@@ -578,8 +574,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   void OnCaptureStart(orbit_grpc_protos::CaptureOptions capture_options) override {
+    absl::WriterMutexLock lock(&mutex_);
     SetMaxLocalMarkerDepthPerCommandBuffer(
         capture_options.max_local_marker_depth_per_command_buffer());
+    is_capturing_ = true;
   }
 
   void OnCaptureStop() override {}
@@ -615,6 +613,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     if (!slots_to_reset.empty()) {
       timer_query_pool_->ResetQuerySlots(device, slots_to_reset);
     }
+
+    is_capturing_ = false;
   }
 
  private:
@@ -659,9 +659,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   uint32_t RecordTimestamp(VkCommandBuffer command_buffer,
                            VkPipelineStageFlagBits pipeline_stage_flags) {
+    mutex_.AssertReaderHeld();
     VkDevice device;
     {
-      absl::ReaderMutexLock lock(&mutex_);
       CHECK(command_buffer_to_device_.contains(command_buffer));
       device = command_buffer_to_device_.at(command_buffer);
     }
@@ -678,9 +678,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   std::vector<QueueSubmission> PullCompletedSubmissions(VkDevice device, VkQueryPool query_pool) {
+    mutex_.AssertHeld();
     std::vector<QueueSubmission> completed_submissions = {};
-
-    absl::WriterMutexLock lock(&mutex_);
     for (auto& [unused_queue, queue_submissions] : queue_to_submissions_) {
       auto submission_it = queue_submissions.begin();
       while (submission_it != queue_submissions.end()) {
@@ -933,6 +932,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   // This method does not acquire a lock and MUST NOT be called without holding the `mutex_`.
   void ResetCommandBufferUnsafe(VkCommandBuffer command_buffer) {
+    mutex_.AssertHeld();
     if (!command_buffer_to_state_.contains(command_buffer)) {
       return;
     }
@@ -973,11 +973,15 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // We use std::numeric_limits<uint32_t>::max() to disable filtering of markers and 0 to discard
   // all debug markers.
   uint32_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint32_t>::max();
-
-  [[nodiscard]] bool IsCapturing() {
-    return vulkan_layer_producer_ != nullptr && vulkan_layer_producer_->IsCapturing();
-  }
   VulkanLayerProducer* vulkan_layer_producer_ = nullptr;
+
+  // This boolean is precisely true between a call to OnCaptureStart and OnCaptureFinished. In
+  // particular, OnCaptureFinished changes command buffer state and resets query slots, and we
+  // must ensure state remains consistent with respect to calls to marking begins and ends of
+  // command buffers and debug markers. A consistent state allows proper cleanup of query slots
+  // either in OnCaptureFinished or when completing submits. Note that calling
+  // vulkan_layer_producer_->IsCapturing() is not a correct replacement for checking this boolean.
+  bool is_capturing_ = false;
 };
 
 }  // namespace orbit_vulkan_layer
