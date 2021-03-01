@@ -161,7 +161,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
 
   // The first command buffer acts as our reference needed to align GPU time based events in the
   // CPU timeline. If we have no result for it -- which is the case if we started capturing within
-  // its execution -- we need to give up for this.
+  // its execution -- we need to discard the submission.
   if (first_command_buffer.has_value() && first_command_buffer->begin_gpu_timestamp_ns() == 0) {
     return result;
   }
