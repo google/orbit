@@ -8,12 +8,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <optional>
+
 class CodeReport {
  public:
   virtual ~CodeReport() = default;
   [[nodiscard]] virtual uint32_t GetNumSamplesInFunction() const = 0;
   [[nodiscard]] virtual uint32_t GetNumSamples() const = 0;
-  [[nodiscard]] virtual uint32_t GetNumSamplesAtLine(size_t line) const = 0;
+
+  // A returned empty optional means there is no data available for this line.
+  [[nodiscard]] virtual std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const = 0;
 };
 
 #endif  // ORBIT_GL_CODE_REPORT_H_

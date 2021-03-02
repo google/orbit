@@ -29,7 +29,7 @@ class DisassemblyReport : public CodeReport {
 
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return function_count_; }
   [[nodiscard]] uint32_t GetNumSamples() const override { return samples_count_; }
-  [[nodiscard]] uint32_t GetNumSamplesAtLine(size_t line) const override;
+  [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override;
 
  private:
   const Disassembler disasm_;

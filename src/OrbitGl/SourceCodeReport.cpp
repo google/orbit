@@ -4,6 +4,8 @@
 
 #include "SourceCodeReport.h"
 
+#include <optional>
+
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
 
@@ -42,8 +44,8 @@ SourceCodeReport::SourceCodeReport(std::string_view source_file,
   }
 }
 
-uint32_t SourceCodeReport::GetNumSamplesAtLine(size_t line) const {
-  if (!number_of_samples_per_line_.contains(line)) return 0;
+std::optional<uint32_t> SourceCodeReport::GetNumSamplesAtLine(size_t line) const {
+  if (!number_of_samples_per_line_.contains(line)) return std::nullopt;
   return number_of_samples_per_line_.at(line);
 }
 

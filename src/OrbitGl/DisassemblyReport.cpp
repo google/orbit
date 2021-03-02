@@ -4,12 +4,15 @@
 
 #include "DisassemblyReport.h"
 
-uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
-  if (function_count_ == 0) {
-    return 0;
-  }
+std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
   uint64_t address = disasm_.GetAddressAtLine(line);
   if (address == 0) {
+    // We return an empty optional when there is no data available for the current line.
+    // That allows the user to differentiate between a line without samples and a line without data.
+    return std::nullopt;
+  }
+
+  if (function_count_ == 0) {
     return 0;
   }
 

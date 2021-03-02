@@ -33,7 +33,7 @@ class SourceCodeReport : public CodeReport {
     return total_samples_in_function_;
   }
   [[nodiscard]] uint32_t GetNumSamples() const override { return total_samples_in_capture_; }
-  [[nodiscard]] uint32_t GetNumSamplesAtLine(size_t line) const override;
+  [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override;
 
  private:
   absl::flat_hash_map<uint32_t, uint32_t> number_of_samples_per_line_;

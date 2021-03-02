@@ -104,10 +104,12 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
       const QRect heatmap_rect{0, top_of(block), heatmap_bar_width_.ToPixels(fontMetrics()),
                                fontMetrics().height()};
 
-      const size_t num_samples_in_line = code_report_->GetNumSamplesAtLine(block.blockNumber() + 1);
-      const size_t num_samples_in_function = code_report_->GetNumSamplesInFunction();
-      const float intensity =
-          std::clamp(static_cast<float>(num_samples_in_line) / num_samples_in_function, 0.0f, 1.0f);
+      const uint32_t num_samples_in_line =
+          code_report_->GetNumSamplesAtLine(block.blockNumber() + 1).value_or(0);
+      const uint32_t num_samples_in_function = code_report_->GetNumSamplesInFunction();
+      const float intensity = std::clamp(
+          static_cast<float>(num_samples_in_line) / static_cast<float>(num_samples_in_function),
+          0.0f, 1.0f);
       const auto scaled_intensity = static_cast<int>(std::sqrt(intensity) * 255);
       QColor color = kHeatmapColor;
       color.setAlpha(scaled_intensity);
