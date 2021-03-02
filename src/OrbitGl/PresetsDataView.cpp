@@ -17,6 +17,8 @@
 #include "App.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
+#include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetLoadState.h"
@@ -43,7 +45,9 @@ std::string GetLoadStateString(OrbitApp* app,
 }
 }  // namespace
 
-PresetsDataView::PresetsDataView(OrbitApp* app) : DataView(DataViewType::kPresets, app) {}
+PresetsDataView::PresetsDataView(OrbitApp* app,
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : DataView(DataViewType::kPresets, app), metrics_uploader_(metrics_uploader) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) const {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -150,6 +154,8 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
     app_->LoadPreset(preset);
 
   } else if (action == kMenuActionDelete) {
+    orbit_metrics_uploader::ScopedMetric metric{
+        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_DELETE};
     if (item_indices.size() != 1) {
       return;
     }
@@ -162,6 +168,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       OnDataChanged();
     } else {
       ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
       app_->SendErrorToUi("Error deleting preset",
                           absl::StrFormat("Could not delete preset \"%s\".", filename));
     }

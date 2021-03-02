@@ -13,13 +13,15 @@
 #include <vector>
 
 #include "DataView.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "preset.pb.h"
 
 class OrbitApp;
 
 class PresetsDataView : public DataView {
  public:
-  explicit PresetsDataView(OrbitApp* app);
+  explicit PresetsDataView(OrbitApp* app,
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnPresetName; }
@@ -68,6 +70,9 @@ class PresetsDataView : public DataView {
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;
+
+ private:
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // ORBIT_GL_PRESET_DATA_VIEW_H_
