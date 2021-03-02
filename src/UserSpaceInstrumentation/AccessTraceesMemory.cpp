@@ -14,8 +14,8 @@
 #include <string>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/SafeStrerror.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -43,7 +43,7 @@ using orbit_base::ReadFileToString;
   do {
     // Pack 8 byte for writing into `data`.
     uint64_t data = 0;
-    std::memcpy(&data, bytes.data() + pos , sizeof(uint64_t));
+    std::memcpy(&data, bytes.data() + pos, sizeof(uint64_t));
     if (ptrace(PTRACE_POKEDATA, pid, address_start + pos, data) == -1) {
       ErrorMessage(absl::StrFormat("Unable to write data into tracees (pid: %d) memory.", pid));
     }
