@@ -19,6 +19,7 @@
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "LinuxTracingHandler.h"
+#include "MemoryInfoHandler.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 #include "ProducerEventProcessor.h"
@@ -165,14 +166,19 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
 // CaptureStartStopListener::OnCaptureStopRequested is also to be assumed blocking,
 // for example until all CaptureEvents from external producers have been received.
 // Hence why these methods need to be called in parallel on different threads.
-static void StopTracingHandlerAndCaptureStartStopListenersInParallel(
-    LinuxTracingHandler* tracing_handler,
+static void StopInternalProducersAndCaptureStartStopListenersInParallel(
+    LinuxTracingHandler* tracing_handler, MemoryInfoHandler* memory_info_handler,
     absl::flat_hash_set<CaptureStartStopListener*>* capture_start_stop_listeners) {
   std::vector<std::thread> stop_threads;
 
   stop_threads.emplace_back([&tracing_handler] {
     tracing_handler->Stop();
     LOG("LinuxTracingHandler stopped: perf_event_open tracing is done");
+  });
+
+  stop_threads.emplace_back([&memory_info_handler] {
+    memory_info_handler->Stop();
+    LOG("MemoryInfoHandler stopped: total memory usage information collection is done");
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
@@ -203,12 +209,14 @@ grpc::Status CaptureServiceImpl::Capture(
   std::unique_ptr<ProducerEventProcessor> producer_event_processor =
       ProducerEventProcessor::Create(&capture_event_buffer);
   LinuxTracingHandler tracing_handler{producer_event_processor.get()};
+  MemoryInfoHandler memory_info_handler{producer_event_processor.get()};
 
   CaptureRequest request;
   reader_writer->Read(&request);
   LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
 
   tracing_handler.Start(request.capture_options());
+  memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
     listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor.get());
   }
@@ -220,8 +228,8 @@ grpc::Status CaptureServiceImpl::Capture(
   }
   LOG("Client finished writing on Capture's gRPC stream: stopping capture");
 
-  StopTracingHandlerAndCaptureStartStopListenersInParallel(&tracing_handler,
-                                                           &capture_start_stop_listeners_);
+  StopInternalProducersAndCaptureStartStopListenersInParallel(
+      &tracing_handler, &memory_info_handler, &capture_start_stop_listeners_);
 
   capture_event_buffer.StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");
