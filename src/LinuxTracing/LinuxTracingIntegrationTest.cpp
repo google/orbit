@@ -461,7 +461,8 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   }
 
   LOG("scheduling_slice_count=%lu", scheduling_slice_count);
-  EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount);
+  // "- 1" as it is the expected number of SchedulingSlices *only between* the first and last sleep.
+  EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount - 1);
 }
 
 void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions* capture_options,
@@ -919,8 +920,10 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
   LOG("running_slice_count=%lu", running_slice_count);
   LOG("runnable_slice_count=%lu", runnable_slice_count);
   LOG("interruptible_sleep_slice_count=%lu", interruptible_sleep_slice_count);
-  EXPECT_GE(running_slice_count, PuppetConstants::kSleepCount);
-  EXPECT_GE(runnable_slice_count, PuppetConstants::kSleepCount);
+  // "- 1" as these are the expected numbers of kRunning and kRunnable ThreadStateSlices *only
+  // between* the first and last sleep.
+  EXPECT_GE(running_slice_count, PuppetConstants::kSleepCount - 1);
+  EXPECT_GE(runnable_slice_count, PuppetConstants::kSleepCount - 1);
   EXPECT_GE(interruptible_sleep_slice_count, PuppetConstants::kSleepCount);
 }
 
