@@ -35,6 +35,22 @@ target_link_libraries(UserSpaceInstrumentation PUBLIC
         OrbitBase
         CONAN_PKG::abseil)
 
+# Test Lib is merely used in UserSpaceInstrumentationTests below. A binary
+# libTestLib.so created from this target is checked in to testdata folder and
+# that binary is used to test the injection mechanism.
+add_library(TestLib SHARED)
+
+target_compile_options(TestLib PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_compile_features(TestLib PUBLIC cxx_std_17)
+
+target_include_directories(TestLib PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR})
+
+target_sources(TestLib PRIVATE
+        TestLib.cpp
+        TestLib.h)
+
 add_executable(UserSpaceInstrumentationTests)
 
 target_compile_options(UserSpaceInstrumentationTests PRIVATE ${STRICT_COMPILE_FLAGS})
