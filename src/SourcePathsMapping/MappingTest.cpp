@@ -48,9 +48,9 @@ TEST(Mapping, MapToFirstMatchingTargetEmpty) {
 TEST(Mapping, MapToFirstExistingTargetSimple) {
   Mapping mapping{"/src/project", testdata_directory};
 
-  const auto file_txt = MapToFirstExistingTarget({mapping}, "/src/project/textfile.txt");
+  const auto file_txt = MapToFirstExistingTarget({mapping}, "/src/project/Makefile");
   ASSERT_TRUE(file_txt.has_value());
-  EXPECT_EQ(file_txt.value(), testdata_directory / "textfile.txt");
+  EXPECT_EQ(file_txt.value(), testdata_directory / "Makefile");
 
   const auto other_txt = MapToFirstExistingTarget({mapping}, "/src/project/other.txt");
   ASSERT_FALSE(other_txt.has_value());
@@ -62,9 +62,9 @@ TEST(Mapping, MapToFirstExistingTargetMultiple) {
   Mapping mapping2{"/src/project", testdata_directory};
 
   const auto file_txt =
-      MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/src/project/textfile.txt");
+      MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/src/project/Makefile");
   ASSERT_TRUE(file_txt.has_value());
-  EXPECT_EQ(file_txt.value(), testdata_directory / "textfile.txt");
+  EXPECT_EQ(file_txt.value(), testdata_directory / "Makefile");
 
   const auto other_txt =
       MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/build/project/other.txt");
