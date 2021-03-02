@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "DataView.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "TextBox.h"
 #include "TimerChain.h"
 #include "capture_data.pb.h"
@@ -23,7 +24,8 @@ class OrbitApp;
 
 class LiveFunctionsDataView : public DataView {
  public:
-  explicit LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app);
+  explicit LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app,
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCount; }
@@ -83,6 +85,9 @@ class LiveFunctionsDataView : public DataView {
   static const std::string kMenuActionIterate;
   static const std::string kMenuActionEnableFrameTrack;
   static const std::string kMenuActionDisableFrameTrack;
+
+ private:
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
