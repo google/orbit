@@ -65,7 +65,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // associated to the `SubmissionMetaInformation`.
   struct SubmittedCommandBuffer {
     std::optional<uint32_t> command_buffer_begin_slot_index;
-    uint32_t command_buffer_end_slot_index;
+    std::optional<uint32_t> command_buffer_end_slot_index;
 
     // These are set when the timestamps were queried successfully. When these have values, the
     // corresponding slot indices for timestamp queries have been reset. Do not query again in
@@ -226,8 +226,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
 
-    uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-    {
+    uint32_t slot_index;
+    if (RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, &slot_index)) {
       CHECK(command_buffer_to_state_.contains(command_buffer));
       command_buffer_to_state_.at(command_buffer).command_buffer_begin_slot_index =
           std::make_optional(slot_index);
@@ -240,9 +240,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
 
-    uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-
-    {
+    uint32_t slot_index;
+    if (RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, &slot_index)) {
       // MarkCommandBufferBegin/End are called from within the same submit, and as the
       // `MarkCommandBufferBegin` will always insert the state, we can assume that it is there.
       CHECK(command_buffer_to_state_.contains(command_buffer));
@@ -273,9 +272,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
 
-    uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
-    {
+    uint32_t slot_index;
+    if (RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, &slot_index)) {
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       state.markers.back().slot_index = std::make_optional(slot_index);
@@ -303,8 +301,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
 
-    uint32_t slot_index = RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-    {
+    uint32_t slot_index;
+    if (RecordTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, &slot_index)) {
       CHECK(command_buffer_to_state_.contains(command_buffer));
       CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
       state.markers.back().slot_index = std::make_optional(slot_index);
@@ -328,6 +326,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return std::nullopt;
     }
 
+    VkDevice device = VK_NULL_HANDLE;
+    std::vector<uint32_t> query_slots_to_reset;
+
     QueueSubmission queue_submission;
     queue_submission.queue = queue;
     queue_submission.meta_information.pre_submission_cpu_timestamp =
@@ -344,9 +345,19 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         CHECK(command_buffer_to_state_.contains(command_buffer));
         CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
 
+        if (device == VK_NULL_HANDLE) {
+          device = command_buffer_to_device_.at(command_buffer);
+        }
+
         // If we haven't recorded neither the end nor the begin of a command buffer, we have no
         // information to send.
         if (!state.command_buffer_end_slot_index.has_value()) {
+          if (state.command_buffer_begin_slot_index.has_value()) {
+            // We need to reset the begin slot when we only have a begin slot. This can happen
+            // if we run out of query slots.
+            query_slots_to_reset.push_back(state.command_buffer_begin_slot_index.value());
+            state.command_buffer_begin_slot_index.reset();
+          }
           continue;
         }
 
@@ -360,6 +371,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         state.command_buffer_begin_slot_index.reset();
         state.command_buffer_end_slot_index.reset();
       }
+    }
+
+    // TODO(b/181098020): Slots here should not be reset again, but marked as unavailable until the
+    // command buffers are done executing. The slots are still baked into the command buffers that
+    // were sent to the GPU. Using the same slots again will likely lead to wrong results.
+    if (!query_slots_to_reset.empty()) {
+      timer_query_pool_->ResetQuerySlots(device, query_slots_to_reset);
     }
 
     return queue_submission;
@@ -657,8 +675,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     uint32_t local_marker_stack_size;
   };
 
-  uint32_t RecordTimestamp(VkCommandBuffer command_buffer,
-                           VkPipelineStageFlagBits pipeline_stage_flags) {
+  bool RecordTimestamp(VkCommandBuffer command_buffer, VkPipelineStageFlagBits pipeline_stage_flags,
+                       uint32_t* slot_index) {
     mutex_.AssertReaderHeld();
     VkDevice device;
     {
@@ -668,13 +686,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
     VkQueryPool query_pool = timer_query_pool_->GetQueryPool(device);
 
-    uint32_t slot_index;
-    bool found_slot = timer_query_pool_->NextReadyQuerySlot(device, &slot_index);
-    CHECK(found_slot);
+    if (!timer_query_pool_->NextReadyQuerySlot(device, slot_index)) {
+      return false;
+    }
     dispatch_table_->CmdWriteTimestamp(command_buffer)(command_buffer, pipeline_stage_flags,
-                                                       query_pool, slot_index);
+                                                       query_pool, *slot_index);
 
-    return slot_index;
+    return true;
   }
 
   std::vector<QueueSubmission> PullCompletedSubmissions(VkDevice device, VkQueryPool query_pool) {
@@ -706,7 +724,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
           }
           // We found our last command buffer, so lets check if its result is there:
           const SubmittedCommandBuffer& last_command_buffer = submit_info.command_buffers.back();
-          uint32_t check_slot_index_end = last_command_buffer.command_buffer_end_slot_index;
+          CHECK(last_command_buffer.command_buffer_end_slot_index.has_value());
+          uint32_t check_slot_index_end = last_command_buffer.command_buffer_end_slot_index.value();
 
           static constexpr VkDeviceSize kResultStride = sizeof(uint64_t);
           uint64_t test_query_result = 0;
@@ -774,7 +793,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     bool queries_succeeded = true;
 
     if (!command_buffer->end_timestamp.has_value()) {
-      uint32_t slot_index = command_buffer->command_buffer_end_slot_index;
+      CHECK(command_buffer->command_buffer_end_slot_index.has_value());
+      uint32_t slot_index = command_buffer->command_buffer_end_slot_index.value();
       std::optional<uint64_t> end_timestamp =
           QueryGpuTimestampNs(device, query_pool, slot_index, timestamp_period);
       if (end_timestamp.has_value()) {
