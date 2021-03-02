@@ -79,6 +79,9 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kModuleUpdateEvent:
       // TODO (http://b/168797897): Process module update events
       break;
+    case ClientCaptureEvent::kSystemMemoryUsage:
+      // TODO (http://b/179000848): Process the system memory usage information.
+      break;
     case ClientCaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;

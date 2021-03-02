@@ -298,6 +298,7 @@ message ClientCaptureEvent {
     IntrospectionScope introspection_scope = 9;
     ModuleUpdateEvent module_update_event = 10;
     SchedulingSlice scheduling_slice = 11;
+    SystemMemoryUsage system_memory_usage = 15;
     ThreadName thread_name = 12;
     ThreadStateSlice thread_state_slice = 13;
     TracepointEvent tracepoint_event = 14;
