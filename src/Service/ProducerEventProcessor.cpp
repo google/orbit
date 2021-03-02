@@ -32,6 +32,7 @@ using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::ModuleUpdateEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
@@ -88,6 +89,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadName(ThreadName* thread_name);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
+  void ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage);
 
   void SendInternedStringEvent(uint64_t key, std::string value);
 
@@ -310,6 +312,12 @@ void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage) {
+  ClientCaptureEvent event;
+  *event.mutable_system_memory_usage() = std::move(*system_memory_usage);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) {
   switch (event.event_case()) {
     case ProducerCaptureEvent::kInternedCallstack:
@@ -353,6 +361,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kModuleUpdateEvent:
       ProcessModuleUpdateEvent(event.mutable_module_update_event());
+      break;
+    case ProducerCaptureEvent::kSystemMemoryUsage:
+      ProcessSystemMemoryUsage(event.mutable_system_memory_usage());
       break;
     case ProducerCaptureEvent::EVENT_NOT_SET:
       UNREACHABLE();

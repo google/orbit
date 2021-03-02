@@ -319,6 +319,7 @@ message ProducerCaptureEvent {
     IntrospectionScope introspection_scope = 10;
     ModuleUpdateEvent module_update_event = 11;
     SchedulingSlice scheduling_slice = 12;
+    SystemMemoryUsage system_memory_usage = 15;
     ThreadName thread_name = 13;
     ThreadStateSlice thread_state_slice = 14;
   }
