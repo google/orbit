@@ -43,14 +43,11 @@ using orbit_base::ReadFileToString;
   do {
     // Pack 8 byte for writing into `data`.
     uint64_t data = 0;
-    for (size_t i = 0; i < sizeof(data) && pos + i < bytes.size(); i++) {
-      uint64_t t = bytes[pos + i];
-      data |= t << (8 * i);
-    }
+    std::memcpy(&data, bytes.data() + pos , sizeof(uint64_t));
     if (ptrace(PTRACE_POKEDATA, pid, address_start + pos, data) == -1) {
       ErrorMessage(absl::StrFormat("Unable to write data into tracees (pid: %d) memory.", pid));
     }
-    pos += 8;
+    pos += sizeof(uint64_t);
   } while (pos < bytes.size());
   return outcome::success();
 }

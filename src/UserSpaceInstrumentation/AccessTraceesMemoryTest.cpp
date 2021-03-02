@@ -8,6 +8,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <algorithm>
+#include <functional>
+#include <iterator>
+#include <random>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
@@ -39,7 +43,12 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   std::vector<uint8_t> original;
   CHECK(ReadTraceesMemory(pid, address_start, address_end - address_start, &original).has_value());
 
-  std::vector<uint8_t> new_data(original.size(), 42);
+  std::vector<uint8_t> new_data(original.size());
+  std::mt19937 engine{std::random_device()()};
+  std::uniform_int_distribution<uint8_t> distribution{0x00, 0xff};
+  std::generate(std::begin(new_data), std::end(new_data),
+                [&distribution, &engine]() { return distribution(engine); });
+
   CHECK(WriteTraceesMemory(pid, address_start, new_data).has_value());
 
   std::vector<uint8_t> read_back;
