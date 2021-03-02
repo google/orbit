@@ -45,6 +45,10 @@ message(STATUS "Doing conan basic setup")
 conan_basic_setup()
 list(APPEND CMAKE_PROGRAM_PATH ${{CONAN_BIN_DIRS}})
 message(STATUS "Conan setup done. CMAKE_PROGRAM_PATH: ${{CMAKE_PROGRAM_PATH}}")
+if(WIN32)
+  set(HAVE_ZLIB_H 1)
+  set(HAVE_LIBZ_ZLIB 1)
+endif()
 '''.format(self.name), self.output):
             self.output.warn("Could not patch {} main CMakeLists.txt file to include conan config".format(self._llvm_component))
 

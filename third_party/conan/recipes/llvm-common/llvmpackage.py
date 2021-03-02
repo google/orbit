@@ -20,7 +20,7 @@ def replace_in_file(file, line_to_search, replace_with, conanfile_output = None)
 
 
 class LLVMPackage(ConanFile):
-    VERSION = '9.0.1-2'
+    VERSION = '9.0.1-3'
     SOURCE_DIR = '.'
     BUILD_DIR = 'build'
     INSTALL_DIR = 'install'
