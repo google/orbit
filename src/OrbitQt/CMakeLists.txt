@@ -97,6 +97,7 @@ target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   OrbitQt
   PRIVATE CodeViewer
+          ConfigWidgets
           MetricsUploader
           OrbitAccessibility
           OrbitCore

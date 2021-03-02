@@ -4,11 +4,14 @@
 
 #include "CaptureOptionsDialog.h"
 
+#include <QAbstractButton>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QWidget>
 #include <QtGui/QValidator>
 
+#include "ConfigWidgets/SourcePathsMappingDialog.h"
+#include "SourcePathsMapping/MappingManager.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {
@@ -21,6 +24,9 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
+
+  QObject::connect(ui_->openSourcePathsMappingDialog, &QAbstractButton::clicked, this,
+                   &CaptureOptionsDialog::ShowSourcePathsMappingEditor);
 }
 
 bool CaptureOptionsDialog::GetCollectThreadStates() const {
@@ -56,6 +62,18 @@ uint64_t CaptureOptionsDialog::GetMaxLocalMarkerDepthPerCommandBuffer() const {
 void CaptureOptionsDialog::ResetLocalMarkerDepthLineEdit() {
   if (ui_->localMarkerDepthLineEdit->text().isEmpty()) {
     ui_->localMarkerDepthLineEdit->setText(QString::number(0));
+  }
+}
+
+void CaptureOptionsDialog::ShowSourcePathsMappingEditor() {
+  orbit_source_paths_mapping::MappingManager manager{};
+
+  orbit_config_widgets::SourcePathsMappingDialog dialog{this};
+  dialog.SetMappings(manager.GetMappings());
+  const int result_code = dialog.exec();
+
+  if (result_code == QDialog::Accepted) {
+    manager.SetMappings(dialog.GetMappings());
   }
 }
 

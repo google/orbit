@@ -48,6 +48,7 @@ class CaptureOptionsDialog : public QDialog {
 
  public slots:
   void ResetLocalMarkerDepthLineEdit();
+  void ShowSourcePathsMappingEditor();
 
  private:
   std::unique_ptr<Ui::CaptureOptionsDialog> ui_;
