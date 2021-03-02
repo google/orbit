@@ -64,16 +64,19 @@ class Viewer : public QPlainTextEdit {
  private:
   void resizeEvent(QResizeEvent* ev) override;
   void wheelEvent(QWheelEvent* ev) override;
+  void DrawTopWidget(QPaintEvent* event);
   void DrawLineNumbers(QPaintEvent* event);
   void DrawSampleCounters(QPaintEvent* event);
 
-  void UpdateSidebarsWidth();
-  void UpdateSidebarPositions();
+  void UpdateBarsSize();
+  void UpdateBarsPosition();
   void HighlightCurrentLine();
   [[nodiscard]] int WidthPercentageColumn() const;
   [[nodiscard]] int WidthSampleCounterColumn() const;
   [[nodiscard]] int WidthMarginBetweenColumns() const;
+  [[nodiscard]] int TopWidgetHeight() const;
 
+  PlaceHolderWidget top_bar_widget_;
   PlaceHolderWidget left_sidebar_widget_;
   PlaceHolderWidget right_sidebar_widget_;
   bool line_numbers_enabled_ = false;

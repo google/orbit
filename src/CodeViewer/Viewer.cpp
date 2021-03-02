@@ -27,6 +27,7 @@ static const QColor kLineNumberBackgroundColor{50, 50, 50};
 static const QColor kLineNumberForegroundColor{189, 189, 189};
 static const QColor kTextEditBackgroundColor{30, 30, 30};
 static const QColor kTextEditForegroundColor{189, 189, 189};
+static const QColor kTitleBackgroundColor{30, 65, 89};
 static const QColor kHeatmapColor{Qt::red};
 
 static int StringWidthInPixels(const QFontMetrics& font_metrics, QString string) {
@@ -38,9 +39,15 @@ int DetermineLineNumberWidthInPixels(const QFontMetrics& font_metrics, int max_l
 }
 
 Viewer::Viewer(QWidget* parent)
-    : QPlainTextEdit(parent), left_sidebar_widget_{this}, right_sidebar_widget_{this} {
-  UpdateSidebarsWidth();
-  QObject::connect(this, &QPlainTextEdit::blockCountChanged, this, &Viewer::UpdateSidebarsWidth);
+    : QPlainTextEdit(parent),
+      top_bar_widget_{this},
+      left_sidebar_widget_{this},
+      right_sidebar_widget_{this} {
+  UpdateBarsSize();
+  QObject::connect(this, &QPlainTextEdit::blockCountChanged, this, &Viewer::UpdateBarsSize);
+
+  QObject::connect(&top_bar_widget_, &PlaceHolderWidget::PaintEventTriggered, this,
+                   &Viewer::DrawTopWidget);
 
   QObject::connect(&left_sidebar_widget_, &PlaceHolderWidget::PaintEventTriggered, this,
                    &Viewer::DrawLineNumbers);
@@ -54,11 +61,16 @@ Viewer::Viewer(QWidget* parent)
       left_sidebar_widget_.scroll(0, dy);
       right_sidebar_widget_.scroll(0, dy);
     } else {
+      QRect titles_bar = rect;
       QRect line_number_rect = rect;
       QRect samples_info_rect = rect;
 
       // We keep the (vertical) y-coordinates and adjust the horizontal x-coordinates for the each
       // bar's area
+      titles_bar.setLeft(0);
+      titles_bar.setWidth(top_bar_widget_.sizeHint().width());
+      top_bar_widget_.update(line_number_rect);
+
       line_number_rect.setLeft(0);
       line_number_rect.setWidth(left_sidebar_widget_.sizeHint().width());
       left_sidebar_widget_.update(line_number_rect);
@@ -88,14 +100,53 @@ Viewer::Viewer(QWidget* parent)
 void Viewer::resizeEvent(QResizeEvent* ev) {
   QPlainTextEdit::resizeEvent(ev);
 
-  UpdateSidebarPositions();
+  UpdateBarsPosition();
 }
 
 void Viewer::wheelEvent(QWheelEvent* ev) {
   QPlainTextEdit::wheelEvent(ev);
 
-  UpdateSidebarsWidth();
-  UpdateSidebarPositions();
+  UpdateBarsSize();
+  UpdateBarsPosition();
+}
+
+void Viewer::DrawTopWidget(QPaintEvent* event) {
+  QPainter painter{&top_bar_widget_};
+  painter.setFont(font());
+  painter.fillRect(event->rect(), kTitleBackgroundColor);
+
+  if (line_numbers_enabled_) {
+    const int left = (left_margin_ + heatmap_bar_width_).ToPixels(fontMetrics());
+    const int width = DetermineLineNumberWidthInPixels(fontMetrics(), blockCount());
+    const QRect bounding_box{left, 0, width, fontMetrics().height()};
+
+    painter.setPen(kLineNumberForegroundColor);
+    painter.drawText(bounding_box, Qt::AlignCenter, QString("#"));
+  }
+  if (sample_counters_enabled_) {
+    const int left = top_bar_widget_.width() - right_sidebar_widget_.width();
+
+    int current = left;
+    current += left_margin_.ToPixels(fontMetrics());
+    {
+      const QRect bounding_box{current, 0, WidthSampleCounterColumn(), fontMetrics().height()};
+      painter.setPen(kLineNumberForegroundColor);
+      painter.drawText(bounding_box, Qt::AlignCenter, QString("Samples"));
+      current += WidthSampleCounterColumn() + WidthMarginBetweenColumns();
+    }
+    {
+      const QRect bounding_box{current, 0, WidthPercentageColumn(), fontMetrics().height()};
+      painter.setPen(kLineNumberForegroundColor);
+      painter.drawText(bounding_box, Qt::AlignCenter, QString("Function"));
+      current += WidthPercentageColumn() + WidthMarginBetweenColumns();
+    }
+    {
+      const QRect bounding_box{current, 0, WidthPercentageColumn(), fontMetrics().height()};
+      painter.setPen(kLineNumberForegroundColor);
+      painter.drawText(bounding_box, Qt::AlignCenter, QString("Total"));
+      current += WidthPercentageColumn() + WidthMarginBetweenColumns();
+    }
+  }
 }
 
 void Viewer::DrawLineNumbers(QPaintEvent* event) {
@@ -207,8 +258,10 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
   }
 }
 
-void Viewer::UpdateSidebarsWidth() {
+void Viewer::UpdateBarsSize() {
   const int number_of_lines = blockCount();
+
+  int top_font_height = fontMetrics().height();
 
   int overall_left_width_px = heatmap_bar_width_.ToPixels(fontMetrics());
 
@@ -230,20 +283,28 @@ void Viewer::UpdateSidebarsWidth() {
     overall_right_width_px += WidthPercentageColumn();
     overall_right_width_px += right_margin_.ToPixels(fontMetrics());
   }
-  setViewportMargins(QMargins{overall_left_width_px, 0, overall_right_width_px, 0});
+  setViewportMargins(QMargins{overall_left_width_px, top_font_height, overall_right_width_px, 0});
+  top_bar_widget_.SetSizeHint({contentsRect().width(), fontMetrics().height()});
   left_sidebar_widget_.SetSizeHint({overall_left_width_px, 0});
   right_sidebar_widget_.SetSizeHint({overall_right_width_px, 0});
 }
 
-void Viewer::UpdateSidebarPositions() {
+void Viewer::UpdateBarsPosition() {
+  auto top_bar = contentsRect();
+  int total_width_without_scroll_bar = top_bar.width() - verticalScrollBar()->width();
+  top_bar.setWidth(total_width_without_scroll_bar);
+  top_bar.setHeight(fontMetrics().height());
+  top_bar_widget_.setGeometry(top_bar);
+
   auto left_sidebar = contentsRect();
-  int total_width = left_sidebar.width();
+  left_sidebar.setTop(TopWidgetHeight());
   left_sidebar.setWidth(left_sidebar_widget_.sizeHint().width());
   left_sidebar_widget_.setGeometry(left_sidebar);
 
   auto right_sidebar = contentsRect();
   int right_sidebar_width = right_sidebar_widget_.sizeHint().width();
-  right_sidebar.moveLeft(total_width - verticalScrollBar()->width() - right_sidebar_width);
+  right_sidebar.setTop(TopWidgetHeight());
+  right_sidebar.moveLeft(total_width_without_scroll_bar - right_sidebar_width);
   right_sidebar.setWidth(right_sidebar_width);
   right_sidebar_widget_.setGeometry(right_sidebar);
 }
@@ -252,35 +313,35 @@ void Viewer::SetEnableLineNumbers(bool is_enabled) {
   if (line_numbers_enabled_ == is_enabled) return;
 
   line_numbers_enabled_ = is_enabled;
-  UpdateSidebarsWidth();
+  UpdateBarsSize();
 }
 
 void Viewer::SetEnableSampleCounters(bool is_enabled) {
   if (sample_counters_enabled_ == is_enabled) return;
 
   sample_counters_enabled_ = is_enabled;
-  UpdateSidebarsWidth();
+  UpdateBarsSize();
 }
 
 void Viewer::SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right) {
   left_margin_ = left;
   right_margin_ = right;
-  UpdateSidebarsWidth();
+  UpdateBarsSize();
 }
 
 void Viewer::SetHeatmapBarWidth(FontSizeInEm width) {
   heatmap_bar_width_ = width;
-  UpdateSidebarsWidth();
+  UpdateBarsSize();
 }
 
 void Viewer::SetHeatmapSource(const CodeReport* code_report) {
   code_report_ = code_report;
-  UpdateSidebarsWidth();
+  UpdateBarsSize();
 }
 
 void Viewer::ClearHeatmapSource() {
   code_report_ = nullptr;
-  UpdateSidebarsWidth();
+  UpdateBarsSize();
 }
 
 void Viewer::SetHighlightCurrentLine(bool enabled) {
@@ -319,13 +380,14 @@ int Viewer::WidthPercentageColumn() const {
 
 int Viewer::WidthSampleCounterColumn() const {
   const QString kSampleColumnTitle = "Samples";
-  return StringWidthInPixels(fontMetrics(),
-                             kSampleColumnTitle);  // TODO: titles might have smaller font
+  return StringWidthInPixels(fontMetrics(), kSampleColumnTitle);
 }
 
 int Viewer::WidthMarginBetweenColumns() const {
   const QString kTwoSpaces = "  ";
   return StringWidthInPixels(fontMetrics(), kTwoSpaces);
 }
+
+int Viewer::TopWidgetHeight() const { return top_bar_widget_.fontMetrics().height(); }
 
 }  // namespace orbit_code_viewer
