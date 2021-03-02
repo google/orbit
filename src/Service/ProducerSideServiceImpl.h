@@ -5,6 +5,8 @@
 #ifndef ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 #define ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
@@ -12,9 +14,8 @@
 
 #include "CaptureEventBuffer.h"
 #include "CaptureStartStopListener.h"
+#include "GrpcProtos/Constants.h"
 #include "ProducerEventProcessor.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
 #include "capture.pb.h"
 #include "producer_side_services.grpc.pb.h"
 #include "producer_side_services.pb.h"
@@ -90,7 +91,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   ProducerEventProcessor* producer_event_processor_ = nullptr;
   absl::Mutex producer_event_processor_mutex_;
 
-  std::atomic<uint64_t> producer_id_counter_ = 1;
+  std::atomic<uint64_t> producer_id_counter_ = orbit_grpc_protos::kExternalProducerStartingId;
 
   uint64_t max_wait_for_all_events_sent_ms_ = 10'000;
 };
