@@ -42,7 +42,7 @@ class MetricsUploaderImpl : public MetricsUploader {
                     OrbitLogEvent_StatusCode status_code) override;
 
  private:
-  bool FillAndSendLogEvent(OrbitLogEvent partial_filled_event);
+  [[nodiscard]] bool FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const;
 
   HMODULE metrics_uploader_client_dll_;
   Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
@@ -186,7 +186,7 @@ ErrorMessageOr<std::string> GenerateUUID() {
   return uuid_string;
 }
 
-bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event) {
+bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const {
   if (send_log_event_addr_ == nullptr) {
     ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
     return false;
