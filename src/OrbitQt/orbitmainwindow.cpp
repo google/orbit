@@ -160,7 +160,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
       target_configuration_(std::move(target_configuration)) {
-  SetupMainWindow();
+  SetupMainWindow(metrics_uploader);
 
   SetupTargetLabel();
   SetupHintFrame();
@@ -186,7 +186,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   LoadCaptureOptionsIntoApp();
 }
 
-void OrbitMainWindow::SetupMainWindow() {
+void OrbitMainWindow::SetupMainWindow(orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   DataViewFactory* data_view_factory = app_.get();
 
   ui->setupUi(this);
@@ -322,7 +322,8 @@ void OrbitMainWindow::SetupMainWindow() {
 
   StartMainTimer();
 
-  ui->liveFunctions->Initialize(app_.get(), SelectionType::kExtended, FontType::kDefault);
+  ui->liveFunctions->Initialize(app_.get(), metrics_uploader, SelectionType::kExtended,
+                                FontType::kDefault);
 
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });

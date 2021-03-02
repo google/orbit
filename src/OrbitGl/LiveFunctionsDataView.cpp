@@ -38,10 +38,13 @@ using orbit_client_protos::FunctionStats;
 
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
-LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app)
+LiveFunctionsDataView::LiveFunctionsDataView(
+    LiveFunctionsController* live_functions, OrbitApp* app,
+    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
-      selected_function_id_(orbit_grpc_protos::kInvalidFunctionId) {
+      selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
+      metrics_uploader_(metrics_uploader) {
   update_period_ms_ = 300;
   OnDataChanged();
 }
@@ -329,6 +332,10 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
           app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function);
       if (stats.count() > 0) {
         live_functions_->AddIterator(instrumented_function_id, &instrumented_function);
+        if (metrics_uploader_ != nullptr) {
+          metrics_uploader_->SendLogEvent(
+              orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_ITERATOR_ADD);
+        }
       }
     }
   } else if (action == kMenuActionEnableFrameTrack) {

@@ -9,6 +9,7 @@
 #include <functional>
 
 #include "LiveFunctionsDataView.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Profiling.h"
 #include "TextBox.h"
 #include "absl/container/flat_hash_map.h"
@@ -18,8 +19,11 @@ class OrbitApp;
 
 class LiveFunctionsController {
  public:
-  explicit LiveFunctionsController(OrbitApp* app)
-      : live_functions_data_view_(this, app), app_{app} {}
+  explicit LiveFunctionsController(OrbitApp* app,
+                                   orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+      : live_functions_data_view_(this, app, metrics_uploader),
+        app_{app},
+        metrics_uploader_(metrics_uploader) {}
 
   LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
@@ -59,6 +63,7 @@ class LiveFunctionsController {
   uint64_t id_to_select_ = 0;
 
   OrbitApp* app_ = nullptr;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // LIVE_FUNCTIONS_H_

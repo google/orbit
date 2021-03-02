@@ -145,7 +145,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
  private:
   void StartMainTimer();
   void SetupCaptureToolbar();
-  void SetupMainWindow();
+  void SetupMainWindow(orbit_metrics_uploader::MetricsUploader* metrics_uploader);
   void SetupHintFrame();
   void SetupTargetLabel();
 
