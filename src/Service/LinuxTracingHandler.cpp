@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_service {
@@ -26,7 +27,7 @@ using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
-constexpr uint64_t kLinuxTracingProducerId = 0;
+using orbit_grpc_protos::kLinuxTracingProducerId;
 
 void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);

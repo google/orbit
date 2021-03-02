@@ -12,6 +12,11 @@ constexpr uint64_t kInvalidInternId = 0;
 constexpr uint64_t kInvalidFunctionId = 0;
 
 constexpr int kMissingInfo = -1;
+
+// Reserved producer IDs.
+constexpr uint64_t kLinuxTracingProducerId = 0;
+constexpr uint64_t kMemoryInfoProducerId = 1;
+constexpr uint64_t kExternalProducerStartingId = 1024;
 }  // namespace orbit_grpc_protos
 
 #endif  // GRPC_PROTOS_CONSTANTS_H_
