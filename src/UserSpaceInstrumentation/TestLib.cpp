@@ -22,7 +22,7 @@ std::filesystem::path GetTmpFilePath() {
 
 void InitTestLib() {
   auto p = GetTmpFilePath();
-  std::cout << "Init Lib. Tmp file is: " << p << std::endl;;
+  std::cout << "Init Lib. Tmp file is: " << p << std::endl;
 }
 
 void UseTestLib(const std::string& s) {
