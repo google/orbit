@@ -14,7 +14,9 @@ class DummyCodeReport : public CodeReport {
 
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return num_samples_; }
   [[nodiscard]] uint32_t GetNumSamples() const override { return num_samples_; }
-  [[nodiscard]] uint32_t GetNumSamplesAtLine(size_t line) const override { return line; }
+  [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override {
+    return line;
+  }
 
  private:
   uint32_t num_samples_ = 0;
