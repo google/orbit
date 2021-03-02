@@ -113,6 +113,7 @@ class TimeGraph {
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] uint32_t GetNumTimers() const;
+  [[nodiscard]] std::string GetTimerSummary() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableTimerChains() const;

@@ -786,6 +786,15 @@ void CaptureWindow::RenderImGuiDebugUI() {
       }
     }
   }
+
+  if (ImGui::CollapsingHeader("Timer Summary")) {
+    if (ImGui::Button("Refresh timer summary and copy to clipboard")) {
+      timer_summary_ = time_graph_->GetTimerSummary();
+      app_->SetClipboard(timer_summary_);
+    }
+
+    ImGui::TextUnformatted(timer_summary_.c_str(), timer_summary_.c_str() + timer_summary_.size());
+  }
 }
 
 void CaptureWindow::RenderText(float layer) {

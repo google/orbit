@@ -405,6 +405,46 @@ uint32_t TimeGraph::GetNumTimers() const {
   return num_timers;
 }
 
+struct ThreadTrackStats {
+  int32_t pid = 0;
+  int32_t total = 0;
+  double capture_duration_s = 0;
+  std::map<int32_t, uint32_t> num_timers_per_tid;
+};
+
+[[nodiscard]] std::string TimeGraph::GetTimerSummary() const {
+  uint32_t total_timers = GetNumTimers();
+  int32_t target_pid = capture_data_ != nullptr ? capture_data_->process_id() : -1;
+  double duration_s = GetCaptureTimeSpanUs() / 1'000'000.0;
+  if (duration_s == 0.0) {
+    return "Duration of capture is 0";
+  }
+
+  std::map<int32_t, ThreadTrackStats> stats_per_pid;
+
+  for (ThreadTrack* track : track_manager_->GetThreadTracks()) {
+    ThreadTrackStats& stats = stats_per_pid[track->GetProcessId()];
+    stats.total += track->GetNumTimers();
+    stats.num_timers_per_tid[track->GetThreadId()] += track->GetNumTimers();
+  }
+
+  std::string summary = absl::StrFormat("Total timers: %u (%.3f/second)\n", total_timers,
+                                        static_cast<double>(total_timers) / duration_s);
+
+  for (auto& [pid, stats] : stats_per_pid) {
+    if (pid == -1) continue;
+    summary +=
+        absl::StrFormat("%spid [%i] total: %u (%.2f/second)\n", pid == target_pid ? "TARGET " : "",
+                        pid, stats.total, static_cast<double>(stats.total) / duration_s);
+    for (auto& [tid, num_timers] : stats.num_timers_per_tid) {
+      summary += absl::StrFormat("\t tid [%i] %u (%.2f/second)\n", tid, num_timers,
+                                 static_cast<double>(num_timers) / duration_s);
+    }
+  }
+
+  return summary;
+}
+
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : track_manager_->GetAllTracks()) {

@@ -934,7 +934,8 @@ void OrbitApp::StartCapture() {
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
   bool collect_thread_states = data_manager_->collect_thread_states();
-  bool enable_introspection = absl::GetFlag(FLAGS_devmode);
+  bool bulk_capture_events = data_manager_->bulk_capture_events();
+  bool enable_introspection = false;  // absl::GetFlag(FLAGS_devmode);
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 
@@ -942,7 +943,7 @@ void OrbitApp::StartCapture() {
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), std::move(frame_track_function_ids), collect_thread_states,
-      enable_introspection, max_local_marker_depth_per_command_buffer);
+      bulk_capture_events, enable_introspection, max_local_marker_depth_per_command_buffer);
 
   capture_result.Then(main_thread_executor_, [this](ErrorMessageOr<CaptureOutcome> capture_result) {
     if (capture_result.has_error()) {
@@ -1623,6 +1624,10 @@ void OrbitApp::UpdateProcessAndModuleList(int32_t pid) {
 
 void OrbitApp::SetCollectThreadStates(bool collect_thread_states) {
   data_manager_->set_collect_thread_states(collect_thread_states);
+}
+
+void OrbitApp::SetBulkCaptureEvents(bool bulk_capture_events) {
+  data_manager_->set_bulk_capture_events(bulk_capture_events);
 }
 
 void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(

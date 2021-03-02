@@ -51,6 +51,7 @@ message CaptureOptions {
 
   bool collect_memory_info = 11;
   uint64 memory_sampling_period_ns = 12;
+  bool bulk_capture_events = 13;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we
@@ -100,6 +101,21 @@ message ApiEvent {
   // bytes raw_data = 2;
   repeated fixed64 raw_data = 3;
 }
+
+/*
+message ApiEventFixed {
+  uint64 timestamp_ns = 1;
+  int32 pid = 2;
+  int32 tid = 3;
+  uint32 type = 4;
+  uint32 color = 5;
+  uint64 data = 6;
+  fixed64 d0 = 7;
+  fixed64 d1 = 8;
+  fixed64 d2 = 9;
+  fixed64 d3 = 10;
+  fixed64 d4 = 11;
+}*/
 
 message ApiEventFixed {
   uint64 timestamp_ns = 1;

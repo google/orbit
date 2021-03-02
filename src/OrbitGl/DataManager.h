@@ -72,6 +72,11 @@ class DataManager final {
   }
   [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
 
+  void set_bulk_capture_events(bool bulk_capture_events) {
+    bulk_capture_events_ = bulk_capture_events;
+  }
+  [[nodiscard]] bool bulk_capture_events() const { return bulk_capture_events_; }
+
   void set_max_local_marker_depth_per_command_buffer(
       uint64_t max_local_marker_depth_per_command_buffer) {
     max_local_marker_depth_per_command_buffer_ = max_local_marker_depth_per_command_buffer;
@@ -97,6 +102,7 @@ class DataManager final {
   UserDefinedCaptureData user_defined_capture_data_;
 
   bool collect_thread_states_ = false;
+  bool bulk_capture_events_ = false;
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
 };
 

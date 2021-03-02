@@ -40,7 +40,9 @@ class CaptureOptionsDialog : public QDialog {
   explicit CaptureOptionsDialog(QWidget* parent = nullptr);
 
   void SetCollectThreadStates(bool collect_thread_state);
+  void SetBulkCaptureEvents(bool bulk_capture_events);
   [[nodiscard]] bool GetCollectThreadStates() const;
+  [[nodiscard]] bool GetBulkCaptureEvents() const;
   void SetLimitLocalMarkerDepthPerCommandBuffer(bool limit_local_marker_depth_per_command_buffer);
   [[nodiscard]] bool GetLimitLocalMarkerDepthPerCommandBuffer() const;
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);

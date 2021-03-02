@@ -361,6 +361,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   }
 
   void SetCollectThreadStates(bool collect_thread_states);
+  void SetBulkCaptureEvents(bool bulk_capture_events);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
 
   // TODO(kuebler): Move them to a separate controler at some point

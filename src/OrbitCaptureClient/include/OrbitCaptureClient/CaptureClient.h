@@ -44,7 +44,8 @@ class CaptureClient {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids, bool collect_thread_state,
-      bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer);
+      bool bulk_capture_events, bool enable_introspection,
+      uint64_t max_local_marker_depth_per_command_buffer);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -72,7 +73,8 @@ class CaptureClient {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids, bool collect_thread_state,
-      bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer);
+      bool bulk_capture_events, bool enable_introspection,
+      uint64_t max_local_marker_depth_per_command_buffer);
 
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 

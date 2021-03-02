@@ -58,6 +58,13 @@
           </property>
          </widget>
         </item>
+         <item>
+         <widget class="QCheckBox" name="bulkCaptureEventsCheckBox">
+          <property name="text">
+           <string>Bulk capture events</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>

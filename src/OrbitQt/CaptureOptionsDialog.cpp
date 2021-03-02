@@ -33,8 +33,16 @@ bool CaptureOptionsDialog::GetCollectThreadStates() const {
   return ui_->threadStateCheckBox->isChecked();
 }
 
+bool CaptureOptionsDialog::GetBulkCaptureEvents() const {
+  return ui_->bulkCaptureEventsCheckBox->isChecked();
+}
+
 void CaptureOptionsDialog::SetCollectThreadStates(bool collect_thread_state) {
   ui_->threadStateCheckBox->setChecked(collect_thread_state);
+}
+
+void CaptureOptionsDialog::SetBulkCaptureEvents(bool bulk_capture_events) {
+  ui_->bulkCaptureEventsCheckBox->setChecked(bulk_capture_events);
 }
 
 void CaptureOptionsDialog::SetLimitLocalMarkerDepthPerCommandBuffer(

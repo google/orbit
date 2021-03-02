@@ -142,8 +142,8 @@ else()
 endif()
 
 if(WITH_VULKAN_LAYER)
-  add_subdirectory(src/OrbitTriggerCaptureVulkanLayer)
-  add_subdirectory(src/OrbitVulkanLayer)
+  #add_subdirectory(src/OrbitTriggerCaptureVulkanLayer)
+  #add_subdirectory(src/OrbitVulkanLayer)
 endif()
 
 add_subdirectory(src/ClientProtos)

@@ -113,9 +113,10 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   }
 
  protected:
-  void OnCaptureStart(orbit_grpc_protos::CaptureOptions /*capture_options*/) override {
+  void OnCaptureStart(orbit_grpc_protos::CaptureOptions capture_options) override {
     absl::MutexLock lock{&status_mutex_};
     status_ = ProducerStatus::kShouldSendEvents;
+    bulk_capture_events_ = capture_options.bulk_capture_events();
   }
 
   void OnCaptureStop() override {
@@ -187,39 +188,22 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
           auto* send_request = google::protobuf::Arena::CreateMessage<
               orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>(&arena);
 
-          std::vector<orbit_grpc_protos::ProducerCaptureEvent*> translated_events;
-          translated_events.resize(dequeued_event_count);
-          // LOG("/====");
-
-          // {
-          //   //ScopeTimer t("TranslateIntermediateEvents one by one");
-          for (size_t i = 0; i < dequeued_event_count; ++i) {
-            auto single_event =
-                TranslateSingleIntermediateEvent(std::move(dequeued_events[i]), &arena);
-            translated_events[i] = single_event;
-          }
-          // }
-
-          // translated_events.clear();
-          // translated_events.reserve(dequeued_event_count);
-
-          {
-            // ScopeTimer t("TranslateIntermediateEvents in bulk");
-            // translated_events =
-            //     TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count,
-            //     &arena);
-          }
-
-          // LOG("num_events: %u", dequeued_event_count);
-          // LOG("\\====");
-
-          ScopeTimer::OutputReport();
-
           auto* capture_events =
               send_request->mutable_buffered_capture_events()->mutable_capture_events();
-          capture_events->Reserve(translated_events.size());
-          for (orbit_grpc_protos::ProducerCaptureEvent* translated_event : translated_events) {
-            capture_events->AddAllocated(translated_event);
+
+          if (bulk_capture_events_) {
+            auto translated_events =
+                TranslateIntermediateEvents(dequeued_events.data(), dequeued_event_count, &arena);
+            capture_events->Reserve(translated_events.size());
+            for (orbit_grpc_protos::ProducerCaptureEvent* translated_event : translated_events) {
+              capture_events->AddAllocated(translated_event);
+            }
+          } else {
+            for (size_t i = 0; i < dequeued_event_count; ++i) {
+              auto single_event =
+                  TranslateSingleIntermediateEvent(std::move(dequeued_events[i]), &arena);
+              capture_events->AddAllocated(single_event);
+            }
           }
 
           if (!SendCaptureEvents(*send_request)) {
@@ -256,6 +240,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
 
   std::thread forwarder_thread_;
   std::atomic<bool> shutdown_requested_ = false;
+  bool bulk_capture_events_ = false;
 
   enum class ProducerStatus { kShouldSendEvents, kShouldNotifyAllEventsSent, kShouldDropEvents };
   ProducerStatus status_ = ProducerStatus::kShouldDropEvents;

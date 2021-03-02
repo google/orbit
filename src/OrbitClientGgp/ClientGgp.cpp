@@ -95,13 +95,14 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
+  bool bulk_capture_events = false;
   uint64_t max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
   bool enable_introspection = false;
   Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_, module_manager_, selected_functions_, selected_tracepoints,
-      absl::flat_hash_set<uint64_t>{}, collect_thread_state, enable_introspection,
-      max_local_marker_depth_per_command_buffer);
+      absl::flat_hash_set<uint64_t>{}, collect_thread_state, bulk_capture_events,
+      enable_introspection, max_local_marker_depth_per_command_buffer);
 
   orbit_base::ImmediateExecutor executer;
   result.Then(&executer, [this](ErrorMessageOr<CaptureOutcome> result) {
