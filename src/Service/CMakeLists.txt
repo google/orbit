@@ -22,6 +22,8 @@ target_sources(ServiceLib PRIVATE
         FramePointerValidatorServiceImpl.h
         LinuxTracingHandler.cpp
         LinuxTracingHandler.h
+        MemoryInfoHandler.cpp
+        MemoryInfoHandler.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
@@ -54,6 +56,7 @@ target_link_libraries(ServiceLib PUBLIC
         FramePointerValidator
         GrpcProtos
         LinuxTracing
+        MemoryTracing
         OrbitVersion
         ProducerSideChannel)
 
