@@ -223,8 +223,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         ERROR("Calling vkBeginCommandBuffer on a command buffer that is not in the initial state.");
         // We end up in this case, if we have used the command buffer before and want to write new
         // commands to it without resetting the command buffer. This is prohibited by the
-        // specification. However, we've seen this in the wild. Let's assume there was a reset call,
-        // which for use mean, we need to reset the slots associated with this command buffer.
+        // specification. However, we've seen this in the wild. The "vkBeginCommandBuffer" will,
+        // however, invalidate the previous commands here. So we can reset potentially blocked slots
+        // associated with this command buffer.
         ResetCommandBufferUnsafe(command_buffer);
       }
       command_buffer_to_state_[command_buffer] = {};
@@ -334,6 +335,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
 
     VkDevice device = VK_NULL_HANDLE;
+    // Collect slots of command buffer "begins" that are baked into the command buffer but for which
+    // the "end" is missing. We will never read those, but need to wait until the command buffer
+    // gets reset.
     std::vector<uint32_t> query_slots_not_needed_to_read;
 
     QueueSubmission queue_submission;
@@ -351,7 +355,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         VkCommandBuffer command_buffer = submit_info.pCommandBuffers[command_buffer_index];
         CHECK(command_buffer_to_state_.contains(command_buffer));
         CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-        bool already_submitted = state.pre_submission_timestamp.has_value();
+        bool has_been_submitted_before = state.pre_submission_cpu_timestamp.has_value();
 
         // Mark that this command buffer in the current state was already submitted. If the command
         // buffer is being submitted again, without a "vkResetCommandBuffer" call, the same slot
@@ -361,7 +365,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         // Note that we are using an std::optional with the submission time to protect us against an
         // "OnCaptureFinished" call, right between pre and post submission, which would try to reset
         // the slots.
-        state.pre_submission_timestamp =
+        state.pre_submission_cpu_timestamp =
             queue_submission.meta_information.pre_submission_cpu_timestamp;
 
         if (device == VK_NULL_HANDLE) {
@@ -384,7 +388,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         // indices are not unique anymore and can't be used by us. Note, that the slots will be
         // marked as "done with reading" when the first submission of this command buffer is done
         // and will eventually be reset on a "vkResetCommandBuffer" call.
-        if (!already_submitted) {
+        if (!has_been_submitted_before) {
           SubmittedCommandBuffer submitted_command_buffer{
               .command_buffer_begin_slot_index = state.command_buffer_begin_slot_index,
               .command_buffer_end_slot_index = state.command_buffer_end_slot_index.value()};
@@ -451,9 +455,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         for (const Marker& marker : state.markers) {
           std::optional<SubmittedMarker> submitted_marker = std::nullopt;
           CHECK(!queue_submission_optional.has_value() ||
-                state.pre_submission_timestamp.has_value());
+                state.pre_submission_cpu_timestamp.has_value());
           if (marker.slot_index.has_value() && queue_submission_optional.has_value() &&
-              (state.pre_submission_timestamp.value() ==
+              (state.pre_submission_cpu_timestamp.value() ==
                queue_submission_optional->meta_information.pre_submission_cpu_timestamp)) {
             submitted_marker = {.meta_information = queue_submission_optional->meta_information,
                                 .slot_index = marker.slot_index.value()};
@@ -633,7 +637,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     VkDevice device = VK_NULL_HANDLE;
 
     for (auto& [command_buffer, command_buffer_state] : command_buffer_to_state_) {
-      if (command_buffer_state.pre_submission_timestamp.has_value()) continue;
+      if (command_buffer_state.pre_submission_cpu_timestamp.has_value()) continue;
       if (device == VK_NULL_HANDLE) {
         CHECK(command_buffer_to_device_.contains(command_buffer));
         device = command_buffer_to_device_.at(command_buffer);
@@ -700,7 +704,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   struct CommandBufferState {
     std::optional<uint32_t> command_buffer_begin_slot_index;
     std::optional<uint32_t> command_buffer_end_slot_index;
-    std::optional<uint64_t> pre_submission_timestamp;
+    std::optional<uint64_t> pre_submission_cpu_timestamp;
     std::vector<Marker> markers;
     uint32_t local_marker_stack_size;
   };
@@ -1002,7 +1006,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         query_slots_to_reset.push_back(marker.slot_index.value());
       }
     }
-    if (state.pre_submission_timestamp.has_value()) {
+    if (state.pre_submission_cpu_timestamp.has_value()) {
       timer_query_pool_->MarkQuerySlotsForReset(device, query_slots_to_reset);
     } else {
       timer_query_pool_->RollbackPendingQuerySlots(device, query_slots_to_reset);
