@@ -21,8 +21,6 @@
 
 namespace orbit_user_space_instrumentation {
 
-namespace {}  // namespace
-
 TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   pid_t pid = fork();
   CHECK(pid != -1);
@@ -40,10 +38,10 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   auto result_memory_region = GetFirstExecutableMemoryRegion(pid, &address_start, &address_end);
   CHECK(result_memory_region.has_value());
 
-  std::vector<uint8_t> original;
-  CHECK(ReadTraceesMemory(pid, address_start, address_end - address_start, &original).has_value());
+  auto result_backup = ReadTraceesMemory(pid, address_start, address_end - address_start);
+  CHECK(result_backup.has_value());
 
-  std::vector<uint8_t> new_data(original.size());
+  std::vector<uint8_t> new_data(result_backup.value().size());
   std::mt19937 engine{std::random_device()()};
   std::uniform_int_distribution<uint8_t> distribution{0x00, 0xff};
   std::generate(std::begin(new_data), std::end(new_data),
@@ -51,12 +49,12 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
 
   CHECK(WriteTraceesMemory(pid, address_start, new_data).has_value());
 
-  std::vector<uint8_t> read_back;
-  CHECK(ReadTraceesMemory(pid, address_start, address_end - address_start, &read_back).has_value());
+  auto result_read_back = ReadTraceesMemory(pid, address_start, address_end - address_start);
+  CHECK(result_read_back.has_value());
 
-  EXPECT_EQ(new_data, read_back);
+  EXPECT_EQ(new_data, result_read_back.value());
 
-  CHECK(WriteTraceesMemory(pid, address_start, original).has_value());
+  CHECK(WriteTraceesMemory(pid, address_start, result_backup.value()).has_value());
 
   // Detach and end child.
   CHECK(DetachAndContinueProcess(pid).has_value());

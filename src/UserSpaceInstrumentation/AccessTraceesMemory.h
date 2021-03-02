@@ -15,10 +15,11 @@
 namespace orbit_user_space_instrumentation {
 
 // Read `length` bytes from process `pid` starting at `address_start`. `length` will be rounded up
-// to a multiple of eight. The data is returned in `bytes`.
+// to a multiple of eight.
 // Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.
-[[nodiscard]] ErrorMessageOr<void> ReadTraceesMemory(pid_t pid, uint64_t address_start,
-                                                     uint64_t length, std::vector<uint8_t>* bytes);
+[[nodiscard]] ErrorMessageOr<std::vector<uint8_t>> ReadTraceesMemory(pid_t pid,
+                                                                     uint64_t address_start,
+                                                                     uint64_t length);
 
 // Write `bytes` into memory of process `pid` starting from `address_start`.
 // Note that we write multiples of eight bytes at once. If length of `bytes` is not a multiple of

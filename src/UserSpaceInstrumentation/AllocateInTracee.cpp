@@ -55,10 +55,9 @@ namespace {
   }
 
   // Backup first 8 bytes.
-  std::vector<uint8_t> original_data;
-  auto result_backup_code = ReadTraceesMemory(pid, address_start, 8, &original_data);
+  auto result_backup_code = ReadTraceesMemory(pid, address_start, 8);
   if (result_backup_code.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to read from tracees: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to read from tracee: \"%s\"",
                                         result_backup_code.error().message()));
   }
 
@@ -66,7 +65,7 @@ namespace {
   auto result_write_code = WriteTraceesMemory(pid, address_start, std::vector<uint8_t>{0x0f, 0x05});
   if (result_write_code.has_error()) {
     return ErrorMessage(
-        absl::StrFormat("Failed to write to tracees: \"%s\"", result_write_code.error().message()));
+        absl::StrFormat("Failed to write to tracee: \"%s\"", result_write_code.error().message()));
   }
 
   // Move instruction pointer to the `syscall` and fill registers with parameters.
@@ -112,7 +111,7 @@ namespace {
   }
 
   // Clean up memory and registers.
-  auto result_restore_memory = WriteTraceesMemory(pid, address_start, original_data);
+  auto result_restore_memory = WriteTraceesMemory(pid, address_start, result_backup_code.value());
   if (result_restore_memory.has_error()) {
     FATAL("Unable to restore memory state of tracee: \"%s\"",
           result_restore_memory.error().message());
