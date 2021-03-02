@@ -286,42 +286,60 @@ message SystemMemoryUsage {
 
 message ClientCaptureEvent {
   oneof event {
+    // Note that field numbers from 1-15 take only 1 byte to encode
+    // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
+    // use them for high frequency events. For the rest please assign
+    // numbers starting with 16.
+    //
     // Please keep these alphabetically ordered.
-    AddressInfo address_info = 1;
-    CallstackSample callstack_sample = 2;
-    FunctionCall function_call = 3;
-    GpuJob gpu_job = 4;
-    GpuQueueSubmission gpu_queue_submission = 5;
-    InternedCallstack interned_callstack = 6;
-    InternedString interned_string = 7;
-    InternedTracepointInfo interned_tracepoint_info = 8;
-    IntrospectionScope introspection_scope = 9;
-    ModuleUpdateEvent module_update_event = 10;
-    SchedulingSlice scheduling_slice = 11;
-    SystemMemoryUsage system_memory_usage = 15;
-    ThreadName thread_name = 12;
-    ThreadStateSlice thread_state_slice = 13;
-    TracepointEvent tracepoint_event = 14;
+
+    // Even though AddressInfo is a high-frequency event
+    // it is going to go away in the future when we switch to
+    // frame-pointer based unwinding.
+    AddressInfo address_info = 16;
+    CallstackSample callstack_sample = 1;
+    FunctionCall function_call = 2;
+    GpuJob gpu_job = 3;
+    GpuQueueSubmission gpu_queue_submission = 4;
+    InternedCallstack interned_callstack = 5;
+    InternedString interned_string = 18;
+    InternedTracepointInfo interned_tracepoint_info = 19;
+    IntrospectionScope introspection_scope = 20;
+    ModuleUpdateEvent module_update_event = 21;
+    SchedulingSlice scheduling_slice = 6;
+    SystemMemoryUsage system_memory_usage = 23;
+    ThreadName thread_name = 22;
+    ThreadStateSlice thread_state_slice = 7;
+    TracepointEvent tracepoint_event = 8;
   }
 }
 
 message ProducerCaptureEvent {
   oneof event {
+    // Note that field numbers from 1-15 take only 1 byte to encode
+    // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
+    // use them for high frequency events. For the rest please assign
+    // numbers starting with 16.
+    //
     // Please keep these alphabetically ordered.
     CallstackSample callstack_sample = 1;
     FullCallstackSample full_callstack_sample = 2;
-    FullAddressInfo full_address_info = 3;
-    FullGpuJob full_gpu_job = 4;
-    FullTracepointEvent full_tracepoint_event = 5;
-    FunctionCall function_call = 6;
-    GpuQueueSubmission gpu_queue_submission = 7;
-    InternedCallstack interned_callstack = 8;
-    InternedString interned_string = 9;
-    IntrospectionScope introspection_scope = 10;
-    ModuleUpdateEvent module_update_event = 11;
-    SchedulingSlice scheduling_slice = 12;
-    SystemMemoryUsage system_memory_usage = 15;
-    ThreadName thread_name = 13;
-    ThreadStateSlice thread_state_slice = 14;
+
+    // Even though AddressInfo is a high-frequency event
+    // it is going to go away in the future when we switch to
+    // frame-pointer based unwinding.
+    FullAddressInfo full_address_info = 16;
+    FullGpuJob full_gpu_job = 3;
+    FullTracepointEvent full_tracepoint_event = 4;
+    FunctionCall function_call = 5;
+    GpuQueueSubmission gpu_queue_submission = 6;
+    InternedCallstack interned_callstack = 7;
+    InternedString interned_string = 18;
+    IntrospectionScope introspection_scope = 19;
+    ModuleUpdateEvent module_update_event = 20;
+    SchedulingSlice scheduling_slice = 8;
+    SystemMemoryUsage system_memory_usage = 22;
+    ThreadName thread_name = 21;
+    ThreadStateSlice thread_state_slice = 9;
   }
 }
