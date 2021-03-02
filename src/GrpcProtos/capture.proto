@@ -271,6 +271,16 @@ message ModuleUpdateEvent {
   ModuleInfo module = 3;
 }
 
+message SystemMemoryUsage {
+  uint64 timestamp_ns = 1;
+  // These fields are retrieved from /proc/meminfo.
+  int64 total_kb = 2;
+  int64 free_kb = 3;
+  int64 available_kb = 4;
+  int64 buffers_kb = 5;
+  int64 cached_kb = 6;
+}
+
 message ClientCaptureEvent {
   oneof event {
     // Please keep these alphabetically ordered.
