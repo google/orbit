@@ -5,6 +5,9 @@
 #ifndef ORBIT_VULKAN_LAYER_TIMER_QUERY_POOL_H_
 #define ORBIT_VULKAN_LAYER_TIMER_QUERY_POOL_H_
 
+#include <numeric>
+#include <vector>
+
 #include "OrbitBase/Logging.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -51,7 +54,10 @@ class TimerQueryPool {
       std::vector<SlotState> slots{num_timer_query_slots_};
       std::fill(slots.begin(), slots.end(), SlotState::kReadyForQueryIssue);
       device_to_query_slots_[device] = slots;
-      device_to_potential_next_free_index_[device] = 0;
+      std::vector<uint32_t> free_slots(num_timer_query_slots_);
+      // At the beginning all slot indices in [0, num_timer_query_slots) are free.
+      std::iota(free_slots.begin(), free_slots.end(), 0);
+      device_to_free_slots_[device] = free_slots;
     }
   }
 
@@ -61,7 +67,7 @@ class TimerQueryPool {
     CHECK(device_to_query_pool_.contains(device));
     VkQueryPool query_pool = device_to_query_pool_.at(device);
     device_to_query_slots_.erase(device);
-    device_to_potential_next_free_index_.erase(device);
+    device_to_free_slots_.erase(device);
 
     dispatch_table_->DestroyQueryPool(device)(device, query_pool, nullptr);
 
@@ -76,30 +82,26 @@ class TimerQueryPool {
     return device_to_query_pool_.at(device);
   }
 
-  // Tries to find a free query slot in the device's pool. It returns `false` if no slot was found
-  // (all slots are occupied) and true otherwise.
-  // In case it successfully found a slot, the index will be written to the given `allocated_index`.
+  // Returns a free query slot from the device's pool if one still exists. It returns `false` if all
+  // slots are occupied and true otherwise. If successful, the index will be written to the given
+  // `allocated_index`.
   //
   // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
   // See also `ResetQuerySlots` to make occupied slots available again.
   [[nodiscard]] bool NextReadyQuerySlot(VkDevice device, uint32_t* allocated_index) {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(device_to_potential_next_free_index_.contains(device));
+    CHECK(device_to_free_slots_.contains(device));
     CHECK(device_to_query_slots_.contains(device));
-    uint32_t potential_next_free_slot = device_to_potential_next_free_index_.at(device);
-    std::vector<SlotState>& slots = device_to_query_slots_.at(device);
-    uint32_t current_slot = potential_next_free_slot;
-    do {
-      if (slots.at(current_slot) == SlotState::kReadyForQueryIssue) {
-        device_to_potential_next_free_index_[device] = (current_slot + 1) % num_timer_query_slots_;
-        slots.at(current_slot) = SlotState::kQueryPendingOnGpu;
-        *allocated_index = current_slot;
-        return true;
-      }
-      current_slot = (current_slot + 1) % num_timer_query_slots_;
-    } while (current_slot != potential_next_free_slot);
+    std::vector<uint32_t>& free_slots = device_to_free_slots_.at(device);
+    if (free_slots.empty()) {
+      return false;
+    }
+    *allocated_index = free_slots.back();
+    free_slots.pop_back();
 
-    return false;
+    CHECK(device_to_query_slots_.at(device)[*allocated_index] == SlotState::kReadyForQueryIssue);
+    device_to_query_slots_.at(device)[*allocated_index] = SlotState::kQueryPendingOnGpu;
+    return true;
   }
 
   // Resets an occupied slot to be ready for queries again. It will also call to Vulkan to reset the
@@ -129,7 +131,7 @@ class TimerQueryPool {
 
   // Resets an occupied slot to be ready for queries again.
   // If `rollback_only` is set, it will not call to Vulkan to reset the content of that slot.
-  // This is useful, if the slot was retrieved, but the actual query was not yet submitted to
+  // This is useful if the slot was retrieved, but the actual query was not yet submitted to
   // Vulkan (e.g. if on resetting the command buffer).
   //
   // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
@@ -143,16 +145,18 @@ class TimerQueryPool {
     absl::WriterMutexLock lock(&mutex_);
     CHECK(device_to_query_slots_.contains(device));
     std::vector<SlotState>& slot_states = device_to_query_slots_.at(device);
-    for (uint32_t physical_slot_index : slot_indices) {
-      CHECK(physical_slot_index < num_timer_query_slots_);
-      const SlotState& current_state = slot_states.at(physical_slot_index);
+    std::vector<uint32_t>& free_slots = device_to_free_slots_.at(device);
+    for (uint32_t slot_index : slot_indices) {
+      CHECK(slot_index < num_timer_query_slots_);
+      const SlotState& current_state = slot_states.at(slot_index);
       CHECK(current_state == SlotState::kQueryPendingOnGpu);
-      slot_states.at(physical_slot_index) = SlotState::kReadyForQueryIssue;
+      slot_states.at(slot_index) = SlotState::kReadyForQueryIssue;
+      free_slots.push_back(slot_index);
       if (rollback_only) {
         continue;
       }
       VkQueryPool query_pool = device_to_query_pool_.at(device);
-      dispatch_table_->ResetQueryPoolEXT(device)(device, query_pool, physical_slot_index, 1);
+      dispatch_table_->ResetQueryPoolEXT(device)(device, query_pool, slot_index, 1);
     }
   }
 
@@ -163,7 +167,7 @@ class TimerQueryPool {
 
   absl::flat_hash_map<VkDevice, VkQueryPool> device_to_query_pool_;
   absl::flat_hash_map<VkDevice, std::vector<SlotState>> device_to_query_slots_;
-  absl::flat_hash_map<VkDevice, uint32_t> device_to_potential_next_free_index_;
+  absl::flat_hash_map<VkDevice, std::vector<uint32_t>> device_to_free_slots_;
 };
 }  // namespace orbit_vulkan_layer
 
