@@ -19,7 +19,7 @@ namespace orbit_user_space_instrumentation {
 
 namespace {}  // namespace
 
-TEST(AccessTraceesMemory, ReadWriteRestore) {
+TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {

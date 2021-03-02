@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef USER_SPACE_INSTRUMENTATION_WRITE_INTO_TRACEES_MEMORY_H_
-#define USER_SPACE_INSTRUMENTATION_WRITE_INTO_TRACEES_MEMORY_H_
+#ifndef USER_SPACE_INSTRUMENTATION_ACCESS_TRACEES_MEMORY_H_
+#define USER_SPACE_INSTRUMENTATION_ACCESS_TRACEES_MEMORY_H_
 
 #include <sys/types.h>
 
@@ -36,4 +36,4 @@ namespace orbit_user_space_instrumentation {
 
 }  // namespace orbit_user_space_instrumentation
 
-#endif  // USER_SPACE_INSTRUMENTATION_WRITE_INTO_TRACEES_MEMORY_H_
+#endif  // USER_SPACE_INSTRUMENTATION_ACCESS_TRACEES_MEMORY_H_
