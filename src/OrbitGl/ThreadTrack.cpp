@@ -284,6 +284,23 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   TimerTrack::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 }
 
+std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
+  std::vector<CaptureViewElement*> result;
+  if (!thread_state_track_->IsEmpty()) {
+    result.push_back(thread_state_track_.get());
+  }
+
+  if (!event_track_->IsEmpty()) {
+    result.push_back(event_track_.get());
+  }
+
+  if (!tracepoint_track_->IsEmpty()) {
+    result.push_back(tracepoint_track_.get());
+  }
+
+  return result;
+}
+
 void ThreadTrack::SetTrackColor(Color color) {
   absl::MutexLock lock(&mutex_);
   event_track_->SetColor(color);

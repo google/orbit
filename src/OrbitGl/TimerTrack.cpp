@@ -84,19 +84,20 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 
 }  // namespace
 
-void TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
+bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
                            const internal::DrawData& draw_data, TextBox* current_text_box,
                            uint64_t* min_ignore, uint64_t* max_ignore) {
   CHECK(min_ignore != nullptr);
   CHECK(max_ignore != nullptr);
-  if (current_text_box == nullptr) return;
+  if (current_text_box == nullptr) return false;
   const TimerInfo& current_timer_info = current_text_box->GetTimerInfo();
   if (draw_data.min_tick > current_timer_info.end() ||
       draw_data.max_tick < current_timer_info.start()) {
-    return;
+    return false;
   }
-  if (current_timer_info.start() >= *min_ignore && current_timer_info.end() <= *max_ignore) return;
-  if (!TimerFilter(current_timer_info)) return;
+  if (current_timer_info.start() >= *min_ignore && current_timer_info.end() <= *max_ignore)
+    return false;
+  if (!TimerFilter(current_timer_info)) return false;
 
   UpdateDepth(current_timer_info.depth() + 1);
   double start_us = time_graph_->GetUsFromTick(current_timer_info.start());
@@ -229,11 +230,15 @@ void TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
       *max_ignore = *min_ignore + draw_data.pixel_delta_in_ticks;
     }
   }
+
+  return true;
 }
 
 void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                   PickingMode /*picking_mode*/, float z_offset) {
   UpdateBoxHeight();
+
+  visible_timer_count_ = 0;
 
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;
@@ -286,8 +291,10 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
         // the previous iteration ("current").
         next_text_box = &block[k];
 
-        DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
-                  &max_ignore);
+        if (DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
+                      &max_ignore)) {
+          ++visible_timer_count_;
+        }
 
         prev_text_box = current_text_box;
         current_text_box = next_text_box;
@@ -295,7 +302,10 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
     }
     // We still need to draw the last timer.
     next_text_box = nullptr;
-    DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore, &max_ignore);
+    if (DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
+                  &max_ignore)) {
+      ++visible_timer_count_;
+    }
   }
 }
 

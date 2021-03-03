@@ -48,6 +48,8 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
 
+  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
+
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;

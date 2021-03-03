@@ -21,10 +21,63 @@ using orbit_accessibility::AccessibilityRole;
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;
 
+namespace {
+class AccessibleTimerPane : public AccessibleInterface {
+ public:
+  AccessibleTimerPane(orbit_gl::AccessibleTrackContent* parent) : parent_(parent) {}
+
+  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
+  [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
+    return nullptr;
+  }
+  [[nodiscard]] const AccessibleInterface* AccessibleParent() const override { return parent_; }
+
+  [[nodiscard]] std::string AccessibleName() const override { return "Timers"; }
+  [[nodiscard]] AccessibilityRole AccessibleRole() const override {
+    return AccessibilityRole::Pane;
+  }
+  [[nodiscard]] AccessibilityRect AccessibleLocalRect() const override {
+    // This implies a lot of knowledge about the structure of the parent:
+    // The TimerPane is not a real control and only created to expose areas of the track to the
+    // E2E tests. We know that the TimerPane is always the last child of the content pane of a
+    // track, and that the content pane does not have any margins / paddings.
+    AccessibilityRect parent_rect = parent_->AccessibleLocalRect();
+
+    if (parent_->AccessibleChildCount() <= 1) {
+      return AccessibilityRect(0, 0, parent_rect.width, parent_rect.height);
+    }
+
+    AccessibilityRect last_child_rect =
+        parent_->AccessibleChild(parent_->AccessibleChildCount() - 2)->AccessibleLocalRect();
+    AccessibilityRect result;
+    result.width = parent_rect.width;
+    result.top = last_child_rect.top + last_child_rect.height;
+    result.height = parent_rect.height - result.top;
+    return result;
+  }
+
+  [[nodiscard]] AccessibilityState AccessibleState() const override {
+    return AccessibilityState::Normal;
+  }
+
+ private:
+  orbit_gl::AccessibleTrackContent* parent_;
+};
+}  // namespace
+
 namespace orbit_gl {
 
+AccessibleTrackContent::AccessibleTrackContent(Track* track, TimeGraphLayout* layout)
+    : track_(track), layout_(layout), timer_pane_(new AccessibleTimerPane(this)) {}
+
 int AccessibleTrackContent::AccessibleChildCount() const {
-  return static_cast<int>(track_->GetVisibleChildren().size());
+  int result = static_cast<int>(track_->GetVisibleChildren().size());
+  if (track_->GetVisiblePrimitiveCount() > 0) {
+    // Only expose the "Timer" pane if any timers were rendered in the visible field
+    result += 1;
+  }
+
+  return result;
 }
 
 const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int index) const {
@@ -33,7 +86,10 @@ const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int index) co
   }
 
   auto children = track_->GetVisibleChildren();
-  if (static_cast<size_t>(index) >= children.size()) {
+  if (static_cast<size_t>(index) == children.size()) {
+    return timer_pane_.get();
+  }
+  if (static_cast<size_t>(index) > children.size()) {
     return nullptr;
   }
   return children[index]->GetOrCreateAccessibleInterface();
