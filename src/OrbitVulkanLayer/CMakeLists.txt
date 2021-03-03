@@ -40,6 +40,9 @@ target_link_libraries(OrbitVulkanLayer PUBLIC
         Vulkan::Vulkan
         Vulkan::ValidationLayers)
 
+
+strip_symbols(OrbitVulkanLayer)
+
 add_executable(OrbitVulkanLayerTests)
 
 target_compile_options(OrbitVulkanLayerTests PRIVATE ${STRICT_COMPILE_FLAGS})
