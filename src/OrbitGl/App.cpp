@@ -563,7 +563,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
 
             std::optional<std::unique_ptr<CodeReport>> code_report;
 
-            if (GetCaptureData().has_post_processed_sampling_data()) {
+            if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
               const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
               const auto absolute_address =
                   function_utils::GetAbsoluteAddress(function, *process_, *module);
