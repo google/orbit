@@ -23,9 +23,11 @@ target_sources(UserSpaceInstrumentation PUBLIC
         include/UserSpaceInstrumentation/RegisterState.h)
 
 target_sources(UserSpaceInstrumentation PRIVATE
-        Attach.cpp
+        AccessTraceesMemory.cpp
+        AccessTraceesMemory.h
         AllocateInTracee.cpp
         AllocateInTracee.h
+        Attach.cpp
         RegisterState.cpp)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
@@ -41,10 +43,12 @@ target_include_directories(UserSpaceInstrumentationTests PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(UserSpaceInstrumentationTests PRIVATE
-        AttachTest.cpp
+        AccessTraceesMemoryTest.cpp
         AllocateInTraceeTest.cpp
+        AttachTest.cpp
         RegisterStateTest.cpp
-        TestProcess.cpp)
+        TestProcess.cpp
+        TestProcess.h)
 
 target_link_libraries(UserSpaceInstrumentationTests PRIVATE
         LinuxTracing

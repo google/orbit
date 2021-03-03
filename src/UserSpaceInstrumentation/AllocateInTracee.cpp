@@ -17,58 +17,14 @@
 #include <string>
 #include <vector>
 
+#include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "UserSpaceInstrumentation/RegisterState.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
-
-using orbit_base::ReadFileToString;
-
-// Returns the address range of the first executable memory region. In every case I encountered this
-// was the second line in the `maps` file corresponding to the code of the process we look at.
-// However we don't really care. So keeping it general and just searching for an executable region
-// is probably helping stability.
-[[nodiscard]] ErrorMessageOr<void> GetFirstExecutableMemoryRegion(pid_t pid, uint64_t* addr_start,
-                                                                  uint64_t* addr_end) {
-  auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  if (result_read_maps.has_error()) {
-    return result_read_maps.error();
-  }
-  const std::vector<std::string> lines =
-      absl::StrSplit(result_read_maps.value(), '\n', absl::SkipEmpty());
-  for (const auto& line : lines) {
-    const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
-    if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
-    const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
-    if (addresses.size() != 2) continue;
-    if (!absl::numbers_internal::safe_strtou64_base(addresses[0], addr_start, 16)) continue;
-    if (!absl::numbers_internal::safe_strtou64_base(addresses[1], addr_end, 16)) continue;
-    return outcome::success();
-  }
-  return ErrorMessage(absl::StrFormat("Unable to locate executable memory area in pid: %d", pid));
-}
-
-// Write `bytes` into memory of process `pid` starting from `address_start`.
-// Note that we write multiples of eight bytes at once. If length of `bytes` is not a multiple of
-// eight the remaining bytes are zeroed out.
-void WriteBytesIntoTraceesMemory(pid_t pid, uint64_t address_start,
-                                 const std::vector<uint8_t>& bytes) {
-  size_t pos = 0;
-  do {
-    // Pack 8 byte for writing into `data`.
-    uint64_t data = 0;
-    for (size_t i = 0; i < sizeof(data) && pos + i < bytes.size(); i++) {
-      uint64_t t = bytes[pos + i];
-      data |= t << (8 * i);
-    }
-    CHECK(ptrace(PTRACE_POKEDATA, pid, address_start + pos, data) != -1);
-    pos += 8;
-  } while (pos < bytes.size());
-}
 
 // Execute a single syscall instruction in tracee `pid`. `syscall` identifies the syscall as in this
 // list: https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl
@@ -90,23 +46,26 @@ void WriteBytesIntoTraceesMemory(pid_t pid, uint64_t address_start,
   }
 
   // Get an executable memory region.
-  uint64_t address_start = 0;
-  uint64_t address_end = 0;
-  auto result_memory_region = GetFirstExecutableMemoryRegion(pid, &address_start, &address_end);
+  auto result_memory_region = GetFirstExecutableMemoryRegion(pid);
   if (result_memory_region.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
                                         result_memory_region.error().message()));
   }
+  const uint64_t address_start = result_memory_region.value().first;
 
   // Backup first 8 bytes.
-  const uint64_t backup_module_code = ptrace(PTRACE_PEEKDATA, pid, address_start, NULL);
-  if (errno) {
-    return ErrorMessage(absl::StrFormat("Failed to PTRACE_PEEKDATA with errno %d: \"%s\"", errno,
-                                        SafeStrerror(errno)));
+  auto result_backup_code = ReadTraceesMemory(pid, address_start, 8);
+  if (result_backup_code.has_error()) {
+    return ErrorMessage(absl::StrFormat("Failed to read from tracee's memory: \"%s\"",
+                                        result_backup_code.error().message()));
   }
 
   // Write `syscall` into memory. Machine code is `0x0f05`.
-  WriteBytesIntoTraceesMemory(pid, address_start, std::vector<uint8_t>{0x0f, 0x05});
+  auto result_write_code = WriteTraceesMemory(pid, address_start, std::vector<uint8_t>{0x0f, 0x05});
+  if (result_write_code.has_error()) {
+    return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: \"%s\"",
+                                        result_write_code.error().message()));
+  }
 
   // Move instruction pointer to the `syscall` and fill registers with parameters.
   RegisterState registers_for_syscall = original_registers;
@@ -151,13 +110,14 @@ void WriteBytesIntoTraceesMemory(pid_t pid, uint64_t address_start,
   }
 
   // Clean up memory and registers.
-  auto result_restore_memory = ptrace(PTRACE_POKEDATA, pid, address_start, backup_module_code);
-  if (result_restore_memory == -1) {
-    FATAL("Unable to restore memory state of tracee");
+  auto result_restore_memory = WriteTraceesMemory(pid, address_start, result_backup_code.value());
+  if (result_restore_memory.has_error()) {
+    FATAL("Unable to restore memory state of tracee: \"%s\"",
+          result_restore_memory.error().message());
   }
   result_restore_registers = original_registers.RestoreRegisters();
   if (result_restore_registers.has_error()) {
-    FATAL("Unable to restore register state of tracee : \"%s\"",
+    FATAL("Unable to restore register state of tracee: \"%s\"",
           result_restore_registers.error().message());
   }
 
