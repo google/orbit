@@ -958,8 +958,14 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         marker_proto->set_text_key(
             vulkan_layer_producer_->InternStringIfNecessaryAndGetKey(marker_state.label_name));
       }
-      if (marker_state.color.red != 0.0f || marker_state.color.green != 0.0f ||
-          marker_state.color.blue != 0.0f || marker_state.color.alpha != 0.0f) {
+
+      auto quantize = [](float value) { return static_cast<uint8_t>(value * 255.f); };
+
+      // We have seen near 0.f color values in all four components "in the wild", so we check if the
+      // quantized values are not zero here to make sure these markers are rendered with an actual
+      // color.
+      if (quantize(marker_state.color.red) != 0 || quantize(marker_state.color.green) != 0 ||
+          quantize(marker_state.color.blue) != 0 || quantize(marker_state.color.alpha) != 0) {
         auto color = marker_proto->mutable_color();
         color->set_red(marker_state.color.red);
         color->set_green(marker_state.color.green);
