@@ -445,6 +445,50 @@ struct ThreadTrackStats {
   return summary;
 }
 
+std::string TimeGraph::GetTimerSummary(uint64_t start_ns, uint64_t end_ns) const {
+  if (start_ns > end_ns) {
+    std::swap(start_ns, end_ns);
+  }
+
+  // Scheduler
+  SchedulerTrack* scheduler_track = track_manager_->GetOrCreateSchedulerTrack();
+  std::vector<const TextBox*> boxes = scheduler_track->GetBoxesInRange(start_ns, end_ns);
+  std::unordered_map<int32_t, std::vector<const TimerInfo*>> timers_by_pid;
+  std::unordered_map<int32_t, uint64_t> duration_by_pid;
+  for (const TextBox* box : boxes) {
+    const orbit_client_protos::TimerInfo& timer_info = box->GetTimerInfo();
+    timers_by_pid[timer_info.process_id()].push_back(&timer_info);
+    duration_by_pid[timer_info.process_id()] += (timer_info.end() - timer_info.start());
+  }
+  auto sorted_duration_by_pid = orbit_core::ReverseValueSort(duration_by_pid);
+
+  constexpr double kNsToMs = 1 / 1000000.0;
+  double range_ms = static_cast<double>(end_ns - start_ns) * kNsToMs;
+
+  std::string result = absl::StrFormat("Selection time: %.6f ms\n", range_ms);
+
+  for (auto& [pid, process_duration] : sorted_duration_by_pid) {
+    auto& timers = timers_by_pid[pid];
+    std::string process_name = capture_data_->GetThreadName(pid);
+    std::unordered_map<int32_t, uint64_t> duration_by_tid;
+    for (auto& timer : timers) {
+      duration_by_tid[timer->thread_id()] += timer->end() - timer->start();
+    }
+    double process_duration_ms = static_cast<double>(process_duration) * kNsToMs;
+    result += absl::StrFormat("  %s[%i] spent %.6f ms on core (%.2f%%)\n", process_name, pid,
+                              process_duration_ms, 100.0 * process_duration_ms / range_ms);
+
+    auto sorted_duration_by_tid = orbit_core::ReverseValueSort(duration_by_tid);
+    for (auto& [tid, duration_ns] : sorted_duration_by_tid) {
+      std::string thread_name = capture_data_->GetThreadName(tid);
+      double duration_ms = static_cast<double>(duration_ns) * kNsToMs;
+      result += absl::StrFormat("    %s[%i] spent %.6f ms on core (%.2f%%)\n", thread_name, tid,
+                                duration_ms, 100.0 * duration_ms / range_ms);
+    }
+  }
+  return result;
+}
+
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : track_manager_->GetAllTracks()) {

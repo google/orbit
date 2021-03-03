@@ -337,6 +337,8 @@ bool CaptureWindow::RightUp() {
     select_start_ = select_stop_;
   }
 
+  timer_summary_for_range_ = time_graph_->GetTimerSummary(time_start_, time_stop_);
+
   bool show_context_menu = select_start_[0] == select_stop_[0];
   is_selecting_ = false;
   NeedsRedraw();
@@ -790,10 +792,15 @@ void CaptureWindow::RenderImGuiDebugUI() {
   if (ImGui::CollapsingHeader("Timer Summary")) {
     if (ImGui::Button("Refresh timer summary and copy to clipboard")) {
       timer_summary_ = time_graph_->GetTimerSummary();
-      app_->SetClipboard(timer_summary_);
+      app_->SetClipboard(timer_summary_ + timer_summary_for_range_);
     }
 
     ImGui::TextUnformatted(timer_summary_.c_str(), timer_summary_.c_str() + timer_summary_.size());
+
+    ImGui::Text("Timer summary for selected range (%.6f ms)",
+                static_cast<double>(time_stop_ - time_start_) / 1000000.0);
+    ImGui::TextUnformatted(timer_summary_for_range_.c_str(),
+                           timer_summary_for_range_.c_str() + timer_summary_for_range_.size());
   }
 }
 

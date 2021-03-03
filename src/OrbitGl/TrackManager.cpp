@@ -163,7 +163,8 @@ void TrackManager::UpdateFilteredTrackList() {
   for (const auto& track : sorted_tracks_) {
     std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
     for (auto& filter : filters) {
-      if (absl::StrContains(lower_case_label, filter)) {
+      if (absl::StrContains(lower_case_label, filter) ||
+          track->GetType() == Track::kSchedulerTrack) {
         visible_tracks_.push_back(track);
         break;
       }

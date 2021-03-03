@@ -274,7 +274,7 @@ std::vector<std::pair<Key, Val> > ValueSort(
     });
   else
     std::sort(vec.begin(), vec.end(),
-              [&a_SortFunc](const PairType& a, const PairType& b) { return a.second < b.second; });
+              [](const PairType& a, const PairType& b) { return a.second < b.second; });
 
   return vec;
 }
