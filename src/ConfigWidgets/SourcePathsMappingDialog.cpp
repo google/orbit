@@ -81,7 +81,7 @@ void SourcePathsMappingDialog::OnSelectionChanged(const QItemSelection& selected
   if (!deselected.isEmpty()) {
     const auto* mapping = deselected.indexes().first().data(Qt::UserRole).value<const Mapping*>();
     const bool invalid_mapping_deselected = !mapping->IsValid();
-    if (invalid_mapping_deselected) model_.removeRows(deselected.indexes().first().row(), 1);
+    if (invalid_mapping_deselected) model_.RemoveRows(deselected.indexes().first().row(), 1);
   }
 }
 
@@ -110,6 +110,6 @@ void SourcePathsMappingDialog::OnTargetPathChanged(const QString& new_target) {
 void SourcePathsMappingDialog::OnRemoveSelectedMapping() {
   auto indexes = ui_->list_view->selectionModel()->selectedIndexes();
   auto idx = indexes.first();
-  model_.removeRows(idx.row(), 1);
+  model_.RemoveRows(idx.row(), 1);
 }
 }  // namespace orbit_config_widgets

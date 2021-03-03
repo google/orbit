@@ -46,6 +46,9 @@
      <property name="dragEnabled">
       <bool>true</bool>
      </property>
+     <property name="dragDropOverwriteMode">
+      <bool>true</bool>
+     </property>
      <property name="dragDropMode">
       <enum>QAbstractItemView::InternalMove</enum>
      </property>

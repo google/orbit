@@ -27,6 +27,12 @@ void MappingItemModel::SetMappings(std::vector<Mapping> new_mappings) {
   }
 }
 
+Qt::ItemFlags MappingItemModel::flags(const QModelIndex& index) const {
+  if (index.isValid()) return QAbstractListModel::flags(index) | Qt::ItemIsDragEnabled;
+
+  return QAbstractListModel::flags(index) | Qt::ItemIsDropEnabled;
+}
+
 QVariant MappingItemModel::data(const QModelIndex& index, int role) const {
   CHECK(index.model() == this);
   CHECK(index.row() < static_cast<int>(mappings_.size()));
@@ -80,7 +86,7 @@ bool MappingItemModel::moveRows(const QModelIndex& source_parent, int source_row
   return true;
 }
 
-bool MappingItemModel::removeRows(int row, int count, const QModelIndex& parent) {
+bool MappingItemModel::RemoveRows(int row, int count, const QModelIndex& parent) {
   // We don't have a tree structure, so the parent can't be valid.
   if (parent.isValid()) return false;
   if (row >= rowCount()) return false;
