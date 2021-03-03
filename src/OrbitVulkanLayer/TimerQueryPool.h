@@ -26,7 +26,7 @@ namespace orbit_vulkan_layer {
 // Slots can be requested using `NextReadyQuerySlot, which will block them until being reset again.
 // If the command buffer storing the slot index gets reset before it was even submitted,
 // `RollbackPendingQuerySlots` can be called to mark the slot as being free (ready) again without
-// the need of actually resetting the timer value underlying to the slot.
+// the need of actually resetting the timer value underlying the slot.
 // Once submitted, the slot is baked into the command buffer (until the command buffer is being
 // reset again). In order to free that slot, two things need to happen:
 // 1. The client (this Vulkan layer) needs to communicate that it will not do any attempts to read
@@ -155,14 +155,13 @@ class TimerQueryPool {
     std::vector<uint32_t>& free_slots = device_to_free_slots_.at(device);
     for (uint32_t slot_index : slot_indices) {
       CHECK(slot_index < num_timer_query_slots_);
-      const SlotState& current_state = slot_states.at(slot_index);
-      CHECK(current_state == SlotState::kQueryPendingOnGpu ||
-            current_state == SlotState::kResetRequested);
+      const SlotState& current_state = slot_states[slot_index];
       if (current_state == SlotState::kQueryPendingOnGpu) {
-        slot_states.at(slot_index) = SlotState::kDoneReading;
+        slot_states[slot_index] = SlotState::kDoneReading;
         continue;
       }
-      slot_states.at(slot_index) = SlotState::kReadyForQueryIssue;
+      CHECK(current_state == SlotState::kResetRequested);
+      slot_states[slot_index] = SlotState::kReadyForQueryIssue;
       free_slots.push_back(slot_index);
       VkQueryPool query_pool = device_to_query_pool_.at(device);
       dispatch_table_->ResetQueryPoolEXT(device)(device, query_pool, slot_index, 1);
@@ -191,14 +190,13 @@ class TimerQueryPool {
     std::vector<uint32_t>& free_slots = device_to_free_slots_.at(device);
     for (uint32_t slot_index : slot_indices) {
       CHECK(slot_index < num_timer_query_slots_);
-      const SlotState& current_state = slot_states.at(slot_index);
-      CHECK(current_state == SlotState::kQueryPendingOnGpu ||
-            current_state == SlotState::kDoneReading);
+      const SlotState& current_state = slot_states[slot_index];
       if (current_state == SlotState::kQueryPendingOnGpu) {
-        slot_states.at(slot_index) = SlotState::kResetRequested;
+        slot_states[slot_index] = SlotState::kResetRequested;
         continue;
       }
-      slot_states.at(slot_index) = SlotState::kReadyForQueryIssue;
+      CHECK(current_state == SlotState::kDoneReading);
+      slot_states[slot_index] = SlotState::kReadyForQueryIssue;
       free_slots.push_back(slot_index);
       VkQueryPool query_pool = device_to_query_pool_.at(device);
       dispatch_table_->ResetQueryPoolEXT(device)(device, query_pool, slot_index, 1);
@@ -224,9 +222,9 @@ class TimerQueryPool {
     std::vector<uint32_t>& free_slots = device_to_free_slots_.at(device);
     for (uint32_t slot_index : slot_indices) {
       CHECK(slot_index < num_timer_query_slots_);
-      const SlotState& current_state = slot_states.at(slot_index);
+      const SlotState& current_state = slot_states[slot_index];
       CHECK(current_state == SlotState::kQueryPendingOnGpu);
-      slot_states.at(slot_index) = SlotState::kReadyForQueryIssue;
+      slot_states[slot_index] = SlotState::kReadyForQueryIssue;
       free_slots.push_back(slot_index);
     }
   }
