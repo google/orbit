@@ -4,6 +4,8 @@
 
 #include "SourceCodeReport.h"
 
+#include <algorithm>
+#include <limits>
 #include <optional>
 
 #include "OrbitBase/Logging.h"
@@ -39,14 +41,23 @@ SourceCodeReport::SourceCodeReport(std::string_view source_file,
       continue;
     }
 
+    min_line_number_ = std::min(min_line_number_, current_line_info.source_line());
+    max_line_number_ = std::max(max_line_number_, current_line_info.source_line());
+
     number_of_samples_per_line_[current_line_info.source_line()] += current_samples;
     total_samples_in_function_ += current_samples;
   }
 }
 
 std::optional<uint32_t> SourceCodeReport::GetNumSamplesAtLine(size_t line) const {
-  if (!number_of_samples_per_line_.contains(line)) return std::nullopt;
-  return number_of_samples_per_line_.at(line);
+  // Outside the function, no data. So we return an empty optional.
+  if (line < min_line_number_ || line > max_line_number_) return std::nullopt;
+
+  // We are inside the function and we have samples
+  if (number_of_samples_per_line_.contains(line)) return number_of_samples_per_line_.at(line);
+
+  // We are inside the function, but have no samples. So we return 0
+  return 0;
 }
 
 }  // namespace orbit_gl

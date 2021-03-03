@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <limits>
 #include <optional>
 #include <utility>
 
@@ -39,6 +40,8 @@ class SourceCodeReport : public CodeReport {
   absl::flat_hash_map<uint32_t, uint32_t> number_of_samples_per_line_;
   uint32_t total_samples_in_function_ = 0;
   uint32_t total_samples_in_capture_ = 0;
+  uint32_t min_line_number_ = std::numeric_limits<uint32_t>::max();
+  uint32_t max_line_number_ = std::numeric_limits<uint32_t>::min();
 };
 
 }  // namespace orbit_gl
