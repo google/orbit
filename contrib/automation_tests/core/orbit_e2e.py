@@ -89,6 +89,8 @@ class CloseOrbit(E2ETestCase):
         # self.find_control("Button", "Close").click_input()
         # ... so just send Alt + F4
         send_keys('%{F4}')
+        # Click Yes on the "Are you sure you want to continue" dialog to actually close Orbit
+        self.find_control('Button', 'Yes').click_input()
         logging.info('Closed Orbit.')
 
 
