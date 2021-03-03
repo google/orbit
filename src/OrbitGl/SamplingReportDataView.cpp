@@ -278,27 +278,43 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   }
 }
 
-void SamplingReportDataView::UpdateSelectedAddressesAndTid(const std::vector<int>& indices) {
+void SamplingReportDataView::UpdateSelectedIndicesAndFunctionIds(
+    const std::vector<int>& selected_indices) {
+  selected_indices_.clear();
+  selected_function_ids_.clear();
+  for (int row : selected_indices) {
+    selected_indices_.insert(indices_[row]);
+    selected_function_ids_.insert(GetSampledFunction(row).absolute_address);
+  }
+}
+
+void SamplingReportDataView::RestoreSelectedIndicesAfterFunctionsChanged() {
+  selected_indices_.clear();
+  for (size_t row = 0; row < functions_.size(); ++row) {
+    if (selected_function_ids_.contains(functions_[row].absolute_address)) {
+      selected_indices_.insert(static_cast<int>(row));
+    }
+  }
+}
+
+void SamplingReportDataView::UpdateVisibleSelectedAddressesAndTid(
+    const std::vector<int>& visible_selected_indices) {
   absl::flat_hash_set<uint64_t> addresses;
-  for (int index : indices) {
+  for (int index : visible_selected_indices) {
     addresses.insert(GetSampledFunction(index).absolute_address);
   }
   sampling_report_->OnSelectAddresses(addresses, tid_);
 }
 
 void SamplingReportDataView::OnSelect(const std::vector<int>& indices) {
-  UpdateSelectedAddressesAndTid(indices);
-
-  selected_indices_.clear();
-  for (int row : indices) {
-    selected_indices_.insert(indices_[row]);
-  }
+  UpdateSelectedIndicesAndFunctionIds(indices);
+  UpdateVisibleSelectedAddressesAndTid(indices);
 }
 
 void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_indices,
                                        const RefreshMode& mode) {
   if (mode != RefreshMode::kOnFilter && mode != RefreshMode::kOnSort) return;
-  UpdateSelectedAddressesAndTid(visible_selected_indices);
+  UpdateVisibleSelectedAddressesAndTid(visible_selected_indices);
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {
@@ -310,6 +326,7 @@ void SamplingReportDataView::LinkDataView(DataView* data_view) {
 
 void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFunction>& functions) {
   functions_ = functions;
+  RestoreSelectedIndicesAfterFunctionsChanged();
 
   size_t num_functions = functions_.size();
   indices_.resize(num_functions);
