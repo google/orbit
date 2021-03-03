@@ -92,6 +92,8 @@ class TimerTrack : public Track {
 
   [[nodiscard]] virtual float GetHeaderHeight() const;
 
+  [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
+
  protected:
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
@@ -104,9 +106,9 @@ class TimerTrack : public Track {
     return true;
   }
 
-  void DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
-                 const internal::DrawData& draw_data, TextBox* current_text_box,
-                 uint64_t* min_ignore, uint64_t* max_ignore);
+  [[nodiscard]] bool DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
+                               const internal::DrawData& draw_data, TextBox* current_text_box,
+                               uint64_t* min_ignore, uint64_t* max_ignore);
 
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
@@ -120,6 +122,7 @@ class TimerTrack : public Track {
   uint32_t depth_ = 0;
   mutable absl::Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
+  int visible_timer_count_ = 0;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   float GetHeight() const override;

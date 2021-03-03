@@ -96,6 +96,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
 
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
+  [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
  protected:
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
