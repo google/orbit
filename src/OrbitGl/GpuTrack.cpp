@@ -336,7 +336,7 @@ std::string GpuTrack::GetCommandBufferTooltip(
   return absl::StrFormat(
       "<b>Command Buffer Execution</b><br/>"
       "<i>At `vkBeginCommandBuffer` and `vkEndCommandBuffer` `vkCmdWriteTimestamp`s have been "
-      "inserted. The GPU timestamps get aligned with the corresponding hardware execution of the"
+      "inserted. The GPU timestamps get aligned with the corresponding hardware execution of the "
       "submission.</i>"
       "<br/>"
       "<br/>"
@@ -352,7 +352,7 @@ std::string GpuTrack::GetDebugMarkerTooltip(
   return absl::StrFormat(
       "<b>Vulkan Debug Marker</b><br/>"
       "<i>At the marker's begin and end `vkCmdWriteTimestamp`s have been "
-      "inserted. The GPU timestamps get aligned with the corresponding hardware execution of the"
+      "inserted. The GPU timestamps get aligned with the corresponding hardware execution of the "
       "submission.</i>"
       "<br/>"
       "<br/>"
