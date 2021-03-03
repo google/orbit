@@ -2,14 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TestLib.h"
+#include "UserSpaceInstrumentationTestLib.h"
 
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-
-namespace orbit_user_space_instrumentation {
 
 namespace {
 
@@ -25,7 +23,7 @@ void InitTestLib() {
   std::cout << "Init Lib. Tmp file is: " << p << std::endl;
 }
 
-void UseTestLib(const std::string& s) {
+void UseTestLib(std::string_view s) {
   auto p = GetTmpFilePath();
   std::ofstream ofs;
   ofs.open(p, std::ofstream::out | std::ofstream::app);
@@ -48,5 +46,3 @@ void CloseTestLib() {
 
   std::remove(p.c_str());
 }
-
-}  // namespace orbit_user_space_instrumentation
