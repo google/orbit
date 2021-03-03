@@ -65,9 +65,6 @@ ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, nodeploy);
 
-// TODO(irinashkviro): remove this flag when metrics uploading is finished
-ABSL_FLAG(bool, enable_metrics, false, "Enables sending log events");
-
 using ServiceDeployManager = orbit_qt::ServiceDeployManager;
 using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
 using ScopedConnection = orbit_ssh_qt::ScopedConnection;
@@ -90,14 +87,12 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   std::optional<orbit_qt::TargetConfiguration> target_config;
 
   std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader;
-  if (absl::GetFlag(FLAGS_enable_metrics)) {
-    auto metrics_uploader_result = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
-    if (metrics_uploader_result.has_value()) {
-      metrics_uploader = std::move(metrics_uploader_result.value());
-      LOG("MetricsUploader was initialized successfully");
-    } else {
-      ERROR("%s", metrics_uploader_result.error().message());
-    }
+  auto metrics_uploader_result = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
+  if (metrics_uploader_result.has_value()) {
+    metrics_uploader = std::move(metrics_uploader_result.value());
+    LOG("MetricsUploader was initialized successfully");
+  } else {
+    ERROR("%s", metrics_uploader_result.error().message());
   }
 
   // If Orbit starts with loading a capture file, we skip ProfilingTargetDialog and create a
