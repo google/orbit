@@ -33,10 +33,10 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   // Stop the child process using our tooling.
   CHECK(AttachAndStopProcess(pid).has_value());
 
-  uint64_t address_start = 0;
-  uint64_t address_end = 0;
-  auto result_memory_region = GetFirstExecutableMemoryRegion(pid, &address_start, &address_end);
+  auto result_memory_region = GetFirstExecutableMemoryRegion(pid);
   CHECK(result_memory_region.has_value());
+  const uint64_t address_start = result_memory_region.value().first;
+  const uint64_t address_end = result_memory_region.value().second;
 
   auto result_backup = ReadTraceesMemory(pid, address_start, address_end - address_start);
   CHECK(result_backup.has_value());
@@ -47,7 +47,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   std::generate(std::begin(new_data), std::end(new_data),
                 [&distribution, &engine]() { return distribution(engine); });
 
-  CHECK(WriteTraceesMemory(pid, address_start, new_data).has_value());
+  CHECK(!WriteTraceesMemory(pid, address_start, new_data).has_error());
 
   auto result_read_back = ReadTraceesMemory(pid, address_start, address_end - address_start);
   CHECK(result_read_back.has_value());
@@ -57,7 +57,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   CHECK(WriteTraceesMemory(pid, address_start, result_backup.value()).has_value());
 
   // Detach and end child.
-  CHECK(DetachAndContinueProcess(pid).has_value());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }

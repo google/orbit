@@ -46,26 +46,25 @@ namespace {
   }
 
   // Get an executable memory region.
-  uint64_t address_start = 0;
-  uint64_t address_end = 0;
-  auto result_memory_region = GetFirstExecutableMemoryRegion(pid, &address_start, &address_end);
+  auto result_memory_region = GetFirstExecutableMemoryRegion(pid);
   if (result_memory_region.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
                                         result_memory_region.error().message()));
   }
+  const uint64_t address_start = result_memory_region.value().first;
 
   // Backup first 8 bytes.
   auto result_backup_code = ReadTraceesMemory(pid, address_start, 8);
   if (result_backup_code.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to read from tracee: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to read from tracee's memory: \"%s\"",
                                         result_backup_code.error().message()));
   }
 
   // Write `syscall` into memory. Machine code is `0x0f05`.
   auto result_write_code = WriteTraceesMemory(pid, address_start, std::vector<uint8_t>{0x0f, 0x05});
   if (result_write_code.has_error()) {
-    return ErrorMessage(
-        absl::StrFormat("Failed to write to tracee: \"%s\"", result_write_code.error().message()));
+    return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: \"%s\"",
+                                        result_write_code.error().message()));
   }
 
   // Move instruction pointer to the `syscall` and fill registers with parameters.

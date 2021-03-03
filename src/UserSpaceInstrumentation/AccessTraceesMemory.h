@@ -32,8 +32,8 @@ namespace orbit_user_space_instrumentation {
 // was the second line in the `maps` file corresponding to the code of the process we look at.
 // However we don't really care. So keeping it general and just searching for an executable region
 // is probably helping stability.
-[[nodiscard]] ErrorMessageOr<void> GetFirstExecutableMemoryRegion(pid_t pid, uint64_t* addr_start,
-                                                                  uint64_t* addr_end);
+using AddressRange = std::pair<uint64_t, uint64_t>;
+[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(pid_t pid);
 
 }  // namespace orbit_user_space_instrumentation
 

@@ -32,7 +32,7 @@ using orbit_base::ReadFileToString;
     const uint64_t data = ptrace(PTRACE_PEEKDATA, pid, address_start + i * 8, NULL);
     if (errno) {
       return ErrorMessage(
-          absl::StrFormat("Failed to PTRACE_PEEKDATA for pid: %d with errno %d: \"%s\"", pid, errno,
+          absl::StrFormat("Failed to PTRACE_PEEKDATA for pid %d with errno %d: \"%s\"", pid, errno,
                           SafeStrerror(errno)));
     }
     std::memcpy(bytes.data() + (i * sizeof(uint64_t)), &data, 8);
@@ -55,8 +55,7 @@ using orbit_base::ReadFileToString;
   return outcome::success();
 }
 
-[[nodiscard]] ErrorMessageOr<void> GetFirstExecutableMemoryRegion(pid_t pid, uint64_t* addr_start,
-                                                                  uint64_t* addr_end) {
+[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(pid_t pid) {
   auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   if (result_read_maps.has_error()) {
     return result_read_maps.error();
@@ -68,9 +67,10 @@ using orbit_base::ReadFileToString;
     if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
     const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
-    if (!absl::numbers_internal::safe_strtou64_base(addresses[0], addr_start, 16)) continue;
-    if (!absl::numbers_internal::safe_strtou64_base(addresses[1], addr_end, 16)) continue;
-    return outcome::success();
+    AddressRange result;
+    if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) continue;
+    if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) continue;
+    return result;
   }
   return ErrorMessage(absl::StrFormat("Unable to locate executable memory area in pid: %d", pid));
 }
