@@ -8,10 +8,13 @@
 CC=clang
 PHONY=all clean
 
-all: line_info_test_binary
+all: line_info_test_binary line_info_test_binary_compressed
 
 line_info_test_binary: ../LineInfoTestBinary.cpp
 	${CC} ../LineInfoTestBinary.cpp -g -O3 -o line_info_test_binary -fdebug-prefix-map=$(shell pwd)=.
 
+line_info_test_binary_compressed: ../LineInfoTestBinary.cpp
+	${CC} ../LineInfoTestBinary.cpp -g -gz -O3 -o line_info_test_binary_compressed -fdebug-prefix-map=$(shell pwd)=.
+
 clean:
-	rm -f line_info_test_binary
+	rm -f line_info_test_binary line_info_test_binary_compressed

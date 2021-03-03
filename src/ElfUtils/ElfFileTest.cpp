@@ -290,3 +290,16 @@ TEST(ElfFile, LineInfoInlining) {
   EXPECT_EQ(std::filesystem::path{line_info.value().source_file()}.filename().string(),
             "LineInfoTestBinary.cpp");
 }
+
+TEST(ElfFile, CompressedDebugInfo) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary_compressed";
+
+  auto program = ElfFile::Create(file_path);
+  ASSERT_TRUE(program.has_value()) << program.error().message();
+
+  constexpr uint64_t kFirstInstructionOfInlinedPrintHelloWorld = 0x401141;
+  ErrorMessageOr<orbit_grpc_protos::LineInfo> line_info =
+      program.value()->GetLineInfo(kFirstInstructionOfInlinedPrintHelloWorld);
+  ASSERT_TRUE(line_info.has_value()) << line_info.error().message();
+}
