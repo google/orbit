@@ -195,9 +195,10 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
 }
 
 // For example, from a value = 0.5, we want to print "50.00 %"
-static QString DoubleToPercentageString(double v) {
-  v = std::clamp(v, 0., 1.);
-  return QString{"%1 %"}.arg(v * 100., 0, 'f', 2);
+static QString FractionToPercentageString(int a, int b) {
+  double ratio = (!b ? 0. : static_cast<double>(a) / b);
+  double percentage_ratio = std::clamp(ratio * 100., 0., 100.);
+  return QString{"%1 %"}.arg(percentage_ratio, 0, 'f', 2);
 }
 
 void Viewer::DrawSampleCounters(QPaintEvent* event) {
@@ -239,9 +240,9 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
                                fontMetrics().height()};
       painter.setPen(kLineNumberForegroundColor);
 
-      painter.drawText(bounding_box, Qt::AlignRight,
-                       QString(DoubleToPercentageString(static_cast<double>(num_samples_in_line) /
-                                                        code_report_->GetNumSamplesInFunction())));
+      QString function_percetange_string =
+          FractionToPercentageString(num_samples_in_line, code_report_->GetNumSamplesInFunction());
+      painter.drawText(bounding_box, Qt::AlignRight, function_percetange_string);
       current += WidthPercentageColumn() + WidthMarginBetweenColumns();
     }
 
@@ -250,9 +251,10 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
       const QRect bounding_box{current, top_of(block), WidthPercentageColumn(),
                                fontMetrics().height()};
       painter.setPen(kLineNumberForegroundColor);
-      painter.drawText(bounding_box, Qt::AlignRight,
-                       QString(DoubleToPercentageString(static_cast<double>(num_samples_in_line) /
-                                                        code_report_->GetNumSamples())));
+
+      QString total_percetange_string =
+          FractionToPercentageString(num_samples_in_line, code_report_->GetNumSamples());
+      painter.drawText(bounding_box, Qt::AlignRight, total_percetange_string);
       current += WidthPercentageColumn() + right_margin_.ToPixels(fontMetrics());
     }
   }
