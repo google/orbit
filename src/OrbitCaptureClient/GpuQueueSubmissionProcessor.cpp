@@ -347,7 +347,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
             begin_marker_thread_id, begin_marker_post_submission_cpu_timestamp);
         // Note that we receive submissions of a single queue in order (by CPU submission time).
         // However, if we are out of timer slot indices, we might discard submissions (if it
-        // contains no command buffer timers).
+        // contains no command buffer timers). If we don't have a matching submission for the
+        // "begin" marker, we have to discard the entire marker.
         if (matching_begin_submission == nullptr) {
           ERROR("Discarding debug marker timer.");
           continue;
