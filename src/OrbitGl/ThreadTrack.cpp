@@ -91,14 +91,14 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
                                    PickingMode picking_mode, float z_offset) {
   UpdatePositionOfSubtracks();
 
-  if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  if (!thread_state_bar_->IsEmpty()) {
+    thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
-  if (!event_track_->IsEmpty()) {
-    event_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  if (!event_bar_->IsEmpty()) {
+    event_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
-  if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  if (!tracepoint_bar_->IsEmpty()) {
+    tracepoint_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
 
   UpdateBoxHeight();

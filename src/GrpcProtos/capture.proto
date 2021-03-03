@@ -361,8 +361,8 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Please keep these alphabetically ordered.
-    ApiEvent api_event = 16;
-    ApiEventFixed api_event_fixed = 17;
+    ApiEvent api_event = 23;
+    ApiEventFixed api_event_fixed = 24;
     CallstackSample callstack_sample = 1;
     FullCallstackSample full_callstack_sample = 2;
 

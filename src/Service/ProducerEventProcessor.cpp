@@ -91,16 +91,9 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadName(ThreadName* thread_name);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
-<<<<<<< HEAD
   void ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage);
-=======
   void ProcessApiEvent(ApiEvent* api_event);
-<<<<<<< HEAD
->>>>>>> a5c36ef0 (Rebase and adapt to latest changes)
-=======
   void ProcessApiEventFixed(ApiEventFixed* api_event);
->>>>>>> 32492373 (Add ApiEventFixed for perf investigation)
-
   void SendInternedStringEvent(uint64_t key, std::string value);
 
   CaptureEventBuffer* capture_event_buffer_;
