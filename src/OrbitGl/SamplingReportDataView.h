@@ -36,7 +36,6 @@ class SamplingReportDataView : public DataView {
   void OnRefresh(const std::vector<int>& visible_selected_indices,
                  const RefreshMode& mode) override;
 
-  void UpdateSelectedAddressesAndTid(const std::vector<int>& indices);
   void LinkDataView(DataView* data_view) override;
   void SetSamplingReport(class SamplingReport* sampling_report) {
     sampling_report_ = sampling_report;
@@ -56,7 +55,15 @@ class SamplingReportDataView : public DataView {
       const std::vector<int>& indices) const;
 
  private:
+  void UpdateSelectedIndicesAndFunctionIds(const std::vector<int>& selected_indices);
+  void RestoreSelectedIndicesAfterFunctionsChanged();
+  // The callstack view will be updated according to the visible selected addresses and thread id.
+  void UpdateVisibleSelectedAddressesAndTid(const std::vector<int>& visible_selected_indices);
+
   std::vector<SampledFunction> functions_;
+  // We need to keep user's selected function ids such that if functions_ changes, the
+  // selected_indices_ can be updated according to the selected function ids.
+  absl::flat_hash_set<uint64_t> selected_function_ids_;
   ThreadID tid_ = -1;
   std::string name_;
   CallStackDataView* callstack_data_view_;
