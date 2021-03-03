@@ -724,7 +724,7 @@ class VulkanLayerController {
   VulkanWrapper vulkan_wrapper_;
 
   // The number of timer query slots is chosen arbitrary such that it is large enough.
-  static constexpr uint32_t kNumTimerQuerySlots = 65536;
+  static constexpr uint32_t kNumTimerQuerySlots = 131072;
 };
 
 }  // namespace orbit_vulkan_layer
