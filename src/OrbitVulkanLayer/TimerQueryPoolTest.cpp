@@ -43,7 +43,8 @@ TEST(TimerQueryPool, ATimerQueryPoolMustGetInitialized) {
   EXPECT_DEATH({ (void)query_pool.GetQueryPool(device); }, "");
   EXPECT_DEATH({ (void)query_pool.NextReadyQuerySlot(device, &slot_index); }, "");
   reset_slots.push_back(slot_index);
-  EXPECT_DEATH({ (void)query_pool.ResetQuerySlots(device, reset_slots); }, "");
+  EXPECT_DEATH({ (void)query_pool.MarkQuerySlotsDoneReading(device, reset_slots); }, "");
+  EXPECT_DEATH({ (void)query_pool.MarkQuerySlotsForReset(device, reset_slots); }, "");
   EXPECT_DEATH({ (void)query_pool.RollbackPendingQuerySlots(device, reset_slots); }, "");
 }
 
@@ -205,7 +206,7 @@ TEST(TimerQueryPool, RollingBackSlotsMakesSlotsReady) {
   ASSERT_TRUE(found_slot);
 }
 
-TEST(TimerQueryPool, ResettingSlotsMakesSlotsReady) {
+TEST(TimerQueryPool, MarkResetSlotsAloneDoesNotMakeSlotsReady) {
   MockDispatchTable dispatch_table;
   static constexpr uint32_t kNumSlots = 1;
   TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, kNumSlots);
@@ -222,7 +223,54 @@ TEST(TimerQueryPool, ResettingSlotsMakesSlotsReady) {
   std::vector<uint32_t> reset_slots;
   reset_slots.push_back(slot);
 
-  query_pool.ResetQuerySlots(device, reset_slots);
+  query_pool.MarkQuerySlotsForReset(device, reset_slots);
+
+  bool found_slot = query_pool.NextReadyQuerySlot(device, &slot);
+  ASSERT_FALSE(found_slot);
+}
+
+TEST(TimerQueryPool, MarkSlotsDoneReadingAloneDoesNotMakeSlotsReady) {
+  MockDispatchTable dispatch_table;
+  static constexpr uint32_t kNumSlots = 1;
+  TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, kNumSlots);
+  VkDevice device = {};
+  EXPECT_CALL(dispatch_table, CreateQueryPool)
+      .WillRepeatedly(Return(dummy_create_query_pool_function));
+  EXPECT_CALL(dispatch_table, ResetQueryPoolEXT)
+      .WillRepeatedly(Return(dummy_reset_query_pool_function));
+
+  query_pool.InitializeTimerQueryPool(device);
+  uint32_t slot;
+  (void)query_pool.NextReadyQuerySlot(device, &slot);
+
+  std::vector<uint32_t> reset_slots;
+  reset_slots.push_back(slot);
+
+  query_pool.MarkQuerySlotsDoneReading(device, reset_slots);
+
+  bool found_slot = query_pool.NextReadyQuerySlot(device, &slot);
+  ASSERT_FALSE(found_slot);
+}
+
+TEST(TimerQueryPool, MarkSlotsDoneReadingAndReadForResetMakesThemReady) {
+  MockDispatchTable dispatch_table;
+  static constexpr uint32_t kNumSlots = 1;
+  TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, kNumSlots);
+  VkDevice device = {};
+  EXPECT_CALL(dispatch_table, CreateQueryPool)
+      .WillRepeatedly(Return(dummy_create_query_pool_function));
+  EXPECT_CALL(dispatch_table, ResetQueryPoolEXT)
+      .WillRepeatedly(Return(dummy_reset_query_pool_function));
+
+  query_pool.InitializeTimerQueryPool(device);
+  uint32_t slot;
+  (void)query_pool.NextReadyQuerySlot(device, &slot);
+
+  std::vector<uint32_t> reset_slots;
+  reset_slots.push_back(slot);
+
+  query_pool.MarkQuerySlotsDoneReading(device, reset_slots);
+  query_pool.MarkQuerySlotsForReset(device, reset_slots);
 
   bool found_slot = query_pool.NextReadyQuerySlot(device, &slot);
   ASSERT_TRUE(found_slot);
@@ -279,7 +327,8 @@ TEST(TimerQueryPool, ResettingSlotsDoesResetOnVulkan) {
   std::vector<uint32_t> reset_slots;
   reset_slots.push_back(expected_reset_slot);
 
-  query_pool.ResetQuerySlots(device, reset_slots);
+  query_pool.MarkQuerySlotsDoneReading(device, reset_slots);
+  query_pool.MarkQuerySlotsForReset(device, reset_slots);
 }
 
 TEST(TimerQueryPool, CannotRollbackReadySlots) {
@@ -301,7 +350,7 @@ TEST(TimerQueryPool, CannotRollbackReadySlots) {
   EXPECT_DEATH({ query_pool.RollbackPendingQuerySlots(device, rollback_slots); }, "");
 }
 
-TEST(TimerQueryPool, CannotResetReadySlots) {
+TEST(TimerQueryPool, CannotMarkReadySlotsForReset) {
   MockDispatchTable dispatch_table;
   static constexpr uint32_t kNumSlots = 1;
   TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, kNumSlots);
@@ -317,7 +366,26 @@ TEST(TimerQueryPool, CannotResetReadySlots) {
   std::vector<uint32_t> rollback_slots;
   rollback_slots.push_back(first_slot_index);
 
-  EXPECT_DEATH({ query_pool.ResetQuerySlots(device, rollback_slots); }, "");
+  EXPECT_DEATH({ query_pool.MarkQuerySlotsForReset(device, rollback_slots); }, "");
+}
+
+TEST(TimerQueryPool, CannotMarkReadySlotsDoneReading) {
+  MockDispatchTable dispatch_table;
+  static constexpr uint32_t kNumSlots = 1;
+  TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, kNumSlots);
+  VkDevice device = {};
+  EXPECT_CALL(dispatch_table, CreateQueryPool)
+      .WillRepeatedly(Return(dummy_create_query_pool_function));
+  EXPECT_CALL(dispatch_table, ResetQueryPoolEXT)
+      .WillRepeatedly(Return(dummy_reset_query_pool_function));
+
+  query_pool.InitializeTimerQueryPool(device);
+
+  uint32_t first_slot_index = 0;
+  std::vector<uint32_t> rollback_slots;
+  rollback_slots.push_back(first_slot_index);
+
+  EXPECT_DEATH({ query_pool.MarkQuerySlotsDoneReading(device, rollback_slots); }, "");
 }
 
 TEST(TimerQueryPool, CanRepeatadlyRetrieveAndResetSlots) {
@@ -342,7 +410,8 @@ TEST(TimerQueryPool, CanRepeatadlyRetrieveAndResetSlots) {
 
     // Check for both, rollback and actual resets.
     if (i % 2 == 0) {
-      query_pool.ResetQuerySlots(device, reset_slots);
+      query_pool.MarkQuerySlotsDoneReading(device, reset_slots);
+      query_pool.MarkQuerySlotsForReset(device, reset_slots);
     } else {
       query_pool.RollbackPendingQuerySlots(device, reset_slots);
     }
