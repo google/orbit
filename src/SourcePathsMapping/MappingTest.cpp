@@ -9,17 +9,31 @@
 
 const std::filesystem::path testdata_directory = orbit_base::GetExecutableDir() / "testdata";
 
+static bool AlwaysTruePredicate(const std::filesystem::path& /*target_path*/) { return true; }
+
+static bool AlwaysFalsePredicate(const std::filesystem::path& /*target_path*/) { return false; }
+
 namespace orbit_source_paths_mapping {
 
 TEST(Mapping, MapToFirstMatchingTargetSimple) {
   Mapping mapping{"/src/project", "/home/user/project"};
 
-  const auto file_txt = MapToFirstMatchingTarget({mapping}, "/src/project/file.txt");
+  const auto file_txt =
+      MapToFirstMatchingTarget({mapping}, "/src/project/file.txt", &AlwaysTruePredicate);
   ASSERT_TRUE(file_txt.has_value());
   EXPECT_EQ(file_txt.value(), "/home/user/project/file.txt");
 
-  const auto other_txt = MapToFirstMatchingTarget({mapping}, "/somewhere/different/other.txt");
+  const auto other_txt =
+      MapToFirstMatchingTarget({mapping}, "/somewhere/different/other.txt", &AlwaysTruePredicate);
   ASSERT_FALSE(other_txt.has_value());
+}
+
+TEST(Mapping, MapToFirstMatchingTargetFalsePredicate) {
+  Mapping mapping{"/src/project", "/home/user/project"};
+
+  const auto no_file =
+      MapToFirstMatchingTarget({mapping}, "/src/project/file.txt", &AlwaysFalsePredicate);
+  ASSERT_FALSE(no_file.has_value());
 }
 
 TEST(Mapping, MapToFirstMatchingTargetMultiple) {
@@ -27,21 +41,22 @@ TEST(Mapping, MapToFirstMatchingTargetMultiple) {
   Mapping mapping1{"/src/project2", "/home/user/project1"};
   Mapping mapping2{"/src/project", "/home/user/project2"};
 
-  const auto file_txt =
-      MapToFirstMatchingTarget({mapping0, mapping1, mapping2}, "/src/project/file.txt");
+  const auto file_txt = MapToFirstMatchingTarget({mapping0, mapping1, mapping2},
+                                                 "/src/project/file.txt", &AlwaysTruePredicate);
   ASSERT_TRUE(file_txt.has_value());
   EXPECT_EQ(file_txt.value(), "/home/user/project2/file.txt");
 
-  const auto other_txt =
-      MapToFirstMatchingTarget({mapping0, mapping1, mapping2}, "/somewhere/different/other.txt");
+  const auto other_txt = MapToFirstMatchingTarget(
+      {mapping0, mapping1, mapping2}, "/somewhere/different/other.txt", &AlwaysTruePredicate);
   ASSERT_FALSE(other_txt.has_value());
 }
 
 TEST(Mapping, MapToFirstMatchingTargetEmpty) {
-  const auto file_txt = MapToFirstMatchingTarget({}, "/src/project/file.txt");
+  const auto file_txt = MapToFirstMatchingTarget({}, "/src/project/file.txt", &AlwaysTruePredicate);
   ASSERT_FALSE(file_txt.has_value());
 
-  const auto other_txt = MapToFirstMatchingTarget({}, "/somewhere/different/other.txt");
+  const auto other_txt =
+      MapToFirstMatchingTarget({}, "/somewhere/different/other.txt", &AlwaysTruePredicate);
   ASSERT_FALSE(other_txt.has_value());
 }
 

@@ -6,6 +6,7 @@
 #define SOURCE_PATHS_MAPPING_MAPPING_MANAGER_H_
 
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "SourcePathsMapping/Mapping.h"
@@ -21,9 +22,11 @@ class MappingManager {
   void SetMappings(std::vector<Mapping> mappings);
   void AppendMapping(Mapping mapping);
 
+  template <typename Predicate>
   [[nodiscard]] std::optional<std::filesystem::path> MapToFirstMatchingTarget(
-      const std::filesystem::path& source_path) const {
-    return orbit_source_paths_mapping::MapToFirstMatchingTarget(mappings_, source_path);
+      const std::filesystem::path& source_path, Predicate&& predicate) const {
+    return orbit_source_paths_mapping::MapToFirstMatchingTarget(mappings_, source_path,
+                                                                std::forward<Predicate>(predicate));
   }
 
   [[nodiscard]] std::optional<std::filesystem::path> MapToFirstExistingTarget(
