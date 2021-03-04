@@ -1116,39 +1116,6 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   return check_file_on_remote.Then(main_thread_executor_, std::move(download_file));
 }
 
-void OrbitApp::RetrieveModuleFromRemote(ModuleData* module_data,
-                                        std::vector<uint64_t> function_hashes_to_hook,
-                                        std::vector<uint64_t> frame_track_function_hashes,
-                                        std::string error_message_from_local) {
-  // This overload will be removed in a subsequent commit.
-  auto local_file_path = RetrieveModuleFromRemote(module_data->file_path());
-
-  auto load_symbols = [this, module_data,
-                       function_hashes_to_hook = std::move(function_hashes_to_hook),
-                       frame_track_function_hashes = std::move(frame_track_function_hashes),
-                       error_message_from_local = std::move(error_message_from_local),
-                       main_thread_executor = main_thread_executor_->weak_from_this()](
-                          const ErrorMessageOr<std::filesystem::path>& result) {
-    if (result.has_error()) {
-      SendErrorToUi(
-          "Error loading symbols",
-          absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
-                          module_data->file_path(), error_message_from_local,
-                          result.error().message()));
-      modules_currently_loading_.erase(module_data->file_path());
-      return;
-    }
-
-    LoadSymbols(result.value(), module_data, function_hashes_to_hook, frame_track_function_hashes);
-  };
-
-  const auto future = local_file_path.Then(main_thread_executor_, std::move(load_symbols));
-
-  // We discard this future and don't wait for it to complete, as this was the original
-  // behaviour of this function which needs to be preserved.
-  (void)future;
-}
-
 void OrbitApp::LoadModules(
     const std::vector<ModuleData*>& modules,
     absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
