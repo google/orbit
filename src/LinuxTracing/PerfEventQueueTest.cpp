@@ -251,4 +251,22 @@ TEST(PerfEventQueue, OrderedFdsAndNotOrderedInAnyFileDescriptor) {
   EXPECT_DEATH(event_queue.PopEvent(), "");
 }
 
+TEST(
+    PerfEventQueue,
+    TopEventAndPopEventReturnTheSameWhenAnEventOrderedByFdAndAnEventNotOrderedInAnyFdHaveTheSameTimestamp) {
+  PerfEventQueue event_queue;
+  constexpr uint64_t kCommonTimestamp = 100;
+
+  event_queue.PushEvent(MakeTestEvent(11, kCommonTimestamp));
+  event_queue.PushEvent(MakeTestEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, kCommonTimestamp));
+
+  PerfEvent* top_event = event_queue.TopEvent();
+  std::unique_ptr<PerfEvent> popped_event = event_queue.PopEvent();
+  EXPECT_EQ(top_event, popped_event.get());
+  EXPECT_EQ(popped_event->GetOrderedInFileDescriptor(), PerfEvent::kNotOrderedInAnyFileDescriptor);
+
+  popped_event = event_queue.PopEvent();
+  EXPECT_EQ(popped_event->GetOrderedInFileDescriptor(), 11);
+}
+
 }  // namespace orbit_linux_tracing
