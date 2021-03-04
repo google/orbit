@@ -426,10 +426,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                    std::vector<uint64_t> function_hashes_to_hook,
                    std::vector<uint64_t> frame_track_function_hashes);
 
-  void RetrieveModuleFromRemote(ModuleData* module_data,
-                                std::vector<uint64_t> function_hashes_to_hook,
-                                std::vector<uint64_t> frame_track_function_hashes,
-                                std::string error_message_from_local);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);
 
