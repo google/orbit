@@ -1378,6 +1378,11 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     const std::filesystem::path& symbols_path, const std::string& module_file_path) {
+  const auto it = symbols_currently_loading_.find(module_file_path);
+  if (it != symbols_currently_loading_.end()) {
+    return it->second;
+  }
+
   auto scoped_status = CreateScopedStatus(absl::StrFormat(
       R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
 
@@ -1388,6 +1393,8 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       [this, module_file_path, scoped_status = std::move(scoped_status)](
           const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& symbols_result) mutable
       -> ErrorMessageOr<void> {
+    symbols_currently_loading_.erase(module_file_path);
+
     if (symbols_result.has_error()) return symbols_result.error();
 
     AddSymbols(module_file_path, symbols_result.value());
@@ -1400,7 +1407,9 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     return outcome::success();
   };
 
-  return load_symbols_from_file.Then(main_thread_executor_, std::move(add_symbols));
+  auto result_future = load_symbols_from_file.Then(main_thread_executor_, std::move(add_symbols));
+  symbols_currently_loading_.emplace(module_file_path, result_future);
+  return result_future;
 }
 
 void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
