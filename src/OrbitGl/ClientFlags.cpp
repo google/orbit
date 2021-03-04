@@ -36,5 +36,4 @@ ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 ABSL_FLAG(bool, enable_tracepoint_feature, false,
           "Enable the setting of the panel of kernel tracepoints");
 
-// TODO(b/181736566): Remove this flag entirely
-ABSL_FLAG(bool, enable_source_code_view, true, "Enable the experimental source code view");
+ABSL_FLAG(bool, enable_source_code_view, false, "Enable the experimental source code view");
