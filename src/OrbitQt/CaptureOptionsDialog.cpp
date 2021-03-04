@@ -4,6 +4,9 @@
 
 #include "CaptureOptionsDialog.h"
 
+#include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
+
 #include <QAbstractButton>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -13,6 +16,8 @@
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "ui_CaptureOptionsDialog.h"
+
+ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 namespace orbit_qt {
 
@@ -27,6 +32,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->openSourcePathsMappingDialog, &QAbstractButton::clicked, this,
                    &CaptureOptionsDialog::ShowSourcePathsMappingEditor);
+
+  if (!absl::GetFlag(FLAGS_enable_source_code_view)) {
+    ui_->groupBox_3->hide();
+  }
 }
 
 bool CaptureOptionsDialog::GetCollectThreadStates() const {
