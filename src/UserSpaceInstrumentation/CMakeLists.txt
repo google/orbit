@@ -35,9 +35,9 @@ target_link_libraries(UserSpaceInstrumentation PUBLIC
         OrbitBase
         CONAN_PKG::abseil)
 
-# Test Lib is merely used in UserSpaceInstrumentationTests below. The binary
-# libUserSpaceInstrumentationTestLib.so created from this target is used to
-# test the injection mechanism.
+# This test lib is merely used in UserSpaceInstrumentationTests below. The
+# binary libUserSpaceInstrumentationTestLib.so created from this target is used
+# to test the injection mechanism.
 add_library(UserSpaceInstrumentationTestLib SHARED)
 
 target_compile_options(UserSpaceInstrumentationTestLib PRIVATE ${STRICT_COMPILE_FLAGS})

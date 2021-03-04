@@ -16,8 +16,8 @@ void InitTestLib();
 // Log a string into a temporary file.
 void UseTestLib(std::string_view s);
 
-// Call to end using the library. Prints the entire log to standard out and removes the temporary
-// log file.
+// Call to end using the library. Prints the entire log to standard output and removes the
+// temporary log file.
 void CloseTestLib();
 
 #endif  // USER_SPACE_INSTRUMENTATION_TEST_LIB_H_
