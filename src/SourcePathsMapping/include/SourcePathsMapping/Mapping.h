@@ -5,6 +5,7 @@
 #ifndef SOURCE_PATHS_MAPPING_MAPPING_H_
 #define SOURCE_PATHS_MAPPING_MAPPING_H_
 
+#include <absl/strings/match.h>
 #include <absl/types/span.h>
 
 #include <filesystem>
@@ -32,8 +33,23 @@ struct Mapping {
   [[nodiscard]] bool IsValid() const { return !source_path.empty() && !target_path.empty(); }
 };
 
+template <typename Predicate>
 [[nodiscard]] std::optional<std::filesystem::path> MapToFirstMatchingTarget(
-    absl::Span<const Mapping> mappings, const std::filesystem::path& source_path);
+    absl::Span<const Mapping> mappings, const std::filesystem::path& source_path,
+    Predicate&& predicate) {
+  for (const auto& mapping : mappings) {
+    if (absl::StartsWith(source_path.string(), mapping.source_path.string())) {
+      std::string target = mapping.target_path.string();
+      target.append(
+          std::string_view{source_path.string()}.substr(mapping.source_path.string().size()));
+
+      std::filesystem::path target_path{target};
+      if (predicate(target_path)) return target_path;
+    }
+  }
+
+  return std::nullopt;
+}
 [[nodiscard]] std::optional<std::filesystem::path> MapToFirstExistingTarget(
     absl::Span<const Mapping> mappings, const std::filesystem::path& source_path);
 
