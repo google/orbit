@@ -499,6 +499,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
       modules_currently_loading_;
+  absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<void>>>
+      symbols_currently_loading_;
 
   StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
