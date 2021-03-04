@@ -1324,15 +1324,10 @@ static std::optional<QString> TryAskingTheUserAndReadSourceFile(
     user_chosen_file = QFileDialog::getOpenFileName(
         parent, QString{"Choose %1"}.arg(QString::fromStdString(file_path.string())),
         previous_directory.filePath(file_name), file_name);
-    if (user_chosen_file.isEmpty()) {
-      message_box.reject();
-      return;
-    }
-    message_box.accept();
   });
 
-  const int return_code = message_box.exec();
-  if (return_code == QDialog::Rejected) return std::nullopt;
+  message_box.exec();
+  if (user_chosen_file.isEmpty()) return std::nullopt;
 
   settings.setValue(kAutocreateMappingKey, message_box.checkBox()->isChecked());
   settings.setValue(kPreviousSourcePathsMappingDirectoryKey, QFileInfo{user_chosen_file}.path());
