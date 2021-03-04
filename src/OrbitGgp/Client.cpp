@@ -85,7 +85,7 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
 
 }  // namespace
 
-outcome::result<QPointer<Client>> Client::Create(QObject* parent) {
+ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent) {
   QProcess ggp_process{};
   ggp_process.setProgram("ggp");
   ggp_process.setArguments({"version"});
@@ -97,9 +97,18 @@ outcome::result<QPointer<Client>> Client::Create(QObject* parent) {
   // return value
   if (ggp_process.exitStatus() != QProcess::NormalExit || ggp_process.exitCode() != 0 ||
       ggp_process.error() != QProcess::UnknownError) {
-    ERROR("Ggp command line process failed with error: %s (exit code: %d)",
-          ggp_process.errorString().toStdString(), ggp_process.exitCode());
-    return outcome::failure(Error::kCouldNotUseGgpCli);
+    std::string error_message =
+        absl::StrFormat("Ggp command line process failed with error: %s (exit code: %d)",
+                        ggp_process.errorString().toStdString(), ggp_process.exitCode());
+
+    std::string ggp_stderr = QString(ggp_process.readAllStandardError()).toStdString();
+    if (!ggp_stderr.empty()) {
+      error_message.append(absl::StrFormat(", ggp error message: \"%s\"", ggp_stderr));
+    }
+
+    LOG("%s", error_message);
+    LOG("ggp stdout: \"%s\"", QString(ggp_process.readAllStandardOutput()).toStdString());
+    return ErrorMessage{error_message};
   }
 
   return QPointer<Client>(new Client{parent});

@@ -14,6 +14,7 @@
 #include <string>
 
 #include "Instance.h"
+#include "OrbitBase/Result.h"
 #include "SshInfo.h"
 
 namespace orbit_ggp {
@@ -22,7 +23,7 @@ class Client : public QObject {
   Q_OBJECT
 
  public:
-  static outcome::result<QPointer<Client>> Create(QObject* parent);
+  static ErrorMessageOr<QPointer<Client>> Create(QObject* parent);
 
   void GetInstancesAsync(const std::function<void(outcome::result<QVector<Instance>>)>& callback,
                          int retry = 3);
