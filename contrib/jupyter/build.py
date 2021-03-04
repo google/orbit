@@ -5,7 +5,6 @@ found in the LICENSE file.
 """
 
 import os, sys
-import build
 import subprocess
 
 def install_orbitutils():
