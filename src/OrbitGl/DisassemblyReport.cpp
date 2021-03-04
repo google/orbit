@@ -5,6 +5,9 @@
 #include "DisassemblyReport.h"
 
 std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
+  // The given line number will be 1-indexed, but `Disassembler` works with 0-indexed line numbers.
+  line -= 1;
+
   uint64_t address = disasm_.GetAddressAtLine(line);
   if (address == 0) {
     // We return an empty optional when there is no data available for the current line.
