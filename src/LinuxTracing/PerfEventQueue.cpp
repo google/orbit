@@ -47,7 +47,8 @@ bool PerfEventQueue::HasEvent() const {
 
 PerfEvent* PerfEventQueue::TopEvent() {
   // As we effectively have two priority queues, get the older event between the two events at the
-  // top of the two queues.
+  // top of the two queues. In case those two events have the exact same timestamp, return the one
+  // at the top of priority_queue_of_events_not_ordered_by_fd_ (and do the same in PopEvent).
   PerfEvent* top_event = nullptr;
   if (!priority_queue_of_events_not_ordered_by_fd_.empty()) {
     top_event = priority_queue_of_events_not_ordered_by_fd_.top().get();
@@ -65,10 +66,12 @@ PerfEvent* PerfEventQueue::TopEvent() {
 std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
   if (!priority_queue_of_events_not_ordered_by_fd_.empty() &&
       (heap_of_queues_of_events_ordered_by_fd_.empty() ||
-       priority_queue_of_events_not_ordered_by_fd_.top()->GetTimestamp() <
+       priority_queue_of_events_not_ordered_by_fd_.top()->GetTimestamp() <=
            heap_of_queues_of_events_ordered_by_fd_.front()->front()->GetTimestamp())) {
     // The oldest event is at the top of the priority queue holding the events that cannot be
-    // assumed sorted in any ring buffer.
+    // assumed sorted in any ring buffer. Note in particular that we return and pop this event even
+    // if the event at the top of heap_of_queues_of_events_ordered_by_fd_ has the exact same
+    // timestamp, as we need to be consistent with TopEvent.
     std::unique_ptr<PerfEvent> top_event = std::move(
         const_cast<std::unique_ptr<PerfEvent>&>(priority_queue_of_events_not_ordered_by_fd_.top()));
     priority_queue_of_events_not_ordered_by_fd_.pop();
