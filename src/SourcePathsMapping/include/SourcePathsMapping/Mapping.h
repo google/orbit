@@ -38,12 +38,13 @@ template <typename Predicate>
     absl::Span<const Mapping> mappings, const std::filesystem::path& source_path,
     Predicate&& predicate) {
   for (const auto& mapping : mappings) {
-    if (absl::StartsWith(source_path.string(), mapping.source_path.string())) {
-      std::string target = mapping.target_path.string();
-      target.append(
-          std::string_view{source_path.string()}.substr(mapping.source_path.string().size()));
+    const auto& prefix = mapping.source_path;
+    const auto iterators =
+        std::mismatch(source_path.begin(), source_path.end(), prefix.begin(), prefix.end());
 
-      std::filesystem::path target_path{target};
+    if (iterators.second == prefix.end()) {
+      std::filesystem::path target_path = mapping.target_path;
+      for (auto it = iterators.first; it != source_path.end(); ++it) target_path /= *it;
       if (predicate(target_path)) return target_path;
     }
   }
