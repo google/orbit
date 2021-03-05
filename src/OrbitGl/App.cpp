@@ -199,7 +199,7 @@ void OrbitApp::OnCaptureStarted(ProcessData&& process,
         capture_window_->CreateTimeGraph(&capture_data_.value());
 
         frame_track_online_processor_ =
-            FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
+            orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
         CHECK(capture_started_callback_);
         capture_started_callback_();
@@ -2033,17 +2033,8 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
 
   for (size_t k = 0; k < all_start_times.size() - 1; ++k) {
     TimerInfo frame_timer;
-
-    // TID is meaningless for this timer (start and end can be on two different threads).
-    constexpr const int32_t kUnusedThreadId = -1;
-    frame_timer.set_thread_id(kUnusedThreadId);
-    frame_timer.set_function_id(instrumented_function_id);
-    frame_timer.set_start(all_start_times[k]);
-    frame_timer.set_end(all_start_times[k + 1]);
-    // We use user_data_key to keep track of the frame number.
-    frame_timer.set_user_data_key(k);
-    frame_timer.set_type(TimerInfo::kFrame);
-
+    orbit_gl::CreateFrameTrackTimer(instrumented_function_id, all_start_times[k],
+                                    all_start_times[k + 1], k, &frame_timer);
     GetMutableTimeGraph()->ProcessTimer(frame_timer, function);
   }
 }

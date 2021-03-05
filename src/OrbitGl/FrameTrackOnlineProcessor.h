@@ -14,6 +14,11 @@
 class CaptureData;
 class TimeGraph;
 
+namespace orbit_gl {
+
+void CreateFrameTrackTimer(uint64_t function_id, uint64_t start_ns, uint64_t end_ns, int frame_id,
+                           orbit_client_protos::TimerInfo* timer_info);
+
 // FrameTrackOnlineProcessor is used to create frame track timers during a capture.
 class FrameTrackOnlineProcessor {
  public:
@@ -32,5 +37,7 @@ class FrameTrackOnlineProcessor {
   TimeGraph* time_graph_{nullptr};
   int current_frame_index_ = 0;
 };
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_FRAME_TRACK_ONLINE_PROCESSOR_H_

@@ -525,7 +525,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
   std::optional<CaptureData> capture_data_;
 
-  FrameTrackOnlineProcessor frame_track_online_processor_;
+  orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 
   const orbit_base::CrashHandler* crash_handler_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
