@@ -42,7 +42,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   auto result_backup = ReadTraceesMemory(pid, address_start, kMemorySize);
   CHECK(result_backup.has_value());
 
-  std::vector<uint8_t> new_data(result_backup.value().size());
+  std::vector<uint8_t> new_data(kMemorySize);
   std::mt19937 engine{std::random_device()()};
   std::uniform_int_distribution<uint8_t> distribution{0x00, 0xff};
   std::generate(std::begin(new_data), std::end(new_data),
