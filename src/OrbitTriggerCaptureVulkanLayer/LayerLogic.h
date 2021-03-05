@@ -1,6 +1,7 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 
 #ifndef ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_LOGIC_H_
 #define ORBIT_TRIGGER_CAPTURE_VULKAN_LAYER_LAYER_LOGIC_H_
