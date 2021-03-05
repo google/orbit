@@ -40,8 +40,8 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_track_ = std::make_shared<orbit_gl::ThreadStateTrack>(
-      app_, time_graph, layout, capture_data, thread_id_, this);
+  thread_state_track_ = std::make_shared<orbit_gl::ThreadStateBar>(app_, time_graph, layout,
+                                                                   capture_data, thread_id_, this);
 
   event_track_ = std::make_shared<orbit_gl::CallstackThreadBar>(app_, time_graph, layout,
                                                                 capture_data, thread_id_, this);
