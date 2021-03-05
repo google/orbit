@@ -35,8 +35,8 @@ bool ThreadStateTrack::IsEmpty() const {
 void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ThreadBar::Draw(canvas, picking_mode, z_offset);
 
-  // Similarly to EventTrack::Draw, the thread state slices don't respond to clicks, but have a
-  // tooltip. For picking, we want to draw the event bar over them if handling a click, and
+  // Similarly to CallstackThreadBar::Draw, the thread state slices don't respond to clicks, but
+  // have a tooltip. For picking, we want to draw the event bar over them if handling a click, and
   // underneath otherwise. This simulates "click-through" behavior.
   float thread_state_bar_z = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
                                                                  : GlCanvas::kZValueEventBar;

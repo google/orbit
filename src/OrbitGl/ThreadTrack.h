@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
+#include "CallstackThreadBar.h"
 #include "CoreMath.h"
-#include "EventTrack.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 #include "ThreadStateTrack.h"
@@ -67,7 +67,7 @@ class ThreadTrack final : public TimerTrack {
   void UpdateMinMaxTimestamps();
 
   std::shared_ptr<orbit_gl::ThreadStateTrack> thread_state_track_;
-  std::shared_ptr<orbit_gl::EventTrack> event_track_;
+  std::shared_ptr<orbit_gl::CallstackThreadBar> event_track_;
   std::shared_ptr<orbit_gl::TracepointTrack> tracepoint_track_;
 };
 

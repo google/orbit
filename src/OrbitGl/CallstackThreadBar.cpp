@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "EventTrack.h"
+#include "CallstackThreadBar.h"
 
 #include <absl/strings/str_format.h>
 #include <stddef.h>
@@ -31,15 +31,17 @@ using orbit_client_protos::CallstackEvent;
 
 namespace orbit_gl {
 
-EventTrack::EventTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                       const CaptureData* capture_data, ThreadID thread_id,
-                       CaptureViewElement* parent)
-    : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "Events"),
+CallstackThreadBar::CallstackThreadBar(OrbitApp* app, TimeGraph* time_graph,
+                                       TimeGraphLayout* layout, const CaptureData* capture_data,
+                                       ThreadID thread_id, CaptureViewElement* parent)
+    : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "Callstacks"),
       color_{0, 255, 0, 255} {}
 
-std::string EventTrack::GetTooltip() const { return "Left-click and drag to select samples"; }
+std::string CallstackThreadBar::GetTooltip() const {
+  return "Left-click and drag to select samples";
+}
 
-void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+void CallstackThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ThreadBar::Draw(canvas, picking_mode, z_offset);
 
   if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
@@ -86,8 +88,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   }
 }
 
-void EventTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                  PickingMode picking_mode, float z_offset) {
+void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                          PickingMode picking_mode, float z_offset) {
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
@@ -149,24 +151,24 @@ void EventTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   }
 }
 
-void EventTrack::OnRelease() {
+void CallstackThreadBar::OnRelease() {
   CaptureViewElement::OnRelease();
-  SelectEvents();
+  SelectCallstacks();
 }
 
-void EventTrack::OnPick(int x, int y) {
+void CallstackThreadBar::OnPick(int x, int y) {
   CaptureViewElement::OnPick(x, y);
   app_->set_selected_thread_id(thread_id_);
 }
 
-void EventTrack::SelectEvents() {
+void CallstackThreadBar::SelectCallstacks() {
   Vec2& from = mouse_pos_last_click_;
   Vec2& to = mouse_pos_cur_;
 
-  time_graph_->SelectEvents(from[0], to[0], thread_id_);
+  time_graph_->SelectCallstacks(from[0], to[0], thread_id_);
 }
 
-bool EventTrack::IsEmpty() const {
+bool CallstackThreadBar::IsEmpty() const {
   if (capture_data_ == nullptr) return true;
   const uint32_t callstack_count =
       (thread_id_ == orbit_base::kAllProcessThreadsTid)
@@ -175,8 +177,8 @@ bool EventTrack::IsEmpty() const {
   return callstack_count == 0;
 }
 
-[[nodiscard]] std::string EventTrack::SafeGetFormattedFunctionName(uint64_t addr,
-                                                                   int max_line_length) const {
+[[nodiscard]] std::string CallstackThreadBar::SafeGetFormattedFunctionName(
+    uint64_t addr, int max_line_length) const {
   CHECK(capture_data_ != nullptr);
   const std::string& function_name = capture_data_->GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
@@ -194,8 +196,9 @@ bool EventTrack::IsEmpty() const {
   return fn_name;
 }
 
-std::string EventTrack::FormatCallstackForTooltip(const CallStack& callstack, int max_line_length,
-                                                  int max_lines, int bottom_n_lines) const {
+std::string CallstackThreadBar::FormatCallstackForTooltip(const CallStack& callstack,
+                                                          int max_line_length, int max_lines,
+                                                          int bottom_n_lines) const {
   std::string result;
   int size = static_cast<int>(callstack.GetFramesCount());
   if (max_lines <= 0) {
@@ -217,7 +220,7 @@ std::string EventTrack::FormatCallstackForTooltip(const CallStack& callstack, in
   return result;
 }
 
-std::string EventTrack::GetSampleTooltip(const Batcher& batcher, PickingId id) const {
+std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
 
   auto user_data = batcher.GetUserData(id);

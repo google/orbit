@@ -546,7 +546,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   needs_update_primitives_ = false;
 }
 
-void TimeGraph::SelectEvents(float world_start, float world_end, int32_t thread_id) {
+void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thread_id) {
   if (world_start > world_end) {
     std::swap(world_end, world_start);
   }

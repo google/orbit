@@ -7,8 +7,8 @@
 
 #include <string>
 
+#include "CallstackThreadBar.h"
 #include "CoreMath.h"
-#include "EventTrack.h"
 #include "PickingManager.h"
 #include "TimerTrack.h"
 #include "Track.h"

@@ -270,14 +270,14 @@ class CheckTimers(CaptureWindowE2ETestCaseBase):
                 self.expect_true(track.timers is None, 'Track "%s" has no timers pane' % track.name)
 
 
-class CheckEvents(CaptureWindowE2ETestCaseBase):
+class CheckCallstacks(CaptureWindowE2ETestCaseBase):
     def _execute(self, track_name_contains: str, expect_exists: bool = True):
         tracks = self._find_tracks(track_name_contains)
         self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_contains)
-        logging.info('Checking for events in %s tracks', len(tracks))
+        logging.info('Checking for callstacks pane in %s tracks', len(tracks))
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.events is not None, 'Track "%s" has events pane' % track.name)
+                self.expect_true(track.callstacks is not None, 'Track "%s" has callstacks pane' % track.name)
             else:
-                self.expect_true(track.events is None, 'Track "%s" has no events pane' % track.name)
+                self.expect_true(track.callstacks is None, 'Track "%s" has no callstacks pane' % track.name)

@@ -17,9 +17,9 @@
 
 #include "AccessibleTimeGraph.h"
 #include "Batcher.h"
+#include "CallstackThreadBar.h"
 #include "CoreMath.h"
 #include "CoreUtils.h"
-#include "EventTrack.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "PickingManager.h"
@@ -47,7 +47,7 @@ class TimeGraph {
 
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
-  void SelectEvents(float world_start, float world_end, int32_t thread_id);
+  void SelectCallstacks(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
