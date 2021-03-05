@@ -286,11 +286,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void NeedsRedraw();
   void RenderImGuiDebugUI();
 
-  void LoadModules(
-      const std::vector<ModuleData*>& modules,
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
-      absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map);
-
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
   // local cache). Only modules with a .symtab section will be considered.
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(

@@ -1116,30 +1116,6 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   return check_file_on_remote.Then(main_thread_executor_, std::move(download_file));
 }
 
-void OrbitApp::LoadModules(
-    const std::vector<ModuleData*>& modules,
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map,
-    absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map) {
-  // This overload will be removed in a subsequent commit
-
-  for (const auto& module : modules) {
-    auto handle_hooks_and_frame_tracks =
-        [this, module, select_functions = function_hashes_to_hook_map[module->file_path()],
-         frame_tracks = frame_track_function_hashes_map[module->file_path()]](
-            const ErrorMessageOr<void>& result) {
-          if (result.has_error()) {
-            error_message_callback_("Error loading symbols", result.error().message());
-            return;
-          }
-
-          SelectFunctionsFromHashes(module, select_functions);
-          EnableFrameTracksFromHashes(module, frame_tracks);
-        };
-    RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_,
-                                              std::move(handle_hooks_and_frame_tracks));
-  }
-}
-
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
     absl::Span<const ModuleData* const> modules) {
   std::vector<orbit_base::Future<void>> futures;
