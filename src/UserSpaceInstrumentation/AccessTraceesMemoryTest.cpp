@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <random>
@@ -36,12 +37,12 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   auto result_memory_region = GetFirstExecutableMemoryRegion(pid);
   CHECK(result_memory_region.has_value());
   const uint64_t address_start = result_memory_region.value().first;
-  const uint64_t address_end = result_memory_region.value().second;
 
-  auto result_backup = ReadTraceesMemory(pid, address_start, address_end - address_start);
+  constexpr uint64_t kMemorySize = 4 * 1024;
+  auto result_backup = ReadTraceesMemory(pid, address_start, kMemorySize);
   CHECK(result_backup.has_value());
 
-  std::vector<uint8_t> new_data(result_backup.value().size());
+  std::vector<uint8_t> new_data(kMemorySize);
   std::mt19937 engine{std::random_device()()};
   std::uniform_int_distribution<uint8_t> distribution{0x00, 0xff};
   std::generate(std::begin(new_data), std::end(new_data),
@@ -49,7 +50,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
 
   CHECK(!WriteTraceesMemory(pid, address_start, new_data).has_error());
 
-  auto result_read_back = ReadTraceesMemory(pid, address_start, address_end - address_start);
+  auto result_read_back = ReadTraceesMemory(pid, address_start, kMemorySize);
   CHECK(result_read_back.has_value());
 
   EXPECT_EQ(new_data, result_read_back.value());
