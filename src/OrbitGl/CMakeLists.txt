@@ -19,6 +19,7 @@ target_sources(
          Batcher.h
          BlockChain.h
          CallStackDataView.h
+         CallstackThreadBar.h
          CallTreeView.h
          CaptureWindow.h
          CaptureViewElement.h
@@ -28,7 +29,6 @@ target_sources(
          DataViewTypes.h
          Disassembler.h
          DisassemblyReport.h
-         EventTrack.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -82,6 +82,7 @@ target_sources(
           AsyncTrack.cpp
           Batcher.cpp
           CallStackDataView.cpp
+          CallstackThreadBar.cpp
           CallTreeView.cpp
           CaptureWindow.cpp
           CaptureViewElement.cpp
@@ -89,7 +90,6 @@ target_sources(
           DataView.cpp
           Disassembler.cpp
           DisassemblyReport.cpp
-          EventTrack.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp

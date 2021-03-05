@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "BlockChain.h"
+#include "CallstackThreadBar.h"
 #include "CoreMath.h"
-#include "EventTrack.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "PickingManager.h"
 #include "TextBox.h"

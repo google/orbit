@@ -15,14 +15,14 @@ class Track:
         self._container = control
         self._name = control.texts()[0]
         self._title = find_control(control, 'TabItem')
-        self._events = find_control(control, 'Pane', 'Events', raise_on_failure=False)
+        self._callstacks = find_control(control, 'Pane', 'Callstacks', raise_on_failure=False)
         self._thread_states = find_control(control, 'Pane', 'ThreadStates', raise_on_failure=False)
         self._tracepoints = find_control(control, 'Pane', 'Tracepoints', raise_on_failure=False)
         self._timers = find_control(control, 'Pane', 'Timers', raise_on_failure=False)
 
     container = property(lambda self: self._container)
     title = property(lambda self: self._title)
-    events = property(lambda self: self._events)
+    callstacks = property(lambda self: self._callstacks)
     thread_states = property(lambda self: self._thread_states)
     tracepoints = property(lambda self: self._tracepoints)
     timers = property(lambda self: self._timers)

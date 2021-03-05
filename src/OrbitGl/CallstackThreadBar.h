@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_EVENT_TRACK_H_
-#define ORBIT_GL_EVENT_TRACK_H_
+#ifndef ORBIT_GL_CALLSTACK_THREAD_BAR_H_
+#define ORBIT_GL_CALLSTACK_THREAD_BAR_H_
 
 #include <GteVector.h>
 #include <stdint.h>
@@ -21,11 +21,11 @@ class OrbitApp;
 
 namespace orbit_gl {
 
-class EventTrack : public ThreadBar {
+class CallstackThreadBar : public ThreadBar {
  public:
-  explicit EventTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                      const CaptureData* capture_data, ThreadID thread_id,
-                      CaptureViewElement* parent);
+  explicit CallstackThreadBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                              const CaptureData* capture_data, ThreadID thread_id,
+                              CaptureViewElement* parent);
 
   std::string GetTooltip() const override;
 
@@ -41,7 +41,7 @@ class EventTrack : public ThreadBar {
   void SetColor(const Color& color) { color_ = color; }
 
  protected:
-  void SelectEvents();
+  void SelectCallstacks();
   [[nodiscard]] std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) const;
   [[nodiscard]] std::string FormatCallstackForTooltip(const CallStack& callstack,
                                                       int max_line_length = 80, int max_lines = 20,
