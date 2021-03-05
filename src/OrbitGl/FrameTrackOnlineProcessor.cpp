@@ -15,6 +15,21 @@
 #include "OrbitClientModel/CaptureData.h"
 #include "TimeGraph.h"
 
+namespace orbit_gl {
+
+void CreateFrameTrackTimer(uint64_t function_id, uint64_t start_ns, uint64_t end_ns, int frame_id,
+                           orbit_client_protos::TimerInfo* timer_info) {
+  // TID is meaningless for this timer (start and end can be on two different threads).
+  constexpr const int32_t kUnusedThreadId = -1;
+  timer_info->set_thread_id(kUnusedThreadId);
+  timer_info->set_function_id(function_id);
+  timer_info->set_start(start_ns);
+  timer_info->set_end(end_ns);
+  // We use user_data_key to keep track of the frame number.
+  timer_info->set_user_data_key(frame_id);
+  timer_info->set_type(orbit_client_protos::TimerInfo::kFrame);
+}
+
 FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(const CaptureData& capture_data,
                                                      TimeGraph* time_graph)
     : time_graph_(time_graph) {
@@ -40,19 +55,9 @@ void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInf
 
   if (previous_timestamp_ns < timer_info.start()) {
     orbit_client_protos::TimerInfo frame_timer;
-
-    // TID is meaningless for this timer (start and end can be on two different threads).
-    constexpr const int32_t kUnusedThreadId = -1;
-    frame_timer.set_thread_id(kUnusedThreadId);
-    frame_timer.set_function_id(function_id);
-    frame_timer.set_start(previous_timestamp_ns);
-    frame_timer.set_end(timer_info.start());
-    // We use user_data_key to keep track of the frame number.
-    frame_timer.set_user_data_key(current_frame_index_++);
-    frame_timer.set_type(orbit_client_protos::TimerInfo::kFrame);
-
+    CreateFrameTrackTimer(function_id, previous_timestamp_ns, timer_info.start(),
+                          current_frame_index_++, &frame_timer);
     time_graph_->ProcessTimer(frame_timer, &function);
-
     function_id_to_previous_timestamp_ns_[function_id] = timer_info.start();
   }
 }
@@ -67,3 +72,5 @@ void FrameTrackOnlineProcessor::RemoveFrameTrack(uint64_t function_id) {
   current_frame_track_function_ids_.erase(function_id);
   function_id_to_previous_timestamp_ns_.erase(function_id);
 }
+
+}  // namespace orbit_gl
