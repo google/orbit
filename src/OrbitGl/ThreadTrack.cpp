@@ -47,8 +47,8 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t
                                                                 capture_data, thread_id_, this);
   event_track_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<orbit_gl::TracepointTrack>(app_, time_graph, layout,
-                                                                  capture_data, thread_id_, this);
+  tracepoint_track_ = std::make_shared<orbit_gl::TracepointThreadBar>(
+      app_, time_graph, layout, capture_data, thread_id_, this);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 

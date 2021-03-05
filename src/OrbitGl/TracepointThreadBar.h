@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TRACEPOINT_TRACK_H_
-#define ORBIT_GL_TRACEPOINT_TRACK_H_
+#ifndef ORBIT_GL_TRACEPOINT_THREAD_BAR_H_
+#define ORBIT_GL_TRACEPOINT_THREAD_BAR_H_
 
 #include <stdint.h>
 
@@ -13,11 +13,11 @@
 
 namespace orbit_gl {
 
-class TracepointTrack : public ThreadBar {
+class TracepointThreadBar : public ThreadBar {
  public:
-  explicit TracepointTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                           const CaptureData* capture_data, int32_t thread_id,
-                           CaptureViewElement* parent);
+  explicit TracepointThreadBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                               const CaptureData* capture_data, int32_t thread_id,
+                               CaptureViewElement* parent);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 
