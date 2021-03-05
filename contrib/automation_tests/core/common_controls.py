@@ -16,7 +16,7 @@ class Track:
         self._name = control.texts()[0]
         self._title = find_control(control, 'TabItem')
         self._callstacks = find_control(control, 'Pane', 'Callstacks', raise_on_failure=False)
-        self._thread_states = find_control(control, 'Pane', 'ThreadStates', raise_on_failure=False)
+        self._thread_states = find_control(control, 'Pane', 'ThreadState', raise_on_failure=False)
         self._tracepoints = find_control(control, 'Pane', 'Tracepoints', raise_on_failure=False)
         self._timers = find_control(control, 'Pane', 'Timers', raise_on_failure=False)
 

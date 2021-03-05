@@ -46,7 +46,7 @@ def main(argv):
         CheckTimers(track_name_contains="All Threads", expect_exists=False),
         CheckTimers(track_name_contains="hello_ggp_stand")
     ]
-    suite = E2ETestSuite(test_name="Connect & Capture", test_cases=test_cases)
+    suite = E2ETestSuite(test_name="Instrument Function", test_cases=test_cases)
     suite.execute()
 
 
