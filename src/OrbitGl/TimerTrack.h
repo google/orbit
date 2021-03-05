@@ -21,7 +21,7 @@
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimerChain.h"
-#include "TracepointTrack.h"
+#include "TracepointThreadBar.h"
 #include "Track.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"

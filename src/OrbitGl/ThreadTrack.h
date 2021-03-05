@@ -17,7 +17,7 @@
 #include "TextBox.h"
 #include "ThreadStateTrack.h"
 #include "TimerTrack.h"
-#include "TracepointTrack.h"
+#include "TracepointThreadBar.h"
 #include "Track.h"
 #include "capture_data.pb.h"
 
@@ -68,7 +68,7 @@ class ThreadTrack final : public TimerTrack {
 
   std::shared_ptr<orbit_gl::ThreadStateTrack> thread_state_track_;
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_track_;
-  std::shared_ptr<orbit_gl::TracepointTrack> tracepoint_track_;
+  std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_track_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

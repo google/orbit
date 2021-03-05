@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointTrack.h"
+#include "TracepointThreadBar.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -26,13 +26,13 @@
 
 namespace orbit_gl {
 
-TracepointTrack::TracepointTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                                 const CaptureData* capture_data, int32_t thread_id,
-                                 CaptureViewElement* parent)
+TracepointThreadBar::TracepointThreadBar(OrbitApp* app, TimeGraph* time_graph,
+                                         TimeGraphLayout* layout, const CaptureData* capture_data,
+                                         int32_t thread_id, CaptureViewElement* parent)
     : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "Tracepoints"),
       color_{255, 0, 0, 255} {}
 
-void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+void TracepointThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ThreadBar::Draw(canvas, picking_mode, z_offset);
 
   if (IsEmpty()) {
@@ -49,8 +49,8 @@ void TracepointTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_o
   ui_batcher->AddBox(box, color, shared_from_this());
 }
 
-void TracepointTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                       PickingMode picking_mode, float z_offset) {
+void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                           PickingMode picking_mode, float z_offset) {
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
@@ -103,7 +103,7 @@ void TracepointTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint
   }
 }
 
-std::string TracepointTrack::GetTracepointTooltip(Batcher* batcher, PickingId id) const {
+std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingId id) const {
   auto user_data = batcher->GetUserData(id);
   CHECK(user_data && user_data->custom_data_);
 
@@ -137,7 +137,7 @@ std::string TracepointTrack::GetTracepointTooltip(Batcher* batcher, PickingId id
   }
 }
 
-bool TracepointTrack::IsEmpty() const {
+bool TracepointThreadBar::IsEmpty() const {
   if (capture_data_ == nullptr) return true;
   return capture_data_->GetNumTracepointsForThreadId(thread_id_) == 0;
 }
