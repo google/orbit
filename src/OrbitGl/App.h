@@ -295,8 +295,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
       absl::Span<const ModuleData* const> modules);
 
-  // LoadModuleAndSymbols is a helper function which first retrieves the module by calling
-  // `LoadModule` and afterwards load the symbols by calling `LoadSymbols`.
+  // RetrieveModuleAndSymbols is a helper function which first retrieves the module by calling
+  // `RetrieveModule` and afterwards load the symbols by calling `LoadSymbols`.
   orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(const ModuleData* module);
   orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
       const std::string& module_path, const std::string& build_id);
