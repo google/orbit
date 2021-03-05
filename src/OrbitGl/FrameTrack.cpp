@@ -110,21 +110,28 @@ Color FrameTrack::GetTimerColor(const orbit_client_protos::TimerInfo& timer_info
   Vec4 color;
   uint64_t timer_duration_ns = timer_info.end() - timer_info.start();
 
+  // A note on overflows here and below: The times in uint64_t represent durations of events
+  // in nanoseconds. This means the maximum duration is ~600 years. That is, multiplying by values
+  // in the single digits (and even much higher) as done here does not cause any issues.
   if (timer_duration_ns >= kHeightCapAverageMultipleUint64 * stats_.average_time_ns()) {
     color = warn_color;
-  } else {
-    uint64_t lower_bound = stats_.min_ns();
-    uint64_t upper_bound =
-        std::min(kHeightCapAverageMultipleUint64 * stats_.average_time_ns(), stats_.max_ns());
-    if (upper_bound == lower_bound) {
-      // This implies that min_ns == max_ns and thus all times are the same. We can just render
-      // everything using min_color.
-      color = min_color;
-    }
-    timer_duration_ns = std::min(timer_duration_ns, upper_bound);
+  } else if (stats_.average_time_ns() > 0) {
+    // We are interpolating colors between min_color and max_color based on how much
+    // the duration (timer_duration_ns) differs from the average. This is asymmetric on
+    // purpose, as frames that are shorter than the average time are fine and do not need
+    // to stand out differently from the average. Durations below lower_bound and
+    // durations above upper_bound are drawn with min_color and max_color, respectively.
+    uint64_t lower_bound = 4 * stats_.average_time_ns() / 5;
+    uint64_t upper_bound = 8 * stats_.average_time_ns() / 5;
+
+    timer_duration_ns = std::min(std::max(timer_duration_ns, lower_bound), upper_bound);
     float fraction = static_cast<float>(timer_duration_ns - lower_bound) /
                      static_cast<float>(upper_bound - lower_bound);
     color = fraction * max_color + (1.f - fraction) * min_color;
+  } else {
+    // All times are zero here. Just draw the minimum color, this doesn't make a difference
+    // as in this case all frame timeslices are not visible anyway.
+    color = min_color;
   }
 
   if (timer_info.user_data_key() % 2 == 0) {
@@ -177,9 +184,9 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Frame track</b><br/>"
       "<i>Shows frame timings based on subsequent callst to %s. "
       "<br/><br/>"
-      "<b>Coloring</b>: Colors are interpolated between green (minimum frame time) and blue "
-      "(maximum frame time). The height of frames that strongly exceed average time are capped at "
-      "%u times the average frame time for drawing purposes. These are drawn in red."
+      "<b>Coloring</b>: Colors are interpolated between green (low frame time) and blue "
+      "(high frame time). The height of frames that strongly exceed average time are capped "
+      "at %u times the average frame time for drawing purposes. These are drawn in red."
       "<br/><br/>"
       "<b>Note</b>: Timings are not the runtime of the function, but the difference "
       "between start timestamps of subsequent calls."
@@ -257,7 +264,7 @@ void FrameTrack::UpdateBoxHeight() {
 
 std::vector<std::shared_ptr<TimerChain>> FrameTrack::GetAllSerializableChains() const {
   // Frametracks are just displaying existing data in a different way.
-  // We don't want to write out all the timers of that track.
-  // TODO(b/171026228): However, we should serialize them in some form.
+  // We don't want to write out all the timers of that track. Frame tracks are serialized
+  // by storing the function ids of all functions with frame tracks enabled.
   return {};
 }
