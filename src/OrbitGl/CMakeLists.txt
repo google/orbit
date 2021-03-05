@@ -59,7 +59,7 @@ target_sources(
          TextBox.h
          TextRenderer.h
          ThreadBar.h
-         ThreadStateTrack.h
+         ThreadStateBar.h
          ThreadTrack.h
          TimeGraph.h
          TimeGraphLayout.h
@@ -118,7 +118,7 @@ target_sources(
           TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadBar.cpp
-          ThreadStateTrack.cpp
+          ThreadStateBar.cpp
           ThreadTrack.cpp
           Track.cpp
           TrackManager.cpp

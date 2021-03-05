@@ -15,7 +15,7 @@
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "TextBox.h"
-#include "ThreadStateTrack.h"
+#include "ThreadStateBar.h"
 #include "TimerTrack.h"
 #include "TracepointThreadBar.h"
 #include "Track.h"
@@ -66,7 +66,7 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePositionOfSubtracks();
   void UpdateMinMaxTimestamps();
 
-  std::shared_ptr<orbit_gl::ThreadStateTrack> thread_state_track_;
+  std::shared_ptr<orbit_gl::ThreadStateBar> thread_state_track_;
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_track_;
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_track_;
 };

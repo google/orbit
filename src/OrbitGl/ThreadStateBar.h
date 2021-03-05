@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_THREAD_STATE_TRACK_H_
-#define ORBIT_GL_THREAD_STATE_TRACK_H_
+#ifndef ORBIT_GL_THREAD_STATE_BAR_H_
+#define ORBIT_GL_THREAD_STATE_BAR_H_
 
 #include <GteVector.h>
 #include <stdint.h>
@@ -21,11 +21,11 @@ namespace orbit_gl {
 // It is a thin sub-track of ThreadTrack, added above the callstack track (EventTrack).
 // The colors are determined only by the states, not by the color assigned to the thread.
 
-class ThreadStateTrack final : public ThreadBar {
+class ThreadStateBar final : public ThreadBar {
  public:
-  explicit ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                            const CaptureData* capture_data, ThreadID thread_id,
-                            CaptureViewElement* parent);
+  explicit ThreadStateBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                          const CaptureData* capture_data, ThreadID thread_id,
+                          CaptureViewElement* parent);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,

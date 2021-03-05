@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ThreadStateTrack.h"
+#include "ThreadStateBar.h"
 
 #include <absl/strings/str_format.h>
 
@@ -22,17 +22,17 @@ using orbit_client_protos::ThreadStateSliceInfo;
 
 namespace orbit_gl {
 
-ThreadStateTrack::ThreadStateTrack(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                                   const CaptureData* capture_data, ThreadID thread_id,
-                                   CaptureViewElement* parent)
+ThreadStateBar::ThreadStateBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
+                               const CaptureData* capture_data, ThreadID thread_id,
+                               CaptureViewElement* parent)
     : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "ThreadState") {}
 
-bool ThreadStateTrack::IsEmpty() const {
+bool ThreadStateBar::IsEmpty() const {
   if (capture_data_ == nullptr) return true;
   return !capture_data_->HasThreadStatesForThread(thread_id_);
 }
 
-void ThreadStateTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+void ThreadStateBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ThreadBar::Draw(canvas, picking_mode, z_offset);
 
   // Similarly to CallstackThreadBar::Draw, the thread state slices don't respond to clicks, but
@@ -140,7 +140,7 @@ static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState s
   }
 }
 
-std::string ThreadStateTrack::GetThreadStateSliceTooltip(Batcher* batcher, PickingId id) const {
+std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher* batcher, PickingId id) const {
   auto user_data = batcher->GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
@@ -157,8 +157,8 @@ std::string ThreadStateTrack::GetThreadStateSliceTooltip(Batcher* batcher, Picki
       GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
-void ThreadStateTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                        PickingMode picking_mode, float z_offset) {
+void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                      PickingMode picking_mode, float z_offset) {
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   const GlCanvas* canvas = time_graph_->GetCanvas();
@@ -215,7 +215,7 @@ void ThreadStateTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uin
       });
 }
 
-void ThreadStateTrack::OnPick(int x, int y) {
+void ThreadStateBar::OnPick(int x, int y) {
   ThreadBar::OnPick(x, y);
   app_->set_selected_thread_id(thread_id_);
 }
