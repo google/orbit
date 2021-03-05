@@ -40,11 +40,17 @@ void ExpectMemInfoParsingResult(std::optional<SystemMemoryUsage> parsing_result,
 namespace orbit_memory_tracing {
 
 TEST(MemoryUtils, ParseMemInfo) {
-  const int kMemTotal = 16396576;
-  const int kMemFree = 11493816;
-  const int kMemAvailable = 14378752;
-  const int kBuffers = 71540;
-  const int kCached = 3042860;
+  const int kMemTotalKB = 16396576;
+  const int kMemFreeKB = 11493816;
+  const int kMemAvailableKB = 14378752;
+  const int kBuffersKB = 71540;
+  const int kCachedKB = 3042860;
+  const int kMemTotalKiB = 16012281;
+  const int kMemFreeMB = 11494;
+
+  const float kKiloBytes = 1000;
+  const float kKibiBytes = 1024;
+  const float kMegaBytes = 1000000;
 
   const std::string kValidMeminfo =
       absl::Substitute(R"(MemTotal:       $0 kB
@@ -98,26 +104,37 @@ Hugetlb:               0 kB
 DirectMap4k:      201960 kB
 DirectMap2M:     5040128 kB
 DirectMap1G:    13631488 kB)",
-                       kMemTotal, kMemFree, kMemAvailable, kBuffers, kCached);
+                       kMemTotalKB, kMemFreeKB, kMemAvailableKB, kBuffersKB, kCachedKB);
 
   const std::string kPartialMeminfo = absl::Substitute(R"(MemTotal:       $0 kB
 MemFree:        $1 kB
 SwapCached:      0 kB)",
-                                                       kMemTotal, kMemFree);
+                                                       kMemTotalKB, kMemFreeKB);
 
   const std::string kEmptyMeminfo = "";
+
+  const std::string kPartialMeminfoWithDifferentSizeUnits =
+      absl::Substitute(R"(MemTotal:       $0 KiB
+MemFree:        $1 MB
+SwapCached:      0 kB)",
+                       kMemTotalKiB, kMemFreeMB);
 
   std::optional<SystemMemoryUsage> parsing_result;
 
   parsing_result = ParseMemInfo(kValidMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, true, kMemTotal, kMemFree, kMemAvailable, kBuffers,
-                             kCached);
+  ExpectMemInfoParsingResult(parsing_result, true, kMemTotalKB, kMemFreeKB, kMemAvailableKB,
+                             kBuffersKB, kCachedKB);
 
   parsing_result = ParseMemInfo(kPartialMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, true, kMemTotal, kMemFree);
+  ExpectMemInfoParsingResult(parsing_result, true, kMemTotalKB, kMemFreeKB);
 
   parsing_result = ParseMemInfo(kEmptyMeminfo);
   ExpectMemInfoParsingResult(parsing_result, false);
+
+  parsing_result = ParseMemInfo(kPartialMeminfoWithDifferentSizeUnits);
+  int converted_mem_total_kb = static_cast<int>(std::round(kKibiBytes / kKiloBytes * kMemTotalKiB));
+  int converted_mem_free_kb = static_cast<int>(std::round(kMegaBytes / kKiloBytes * kMemFreeMB));
+  ExpectMemInfoParsingResult(parsing_result, true, converted_mem_total_kb, converted_mem_free_kb);
 }
 
 }  // namespace orbit_memory_tracing
