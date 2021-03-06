@@ -774,16 +774,16 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     filename_with_ext += ".opr";
   }
 
-  auto open_result = orbit_base::OpenFileForWriting(filename_with_ext);
-  if (open_result.has_error()) {
+  auto fd_or_error = orbit_base::OpenFileForWriting(filename_with_ext);
+  if (fd_or_error.has_error()) {
     std::string error_message = absl::StrFormat("Failed to open \"%s\": %s", filename_with_ext,
-                                                open_result.error().message());
+                                                fd_or_error.error().message());
     ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
   LOG("Saving preset to \"%s\"", filename_with_ext);
-  if (!preset.SerializeToFileDescriptor(open_result.value())) {
+  if (!preset.SerializeToFileDescriptor(fd_or_error.value().get())) {
     std::string error_message =
         absl::StrFormat("Failed to save preset to \"%s\"", filename_with_ext);
     ERROR("%s", error_message);
@@ -797,16 +797,16 @@ ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::p
   std::filesystem::path file_path =
       filename.is_absolute() ? filename : Path::CreateOrGetPresetDir() / filename;
 
-  auto open_result = orbit_base::OpenFileForReading(file_path);
-  if (open_result.has_error()) {
+  auto fd_or_error = orbit_base::OpenFileForReading(file_path);
+  if (fd_or_error.has_error()) {
     std::string error_message = absl::StrFormat("Failed to open \"%s\": %s", file_path.string(),
-                                                open_result.error().message());
+                                                fd_or_error.error().message());
     ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
   PresetInfo preset_info;
-  if (!preset_info.ParseFromFileDescriptor(open_result.value())) {
+  if (!preset_info.ParseFromFileDescriptor(fd_or_error.value().get())) {
     std::string error_message =
         absl::StrFormat("Failed to load preset from \"%s\"", file_path.string());
     ERROR("%s", error_message);

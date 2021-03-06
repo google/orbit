@@ -40,13 +40,13 @@ ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_n
 
   // We want to avoid memory reallocations in case the file is relatively large.
   struct stat st {};
-  if (fstat(fd, &st) != -1 && st.st_size > 0) {
+  if (fstat(fd.get(), &st) != -1 && st.st_size > 0) {
     result.reserve(st.st_size);
   }
 
   std::array<char, BUFSIZ> buf{};
   int64_t number_of_bytes;
-  while ((number_of_bytes = TEMP_FAILURE_RETRY(read(fd, buf.data(), buf.size()))) > 0) {
+  while ((number_of_bytes = TEMP_FAILURE_RETRY(read(fd.get(), buf.data(), buf.size()))) > 0) {
     result.append(buf.data(), number_of_bytes);
   }
 

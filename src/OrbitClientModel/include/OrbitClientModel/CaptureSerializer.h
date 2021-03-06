@@ -75,7 +75,7 @@ ErrorMessageOr<void> Save(const std::filesystem::path& filename, const CaptureDa
     return fd_or_error.error();
   }
 
-  google::protobuf::io::FileOutputStream out_stream(fd_or_error.value());
+  google::protobuf::io::FileOutputStream out_stream(fd_or_error.value().get());
   google::protobuf::io::CodedOutputStream coded_output(&out_stream);
 
   {
