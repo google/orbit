@@ -55,7 +55,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> Load(const std::filesystem::path
     return fd_or_error.error();
   }
 
-  google::protobuf::io::FileInputStream input_stream(fd_or_error.value());
+  google::protobuf::io::FileInputStream input_stream(fd_or_error.value().get());
   google::protobuf::io::CodedInputStream coded_input(&input_stream);
 
   return Load(&coded_input, file_name, capture_listener, module_manager, cancellation_requested);

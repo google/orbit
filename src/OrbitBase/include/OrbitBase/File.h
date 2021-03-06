@@ -13,11 +13,54 @@
 
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "OrbitBase/UniqueResource.h"
+
+#if defined(__linux)
+#include <unistd.h>
+#elif defined(_WIN32)
+#include <io.h>
+#endif
 
 namespace orbit_base {
 
-using unique_fd = unique_resource<int, void (*)(int)>;
+constexpr int kInvalidFd = -1;
+
+class unique_fd {
+ public:
+  constexpr unique_fd() noexcept = default;
+  constexpr explicit unique_fd(int fd) noexcept : fd_{fd} {}
+  ~unique_fd() noexcept { release(); }
+
+  unique_fd(const unique_fd&) = delete;
+  unique_fd& operator=(const unique_fd&) = delete;
+
+  constexpr unique_fd(unique_fd&& other) noexcept : fd_{other.fd_} { other.fd_ = kInvalidFd; }
+
+  unique_fd& operator=(unique_fd&& other) noexcept {
+    if (&other == this) return *this;
+
+    reset(other.fd_);
+    other.fd_ = kInvalidFd;
+
+    return *this;
+  }
+
+  void release() noexcept {
+    if (fd_ != kInvalidFd) close(fd_);
+    fd_ = kInvalidFd;
+  }
+
+  [[nodiscard]] constexpr bool valid() const noexcept { return fd_ != kInvalidFd; }
+
+  [[nodiscard]] constexpr int get() const noexcept { return fd_; }
+
+ private:
+  void reset(int fd) noexcept {
+    release();
+    fd_ = fd;
+  }
+
+  int fd_{kInvalidFd};
+};
 
 // The following functions provide convenience wrappers for working with file
 // descriptors without having having to do TEMP_FAILURE_RETRY and
