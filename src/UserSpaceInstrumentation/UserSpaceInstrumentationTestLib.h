@@ -11,13 +11,16 @@
 // injects a binary produced by this code into its child.
 
 // Call first to initialize the library.
-void InitTestLib();
+extern "C" void InitTestLib();
 
 // Log a string into a temporary file.
-void UseTestLib(std::string_view s);
+extern "C" void UseTestLib(std::string_view s);
 
 // Call to end using the library. Prints the entire log to standard output and removes the
 // temporary log file.
-void CloseTestLib();
+extern "C" void CloseTestLib();
+
+// Returns 42.
+extern "C" int TrivialFunction();
 
 #endif  // USER_SPACE_INSTRUMENTATION_TEST_LIB_H_

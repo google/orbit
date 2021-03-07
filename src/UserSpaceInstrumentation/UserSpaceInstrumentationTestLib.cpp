@@ -46,3 +46,7 @@ void CloseTestLib() {
 
   std::remove(p.c_str());
 }
+
+int TrivialFunction() {
+  return 42;
+}
