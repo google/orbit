@@ -192,29 +192,29 @@ void ElfFileImpl<ElfT>::InitSections() {
 bool AddSymbol(const llvm::object::ELFSymbolRef& symbol_ref, ModuleSymbols& module_symbols,
                std::string_view file_path) {
   if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
-      return false;
-    }
-    std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-    std::string demangled_name = llvm::demangle(name);
+    return false;
+  }
+  std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
+  std::string demangled_name = llvm::demangle(name);
 
-    // Unknown type - skip and generate a warning
-    if (!symbol_ref.getType()) {
-      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name, file_path);
-      return false;
-    }
-    // Limit list of symbols to functions. Ignore sections and variables.
-    if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
-      return false;
-    }
+  // Unknown type - skip and generate a warning
+  if (!symbol_ref.getType()) {
+    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name, file_path);
+    return false;
+  }
+  // Limit list of symbols to functions. Ignore sections and variables.
+  if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
+    return false;
+  }
 
-    uint64_t symbol_address = symbol_ref.getValue();
-    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name(name);
-    symbol_info->set_demangled_name(demangled_name);
-    symbol_info->set_address(symbol_address);
-    symbol_info->set_size(symbol_ref.getSize());
+  uint64_t symbol_address = symbol_ref.getValue();
+  SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+  symbol_info->set_name(name);
+  symbol_info->set_demangled_name(demangled_name);
+  symbol_info->set_address(symbol_address);
+  symbol_info->set_size(symbol_ref.getSize());
 
-    return true;
+  return true;
 }
 
 template <typename ElfT>
