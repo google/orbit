@@ -52,6 +52,7 @@ class ElfFile {
   // available. This should be the case for all loadable elf-files.
   [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
   [[nodiscard]] virtual bool HasSymtab() const = 0;
+  [[nodiscard]] virtual bool HasDynsym() const = 0;
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;
   [[nodiscard]] virtual bool HasGnuDebuglink() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
