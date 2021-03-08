@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H
-#define USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H
+#ifndef USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H_
+#define USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H_
 
 #include <cstdint>
 #include <vector>
@@ -33,4 +33,4 @@ class MachineCode {
 
 }  // namespace orbit_user_space_instrumentation
 
-#endif  // USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H
+#endif  // USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H_
