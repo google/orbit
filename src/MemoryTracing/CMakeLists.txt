@@ -33,7 +33,9 @@ add_executable(MemoryTracingTests)
 
 target_compile_options(MemoryTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(MemoryTracingTests PRIVATE MemoryTracingUtilsTest.cpp)
+target_sources(MemoryTracingTests PRIVATE 
+        MemoryTracingIntegrationTest.cpp
+        MemoryTracingUtilsTest.cpp)
 
 target_link_libraries(MemoryTracingTests PRIVATE
         MemoryTracing
