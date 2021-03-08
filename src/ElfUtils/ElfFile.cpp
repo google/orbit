@@ -50,7 +50,8 @@ class ElfFileImpl : public ElfFile {
   ElfFileImpl(std::filesystem::path file_path,
               llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbols() override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromSymtab() override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
   [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
   [[nodiscard]] bool HasSymtab() const override;
   [[nodiscard]] bool HasDynsym() const override;
@@ -218,9 +219,34 @@ bool AddSymbol(const llvm::object::ELFSymbolRef& symbol_ref, ModuleSymbols& modu
 }
 
 template <typename ElfT>
-ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() {
-  if (!has_symtab_section_ && !has_dynsym_section_) {
-    return ErrorMessage("ELF file does neither have a .symtab nor a .dynsym section.");
+ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
+  if (!has_symtab_section_) {
+    return ErrorMessage("ELF file does not have a .symtab section.");
+  }
+  bool symbols_added = false;
+
+  OUTCOME_TRY(load_bias, GetLoadBias());
+
+  ModuleSymbols module_symbols;
+  module_symbols.set_load_bias(load_bias);
+  module_symbols.set_symbols_file_path(file_path_.string());
+
+  for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
+    symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
+  }
+
+  if (!symbols_added) {
+    return ErrorMessage(
+        "Unable to load symbols from ELF file, not even a single symbol of "
+        "type function found.");
+  }
+  return module_symbols;
+}
+
+template <typename ElfT>
+ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
+  if (!has_dynsym_section_) {
+    return ErrorMessage("ELF file does not have a .dynsym section.");
   }
   bool symbols_added = false;
 
@@ -234,14 +260,10 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() {
     symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
   }
 
-  for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
-  }
-
   if (!symbols_added) {
     return ErrorMessage(
-        "Unable to load symbols from ELF file, not even a single symbol of "
-        "type function found.");
+        "Unable to load symbols from .dynsym section, not even a single symbol of type function "
+        "found.");
   }
   return module_symbols;
 }

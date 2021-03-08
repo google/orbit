@@ -348,7 +348,7 @@ orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid) {
   CHECK(error_or_elf_file.has_value());
   const std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
 
-  auto error_or_module = elf_file->LoadSymbols();
+  auto error_or_module = elf_file->LoadSymbolsFromSymtab();
   CHECK(error_or_module.has_value());
   return error_or_module.value();
 }

@@ -236,7 +236,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& 
     return ErrorMessage("ELF file does not have a .symtab section.");
   }
 
-  return elf_file_or_error.value()->LoadSymbols();
+  return elf_file_or_error.value()->LoadSymbolsFromSymtab();
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
