@@ -40,15 +40,15 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_track_ = std::make_shared<orbit_gl::ThreadStateBar>(app_, time_graph, layout,
-                                                                   capture_data, thread_id_, this);
+  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(app_, time_graph, layout,
+                                                                 capture_data, thread_id_, this);
 
-  event_track_ = std::make_shared<orbit_gl::CallstackThreadBar>(app_, time_graph, layout,
-                                                                capture_data, thread_id_, this);
-  event_track_->SetThreadId(thread_id);
+  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(app_, time_graph, layout,
+                                                              capture_data, thread_id_, this);
+  event_bar_->SetThreadId(thread_id);
 
-  tracepoint_track_ = std::make_shared<orbit_gl::TracepointThreadBar>(
-      app_, time_graph, layout, capture_data, thread_id_, this);
+  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(app_, time_graph, layout,
+                                                                    capture_data, thread_id_, this);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 
@@ -204,8 +204,8 @@ void ThreadTrack::UpdateBoxHeight() {
 }
 
 bool ThreadTrack::IsEmpty() const {
-  return thread_state_track_->IsEmpty() && event_track_->IsEmpty() &&
-         tracepoint_track_->IsEmpty() && (GetNumTimers() == 0);
+  return thread_state_bar_->IsEmpty() && event_bar_->IsEmpty() && tracepoint_bar_->IsEmpty() &&
+         (GetNumTimers() == 0);
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
@@ -215,17 +215,17 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
 
   float current_y = pos_[1];
 
-  thread_state_track_->SetPos(pos_[0], current_y);
-  if (!thread_state_track_->IsEmpty()) {
+  thread_state_bar_->SetPos(pos_[0], current_y);
+  if (!thread_state_bar_->IsEmpty()) {
     current_y -= (space_between_subtracks + thread_state_track_height);
   }
 
-  event_track_->SetPos(pos_[0], current_y);
-  if (!event_track_->IsEmpty()) {
+  event_bar_->SetPos(pos_[0], current_y);
+  if (!event_bar_->IsEmpty()) {
     current_y -= (space_between_subtracks + event_track_height);
   }
 
-  tracepoint_track_->SetPos(pos_[0], current_y);
+  tracepoint_bar_->SetPos(pos_[0], current_y);
 }
 
 void ThreadTrack::UpdateMinMaxTimestamps() {
@@ -246,19 +246,19 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   const float event_track_height = layout_->GetEventTrackHeight();
   const float tracepoint_track_height = layout_->GetEventTrackHeight();
 
-  if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
-    thread_state_track_->Draw(canvas, picking_mode, z_offset);
+  if (!thread_state_bar_->IsEmpty()) {
+    thread_state_bar_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
+    thread_state_bar_->Draw(canvas, picking_mode, z_offset);
   }
 
-  if (!event_track_->IsEmpty()) {
-    event_track_->SetSize(canvas->GetWorldWidth(), event_track_height);
-    event_track_->Draw(canvas, picking_mode, z_offset);
+  if (!event_bar_->IsEmpty()) {
+    event_bar_->SetSize(canvas->GetWorldWidth(), event_track_height);
+    event_bar_->Draw(canvas, picking_mode, z_offset);
   }
 
-  if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->SetSize(canvas->GetWorldWidth(), tracepoint_track_height);
-    tracepoint_track_->Draw(canvas, picking_mode, z_offset);
+  if (!tracepoint_bar_->IsEmpty()) {
+    tracepoint_bar_->SetSize(canvas->GetWorldWidth(), tracepoint_track_height);
+    tracepoint_bar_->Draw(canvas, picking_mode, z_offset);
   }
 }
 
@@ -271,14 +271,14 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
                                    PickingMode picking_mode, float z_offset) {
   UpdatePositionOfSubtracks();
 
-  if (!thread_state_track_->IsEmpty()) {
-    thread_state_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  if (!thread_state_bar_->IsEmpty()) {
+    thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
-  if (!event_track_->IsEmpty()) {
-    event_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  if (!event_bar_->IsEmpty()) {
+    event_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
-  if (!tracepoint_track_->IsEmpty()) {
-    tracepoint_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  if (!tracepoint_bar_->IsEmpty()) {
+    tracepoint_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
 
   TimerTrack::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
@@ -286,16 +286,16 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 
 std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
   std::vector<CaptureViewElement*> result;
-  if (!thread_state_track_->IsEmpty()) {
-    result.push_back(thread_state_track_.get());
+  if (!thread_state_bar_->IsEmpty()) {
+    result.push_back(thread_state_bar_.get());
   }
 
-  if (!event_track_->IsEmpty()) {
-    result.push_back(event_track_.get());
+  if (!event_bar_->IsEmpty()) {
+    result.push_back(event_bar_.get());
   }
 
-  if (!tracepoint_track_->IsEmpty()) {
-    result.push_back(tracepoint_track_.get());
+  if (!tracepoint_bar_->IsEmpty()) {
+    result.push_back(tracepoint_bar_.get());
   }
 
   return result;
@@ -303,8 +303,8 @@ std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
 
 void ThreadTrack::SetTrackColor(Color color) {
   absl::MutexLock lock(&mutex_);
-  event_track_->SetColor(color);
-  tracepoint_track_->SetColor(color);
+  event_bar_->SetColor(color);
+  tracepoint_bar_->SetColor(color);
 }
 
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
@@ -361,8 +361,7 @@ float ThreadTrack::GetHeight() const {
   const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
 
   bool gap_between_tracks_and_timers =
-      (!thread_state_track_->IsEmpty() || !event_track_->IsEmpty() ||
-       !tracepoint_track_->IsEmpty()) &&
+      (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
       (depth > 0);
   return GetHeaderHeight() +
          (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
@@ -377,17 +376,17 @@ float ThreadTrack::GetHeaderHeight() const {
 
   float header_height = 0.0f;
   int track_count = 0;
-  if (!thread_state_track_->IsEmpty()) {
+  if (!thread_state_bar_->IsEmpty()) {
     header_height += thread_state_track_height;
     ++track_count;
   }
 
-  if (!event_track_->IsEmpty()) {
+  if (!event_bar_->IsEmpty()) {
     header_height += event_track_height;
     ++track_count;
   }
 
-  if (!tracepoint_track_->IsEmpty()) {
+  if (!tracepoint_bar_->IsEmpty()) {
     header_height += tracepoint_track_height;
     ++track_count;
   }
