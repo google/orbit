@@ -17,11 +17,11 @@ using orbit_grpc_protos::SystemMemoryUsage;
 namespace {
 
 void ExpectMemInfoParsingResult(std::optional<SystemMemoryUsage> parsing_result,
-                                bool parsing_succeed, int expected_total = kMissingInfo,
-                                int expected_free = kMissingInfo,
-                                int expected_available = kMissingInfo,
-                                int expected_buffers = kMissingInfo,
-                                int expected_cached = kMissingInfo) {
+                                bool parsing_succeed, int64_t expected_total = kMissingInfo,
+                                int64_t expected_free = kMissingInfo,
+                                int64_t expected_available = kMissingInfo,
+                                int64_t expected_buffers = kMissingInfo,
+                                int64_t expected_cached = kMissingInfo) {
   if (!parsing_succeed) {
     EXPECT_FALSE(parsing_result.has_value());
     return;
@@ -40,17 +40,17 @@ void ExpectMemInfoParsingResult(std::optional<SystemMemoryUsage> parsing_result,
 namespace orbit_memory_tracing {
 
 TEST(MemoryUtils, ParseMemInfo) {
-  const int kMemTotalKB = 16396576;
-  const int kMemFreeKB = 11493816;
-  const int kMemAvailableKB = 14378752;
-  const int kBuffersKB = 71540;
-  const int kCachedKB = 3042860;
-  const int kMemTotalKiB = 16012281;
-  const int kMemFreeMB = 11494;
+  const int64_t kMemTotalKB = 16396576;
+  const int64_t kMemFreeKB = 11493816;
+  const int64_t kMemAvailableKB = 14378752;
+  const int64_t kBuffersKB = 71540;
+  const int64_t kCachedKB = 3042860;
+  const int64_t kMemTotalKiB = 16012281;
+  const int64_t kMemFreeMB = 11494;
 
-  const float kKiloBytes = 1000;
-  const float kKibiBytes = 1024;
-  const float kMegaBytes = 1000000;
+  const int64_t kKiloBytes = 1000;
+  const int64_t kKibiBytes = 1024;
+  const int64_t kMegaBytes = 1'000'000;
 
   const std::string kValidMeminfo =
       absl::Substitute(R"(MemTotal:       $0 kB
@@ -132,8 +132,8 @@ SwapCached:      0 kB)",
   ExpectMemInfoParsingResult(parsing_result, false);
 
   parsing_result = ParseMemInfo(kPartialMeminfoWithDifferentSizeUnits);
-  int converted_mem_total_kb = static_cast<int>(std::round(kKibiBytes / kKiloBytes * kMemTotalKiB));
-  int converted_mem_free_kb = static_cast<int>(std::round(kMegaBytes / kKiloBytes * kMemFreeMB));
+  int64_t converted_mem_total_kb = kMemTotalKiB * kKibiBytes / kKiloBytes;
+  int64_t converted_mem_free_kb = kMemFreeMB * kMegaBytes / kKiloBytes;
   ExpectMemInfoParsingResult(parsing_result, true, converted_mem_total_kb, converted_mem_free_kb);
 }
 

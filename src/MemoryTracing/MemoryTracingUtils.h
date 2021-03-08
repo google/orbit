@@ -13,7 +13,7 @@ namespace orbit_memory_tracing {
 
 // As we are reporting in Kilobytes, this method parses the memory size unit and computes the factor
 // when converting to Kilobytes.
-std::optional<float> ExtractSizeUintConversionFactor(const std::string& unit_string);
+std::optional<uint64_t> ExtractSizeUintConversionFactor(const std::string& unit_string);
 std::optional<orbit_grpc_protos::SystemMemoryUsage> ParseMemInfo(
     const std::string& meminfo_content);
 std::optional<orbit_grpc_protos::SystemMemoryUsage> GetSystemMemoryUsage() noexcept;
