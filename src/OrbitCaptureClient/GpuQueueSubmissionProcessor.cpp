@@ -250,6 +250,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
       get_string_hash_and_send_to_listener_if_necessary(kCommandBufferLabel);
 
   int32_t thread_id = gpu_queue_submission.meta_info().tid();
+  int32_t process_id = gpu_queue_submission.meta_info().pid();
 
   std::vector<TimerInfo> result;
 
@@ -272,6 +273,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
       command_buffer_timer.set_timeline_hash(timeline_hash);
       command_buffer_timer.set_processor(-1);
       command_buffer_timer.set_thread_id(thread_id);
+      command_buffer_timer.set_process_id(process_id);
       command_buffer_timer.set_type(TimerInfo::kGpuCommandBuffer);
       command_buffer_timer.set_user_data_key(command_buffer_text_key);
       result.push_back(command_buffer_timer);
@@ -295,6 +297,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
 
   const auto& submission_meta_info = gpu_queue_submission.meta_info();
   const int32_t submission_thread_id = submission_meta_info.tid();
+  const int32_t submission_process_id = submission_meta_info.pid();
   uint64_t submission_pre_submission_cpu_timestamp =
       submission_meta_info.pre_submission_cpu_timestamp();
   uint64_t submission_post_submission_cpu_timestamp =
@@ -393,6 +396,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       marker_timer.set_thread_id(kUnknownThreadId);
     }
 
+    marker_timer.set_process_id(submission_process_id);
     marker_timer.set_depth(completed_marker.depth());
     marker_timer.set_timeline_hash(timeline_marker_hash);
     marker_timer.set_processor(-1);

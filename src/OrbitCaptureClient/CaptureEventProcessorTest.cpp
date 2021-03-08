@@ -483,6 +483,7 @@ GpuQueueSubmissionMetaInfo* CreateGpuQueueSubmissionMetaInfo(GpuQueueSubmission*
                                                              uint64_t post_timestamp) {
   GpuQueueSubmissionMetaInfo* meta_info = submission->mutable_meta_info();
   meta_info->set_tid(kGpuTid);
+  meta_info->set_pid(kGpuPid);
   meta_info->set_pre_submission_cpu_timestamp(pre_timestamp);
   meta_info->set_post_submission_cpu_timestamp(post_timestamp);
   return meta_info;
@@ -527,6 +528,7 @@ void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const GpuJob& gpu
                                 uint64_t cpu_begin, uint64_t cpu_end, uint64_t timeline_key,
                                 uint64_t command_buffer_key) {
   EXPECT_EQ(actual_timer.thread_id(), gpu_job.tid());
+  EXPECT_EQ(actual_timer.process_id(), gpu_job.pid());
   EXPECT_EQ(actual_timer.depth(), gpu_job.depth());
   EXPECT_EQ(actual_timer.start(), cpu_begin);
   EXPECT_EQ(actual_timer.end(), cpu_end);
@@ -536,11 +538,12 @@ void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const GpuJob& gpu
 }
 
 void ExpectDebugMarkerTimerEq(const TimerInfo& actual_timer, uint64_t cpu_begin, uint64_t cpu_end,
-                              int32_t thread_id, uint32_t depth, uint64_t timeline_key,
-                              uint64_t marker_key) {
+                              int32_t thread_id, int32_t process_id, uint32_t depth,
+                              uint64_t timeline_key, uint64_t marker_key) {
   EXPECT_EQ(actual_timer.start(), cpu_begin);
   EXPECT_EQ(actual_timer.end(), cpu_end);
   EXPECT_EQ(actual_timer.thread_id(), thread_id);
+  EXPECT_EQ(actual_timer.process_id(), process_id);
   EXPECT_EQ(actual_timer.depth(), depth);
   EXPECT_EQ(actual_timer.type(), TimerInfo::kGpuDebugMarker);
   EXPECT_EQ(actual_timer.timeline_hash(), timeline_key);
@@ -618,7 +621,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job, 35, 39, kTimelineKey,
                              actual_command_buffer_key);
 
-  ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 36, gpu_job->tid(), 1,
+  ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 36, gpu_job->tid(), gpu_job->pid(), 1,
                            actual_marker_timeline_key, actual_marker_key);
 }
 
@@ -693,7 +696,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   ExpectCommandBufferTimerEq(command_buffer_timer_2, *gpu_job, 35, 39, kTimelineKey,
                              actual_command_buffer_key);
 
-  ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 36, gpu_job->tid(), 1,
+  ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 36, gpu_job->tid(), gpu_job->pid(), 1,
                            actual_marker_timeline_key, actual_marker_key);
 }
 
@@ -783,7 +786,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, kTimelineKey,
                              actual_command_buffer_key);
 
-  ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 78, gpu_job_2->tid(), 1,
+  ExpectDebugMarkerTimerEq(debug_marker_timer, 31, 78, gpu_job_2->tid(), gpu_job_2->pid(), 1,
                            actual_marker_timeline_key, actual_marker_key);
 }
 
@@ -848,8 +851,8 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
 
   // We expect the begin timestamp to be approximated by the first known timestamp. Also as we don't
   // know the thread id of the begin submission, the timer should state -1 as thread id.
-  ExpectDebugMarkerTimerEq(debug_marker_timer, 50, 78, -1, 1, actual_marker_timeline_key,
-                           actual_marker_key);
+  ExpectDebugMarkerTimerEq(debug_marker_timer, 50, 78, -1, gpu_job_2->pid(), 1,
+                           actual_marker_timeline_key, actual_marker_key);
 }
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
@@ -921,7 +924,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
                              actual_command_buffer_key);
 
   // We expect the begin timestamp to be approximated by the first known timestamp.
-  ExpectDebugMarkerTimerEq(debug_marker_timer, 50, 78, gpu_job_2->tid(), 1,
+  ExpectDebugMarkerTimerEq(debug_marker_timer, 50, 78, gpu_job_2->tid(), gpu_job_2->pid(), 1,
                            actual_marker_timeline_key, actual_marker_key);
 }
 
