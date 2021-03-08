@@ -273,7 +273,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
                                           const std::vector<int>& item_indices) {
   const CaptureData& capture_data = app_->GetCaptureData();
   if (action == kMenuActionSelect || action == kMenuActionUnselect ||
-      action == kMenuActionDisassembly) {
+      action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
     for (int i : item_indices) {
       const FunctionInfo selected_function = GetInstrumentedFunction(i);
       if (action == kMenuActionSelect) {
