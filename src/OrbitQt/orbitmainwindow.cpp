@@ -782,10 +782,14 @@ void OrbitMainWindow::OnTimer() {
   app_->MainTick();
 
   for (OrbitGLWidget* gl_widget : gl_widgets_) {
-    gl_widget->update();
+    if (gl_widget->GetCanvas() != nullptr && gl_widget->GetCanvas()->GetNeedsRedraw()) {
+      gl_widget->update();
+    }
   }
 
-  filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
+  if (app_->IsCapturing()) {
+    filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
+  }
 }
 
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
