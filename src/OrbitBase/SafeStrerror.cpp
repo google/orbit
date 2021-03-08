@@ -4,15 +4,15 @@
 
 #include "OrbitBase/SafeStrerror.h"
 
+#include <array>
 #include <cstring>
 
 const char* SafeStrerror(int errnum) {
-  constexpr size_t BUFLEN = 256;
-  thread_local char buf[BUFLEN];
+  thread_local std::array<char, 256> buf;
 #ifdef _MSC_VER
-  strerror_s(buf, BUFLEN, errnum);
-  return buf;
+  strerror_s(buf.data(), buf.size(), errnum);
+  return buf.data();
 #else
-  return strerror_r(errnum, buf, BUFLEN);
+  return strerror_r(errnum, buf.data(), buf.size());
 #endif
 }
