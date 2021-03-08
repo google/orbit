@@ -19,6 +19,9 @@ ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
+ABSL_FLAG(std::string, process_name, "",
+          "Automatically select and connect to the specified process");
+
 ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
 
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.

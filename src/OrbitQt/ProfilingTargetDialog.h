@@ -96,7 +96,7 @@ class ProfilingTargetDialog : public QDialog {
   void SetupLocalStates();
   void SetStateMachineInitialStateFromTarget(TargetConfiguration config);
   void SetStateMachineInitialState();
-  [[nodiscard]] bool TrySelectProcess(const ProcessData& process);
+  [[nodiscard]] bool TrySelectProcess(const std::string& process);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
   void SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel);
   void SetTargetAndStateMachineInitialState(StadiaTarget target);

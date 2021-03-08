@@ -51,6 +51,7 @@
 #include "servicedeploymanager.h"
 
 ABSL_DECLARE_FLAG(bool, local);
+ABSL_DECLARE_FLAG(std::string, process_name);
 
 namespace {
 constexpr int kProcessesRowHeight = 19;
@@ -433,14 +434,14 @@ void ProfilingTargetDialog::SelectFile() {
   }
 }
 
-bool ProfilingTargetDialog::TrySelectProcess(const ProcessData& process) {
+bool ProfilingTargetDialog::TrySelectProcess(const std::string& process_name) {
   QModelIndexList matches = process_proxy_model_.match(
       process_proxy_model_.index(0, static_cast<int>(ProcessItemModel::Column::kName)),
-      Qt::DisplayRole, QVariant::fromValue(QString::fromStdString(process.name())));
+      Qt::DisplayRole, QVariant::fromValue(QString::fromStdString(process_name)));
 
   if (matches.isEmpty()) return false;
 
-  LOG("Selecting remembered process: %s", process.name());
+  LOG("Selecting remembered process: %s", process_name);
 
   ui_->processesTableView->selectionModel()->setCurrentIndex(
       matches[0], {QItemSelectionModel::SelectCurrent, QItemSelectionModel::Rows});
@@ -462,8 +463,13 @@ void ProfilingTargetDialog::OnProcessListUpdate(
     // TrySelectProcess attempts to select the process again if it exists
     // in process_model_.
     if (process_ != nullptr) {
-      bool success = TrySelectProcess(*process_);
+      bool success = TrySelectProcess(process_->name());
       if (success) return;
+    }
+
+    if (absl::GetFlag(FLAGS_process_name) != "") {
+      bool success = TrySelectProcess(absl::GetFlag(FLAGS_process_name));
+      if (success) accept();
     }
 
     // The first time a list of processes arrives, the cpu utilization
