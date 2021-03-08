@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <string_view>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 
@@ -51,7 +52,10 @@ class unique_fd {
 
   [[nodiscard]] constexpr bool valid() const noexcept { return fd_ != kInvalidFd; }
 
-  [[nodiscard]] constexpr int get() const noexcept { return fd_; }
+  [[nodiscard]] int get() const noexcept {
+    CHECK(valid());
+    return fd_;
+  }
 
  private:
   void reset(int fd) noexcept {
