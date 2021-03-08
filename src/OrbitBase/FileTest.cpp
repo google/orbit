@@ -12,14 +12,12 @@ namespace orbit_base {
 TEST(File, DefaultUniqueFdIsInvalidDescriptor) {
   unique_fd fd;
   EXPECT_FALSE(fd.valid());
-  EXPECT_EQ(fd.get(), kInvalidFd);
 }
 
 TEST(File, EmptyUnuqueFdCanBeReleased) {
   unique_fd fd;
   fd.release();
   EXPECT_FALSE(fd.valid());
-  EXPECT_EQ(fd.get(), kInvalidFd);
 }
 
 TEST(File, MoveAssingToExisingUniqueFd) {
@@ -36,7 +34,6 @@ TEST(File, MoveAssingToExisingUniqueFd) {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wself-move"
-
 TEST(File, UniqueFdSelfMove) {
   auto fd_or_error =
       OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
@@ -47,8 +44,22 @@ TEST(File, UniqueFdSelfMove) {
 
   ASSERT_TRUE(valid_fd.valid());
 }
-
 #pragma GCC diagnostic pop
+
+TEST(File, AcccessInvalidUniqueFd) {
+  unique_fd fd;
+  EXPECT_FALSE(fd.valid());
+  EXPECT_DEATH((void)fd.get(), "");
+
+  auto fd_or_error =
+      OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
+
+  fd = std::move(fd_or_error.value());
+  EXPECT_TRUE(fd.valid());
+  fd.release();
+  EXPECT_FALSE(fd.valid());
+  EXPECT_DEATH((void)fd.get(), "");
+}
 
 TEST(File, OpenFileForReadingInvalidFile) {
   const auto fd_or_error = OpenFileForReading("non/existing/filename");
