@@ -180,6 +180,7 @@ message GpuQueueSubmission {
 
 message GpuQueueSubmissionMetaInfo {
   int32 tid = 1;
+  int32 pid = 4;
   uint64 pre_submission_cpu_timestamp = 2;
   uint64 post_submission_cpu_timestamp = 3;
 }

@@ -234,14 +234,14 @@ class SubmissionTrackerTest : public ::testing::Test {
   static void ExpectSingleCommandBufferSubmissionEq(
       const orbit_grpc_protos::ProducerCaptureEvent& actual_capture_event,
       uint64_t test_pre_submit_time, uint64_t test_post_submit_time, pid_t expected_tid,
-      uint64_t expected_command_buffer_begin_timestamp,
+      pid_t expected_pid, uint64_t expected_command_buffer_begin_timestamp,
       uint64_t expected_command_buffer_end_timestamp) {
     EXPECT_TRUE(actual_capture_event.has_gpu_queue_submission());
     const orbit_grpc_protos::GpuQueueSubmission& actual_queue_submission =
         actual_capture_event.gpu_queue_submission();
 
     ExpectSubmitEq(actual_queue_submission.meta_info(), test_pre_submit_time, test_post_submit_time,
-                   expected_tid);
+                   expected_tid, expected_pid);
 
     ASSERT_EQ(actual_queue_submission.submit_infos_size(), 1);
     const orbit_grpc_protos::GpuSubmitInfo& actual_submit_info =
@@ -258,12 +258,13 @@ class SubmissionTrackerTest : public ::testing::Test {
 
   static void ExpectSubmitEq(const orbit_grpc_protos::GpuQueueSubmissionMetaInfo& actual_meta_info,
                              int64_t test_pre_submit_time, uint64_t test_post_submit_time,
-                             pid_t expected_tid) {
+                             pid_t expected_tid, pid_t expected_pid) {
     EXPECT_LE(test_pre_submit_time, actual_meta_info.pre_submission_cpu_timestamp());
     EXPECT_LE(actual_meta_info.pre_submission_cpu_timestamp(),
               actual_meta_info.post_submission_cpu_timestamp());
     EXPECT_LE(actual_meta_info.post_submission_cpu_timestamp(), test_post_submit_time);
     EXPECT_EQ(expected_tid, actual_meta_info.tid());
+    EXPECT_EQ(expected_pid, actual_meta_info.pid());
   }
 
   static void ExpectDebugMarkerEndEq(const orbit_grpc_protos::GpuDebugMarker& actual_debug_marker,
@@ -280,13 +281,14 @@ class SubmissionTrackerTest : public ::testing::Test {
 
   static void ExpectDebugMarkerBeginEq(const orbit_grpc_protos::GpuDebugMarker& actual_debug_marker,
                                        uint64_t expected_timestamp, int64_t test_pre_submit_time,
-                                       uint64_t test_post_submit_time, pid_t expected_tid) {
+                                       uint64_t test_post_submit_time, pid_t expected_tid,
+                                       pid_t expected_pid) {
     ASSERT_TRUE(actual_debug_marker.has_begin_marker());
     EXPECT_EQ(actual_debug_marker.begin_marker().gpu_timestamp_ns(), expected_timestamp);
     const orbit_grpc_protos::GpuQueueSubmissionMetaInfo& actual_begin_marker_meta_info =
         actual_debug_marker.begin_marker().meta_info();
     ExpectSubmitEq(actual_begin_marker_meta_info, test_pre_submit_time, test_post_submit_time,
-                   expected_tid);
+                   expected_tid, expected_pid);
   }
 
   void ExpectTwoNextReadyQuerySlotCalls() {
@@ -514,7 +516,8 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = orbit_base::GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -524,7 +527,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveCommandBufferTimestampsForACompleteSubm
 
   EXPECT_THAT(actual_slots_marked_done_reading, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
-                                        pid, kTimestamp1, kTimestamp2);
+                                        tid, pid, kTimestamp1, kTimestamp2);
 }
 
 TEST_F(SubmissionTrackerTest,
@@ -551,7 +554,8 @@ TEST_F(SubmissionTrackerTest,
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = orbit_base::GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -562,7 +566,7 @@ TEST_F(SubmissionTrackerTest,
 
   EXPECT_THAT(actual_slots_done_reading, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
-                                        pid, kTimestamp1, kTimestamp2);
+                                        tid, pid, kTimestamp1, kTimestamp2);
 }
 
 TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFails) {
@@ -625,7 +629,8 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
                                                         .pCommandBuffers = &command_buffers[1],
                                                         .commandBufferCount = 1}};
 
-  pid_t pid = orbit_base::GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   std::array<uint64_t, 2> pre_submit_times;
   std::array<uint64_t, 2> post_submit_times;
 
@@ -652,9 +657,9 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
   EXPECT_THAT(actual_slots_done_reading2, UnorderedElementsAre(kSlotIndex3));
 
   ExpectSingleCommandBufferSubmissionEq(actual_capture_events[0], pre_submit_times[0],
-                                        post_submit_times[0], pid, kTimestamp1, kTimestamp2);
+                                        post_submit_times[0], tid, pid, kTimestamp1, kTimestamp2);
   ExpectSingleCommandBufferSubmissionEq(actual_capture_events[1], pre_submit_times[1],
-                                        post_submit_times[1], pid, kTimestamp3, kTimestamp4);
+                                        post_submit_times[1], tid, pid, kTimestamp3, kTimestamp4);
 }
 
 TEST_F(SubmissionTrackerTest, StopCaptureBeforeSubmissionWillResetTheSlots) {
@@ -703,7 +708,8 @@ TEST_F(SubmissionTrackerTest,
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = orbit_base::GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -714,7 +720,7 @@ TEST_F(SubmissionTrackerTest,
 
   EXPECT_THAT(actual_slots_done_reading, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
-                                        pid, kTimestamp1, kTimestamp2);
+                                        tid, pid, kTimestamp1, kTimestamp2);
 }
 
 TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) {
@@ -739,7 +745,8 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = orbit_base::GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -750,7 +757,7 @@ TEST_F(SubmissionTrackerTest, StopCaptureDuringSubmissionWillStillYieldResults) 
 
   EXPECT_THAT(actual_slots_done_reading, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
-                                        pid, kTimestamp1, kTimestamp2);
+                                        tid, pid, kTimestamp1, kTimestamp2);
 }
 
 TEST_F(SubmissionTrackerTest, StartCaptureJustBeforeSubmissionWontWriteData) {
@@ -909,7 +916,8 @@ TEST_F(SubmissionTrackerTest, ReusingCommandBufferWithoutResetInvalidatesSlot) {
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
   tracker_.MarkCommandBufferBegin(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
-  pid_t pid = orbit_base::GetCurrentThreadId();
+  pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -918,7 +926,7 @@ TEST_F(SubmissionTrackerTest, ReusingCommandBufferWithoutResetInvalidatesSlot) {
   tracker_.CompleteSubmits(device_);
 
   ExpectSingleCommandBufferSubmissionEq(actual_capture_event, pre_submit_time, post_submit_time,
-                                        pid, kTimestamp1, kTimestamp2);
+                                        tid, pid, kTimestamp1, kTimestamp2);
 
   EXPECT_THAT(actual_slots_marked_done_reading, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
 
@@ -1044,6 +1052,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -1062,8 +1071,8 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
       actual_queue_submission.completed_markers(0);
 
   ExpectDebugMarkerEndEq(actual_debug_marker, kTimestamp3, expected_text_key, expected_color, 0);
-  ExpectDebugMarkerBeginEq(actual_debug_marker, kTimestamp2, pre_submit_time, post_submit_time,
-                           tid);
+  ExpectDebugMarkerBeginEq(actual_debug_marker, kTimestamp2, pre_submit_time, post_submit_time, tid,
+                           pid);
 }
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenBeginNotCaptured) {
@@ -1166,6 +1175,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -1189,12 +1199,12 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   ExpectDebugMarkerEndEq(actual_debug_marker_outer, kTimestamp5, expected_text_key_outer,
                          expected_color, 0);
   ExpectDebugMarkerBeginEq(actual_debug_marker_outer, kTimestamp2, pre_submit_time,
-                           post_submit_time, tid);
+                           post_submit_time, tid, pid);
 
   ExpectDebugMarkerEndEq(actual_debug_marker_inner, kTimestamp4, expected_text_key_inner,
                          expected_color, 1);
   ExpectDebugMarkerBeginEq(actual_debug_marker_inner, kTimestamp3, pre_submit_time,
-                           post_submit_time, tid);
+                           post_submit_time, tid, pid);
 }
 
 TEST_F(SubmissionTrackerTest,
@@ -1244,6 +1254,7 @@ TEST_F(SubmissionTrackerTest,
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -1270,7 +1281,7 @@ TEST_F(SubmissionTrackerTest,
   ExpectDebugMarkerEndEq(actual_debug_marker_inner, kTimestamp2, expected_text_key_inner,
                          expected_color, 1);
   ExpectDebugMarkerBeginEq(actual_debug_marker_inner, kTimestamp1, pre_submit_time,
-                           post_submit_time, tid);
+                           post_submit_time, tid, pid);
 }
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
@@ -1312,6 +1323,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
   pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
 
   producer_->StartCapture();
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
@@ -1363,7 +1375,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
 
   ExpectDebugMarkerEndEq(actual_debug_marker, kTimestamp5, expected_text_key, expected_color, 0);
   ExpectDebugMarkerBeginEq(actual_debug_marker, kTimestamp2, pre_submit_time_1, post_submit_time_1,
-                           tid);
+                           tid, pid);
 }
 
 TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhenBeginNotCaptured) {
@@ -1590,6 +1602,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   tracker_.MarkDebugMarkerEnd(command_buffer_);
   tracker_.MarkCommandBufferEnd(command_buffer_);
   pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
   uint64_t pre_submit_time = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
       tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
@@ -1610,7 +1623,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   ExpectDebugMarkerEndEq(actual_debug_marker_outer, kTimestamp3, expected_text_key_outer,
                          expected_color, 0);
   ExpectDebugMarkerBeginEq(actual_debug_marker_outer, kTimestamp2, pre_submit_time,
-                           post_submit_time, tid);
+                           post_submit_time, tid, pid);
 }
 
 TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcrossSubmissions) {
@@ -1662,6 +1675,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   Color expected_color{1.f, 0.8f, 0.6f, 0.4f};
 
   pid_t tid = orbit_base::GetCurrentThreadId();
+  pid_t pid = orbit_base::GetCurrentProcessId();
 
   constexpr uint64_t kMaxDepth = 1;
   producer_->StartCapture(kMaxDepth);
@@ -1718,7 +1732,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   ExpectDebugMarkerEndEq(actual_debug_marker, kTimestamp6, expected_outer_text_key, expected_color,
                          0);
   ExpectDebugMarkerBeginEq(actual_debug_marker, kTimestamp2, pre_submit_time_1, post_submit_time_1,
-                           tid);
+                           tid, pid);
 }
 
 }  // namespace orbit_vulkan_layer
