@@ -2,16 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef USER_SPACE_INSTRUMENTATION_MACHINE_CODE_TOOLING_H
-#define USER_SPACE_INSTRUMENTATION_MACHINE_CODE_TOOLING_H
+#ifndef USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H
+#define USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H
 
 #include <cstdint>
 #include <vector>
 
 namespace orbit_user_space_instrumentation {
 
-// Close to trivial tooling to build up a vector of bytes used to write machine code in a somewhat
-// structured way.
+// Tooling to write machine code and build the corresponding vector of bytes in a structured way.
 //
 // Usage example:
 // code.AppendBytes({0x48, 0xb8})
@@ -26,7 +25,7 @@ class MachineCode {
   MachineCode& AppendBytes(const std::vector<uint8_t>& data);
   MachineCode& AppendImmediate64(uint64_t data);
   MachineCode& AppendImmediate32(uint32_t data);
-  const std::vector<uint8_t>& GetResultAsVector() { return data_; }
+  const std::vector<uint8_t>& GetResultAsVector() const { return data_; }
 
  private:
   std::vector<uint8_t> data_;
@@ -34,4 +33,4 @@ class MachineCode {
 
 }  // namespace orbit_user_space_instrumentation
 
-#endif  // USER_SPACE_INSTRUMENTATION_MACHINE_CODE_TOOLING_H
+#endif  // USER_SPACE_INSTRUMENTATION_MACHINE_CODE_H
