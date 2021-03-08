@@ -390,6 +390,6 @@ int Viewer::WidthMarginBetweenColumns() const {
   return StringWidthInPixels(fontMetrics(), kTwoSpaces);
 }
 
-int Viewer::TopWidgetHeight() const { return top_bar_widget_.fontMetrics().height(); }
+int Viewer::TopWidgetHeight() const { return fontMetrics().height(); }
 
 }  // namespace orbit_code_viewer
