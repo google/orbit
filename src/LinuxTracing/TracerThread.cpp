@@ -514,8 +514,10 @@ void TracerThread::Startup() {
   // perf_event_open refers to cores as "CPUs".
 
   // Record context switches from all cores for all processes.
+  int32_t number_of_cores = GetNumCores();
   std::vector<int32_t> all_cpus;
-  for (int32_t cpu = 0; cpu < GetNumCores(); ++cpu) {
+  all_cpus.reserve(number_of_cores);
+  for (int32_t cpu = 0; cpu < number_of_cores; ++cpu) {
     all_cpus.push_back(cpu);
   }
 
@@ -824,8 +826,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto event = make_unique_for_overwrite<UprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
     using perf_event_uprobe = perf_event_sp_ip_arguments_8bytes_sample;
-    constexpr size_t size_of_uprobes = sizeof(perf_event_uprobe);
-    CHECK(header.size == size_of_uprobes);
+    constexpr size_t kSizeOfUprobes = sizeof(perf_event_uprobe);
+    CHECK(header.size == kSizeOfUprobes);
     if (event->GetPid() != target_pid_) {
       return;
     }
@@ -838,8 +840,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_uretprobe) {
     auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    constexpr size_t size_of_uretprobes = sizeof(perf_event_ax_sample);
-    CHECK(header.size == size_of_uretprobes);
+    constexpr size_t kSizeOfUretprobes = sizeof(perf_event_ax_sample);
+    CHECK(header.size == kSizeOfUretprobes);
     if (event->GetPid() != target_pid_) {
       return;
     }
@@ -851,8 +853,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   } else if (is_stack_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-    constexpr size_t size_of_stack_sample = sizeof(perf_event_stack_sample);
-    if (header.size != size_of_stack_sample) {
+    constexpr size_t kSizeOfStackSample = sizeof(perf_event_stack_sample);
+    if (header.size != kSizeOfStackSample) {
       // Skip stack samples that have an unexpected size. These normally have
       // abi == PERF_SAMPLE_REGS_ABI_NONE and no registers, and size == 0 and
       // no stack. Usually, these samples have pid == tid == 0, but that's not
