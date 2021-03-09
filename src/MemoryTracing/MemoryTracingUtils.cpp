@@ -37,21 +37,32 @@ std::optional<SystemMemoryUsage> ParseMemInfo(const std::string& meminfo_content
   constexpr size_t kNumLines = 5;
   std::vector<std::string> top_lines(
       lines.begin(), lines.begin() + (lines.size() > kNumLines ? kNumLines : lines.size()));
-  int mem_total, mem_free, mem_available, mem_buffers, mem_cached;
   for (const std::string& line : top_lines) {
+    // Each line of the /proc/meminfo file consists of a parameter name, followed by a colon, the
+    // value of the parameter, and an option unit of measurement (e.g., "kB").
     std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
-    if (splits.size() < 2) continue;
-    // TODO: (http://b/181637734) Also parse the unit in splits[2] and update the unit tests.
-    if (splits[0] == "MemTotal:" && absl::SimpleAtoi(splits[1], &mem_total)) {
-      memory_info.set_total_kb(mem_total);
-    } else if (splits[0] == "MemFree:" && absl::SimpleAtoi(splits[1], &mem_free)) {
-      memory_info.set_free_kb(mem_free);
-    } else if (splits[0] == "MemAvailable:" && absl::SimpleAtoi(splits[1], &mem_available)) {
-      memory_info.set_available_kb(mem_available);
-    } else if (splits[0] == "Buffers:" && absl::SimpleAtoi(splits[1], &mem_buffers)) {
-      memory_info.set_buffers_kb(mem_buffers);
-    } else if (splits[0] == "Cached:" && absl::SimpleAtoi(splits[1], &mem_cached)) {
-      memory_info.set_cached_kb(mem_cached);
+    if (splits.size() < 3) continue;
+
+    // According to the kernel code https://github.com/torvalds/linux/blob/master/fs/proc/meminfo.c,
+    // the size unit in the file /proc/meminfo is fixed to "kB", which implies 1024 Bytes. And this
+    // is different from the definitions in http://en.wikipedia.org/wiki/Kilobyte. We keep
+    // consistent with the definition in /proc/meminfo: we report in "kB" and consider 1 kB = 1
+    // KiloBytes = 1024 Bytes.
+    CHECK(splits[2] == "kB");
+
+    int64_t memory_size_value;
+    if (!absl::SimpleAtoi(splits[1], &memory_size_value)) continue;
+
+    if (splits[0] == "MemTotal:") {
+      memory_info.set_total_kb(memory_size_value);
+    } else if (splits[0] == "MemFree:") {
+      memory_info.set_free_kb(memory_size_value);
+    } else if (splits[0] == "MemAvailable:") {
+      memory_info.set_available_kb(memory_size_value);
+    } else if (splits[0] == "Buffers:") {
+      memory_info.set_buffers_kb(memory_size_value);
+    } else if (splits[0] == "Cached:") {
+      memory_info.set_cached_kb(memory_size_value);
     }
   }
 
