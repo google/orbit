@@ -10,7 +10,7 @@
 
 #include "outcome.hpp"
 
-class ErrorMessage final {
+class [[nodiscard]] ErrorMessage final {
  public:
   ErrorMessage() = default;
   explicit ErrorMessage(std::string message) : message_(std::move(message)) {}
@@ -25,7 +25,7 @@ template <typename T, typename E>
 using Result = outcome::result<T, E, outcome::policy::terminate>;
 
 template <typename T>
-class ErrorMessageOr : public Result<T, ErrorMessage> {
+class [[nodiscard]] ErrorMessageOr : public Result<T, ErrorMessage> {
  public:
   using Result<T, ErrorMessage>::Result;
 
