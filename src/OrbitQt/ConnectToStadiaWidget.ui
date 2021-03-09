@@ -66,18 +66,6 @@
              <property name="enabled">
               <bool>true</bool>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>280</width>
-               <height>23</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>23</height>
-              </size>
-             </property>
              <property name="font">
               <font>
                <pointsize>12</pointsize>
@@ -118,16 +106,10 @@
                <height>23</height>
               </size>
              </property>
-             <property name="maximumSize">
+             <property name="baseSize">
               <size>
                <width>23</width>
                <height>23</height>
-              </size>
-             </property>
-             <property name="baseSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
               </size>
              </property>
              <property name="toolTip">

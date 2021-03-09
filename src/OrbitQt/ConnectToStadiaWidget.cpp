@@ -59,8 +59,6 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
   ui_->setupUi(this);
   ui_->instancesTableOverlay->raise();
 
-  DetachRadioButton();
-
   QSettings settings;
   if (settings.contains(kRememberChosenInstance)) {
     remembered_instance_id_ = settings.value(kRememberChosenInstance).toString();
@@ -145,6 +143,7 @@ void ConnectToStadiaWidget::DetachRadioButton() {
   ui_->mainFrame->layout()->getContentsMargins(&left, &top, nullptr, nullptr);
   int frame_border_width = ui_->mainFrame->lineWidth();
   ui_->radioButton->move(left + frame_border_width, top + frame_border_width);
+  ui_->radioButton->show();
 }
 
 void ConnectToStadiaWidget::SetupStateMachine() {
@@ -433,6 +432,11 @@ void ConnectToStadiaWidget::TrySelectRememberedInstance() {
   } else {
     ui_->rememberCheckBox->setChecked(false);
   }
+}
+
+void ConnectToStadiaWidget::showEvent(QShowEvent* event) {
+  QWidget::showEvent(event);
+  DetachRadioButton();
 }
 
 }  // namespace orbit_qt
