@@ -507,9 +507,8 @@ bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus)
   return !tracepoint_event_open_errors;
 }
 
-void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested) {
-  FAIL_IF(listener_ == nullptr, "No listener set");
-
+void TracerThread::Startup() {
+  ORBIT_SCOPE_FUNCTION;
   Reset();
 
   // perf_event_open refers to cores as "CPUs".
@@ -606,6 +605,89 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   }
 
   stats_.Reset();
+}
+
+void TracerThread::Shutdown() {
+  ORBIT_SCOPE_FUNCTION;
+  if (trace_thread_state_) {
+    switches_states_names_visitor_->ProcessRemainingOpenStates(orbit_base::CaptureTimestampNs());
+  }
+
+  // Stop recording.
+  for (int fd : tracing_fds_) {
+    perf_event_disable(fd);
+  }
+
+  // Close the ring buffers.
+  {
+    ORBIT_SCOPE("ring_buffers_.clear()");
+    ring_buffers_.clear();
+  }
+
+  // Close the file descriptors.
+  {
+    ORBIT_SCOPE_WITH_COLOR(
+        absl::StrFormat("Closing %d file descriptors", tracing_fds_.size()).c_str(),
+        orbit::Color::kRed);
+    SCOPED_TIMED_LOG("Closing %d file descriptors", tracing_fds_.size());
+    for (int fd : tracing_fds_) {
+      ORBIT_SCOPE("Closing fd");
+      close(fd);
+    }
+  }
+}
+
+void TracerThread::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
+  perf_event_header header;
+  ring_buffer->ReadHeader(&header);
+
+  // perf_event_header::type contains the type of record, e.g.,
+  // PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
+  // perf_event_type in linux/perf_event.h.
+  switch (header.type) {
+    case PERF_RECORD_SWITCH:
+      ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'", ring_buffer->GetName());
+      break;
+    case PERF_RECORD_SWITCH_CPU_WIDE:
+      ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'", ring_buffer->GetName());
+      break;
+    case PERF_RECORD_FORK:
+      ProcessForkEvent(header, ring_buffer);
+      break;
+    case PERF_RECORD_EXIT:
+      ProcessExitEvent(header, ring_buffer);
+      break;
+    case PERF_RECORD_MMAP:
+      ProcessMmapEvent(header, ring_buffer);
+      break;
+    case PERF_RECORD_SAMPLE:
+      ProcessSampleEvent(header, ring_buffer);
+      break;
+    case PERF_RECORD_LOST:
+      ProcessLostEvent(header, ring_buffer);
+      break;
+    case PERF_RECORD_THROTTLE:
+      // We don't use throttle/unthrottle events, but log them separately
+      // from the default 'Unexpected perf_event_header::type' case.
+      LOG("PERF_RECORD_THROTTLE in ring buffer '%s'", ring_buffer->GetName());
+      ring_buffer->SkipRecord(header);
+      break;
+    case PERF_RECORD_UNTHROTTLE:
+      LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'", ring_buffer->GetName());
+      ring_buffer->SkipRecord(header);
+      break;
+    default:
+      ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u", ring_buffer->GetName(),
+            header.type);
+      ring_buffer->SkipRecord(header);
+      break;
+  }
+}
+
+void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested) {
+  FAIL_IF(listener_ == nullptr, "No listener set");
+
+  Startup();
 
   bool last_iteration_saw_events = false;
   std::thread deferred_events_thread(&TracerThread::ProcessDeferredEvents, this);
@@ -650,52 +732,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
         }
 
         last_iteration_saw_events = true;
-        perf_event_header header;
-        ring_buffer.ReadHeader(&header);
-
-        // perf_event_header::type contains the type of record, e.g.,
-        // PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
-        // perf_event_type in linux/perf_event.h.
-        switch (header.type) {
-          case PERF_RECORD_SWITCH:
-            ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'",
-                  ring_buffer.GetName().c_str());
-            break;
-          case PERF_RECORD_SWITCH_CPU_WIDE:
-            ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'",
-                  ring_buffer.GetName().c_str());
-            break;
-          case PERF_RECORD_FORK:
-            ProcessForkEvent(header, &ring_buffer);
-            break;
-          case PERF_RECORD_EXIT:
-            ProcessExitEvent(header, &ring_buffer);
-            break;
-          case PERF_RECORD_MMAP:
-            ProcessMmapEvent(header, &ring_buffer);
-            break;
-          case PERF_RECORD_SAMPLE:
-            ProcessSampleEvent(header, &ring_buffer);
-            break;
-          case PERF_RECORD_LOST:
-            ProcessLostEvent(header, &ring_buffer);
-            break;
-          case PERF_RECORD_THROTTLE:
-            // We don't use throttle/unthrottle events, but log them separately
-            // from the default 'Unexpected perf_event_header::type' case.
-            LOG("PERF_RECORD_THROTTLE in ring buffer '%s'", ring_buffer.GetName().c_str());
-            ring_buffer.SkipRecord(header);
-            break;
-          case PERF_RECORD_UNTHROTTLE:
-            LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'", ring_buffer.GetName().c_str());
-            ring_buffer.SkipRecord(header);
-            break;
-          default:
-            ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
-                  ring_buffer.GetName().c_str(), header.type);
-            ring_buffer.SkipRecord(header);
-            break;
-        }
+        ProcessOneRecord(&ring_buffer);
       }
     }
   }
@@ -705,32 +742,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   deferred_events_thread.join();
   event_processor_.ProcessAllEvents();
 
-  if (trace_thread_state_) {
-    switches_states_names_visitor_->ProcessRemainingOpenStates(orbit_base::CaptureTimestampNs());
-  }
-
-  // Stop recording.
-  for (int fd : tracing_fds_) {
-    perf_event_disable(fd);
-  }
-
-  // Close the ring buffers.
-  {
-    ORBIT_SCOPE("ring_buffers_.clear()");
-    ring_buffers_.clear();
-  }
-
-  // Close the file descriptors.
-  {
-    ORBIT_SCOPE_WITH_COLOR(
-        absl::StrFormat("Closing %d file descriptors", tracing_fds_.size()).c_str(),
-        orbit::Color::kRed);
-    SCOPED_TIMED_LOG("Closing %d file descriptors", tracing_fds_.size());
-    for (int fd : tracing_fds_) {
-      ORBIT_SCOPE("Closing fd");
-      close(fd);
-    }
-  }
+  Shutdown();
 }
 
 void TracerThread::ProcessForkEvent(const perf_event_header& header,
@@ -1062,54 +1074,53 @@ void TracerThread::Reset() {
 void TracerThread::PrintStatsIfTimerElapsed() {
   ORBIT_SCOPE_FUNCTION;
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND < timestamp_ns) {
-    double actual_window_s =
-        static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
-    CHECK(actual_window_s > 0.0);
-
-    LOG("Events per second (and total) last %.3f s:", actual_window_s);
-    LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
-        stats_.sched_switch_count);
-    LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
-    LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s,
-        stats_.uprobes_count);
-    LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
-        stats_.gpu_events_count);
-
-    if (stats_.lost_count_per_buffer.empty()) {
-      LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
-    } else {
-      LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s,
-          stats_.lost_count);
-      for (const auto& buffer_and_lost_count : stats_.lost_count_per_buffer) {
-        LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
-            buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
-      }
-    }
-
-    uint64_t discarded_out_of_order_count = stats_.discarded_out_of_order_count;
-    LOG("  %s: %.0f/s (%lu)",
-        discarded_out_of_order_count == 0 ? "discarded as out of order"
-                                          : "DISCARDED AS OUT OF ORDER",
-        discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
-
-    // Ensure we can divide by 0.0 safely in case stats_.sample_count is zero.
-    static_assert(std::numeric_limits<double>::is_iec559);
-
-    uint64_t unwind_error_count = stats_.unwind_error_count;
-    LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
-        unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
-    uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
-    LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
-        discarded_samples_in_uretprobes_count / actual_window_s,
-        discarded_samples_in_uretprobes_count,
-        100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
-
-    uint64_t thread_state_count = stats_.thread_state_count;
-    LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
-        thread_state_count);
-    stats_.Reset();
+  if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND >= timestamp_ns) {
+    return;
   }
+
+  double actual_window_s =
+      static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
+  CHECK(actual_window_s > 0.0);
+
+  LOG("Events per second (and total) last %.3f s:", actual_window_s);
+  LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
+      stats_.sched_switch_count);
+  LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
+  LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s, stats_.uprobes_count);
+  LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
+      stats_.gpu_events_count);
+
+  if (stats_.lost_count_per_buffer.empty()) {
+    LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
+  } else {
+    LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s, stats_.lost_count);
+    for (const auto& buffer_and_lost_count : stats_.lost_count_per_buffer) {
+      LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
+          buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
+    }
+  }
+
+  uint64_t discarded_out_of_order_count = stats_.discarded_out_of_order_count;
+  LOG("  %s: %.0f/s (%lu)",
+      discarded_out_of_order_count == 0 ? "discarded as out of order" : "DISCARDED AS OUT OF ORDER",
+      discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
+
+  // Ensure we can divide by 0.0 safely in case stats_.sample_count is zero.
+  static_assert(std::numeric_limits<double>::is_iec559);
+
+  uint64_t unwind_error_count = stats_.unwind_error_count;
+  LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
+      unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
+  uint64_t discarded_samples_in_uretprobes_count = stats_.discarded_samples_in_uretprobes_count;
+  LOG("  discarded samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
+      discarded_samples_in_uretprobes_count / actual_window_s,
+      discarded_samples_in_uretprobes_count,
+      100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+
+  uint64_t thread_state_count = stats_.thread_state_count;
+  LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
+      thread_state_count);
+  stats_.Reset();
 }
 
 }  // namespace orbit_linux_tracing

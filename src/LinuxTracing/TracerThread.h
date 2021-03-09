@@ -58,6 +58,9 @@ class TracerThread {
     return std::nullopt;
   }
 
+  void Startup();
+  void Shutdown();
+  void ProcessOneRecord(PerfEventRingBuffer* ring_buffer);
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
   bool OpenUprobes(const orbit_linux_tracing::Function& function, const std::vector<int32_t>& cpus,
