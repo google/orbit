@@ -5,6 +5,9 @@ found in the LICENSE file.
 """
 
 import logging
+import os
+
+from absl import flags
 
 from pywinauto.keyboard import send_keys
 
@@ -153,3 +156,105 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
                          'GgpIssueFrameToken is marked as hooked')
 
         return True
+
+
+class ShowSourceCode(E2ETestCase):
+    """
+    Select given function in Symbols Tab, right-click to open context menu, select "Go To Source"
+    It is expected that the source code file is not found locally. A message box will pop up.
+    The test will click "Choose file..." which brings up a file open dialog. The test types in
+    the path to hello_ggp's main.c source code file. This path is hard-coded to match the
+    path which is used in the testrunner workflow, but can be overwritten by a command line flag
+    "--source_code_file".
+
+    Selection is done be filtering the function list and loading the first remaining row.
+    """
+
+    def _provoke_goto_source_action(self, function_search_string: str):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        logging.info('Start showing source code for function {}'.format(
+            function_search_string))
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
+
+        logging.info('Waiting for function list to be populated...')
+        wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
+
+        logging.info('Filtering functions')
+        functions_dataview.filter.set_focus()
+        functions_dataview.filter.set_edit_text('')
+        send_keys(function_search_string)
+        wait_for_condition(lambda: functions_dataview.get_row_count() == 1)
+        functions_dataview.get_item_at(0, 0).click_input('right')
+
+        logging.info('Click on "Go to Source code"')
+        self.find_context_menu_item('Go to Source code').click_input()
+
+    def _handle_file_not_found_message_box(self):
+        logging.info('Waiting for message box')
+
+        def get_message_box():
+            return self.find_control(control_type="Window", name="Source code file not found", parent=self.suite.top_window(), recurse=False)
+        wait_for_condition(lambda: get_message_box().is_visible())
+
+        logging.info('Message box found - Clicking "Choose file..."')
+        choose_file_button = self.find_control(
+            control_type="Button", name="Choose file...", parent=get_message_box(), recurse=True)
+        choose_file_button.click_input()
+
+    def _handle_file_open_dialog(self):
+        logging.info("Waiting for File Open Dialog")
+
+        def get_file_open_dialog():
+            return self.find_control(control_type="Window", name_contains="Choose ", parent=self.suite.top_window(), recurse=False)
+        wait_for_condition(lambda: get_file_open_dialog().is_visible())
+        file_open_dialog = get_file_open_dialog()
+        logging.info(
+            "File Open Dialog is now visible. Looking for file edit...")
+
+        logging.info("File Edit was found. Entering file path...")
+        file_edit = self.find_control(
+            control_type="Edit", name="File name:", parent=file_open_dialog, recurse=True)
+        file_edit.set_focus()
+        file_edit.set_edit_text('')
+
+        # The test needs the source code file "main.c" from the hello_ggp example
+        # to be available on the machine. On the E2E test infrastructure the example
+        # project will be extracted to C:\build\scratch\test\hello_ggp.
+        #
+        # To run this test in developer machines, the patch can be overwritten by a
+        # command line flag. Keep in mind, it needs to be an absolute path, which
+        # is understood by the Windows file open dialog, when pasted into the filename
+        # field.
+        send_keys(flags.FLAGS.source_code_file)
+
+        logging.info("Clicking the open button...")
+        file_open_button = self.find_control(
+            control_type="Button", name="Open", parent=file_open_dialog, recurse=False)
+        file_open_button.click_input()
+
+    def _handle_source_code_dialog(self):
+        logging.info("Waiting for the source code dialog.")
+
+        def get_source_code_dialog():
+            return self.find_control(control_type="Window", name="main.c", parent=self.suite.top_window(), recurse=False)
+        wait_for_condition(lambda: get_source_code_dialog().is_visible())
+        source_code_dialog = get_source_code_dialog()
+
+        logging.info("Found source code dialog. Checking contents...")
+        source_code_edit = self.find_control(
+            control_type="Edit", name="", parent=source_code_dialog, recurse=False)
+        self.expect_true('#include <ggp_c/ggp.h>' in source_code_edit.get_line(0),
+                         "Source code dialog shows the correct file.")
+
+        logging.info("All good. Closing the dialog...")
+        close_button = self.find_control(
+            control_type="Button", name="Close", parent=source_code_dialog, recurse=True)
+        close_button.click_input()
+
+    def _execute(self, function_search_string: str):
+        self._provoke_goto_source_action(function_search_string)
+        self._handle_file_not_found_message_box()
+        self._handle_file_open_dialog()
+        self._handle_source_code_dialog()
