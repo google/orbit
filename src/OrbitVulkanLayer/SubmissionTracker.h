@@ -5,6 +5,8 @@
 #ifndef ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
 #define ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
 
+#include <functional>
+#include <queue>
 #include <stack>
 
 #include "OrbitBase/Logging.h"
@@ -525,18 +527,28 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
 
-    if (!queue_to_submissions_.contains(queue)) {
-      queue_to_submissions_[queue] = {};
+    if (!submissions_queue_.contains(queue)) {
+      std::priority_queue<QueueSubmission, std::vector<QueueSubmission>,
+                          std::function<bool(QueueSubmission, QueueSubmission)>>
+          priority_queue{[](const QueueSubmission& lhs, const QueueSubmission& rhs) -> bool {
+            return lhs.meta_information.pre_submission_cpu_timestamp >
+                   rhs.meta_information.pre_submission_cpu_timestamp;
+          }};
+      submissions_queue_[queue] = priority_queue;
     }
-    CHECK(queue_to_submissions_.contains(queue));
-    queue_to_submissions_.at(queue).emplace_back(std::move(queue_submission_optional.value()));
+
+    submissions_queue_.at(queue).emplace(std::move(queue_submission_optional.value()));
   }
 
   // This method is responsible for retrieving all the timestamps for the "completed" submissions,
-  // for transforming the information of those submissions (in particlular about the command buffers
+  // for transforming the information of those submissions (in particular about the command buffers
   // and debug markers) into the `GpuQueueSubmission` proto, and for sending it to the
-  // `VulkanLayerProducer`. We consider a submission to be "completed" if its last command buffer
-  // timestamp is ready (see `PullCompletedSubmissions`).
+  // `VulkanLayerProducer`. We consider a submission to be "completed" all timestamps that are
+  // associated with this submission are ready.
+  // We maintain a priority queue (for every `VkQueue`) `submissions_queue_` and process submissions
+  // with the oldest CPU timestamp, until we encounter the first "incomplete" submission.
+  // This way, we ensure, that we will send the submission information per queue in ordered by the
+  // CPU timestamp.
   // Beside the timestamps of command buffers and the meta information of the submission, the proto
   // also contains the debug markers, "begin" (even if submitted in a different submission) and
   // "end", that got completed in this submission.
@@ -546,10 +558,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   void CompleteSubmits(VkDevice device) {
     absl::WriterMutexLock lock(&mutex_);
     VkQueryPool query_pool = timer_query_pool_->GetQueryPool(device);
-    std::vector<QueueSubmission> completed_submissions =
-        PullCompletedSubmissions(device, query_pool);
 
-    if (completed_submissions.empty()) {
+    if (submissions_queue_.empty()) {
       return;
     }
 
@@ -560,29 +570,31 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     std::vector<uint32_t> query_slots_done_reading = {};
     std::vector<QueueSubmission> submissions_to_send = {};
 
-    // The submits in completed_submissions are sorted by "pre submission CPU" timestamp and we want
-    // to make sure we send events to the client in that order. Therefore, we must retry all
-    // submissions after we encounter the first submission that we can't complete yet and push them
-    // back into the queue_to_submissions_ queue.
-    bool all_succeeded_so_far = true;
-    for (auto& completed_submission : completed_submissions) {
-      bool command_buffer_queries_succeeded = QueryCommandBufferTimestamps(
-          &completed_submission, &query_slots_done_reading, device, query_pool, timestamp_period);
-      bool marker_queries_succeeded = QueryDebugMarkerTimestamps(
-          &completed_submission, &query_slots_done_reading, device, query_pool, timestamp_period);
+    // The submits of a specific queue in `submissions_queue_` are sorted by "pre submission CPU"
+    // timestamp and we want to make sure we send events to the client in that order. Therefore, we
+    // stop as soon as a query failed.
+    for (auto& [unused_queue, submissions] : submissions_queue_) {
+      while (!submissions.empty()) {
+        QueueSubmission completed_submission = submissions.top();
+        submissions.pop();
+        bool command_buffer_queries_succeeded = QueryCommandBufferTimestamps(
+            &completed_submission, &query_slots_done_reading, device, query_pool, timestamp_period);
 
-      all_succeeded_so_far &= command_buffer_queries_succeeded && marker_queries_succeeded;
-
-      if (all_succeeded_so_far) {
-        submissions_to_send.push_back(completed_submission);
-      } else {
-        VkQueue queue = completed_submission.queue;
-
-        if (!queue_to_submissions_.contains(queue)) {
-          queue_to_submissions_[queue] = {};
+        // We only need to read the debug marker timestamps, if querying the command buffers
+        // succeeded.
+        bool marker_queries_succeeded = false;
+        if (command_buffer_queries_succeeded) {
+          marker_queries_succeeded =
+              QueryDebugMarkerTimestamps(&completed_submission, &query_slots_done_reading, device,
+                                         query_pool, timestamp_period);
         }
-        CHECK(queue_to_submissions_.contains(queue));
-        queue_to_submissions_.at(queue).emplace_back(std::move(completed_submission));
+
+        if (command_buffer_queries_succeeded && marker_queries_succeeded) {
+          submissions_to_send.emplace_back(std::move(completed_submission));
+        } else {
+          submissions.emplace(std::move(completed_submission));
+          break;
+        }
       }
     }
 
@@ -592,15 +604,19 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
           capture_event.mutable_gpu_queue_submission();
 
       WriteMetaInfo(completed_submission.meta_information, submission_proto->mutable_meta_info());
-      WriteCommandBufferTimings(completed_submission, submission_proto);
-      WriteDebugMarkers(completed_submission, submission_proto);
+      bool has_command_buffer_timestamps =
+          WriteCommandBufferTimings(completed_submission, submission_proto);
+      bool has_debug_marker_timestamps = WriteDebugMarkers(completed_submission, submission_proto);
 
-      if (vulkan_layer_producer_ != nullptr) {
+      if (vulkan_layer_producer_ != nullptr &&
+          (has_command_buffer_timestamps || has_debug_marker_timestamps)) {
         vulkan_layer_producer_->EnqueueCaptureEvent(std::move(capture_event));
       }
     }
 
-    timer_query_pool_->MarkQuerySlotsDoneReading(device, query_slots_done_reading);
+    if (!query_slots_done_reading.empty()) {
+      timer_query_pool_->MarkQuerySlotsDoneReading(device, query_slots_done_reading);
+    }
   }
 
   void ResetCommandBuffer(VkCommandBuffer command_buffer) {
@@ -731,73 +747,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     return true;
   }
 
-  std::vector<QueueSubmission> PullCompletedSubmissions(VkDevice device, VkQueryPool query_pool) {
-    mutex_.AssertHeld();
-    std::vector<QueueSubmission> completed_submissions = {};
-    for (auto& [unused_queue, queue_submissions] : queue_to_submissions_) {
-      auto submission_it = queue_submissions.begin();
-      while (submission_it != queue_submissions.end()) {
-        const QueueSubmission& submission = *submission_it;
-        if (submission.submit_infos.empty()) {
-          submission_it = queue_submissions.erase(submission_it);
-          continue;
-        }
-
-        bool erase_submission = true;
-        // Let's find the last command buffer in this submission, so first find the last
-        // submit info that has at least one command buffer.
-        // We test if for this command buffer we already have a query result for its last slot
-        // and if so (or if the submission does not contain any command buffer) erase this
-        // submission.
-        // We expect that each `QueueSubmission` that made it into the `queue_to_submissions_`
-        // contains at least one command buffer.
-        auto submit_info_reverse_it = submission.submit_infos.rbegin();
-        while (submit_info_reverse_it != submission.submit_infos.rend()) {
-          const SubmitInfo& submit_info = submission.submit_infos.back();
-          if (submit_info.command_buffers.empty()) {
-            ++submit_info_reverse_it;
-            continue;
-          }
-          // We found our last command buffer, so lets check if its result is there:
-          const SubmittedCommandBuffer& last_command_buffer = submit_info.command_buffers.back();
-          CHECK(last_command_buffer.command_buffer_end_slot_index.has_value());
-          uint32_t check_slot_index_end = last_command_buffer.command_buffer_end_slot_index.value();
-
-          static constexpr VkDeviceSize kResultStride = sizeof(uint64_t);
-          uint64_t test_query_result = 0;
-          VkResult query_worked = dispatch_table_->GetQueryPoolResults(device)(
-              device, query_pool, check_slot_index_end, 1, sizeof(test_query_result),
-              &test_query_result, kResultStride, VK_QUERY_RESULT_64_BIT);
-
-          // Only erase the submission if we query its timers now.
-          if (query_worked == VK_SUCCESS) {
-            erase_submission = true;
-            completed_submissions.push_back(submission);
-          } else {
-            erase_submission = false;
-          }
-          break;
-        }
-
-        if (erase_submission) {
-          submission_it = queue_submissions.erase(submission_it);
-        } else {
-          ++submission_it;
-        }
-      }
-    }
-
-    // We sort the completed submissions by timestamp to avoid sending the capture events out of
-    // order.
-    std::sort(completed_submissions.begin(), completed_submissions.end(),
-              [](const QueueSubmission& lhs, const QueueSubmission& rhs) {
-                return lhs.meta_information.pre_submission_cpu_timestamp <
-                       rhs.meta_information.pre_submission_cpu_timestamp;
-              });
-
-    return completed_submissions;
-  }
-
   std::optional<uint64_t> QueryGpuTimestampNs(VkDevice device, VkQueryPool query_pool,
                                               uint32_t slot_index, float timestamp_period) {
     static constexpr VkDeviceSize kResultStride = sizeof(uint64_t);
@@ -827,7 +776,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
                                                         VkDevice device, VkQueryPool query_pool,
                                                         float timestamp_period) {
     CHECK(command_buffer != nullptr);
-    bool queries_succeeded = true;
 
     if (!command_buffer->end_timestamp.has_value()) {
       CHECK(command_buffer->command_buffer_end_slot_index.has_value());
@@ -838,14 +786,14 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         command_buffer->end_timestamp = end_timestamp;
         query_slots_to_reset->push_back(slot_index);
       } else {
-        queries_succeeded = false;
+        return false;
       }
     }
 
     // It's possible that the command begin was not recorded, so we have to check if there is even
     // a query slot index for the begin timestamp before we try to query it.
     if (!command_buffer->command_buffer_begin_slot_index.has_value()) {
-      return queries_succeeded;
+      return true;
     }
 
     if (!command_buffer->begin_timestamp.has_value()) {
@@ -856,25 +804,25 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         command_buffer->begin_timestamp = begin_timestamp;
         query_slots_to_reset->push_back(slot_index);
       } else {
-        queries_succeeded = false;
+        return false;
       }
     }
 
-    return queries_succeeded;
+    return true;
   }
 
   [[nodiscard]] bool QueryCommandBufferTimestamps(QueueSubmission* completed_submission,
                                                   std::vector<uint32_t>* query_slots_to_reset,
                                                   VkDevice device, VkQueryPool query_pool,
                                                   float timestamp_period) {
-    bool all_queries_succeeded = true;
     for (auto& completed_submit : completed_submission->submit_infos) {
       for (auto& completed_command_buffer : completed_submit.command_buffers) {
-        all_queries_succeeded &= QuerySingleCommandBufferTimestamps(
+        bool queries_succeeded = QuerySingleCommandBufferTimestamps(
             &completed_command_buffer, query_slots_to_reset, device, query_pool, timestamp_period);
+        if (!queries_succeeded) return false;
       }
     }
-    return all_queries_succeeded;
+    return true;
   }
 
   [[nodiscard]] bool QuerySingleDebugMarkerTimestamps(SubmittedMarkerSlice* marker_slice,
@@ -882,7 +830,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
                                                       VkDevice device, VkQueryPool query_pool,
                                                       float timestamp_period) {
     CHECK(marker_slice != nullptr);
-    bool queries_succeeded = true;
 
     if (!marker_slice->end_info.timestamp.has_value()) {
       std::optional<uint64_t> end_timestamp = QueryGpuTimestampNs(
@@ -891,12 +838,12 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         marker_slice->end_info.timestamp = end_timestamp;
         query_slots_to_reset->push_back(marker_slice->end_info.slot_index);
       } else {
-        queries_succeeded = false;
+        return false;
       }
     }
 
     if (!marker_slice->begin_info.has_value()) {
-      return queries_succeeded;
+      return true;
     }
 
     if (!marker_slice->begin_info->timestamp.has_value()) {
@@ -906,26 +853,28 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         marker_slice->begin_info->timestamp = begin_timestamp;
         query_slots_to_reset->push_back(marker_slice->begin_info->slot_index);
       } else {
-        queries_succeeded = false;
+        return false;
       }
     }
-    return queries_succeeded;
+    return true;
   }
 
   [[nodiscard]] bool QueryDebugMarkerTimestamps(QueueSubmission* completed_submission,
                                                 std::vector<uint32_t>* query_slots_to_reset,
                                                 VkDevice device, VkQueryPool query_pool,
                                                 float timestamp_period) {
-    bool all_queries_succeeded = true;
     for (auto& marker_slice : completed_submission->completed_markers) {
-      all_queries_succeeded &= QuerySingleDebugMarkerTimestamps(
+      bool queries_succeeded = QuerySingleDebugMarkerTimestamps(
           &marker_slice, query_slots_to_reset, device, query_pool, timestamp_period);
+      if (!queries_succeeded) return false;
     }
-    return all_queries_succeeded;
+    return true;
   }
 
-  void WriteCommandBufferTimings(const QueueSubmission& completed_submission,
-                                 orbit_grpc_protos::GpuQueueSubmission* submission_proto) {
+  [[nodiscard]] bool WriteCommandBufferTimings(
+      const QueueSubmission& completed_submission,
+      orbit_grpc_protos::GpuQueueSubmission* submission_proto) {
+    bool has_at_least_one_timestamp = false;
     for (const auto& completed_submit : completed_submission.submit_infos) {
       orbit_grpc_protos::GpuSubmitInfo* submit_info_proto = submission_proto->add_submit_infos();
       for (const auto& completed_command_buffer : completed_submit.command_buffers) {
@@ -945,16 +894,21 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
         CHECK(completed_command_buffer.end_timestamp.has_value());
         command_buffer_proto->set_end_gpu_timestamp_ns(
             completed_command_buffer.end_timestamp.value());
+
+        has_at_least_one_timestamp = true;
       }
     }
+    return has_at_least_one_timestamp;
   }
 
-  void WriteDebugMarkers(const QueueSubmission& completed_submission,
-                         orbit_grpc_protos::GpuQueueSubmission* submission_proto) {
+  [[nodiscard]] bool WriteDebugMarkers(const QueueSubmission& completed_submission,
+                                       orbit_grpc_protos::GpuQueueSubmission* submission_proto) {
     submission_proto->set_num_begin_markers(completed_submission.num_begin_markers);
+    bool has_at_least_one_timestamp = false;
     for (const auto& marker_state : completed_submission.completed_markers) {
       CHECK(marker_state.end_info.timestamp.has_value());
       uint64_t end_timestamp = marker_state.end_info.timestamp.value();
+      has_at_least_one_timestamp = true;
 
       orbit_grpc_protos::GpuDebugMarker* marker_proto = submission_proto->add_completed_markers();
       if (vulkan_layer_producer_ != nullptr) {
@@ -969,7 +923,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       // color.
       if (quantize(marker_state.color.red) != 0 || quantize(marker_state.color.green) != 0 ||
           quantize(marker_state.color.blue) != 0 || quantize(marker_state.color.alpha) != 0) {
-        auto color = marker_proto->mutable_color();
+        auto* color = marker_proto->mutable_color();
         color->set_red(marker_state.color.red);
         color->set_green(marker_state.color.green);
         color->set_blue(marker_state.color.blue);
@@ -991,6 +945,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       uint64_t begin_timestamp = marker_state.begin_info->timestamp.value();
       begin_debug_marker_proto->set_gpu_timestamp_ns(begin_timestamp);
     }
+
+    return has_at_least_one_timestamp;
   }
 
   // This method does not acquire a lock and MUST NOT be called without holding the `mutex_`.
@@ -1029,7 +985,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   absl::flat_hash_map<VkCommandBuffer, VkDevice> command_buffer_to_device_;
 
   absl::flat_hash_map<VkCommandBuffer, CommandBufferState> command_buffer_to_state_;
-  absl::flat_hash_map<VkQueue, std::vector<QueueSubmission>> queue_to_submissions_;
+  absl::flat_hash_map<VkQueue,
+                      std::priority_queue<QueueSubmission, std::vector<QueueSubmission>,
+                                          std::function<bool(QueueSubmission, QueueSubmission)>>>
+      submissions_queue_;
 
   absl::flat_hash_map<VkQueue, QueueMarkerState> queue_to_markers_;
 
