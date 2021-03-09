@@ -43,6 +43,7 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -257,6 +258,29 @@ static bool DevModeEnabledViaEnvironmentVariable() {
   return env.contains("ORBIT_DEV_MODE") || env.contains("ORBIT_DEVELOPER_MODE");
 }
 
+static void LogAndMaybeWarnAboutClockResolution() {
+  uint64_t estimated_clock_resolution = orbit_base::EstimateClockResolution();
+  LOG("%s", absl::StrFormat("Clock resolution on client: %d (ns)", estimated_clock_resolution));
+
+  // Since a low clock resolution on the client only affects our own introspection and logging
+  // timings, we only show a warning dialogue when running in devmode.
+  constexpr uint64_t kWarnThresholdClockResolutionNs = 10 * 1000;  // 10 us
+  if (absl::GetFlag(FLAGS_devmode) &&
+      estimated_clock_resolution > kWarnThresholdClockResolutionNs) {
+    DisplayErrorToUser(
+        QString("Warning, clock resolution is low (estimated as %1 ns)! Introspection "
+                "timings may be inaccurate.")
+            .arg(estimated_clock_resolution));
+  }
+  // An estimated clock resolution of 0 means that estimating the resolution failed. This can
+  // happen for really low resolutions and is likely an error case that we should warn about
+  // in devmode.
+  if (absl::GetFlag(FLAGS_devmode) && estimated_clock_resolution == 0) {
+    DisplayErrorToUser(QString(
+        "Warning, failed to estimate clock resolution! Introspection timings may be inaccurate."));
+  }
+}
+
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
@@ -344,6 +368,8 @@ int main(int argc, char* argv[]) {
                            .arg(open_gl_version->minor));
     return -1;
   }
+
+  LogAndMaybeWarnAboutClockResolution();
 
   const DeploymentConfiguration deployment_configuration = FigureOutDeploymentConfiguration();
 

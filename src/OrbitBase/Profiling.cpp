@@ -19,8 +19,10 @@ uint64_t EstimateClockResolution() {
   while (duration_ns < kMaximumDurationNs) {
     // Count to limit the number of iterations in the while loop below. Note that the loop
     // below will terminate within one quantum of the clock used. For the unlikely (broken?)
-    // case that the clock does not increase, this additional limit is checked.
-    constexpr int kSafetyNetCount = 100'000;
+    // case that the clock does not increase, this additional limit is checked. However, this
+    // value also needs to be sufficiently large so that the loop will actually hit an
+    // increase of the clock.
+    constexpr int kSafetyNetCount = 1'000'000;
 
     uint64_t resolution = 0;
     int safety_net_counter = 0;
