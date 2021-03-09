@@ -169,7 +169,7 @@ if [ -n "$1" ]; then
     set +e
     echo "Uploading symbols to the symbol server."
     api_key=$(get_api_key "${OAUTH_TOKEN_HEADER}")
-    upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin"
+    upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin" "${REPO_ROOT}/build/lib"
     set -e
   fi
 

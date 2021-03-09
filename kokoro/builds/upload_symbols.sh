@@ -72,6 +72,7 @@ function upload_symbol_file {
 function upload_debug_symbols {
   local api_key=$1
   local bin_folder=$2
+  local lib_folder=$3
   
   install_breakpad_tools
   if [ ! -d breakpad/symbols ]; then
@@ -80,6 +81,7 @@ function upload_debug_symbols {
 
   if [ "$(uname -s)" == "Linux" ]; then
     upload_symbol_file $api_key $bin_folder/OrbitService
+    upload_symbol_file $api_key $lib_folder/libOrbitVulkanLayer.so
   else
     upload_symbol_file $api_key $bin_folder/Orbit.exe                             
     upload_symbol_file $api_key $bin_folder/Qt5Core.dll                           
