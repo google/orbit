@@ -25,6 +25,10 @@ class IntrospectionWindow : public CaptureWindow {
   void StartIntrospection();
   void StopIntrospection();
 
+  void Draw() override;
+  void DrawScreenSpace() override;
+  void RenderText(float layer) override;
+
  protected:
   [[nodiscard]] const char* GetHelpText() const override;
   [[nodiscard]] bool ShouldAutoZoom() const override;
