@@ -77,6 +77,7 @@ class ConnectToStadiaWidget : public QWidget {
   void InstanceReloadRequested();
 
  private:
+  void showEvent(QShowEvent* event) override;
   std::unique_ptr<Ui::ConnectToStadiaWidget> ui_;
   orbit_ggp::InstanceItemModel instance_model_;
   SshConnectionArtifacts* ssh_connection_artifacts_ = nullptr;
