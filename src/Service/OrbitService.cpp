@@ -89,8 +89,7 @@ static void PrintInstanceVersions() {
 // postmortem debugging purposes. The resolution should be fairly small (in my tests
 // it was ~35 nanoseconds).
 static void PrintClockResolution() {
-  LOG("%s",
-      absl::StrFormat("Clock resolution: %" PRIi64 " (ns)", orbit_base::EstimateClockResolution()));
+  LOG("%s", absl::StrFormat("Clock resolution: %d (ns)", orbit_base::EstimateClockResolution()));
 }
 
 static std::string ReadStdIn() {
