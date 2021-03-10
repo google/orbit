@@ -352,6 +352,16 @@ void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracep
       is_same_pid_as_target);
 }
 
+void OrbitApp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
+  module_manager_->AddOrUpdateModules({module_info});
+  GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
+}
+
+void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
+  module_manager_->AddOrUpdateModules(module_infos);
+  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
+}
+
 void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate) {
   thread_pool_->Schedule([modules_to_validate = std::move(modules_to_validate), this] {
     frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);

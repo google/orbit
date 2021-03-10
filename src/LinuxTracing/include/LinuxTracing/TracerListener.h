@@ -18,9 +18,12 @@ class TracerListener {
   virtual void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_scope) = 0;
   virtual void OnGpuJob(orbit_grpc_protos::FullGpuJob gpu_job) = 0;
   virtual void OnThreadName(orbit_grpc_protos::ThreadName thread_name) = 0;
+  virtual void OnThreadNamesSnapshot(
+      orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) = 0;
   virtual void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) = 0;
   virtual void OnAddressInfo(orbit_grpc_protos::FullAddressInfo full_address_info) = 0;
   virtual void OnTracepointEvent(orbit_grpc_protos::FullTracepointEvent tracepoint_event) = 0;
+  virtual void OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot modules_snapshot) = 0;
   virtual void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) = 0;
 };
 

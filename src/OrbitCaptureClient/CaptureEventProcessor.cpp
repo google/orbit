@@ -37,6 +37,9 @@ using orbit_grpc_protos::ThreadStateSlice;
 
 void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
   switch (event.event_case()) {
+    case ClientCaptureEvent::kCaptureStarted:
+      // TODO: implement this (as part of this PR)
+      break;
     case ClientCaptureEvent::kSchedulingSlice:
       ProcessSchedulingSlice(event.scheduling_slice());
       break;
@@ -76,8 +79,14 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmission(event.gpu_queue_submission());
       break;
+    case ClientCaptureEvent::kModulesSnapshot:
+      ProcessModulesSnapshot(event.modules_snapshot());
+      break;
+    case ClientCaptureEvent::kThreadNamesSnapshot:
+      ProcessThreadNamesSnapshot(event.thread_names_snapshot());
+      break;
     case ClientCaptureEvent::kModuleUpdateEvent:
-      // TODO (http://b/168797897): Process module update events
+      ProcessModuleUpdate(event.module_update_event());
       break;
     case ClientCaptureEvent::kSystemMemoryUsage:
       ProcessSystemMemoryUsage(event.system_memory_usage());
@@ -183,6 +192,19 @@ void CaptureEventProcessor::ProcessInternedString(InternedString interned_string
   string_intern_pool_.emplace(interned_string.key(), std::move(*interned_string.mutable_intern()));
 }
 
+void CaptureEventProcessor::ProcessModuleUpdate(
+    orbit_grpc_protos::ModuleUpdateEvent module_update) {
+  capture_listener_->OnModuleUpdate(module_update.timestamp_ns(),
+                                    std::move(*module_update.mutable_module()));
+}
+
+void CaptureEventProcessor::ProcessModulesSnapshot(
+    const orbit_grpc_protos::ModulesSnapshot& modules_snapshot) {
+  capture_listener_->OnModulesSnapshot(
+      modules_snapshot.timestamp_ns(),
+      {modules_snapshot.modules().begin(), modules_snapshot.modules().end()});
+}
+
 void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t timeline_key = gpu_job.timeline_key();
 
@@ -266,6 +288,13 @@ void CaptureEventProcessor::ProcessSystemMemoryUsage(
 void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
   // Note: thread_name.pid() is available, but currently dropped.
   capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
+}
+
+void CaptureEventProcessor::ProcessThreadNamesSnapshot(
+    const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot) {
+  for (const auto& thread_name : thread_names_snapshot.thread_names()) {
+    capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
+  }
 }
 
 void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thread_state_slice) {

@@ -18,17 +18,24 @@
 
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
+#include "ElfUtils/ElfFile.h"
+#include "GrpcProtos/Constants.h"
 #include "LinuxTracingHandler.h"
 #include "MemoryInfoHandler.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/Tracing.h"
 #include "ProducerEventProcessor.h"
 #include "capture.pb.h"
 
 namespace orbit_service {
 
+using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::CaptureStarted;
+using orbit_grpc_protos::ProducerCaptureEvent;
 
 namespace {
 
@@ -193,6 +200,37 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   }
 }
 
+static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_options,
+                                                      uint64_t capture_start_timestamp_ns) {
+  ProducerCaptureEvent event;
+  CaptureStarted* capture_started = event.mutable_capture_started();
+
+  int32_t target_pid = capture_options.pid();
+
+  capture_started->set_process_id(target_pid);
+  auto executable_path_or_error = orbit_base::GetExecutablePath(target_pid);
+
+  if (executable_path_or_error.has_value()) {
+    const std::string& executable_path = executable_path_or_error.value();
+    capture_started->set_executable_path(executable_path);
+
+    ErrorMessageOr<std::unique_ptr<orbit_elf_utils::ElfFile>> elf_file_or_error =
+        orbit_elf_utils::ElfFile::Create(executable_path);
+    if (elf_file_or_error.has_value()) {
+      capture_started->set_executable_build_id(elf_file_or_error.value()->GetBuildId());
+    } else {
+      ERROR("Unable to load module: %s", elf_file_or_error.error().message());
+    }
+  } else {
+    ERROR("%s", executable_path_or_error.error().message());
+  }
+
+  capture_started->mutable_capture_options()->CopyFrom(capture_options);
+  capture_started->set_capture_start_timestamp_ns(capture_start_timestamp_ns);
+  capture_started->mutable_capture_options()->CopyFrom(capture_options);
+  return event;
+}
+
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
@@ -215,7 +253,15 @@ grpc::Status CaptureServiceImpl::Capture(
   reader_writer->Read(&request);
   LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
 
-  tracing_handler.Start(request.capture_options());
+  const CaptureOptions& capture_options = request.capture_options();
+
+  uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();
+  producer_event_processor->ProcessEvent(
+      orbit_grpc_protos::kRootProducerId,
+      CreateCaptureStartedEvent(capture_options, capture_start_timestamp_ns));
+
+  tracing_handler.Start(capture_options);
+
   memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
     listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor.get());

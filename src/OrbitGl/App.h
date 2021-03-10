@@ -147,6 +147,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnUniqueTracepointInfo(uint64_t key,
                               orbit_grpc_protos::TracepointInfo tracepoint_info) override;
   void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
+  void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
+  void OnModulesSnapshot(uint64_t timestamp_ns,
+                         std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
 
   enum class SystemMemoryUsageEncodingIndex {
     kTotalKb,

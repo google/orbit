@@ -14,8 +14,6 @@
 
 namespace orbit_service {
 
-using orbit_grpc_protos::Callstack;
-using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -105,6 +103,13 @@ void LinuxTracingHandler::OnThreadName(ThreadName thread_name) {
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
+void LinuxTracingHandler::OnThreadNamesSnapshot(
+    orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) {
+  ProducerCaptureEvent event;
+  *event.mutable_thread_names_snapshot() = std::move(thread_names_snapshot);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
 void LinuxTracingHandler::OnThreadStateSlice(ThreadStateSlice thread_state_slice) {
   ProducerCaptureEvent event;
   *event.mutable_thread_state_slice() = std::move(thread_state_slice);
@@ -127,6 +132,12 @@ void LinuxTracingHandler::OnTracepointEvent(
 void LinuxTracingHandler::OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) {
   ProducerCaptureEvent event;
   *event.mutable_module_update_event() = std::move(module_update_event);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void LinuxTracingHandler::OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot modules_snapshot) {
+  ProducerCaptureEvent event;
+  *event.mutable_modules_snapshot() = std::move(modules_snapshot);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

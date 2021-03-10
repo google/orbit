@@ -49,6 +49,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
+using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
@@ -82,6 +83,10 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
+  MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
+              (override));
+  MOCK_METHOD(void, OnModulesSnapshot,
+              (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
 };
 
 }  // namespace

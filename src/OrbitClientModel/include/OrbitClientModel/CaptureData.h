@@ -203,6 +203,7 @@ class CaptureData {
   }
 
   [[nodiscard]] const ProcessData* process() const { return &process_; }
+  [[nodiscard]] ProcessData* mutable_process() { return &process_; }
 
   [[nodiscard]] bool has_post_processed_sampling_data() const {
     return post_processed_sampling_data_.has_value();

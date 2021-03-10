@@ -17,6 +17,7 @@ using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -30,11 +31,13 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
+using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
+using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 
@@ -73,6 +76,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) override;
 
  private:
+  void ProcessCaptureStarted(CaptureStarted* capture_started);
   void ProcessFullAddressInfo(FullAddressInfo* full_address_info);
   void ProcessFullCallstackSample(FullCallstackSample* full_callstack_sample);
   void ProcessFunctionCall(FunctionCall* function_call);
@@ -86,8 +90,10 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessInternedString(uint64_t producer_id, InternedString* interned_string);
   void ProcessIntrospectionScope(IntrospectionScope* introspection_scope);
   void ProcessModuleUpdateEvent(ModuleUpdateEvent* module_update_event);
+  void ProcessModulesSnapshot(ModulesSnapshot* modules_snapshot);
   void ProcessSchedulingSlice(SchedulingSlice* scheduling_slice);
   void ProcessThreadName(ThreadName* thread_name);
+  void ProcessThreadNamesSnapshot(ThreadNamesSnapshot* thread_names_snapshot);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
   void ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage);
@@ -273,6 +279,18 @@ void ProducerEventProcessorImpl::ProcessModuleUpdateEvent(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessModulesSnapshot(ModulesSnapshot* modules_snapshot) {
+  ClientCaptureEvent event;
+  *event.mutable_modules_snapshot() = std::move(*modules_snapshot);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessCaptureStarted(CaptureStarted* capture_started) {
+  ClientCaptureEvent event;
+  *event.mutable_capture_started() = std::move(*capture_started);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessSchedulingSlice(SchedulingSlice* scheduling_slice) {
   ClientCaptureEvent event;
   *event.mutable_scheduling_slice() = std::move(*scheduling_slice);
@@ -282,6 +300,13 @@ void ProducerEventProcessorImpl::ProcessSchedulingSlice(SchedulingSlice* schedul
 void ProducerEventProcessorImpl::ProcessThreadName(ThreadName* thread_name) {
   ClientCaptureEvent event;
   *event.mutable_thread_name() = std::move(*thread_name);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessThreadNamesSnapshot(
+    ThreadNamesSnapshot* thread_names_snapshot) {
+  ClientCaptureEvent event;
+  *event.mutable_thread_names_snapshot() = std::move(*thread_names_snapshot);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -328,6 +353,9 @@ void ProducerEventProcessorImpl::ProcessApiEvent(ApiEvent* api_event) {
 
 void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) {
   switch (event.event_case()) {
+    case ProducerCaptureEvent::kCaptureStarted:
+      ProcessCaptureStarted(event.mutable_capture_started());
+      break;
     case ProducerCaptureEvent::kInternedCallstack:
       ProcessInternedCallstack(producer_id, event.mutable_interned_callstack());
       break;
@@ -358,6 +386,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kThreadName:
       ProcessThreadName(event.mutable_thread_name());
       break;
+    case ProducerCaptureEvent::kThreadNamesSnapshot:
+      ProcessThreadNamesSnapshot(event.mutable_thread_names_snapshot());
+      break;
     case ProducerCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSlice(event.mutable_thread_state_slice());
       break;
@@ -369,6 +400,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kModuleUpdateEvent:
       ProcessModuleUpdateEvent(event.mutable_module_update_event());
+      break;
+    case ProducerCaptureEvent::kModulesSnapshot:
+      ProcessModulesSnapshot(event.mutable_modules_snapshot());
       break;
     case ProducerCaptureEvent::kSystemMemoryUsage:
       ProcessSystemMemoryUsage(event.mutable_system_memory_usage());

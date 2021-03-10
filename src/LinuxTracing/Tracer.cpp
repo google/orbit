@@ -15,8 +15,6 @@
 
 namespace orbit_linux_tracing {
 
-using orbit_grpc_protos::CaptureOptions;
-
 void Tracer::Run() {
   pthread_setname_np(pthread_self(), "Tracer::Run");
   TracerThread session{capture_options_};

@@ -309,6 +309,26 @@ message SystemMemoryUsage {
   int64 cached_kb = 6;
 }
 
+message ModulesSnapshot {
+  int32 pid = 1;
+  uint64 timestamp_ns = 2;
+  repeated ModuleInfo modules = 3;
+}
+
+message ThreadNamesSnapshot {
+  // This is a system-wide snapshot, hence it does not have a pid
+  uint64 timestamp_ns = 1;
+  repeated ThreadName thread_names = 2;
+}
+
+message CaptureStarted {
+  int32 process_id = 1;
+  string executable_path = 2;
+  string executable_build_id = 3;
+  uint64 capture_start_timestamp_ns = 4;
+  CaptureOptions capture_options = 5;
+}
+
 message ClientCaptureEvent {
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
@@ -324,6 +344,7 @@ message ClientCaptureEvent {
     AddressInfo address_info = 16;
     ApiEvent api_event = 9;
     CallstackSample callstack_sample = 1;
+    CaptureStarted capture_started = 24;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
     GpuQueueSubmission gpu_queue_submission = 4;
@@ -331,10 +352,12 @@ message ClientCaptureEvent {
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
     IntrospectionScope introspection_scope = 20;
+    ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 21;
     SchedulingSlice scheduling_slice = 6;
     SystemMemoryUsage system_memory_usage = 23;
     ThreadName thread_name = 22;
+    ThreadNamesSnapshot thread_names_snapshot = 26;
     ThreadStateSlice thread_state_slice = 7;
     TracepointEvent tracepoint_event = 8;
   }
@@ -350,6 +373,7 @@ message ProducerCaptureEvent {
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
     CallstackSample callstack_sample = 1;
+    CaptureStarted capture_started = 23;
     FullCallstackSample full_callstack_sample = 2;
 
     // Even though AddressInfo is a high-frequency event
@@ -363,10 +387,12 @@ message ProducerCaptureEvent {
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     IntrospectionScope introspection_scope = 19;
+    ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;
     SchedulingSlice scheduling_slice = 8;
     SystemMemoryUsage system_memory_usage = 22;
     ThreadName thread_name = 21;
+    ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
   }
 }

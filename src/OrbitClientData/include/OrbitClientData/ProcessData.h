@@ -68,6 +68,7 @@ class ProcessData final {
   [[nodiscard]] bool is_64_bit() const { return process_info_.is_64_bit(); }
 
   void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
+  void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_infos);
 
   [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
@@ -90,7 +91,7 @@ class ProcessData final {
 
   // This is a map from module_path to the space in memory where that module is loaded
   absl::node_hash_map<std::string, ModuleInMemory> module_memory_map_;
-  std::map<uint64_t, const std::string> start_addresses_;
+  std::map<uint64_t, std::string> start_addresses_;
 };
 
 #endif  // ORBIT_GL_PROCESS_DATA_H_
