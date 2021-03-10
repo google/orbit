@@ -527,27 +527,22 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
 
-    if (!submissions_queue_.contains(queue)) {
-      std::priority_queue<QueueSubmission, std::vector<QueueSubmission>,
-                          std::function<bool(QueueSubmission, QueueSubmission)>>
-          priority_queue{[](const QueueSubmission& lhs, const QueueSubmission& rhs) -> bool {
-            return lhs.meta_information.pre_submission_cpu_timestamp >
-                   rhs.meta_information.pre_submission_cpu_timestamp;
-          }};
-      submissions_queue_[queue] = priority_queue;
+    if (!queue_to_submission_priority_queue_.contains(queue)) {
+      queue_to_submission_priority_queue_.emplace(queue, kPreSubmissionCPUTimestampComparator);
     }
 
-    submissions_queue_.at(queue).emplace(std::move(queue_submission_optional.value()));
+    queue_to_submission_priority_queue_.at(queue).emplace(
+        std::move(queue_submission_optional.value()));
   }
 
   // This method is responsible for retrieving all the timestamps for the "completed" submissions,
   // for transforming the information of those submissions (in particular about the command buffers
   // and debug markers) into the `GpuQueueSubmission` proto, and for sending it to the
-  // `VulkanLayerProducer`. We consider a submission to be "completed" all timestamps that are
+  // `VulkanLayerProducer`. We consider a submission to be "completed" when all timestamps that are
   // associated with this submission are ready.
   // We maintain a priority queue (for every `VkQueue`) `submissions_queue_` and process submissions
   // with the oldest CPU timestamp, until we encounter the first "incomplete" submission.
-  // This way, we ensure, that we will send the submission information per queue in ordered by the
+  // This way, we ensure that we will send the submission information per queue ordered by the
   // CPU timestamp.
   // Beside the timestamps of command buffers and the meta information of the submission, the proto
   // also contains the debug markers, "begin" (even if submitted in a different submission) and
@@ -559,7 +554,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     absl::WriterMutexLock lock(&mutex_);
     VkQueryPool query_pool = timer_query_pool_->GetQueryPool(device);
 
-    if (submissions_queue_.empty()) {
+    if (queue_to_submission_priority_queue_.empty()) {
       return;
     }
 
@@ -573,7 +568,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     // The submits of a specific queue in `submissions_queue_` are sorted by "pre submission CPU"
     // timestamp and we want to make sure we send events to the client in that order. Therefore, we
     // stop as soon as a query failed.
-    for (auto& [unused_queue, submissions] : submissions_queue_) {
+    for (auto& [unused_queue, submissions] : queue_to_submission_priority_queue_) {
       while (!submissions.empty()) {
         QueueSubmission completed_submission = submissions.top();
         submissions.pop();
@@ -985,10 +980,16 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   absl::flat_hash_map<VkCommandBuffer, VkDevice> command_buffer_to_device_;
 
   absl::flat_hash_map<VkCommandBuffer, CommandBufferState> command_buffer_to_state_;
+
+  static constexpr auto kPreSubmissionCPUTimestampComparator =
+      [](const QueueSubmission& lhs, const QueueSubmission& rhs) -> bool {
+    return lhs.meta_information.pre_submission_cpu_timestamp >
+           rhs.meta_information.pre_submission_cpu_timestamp;
+  };
   absl::flat_hash_map<VkQueue,
                       std::priority_queue<QueueSubmission, std::vector<QueueSubmission>,
                                           std::function<bool(QueueSubmission, QueueSubmission)>>>
-      submissions_queue_;
+      queue_to_submission_priority_queue_;
 
   absl::flat_hash_map<VkQueue, QueueMarkerState> queue_to_markers_;
 
