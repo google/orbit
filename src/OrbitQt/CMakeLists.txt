@@ -40,6 +40,7 @@ target_sources(
           resource.h
           servicedeploymanager.h
           TargetConfiguration.h
+          TargetLabel.h
           TutorialContent.h
           TutorialOverlay.h)
 
@@ -81,6 +82,8 @@ target_sources(
           ProfilingTargetDialog.cpp
           ProfilingTargetDialog.ui
           servicedeploymanager.cpp
+          TargetLabel.cpp
+          TargetLabel.ui
           TutorialContent.cpp
           TutorialOverlay.cpp
           TutorialOverlay.ui
@@ -135,6 +138,7 @@ target_sources(OrbitQtTests
                 EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 StatusListenerImplTest.cpp
+                TargetLabelTest.cpp
                 TutorialOverlayTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
