@@ -224,17 +224,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     // other than the debug markers then.
     {
       if (command_buffer_to_state_.contains(command_buffer)) {
-        if (!logged_begin_when_not_initial_) {
-          ERROR(
-              "Calling vkBeginCommandBuffer on a command buffer that is not in the initial state "
-              "(i.e. neither freshly allocated nor reset with vkResetCommandBuffer).");
-          logged_begin_when_not_initial_ = true;
-        }
         // We end up in this case, if we have used the command buffer before and want to write new
-        // commands to it without resetting the command buffer. This is prohibited by the
-        // specification. However, we've seen this in the wild. The "vkBeginCommandBuffer" will,
-        // however, invalidate the previous commands here. So we can reset potentially blocked slots
-        // associated with this command buffer.
+        // commands to it without resetting the command buffer. Per specification,
+        // "vkBeginCommandBuffer" does also reset the command buffer, in addition to putting it
+        // into the executable state.
         ResetCommandBufferUnsafe(command_buffer);
       }
       command_buffer_to_state_[command_buffer] = {};
@@ -257,12 +250,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
     if (!command_buffer_to_state_.contains(command_buffer)) {
-      if (!logged_end_when_initial_) {
-        ERROR(
-            "Calling vkEndCommandBuffer on a command buffer that is in the initial state "
-            "(i.e. either freshly allocated or reset with vkResetCommandBuffer).");
-        logged_end_when_initial_ = true;
-      }
+      LogErrorOnce(
+          "Calling vkEndCommandBuffer on a command buffer that is in the initial state "
+          "(i.e. either freshly allocated or reset with vkResetCommandBuffer).",
+          &logged_end_when_initial_);
       return;
     }
 
@@ -283,13 +274,11 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     bool marker_depth_exceeds_maximum;
     {
       if (!command_buffer_to_state_.contains(command_buffer)) {
-        if (!logged_marker_begin_when_initial_) {
-          ERROR(
-              "Calling vkCmdDebugMarkerBeginEXT/vkCmdBeginDebugUtilsLabelEXT on a command buffer "
-              "that is in the initial state (i.e. either freshly allocated or reset with "
-              "vkResetCommandBuffer).");
-          logged_marker_begin_when_initial_ = true;
-        }
+        LogErrorOnce(
+            "Calling vkCmdDebugMarkerBeginEXT/vkCmdBeginDebugUtilsLabelEXT on a command buffer "
+            "that is in the initial state (i.e. either freshly allocated or reset with "
+            "vkResetCommandBuffer).",
+            &logged_marker_begin_when_initial_);
         return;
       }
       CHECK(command_buffer_to_state_.contains(command_buffer));
@@ -319,28 +308,25 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   void MarkDebugMarkerEnd(VkCommandBuffer command_buffer) {
     absl::WriterMutexLock lock(&mutex_);
     bool marker_depth_exceeds_maximum;
-    {
-      if (!command_buffer_to_state_.contains(command_buffer)) {
-        if (!logged_marker_end_when_initial_) {
-          ERROR(
-              "Calling vkCmdDebugMarkerEndEXT/vkCmdEndDebugUtilsLabelEXT on a command buffer "
-              "that is in the initial state (i.e. either freshly allocated or reset with "
-              "vkResetCommandBuffer).");
-          logged_marker_end_when_initial_ = true;
-        }
-        return;
-      }
-      CHECK(command_buffer_to_state_.contains(command_buffer));
-      CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-      marker_depth_exceeds_maximum =
-          state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
-      Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = marker_depth_exceeds_maximum};
-      state.markers.emplace_back(std::move(marker));
-      // We might see more "ends" than "begins", as the "begins" can be on a different command
-      // buffer.
-      if (state.local_marker_stack_size != 0) {
-        --state.local_marker_stack_size;
-      }
+
+    if (!command_buffer_to_state_.contains(command_buffer)) {
+      LogErrorOnce(
+          "Calling vkCmdDebugMarkerEndEXT/vkCmdEndDebugUtilsLabelEXT on a command buffer "
+          "that is in the initial state (i.e. either freshly allocated or reset with "
+          "vkResetCommandBuffer).",
+          &logged_marker_end_when_initial_);
+      return;
+    }
+    CHECK(command_buffer_to_state_.contains(command_buffer));
+    CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
+    marker_depth_exceeds_maximum =
+        state.local_marker_stack_size > max_local_marker_depth_per_command_buffer_;
+    Marker marker{.type = MarkerType::kDebugMarkerEnd, .cut_off = marker_depth_exceeds_maximum};
+    state.markers.emplace_back(std::move(marker));
+    // We might see more "ends" than "begins", as the "begins" can be on a different command
+    // buffer.
+    if (state.local_marker_stack_size != 0) {
+      --state.local_marker_stack_size;
     }
 
     if (!is_capturing_ || marker_depth_exceeds_maximum) {
@@ -392,56 +378,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       for (uint32_t command_buffer_index = 0; command_buffer_index < submit_info.commandBufferCount;
            ++command_buffer_index) {
         VkCommandBuffer command_buffer = submit_info.pCommandBuffers[command_buffer_index];
-        if (!command_buffer_to_state_.contains(command_buffer)) {
-          if (!logged_submit_when_initial_) {
-            ERROR(
-                "Calling vkQueueSubmit on a command buffer that is in the initial state (i.e. "
-                "either freshly allocated or reset with vkResetCommandBuffer).");
-            logged_submit_when_initial_ = true;
-          }
-          continue;
-        }
-        CHECK(command_buffer_to_state_.contains(command_buffer));
-        CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-        bool has_been_submitted_before = state.pre_submission_cpu_timestamp.has_value();
-
-        // Mark that this command buffer in the current state was already submitted. If the command
-        // buffer is being submitted again, without a "vkResetCommandBuffer" call, the same slot
-        // indices will be used again, so that we can not distinguish the results for the different
-        // submissions anymore. Thus, this field will be used to ensure to not try to read such a
-        // slot. Calling "vkResetCommandBuffer" (or "vkBeginCommandBuffer"), will reset this field.
-        // Note that we are using an std::optional with the submission time to protect us against an
-        // "OnCaptureFinished" call, right between pre and post submission, which would try to reset
-        // the slots.
-        state.pre_submission_cpu_timestamp =
-            queue_submission.meta_information.pre_submission_cpu_timestamp;
-
-        if (device == VK_NULL_HANDLE) {
-          device = command_buffer_to_device_.at(command_buffer);
-        }
-
-        // If we haven't recorded neither the end nor the begin of a command buffer, we have no
-        // information to send.
-        if (!state.command_buffer_end_slot_index.has_value()) {
-          if (state.command_buffer_begin_slot_index.has_value()) {
-            // We need to discard the begin slot when we only have a begin slot. This can happen
-            // if we run out of query slots.
-            query_slots_not_needed_to_read.push_back(state.command_buffer_begin_slot_index.value());
-            state.command_buffer_begin_slot_index.reset();
-          }
-          continue;
-        }
-
-        // If this command buffer was already submitted before (without reset afterwards), its slot
-        // indices are not unique anymore and can't be used by us. Note, that the slots will be
-        // marked as "done with reading" when the first submission of this command buffer is done
-        // and will eventually be reset on a "vkResetCommandBuffer" call.
-        if (!has_been_submitted_before) {
-          SubmittedCommandBuffer submitted_command_buffer{
-              .command_buffer_begin_slot_index = state.command_buffer_begin_slot_index,
-              .command_buffer_end_slot_index = state.command_buffer_end_slot_index.value()};
-          submitted_submit_info.command_buffers.emplace_back(submitted_command_buffer);
-        }
+        PersistSingleCommandBufferOnSubmitUnsafe(device, command_buffer, &queue_submission,
+                                                 &submitted_submit_info,
+                                                 &query_slots_not_needed_to_read);
       }
     }
 
@@ -497,78 +436,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
           CHECK(command_buffer_to_device_.contains(command_buffer));
           device = command_buffer_to_device_.at(command_buffer);
         }
-        if (!command_buffer_to_state_.contains(command_buffer)) {
-          if (!logged_submit_when_initial_) {
-            ERROR(
-                "Calling vkQueueSubmit on a command buffer that is in the initial state (i.e. "
-                "either freshly allocated or reset with vkResetCommandBuffer).");
-            logged_submit_when_initial_ = true;
-          }
-          continue;
-        }
-        CHECK(command_buffer_to_state_.contains(command_buffer));
-        CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
-
-        for (const Marker& marker : state.markers) {
-          std::optional<SubmittedMarker> submitted_marker = std::nullopt;
-          CHECK(!queue_submission_optional.has_value() ||
-                state.pre_submission_cpu_timestamp.has_value());
-          if (marker.slot_index.has_value() && queue_submission_optional.has_value() &&
-              (state.pre_submission_cpu_timestamp.value() ==
-               queue_submission_optional->meta_information.pre_submission_cpu_timestamp)) {
-            submitted_marker = {.meta_information = queue_submission_optional->meta_information,
-                                .slot_index = marker.slot_index.value()};
-          }
-
-          switch (marker.type) {
-            case MarkerType::kDebugMarkerBegin: {
-              if (queue_submission_optional.has_value() && marker.slot_index.has_value()) {
-                ++queue_submission_optional->num_begin_markers;
-              }
-              CHECK(marker.label_name.has_value());
-              CHECK(marker.color.has_value());
-              MarkerState marker_state{.begin_info = submitted_marker,
-                                       .label_name = marker.label_name.value(),
-                                       .color = marker.color.value(),
-                                       .depth = markers.marker_stack.size(),
-                                       .depth_exceeds_maximum = marker.cut_off};
-              markers.marker_stack.push(std::move(marker_state));
-              break;
-            }
-
-            case MarkerType::kDebugMarkerEnd: {
-              MarkerState marker_state = markers.marker_stack.top();
-              markers.marker_stack.pop();
-
-              // If there is a begin marker slot from a previous submission, this is our chance to
-              // state that we will not read the slot anymore. We can reset is as soon as the
-              // command buffer itself gets reset.
-              if (marker_state.begin_info.has_value() && !queue_submission_optional.has_value()) {
-                marker_slots_not_needed_to_read.push_back(marker_state.begin_info->slot_index);
-              }
-
-              // If the begin marker was discarded for exceeding the maximum depth, but the end
-              // marker was not (as it is in a different submission), we will not read the slot in
-              // "CompleteSubmits". We can reset is as soon as the command buffer itself gets reset.
-              if (marker_state.depth_exceeds_maximum && marker.slot_index.has_value()) {
-                marker_slots_not_needed_to_read.push_back(marker.slot_index.value());
-              }
-
-              if (queue_submission_optional.has_value() && marker.slot_index.has_value() &&
-                  !marker_state.depth_exceeds_maximum) {
-                queue_submission_optional->completed_markers.emplace_back(
-                    SubmittedMarkerSlice{.begin_info = marker_state.begin_info,
-                                         .end_info = submitted_marker.value(),
-                                         .label_name = std::move(marker_state.label_name),
-                                         .color = marker_state.color,
-                                         .depth = marker_state.depth});
-                CHECK(submitted_marker.has_value());
-              }
-
-              break;
-            }
-          }
-        }
+        PersistDebugMarkersOfASingleCommandBufferOnSubmitUnsafe(
+            command_buffer, &queue_submission_optional, &markers, &marker_slots_not_needed_to_read);
       }
     }
 
@@ -1028,6 +897,149 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     command_buffer_to_state_.erase(command_buffer);
   }
 
+  void PersistSingleCommandBufferOnSubmitUnsafe(
+      VkDevice device, VkCommandBuffer command_buffer, QueueSubmission* queue_submission,
+      SubmitInfo* submitted_submit_info, std::vector<uint32_t>* query_slots_not_needed_to_read) {
+    CHECK(queue_submission != nullptr);
+    CHECK(submitted_submit_info != nullptr);
+    CHECK(query_slots_not_needed_to_read != nullptr);
+
+    if (!command_buffer_to_state_.contains(command_buffer)) {
+      LogErrorOnce(
+          "Calling vkQueueSubmit on a command buffer that is in the initial state (i.e. "
+          "either freshly allocated or reset with vkResetCommandBuffer).",
+          &logged_submit_when_initial_);
+      return;
+    }
+    CHECK(command_buffer_to_state_.contains(command_buffer));
+    CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
+    bool has_been_submitted_before = state.pre_submission_cpu_timestamp.has_value();
+
+    // Mark that this command buffer in the current state was already submitted. If the command
+    // buffer is being submitted again, without a "vkResetCommandBuffer" call, the same slot
+    // indices will be used again, so that we can not distinguish the results for the different
+    // submissions anymore. Thus, this field will be used to ensure to not try to read such a
+    // slot. Calling "vkResetCommandBuffer" (or "vkBeginCommandBuffer"), will reset this field.
+    // Note that we are using an std::optional with the submission time to protect us against an
+    // "OnCaptureFinished" call, right between pre and post submission, which would try to reset
+    // the slots.
+    state.pre_submission_cpu_timestamp =
+        queue_submission->meta_information.pre_submission_cpu_timestamp;
+
+    if (device == VK_NULL_HANDLE) {
+      device = command_buffer_to_device_.at(command_buffer);
+    }
+
+    // If we haven't recorded neither the end nor the begin of a command buffer, we have no
+    // information to send.
+    if (!state.command_buffer_end_slot_index.has_value()) {
+      if (state.command_buffer_begin_slot_index.has_value()) {
+        // We need to discard the begin slot when we only have a begin slot. This can happen
+        // if we run out of query slots.
+        query_slots_not_needed_to_read->push_back(state.command_buffer_begin_slot_index.value());
+        state.command_buffer_begin_slot_index.reset();
+      }
+      return;
+    }
+
+    // If this command buffer was already submitted before (without reset afterwards), its slot
+    // indices are not unique anymore and can't be used by us. Note, that the slots will be
+    // marked as "done with reading" when the first submission of this command buffer is done
+    // and will eventually be reset on a "vkResetCommandBuffer" call.
+    if (!has_been_submitted_before) {
+      SubmittedCommandBuffer submitted_command_buffer{
+          .command_buffer_begin_slot_index = state.command_buffer_begin_slot_index,
+          .command_buffer_end_slot_index = state.command_buffer_end_slot_index.value()};
+      submitted_submit_info->command_buffers.emplace_back(submitted_command_buffer);
+    }
+  }
+
+  void PersistDebugMarkersOfASingleCommandBufferOnSubmitUnsafe(
+      VkCommandBuffer command_buffer, std::optional<QueueSubmission>* queue_submission_optional,
+      QueueMarkerState* markers, std::vector<uint32_t>* marker_slots_not_needed_to_read) {
+    CHECK(queue_submission_optional != nullptr);
+    CHECK(markers != nullptr);
+    CHECK(marker_slots_not_needed_to_read != nullptr);
+
+    if (!command_buffer_to_state_.contains(command_buffer)) {
+      LogErrorOnce(
+          "Calling vkQueueSubmit on a command buffer that is in the initial state (i.e. "
+          "either freshly allocated or reset with vkResetCommandBuffer).",
+          &logged_submit_when_initial_);
+      return;
+    }
+    CHECK(command_buffer_to_state_.contains(command_buffer));
+    CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
+
+    for (const Marker& marker : state.markers) {
+      std::optional<SubmittedMarker> submitted_marker = std::nullopt;
+      CHECK(!queue_submission_optional->has_value() ||
+            state.pre_submission_cpu_timestamp.has_value());
+      if (marker.slot_index.has_value() && queue_submission_optional->has_value() &&
+          (state.pre_submission_cpu_timestamp.value() ==
+           queue_submission_optional->value().meta_information.pre_submission_cpu_timestamp)) {
+        submitted_marker = {.meta_information = queue_submission_optional->value().meta_information,
+                            .slot_index = marker.slot_index.value()};
+      }
+
+      switch (marker.type) {
+        case MarkerType::kDebugMarkerBegin: {
+          if (queue_submission_optional->has_value() && marker.slot_index.has_value()) {
+            ++queue_submission_optional->value().num_begin_markers;
+          }
+          CHECK(marker.label_name.has_value());
+          CHECK(marker.color.has_value());
+          MarkerState marker_state{.label_name = marker.label_name.value(),
+                                   .color = marker.color.value(),
+                                   .begin_info = submitted_marker,
+                                   .depth = markers->marker_stack.size(),
+                                   .depth_exceeds_maximum = marker.cut_off};
+          markers->marker_stack.push(std::move(marker_state));
+          break;
+        }
+
+        case MarkerType::kDebugMarkerEnd: {
+          MarkerState marker_state = markers->marker_stack.top();
+          markers->marker_stack.pop();
+
+          // If there is a begin marker slot from a previous submission, this is our chance to
+          // state that we will not read the slot anymore. We can reset is as soon as the
+          // command buffer itself gets reset.
+          if (marker_state.begin_info.has_value() && !queue_submission_optional->has_value()) {
+            marker_slots_not_needed_to_read->push_back(marker_state.begin_info->slot_index);
+          }
+
+          // If the begin marker was discarded for exceeding the maximum depth, but the end
+          // marker was not (as it is in a different submission), we will not read the slot in
+          // "CompleteSubmits". We can reset is as soon as the command buffer itself gets reset.
+          if (marker_state.depth_exceeds_maximum && marker.slot_index.has_value()) {
+            marker_slots_not_needed_to_read->push_back(marker.slot_index.value());
+          }
+
+          if (queue_submission_optional->has_value() && marker.slot_index.has_value() &&
+              !marker_state.depth_exceeds_maximum) {
+            CHECK(submitted_marker.has_value());
+            queue_submission_optional->value().completed_markers.emplace_back(
+                SubmittedMarkerSlice{.begin_info = marker_state.begin_info,
+                                     .end_info = submitted_marker.value(),
+                                     .depth = marker_state.depth,
+                                     .color = marker_state.color,
+                                     .label_name = std::move(marker_state.label_name)});
+          }
+
+          break;
+        }
+      }
+    }
+  }
+
+  void LogErrorOnce(const std::string_view& error_string, bool* already_logged) {
+    if (!*already_logged) {
+      *already_logged = true;
+      ERROR("%s", error_string);
+    }
+  }
+
   absl::Mutex mutex_;
   absl::flat_hash_map<VkCommandPool, absl::flat_hash_set<VkCommandBuffer>> pool_to_command_buffers_;
   absl::flat_hash_map<VkCommandBuffer, VkDevice> command_buffer_to_device_;
@@ -1064,7 +1076,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   bool is_capturing_ = false;
 
   // The layer can handle some misuse of the Vulkan command buffer lifetime. The following bools
-  // are used to log errors on missuses only once and not spam the log.
+  // are used to log errors on misuses only once and not spam the log.
   bool logged_begin_when_not_initial_ = false;
   bool logged_end_when_initial_ = false;
   bool logged_marker_begin_when_initial_ = false;
