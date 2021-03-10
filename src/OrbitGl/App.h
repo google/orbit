@@ -283,7 +283,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
-  void NeedsRedraw();
   void RenderImGuiDebugUI();
 
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
@@ -446,6 +445,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCaptureFailed(ErrorMessage error_message);
   void OnCaptureCancelled();
   void OnCaptureComplete();
+
+  void RequestUpdatePrimitives();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
 

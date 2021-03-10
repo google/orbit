@@ -79,17 +79,17 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
 
   slider_->SetDragCallback([&](float ratio) {
     this->UpdateHorizontalScroll(ratio);
-    NeedsUpdate();
+    RequestUpdatePrimitives();
   });
   slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
     this->UpdateHorizontalZoom(normalized_start, normalized_end);
-    NeedsUpdate();
+    RequestUpdatePrimitives();
   });
   slider_->SetCanvas(this);
 
   vertical_slider_->SetDragCallback([&](float ratio) {
     this->UpdateVerticalScroll(ratio);
-    NeedsUpdate();
+    RequestUpdatePrimitives();
   });
   vertical_slider_->SetCanvas(this);
 
@@ -101,7 +101,7 @@ void CaptureWindow::OnTimer() { GlCanvas::OnTimer(); }
 
 void CaptureWindow::ZoomAll() {
   ResetHoverTimer();
-  NeedsUpdate();
+  RequestUpdatePrimitives();
   if (time_graph_ == nullptr) return;
   time_graph_->ZoomAll();
 }
@@ -145,7 +145,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
               world_height_ - time_graph_->GetTrackManager()->GetTracksTotalHeight(), world_max_y_);
 
     time_graph_->PanTime(screen_click_x_, x, GetWidth(), ref_time_click_);
-    NeedsUpdate();
+    RequestUpdatePrimitives();
 
     click_was_drag_ = true;
   }
@@ -162,7 +162,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*m
 
   ResetHoverTimer();
 
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void CaptureWindow::LeftDown(int x, int y) {
@@ -177,7 +177,7 @@ void CaptureWindow::LeftDown(int x, int y) {
 
   picking_ = true;
   click_was_drag_ = false;
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void CaptureWindow::LeftUp() {
@@ -186,7 +186,7 @@ void CaptureWindow::LeftUp() {
   if (!click_was_drag_ && background_clicked_) {
     app_->SelectTextBox(nullptr);
     app_->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
-    NeedsUpdate();
+    RequestUpdatePrimitives();
   }
 }
 
@@ -198,7 +198,7 @@ void CaptureWindow::LeftDoubleClick() {
 
 void CaptureWindow::Pick() {
   picking_ = true;
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void CaptureWindow::Pick(int x, int y) {
@@ -211,7 +211,7 @@ void CaptureWindow::Pick(int x, int y) {
 
   Pick(pick_id, x, y);
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::Pick(PickingId picking_id, int x, int y) {
@@ -279,9 +279,7 @@ void CaptureWindow::PreRender() {
   if (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_) {
     is_hovering_ = true;
     picking_ = true;
-    NeedsRedraw();
   }
-  m_NeedsRedraw = m_NeedsRedraw || (time_graph_ != nullptr && time_graph_->IsRedrawNeeded());
 }
 
 void CaptureWindow::PostRender() {
@@ -292,7 +290,7 @@ void CaptureWindow::PostRender() {
     hover_timer_.Restart();
 
     Hover(mouse_screen_x_, mouse_screen_y_);
-    NeedsUpdate();
+    RequestUpdatePrimitives();
     GlCanvas::Render(screen_width_, screen_height_);
     hover_timer_.Restart();
   }
@@ -300,14 +298,14 @@ void CaptureWindow::PostRender() {
   if (picking_) {
     picking_ = false;
     Pick(screen_click_x_, screen_click_y_);
-    NeedsRedraw();
+    RequestRedraw();
     GlCanvas::Render(screen_width_, screen_height_);
   }
 }
 
 void CaptureWindow::Resize(int width, int height) {
   GlCanvas::Resize(width, height);
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::RightDown(int x, int y) {
@@ -339,7 +337,7 @@ bool CaptureWindow::RightUp() {
 
   bool show_context_menu = select_start_[0] == select_stop_[0];
   is_selecting_ = false;
-  NeedsRedraw();
+  RequestRedraw();
   return show_context_menu;
 }
 
@@ -358,7 +356,7 @@ void CaptureWindow::MiddleUp(int x, int y) {
 
   select_stop_ = Vec2(world_x, world_y);
 
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void CaptureWindow::Zoom(int delta) {
@@ -378,7 +376,7 @@ void CaptureWindow::Zoom(int delta) {
   }
   wheel_momentum_ = delta_float * wheel_momentum_ < 0 ? 0 : wheel_momentum_ + delta_float;
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::Pan(float ratio) {
@@ -387,7 +385,7 @@ void CaptureWindow::Pan(float ratio) {
   time_graph_->PanTime(mouse_screen_x_,
                        mouse_screen_x_ + static_cast<int>(ratio * static_cast<float>(GetWidth())),
                        GetWidth(), ref_time);
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
@@ -422,7 +420,7 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
 
   can_hover_ = true;
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta, bool /*ctrl*/) {
@@ -512,7 +510,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     }
   }
 
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 std::vector<std::string> CaptureWindow::GetContextMenu() { return std::vector<std::string>{}; }
@@ -650,7 +648,7 @@ void CaptureWindow::UpdateVerticalScroll(float ratio) {
   float new_top_left_y = min + ratio * range;
   if (new_top_left_y != world_top_left_y_) {
     world_top_left_y_ = new_top_left_y;
-    NeedsUpdate();
+    RequestUpdatePrimitives();
   }
 }
 
@@ -693,7 +691,7 @@ void CaptureWindow::UpdateWorldTopLeftY(float val) {
   float min_world_top_left =
       GetWorldHeight() - time_graph_->GetTrackManager()->GetTracksTotalHeight();
   GlCanvas::UpdateWorldTopLeftY(clamp(val, min_world_top_left, GetWorldMaxY()));
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::ToggleRecording() {
@@ -708,7 +706,7 @@ void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
 
 void CaptureWindow::set_draw_help(bool draw_help) {
   draw_help_ = draw_help;
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void CaptureWindow::CreateTimeGraph(const CaptureData* capture_data) {
@@ -727,10 +725,10 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   }
 }
 
-void CaptureWindow::NeedsUpdate() {
-  m_NeedsRedraw = true;
+void CaptureWindow::RequestUpdatePrimitives() {
+  redraw_requested_ = true;
   if (time_graph_ == nullptr) return;
-  time_graph_->NeedsUpdate();
+  time_graph_->RequestUpdatePrimitives();
 }
 
 template <class T>
@@ -743,13 +741,13 @@ static std::string VariableToString(std::string_view name, const T& value) {
 void CaptureWindow::RenderImGuiDebugUI() {
   if (ImGui::CollapsingHeader("Layout Properties")) {
     if (time_graph_ != nullptr && time_graph_->GetLayout().DrawProperties()) {
-      NeedsUpdate();
+      RequestUpdatePrimitives();
     }
 
     static bool draw_text_outline = false;
     if (ImGui::Checkbox("Draw Text Outline", &draw_text_outline)) {
       TextRenderer::SetDrawOutline(draw_text_outline);
-      NeedsUpdate();
+      RequestUpdatePrimitives();
     }
   }
 

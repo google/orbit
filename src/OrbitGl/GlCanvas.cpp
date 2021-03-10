@@ -72,7 +72,7 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
   picking_ = false;
   double_clicking_ = false;
   control_key_ = false;
-  m_NeedsRedraw = true;
+  redraw_requested_ = true;
 
   mouse_screen_x_ = 0.0;
   mouse_screen_y_ = 0.0;
@@ -150,6 +150,11 @@ void GlCanvas::EnableImGui() {
   }
 }
 
+bool GlCanvas::IsRedrawNeeded() const {
+  return redraw_requested_ ||
+         (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_);
+}
+
 orbit_accessibility::AccessibleInterface* GlCanvas::GetOrCreateAccessibleInterface() {
   if (accessibility_ == nullptr) {
     accessibility_ = CreateAccessibilityInterface();
@@ -182,7 +187,7 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
   }
 
   ResetHoverTimer();
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::LeftDown(int x, int y) {
@@ -194,7 +199,7 @@ void GlCanvas::LeftDown(int x, int y) {
 
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, true);
 
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
@@ -224,18 +229,18 @@ void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   // Use the original sign of a_Delta here.
   Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::LeftUp() {
   picking_manager_.Release();
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, false);
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::LeftDoubleClick() {
   double_clicking_ = true;
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::RightDown(int x, int y) {
@@ -246,13 +251,13 @@ void GlCanvas::RightDown(int x, int y) {
   is_selecting_ = true;
 
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, true);
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 bool GlCanvas::RightUp() {
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, false);
   is_selecting_ = true;
-  NeedsRedraw();
+  RequestRedraw();
   return false;
 }
 
@@ -263,13 +268,13 @@ void GlCanvas::CharEvent(unsigned int character) {
 void GlCanvas::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
   Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), true, ctrl, shift, alt);
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
   Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), false, ctrl, shift, alt);
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::UpdateSpecialKeys(bool ctrl, bool /*shift*/, bool /*alt*/) { control_key_ = ctrl; }
@@ -393,11 +398,11 @@ void GlCanvas::Render(int width, int height) {
   screen_width_ = width;
   screen_height_ = height;
 
-  if (!m_NeedsRedraw) {
+  if (!IsRedrawNeeded()) {
     return;
   }
 
-  m_NeedsRedraw = false;
+  redraw_requested_ = false;
   ui_batcher_.StartNewFrame();
 
   PrepareGlState();
@@ -434,7 +439,7 @@ void GlCanvas::Render(int width, int height) {
 void GlCanvas::Resize(int width, int height) {
   screen_width_ = width;
   screen_height_ = height;
-  NeedsRedraw();
+  RequestRedraw();
 }
 
 void GlCanvas::ResetHoverTimer() {

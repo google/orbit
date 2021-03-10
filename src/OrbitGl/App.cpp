@@ -451,7 +451,7 @@ void OrbitApp::ListPresets() {
 
 void OrbitApp::RefreshCaptureView() {
   ORBIT_SCOPE_FUNCTION;
-  NeedsRedraw();
+  RequestUpdatePrimitives();
   FireRefreshCallbacks();
   DoZoom = true;  // TODO: remove global, review logic
 }
@@ -501,7 +501,7 @@ void OrbitApp::RenderImGuiDebugUI() {
   ImGui::End();
 
   ImGui::Render();
-  debug_canvas_->NeedsRedraw();
+  debug_canvas_->RequestRedraw();
 }
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
@@ -594,7 +594,7 @@ void OrbitApp::MainTick() {
     // TODO (b/176077097): TrackManager has to manage sorting by their own.
     GetMutableTimeGraph()->GetTrackManager()->SortTracks();
     capture_window_->ZoomAll();
-    NeedsRedraw();
+    RequestUpdatePrimitives();
     DoZoom = false;
   }
 }
@@ -623,9 +623,9 @@ void OrbitApp::StopIntrospection() {
   }
 }
 
-void OrbitApp::NeedsRedraw() {
+void OrbitApp::RequestUpdatePrimitives() {
   if (capture_window_ != nullptr) {
-    capture_window_->NeedsUpdate();
+    capture_window_->RequestUpdatePrimitives();
   }
 }
 
@@ -1676,7 +1676,7 @@ const FunctionInfo* OrbitApp::GetInstrumentedFunction(uint64_t function_id) cons
 
 void OrbitApp::SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_function_ids) {
   data_manager_->set_visible_function_ids(std::move(visible_function_ids));
-  NeedsRedraw();
+  RequestUpdatePrimitives();
 }
 
 bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
@@ -1704,7 +1704,7 @@ uint64_t OrbitApp::highlighted_function_id() const {
 
 void OrbitApp::set_highlighted_function_id(uint64_t highlighted_function_id) {
   data_manager_->set_highlighted_function_id(highlighted_function_id);
-  NeedsRedraw();
+  RequestUpdatePrimitives();
 }
 
 ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_thread_id(); }

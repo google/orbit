@@ -49,7 +49,7 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   if (event->type() == QEvent::Paint) {
     if (gl_canvas_) {
       gl_canvas_->PreRender();
-      if (!gl_canvas_->GetNeedsRedraw()) {
+      if (!gl_canvas_->IsRedrawNeeded()) {
         return true;
       }
     }

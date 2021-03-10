@@ -45,7 +45,7 @@ class TimeGraph {
   void DrawOverlay(GlCanvas* canvas, PickingMode picking_mode);
   void DrawText(GlCanvas* canvas, float layer);
 
-  void NeedsUpdate();
+  void RequestUpdatePrimitives();
   void UpdatePrimitives(PickingMode picking_mode);
   void SelectCallstacks(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
@@ -100,8 +100,8 @@ class TimeGraph {
   void SelectAndZoom(const TextBox* text_box);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
-  void NeedsRedraw() { needs_redraw_ = true; }
-  [[nodiscard]] bool IsRedrawNeeded() const { return needs_redraw_; }
+  void RequestRedraw();
+  [[nodiscard]] bool IsRedrawNeeded() const { return redraw_requested_; }
   void SetThreadFilter(const std::string& filter);
 
   [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
@@ -153,7 +153,7 @@ class TimeGraph {
       const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id) {
     iterator_text_boxes_ = iterator_text_boxes;
     iterator_id_to_function_id_ = iterator_id_to_function_id;
-    NeedsRedraw();
+    RequestRedraw();
   }
 
   void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
@@ -205,14 +205,14 @@ class TimeGraph {
   TimeGraphAccessibility accessibility_;
 
   // Be careful when directly changing these members without using the
-  // methods NeedsRedraw() or NeedsUpdate():
-  // needs_update_primitives_ should always imply needs_redraw_, that is
-  // needs_update_primitives_ => needs_redraw_ is an invariant of this
+  // methods RequestRedraw() or RequestUpdatePrimitives():
+  // update_primitives_requested_ should always imply redraw_requested_, that is
+  // update_primitives_requested_ => redraw_requested_ is an invariant of this
   // class. When updating the primitives, which computes the primitives
   // to be drawn and their coordinates, we always have to redraw the
   // timeline.
-  bool needs_update_primitives_ = false;
-  bool needs_redraw_ = false;
+  bool update_primitives_requested_ = false;
+  bool redraw_requested_ = false;
 
   bool draw_text_ = true;
 

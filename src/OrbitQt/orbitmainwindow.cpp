@@ -786,7 +786,7 @@ void OrbitMainWindow::OnTimer() {
   app_->MainTick();
 
   for (OrbitGLWidget* gl_widget : gl_widgets_) {
-    if (gl_widget->GetCanvas() != nullptr && gl_widget->GetCanvas()->GetNeedsRedraw()) {
+    if (gl_widget->GetCanvas() != nullptr && gl_widget->GetCanvas()->IsRedrawNeeded()) {
       gl_widget->update();
     }
   }
