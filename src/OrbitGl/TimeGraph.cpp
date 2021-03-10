@@ -83,7 +83,7 @@ void TimeGraph::ZoomAll() {
   min_time_us_ = max_time_us_ - (GNumHistorySeconds * 1000 * 1000);
   if (min_time_us_ < 0) min_time_us_ = 0;
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void TimeGraph::Zoom(uint64_t min, uint64_t max) {
@@ -109,6 +109,13 @@ double TimeGraph::GetCaptureTimeSpanUs() const {
 }
 
 double TimeGraph::GetCurrentTimeSpanUs() const { return max_time_us_ - min_time_us_; }
+
+void TimeGraph::RequestRedraw() {
+  redraw_requested_ = true;
+  if (canvas_ != nullptr) {
+    canvas_->RequestRedraw();
+  }
+}
 
 void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   static double increment_ratio = 0.1;
@@ -156,7 +163,7 @@ void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
   min_time_us_ = std::max(min_time_us, 0.0);
   max_time_us_ = std::min(min_time_us_ + desired_time_window, GetCaptureTimeSpanUs());
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_time) {
@@ -168,7 +175,7 @@ void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_
       clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
   max_time_us_ = min_time_us_ + time_window_us_;
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, uint64_t max,
@@ -196,7 +203,7 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, 
 
   SetMinMax(mid - current_time_window_us * (1 - distance), mid + current_time_window_us * distance);
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInfo& timer_info,
@@ -288,7 +295,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       UNREACHABLE();
   }
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
@@ -512,10 +519,9 @@ const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_id, uint64_t cu
   return next_box;
 }
 
-void TimeGraph::NeedsUpdate() {
-  needs_update_primitives_ = true;
-  // If the primitives need to be updated, we also have to redraw.
-  needs_redraw_ = true;
+void TimeGraph::RequestUpdatePrimitives() {
+  update_primitives_requested_ = true;
+  RequestRedraw();
 }
 
 // UpdatePrimitives updates all the drawable track timers in the timegraph's batcher
@@ -543,7 +549,7 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   track_manager_->UpdateMovingTrackSorting();
   track_manager_->UpdateTracks(&batcher_, min_tick, max_tick, picking_mode);
 
-  needs_update_primitives_ = false;
+  update_primitives_requested_ = false;
 }
 
 void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thread_id) {
@@ -569,7 +575,7 @@ void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thr
 
   app_->SelectCallstackEvents(selected_callstack_events, thread_id);
 
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t tid) {
@@ -581,14 +587,14 @@ void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   current_mouse_time_ns_ = GetTickFromWorld(canvas_->GetMouseX());
 
   const bool picking = picking_mode != PickingMode::kNone;
-  if ((!picking && needs_update_primitives_) || picking) {
+  if ((!picking && update_primitives_requested_) || picking) {
     UpdatePrimitives(picking_mode);
   }
 
   DrawTracks(canvas, picking_mode);
   DrawOverlay(canvas, picking_mode);
 
-  needs_redraw_ = false;
+  redraw_requested_ = false;
 }
 
 namespace {
@@ -765,7 +771,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
 
 void TimeGraph::SetThreadFilter(const std::string& filter) {
   track_manager_->SetFilter(filter);
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }
 
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {
@@ -831,7 +837,7 @@ void TimeGraph::UpdateRightMargin(float margin) {
   {
     if (right_margin_ != margin) {
       right_margin_ = margin;
-      NeedsUpdate();
+      RequestUpdatePrimitives();
     }
   }
 }
@@ -912,5 +918,5 @@ bool TimeGraph::HasFrameTrack(uint64_t function_id) const {
 
 void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
   track_manager_->RemoveFrameTrack(function_id);
-  NeedsUpdate();
+  RequestUpdatePrimitives();
 }

@@ -66,7 +66,7 @@ class CaptureWindow : public GlCanvas {
   void UpdateHorizontalSliderFromWorld();
   void UpdateWorldTopLeftY(float val) override;
 
-  void NeedsUpdate();
+  void RequestUpdatePrimitives();
   std::vector<std::string> GetContextMenu() override;
   void OnContextMenu(const std::string& action, int menu_index) override;
   virtual void ToggleRecording();

@@ -127,8 +127,8 @@ class GlCanvas {
   [[nodiscard]] ImGuiContext* GetImGuiContext() const { return imgui_context_; }
   [[nodiscard]] Batcher* GetBatcher() { return &ui_batcher_; }
 
-  [[nodiscard]] virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
-  void NeedsRedraw() { m_NeedsRedraw = true; }
+  [[nodiscard]] virtual bool IsRedrawNeeded() const;
+  void RequestRedraw() { redraw_requested_ = true; }
 
   [[nodiscard]] bool GetIsMouseOver() const { return is_mouse_over_; }
   void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
@@ -207,7 +207,7 @@ class GlCanvas {
   bool double_clicking_;
   bool control_key_;
   bool is_mouse_over_ = false;
-  bool m_NeedsRedraw;
+  bool redraw_requested_;
   int m_MainWindowWidth = 0;
   int m_MainWindowHeight = 0;
 

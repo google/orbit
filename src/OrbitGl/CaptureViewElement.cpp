@@ -31,12 +31,12 @@ void CaptureViewElement::OnPick(int x, int y) {
 
 void CaptureViewElement::OnRelease() {
   picked_ = false;
-  time_graph_->NeedsUpdate();
+  time_graph_->RequestUpdatePrimitives();
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
   canvas_->ScreenToWorld(x, y, mouse_pos_cur_[0], mouse_pos_cur_[1]);
-  time_graph_->NeedsUpdate();
+  time_graph_->RequestUpdatePrimitives();
 }
 
 }  // namespace orbit_gl
