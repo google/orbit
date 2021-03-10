@@ -35,5 +35,8 @@
     <file alias="arrow_back">outline_arrow_back_white_48dp.png</file>
     <file alias="arrow_forward">outline_arrow_forward_white_48dp.png</file>
     <file alias="double_arrows">twotone_double_arrow_white_18dp.png</file>
+    <file alias="connected">outline_sensors_white_18dp.png</file>
+    <file alias="disconnected">outline_sensors_off_white_18dp.png</file>
+    <file alias="alert">outline_report_problem_white_18dp.png</file>
   </qresource>
 </RCC>
