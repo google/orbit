@@ -291,6 +291,12 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       track->OnTimer(timer_info);
       break;
     }
+    case TimerInfo::kApiEvent: {
+      if (timer_info.type() == TimerInfo::kApiEvent) {
+        ProcessApiEventTimer(timer_info);
+      }
+      break;
+    }
     default:
       UNREACHABLE();
   }
@@ -306,10 +312,38 @@ void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
       break;
     case FunctionInfo::kOrbitTimerStartAsync:
     case FunctionInfo::kOrbitTimerStopAsync:
-      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      manual_instrumentation_manager_->ProcessAsyncTimerDeprecated(timer_info);
       break;
     default:
       break;
+  }
+}
+
+void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
+  orbit_api::Event api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+  switch (api_event.type) {
+    case orbit_api::kScopeStart:
+    case orbit_api::kScopeStop: {
+      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      track->OnTimer(timer_info);
+      break;
+    }
+    case orbit_api::kScopeStartAsync:
+    case orbit_api::kScopeStopAsync:
+      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      break;
+
+    case orbit_api::kTrackInt:
+    case orbit_api::kTrackInt64:
+    case orbit_api::kTrackUint:
+    case orbit_api::kTrackUint64:
+    case orbit_api::kTrackFloat:
+    case orbit_api::kTrackDouble:
+    case orbit_api::kString:
+      ProcessValueTrackingTimer(timer_info);
+      break;
+    default:
+      ERROR("Unhandled API event");
   }
 }
 

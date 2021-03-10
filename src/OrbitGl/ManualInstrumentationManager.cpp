@@ -29,8 +29,8 @@ orbit_api::Event ManualInstrumentationManager::ApiEventFromTimerInfo(
   // On x64 Linux, 6 registers are used for integer argument passing.
   // Manual instrumentation uses those registers to encode orbit_api::Event
   // objects.
-  constexpr size_t kNumIntegerRegisers = 6;
-  CHECK(timer_info.registers_size() == kNumIntegerRegisers);
+  constexpr size_t kNumIntegerRegisters = 6;
+  CHECK(timer_info.registers_size() == kNumIntegerRegisters);
   uint64_t arg_0 = timer_info.registers(0);
   uint64_t arg_1 = timer_info.registers(1);
   uint64_t arg_2 = timer_info.registers(2);
@@ -41,7 +41,7 @@ orbit_api::Event ManualInstrumentationManager::ApiEventFromTimerInfo(
   return encoded_event.event;
 }
 
-void ManualInstrumentationManager::ProcessAsyncTimer(
+void ManualInstrumentationManager::ProcessAsyncTimerDeprecated(
     const orbit_client_protos::TimerInfo& timer_info) {
   orbit_api::Event event = ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
@@ -58,6 +58,15 @@ void ManualInstrumentationManager::ProcessAsyncTimer(
       absl::MutexLock lock(&mutex_);
       for (auto* listener : async_timer_info_listeners_) (*listener)(start_event.name, async_span);
     }
+  }
+}
+
+void ManualInstrumentationManager::ProcessAsyncTimer(
+    const orbit_client_protos::TimerInfo& timer_info) {
+  orbit_api::Event start_event = ApiEventFromTimerInfo(timer_info);
+  absl::MutexLock lock(&mutex_);
+  for (auto* listener : async_timer_info_listeners_) {
+    (*listener)(start_event.name, timer_info);
   }
 }
 

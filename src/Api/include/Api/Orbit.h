@@ -73,14 +73,14 @@
 //     ORBIT_SCOPE("DoSomeMoreWork");
 //     DoSomeMoreWork();
 //   } else {
-//     ORBIT_SCOPE_WITH_COLOR("DoSomeOtherWork", orbit::Color::kLightGreen);
+//     ORBIT_SCOPE_WITH_COLOR("DoSomeOtherWork", kOrbitColorLightGreen);
 //     DoSomeOtherWork();
 //   }
 // }
 //
 // Parameters:
 // name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
-// col: [orbit::Color] User-defined color for the current time slice (see orbit::Color below).
+// col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
 //
 #ifdef __cplusplus
 #define ORBIT_SCOPE(name) ORBIT_SCOPE_WITH_COLOR(name, kOrbitColorAuto)
@@ -108,7 +108,7 @@
 //   DoSomeMoreWork();
 //   ORBIT_STOP();
 //
-//   ORBIT_START_WITH_COLOR("DoSomeOtherWork", KOrbitColorLightGreen);
+//   ORBIT_START_WITH_COLOR("DoSomeOtherWork", kOrbitColorLightGreen);
 //   DoSomeOtherWork();
 //   ORBIT_STOP();
 // }

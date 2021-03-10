@@ -15,15 +15,25 @@
 #include <string>
 #include <thread>
 
-#include "../Orbit.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "absl/strings/str_format.h"
+
+// OrbitBase defines an implementation of the Orbit API for introspection. To prevent symbol clash
+// with the header-only use of the API, we wrap the include of Orbit.h in a namespace. This is only
+// needed for internal projects that link with OrbitBase, basically only OrbitTest.
+namespace orbit_api_wrapper {
+#include "Api/Orbit.h"
+}
+
+using namespace orbit_api_wrapper;
 
 #if __linux__
 #define NO_INLINE __attribute__((noinline))
 #else
 #define NO_INLINE __declspec(noinline)
 #endif
+
+#define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 
 OrbitTest::OrbitTest() { Init(); }
 
@@ -68,18 +78,21 @@ void OrbitTest::Loop() {
 }
 
 void NO_INLINE OrbitTest::TestFunc(uint32_t a_Depth) {
+  ORBIT_SCOPE_FUNCTION;
   if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
   std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
 }
 
 void NO_INLINE OrbitTest::TestFunc2(uint32_t a_Depth) {
+  ORBIT_SCOPE_FUNCTION;
   if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
   BusyWork(sleep_us_);
 }
 
 void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
+  ORBIT_SCOPE_FUNCTION;
   auto start = std::chrono::system_clock::now();
   while (true) {
     auto end = std::chrono::system_clock::now();
@@ -93,8 +106,8 @@ static void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::m
 
 static void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
-  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kTeal);
-  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", orbit::Color::kOrange);
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorTeal);
+  ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorOrange);
   SleepFor1Ms();
   SleepFor1Ms();
 }
@@ -115,14 +128,14 @@ static void ExecuteTask(uint32_t id) {
 void OrbitTest::ManualInstrumentationApiTest() {
   while (!m_ExitRequested) {
     ORBIT_SCOPE("ORBIT_SCOPE_TEST");
-    ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit::Color(0xff0000ff));
+    ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit_api_color(0xff0000ff));
     SleepFor2Ms();
 
-    ORBIT_START_WITH_COLOR("ORBIT_START_TEST", orbit::Color::kRed);
+    ORBIT_START_WITH_COLOR("ORBIT_START_TEST", kOrbitColorRed);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP();
 
-    ORBIT_START_ASYNC_WITH_COLOR("ORBIT_START_ASYNC_TEST", 0, orbit::Color::kLightBlue);
+    ORBIT_START_ASYNC_WITH_COLOR("ORBIT_START_ASYNC_TEST", 0, kOrbitColorLightBlue);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP_ASYNC(0);
 
@@ -140,15 +153,15 @@ void OrbitTest::ManualInstrumentationApiTest() {
 
     static uint64_t uint64_var = 0;
     if (++uint64_var > 100) uint64_var = 0;
-    ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, orbit::Color::kIndigo);
+    ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, kOrbitColorIndigo);
 
     static float float_var = 0.f;
     static volatile float sinf_coeff = 0.1f;
-    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), orbit::Color::kPink);
+    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), kOrbitColorPink);
 
     static double double_var = 0.0;
     static volatile double cos_coeff = 0.1;
-    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), orbit::Color::kPurple);
+    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), kOrbitColorPurple);
 
     for (int i = 0; i < 5; ++i) {
       std::string track_name = absl::StrFormat("DynamicName_%u", i);

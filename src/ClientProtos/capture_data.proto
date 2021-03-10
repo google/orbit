@@ -151,6 +151,7 @@ message TimerInfo {
     kFrame = 4;
     kGpuCommandBuffer = 5;
     kGpuDebugMarker = 6;
+    kApiEvent = 7;
   }
   Type type = 6;
 

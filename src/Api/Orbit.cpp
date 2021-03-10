@@ -6,21 +6,21 @@
 #include "Api/Orbit.h"
 
 #include "Api/EncodedEvent.h"
+#include "Api/LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 
-// Temporary dummy function, proper implementation is in next PR.
-// See https://github.com/google/orbit/pull/1702 for fully working prototype.
-static void EnqueueIntermediateEvent(const orbit_api::ApiEvent& event) { (void)event; }
-
 static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
                             uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
-  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  static orbit_api::LockFreeApiEventProducer producer;
+  if (!producer.IsCapturing()) return;
+
   static pid_t pid = orbit_base::GetCurrentProcessId();
-  thread_local pid_t tid = orbit_base::GetCurrentThreadId();
+  thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
 
   orbit_api::ApiEvent api_event(pid, tid, timestamp_ns, type, name, data, color);
-  EnqueueIntermediateEvent(api_event);
+  producer.EnqueueIntermediateEvent(api_event);
 }
 
 extern "C" {

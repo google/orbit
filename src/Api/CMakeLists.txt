@@ -4,6 +4,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+if(NOT WIN32)
 project(Api)
 
 add_library(Api SHARED)
@@ -19,6 +20,7 @@ target_include_directories(Api PUBLIC
 
 target_sources(Api PUBLIC
         include/Api/EncodedEvent.h
+        include/Api/LockFreeApiEventProducer.h
         include/Api/Orbit.h)
 
 target_sources(Api PRIVATE
@@ -29,3 +31,14 @@ target_link_libraries(Api PUBLIC
         OrbitBase
         OrbitProducer
         ProducerSideChannel)
+endif()
+
+add_library(ApiInterface INTERFACE)
+
+target_sources(ApiInterface INTERFACE
+        include/Api/EncodedEvent.h
+        include/Api/LockFreeApiEventProducer.h
+        include/Api/Orbit.h)
+
+target_include_directories(ApiInterface INTERFACE
+        ${CMAKE_CURRENT_LIST_DIR}/include)
