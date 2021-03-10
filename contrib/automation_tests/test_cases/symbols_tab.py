@@ -47,7 +47,7 @@ class LoadSymbols(E2ETestCase):
 
         logging.info('Waiting for * to indicate loaded modules')
 
-        wait_for_condition(lambda: modules_dataview.get_item_at(0, 4).texts()[0] == "*")
+        wait_for_condition(lambda: modules_dataview.get_item_at(0, 4).texts()[0] == "*", 100)
 
         functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
