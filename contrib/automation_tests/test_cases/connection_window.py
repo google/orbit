@@ -61,7 +61,7 @@ class FilterAndSelectFirstProcess(E2ETestCase):
                 filter_edit = self.find_control('Edit', 'FilterProcesses')
                 break
             except KeyError:
-                logging.info('Find ProcessList failed. Try again.')        
+                logging.info('Find FilterProcesses failed. Try again.')
 
         while (True):
             try:
