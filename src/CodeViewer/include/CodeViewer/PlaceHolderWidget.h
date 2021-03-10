@@ -48,9 +48,11 @@ class PlaceHolderWidget : public QWidget {
   QSize size_hint_;
 
   void paintEvent(QPaintEvent* event) override;
+  void wheelEvent(QWheelEvent* ev) override;
 
  signals:
   void PaintEventTriggered(QPaintEvent* event);
+  void WheelEventTriggered(QWheelEvent* event);
 };
 
 }  // namespace orbit_code_viewer
