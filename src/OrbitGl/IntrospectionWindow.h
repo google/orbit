@@ -29,11 +29,10 @@ class IntrospectionWindow : public CaptureWindow {
   void DrawScreenSpace() override;
   void RenderText(float layer) override;
 
- protected:
+ private:
   [[nodiscard]] const char* GetHelpText() const override;
   [[nodiscard]] bool ShouldAutoZoom() const override;
 
- private:
   std::unique_ptr<orbit_base::TracingListener> introspection_listener_;
 };
 

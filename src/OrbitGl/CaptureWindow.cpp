@@ -69,7 +69,6 @@ using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   draw_help_ = true;
-  draw_filter_ = false;
   world_top_left_x_ = 0;
   world_top_left_y_ = 0;
   world_max_y_ = 0;
@@ -97,8 +96,6 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 }
 
-void CaptureWindow::OnTimer() { GlCanvas::OnTimer(); }
-
 void CaptureWindow::ZoomAll() {
   ResetHoverTimer();
   RequestUpdatePrimitives();
@@ -106,78 +103,27 @@ void CaptureWindow::ZoomAll() {
   time_graph_->ZoomAll();
 }
 
-void CaptureWindow::UpdateWheelMomentum(float delta_time) {
-  GlCanvas::UpdateWheelMomentum(delta_time);
+void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle) {
+  GlCanvas::MouseMoved(x, y, left, right, middle);
 
   if (time_graph_ == nullptr) return;
-  bool zoom_width = true;  // TODO: !wxGetKeyState(WXK_CONTROL);
-  if (zoom_width && wheel_momentum_ != 0.f) {
-    time_graph_->ZoomTime(wheel_momentum_, mouse_ratio_);
-  }
-}
-
-void CaptureWindow::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
-  if (time_graph_ == nullptr) return;
-  // TODO: Reduce code duplication, call super!
-  float world_x, world_y;
-  ScreenToWorld(x, y, world_x, world_y);
-
-  mouse_world_x_ = world_x;
-  mouse_world_y_ = world_y;
-  mouse_screen_x_ = x;
-  mouse_screen_y_ = y;
 
   // Pan
-  if (left && !im_gui_active_ && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
-    float world_min;
-    float world_max;
-
-    time_graph_->GetWorldMinMax(world_min, world_max);
-
-    world_top_left_x_ =
-        world_click_x_ - static_cast<float>(x) / static_cast<float>(GetWidth()) * world_width_;
-    world_top_left_y_ =
-        world_click_y_ + static_cast<float>(y) / static_cast<float>(GetHeight()) * world_height_;
-
-    world_top_left_x_ = clamp(world_top_left_x_, world_min, world_max - world_width_);
-    world_top_left_y_ =
-        clamp(world_top_left_y_,
-              world_height_ - time_graph_->GetTrackManager()->GetTracksTotalHeight(), world_max_y_);
-
+  if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
     time_graph_->PanTime(screen_click_x_, x, GetWidth(), ref_time_click_);
     RequestUpdatePrimitives();
 
     click_was_drag_ = true;
   }
-
-  if (is_selecting_) {
-    ScreenToWorld(std::max(x, 0), std::max(y, 0), world_x, world_y);
-    select_stop_ = Vec2(world_x, world_y);
-    time_stop_ = time_graph_->GetTickFromWorld(world_x);
-  }
-
-  if (left) {
-    picking_manager_.Drag(x, y);
-  }
-
-  ResetHoverTimer();
-
-  RequestRedraw();
 }
 
 void CaptureWindow::LeftDown(int x, int y) {
-  if (time_graph_ == nullptr) return;
-  // Store world clicked pos for panning
-  ScreenToWorld(x, y, world_click_x_, world_click_y_);
-  screen_click_x_ = x;
-  screen_click_y_ = y;
-  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / GetWidth());
+  GlCanvas::LeftDown(x, y);
 
-  is_selecting_ = false;
-
-  picking_ = true;
   click_was_drag_ = false;
-  RequestRedraw();
+
+  if (time_graph_ == nullptr) return;
+  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / GetWidth());
 }
 
 void CaptureWindow::LeftUp() {
@@ -190,46 +136,44 @@ void CaptureWindow::LeftUp() {
   }
 }
 
-void CaptureWindow::LeftDoubleClick() {
-  GlCanvas::LeftDoubleClick();
-  double_clicking_ = true;
-  picking_ = true;
-}
-
-void CaptureWindow::Pick() {
-  picking_ = true;
-  RequestRedraw();
-}
-
-void CaptureWindow::Pick(int x, int y) {
-  // 4 bytes per pixel (RGBA), 1x1 bitmap
-  std::array<uint8_t, 4 * 1 * 1> pixels{};
-  glReadPixels(x, m_MainWindowHeight - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
-  uint32_t value;
-  std::memcpy(&value, &pixels[0], sizeof(uint32_t));
-  PickingId pick_id = PickingId::FromPixelValue(value);
-
-  Pick(pick_id, x, y);
-
-  RequestUpdatePrimitives();
-}
-
-void CaptureWindow::Pick(PickingId picking_id, int x, int y) {
+void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x,
+                                        int y) {
+  // Early-out: This makes sure the timegraph was not deleted in between redraw and mouse click
   if (time_graph_ == nullptr) return;
   PickingType type = picking_id.type;
-  background_clicked_ = false;
 
   Batcher& batcher = GetBatcherById(picking_id.batcher_id);
-  const TextBox* text_box = batcher.GetTextBox(picking_id);
-  if (text_box) {
-    SelectTextBox(text_box);
-  } else if (type == PickingType::kPickable) {
-    picking_manager_.Pick(picking_id, x, y);
-  } else {
-    // If the background is clicked: The selection should only be cleared
-    // if the user doesn't drag around the capture window.
-    // This is handled later in CaptureWindow::LeftUp()
-    background_clicked_ = true;
+
+  if (picking_mode == PickingMode::kClick) {
+    background_clicked_ = false;
+    const TextBox* text_box = batcher.GetTextBox(picking_id);
+    if (text_box) {
+      SelectTextBox(text_box);
+    } else if (type == PickingType::kPickable) {
+      picking_manager_.Pick(picking_id, x, y);
+    } else {
+      // If the background is clicked: The selection should only be cleared
+      // if the user doesn't drag around the capture window.
+      // This is handled later in CaptureWindow::LeftUp()
+      background_clicked_ = true;
+    }
+  } else if (picking_mode == PickingMode::kHover) {
+    std::string tooltip;
+
+    if (type == PickingType::kPickable) {
+      auto pickable = GetPickingManager().GetPickableFromId(picking_id);
+      if (pickable) {
+        tooltip = pickable->GetTooltip();
+      }
+    } else {
+      PickingUserData* user_data = batcher.GetUserData(picking_id);
+
+      if (user_data && user_data->generate_tooltip_) {
+        tooltip = user_data->generate_tooltip_(picking_id);
+      }
+    }
+
+    app_->SendTooltipToUi(tooltip);
   }
 }
 
@@ -247,60 +191,12 @@ void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   }
 }
 
-void CaptureWindow::Hover(int x, int y) {
-  if (time_graph_ == nullptr) return;
-  // 4 bytes per pixel (RGBA), 1x1 bitmap
-  uint8_t pixels[1 * 1 * 4] = {0, 0, 0, 0};
-  glReadPixels(x, m_MainWindowHeight - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
-
-  auto pick_id = PickingId::FromPixelValue(absl::bit_cast<uint32_t>(pixels));
-  Batcher& batcher = GetBatcherById(pick_id.batcher_id);
-
-  std::string tooltip;
-
-  if (pick_id.type == PickingType::kPickable) {
-    auto pickable = GetPickingManager().GetPickableFromId(pick_id);
-    if (pickable) {
-      tooltip = pickable->GetTooltip();
-    }
-  } else {
-    PickingUserData* user_data = batcher.GetUserData(pick_id);
-
-    if (user_data && user_data->generate_tooltip_) {
-      tooltip = user_data->generate_tooltip_(pick_id);
-    }
-  }
-
-  app_->SendTooltipToUi(tooltip);
-}
-
-void CaptureWindow::PreRender() {
-  // TODO: Move to GlCanvas?
-  if (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_) {
-    is_hovering_ = true;
-    picking_ = true;
-  }
-}
-
 void CaptureWindow::PostRender() {
-  if (is_hovering_) {
-    is_hovering_ = false;
-    can_hover_ = false;
-    picking_ = false;
-    hover_timer_.Restart();
-
-    Hover(mouse_screen_x_, mouse_screen_y_);
+  if (GetPickingMode() != PickingMode::kNone) {
     RequestUpdatePrimitives();
-    GlCanvas::Render(screen_width_, screen_height_);
-    hover_timer_.Restart();
   }
 
-  if (picking_) {
-    picking_ = false;
-    Pick(screen_click_x_, screen_click_y_);
-    RequestRedraw();
-    GlCanvas::Render(screen_width_, screen_height_);
-  }
+  GlCanvas::PostRender();
 }
 
 void CaptureWindow::Resize(int width, int height) {
@@ -308,73 +204,47 @@ void CaptureWindow::Resize(int width, int height) {
   RequestUpdatePrimitives();
 }
 
-void CaptureWindow::RightDown(int x, int y) {
-  if (time_graph_ == nullptr) return;
-  ScreenToWorld(x, y, world_click_x_, world_click_y_);
-  screen_click_x_ = x;
-  screen_click_y_ = y;
-  Pick();
-
-  is_selecting_ = true;
-  select_start_ = Vec2(world_click_x_, world_click_y_);
-  select_stop_ = select_start_;
-  time_start_ = time_graph_->GetTickFromWorld(world_click_x_);
-  time_stop_ = time_start_;
-}
-
 bool CaptureWindow::RightUp() {
-  if (time_graph_ == nullptr) return false;
-  if (is_selecting_ && (select_start_[0] != select_stop_[0]) && ControlPressed()) {
-    float min_world = std::min(select_stop_[0], select_start_[0]);
-    float max_world = std::max(select_stop_[0], select_start_[0]);
+  if (time_graph_ != nullptr && is_selecting_ && (select_start_[0] != select_stop_[0]) &&
+      ControlPressed()) {
+    float min_world = std::min(select_start_[0], select_stop_[0]);
+    float max_world = std::max(select_start_[0], select_stop_[0]);
 
-    double new_min = time_graph_->GetTime((min_world - world_top_left_x_) / world_width_);
-    double new_max = time_graph_->GetTime((max_world - world_top_left_x_) / world_width_);
+    double new_min =
+        TicksToMicroseconds(time_graph_->GetCaptureMin(), time_graph_->GetTickFromWorld(min_world));
+    double new_max =
+        TicksToMicroseconds(time_graph_->GetCaptureMin(), time_graph_->GetTickFromWorld(max_world));
 
     time_graph_->SetMinMax(new_min, new_max);
-    select_start_ = select_stop_;
   }
 
-  bool show_context_menu = select_start_[0] == select_stop_[0];
-  is_selecting_ = false;
-  RequestRedraw();
-  return show_context_menu;
+  return GlCanvas::RightUp();
 }
 
-void CaptureWindow::MiddleDown(int x, int y) {
-  float world_x, world_y;
-  ScreenToWorld(x, y, world_x, world_y);
-  is_selecting_ = true;
-  select_start_ = Vec2(world_x, world_y);
-  select_stop_ = select_start_;
-}
-
-void CaptureWindow::MiddleUp(int x, int y) {
-  float world_x, world_y;
-  ScreenToWorld(x, y, world_x, world_y);
-  is_selecting_ = false;
-
-  select_stop_ = Vec2(world_x, world_y);
-
-  RequestRedraw();
-}
-
-void CaptureWindow::Zoom(int delta) {
+void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
   if (delta == 0) return;
 
-  delta = -delta;
-  auto delta_float = static_cast<float>(delta);
+  auto delta_float = static_cast<float>(-delta);
 
   float world_x;
   float world_y;
 
   ScreenToWorld(mouse_screen_x_, mouse_screen_y_, world_x, world_y);
-  mouse_ratio_ = static_cast<double>(mouse_screen_x_) / GetWidth();
 
   if (time_graph_ != nullptr) {
-    time_graph_->ZoomTime(delta_float, mouse_ratio_);
+    switch (dir) {
+      case ZoomDirection::kHorizontal: {
+        double mouse_ratio = static_cast<double>(mouse_screen_x_) / GetWidth();
+        time_graph_->ZoomTime(delta_float, mouse_ratio);
+        break;
+      }
+      case ZoomDirection::kVertical: {
+        float mouse_ratio =
+            static_cast<float>(mouse_screen_[1]) / static_cast<float>(viewport_.GetHeight());
+        time_graph_->VerticalZoom(delta_float, mouse_ratio);
+      }
+    }
   }
-  wheel_momentum_ = delta_float * wheel_momentum_ < 0 ? 0 : wheel_momentum_ + delta_float;
 
   RequestUpdatePrimitives();
 }
@@ -389,47 +259,18 @@ void CaptureWindow::Pan(float ratio) {
 }
 
 void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
-  if (delta == 0) return;
+  GlCanvas::MouseWheelMoved(x, y, delta, ctrl);
 
-  // Normalize and invert sign, so that delta < 0 is zoom in.
-  const int delta_normalized = delta < 0 ? 1 : -1;
-  const auto delta_float = static_cast<float>(delta_normalized);
-
-  if (delta < min_wheel_delta_) min_wheel_delta_ = delta;
-  if (delta > max_wheel_delta_) max_wheel_delta_ = delta;
-
-  float worldx;
-  float worldy;
-
-  ScreenToWorld(x, y, worldx, worldy);
-
-  bool zoom_width = !ctrl;
-  if (zoom_width) {
-    mouse_ratio_ = static_cast<double>(x) / GetWidth();
-
-    if (time_graph_ != nullptr) {
-      time_graph_->ZoomTime(delta_float, mouse_ratio_);
-    }
-    wheel_momentum_ = delta_float * wheel_momentum_ < 0 ? 0 : wheel_momentum_ + delta_float;
-  } else {
-    float mouse_relative_y_position = static_cast<float>(y) / static_cast<float>(GetHeight());
-    if (time_graph_ != nullptr) {
-      time_graph_->VerticalZoom(delta_float, mouse_relative_y_position);
-    }
-  }
-
-  can_hover_ = true;
-
-  RequestUpdatePrimitives();
+  const int delta_normalized = delta < 0 ? -1 : 1;
+  Zoom(ctrl ? ZoomDirection::kVertical : ZoomDirection::kHorizontal, delta_normalized);
 }
 
-void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta, bool /*ctrl*/) {
+void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) {
+  GlCanvas::MouseWheelMovedHorizontally(x, y, delta, ctrl);
+
   if (delta == 0) return;
 
-  // Normalize and invert sign, so that delta < 0 is left.
-  int delta_normalized = delta < 0 ? 1 : -1;
-
-  if (delta_normalized < 0) {
+  if (delta > 0) {
     Pan(0.1f);
   } else {
     Pan(-0.1f);
@@ -437,85 +278,74 @@ void CaptureWindow::MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int delta,
 }
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
-  UpdateSpecialKeys(ctrl, shift, alt);
+  GlCanvas::KeyPressed(key_code, ctrl, shift, alt);
 
-  if (!im_gui_active_) {
-    switch (key_code) {
-      case ' ':
-        if (!shift) {
-          ZoomAll();
-        }
-        break;
-      case 'A':
-        Pan(0.1f);
-        break;
-      case 'D':
-        Pan(-0.1f);
-        break;
-      case 'W':
-        Zoom(1);
-        break;
-      case 'S':
-        Zoom(-1);
-        break;
-      case 'F':
-        draw_filter_ = !draw_filter_;
-        break;
-      case 'H':
-        draw_help_ = !draw_help_;
-        break;
-      case 'X':
-        ToggleRecording();
-        break;
-      case 18:  // Left
-        if (time_graph_ == nullptr) return;
-        if (shift) {
-          time_graph_->JumpToNeighborBox(app_->selected_text_box(),
-                                         TimeGraph::JumpDirection::kPrevious,
-                                         TimeGraph::JumpScope::kSameFunction);
-        } else if (alt) {
-          time_graph_->JumpToNeighborBox(app_->selected_text_box(),
-                                         TimeGraph::JumpDirection::kPrevious,
-                                         TimeGraph::JumpScope::kSameThreadSameFunction);
-        } else {
-          time_graph_->JumpToNeighborBox(app_->selected_text_box(),
-                                         TimeGraph::JumpDirection::kPrevious,
-                                         TimeGraph::JumpScope::kSameDepth);
-        }
-        break;
-      case 20:  // Right
-        if (time_graph_ == nullptr) return;
-        if (shift) {
-          time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
-                                         TimeGraph::JumpScope::kSameFunction);
-        } else if (alt) {
-          time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
-                                         TimeGraph::JumpScope::kSameThreadSameFunction);
-        } else {
-          time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
-                                         TimeGraph::JumpScope::kSameDepth);
-        }
-        break;
-      case 19:  // Up
+  switch (key_code) {
+    case ' ':
+      if (!shift) {
+        ZoomAll();
+      }
+      break;
+    case 'A':
+      Pan(0.1f);
+      break;
+    case 'D':
+      Pan(-0.1f);
+      break;
+    case 'W':
+      Zoom(ZoomDirection::kHorizontal, 1);
+      break;
+    case 'S':
+      Zoom(ZoomDirection::kHorizontal, -1);
+      break;
+    case 'H':
+      draw_help_ = !draw_help_;
+      break;
+    case 'X':
+      ToggleRecording();
+      break;
+    case 18:  // Left
+      if (time_graph_ == nullptr) return;
+      if (shift) {
+        time_graph_->JumpToNeighborBox(app_->selected_text_box(),
+                                       TimeGraph::JumpDirection::kPrevious,
+                                       TimeGraph::JumpScope::kSameFunction);
+      } else if (alt) {
+        time_graph_->JumpToNeighborBox(app_->selected_text_box(),
+                                       TimeGraph::JumpDirection::kPrevious,
+                                       TimeGraph::JumpScope::kSameThreadSameFunction);
+      } else {
+        time_graph_->JumpToNeighborBox(app_->selected_text_box(),
+                                       TimeGraph::JumpDirection::kPrevious,
+                                       TimeGraph::JumpScope::kSameDepth);
+      }
+      break;
+    case 20:  // Right
+      if (time_graph_ == nullptr) return;
+      if (shift) {
+        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
+                                       TimeGraph::JumpScope::kSameFunction);
+      } else if (alt) {
+        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
+                                       TimeGraph::JumpScope::kSameThreadSameFunction);
+      } else {
+        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
+                                       TimeGraph::JumpScope::kSameDepth);
+      }
+      break;
+    case 19:  // Up
 
-        if (time_graph_ == nullptr) return;
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kTop,
-                                       TimeGraph::JumpScope::kSameThread);
-        break;
-      case 21:  // Down
-        if (time_graph_ == nullptr) return;
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kDown,
-                                       TimeGraph::JumpScope::kSameThread);
-        break;
-    }
+      if (time_graph_ == nullptr) return;
+      time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kTop,
+                                     TimeGraph::JumpScope::kSameThread);
+      break;
+    case 21:  // Down
+      if (time_graph_ == nullptr) return;
+      time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kDown,
+                                     TimeGraph::JumpScope::kSameThread);
+      break;
   }
-
-  RequestRedraw();
 }
-
-std::vector<std::string> CaptureWindow::GetContextMenu() { return std::vector<std::string>{}; }
-
-void CaptureWindow::OnContextMenu(const std::string& /*action*/, int /*menu_index*/) {}
 
 bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
 
@@ -528,9 +358,6 @@ void CaptureWindow::Draw() {
   if (ShouldAutoZoom()) {
     ZoomAll();
   }
-
-  // Reset picking manager before each draw.
-  picking_manager_.Reset();
 
   if (time_graph_ != nullptr) {
     time_graph_->SetPos(0, GetWorldTopLeftX());
@@ -697,6 +524,14 @@ void CaptureWindow::UpdateWorldTopLeftY(float val) {
   RequestUpdatePrimitives();
 }
 
+void CaptureWindow::UpdateWorldTopLeftX(float val) {
+  float world_min;
+  float world_max;
+
+  time_graph_->GetWorldMinMax(world_min, world_max);
+  world_top_left_x_ = clamp(world_top_left_x_, world_min, world_max - world_width_);
+}
+
 void CaptureWindow::ToggleRecording() {
   app_->ToggleCapture();
   draw_help_ = false;
@@ -734,13 +569,6 @@ void CaptureWindow::RequestUpdatePrimitives() {
   time_graph_->RequestUpdatePrimitives();
 }
 
-template <class T>
-static std::string VariableToString(std::string_view name, const T& value) {
-  std::stringstream string_stream{};
-  string_stream << name << " = " << value;
-  return string_stream.str();
-}
-
 void CaptureWindow::RenderImGuiDebugUI() {
   if (ImGui::CollapsingHeader("Layout Properties")) {
     if (time_graph_ != nullptr && time_graph_->GetLayout().DrawProperties()) {
@@ -766,6 +594,7 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(mouse_screen_y_);
     IMGUI_VAR_TO_TEXT(mouse_world_x_);
     IMGUI_VAR_TO_TEXT(mouse_world_y_);
+    IMGUI_VAR_TO_TEXT(mouse_world_[1]);
     if (time_graph_ != nullptr) {
       IMGUI_VAR_TO_TEXT(time_graph_->GetNumDrawnTextBoxes());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetNumTimers());
@@ -790,12 +619,6 @@ void CaptureWindow::RenderText(float layer) {
   if (time_graph_ == nullptr) return;
   if (GetPickingMode() == PickingMode::kNone) {
     time_graph_->DrawText(this, layer);
-  }
-}
-
-void ColorToFloat(Color color, float* output) {
-  for (size_t i = 0; i < 4; ++i) {
-    output[i] = static_cast<float>(color[i]) / 255.f;
   }
 }
 
@@ -912,16 +735,16 @@ void CaptureWindow::RenderTimeBar() {
 
 void CaptureWindow::RenderSelectionOverlay() {
   if (time_graph_ == nullptr) return;
+
   if (!picking_ && select_start_[0] != select_stop_[0]) {
-    uint64_t min_time = std::min(time_start_, time_stop_);
-    uint64_t max_time = std::max(time_start_, time_stop_);
+    float from = std::min(select_start_[0], select_stop_[0]);
+    float to = std::max(select_start_[0], select_stop_[0]);
 
-    float from = time_graph_->GetWorldFromTick(min_time);
-    float to = time_graph_->GetWorldFromTick(max_time);
-
-    float size_x = to - from;
     Vec2 pos(from, world_top_left_y_ - world_height_);
-    Vec2 size(size_x, world_height_);
+    Vec2 size(to - from, world_height_);
+
+    uint64_t min_time = time_graph_->GetTickFromWorld(from);
+    uint64_t max_time = time_graph_->GetTickFromWorld(to);
 
     std::string text = GetPrettyTime(TicksToDuration(min_time, max_time));
     const Color color(0, 128, 0, 128);
@@ -940,5 +763,3 @@ void CaptureWindow::RenderSelectionOverlay() {
     ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
   }
 }
-
-void CaptureWindow::Initialize() { GlCanvas::Initialize(); }

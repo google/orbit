@@ -40,16 +40,11 @@ class GlCanvas {
   virtual void Initialize();
   virtual void Resize(int width, int height);
   virtual void Render(int width, int height);
-  virtual void PreRender(){};
-  virtual void PostRender() {}
+  virtual void PreRender();
+  virtual void PostRender();
 
   [[nodiscard]] virtual int GetWidth() const;
   [[nodiscard]] virtual int GetHeight() const;
-
-  virtual void SetMainWindowSize(int width, int height) {
-    m_MainWindowWidth = width;
-    m_MainWindowHeight = height;
-  }
 
   void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
   void PrepareScreenSpaceViewport();
@@ -72,13 +67,11 @@ class GlCanvas {
   virtual void LeftUp();
   virtual void LeftDoubleClick();
   virtual void MouseWheelMoved(int x, int y, int delta, bool ctrl);
-  virtual void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) {
-    MouseWheelMoved(x, y, delta, ctrl);
-  }
+  virtual void MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int /*delta*/, bool /*ctrl*/) {}
   virtual void RightDown(int x, int y);
   virtual bool RightUp();
-  virtual void MiddleDown(int /*x*/, int /*y*/) {}
-  virtual void MiddleUp(int /*x*/, int /*y*/) {}
+  virtual void MiddleDown(int x, int y) { RightDown(x, y); }
+  virtual void MiddleUp() { RightUp(); }
   virtual void CharEvent(unsigned int character);
   virtual void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt);
   virtual void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt);
@@ -95,13 +88,12 @@ class GlCanvas {
   [[nodiscard]] float GetWorldMaxY() const { return world_max_y_; }
   [[nodiscard]] float GetWorldTopLeftX() const { return world_top_left_x_; }
   [[nodiscard]] float GetWorldTopLeftY() const { return world_top_left_y_; }
+
   void UpdateWorldTopLeftY() { UpdateWorldTopLeftY(GetWorldTopLeftY()); }
   virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
+  virtual void UpdateWorldTopLeftX(float val) { world_top_left_x_ = val; }
 
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
-
-  virtual void UpdateWheelMomentum(float delta_time);
-  virtual void OnTimer();
 
   [[nodiscard]] float GetMouseX() const { return mouse_world_x_; }
 
@@ -113,11 +105,7 @@ class GlCanvas {
   [[nodiscard]] float GetDeltaTimeSeconds() const { return delta_time_; }
 
   virtual void Draw() {}
-  virtual void DrawScreenSpace() {}
   virtual void RenderImGuiDebugUI() {}
-  virtual void RenderText(float /*layer*/) {}
-
-  virtual void Hover(int /*X*/, int /*Y*/) {}
 
   using RenderCallback = std::function<void()>;
   void AddRenderCallback(RenderCallback callback) {
@@ -185,17 +173,10 @@ class GlCanvas {
   int mouse_screen_y_;
   Vec2 select_start_;
   Vec2 select_stop_;
-  uint64_t time_start_;
-  uint64_t time_stop_;
   int screen_click_x_;
   int screen_click_y_;
-  int min_wheel_delta_;
-  int max_wheel_delta_;
-  float wheel_momentum_;
   float delta_time_;
   bool is_selecting_;
-  double mouse_ratio_;
-  bool im_gui_active_;
   Timer hover_timer_;
   int hover_delay_ms_;
   bool is_hovering_;
@@ -204,15 +185,12 @@ class GlCanvas {
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
   TextRenderer text_renderer_;
-  Timer update_timer_;
   PickingManager picking_manager_;
   bool picking_;
   bool double_clicking_;
   bool control_key_;
   bool is_mouse_over_ = false;
   bool redraw_requested_;
-  int m_MainWindowWidth = 0;
-  int m_MainWindowHeight = 0;
 
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
@@ -222,6 +200,10 @@ class GlCanvas {
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface();
   std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
+
+  void Pick(PickingMode picking_mode, int x, int y);
+  virtual void HandlePickedElement(PickingMode /*picking_mode*/, PickingId /*picking_id*/,
+                                   int /*x*/, int /*y*/) {}
 };
 
 #endif  // ORBIT_GL_GL_CANVAS_H_

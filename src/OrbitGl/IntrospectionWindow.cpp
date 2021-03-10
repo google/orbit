@@ -28,7 +28,7 @@ bool IntrospectionWindow::IsIntrospecting() const { return introspection_listene
 
 void IntrospectionWindow::StartIntrospection() {
   CHECK(!IsIntrospecting());
-  draw_help_ = false;
+  set_draw_help(false);
   CreateTimeGraph(nullptr);
   introspection_listener_ =
       std::make_unique<orbit_base::TracingListener>([this](const orbit_base::TracingScope& scope) {
@@ -45,7 +45,7 @@ void IntrospectionWindow::StartIntrospection() {
         timer_info.add_registers(scope.encoded_event.args[3]);
         timer_info.add_registers(scope.encoded_event.args[4]);
         timer_info.add_registers(scope.encoded_event.args[5]);
-        time_graph_->ProcessTimer(timer_info, /*FunctionInfo*/ nullptr);
+        GetTimeGraph()->ProcessTimer(timer_info, /*FunctionInfo*/ nullptr);
       });
 }
 void IntrospectionWindow::StopIntrospection() { introspection_listener_ = nullptr; }
