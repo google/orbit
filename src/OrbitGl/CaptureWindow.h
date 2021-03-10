@@ -25,34 +25,28 @@ class CaptureWindow : public GlCanvas {
  public:
   explicit CaptureWindow(OrbitApp* app);
 
-  void Initialize() override;
+  enum class ZoomDirection { kHorizontal, kVertical };
+
   void ZoomAll();
-  void Zoom(int delta);
+  void Zoom(ZoomDirection dir, int delta);
   void Pan(float ratio);
 
-  void UpdateWheelMomentum(float delta_time) override;
   void MouseMoved(int x, int y, bool left, bool right, bool middle) override;
-  void LeftDoubleClick() override;
   void LeftDown(int x, int y) override;
   void LeftUp() override;
-  void Pick();
-  void Pick(int x, int y);
-  void Pick(PickingId picking_id, int x, int y);
-  void Hover(int x, int y) override;
-  void RightDown(int x, int y) override;
   bool RightUp() override;
-  void MiddleDown(int x, int y) override;
-  void MiddleUp(int x, int y) override;
   void MouseWheelMoved(int x, int y, int delta, bool ctrl) override;
   void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) override;
   void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
-  void OnTimer() override;
+
   void Draw() override;
-  void DrawScreenSpace() override;
+  virtual void DrawScreenSpace();
+  virtual void RenderText(float layer);
+
   void RenderImGuiDebugUI() override;
-  void RenderText(float layer) override;
-  void PreRender() override;
+
   void PostRender() override;
+
   void Resize(int width, int height) override;
   void RenderHelpUi();
   void RenderTimeBar();
@@ -65,34 +59,33 @@ class CaptureWindow : public GlCanvas {
   void UpdateVerticalSliderFromWorld();
   void UpdateHorizontalSliderFromWorld();
   void UpdateWorldTopLeftY(float val) override;
+  void UpdateWorldTopLeftX(float val) override;
 
   void RequestUpdatePrimitives();
-  std::vector<std::string> GetContextMenu() override;
-  void OnContextMenu(const std::string& action, int menu_index) override;
+
   virtual void ToggleRecording();
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
+
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
   void CreateTimeGraph(const CaptureData* capture_data);
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
   Batcher& GetBatcherById(BatcherId batcher_id);
 
- protected:
+ private:
   [[nodiscard]] virtual const char* GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
+  void HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x, int y) override;
 
- protected:
   std::unique_ptr<TimeGraph> time_graph_ = nullptr;
   bool draw_help_;
-  bool draw_filter_;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
 
   bool click_was_drag_ = false;
   bool background_clicked_ = false;
 
- private:
   OrbitApp* app_ = nullptr;
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;

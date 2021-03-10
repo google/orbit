@@ -243,7 +243,7 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
     }
 
     if (event->button() == Qt::MiddleButton) {
-      gl_canvas_->MiddleUp(event->x(), event->y());
+      gl_canvas_->MiddleUp();
     }
   }
 
