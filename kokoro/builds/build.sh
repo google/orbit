@@ -192,7 +192,7 @@ if [ -n "$1" ]; then
   fi
 
   # Package the Debian package, the signature and the ggp client into a zip for integration in the 
-  # installer.
+  # installer. Also package LinuxTracingIntegrationTests so that it can be run on YHITI.
   if [ -f ${KEYSTORE_PATH}/74938_SigningPrivateGpg ] && [[ $CONAN_PROFILE == ggp_* ]]; then
     echo "Create a zip containing OrbitService for integration in the installer."
     pushd "${REPO_ROOT}/build/package" > /dev/null
@@ -202,6 +202,8 @@ if [ -n "$1" ]; then
     cp -v bin/OrbitClientGgp Orbit/collector/
     cp -v lib/libOrbitVulkanLayer.so Orbit/collector/
     cp -v lib/VkLayer_Orbit_implicit.json Orbit/collector/
+    cp -v bin/LinuxTracingIntegrationTests Orbit/collector/
+    cp -v lib/libLinuxTracingIntegrationTestPuppetSharedObject.so Orbit/collector/
     zip Collector.zip -r Orbit/
     rm -rf Orbit/
     popd > /dev/null
