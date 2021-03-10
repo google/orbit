@@ -18,7 +18,7 @@ BUILD_SRC_DIR_FILTER="ClientProtos\|CodeViewerDemo\|GrpcProtos"
 # grep inverted matching list for files in BUILD_DIR/bin/ that are not used
 BIN_FILE_FILTER="\.debug\|crashpad_handler"
 # grep inverted matching list for files in BUILD_DIR/lib/ that are not used
-LIB_FILE_FILTER="VkLayer_Orbit_implicit.json"
+LIB_FILE_FILTER="\.debug\|VkLayer_Orbit_implicit.json"
 # grep inverted matching list for source files that are not used
 SOURCE_FILE_FILTER="Test.cpp\|Tests.cpp\|Fuzzer.cpp"
 # ------------------------------------
