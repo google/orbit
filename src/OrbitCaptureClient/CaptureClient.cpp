@@ -44,11 +44,19 @@ static CaptureOptions::InstrumentedFunction::FunctionType InstrumentedFunctionTy
     FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
     case FunctionInfo::kOrbitTimerStart:
+    case FunctionInfo::kOrbitTimerStartAsync:
       return CaptureOptions::InstrumentedFunction::kTimerStart;
     case FunctionInfo::kOrbitTimerStop:
+    case FunctionInfo::kOrbitTimerStopAsync:
       return CaptureOptions::InstrumentedFunction::kTimerStop;
-    default:
+    case FunctionInfo::kOrbitTrackValue:
+    case FunctionInfo::kNone:
       return CaptureOptions::InstrumentedFunction::kRegular;
+    case orbit_client_protos::
+        FunctionInfo_OrbitType_FunctionInfo_OrbitType_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case orbit_client_protos::
+        FunctionInfo_OrbitType_FunctionInfo_OrbitType_INT_MAX_SENTINEL_DO_NOT_USE_:
+      UNREACHABLE();
   }
 }
 
