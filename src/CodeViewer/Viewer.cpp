@@ -48,12 +48,18 @@ Viewer::Viewer(QWidget* parent)
 
   QObject::connect(&top_bar_widget_, &PlaceHolderWidget::PaintEventTriggered, this,
                    &Viewer::DrawTopWidget);
+  QObject::connect(&top_bar_widget_, &PlaceHolderWidget::WheelEventTriggered, this,
+                   &Viewer::wheelEvent);
 
   QObject::connect(&left_sidebar_widget_, &PlaceHolderWidget::PaintEventTriggered, this,
                    &Viewer::DrawLineNumbers);
+  QObject::connect(&left_sidebar_widget_, &PlaceHolderWidget::WheelEventTriggered, this,
+                   &Viewer::wheelEvent);
 
   QObject::connect(&right_sidebar_widget_, &PlaceHolderWidget::PaintEventTriggered, this,
                    &Viewer::DrawSampleCounters);
+  QObject::connect(&right_sidebar_widget_, &PlaceHolderWidget::WheelEventTriggered, this,
+                   &Viewer::wheelEvent);
 
   const auto update_viewport_area = [&](const QRect& rect, int dy) {
     bool update_caused_by_scroll = (dy != 0);
