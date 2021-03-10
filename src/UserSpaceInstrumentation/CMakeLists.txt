@@ -28,6 +28,8 @@ target_sources(UserSpaceInstrumentation PRIVATE
         AllocateInTracee.cpp
         AllocateInTracee.h
         Attach.cpp
+        MachineCode.cpp
+        MachineCode.h
         RegisterState.cpp)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
@@ -62,6 +64,7 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         AccessTraceesMemoryTest.cpp
         AllocateInTraceeTest.cpp
         AttachTest.cpp
+        MachineCodeTest.cpp
         RegisterStateTest.cpp
         TestProcess.cpp
         TestProcess.h)
