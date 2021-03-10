@@ -139,13 +139,17 @@ void OpenDisassembly(const std::string& assembly, const DisassemblyReport& repor
   orbit_code_viewer::Dialog dialog{};
   dialog.setWindowTitle("Orbit Disassembly");
   dialog.SetEnableLineNumbers(true);
-  dialog.SetEnableSampleCounters(true);
+  dialog.SetHighlightCurrentLine(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
   dialog.SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
 
-  constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
-  dialog.SetHeatmap(kHeatmapAreaWidth, &report);
+  if (report.GetNumSamples() > 0) {
+    constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
+    dialog.SetHeatmap(kHeatmapAreaWidth, &report);
+    dialog.SetEnableSampleCounters(true);
+  }
+
   dialog.exec();
 }
 }  // namespace
