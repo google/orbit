@@ -39,8 +39,13 @@ class CaptureEventProcessor {
   void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
   void ProcessIntrospectionScope(const orbit_grpc_protos::IntrospectionScope& introspection_scope);
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
+  void ProcessModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update);
+  void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
+
   void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
+  void ProcessThreadNamesSnapshot(
+      const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot);
   void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
   void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
   void ProcessInternedTracepointInfo(

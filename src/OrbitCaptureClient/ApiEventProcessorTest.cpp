@@ -33,6 +33,10 @@ class EmptyCaptureListener : public CaptureListener {
   void OnUniqueCallStack(CallStack) override {}
   void OnCallstackEvent(orbit_client_protos::CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
+  void OnModuleUpdate(uint64_t /*timestamp_ns*/,
+                      orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
+  void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
+                         std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo) override {}
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo) override {}
   void OnUniqueTracepointInfo(uint64_t, orbit_grpc_protos::TracepointInfo) override {}

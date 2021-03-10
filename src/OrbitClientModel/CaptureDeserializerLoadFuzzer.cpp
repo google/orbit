@@ -35,6 +35,8 @@ class MockCaptureListener : public CaptureListener {
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo) override {}
   void OnUniqueTracepointInfo(uint64_t, orbit_grpc_protos::TracepointInfo) override {}
   void OnTracepointEvent(orbit_client_protos::TracepointEventInfo) override {}
+  void OnModuleUpdate(uint64_t, orbit_grpc_protos::ModuleInfo) override {}
+  void OnModulesSnapshot(uint64_t, std::vector<orbit_grpc_protos::ModuleInfo>) override {}
 };
 
 }  // namespace

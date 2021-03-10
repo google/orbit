@@ -11,15 +11,13 @@
 
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
-#include "process.pb.h"
 #include "symbol.pb.h"
 
-using orbit_grpc_protos::ModuleSymbols;
-using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::ModuleInfo;
 
 ProcessData::ProcessData() { process_info_.set_pid(-1); }
 
-void ProcessData::UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos) {
+void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   module_memory_map_.clear();
   start_addresses_.clear();
 
@@ -45,6 +43,14 @@ const ModuleInMemory* ProcessData::FindModuleByPath(const std::string& module_pa
   }
 
   return &it->second;
+}
+
+void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
+  module_memory_map_.insert_or_assign(
+      module_info.file_path(),
+      ModuleInMemory{module_info.address_start(), module_info.address_end(),
+                     module_info.file_path(), module_info.build_id()});
+  start_addresses_.insert_or_assign(module_info.address_start(), module_info.file_path());
 }
 
 ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {

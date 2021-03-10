@@ -17,6 +17,8 @@ namespace {
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -28,16 +30,19 @@ using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuSubmitInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::ThreadName;
+using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
-using orbit_grpc_protos::TracepointInfo;
 
 using ::testing::SaveArg;
 
@@ -86,6 +91,10 @@ constexpr float kAlpha2 = 2.1f;
 constexpr float kRed2 = 2.2f;
 constexpr float kGreen2 = 2.3f;
 constexpr float kBlue2 = 2.4f;
+
+constexpr const char* kExecutablePath = "/path/to/executable";
+constexpr const char* kBuildId1 = "build_id_1";
+constexpr const char* kBuildId2 = "build_id_2";
 
 }  // namespace
 
@@ -1287,6 +1296,145 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
 
   producer_event_processor->ProcessEvent(1, event1);
   EXPECT_DEATH(producer_event_processor->ProcessEvent(1, event2), "");
+}
+
+TEST(ProducerEventProcessor, CaptureStartedSmoke) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_event;
+  {
+    CaptureStarted* capture_started = producer_event.mutable_capture_started();
+    capture_started->set_process_id(kPid1);
+    capture_started->set_executable_path(kExecutablePath);
+    capture_started->set_executable_build_id(kBuildId1);
+    capture_started->set_capture_start_timestamp_ns(kTimestampNs1);
+
+    CaptureOptions* capture_options = capture_started->mutable_capture_options();
+    capture_options->set_trace_context_switches(true);
+    capture_options->set_samples_per_second(5);
+    capture_options->set_unwinding_method(CaptureOptions::kFramePointers);
+    capture_options->set_trace_thread_state(true);
+    capture_options->set_trace_gpu_driver(true);
+    capture_options->set_enable_introspection(true);
+    capture_options->set_max_local_marker_depth_per_command_buffer(6);
+    capture_options->set_collect_memory_info(true);
+    capture_options->set_memory_sampling_period_ns(1001);
+
+    InstrumentedFunction* instrumented_function = capture_options->add_instrumented_functions();
+    instrumented_function->set_function_name("void foo()");
+    instrumented_function->set_function_id(kFunctionId1);
+    instrumented_function->set_file_offset(123433);
+    instrumented_function->set_file_path("path");
+    instrumented_function->set_file_build_id(kBuildId2);
+  }
+
+  ClientCaptureEvent event;
+
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+
+  producer_event_processor->ProcessEvent(1, producer_event);
+
+  ASSERT_EQ(event.event_case(), ClientCaptureEvent::kCaptureStarted);
+  const CaptureStarted& capture_started = event.capture_started();
+  EXPECT_EQ(capture_started.process_id(), kPid1);
+  EXPECT_EQ(capture_started.executable_path(), kExecutablePath);
+  EXPECT_EQ(capture_started.executable_build_id(), kBuildId1);
+  EXPECT_EQ(capture_started.capture_start_timestamp_ns(), kTimestampNs1);
+
+  EXPECT_TRUE(capture_started.capture_options().trace_context_switches());
+  EXPECT_EQ(capture_started.capture_options().samples_per_second(), 5);
+  EXPECT_EQ(capture_started.capture_options().unwinding_method(), CaptureOptions::kFramePointers);
+  EXPECT_TRUE(capture_started.capture_options().trace_thread_state());
+  EXPECT_TRUE(capture_started.capture_options().trace_gpu_driver());
+  EXPECT_TRUE(capture_started.capture_options().enable_introspection());
+  EXPECT_EQ(capture_started.capture_options().max_local_marker_depth_per_command_buffer(), 6);
+  EXPECT_TRUE(capture_started.capture_options().collect_memory_info());
+  EXPECT_EQ(capture_started.capture_options().memory_sampling_period_ns(), 1001);
+
+  ASSERT_EQ(capture_started.capture_options().instrumented_functions_size(), 1);
+  const InstrumentedFunction& instrumented_function =
+      capture_started.capture_options().instrumented_functions(0);
+  EXPECT_EQ(instrumented_function.function_name(), "void foo()");
+  EXPECT_EQ(instrumented_function.function_id(), kFunctionId1);
+  EXPECT_EQ(instrumented_function.file_offset(), 123433);
+  EXPECT_EQ(instrumented_function.file_path(), "path");
+  EXPECT_EQ(instrumented_function.file_build_id(), kBuildId2);
+
+  EXPECT_EQ(capture_started.capture_options().instrumented_tracepoint_size(), 0);
+}
+
+TEST(ProducerEventProcessor, ModulesSnapshotSmoke) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_event;
+  {
+    ModulesSnapshot* modules_snapshot = producer_event.mutable_modules_snapshot();
+    modules_snapshot->set_pid(kPid1);
+    modules_snapshot->set_timestamp_ns(kTimestampNs1);
+
+    ModuleInfo* module_info = modules_snapshot->add_modules();
+    module_info->set_name("module");
+    module_info->set_file_path("file path");
+    module_info->set_file_size(1000);
+    module_info->set_address_start(5000);
+    module_info->set_address_end(7000);
+    module_info->set_build_id("build id 42");
+    module_info->set_load_bias(0x2000);
+  }
+
+  ClientCaptureEvent event;
+
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+
+  producer_event_processor->ProcessEvent(1, producer_event);
+
+  ASSERT_EQ(event.event_case(), ClientCaptureEvent::kModulesSnapshot);
+  const ModulesSnapshot& modules_snapshot = event.modules_snapshot();
+  EXPECT_EQ(modules_snapshot.pid(), kPid1);
+  EXPECT_EQ(modules_snapshot.timestamp_ns(), kTimestampNs1);
+  ASSERT_EQ(modules_snapshot.modules_size(), 1);
+  EXPECT_EQ(modules_snapshot.modules(0).name(), "module");
+  EXPECT_EQ(modules_snapshot.modules(0).file_path(), "file path");
+  EXPECT_EQ(modules_snapshot.modules(0).file_size(), 1000);
+  EXPECT_EQ(modules_snapshot.modules(0).address_start(), 5000);
+  EXPECT_EQ(modules_snapshot.modules(0).address_end(), 7000);
+  EXPECT_EQ(modules_snapshot.modules(0).build_id(), "build id 42");
+  EXPECT_EQ(modules_snapshot.modules(0).load_bias(), 0x2000);
+}
+
+TEST(ProducerEventProcessor, ThreadNamesSnapshot) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_event;
+  {
+    ThreadNamesSnapshot* thread_names_snapshot = producer_event.mutable_thread_names_snapshot();
+    thread_names_snapshot->set_timestamp_ns(kTimestampNs1);
+    ThreadName* thread_name = thread_names_snapshot->add_thread_names();
+    thread_name->set_pid(kPid1);
+    thread_name->set_tid(kTid1);
+    thread_name->set_name("Main Thread");
+    thread_name->set_timestamp_ns(kTimestampNs2);
+  }
+
+  ClientCaptureEvent event;
+
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+
+  producer_event_processor->ProcessEvent(1, producer_event);
+
+  ASSERT_EQ(event.event_case(), ClientCaptureEvent::kThreadNamesSnapshot);
+
+  const ThreadNamesSnapshot& thread_names_snapshot = event.thread_names_snapshot();
+  EXPECT_EQ(thread_names_snapshot.timestamp_ns(), kTimestampNs1);
+  ASSERT_EQ(thread_names_snapshot.thread_names_size(), 1);
+  const ThreadName& thread_name = thread_names_snapshot.thread_names(0);
+  EXPECT_EQ(thread_name.pid(), kPid1);
+  EXPECT_EQ(thread_name.tid(), kTid1);
+  EXPECT_EQ(thread_name.name(), "Main Thread");
+  EXPECT_EQ(thread_name.timestamp_ns(), kTimestampNs2);
 }
 
 }  // namespace orbit_service

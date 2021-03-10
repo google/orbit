@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
@@ -23,17 +24,13 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
-#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
-#include "absl/base/casts.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
-#include "gtest/gtest.h"
 
 using orbit_client_data::ModuleManager;
 using orbit_client_protos::CallstackEvent;
@@ -47,6 +44,7 @@ using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::InstrumentedFunction;
+using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::TracepointInfo;
 
@@ -76,6 +74,10 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
+  MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
+              (override));
+  MOCK_METHOD(void, OnModulesSnapshot,
+              (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
   MOCK_METHOD(void, OnThreadName, (int32_t /*thread_id*/, std::string /*thread_name*/), (override));
   MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
@@ -355,7 +357,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
   process_info->set_name("process");
 
   std::string module_path = "path/to/module";
-  const char* kBuildId = "build id 42";
+  constexpr const char* kBuildId = "build id 42";
   orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
   module_info->set_name("module");
   module_info->set_file_path(module_path);

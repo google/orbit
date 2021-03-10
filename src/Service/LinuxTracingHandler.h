@@ -7,7 +7,6 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/synchronization/mutex.h>
 #include <stdint.h>
 
 #include <memory>
@@ -43,10 +42,12 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
   void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_call) override;
   void OnGpuJob(orbit_grpc_protos::FullGpuJob gpu_job) override;
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override;
+  void OnThreadNamesSnapshot(orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) override;
   void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override;
   void OnAddressInfo(orbit_grpc_protos::FullAddressInfo full_address_info) override;
   void OnTracepointEvent(orbit_grpc_protos::FullTracepointEvent tracepoint_event) override;
   void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override;
+  void OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot modules_snapshot) override;
 
  private:
   ProducerEventProcessor* producer_event_processor_;

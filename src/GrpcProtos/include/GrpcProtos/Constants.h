@@ -14,8 +14,9 @@ constexpr uint64_t kInvalidFunctionId = 0;
 constexpr int kMissingInfo = -1;
 
 // Reserved producer IDs.
-constexpr uint64_t kLinuxTracingProducerId = 0;
-constexpr uint64_t kMemoryInfoProducerId = 1;
+constexpr uint64_t kRootProducerId = 0;
+constexpr uint64_t kLinuxTracingProducerId = 1;
+constexpr uint64_t kMemoryInfoProducerId = 2;
 constexpr uint64_t kExternalProducerStartingId = 1024;
 
 enum class UnwindingMethod { kDwarfUnwinding, kFramePointerUnwinding };

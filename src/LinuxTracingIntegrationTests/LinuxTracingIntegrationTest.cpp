@@ -202,6 +202,16 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnThreadNamesSnapshot(
+      orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_thread_names_snapshot() = std::move(thread_names_snapshot);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   void OnThreadStateSlice(orbit_grpc_protos::ThreadStateSlice thread_state_slice) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_thread_state_slice() = std::move(thread_state_slice);
@@ -232,6 +242,15 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
   void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_module_update_event() = std::move(module_update_event);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot modules_snapshot) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_modules_snapshot() = std::move(modules_snapshot);
     {
       absl::MutexLock lock{&events_mutex_};
       events_.emplace_back(std::move(event));
@@ -377,6 +396,9 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
   uint64_t previous_event_timestamp_ns = 0;
   for (const auto& event : events) {
     switch (event.event_case()) {
+      case orbit_grpc_protos::ProducerCaptureEvent::kCaptureStarted:
+        // LinuxTracingHandler does not send this event.
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice:
         EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();
@@ -399,6 +421,10 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
         UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kModulesSnapshot:
+        EXPECT_GE(event.modules_snapshot().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.modules_snapshot().timestamp_ns();
+        break;
       case orbit_grpc_protos::ProducerCaptureEvent::kFullGpuJob:
         EXPECT_GE(event.full_gpu_job().dma_fence_signaled_time_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.full_gpu_job().dma_fence_signaled_time_ns();
@@ -406,6 +432,10 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadName:
         EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_name().timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadNamesSnapshot:
+        EXPECT_GE(event.thread_names_snapshot().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.thread_names_snapshot().timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSlice:
         EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
@@ -948,24 +978,41 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
 
   VerifyOrderOfAllEvents(events);
 
-  std::vector<std::string> collected_event_names;
+  std::vector<std::string> changed_thread_names;
+  std::vector<std::string> initial_thread_names;
   for (const auto& event : events) {
+    if (event.event_case() == orbit_grpc_protos::ProducerCaptureEvent::kThreadNamesSnapshot) {
+      const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot =
+          event.thread_names_snapshot();
+      for (const auto& thread_name : thread_names_snapshot.thread_names()) {
+        if (thread_name.pid() != fixture.GetPuppetPid()) {
+          continue;
+        }
+
+        // There is only one thread and it is the main thread.
+        EXPECT_EQ(thread_name.tid(), fixture.GetPuppetPid());
+
+        initial_thread_names.emplace_back(thread_name.name());
+      }
+    }
     if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kThreadName) {
       continue;
     }
 
     const orbit_grpc_protos::ThreadName& thread_name = event.thread_name();
-    if (thread_name.tid() != fixture.GetPuppetPid()) {
+    if (thread_name.pid() != fixture.GetPuppetPid()) {
       continue;
     }
 
-    EXPECT_EQ(thread_name.pid(), fixture.GetPuppetPid());
+    // There is only one thread and it is the main thread.
+    EXPECT_EQ(thread_name.tid(), fixture.GetPuppetPid());
 
-    collected_event_names.emplace_back(thread_name.name());
+    changed_thread_names.emplace_back(thread_name.name());
   }
 
-  EXPECT_THAT(collected_event_names,
-              ::testing::ElementsAre(initial_puppet_name, PuppetConstants::kNewThreadName));
+  EXPECT_THAT(initial_thread_names, ::testing::ElementsAre(initial_puppet_name));
+
+  EXPECT_THAT(changed_thread_names, ::testing::ElementsAre(PuppetConstants::kNewThreadName));
 }
 
 TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
