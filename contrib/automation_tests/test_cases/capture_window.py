@@ -116,7 +116,8 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
         track.title.drag_mouse_input((mouse_x, new_y + 5))
 
         index = self._find_tracks().index(track.container)
-        self.expect_eq(index, expected_new_index % track_count, "Expected track index after reordering")
+        self.expect_eq(index, expected_new_index % track_count, "Expected track index %s after reordering, got %s" %
+                       (expected_new_index, index))
 
 
 class MatchTracks(CaptureWindowE2ETestCaseBase):
