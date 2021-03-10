@@ -436,6 +436,10 @@ void ConnectToStadiaWidget::TrySelectRememberedInstance() {
 
 void ConnectToStadiaWidget::showEvent(QShowEvent* event) {
   QWidget::showEvent(event);
+  // It is important that the call to DetachRadioButton is done here and not during construction.
+  // For high dpi display settings in Windows (scaling) the the actual width and height of the radio
+  // button is not known during construction. Hence the call is done when the widget is shown, not
+  // when its constructed
   DetachRadioButton();
 }
 
