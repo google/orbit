@@ -284,6 +284,10 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("LICENSE")
         self.copy("libOrbitVulkanLayer.so", src="lib/", dst="lib")
         self.copy("VkLayer_Orbit_implicit.json", src="lib/", dst="lib")
+        self.copy("LinuxTracingIntegrationTests", src="bin/", dst="bin")
+        self.copy("LinuxTracingIntegrationTests.debug", src="bin/", dst="bin")
+        self.copy("libLinuxTracingIntegrationTestPuppetSharedObject.so", src="lib/", dst="lib")
+        self.copy("libLinuxTracingIntegrationTestPuppetSharedObject.so.debug", src="lib/", dst="lib")
 
         if not self.options.system_qt:
             orbit_executable = "Orbit.exe" if self.settings.os == "Windows" else "Orbit"
