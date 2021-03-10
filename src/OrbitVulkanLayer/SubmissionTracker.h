@@ -213,7 +213,6 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   }
 
   void MarkCommandBufferBegin(VkCommandBuffer command_buffer) {
-    LOG("Begin CB %p, tid: %d", command_buffer, orbit_base::GetCurrentThreadId());
     absl::WriterMutexLock lock(&mutex_);
     // Even when we are not capturing we create state for this command buffer to allow the
     // debug marker tracking. In order to compute the correct depth of a debug marker and being able
