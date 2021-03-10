@@ -207,6 +207,8 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
   painter.setFont(font());
   painter.fillRect(event->rect(), kLineNumberBackgroundColor);
 
+  if (code_report_ == nullptr) return;
+
   const auto top_of = [&](const QTextBlock& block) {
     return static_cast<int>(
         std::round(blockBoundingGeometry(block).translated(contentOffset()).top()));
