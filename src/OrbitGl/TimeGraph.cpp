@@ -343,7 +343,7 @@ void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
       ProcessValueTrackingTimer(timer_info);
       break;
     default:
-      ERROR("Unhandled API event");
+      UNREACHABLE();
   }
 }
 

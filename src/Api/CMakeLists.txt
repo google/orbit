@@ -4,6 +4,16 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+add_library(ApiInterface INTERFACE)
+
+target_sources(ApiInterface INTERFACE
+        include/Api/EncodedEvent.h
+        include/Api/LockFreeApiEventProducer.h
+        include/Api/Orbit.h)
+
+target_include_directories(ApiInterface INTERFACE
+        ${CMAKE_CURRENT_LIST_DIR}/include)
+
 if(NOT WIN32)
 project(Api)
 
@@ -15,30 +25,15 @@ target_compile_options(Api PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_compile_features(Api PUBLIC cxx_std_17)
 
-target_include_directories(Api PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/include)
-
-target_sources(Api PUBLIC
-        include/Api/EncodedEvent.h
-        include/Api/LockFreeApiEventProducer.h
-        include/Api/Orbit.h)
-
 target_sources(Api PRIVATE
         Orbit.cpp)
 
 target_link_libraries(Api PUBLIC
+        ApiInterface
         GrpcProtos
         OrbitBase
         OrbitProducer
         ProducerSideChannel)
 endif()
 
-add_library(ApiInterface INTERFACE)
 
-target_sources(ApiInterface INTERFACE
-        include/Api/EncodedEvent.h
-        include/Api/LockFreeApiEventProducer.h
-        include/Api/Orbit.h)
-
-target_include_directories(ApiInterface INTERFACE
-        ${CMAKE_CURRENT_LIST_DIR}/include)

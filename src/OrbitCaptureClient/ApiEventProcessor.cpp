@@ -70,11 +70,8 @@ void ApiEventProcessor::ProcessApiEvent(const orbit_api::ApiEvent& api_event) {
     case orbit_api::kString:
       ProcessTrackingEvent(api_event);
       break;
-    case orbit_api::kNone:
-      ERROR("Received event of type orbit_api::kNone");
-      break;
     default:
-      ERROR("ApiEvent::EVENT_NOT_SET read from Capture's gRPC stream");
+      UNREACHABLE();
   }
 }
 

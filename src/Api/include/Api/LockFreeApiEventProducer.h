@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_API_LOCK_FREE_API_EVENT_PRODUCER_H_
-#define ORBIT_API_LOCK_FREE_API_EVENT_PRODUCER_H_
+#ifndef API_LOCK_FREE_API_EVENT_PRODUCER_H_
+#define API_LOCK_FREE_API_EVENT_PRODUCER_H_
 
 #include "Api/EncodedEvent.h"
 #include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
@@ -12,7 +12,7 @@
 namespace orbit_api {
 
 // This class is used to enqueue orbit_api::ApiEvent events from multiple threads and relay them to
-// OrbitService in the form of orbit_grpc_protos::ProducerCaptureEventCaptureEvent events.
+// OrbitService in the form of orbit_grpc_protos::ApiEvent events.
 class LockFreeApiEventProducer
     : public orbit_producer::LockFreeBufferCaptureEventProducer<orbit_api::ApiEvent> {
  public:
@@ -43,4 +43,4 @@ class LockFreeApiEventProducer
 
 }  // namespace orbit_api
 
-#endif  // ORBIT_API_LOCK_FREE_API_EVENT_PRODUCER_H_
+#endif  // API_LOCK_FREE_API_EVENT_PRODUCER_H_
