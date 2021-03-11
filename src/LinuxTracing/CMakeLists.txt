@@ -99,8 +99,6 @@ target_link_libraries(LinuxTracingIntegrationTestPuppetSharedObject PUBLIC
         dl
         OrbitBase)
 
-strip_symbols(LinuxTracingIntegrationTestPuppetSharedObject)
-
 add_executable(LinuxTracingIntegrationTests)
 
 target_compile_options(LinuxTracingIntegrationTests PRIVATE ${STRICT_COMPILE_FLAGS})
@@ -117,7 +115,5 @@ target_link_libraries(LinuxTracingIntegrationTests PRIVATE
         GTest::GTest
         GTest::Main
         CONAN_PKG::abseil)
-
-strip_symbols(LinuxTracingIntegrationTests)
 
 register_test(LinuxTracingIntegrationTests)
