@@ -104,7 +104,7 @@ message ApiEvent {
   // The fields below are used to encode orbit_api::EncodedEvent events. This is
   // done mainly for the performance gain of not having to allocate memory out
   // of the Arena for strings, but also to emulate the old uprobe-based use of
-  // integer registers to encode events. To review after deprecation (b/182485096).
+  // registers to encode events. To review after deprecation (b/182485096).
   fixed64 r0 = 4;
   fixed64 r1 = 5;
   fixed64 r2 = 6;
