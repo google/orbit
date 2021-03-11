@@ -93,7 +93,7 @@ void ApiEventProcessor::ProcessStopEvent(const orbit_api::ApiEvent& stop_event) 
   const orbit_api::ApiEvent& start_event = event_stack.back();
   TimerInfo timer_info = TimerInfoFromEncodedEvent(
       start_event.encoded_event, start_event.timestamp_ns, stop_event.timestamp_ns, stop_event.pid,
-      stop_event.tid, /*depth*/ event_stack.size() - 1);
+      stop_event.tid, /*depth=*/ event_stack.size() - 1);
   capture_listener_->OnTimer(timer_info);
   event_stack.pop_back();
 }
