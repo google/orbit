@@ -342,7 +342,7 @@ void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
     case orbit_api::kString:
       ProcessValueTrackingTimer(timer_info);
       break;
-    default:
+    case orbit_api::kNone:
       UNREACHABLE();
   }
 }

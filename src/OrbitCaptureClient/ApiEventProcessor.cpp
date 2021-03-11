@@ -70,7 +70,7 @@ void ApiEventProcessor::ProcessApiEvent(const orbit_api::ApiEvent& api_event) {
     case orbit_api::kString:
       ProcessTrackingEvent(api_event);
       break;
-    default:
+    case orbit_api::kNone:
       UNREACHABLE();
   }
 }
