@@ -48,6 +48,17 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 
 #define ERROR(format, ...) LOG("Error: " format, ##__VA_ARGS__)
 
+#define LOG_ONCE(format, ...)           \
+  do {                                  \
+    static bool already_logged = false; \
+    if (!already_logged) {              \
+      already_logged = true;            \
+      LOG(format, ##__VA_ARGS__);       \
+    }                                   \
+  } while (0)
+
+#define ERROR_ONCE(format, ...) LOG_ONCE("Error: " format, ##__VA_ARGS__)
+
 #define FATAL(format, ...)                \
   do {                                    \
     LOG("Fatal: " format, ##__VA_ARGS__); \
