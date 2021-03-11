@@ -64,7 +64,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
   ASSERT_TRUE(result_address_function.has_value());
   const uint64_t address_function = result_address_function.value();
   RegisterState original_registers;
-  ASSERT_TRUE(!original_registers.BackupRegisters(pid).has_error());
+  ASSERT_FALSE(original_registers.BackupRegisters(pid).has_error());
   constexpr uint64_t kScratchPadSize = 1024;
   auto result_address_code = AllocateInTracee(pid, kScratchPadSize);
   ASSERT_TRUE(result_address_code.has_value());
@@ -81,7 +81,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
   auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
   ASSERT_FALSE(result_write_code.has_error());
 
-  // The rip to the code address and execute.
+  // Set rip to the code address and execute.
   RegisterState registers_set_rip = original_registers;
   registers_set_rip.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
   ASSERT_FALSE(registers_set_rip.RestoreRegisters().has_error());
