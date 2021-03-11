@@ -54,9 +54,15 @@ class FilterAndSelectFirstProcess(E2ETestCase):
     Select the first process in the process list and verify there is at least one entry in the list
     """
     def _execute(self, process_filter):
-        filter_edit = self.find_control('Edit', 'FilterProcesses')
-        # Finding ProcessList occationally throws from within pywinauto. This is not understood. The while loop
-        # with the try/except block is a workaround for that.
+        # Finding FilterProcesses/ProcessList occationally throws from within pywinauto. This is not
+        # understood. The while loop with the try/except block is a workaround for that.
+        while (True):
+            try:
+                filter_edit = self.find_control('Edit', 'FilterProcesses')
+                break
+            except KeyError:
+                logging.info('Find FilterProcesses failed. Try again.')
+
         while (True):
             try:
                 process_list = self.find_control('Table', 'ProcessList')
