@@ -138,8 +138,8 @@ class SubmissionTrackerTest : public ::testing::Test {
   VkQueue queue_ = {};
   VkSubmitInfo submit_info_ = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                .pNext = nullptr,
-                               .pCommandBuffers = &command_buffer_,
-                               .commandBufferCount = 1};
+                               .commandBufferCount = 1,
+                               .pCommandBuffers = &command_buffer_};
 
   static constexpr uint32_t kSlotIndex1 = 32;
   static constexpr uint32_t kSlotIndex2 = 33;
@@ -577,10 +577,7 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
 
   ExpectFourNextReadyQuerySlotCalls();
   EXPECT_CALL(dispatch_table_, GetQueryPoolResults)
-      // First two calls should succeed in PullCompletedSubmissions.
-      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
-      .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
-      // Next two calls should succeed to complete the first submission.
+      // The first two calls should succeed to complete the first submission.
       .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
       .WillOnce(Return(mock_get_query_pool_results_function_all_ready_))
       // Fail on the second submission so that we retry on the second call.
@@ -622,12 +619,12 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
 
   std::array<VkSubmitInfo, 2> submit_infos{VkSubmitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                                         .pNext = nullptr,
-                                                        .pCommandBuffers = &command_buffers[0],
-                                                        .commandBufferCount = 1},
+                                                        .commandBufferCount = 1,
+                                                        .pCommandBuffers = &command_buffers[0]},
                                            VkSubmitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                                         .pNext = nullptr,
-                                                        .pCommandBuffers = &command_buffers[1],
-                                                        .commandBufferCount = 1}};
+                                                        .commandBufferCount = 1,
+                                                        .pCommandBuffers = &command_buffers[1]}};
 
   pid_t tid = orbit_base::GetCurrentThreadId();
   pid_t pid = orbit_base::GetCurrentProcessId();
