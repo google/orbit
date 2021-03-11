@@ -528,7 +528,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
 
     if (!queue_to_submission_priority_queue_.contains(queue)) {
-      queue_to_submission_priority_queue_.emplace(queue, kPreSubmissionCPUTimestampComparator);
+      queue_to_submission_priority_queue_.emplace(queue, kPreSubmissionCpuTimestampComparator);
     }
 
     queue_to_submission_priority_queue_.at(queue).emplace(
@@ -981,7 +981,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
   absl::flat_hash_map<VkCommandBuffer, CommandBufferState> command_buffer_to_state_;
 
-  static constexpr auto kPreSubmissionCPUTimestampComparator =
+  static constexpr auto kPreSubmissionCpuTimestampComparator =
       [](const QueueSubmission& lhs, const QueueSubmission& rhs) -> bool {
     return lhs.meta_information.pre_submission_cpu_timestamp >
            rhs.meta_information.pre_submission_cpu_timestamp;
