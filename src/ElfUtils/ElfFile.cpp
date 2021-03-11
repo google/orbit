@@ -196,7 +196,7 @@ void AddSymbol(const llvm::object::ELFSymbolRef& symbol_ref, ModuleSymbols& modu
     return;
   }
   const std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-  // Unknown type - skip and generate a warning
+  // Unknown type - skip and generate a warning.
   if (!symbol_ref.getType()) {
     LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name, file_path);
     return;
@@ -225,7 +225,6 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    // symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
     AddSymbol(symbol_ref, module_symbols, file_path_.string());
   }
 
