@@ -12,6 +12,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <mutex>
 #include <string>
 
 #ifdef _WIN32
@@ -47,6 +48,14 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #endif
 
 #define ERROR(format, ...) LOG("Error: " format, ##__VA_ARGS__)
+
+#define LOG_ONCE(format, ...)                                                   \
+  do {                                                                          \
+    static std::once_flag already_logged_flag;                                  \
+    std::call_once(already_logged_flag, [&]() { LOG(format, ##__VA_ARGS__); }); \
+  } while (0)
+
+#define ERROR_ONCE(format, ...) LOG_ONCE("Error: " format, ##__VA_ARGS__)
 
 #define FATAL(format, ...)                \
   do {                                    \
