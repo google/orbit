@@ -71,7 +71,7 @@ TEST(ElfFile, LoadSymbolsFromDynsymFails) {
 
 TEST(ElfFile, LoadSymbolsFromDynsym) {
    std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "test_lib_no_syntab.so";
+      orbit_base::GetExecutableDir() / "testdata" / "test_lib.so";
 
   auto elf_file_result = ElfFile::Create(file_path);
   ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
@@ -82,19 +82,13 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 7);
+  EXPECT_EQ(symbol_infos.size(), 8);
 
-  SymbolInfo& symbol_info = symbol_infos[1];
-  EXPECT_EQ(symbol_info.name(), "deregister_tm_clones");
-  EXPECT_EQ(symbol_info.demangled_name(), "deregister_tm_clones");
-  EXPECT_EQ(symbol_info.address(), 0x1080);
-  EXPECT_EQ(symbol_info.size(), 0);
-
-  symbol_info = symbol_infos[2];
-  EXPECT_EQ(symbol_info.name(), "main");
-  EXPECT_EQ(symbol_info.demangled_name(), "main");
-  EXPECT_EQ(symbol_info.address(), 0x1140);
-  EXPECT_EQ(symbol_info.size(), 45);
+  SymbolInfo& symbol_info = symbol_infos[7];
+  EXPECT_EQ(symbol_info.name(), "UseTestLib");
+  EXPECT_EQ(symbol_info.demangled_name(), "UseTestLib");
+  EXPECT_EQ(symbol_info.address(), 0x2670);
+  EXPECT_EQ(symbol_info.size(), 591);
 }
 
 TEST(ElfFile, CalculateLoadBias) {

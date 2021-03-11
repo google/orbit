@@ -190,32 +190,26 @@ void ElfFileImpl<ElfT>::InitSections() {
   }
 }
 
-bool AddSymbol(const llvm::object::ELFSymbolRef& symbol_ref, ModuleSymbols& module_symbols,
+void AddSymbol(const llvm::object::ELFSymbolRef& symbol_ref, ModuleSymbols& module_symbols,
                std::string_view file_path) {
   if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
-    return false;
+    return;
   }
-  std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-  std::string demangled_name = llvm::demangle(name);
-
+  const std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
   // Unknown type - skip and generate a warning
   if (!symbol_ref.getType()) {
     LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name, file_path);
-    return false;
+    return;
   }
   // Limit list of symbols to functions. Ignore sections and variables.
   if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
-    return false;
+    return;
   }
-
-  uint64_t symbol_address = symbol_ref.getValue();
   SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
   symbol_info->set_name(name);
-  symbol_info->set_demangled_name(demangled_name);
-  symbol_info->set_address(symbol_address);
+  symbol_info->set_demangled_name(llvm::demangle(name));
+  symbol_info->set_address(symbol_ref.getValue());
   symbol_info->set_size(symbol_ref.getSize());
-
-  return true;
 }
 
 template <typename ElfT>
@@ -223,7 +217,6 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
   if (!has_symtab_section_) {
     return ErrorMessage("ELF file does not have a .symtab section.");
   }
-  bool symbols_added = false;
 
   OUTCOME_TRY(load_bias, GetLoadBias());
 
@@ -232,10 +225,11 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
+    // symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
+    AddSymbol(symbol_ref, module_symbols, file_path_.string());
   }
 
-  if (!symbols_added) {
+  if (module_symbols.symbol_infos_size() == 0) {
     return ErrorMessage(
         "Unable to load symbols from ELF file, not even a single symbol of "
         "type function found.");
@@ -248,7 +242,6 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
   if (!has_dynsym_section_) {
     return ErrorMessage("ELF file does not have a .dynsym section.");
   }
-  bool symbols_added = false;
 
   OUTCOME_TRY(load_bias, GetLoadBias());
 
@@ -257,10 +250,10 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->getDynamicSymbolIterators()) {
-    symbols_added |= AddSymbol(symbol_ref, module_symbols, file_path_.string());
+    AddSymbol(symbol_ref, module_symbols, file_path_.string());
   }
 
-  if (!symbols_added) {
+  if (module_symbols.symbol_infos_size() == 0) {
     return ErrorMessage(
         "Unable to load symbols from .dynsym section, not even a single symbol of type function "
         "found.");
