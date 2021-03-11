@@ -31,7 +31,6 @@ class OrbitConan(ConanFile):
                "with_crash_handling": [True, False],
                "run_tests": [True, False],
                "run_python_tests": [True, False],
-               "with_vulkan_layer": [True, False],
                "build_target": "ANY"}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
@@ -39,7 +38,6 @@ class OrbitConan(ConanFile):
                        "fPIC": True,
                        "crashdump_server": "",
                        "with_crash_handling": True,
-                       "with_vulkan_layer": False,
                        "run_tests": True,
                        "run_python_tests": False,
                        "build_target": None}
@@ -91,6 +89,7 @@ class OrbitConan(ConanFile):
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
+            self.requires("vulkan-headers/1.1.114.0")
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f")
 
         if self.options.with_gui and self.options.with_crash_handling:
@@ -152,7 +151,6 @@ class OrbitConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
-        cmake.definitions["WITH_VULKAN_LAYER"] = "ON" if self.options.with_vulkan_layer else "OFF"
         if self.options.with_gui:
             if self.options.with_crash_handling:
                 cmake.definitions["WITH_CRASH_HANDLING"] = "ON"

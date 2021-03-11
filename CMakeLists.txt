@@ -56,7 +56,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
-option(WITH_VULKAN_LAYER "Setting this option will enable the Vulkan layer for advanced GPU information." OFF)
 
 set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading crash dumps to the url specified.")
 
@@ -107,8 +106,7 @@ endif()
 
 find_package(Filesystem REQUIRED)
 
-if(NOT WIN32 AND WITH_VULKAN_LAYER)
-  find_package(Vulkan REQUIRED)
+if(NOT WIN32)
   find_package(VulkanValidationLayers REQUIRED)
 endif()
 
@@ -135,14 +133,11 @@ else()
   add_subdirectory(src/OrbitCaptureGgpClient)
   add_subdirectory(src/OrbitCaptureGgpService)
   add_subdirectory(src/OrbitProducer)
+  add_subdirectory(src/OrbitTriggerCaptureVulkanLayer)
+  add_subdirectory(src/OrbitVulkanLayer)
   add_subdirectory(src/ProducerSideChannel)
   add_subdirectory(src/Service)
   add_subdirectory(src/UserSpaceInstrumentation)
-endif()
-
-if(WITH_VULKAN_LAYER)
-  add_subdirectory(src/OrbitTriggerCaptureVulkanLayer)
-  add_subdirectory(src/OrbitVulkanLayer)
 endif()
 
 add_subdirectory(src/CaptureFile)

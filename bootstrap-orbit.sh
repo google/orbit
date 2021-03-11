@@ -26,8 +26,7 @@ done
 readonly REQUIRED_PACKAGES=( build-essential libglu1-mesa-dev mesa-common-dev \
                              libxmu-dev libxi-dev libopengl0 qtbase5-dev \
                              qtwebengine5-dev libqt5webchannel5-dev \
-                             libqt5websockets5-dev libxxf86vm-dev python3-pip \
-                             libvulkan-dev vulkan-validationlayers-dev )
+                             libqt5websockets5-dev libxxf86vm-dev python3-pip )
 
 function add_ubuntu_universe_repo {
   sudo add-apt-repository universe
@@ -80,7 +79,7 @@ echo "Checking if conan is available..."
 which conan >/dev/null
 if [ $? -ne 0 ]; then
   echo "Couldn't find conan. Trying to install via pip..."
-  pip3 install --user conan==1.29.2 || exit $?
+  pip3 install --user conan==1.32.0 || exit $?
 
   which conan >/dev/null
   if [ $? -ne 0 ]; then
@@ -100,11 +99,11 @@ else
   CONAN_VERSION_MINOR="$(echo "$CONAN_VERSION" | cut -d'.' -f2)"
 
   CONAN_VERSION_MAJOR_REQUIRED=1
-  CONAN_VERSION_MINOR_MIN=29
+  CONAN_VERSION_MINOR_MIN=32
 
   if [ "$CONAN_VERSION_MAJOR" -eq $CONAN_VERSION_MAJOR_REQUIRED -a "$CONAN_VERSION_MINOR" -lt $CONAN_VERSION_MINOR_MIN ]; then
     echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
-    pip3 install --upgrade --user conan==1.29.2
+    pip3 install --upgrade --user conan==1.32.0
     if [ $? -ne 0 ]; then
       echo "The upgrade of your conan installation failed. Probably because conan was not installed by this script."
       echo "Please manually update conan to at least version $CONAN_VERSION_MAJOR_REQUIRED.$CONAN_VERSION_MINOR_MIN."

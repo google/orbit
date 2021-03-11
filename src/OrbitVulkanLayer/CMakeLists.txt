@@ -3,21 +3,15 @@
 # found in the LICENSE file.
 
 project(OrbitVulkanLayer)
-add_library(OrbitVulkanLayer SHARED)
 
-target_compile_options(OrbitVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
+add_library(OrbitVulkanLayerInterface STATIC)
 
-target_include_directories(OrbitVulkanLayer PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/include)
+target_compile_options(OrbitVulkanLayerInterface PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitVulkanLayer PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR})
-
-target_sources(OrbitVulkanLayer PRIVATE
+target_sources(OrbitVulkanLayerInterface PRIVATE
         DeviceManager.h
         DispatchTable.cpp
         DispatchTable.h
-        EntryPoints.cpp
         QueueManager.cpp
         QueueManager.h
         SubmissionTracker.h
@@ -28,18 +22,27 @@ target_sources(OrbitVulkanLayer PRIVATE
         VulkanLayerProducerImpl.h
         VulkanWrapper.h)
 
-add_custom_command(TARGET OrbitVulkanLayer POST_BUILD COMMAND ${CMAKE_COMMAND}
-                   -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/VkLayer_Orbit_implicit.json
-                   $<TARGET_FILE_DIR:OrbitVulkanLayer>/VkLayer_Orbit_implicit.json)
-
-target_link_libraries(OrbitVulkanLayer PUBLIC
+target_link_libraries(OrbitVulkanLayerInterface PUBLIC
+        CONAN_PKG::vulkan-headers
         GrpcProtos
         OrbitBase
         OrbitProducer
         ProducerSideChannel
-        Vulkan::Vulkan
         Vulkan::ValidationLayers)
 
+add_library(OrbitVulkanLayer SHARED)
+
+target_compile_options(OrbitVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitVulkanLayer PRIVATE
+        EntryPoints.cpp)
+
+add_custom_command(TARGET OrbitVulkanLayer POST_BUILD COMMAND ${CMAKE_COMMAND}
+                   -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/VkLayer_Orbit_implicit.json
+                   $<TARGET_FILE_DIR:OrbitVulkanLayer>/VkLayer_Orbit_implicit.json)
+
+target_link_libraries(OrbitVulkanLayer PRIVATE
+        OrbitVulkanLayerInterface)
 
 strip_symbols(OrbitVulkanLayer)
 
@@ -58,7 +61,7 @@ target_sources(OrbitVulkanLayerTests PRIVATE
 
 target_link_libraries(
         OrbitVulkanLayerTests PRIVATE
-        OrbitVulkanLayer
+        OrbitVulkanLayerInterface
         GTest::Main)
 
 register_test(OrbitVulkanLayerTests)
