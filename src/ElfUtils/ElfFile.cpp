@@ -65,6 +65,7 @@ class ElfFileImpl : public ElfFile {
 
  private:
   void InitSections();
+  ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
 
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
@@ -190,26 +191,30 @@ void ElfFileImpl<ElfT>::InitSections() {
   }
 }
 
-void AddSymbol(const llvm::object::ELFSymbolRef& symbol_ref, ModuleSymbols& module_symbols,
-               std::string_view file_path) {
+template <typename ElfT>
+ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
+    const llvm::object::ELFSymbolRef& symbol_ref) {
   if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
-    return;
+    return ErrorMessage("Symbol is defined in another object file (SF_Undefined flag is set).");
   }
   const std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
   // Unknown type - skip and generate a warning.
   if (!symbol_ref.getType()) {
-    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name, file_path);
-    return;
+    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name,
+        file_path_.string());
+    return ErrorMessage(absl::StrFormat("Type is not set for symbol \"%s\" in \"%s\", skipping.",
+                                        name, file_path_.string()));
   }
   // Limit list of symbols to functions. Ignore sections and variables.
   if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
-    return;
+    return ErrorMessage("Symbol is not a function.");
   }
-  SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-  symbol_info->set_name(name);
-  symbol_info->set_demangled_name(llvm::demangle(name));
-  symbol_info->set_address(symbol_ref.getValue());
-  symbol_info->set_size(symbol_ref.getSize());
+  SymbolInfo symbol_info;
+  symbol_info.set_name(name);
+  symbol_info.set_demangled_name(llvm::demangle(name));
+  symbol_info.set_address(symbol_ref.getValue());
+  symbol_info.set_size(symbol_ref.getSize());
+  return symbol_info;
 }
 
 template <typename ElfT>
@@ -225,7 +230,10 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    AddSymbol(symbol_ref, module_symbols, file_path_.string());
+    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+    if (symbol_or_error.has_value()) {
+      *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
+    }
   }
 
   if (module_symbols.symbol_infos_size() == 0) {
@@ -249,7 +257,10 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->getDynamicSymbolIterators()) {
-    AddSymbol(symbol_ref, module_symbols, file_path_.string());
+    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+    if (symbol_or_error.has_value()) {
+      *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
+    }
   }
 
   if (module_symbols.symbol_infos_size() == 0) {
