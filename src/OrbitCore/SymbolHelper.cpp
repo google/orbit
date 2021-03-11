@@ -232,7 +232,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& 
                                         file_path.string(), elf_file_or_error.error().message()));
   }
 
-  return elf_file_or_error.value()->LoadSymbols();
+  return elf_file_or_error.value()->LoadSymbolsFromSymtab();
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {

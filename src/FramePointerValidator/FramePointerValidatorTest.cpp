@@ -33,7 +33,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   auto elf_file = orbit_elf_utils::ElfFile::Create(test_elf_file);
   ASSERT_FALSE(elf_file.has_error()) << elf_file.error().message();
 
-  const auto symbols_result = elf_file.value()->LoadSymbols();
+  const auto symbols_result = elf_file.value()->LoadSymbolsFromSymtab();
   ASSERT_FALSE(symbols_result.has_error()) << symbols_result.error().message();
   uint64_t load_bias = symbols_result.value().load_bias();
   const std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),

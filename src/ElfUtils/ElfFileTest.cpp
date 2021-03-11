@@ -24,7 +24,7 @@
 using orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::SymbolInfo;
 
-TEST(ElfFile, LoadSymbols) {
+TEST(ElfFile, LoadSymbolsFromSymtab) {
   std::filesystem::path file_path =
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
 
@@ -32,7 +32,7 @@ TEST(ElfFile, LoadSymbols) {
   ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
-  const auto symbols_result = elf_file->LoadSymbols();
+  const auto symbols_result = elf_file->LoadSymbolsFromSymtab();
   ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
 
   EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
@@ -52,6 +52,44 @@ TEST(ElfFile, LoadSymbols) {
   EXPECT_EQ(symbol_info.demangled_name(), "main");
   EXPECT_EQ(symbol_info.address(), 0x1140);
   EXPECT_EQ(symbol_info.size(), 45);
+}
+
+TEST(ElfFile, LoadSymbolsFromDynsymFails) {
+  std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
+
+  auto elf_file_result = ElfFile::Create(file_path);
+  ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
+  std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
+
+  const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
+  EXPECT_FALSE(symbols_result.has_value());
+  EXPECT_THAT(symbols_result.error().message(),
+              "Unable to load symbols from .dynsym section, not even a single symbol of type "
+              "function found.");
+}
+
+TEST(ElfFile, LoadSymbolsFromDynsym) {
+  // test_lib.so is copied from
+  // build_clang9_relwithdebinfo/lib/libUserSpaceInstrumentationTestLib.so and stripped.
+  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "test_lib.so";
+
+  auto elf_file_result = ElfFile::Create(file_path);
+  ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
+  std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
+
+  const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
+  ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  EXPECT_EQ(symbol_infos.size(), 8);
+
+  SymbolInfo& symbol_info = symbol_infos[7];
+  EXPECT_EQ(symbol_info.name(), "UseTestLib");
+  EXPECT_EQ(symbol_info.demangled_name(), "UseTestLib");
+  EXPECT_EQ(symbol_info.address(), 0x2670);
+  EXPECT_EQ(symbol_info.size(), 591);
 }
 
 TEST(ElfFile, CalculateLoadBias) {
