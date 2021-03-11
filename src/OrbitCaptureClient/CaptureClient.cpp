@@ -58,6 +58,7 @@ static CaptureOptions::InstrumentedFunction::FunctionType InstrumentedFunctionTy
         FunctionInfo_OrbitType_FunctionInfo_OrbitType_INT_MAX_SENTINEL_DO_NOT_USE_:
       UNREACHABLE();
   }
+  UNREACHABLE();
 }
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
