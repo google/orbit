@@ -276,9 +276,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
   if (elf_file.has_error()) {
     return elf_file.error();
   }
-  if (!elf_file.value()->HasDynsym()) {
-    return ErrorMessage(absl::StrFormat("Module %s does not contain dynsym section.", module));
-  }
 
   auto syms = elf_file.value()->LoadSymbolsFromDynsym();
   if (syms.has_error()) {
