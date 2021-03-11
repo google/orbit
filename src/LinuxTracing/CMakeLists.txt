@@ -119,5 +119,3 @@ target_link_libraries(LinuxTracingIntegrationTests PRIVATE
         CONAN_PKG::abseil)
 
 strip_symbols(LinuxTracingIntegrationTests)
-
-register_test(LinuxTracingIntegrationTests)
