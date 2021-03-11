@@ -70,8 +70,7 @@ TEST(ElfFile, LoadSymbolsFromDynsymFails) {
 }
 
 TEST(ElfFile, LoadSymbolsFromDynsym) {
-   std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "test_lib.so";
+  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "test_lib.so";
 
   auto elf_file_result = ElfFile::Create(file_path);
   ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
