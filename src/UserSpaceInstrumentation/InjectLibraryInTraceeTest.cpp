@@ -35,11 +35,11 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
     }
   }
 
-  // Stop the process using our tooling.
+  // Stop the child process using our tooling.
   ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
 
   // Tracee does not have the dynamic lib loaded, obviously.
-  std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
+  const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
   auto maps_before = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   ASSERT_TRUE(maps_before.has_value());
   EXPECT_FALSE(absl::StrContains(maps_before.value(), kLibName));
