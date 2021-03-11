@@ -70,6 +70,8 @@ TEST(ElfFile, LoadSymbolsFromDynsymFails) {
 }
 
 TEST(ElfFile, LoadSymbolsFromDynsym) {
+  // test_lib.so is copied over from
+  // build_clang9_relwithdebinfo/lib/libUserSpaceInstrumentationTestLib.so and stripped.
   std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "test_lib.so";
 
   auto elf_file_result = ElfFile::Create(file_path);
