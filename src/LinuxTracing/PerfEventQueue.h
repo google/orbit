@@ -46,7 +46,6 @@ class PerfEventQueue {
   // Floats up an element that it is know should be further up in the heap. Used on insertion.
   void MoveUpBackOfHeapOfQueues();
 
- private:
   // This vector holds the heap of the queues each of which holds events coming from the same ring
   // buffer and assumes them already in order by timestamp.
   std::vector<std::queue<std::unique_ptr<PerfEvent>>*> heap_of_queues_of_events_ordered_by_fd_;
@@ -61,8 +60,9 @@ class PerfEventQueue {
       };
   // This priority queue holds all those events that cannot be assumed already sorted in a specific
   // ring buffer. All such events are simply sorted by the priority queue by increasing timestamp.
-  std::priority_queue<std::unique_ptr<PerfEvent>, std::vector<std::unique_ptr<PerfEvent>>,
-                      decltype(kPerfEventReverseTimestampCompare)>
+  std::priority_queue<
+      std::unique_ptr<PerfEvent>, std::vector<std::unique_ptr<PerfEvent>>,
+      std::function<bool(const std::unique_ptr<PerfEvent>&, const std::unique_ptr<PerfEvent>&)>>
       priority_queue_of_events_not_ordered_by_fd_{kPerfEventReverseTimestampCompare};
 };
 
