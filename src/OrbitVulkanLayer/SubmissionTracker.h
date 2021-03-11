@@ -221,7 +221,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     // other than the debug markers then.
     {
       if (command_buffer_to_state_.contains(command_buffer)) {
-        ERROR("Calling vkBeginCommandBuffer on a command buffer that is not in the initial state.");
+        ERROR_ONCE(
+            "Calling vkBeginCommandBuffer on a command buffer that is not in the initial state.");
         // We end up in this case, if we have used the command buffer before and want to write new
         // commands to it without resetting the command buffer. This is prohibited by the
         // specification. However, we've seen this in the wild. The "vkBeginCommandBuffer" will,
