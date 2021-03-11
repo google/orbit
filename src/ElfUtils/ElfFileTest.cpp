@@ -55,7 +55,7 @@ TEST(ElfFile, LoadSymbolsFromSymtab) {
 }
 
 TEST(ElfFile, LoadSymbolsFromDynsymFails) {
-   std::filesystem::path file_path =
+  std::filesystem::path file_path =
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
 
   auto elf_file_result = ElfFile::Create(file_path);

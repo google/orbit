@@ -35,8 +35,10 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromSymtab() = 0;
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromDynsym() = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadSymbolsFromSymtab() = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadSymbolsFromDynsym() = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some
