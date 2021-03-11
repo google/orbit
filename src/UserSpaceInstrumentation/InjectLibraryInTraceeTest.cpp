@@ -29,45 +29,47 @@ namespace orbit_user_space_instrumentation {
 
 TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ASSERT_TRUE(pid != -1);
   if (pid == 0) {
     while (true) {
     }
   }
 
   // Stop the process using our tooling.
-  CHECK(AttachAndStopProcess(pid).has_value());
+  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
 
   // Tracee does not have the dynamic lib loaded, obviously.
   std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
   auto maps_before = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_before.has_value());
+  ASSERT_TRUE(maps_before.has_value());
   EXPECT_FALSE(absl::StrContains(maps_before.value(), kLibName));
 
   // Load dynamic lib into tracee.
   auto result_dlopen =
       DlopenInTracee(pid, orbit_base::GetExecutableDir() / ".." / "lib" / kLibName, RTLD_LAZY);
-  CHECK(result_dlopen.has_value());
+  ASSERT_TRUE(result_dlopen.has_value());
 
   // Tracee now does have the dynamic lib loaded.
   auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_after_open.has_value());
+  ASSERT_TRUE(maps_after_open.has_value());
   EXPECT_TRUE(absl::StrContains(maps_after_open.value(), kLibName));
 
-  // Look up symbol for "TrivialFunction".
+  // Look up symbol for "TrivialFunction" in the dynamic lib.
   auto result_dlsym = DlsymInTracee(pid, result_dlopen.value(), "TrivialFunction");
-  CHECK(result_dlsym.has_value());
+  ASSERT_TRUE(result_dlsym.has_value());
   EXPECT_TRUE(result_dlsym.value() != nullptr);
 
-  // Call "TrivialFunction" and assert return value.
+  // Write machine code to call "TrivialFunction" from the dynamic lib.
   auto result_address_function = FindFunctionAddress(pid, "TrivialFunction", kLibName);
-  CHECK(result_address_function.has_value());
+  ASSERT_TRUE(result_address_function.has_value());
   const uint64_t address_function = result_address_function.value();
   RegisterState original_registers;
-  CHECK(!original_registers.BackupRegisters(pid).has_error());
-  auto result_address_code = AllocateInTracee(pid, 4 * 1024);
-  CHECK(result_address_code.has_value());
+  ASSERT_TRUE(!original_registers.BackupRegisters(pid).has_error());
+  constexpr uint64_t kScratchPadSize = 1024;
+  auto result_address_code = AllocateInTracee(pid, kScratchPadSize);
+  ASSERT_TRUE(result_address_code.has_value());
   const uint64_t address_code = result_address_code.value();
+  // Move function's address to rax, do the call, and hit a breakpoint:
   // movabs rax, address_function     48 b8 address_function
   // call rax                         ff d0
   // int3                             cc
@@ -77,32 +79,34 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
   auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  CHECK(!result_write_code.has_error());
+  ASSERT_FALSE(result_write_code.has_error());
 
+  // The rip to the code address and execute.
   RegisterState registers_set_rip = original_registers;
   registers_set_rip.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
-  CHECK(!registers_set_rip.RestoreRegisters().has_error());
-  CHECK(ptrace(PTRACE_CONT, pid, 0, 0) == 0);
-  CHECK(waitpid(pid, nullptr, 0) == pid);
+  ASSERT_FALSE(registers_set_rip.RestoreRegisters().has_error());
+  ASSERT_EQ(0, ptrace(PTRACE_CONT, pid, 0, 0));
+  ASSERT_EQ(pid, waitpid(pid, nullptr, 0));
 
+  // Get return value and check result.
   RegisterState return_value_registers;
-  CHECK(!return_value_registers.BackupRegisters(pid).has_error());
+  ASSERT_FALSE(return_value_registers.BackupRegisters(pid).has_error());
   EXPECT_EQ(42, return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax);
 
-  CHECK(!original_registers.RestoreRegisters().has_error());
-  CHECK(!FreeInTracee(pid, address_code, 4 * 1024).has_error());
+  ASSERT_FALSE(original_registers.RestoreRegisters().has_error());
+  ASSERT_FALSE(FreeInTracee(pid, address_code, kScratchPadSize).has_error());
 
-  // Close the library again.
+  // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, result_dlopen.value());
-  CHECK(!result_dlclose.has_error());
+  ASSERT_FALSE(result_dlclose.has_error());
 
   // Now, again, the lib is absent from the tracee.
   auto maps_after_close = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_after_close.has_value());
+  ASSERT_TRUE(maps_after_close.has_value());
   EXPECT_FALSE(absl::StrContains(maps_after_close.value(), kLibName));
 
   // Detach and end child.
-  CHECK(DetachAndContinueProcess(pid).has_value());
+  ASSERT_TRUE(DetachAndContinueProcess(pid).has_value());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
