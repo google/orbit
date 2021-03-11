@@ -17,6 +17,10 @@ using Vec2 = gte::Vector2<float>;
 using Vec3 = gte::Vector3<float>;
 using Vec4 = gte::Vector4<float>;
 
+using Vec2i = gte::Vector2<int>;
+using Vec3i = gte::Vector3<int>;
+using Vec4i = gte::Vector4<int>;
+
 using Color = gte::Vector4<unsigned char>;
 
 template <class T>
