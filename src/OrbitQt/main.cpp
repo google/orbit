@@ -49,6 +49,7 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "ProfilingTargetDialog.h"
+#include "SourcePathsMapping/MappingManager.h"
 #include "TargetConfiguration.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
@@ -65,6 +66,9 @@ ABSL_DECLARE_FLAG(std::string, collector);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, nodeploy);
+
+// This flag is needed by the E2E tests to ensure a clean state before running.
+ABSL_FLAG(bool, clear_source_paths_mappings, false, "Clear all the stored source paths mappings");
 
 using ServiceDeployManager = orbit_qt::ServiceDeployManager;
 using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
@@ -281,6 +285,13 @@ static void LogAndMaybeWarnAboutClockResolution() {
   }
 }
 
+// Removes all source paths mappings from the persistent settings storage.
+static void ClearSourcePathsMappings() {
+  orbit_source_paths_mapping::MappingManager mapping_manager{};
+  mapping_manager.SetMappings({});
+  LOG("Cleared the saved source paths mappings.");
+}
+
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
@@ -344,6 +355,11 @@ int main(int argc, char* argv[]) {
   crash_handler = std::make_unique<orbit_crash_handler::CrashHandler>(
       dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING
+
+  if (absl::GetFlag(FLAGS_clear_source_paths_mappings)) {
+    ClearSourcePathsMappings();
+    return 0;
+  }
 
   StyleOrbit(app);
 
