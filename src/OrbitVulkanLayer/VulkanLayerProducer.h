@@ -5,8 +5,9 @@
 #ifndef ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_H_
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_H_
 
+#include <grpcpp/grpcpp.h>
+
 #include "capture.pb.h"
-#include "grpcpp/grpcpp.h"
 
 namespace orbit_vulkan_layer {
 

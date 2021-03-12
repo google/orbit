@@ -5,15 +5,16 @@
 #ifndef ORBIT_VULKAN_LAYER_DISPATCH_TABLE_H_
 #define ORBIT_VULKAN_LAYER_DISPATCH_TABLE_H_
 
+#include <absl/base/casts.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
+
 #include "OrbitBase/Logging.h"
-#include "absl/base/casts.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
 
 // clang-format off
-#include "vulkan/vulkan.h" // IWYU pragma: keep
-#include "vk_layer_dispatch_table.h" // IWYU pragma: keep
+#include <vulkan/vulkan.h> // IWYU pragma: keep
+#include <vk_layer_dispatch_table.h> // IWYU pragma: keep
 // clang-format on
 
 namespace orbit_vulkan_layer {

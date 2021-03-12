@@ -5,7 +5,7 @@
 #ifndef ORBIT_VULKAN_LAYER_VULKAN_WRAPPER_H_
 #define ORBIT_VULKAN_LAYER_VULKAN_WRAPPER_H_
 
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
 
 namespace orbit_vulkan_layer {
 

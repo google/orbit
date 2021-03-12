@@ -5,11 +5,12 @@
 #ifndef ORBIT_VULKAN_LAYER_DEVICE_MANAGER_H_
 #define ORBIT_VULKAN_LAYER_DEVICE_MANAGER_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
+#include <vulkan/vulkan.h>
+
 #include "OrbitBase/Logging.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
-#include "vulkan/vulkan.h"
 
 namespace orbit_vulkan_layer {
 

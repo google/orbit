@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/casts.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include <array>
 
 #include "OrbitBase/ThreadUtils.h"
 #include "SubmissionTracker.h"
 #include "VulkanLayerProducer.h"
-#include "absl/base/casts.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 using ::testing::ElementsAre;
 using ::testing::Invoke;
