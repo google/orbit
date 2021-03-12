@@ -22,9 +22,6 @@
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 #include <filesystem>
 
 ImFont* GOrbitImguiFont;
@@ -247,45 +244,6 @@ bool Orbit_ImGui_CreateDeviceObjects() {
 #ifndef IMGUI_IMPL_OPENGL_ES2
   glBindVertexArray(last_vertex_array);
 #endif
-
-  return true;
-}
-
-// Simple helper function to load an image into a OpenGL texture with common
-// settings
-bool LoadTextureFromFile(const char* filename, uint32_t* out_texture, int* out_width,
-                         int* out_height) {
-  GLint last_texture;
-  glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-
-  // Load from file
-  int image_width = 0;
-  int image_height = 0;
-  unsigned char* image_data = stbi_load(filename, &image_width, &image_height, nullptr, 4);
-  if (image_data == nullptr) return false;
-
-  // Create an OpenGL texture identifier
-  GLuint image_texture;
-  glGenTextures(1, &image_texture);
-  glBindTexture(GL_TEXTURE_2D, image_texture);
-
-  // Setup filtering parameters for display
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  // Upload pixels into texture
-#ifdef GL_UNPACK_ROW_LENGTH
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               image_data);
-  stbi_image_free(image_data);
-
-  *out_texture = image_texture;
-  *out_width = image_width;
-  *out_height = image_height;
-
-  glBindTexture(GL_TEXTURE_2D, last_texture);
 
   return true;
 }
@@ -623,17 +581,6 @@ void Orbit_ImGui_CharCallback(ImGuiContext* context, unsigned int c) {
   ScopeImguiContext state(context);
   ImGuiIO& io = ImGui::GetIO();
   if (c > 0 && c < 0x10000) io.AddInputCharacter(static_cast<uint16_t>(c));
-}
-
-uint32_t LoadTextureFromFile(const char* file_name) {
-  uint32_t texture_id = 0;
-  int image_width = 0;
-  int image_height = 0;
-  if (!LoadTextureFromFile(file_name, &texture_id, &image_width, &image_height)) {
-    LOG("ERROR, could not load texture %s", file_name);
-  }
-
-  return texture_id;
 }
 
 bool Orbit_ImGui_Init(uint32_t font_size) {
