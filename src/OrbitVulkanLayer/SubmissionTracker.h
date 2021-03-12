@@ -375,9 +375,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       for (uint32_t command_buffer_index = 0; command_buffer_index < submit_info.commandBufferCount;
            ++command_buffer_index) {
         VkCommandBuffer command_buffer = submit_info.pCommandBuffers[command_buffer_index];
-        PersistSingleCommandBufferOnSubmitUnsafe(device, command_buffer, &queue_submission,
-                                                 &submitted_submit_info,
-                                                 &query_slots_not_needed_to_read);
+        PersistSingleCommandBufferOnSubmit(device, command_buffer, &queue_submission,
+                                           &submitted_submit_info, &query_slots_not_needed_to_read);
       }
     }
 
@@ -433,7 +432,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
           CHECK(command_buffer_to_device_.contains(command_buffer));
           device = command_buffer_to_device_.at(command_buffer);
         }
-        PersistDebugMarkersOfASingleCommandBufferOnSubmitUnsafe(
+        PersistDebugMarkersOfASingleCommandBufferOnSubmit(
             command_buffer, &queue_submission_optional, &markers, &marker_slots_not_needed_to_read);
       }
     }
