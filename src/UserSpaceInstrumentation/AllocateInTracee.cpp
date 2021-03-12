@@ -134,8 +134,8 @@ namespace {
                                          PROT_READ | PROT_WRITE | PROT_EXEC,
                                          MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0);
   if (result_or_error.has_error()) {
-    ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
-                                 result_or_error.error().message()));
+    return ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
+                                        result_or_error.error().message()));
   }
   return result_or_error.value();
 }
@@ -146,8 +146,8 @@ namespace {
   constexpr uint64_t kSyscallNumberMunmap = 11;
   auto result_or_error = SyscallInTracee(pid, kSyscallNumberMunmap, address, size);
   if (result_or_error.has_error()) {
-    ErrorMessage(absl::StrFormat("Failed to execute munmap syscall: \"%s\"",
-                                 result_or_error.error().message()));
+    return ErrorMessage(absl::StrFormat("Failed to execute munmap syscall: \"%s\"",
+                                        result_or_error.error().message()));
   }
   return outcome::success();
 }
