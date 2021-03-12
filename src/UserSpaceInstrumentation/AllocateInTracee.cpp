@@ -103,10 +103,11 @@ namespace {
                                         result_backup_return_value.error().message()));
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
-  // Syscalls return -4095, ..., -1 on failure.
+  // Syscalls return -4095, ..., -1 on failure. And these are actually (-1 * errno)
   const int64_t result_as_int = absl::bit_cast<uint64_t>(result);
   if (result_as_int > -4096 && result_as_int < 0) {
-    return ErrorMessage(absl::StrFormat("syscall failed. Return value: %u", result));
+    return ErrorMessage(absl::StrFormat("syscall failed. Return value: %s (%d)",
+                                        SafeStrerror(-result_as_int), result_as_int));
   }
 
   // Clean up memory and registers.
