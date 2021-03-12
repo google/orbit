@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/casts.h>
+#include <vulkan/vk_layer.h>
+#include <vulkan/vulkan.h>
+
 #include "DeviceManager.h"
 #include "DispatchTable.h"
 #include "QueueManager.h"
@@ -9,9 +13,6 @@
 #include "TimerQueryPool.h"
 #include "VulkanLayerController.h"
 #include "VulkanWrapper.h"
-#include "absl/base/casts.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vulkan.h"
 
 /*
  * The big picture:

@@ -5,9 +5,9 @@
 #ifndef ORBIT_VULKAN_LAYER_QUEUE_MANAGER_H_
 #define ORBIT_VULKAN_LAYER_QUEUE_MANAGER_H_
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
-#include "vulkan/vulkan.h"
+#include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
+#include <vulkan/vulkan.h>
 
 namespace orbit_vulkan_layer {
 

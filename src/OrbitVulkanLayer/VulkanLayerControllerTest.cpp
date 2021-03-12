@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <vulkan/vk_layer.h>
 
 #include "VulkanLayerController.h"
 #include "VulkanLayerProducer.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 using ::testing::A;
 using ::testing::AllOf;

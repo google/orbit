@@ -5,6 +5,11 @@
 #ifndef ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
 #define ORBIT_VULKAN_LAYER_SUBMISSION_TRACKER_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
+#include <vulkan/vulkan.h>
+
 #include <functional>
 #include <queue>
 #include <stack>
@@ -13,10 +18,6 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "VulkanLayerProducer.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
-#include "vulkan/vulkan.h"
 
 namespace orbit_vulkan_layer {
 

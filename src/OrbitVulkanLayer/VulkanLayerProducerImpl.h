@@ -5,11 +5,11 @@
 #ifndef ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_IMPL_H_
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_IMPL_H_
 
+#include <absl/container/flat_hash_set.h>
 #include <google/protobuf/arena.h>
 
 #include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
 #include "VulkanLayerProducer.h"
-#include "absl/container/flat_hash_set.h"
 
 namespace orbit_vulkan_layer {
 

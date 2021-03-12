@@ -5,12 +5,13 @@
 #ifndef ORBIT_VULKAN_LAYER_VULKAN_LAYER_CONTROLLER_H_
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_CONTROLLER_H_
 
+#include <absl/base/casts.h>
+#include <vulkan/vk_layer.h>
+#include <vulkan/vulkan.h>
+
 #include "OrbitBase/Logging.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 #include "VulkanLayerProducerImpl.h"
-#include "absl/base/casts.h"
-#include "vulkan/vk_layer.h"
-#include "vulkan/vulkan.h"
 
 namespace orbit_vulkan_layer {
 

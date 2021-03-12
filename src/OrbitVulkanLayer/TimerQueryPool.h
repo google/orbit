@@ -5,16 +5,17 @@
 #ifndef ORBIT_VULKAN_LAYER_TIMER_QUERY_POOL_H_
 #define ORBIT_VULKAN_LAYER_TIMER_QUERY_POOL_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
+#include <vulkan/vulkan.h>
+
 #include <fstream>
 #include <numeric>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
-#include "vulkan/vulkan.h"
 
 namespace orbit_vulkan_layer {
 
