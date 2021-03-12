@@ -27,8 +27,10 @@
 #include "TargetConfiguration.h"
 #include "grpcpp/channel.h"
 #include "process.pb.h"
-#include "ui_ProfilingTargetDialog.h"
 
+namespace Ui {
+class ProfilingTargetDialog;  // IWYU pragma: keep
+}
 namespace orbit_qt {
 
 class ProfilingTargetDialog : public QDialog {
@@ -38,6 +40,8 @@ class ProfilingTargetDialog : public QDialog {
   explicit ProfilingTargetDialog(SshConnectionArtifacts* ssh_connection_artifacts,
                                  std::optional<TargetConfiguration> target_configuration_opt,
                                  QWidget* parent = nullptr);
+  ~ProfilingTargetDialog() noexcept override;
+
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
  private slots:
   void SelectFile();

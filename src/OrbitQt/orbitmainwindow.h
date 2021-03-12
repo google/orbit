@@ -45,7 +45,6 @@
 #include "orbitglwidget.h"
 #include "process.pb.h"
 #include "servicedeploymanager.h"
-#include "ui_orbitmainwindow.h"
 
 namespace Ui {
 class OrbitMainWindow;
