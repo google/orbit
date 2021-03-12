@@ -49,6 +49,7 @@
 #include "TargetConfiguration.h"
 #include "process.pb.h"
 #include "servicedeploymanager.h"
+#include "ui_ProfilingTargetDialog.h"
 
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(std::string, process_name);
@@ -156,6 +157,8 @@ void ProfilingTargetDialog::SetStateMachineInitialState() {
     state_machine_.setInitialState(&state_file_);
   }
 }
+
+ProfilingTargetDialog::~ProfilingTargetDialog() noexcept = default;
 
 std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
   ui_->stadiaWidget->Start();

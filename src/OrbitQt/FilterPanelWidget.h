@@ -8,10 +8,8 @@
 #include <QFrame>
 #include <QWidget>
 
-#include "ui_FilterPanelWidget.h"
-
 namespace Ui {
-class FilterPanelWidget;
+class FilterPanelWidget;  // IWYU pragma: keep
 }
 
 /*
