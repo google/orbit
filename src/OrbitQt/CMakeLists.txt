@@ -4,7 +4,7 @@
 
 project(OrbitQt CXX)
 
-add_executable(OrbitQt)
+add_library(OrbitQt OBJECT)
 
 target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
@@ -59,7 +59,6 @@ target_sources(
           FilterPanelWidgetAction.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
-          main.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
           orbitdataviewpanel.cpp
@@ -92,11 +91,11 @@ target_sources(
           # cpp with the tests
           ../OrbitGl/ClientFlags.cpp)
 
-target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitQt
-  PRIVATE CodeViewer
+  PUBLIC  CodeViewer
           ConfigWidgets
           MetricsUploader
           OrbitAccessibility
@@ -117,32 +116,10 @@ if(WITH_CRASH_HANDLING)
   target_compile_definitions(OrbitQt PRIVATE ORBIT_CRASH_HANDLING)
 endif()
 
-if(WIN32)
-  set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)
-
-  include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
-  GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/OrbitQt.rc.in" OrbitQt)
-  target_sources(OrbitQt PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc)
-
-  get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
-  get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-  find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
-
-  add_custom_command(
-    TARGET OrbitQt
-    POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
-            "${WINDEPLOYQT_EXECUTABLE}" --pdb "$<TARGET_FILE:OrbitQt>"
-    COMMENT "Running windeployqt...")
-endif()
-
-set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 iwyu_add_dependency(OrbitQt)
-strip_symbols(OrbitQt)
 
 add_executable(OrbitQtTests)
 
@@ -154,36 +131,18 @@ target_sources(OrbitQtTests
                 EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
-        PRIVATE AccessibilityAdapter.cpp
-                AccessibilityAdapterTest.cpp
+        PRIVATE AccessibilityAdapterTest.cpp
                 EventLoopTest.cpp
                 ProcessItemModelTest.cpp
-                ProcessItemModel.cpp
                 StatusListenerImplTest.cpp
-                StatusListenerImpl.cpp
-                TutorialOverlayTest.cpp
-                TutorialOverlay.cpp
-                TutorialOverlay.ui
-                ../OrbitGl/ClientFlags.cpp
-                ../../images/orbitimages.qrc)
+                TutorialOverlayTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(
-  OrbitQtTests
-  PRIVATE OrbitAccessibility
-          OrbitCore
-          OrbitGl
-          QtUtils
-          Qt5::Widgets
-          Qt5::Core
+target_link_libraries(OrbitQtTests
+  PRIVATE OrbitQt
           Qt5::Test
           GTest::QtGuiMain)
-
-set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
-set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
-set_target_properties(OrbitQtTests PROPERTIES AUTORCC ON)
-iwyu_add_dependency(OrbitQtTests)
 
 if(WIN32)
   get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
