@@ -321,7 +321,7 @@ message ClientCaptureEvent {
     // it is going to go away in the future when we switch to
     // frame-pointer based unwinding.
     AddressInfo address_info = 16;
-    ApiEvent api_event = 24;
+    ApiEvent api_event = 9;
     CallstackSample callstack_sample = 1;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
@@ -347,7 +347,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Please keep these alphabetically ordered.
-    ApiEvent api_event = 23;
+    ApiEvent api_event = 10;
     CallstackSample callstack_sample = 1;
     FullCallstackSample full_callstack_sample = 2;
 

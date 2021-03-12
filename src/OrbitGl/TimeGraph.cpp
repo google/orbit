@@ -292,9 +292,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       break;
     }
     case TimerInfo::kApiEvent: {
-      if (timer_info.type() == TimerInfo::kApiEvent) {
-        ProcessApiEventTimer(timer_info);
-      }
+      ProcessApiEventTimer(timer_info);
       break;
     }
     default:
