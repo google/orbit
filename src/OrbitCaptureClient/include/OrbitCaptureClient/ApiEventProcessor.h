@@ -11,7 +11,7 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
-// The ApiEventProcessor is responsible processing orbit_grpc_protos::ApiEvent events and
+// The ApiEventProcessor is responsible for processing orbit_grpc_protos::ApiEvent events and
 // transforming them into TimerInfo objects that are relayed to a CaptureListener. Internal state
 // is maintained to cache "start" events until a corresponding "stop" event is received. The pair
 // is then used to create a single TimerInfo object. "Tracking" events don't need to be cached
