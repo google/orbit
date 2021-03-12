@@ -27,6 +27,41 @@
 
 namespace orbit_user_space_instrumentation {
 
+TEST(InjectLibraryInTraceeTest, FindFunctionAddress) {
+  pid_t pid = fork();
+  ASSERT_TRUE(pid != -1);
+  if (pid == 0) {
+    while (true) {
+    }
+  }
+
+  // Stop the child process using our tooling.
+  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
+
+  auto function_address_or_error = FindFunctionAddress(pid, "printf", "libc-");
+  EXPECT_TRUE(function_address_or_error.has_value());
+
+  function_address_or_error = FindFunctionAddress(pid, "NOT_A_SYMBOL", "libc-");
+  EXPECT_TRUE(function_address_or_error.has_error());
+  EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
+                                "Unable to locate function symbol"));
+
+  function_address_or_error = FindFunctionAddress(pid, "printf", "NOT_A_LIB-");
+  EXPECT_TRUE(function_address_or_error.has_error());
+  EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
+                                "There is no module NOT_A_LIB- in process"));
+
+  function_address_or_error = FindFunctionAddress(-1, "printf", "libc-");
+  EXPECT_TRUE(function_address_or_error.has_error());
+  EXPECT_TRUE(
+      absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));
+
+  // Detach and end child.
+  ASSERT_TRUE(DetachAndContinueProcess(pid).has_value());
+  kill(pid, SIGKILL);
+  waitpid(pid, NULL, 0);
+}
+
 TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
   pid_t pid = fork();
   ASSERT_TRUE(pid != -1);
@@ -46,7 +81,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
 
   // Load dynamic lib into tracee.
   auto result_dlopen =
-      DlopenInTracee(pid, orbit_base::GetExecutableDir() / ".." / "lib" / kLibName, RTLD_LAZY);
+      DlopenInTracee(pid, orbit_base::GetExecutableDir() / ".." / "lib" / kLibName, RTLD_NOW);
   ASSERT_TRUE(result_dlopen.has_value());
 
   // Tracee now does have the dynamic lib loaded.

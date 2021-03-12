@@ -7,7 +7,6 @@
 #include <absl/base/casts.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
-#include <dlfcn.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
@@ -31,7 +30,7 @@ using orbit_elf_utils::ElfFile;
 using orbit_elf_utils::ReadModules;
 
 // Size of the small amount of memory we need in the tracee to write machine code into.
-constexpr uint64_t kScratchPadSize = 1024;
+constexpr uint64_t kCodeScratchPadSize = 1024;
 
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
@@ -62,7 +61,7 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
   registers_set_rip.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
   auto result_restore_registers = registers_set_rip.RestoreRegisters();
   if (result_restore_registers.has_error()) {
-    FATAL("Unable to continue tracee with PTRACE_CONT.");
+    FATAL("Unable to set registers in tracee: \"%s\"", result_restore_registers.error().message());
   }
   if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
     FATAL("Unable to continue tracee with PTRACE_CONT.");
@@ -74,12 +73,38 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
   }
 }
 
+// Returns the absolute virtual address of a function in a module of a process as
+// FindFunctionAddress does but accepts a fallback symbol if the primary one cannot be resolved.
+ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view function,
+                                                         std::string_view module,
+                                                         std::string_view fallback_function,
+                                                         std::string_view fallback_module) {
+  ErrorMessageOr<uint64_t> primary_address_or_error = FindFunctionAddress(pid, function, module);
+  if (primary_address_or_error.has_value()) {
+    return primary_address_or_error.value();
+  }
+  ErrorMessageOr<uint64_t> fallback_address_or_error =
+      FindFunctionAddress(pid, fallback_function, fallback_module);
+  if (fallback_address_or_error.has_value()) {
+    return fallback_address_or_error.value();
+  }
+
+  return ErrorMessage(absl::StrFormat(
+      "Failed to load symbol \"%s\" from module \"%s\" with error: \"%s\"\nAnd also "
+      "failed to load fallback symbol \"%s\" from module \"%s\" with error: \"%s\"",
+      function, module, primary_address_or_error.error().message(), fallback_function,
+      fallback_module, fallback_address_or_error.error().message()));
+}
+
 }  // namespace
+
+
 
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen in libc.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddress(pid, "dlopen", "libc-"));
+  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl-",
+                                                              "__libc_dlopen_mode", "libc-"));
 
   // Backup registers.
   RegisterState original_registers;
@@ -87,27 +112,28 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
-  const uint64_t memory_size = kScratchPadSize + path_length;
+  const uint64_t memory_size = kCodeScratchPadSize + path_length;
   OUTCOME_TRY(address_code, AllocateInTracee(pid, memory_size));
 
-  // Write the name of the .so into memory at address_code with offset of kScratchPadSize.
+  // Write the name of the .so into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
   memcpy(path_as_vector.data(), path.c_str(), path_length);
-  const uint64_t address_so_path = address_code + kScratchPadSize;
+  const uint64_t address_so_path = address_code + kCodeScratchPadSize;
   auto result_write_path = WriteTraceesMemory(pid, address_so_path, path_as_vector);
   if (result_write_path.has_error()) {
     FreeMemoryOrDie(pid, address_code, memory_size);
     return result_write_path.error();
   }
+
   // We want to do the following in the tracee:
-  // return_value = dlopen(path, RTLD_LAZY);
+  // return_value = dlopen(path, flag);
   // The calling convention is to put the parameters in registers rdi and rsi.
-  // So the address of the file path goes to rdi. The flag argument goes into rsi (RTLD_LAZY is
-  // equal to 1). Then we load the address of dlopen into rax and do the call. Assembly in Intel
-  // syntax (destination first), machine code on the right:
+  // So the address of the file path goes to rdi. The flag argument goes into rsi. Then we load the
+  // address of dlopen into rax and do the call. Assembly in Intel syntax (destination first),
+  // machine code on the right:
 
   // movabs rax, address_so_path      48 b8 address_so_path
-  // mov rbx, 1                       48 c7 c3 01 00 00 00
+  // mov rbx, 2                       48 c7 c3 flag
   // mov rdi, rax                     48 8b f8
   // mov rsi, rbx                     48 8b f3
   // movabs rax, address_dlopen       48 b8 address_dlopen
@@ -142,7 +168,8 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
 
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string symbol) {
   // Figure out address of dlsym in libc.
-  OUTCOME_TRY(address_dlsym, FindFunctionAddress(pid, "dlsym", "libc-"));
+  OUTCOME_TRY(address_dlsym,
+              FindFunctionAddressWithFallback(pid, "dlsym", "libdl-", "__libc_dlsym", "libc-"));
 
   // Backup registers.
   RegisterState original_registers;
@@ -150,13 +177,13 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
-  const uint64_t memory_size = kScratchPadSize + symbol_name_length;
+  const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
   OUTCOME_TRY(address_code, AllocateInTracee(pid, memory_size));
 
-  // Write the name of symbol into memory at address_code with offset of kScratchPadSize.
+  // Write the name of symbol into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length);
   memcpy(symbol_name_as_vector.data(), symbol.c_str(), symbol_name_length);
-  const uint64_t address_symbol_name = address_code + kScratchPadSize;
+  const uint64_t address_symbol_name = address_code + kCodeScratchPadSize;
   auto result_write_symbol_name =
       WriteTraceesMemory(pid, address_symbol_name, symbol_name_as_vector);
   if (result_write_symbol_name.has_error()) {
@@ -207,14 +234,15 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
-  OUTCOME_TRY(address_dlclose, FindFunctionAddress(pid, "dlclose", "libc-"));
+  OUTCOME_TRY(address_dlclose,
+              FindFunctionAddressWithFallback(pid, "dlclose", "libdl-", "__libc_dlclose", "libc-"));
 
   // Backup registers.
   RegisterState original_registers;
   OUTCOME_TRY(original_registers.BackupRegisters(pid));
 
   // Allocate small memory area in the tracee.
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, kScratchPadSize));
+  OUTCOME_TRY(address_code, AllocateInTracee(pid, kCodeScratchPadSize));
 
   // We want to do the following in the tracee:
   // dlclose(handle);
@@ -237,7 +265,7 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
       .AppendBytes({0xcc});
   auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
   if (result_write_code.has_error()) {
-    FreeMemoryOrDie(pid, address_code, kScratchPadSize);
+    FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
     return result_write_code.error();
   }
 
@@ -249,9 +277,11 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
 
   // Cleanup memory and registers.
   RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, kScratchPadSize);
+  FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
   return outcome::success();
 }
+
+
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function,
                                              std::string_view module) {
@@ -263,13 +293,13 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
   std::string module_file_path;
   uint64_t module_base_address = 0;
   for (const auto& m : modules.value()) {
-    if (absl::StrContains(m.name(), module)) {
+    if (absl::StartsWith(m.name(), module)) {
       module_file_path = m.file_path();
       module_base_address = m.address_start();
     }
   }
   if (module_file_path.empty()) {
-    return ErrorMessage(absl::StrFormat("There is no module %s in process %u.", module, pid));
+    return ErrorMessage(absl::StrFormat("There is no module %s in process %d.", module, pid));
   }
 
   auto elf_file = ElfFile::Create(module_file_path);
@@ -279,20 +309,18 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
 
   auto syms = elf_file.value()->LoadSymbolsFromDynsym();
   if (syms.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to load symbols for module %s: %s", module,
+    return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s", module,
                                         syms.error().message()));
   }
 
-  auto it = syms.value().symbol_infos().begin();
-  while (it != syms.value().symbol_infos().end()) {
-    if (absl::StrContains(it->name(), function)) {
-      return it->address() + module_base_address - syms.value().load_bias();
+  for (const auto& sym : syms.value().symbol_infos()) {
+    if (sym.name() == function) {
+      return sym.address() + module_base_address - syms.value().load_bias();
     }
-    it++;
   }
 
-  return ErrorMessage(
-      absl::StrFormat("Unable to locate function symbol %s in module %s.", function, module));
+  return ErrorMessage(absl::StrFormat("Unable to locate function symbol \"%s\" in module \"%s\".",
+                                      function, module));
 }
 
 }  // namespace orbit_user_space_instrumentation
