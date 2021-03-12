@@ -121,7 +121,8 @@ message FullCallstackSample {
 
 message InternedString {
   uint64 key = 1;
-  string intern = 2;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes intern = 2;
 }
 
 message InternedTracepointInfo {
@@ -155,7 +156,8 @@ message FullGpuJob {
   uint64 amdgpu_sched_run_job_time_ns = 7;
   uint64 gpu_hardware_start_time_ns = 8;
   uint64 dma_fence_signaled_time_ns = 9;
-  string timeline = 10;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes timeline = 10;
 }
 
 message GpuJob {
@@ -222,7 +224,8 @@ message Color {
 message ThreadName {
   int32 pid = 1;
   int32 tid = 2;
-  string name = 3;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes name = 3;
   uint64 timestamp_ns = 4;
 }
 
@@ -266,8 +269,10 @@ message AddressInfo {
 message FullAddressInfo {
   uint64 absolute_address = 1;
   uint64 offset_in_function = 2;
-  string function_name = 3;
-  string module_name = 4;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes function_name = 3;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes module_name = 4;
 }
 
 message ModuleUpdateEvent {
