@@ -98,8 +98,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
 }  // namespace
 
-
-
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen in libc.
@@ -280,8 +278,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
   return outcome::success();
 }
-
-
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function,
                                              std::string_view module) {
