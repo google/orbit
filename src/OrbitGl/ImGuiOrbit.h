@@ -58,8 +58,6 @@ IMGUI_API void Orbit_ImGui_KeyCallback(ImGuiContext* context, int key, bool down
                                        bool shift, bool alt);
 IMGUI_API void Orbit_ImGui_CharCallback(ImGuiContext* context, unsigned int c);
 
-// Returns OpenGL texture id or 0 in case of an error.
-uint32_t LoadTextureFromFile(const char* filename);
 
 struct ScopeImguiContext {
   explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {

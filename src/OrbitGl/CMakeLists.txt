@@ -144,8 +144,7 @@ target_link_libraries(
          CONAN_PKG::freetype
          CONAN_PKG::glew
          CONAN_PKG::imgui
-         gte::gte
-         stb::stb)
+         gte::gte)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
