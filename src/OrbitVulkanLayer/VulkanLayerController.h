@@ -41,14 +41,11 @@ class VulkanLayerController {
   static constexpr uint32_t kLayerSpecVersion = VK_API_VERSION_1_1;
 
   static constexpr std::array<VkExtensionProperties, 1> kImplementedDeviceExtensions = {
-      VkExtensionProperties{.extensionName = VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
-                            .specVersion = VK_EXT_DEBUG_MARKER_SPEC_VERSION}};
+      VkExtensionProperties{VK_EXT_DEBUG_MARKER_EXTENSION_NAME, VK_EXT_DEBUG_MARKER_SPEC_VERSION}};
 
   static constexpr std::array<VkExtensionProperties, 2> kImplementedInstanceExtensions = {
-      VkExtensionProperties{.extensionName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-                            .specVersion = VK_EXT_DEBUG_UTILS_SPEC_VERSION},
-      VkExtensionProperties{.extensionName = VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-                            .specVersion = VK_EXT_DEBUG_REPORT_SPEC_VERSION}};
+      VkExtensionProperties{VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_EXT_DEBUG_UTILS_SPEC_VERSION},
+      VkExtensionProperties{VK_EXT_DEBUG_REPORT_EXTENSION_NAME, VK_EXT_DEBUG_REPORT_SPEC_VERSION}};
 
   VulkanLayerController()
       : device_manager_(&dispatch_table_),

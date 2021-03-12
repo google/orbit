@@ -476,9 +476,9 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
               }
               CHECK(marker.label_name.has_value());
               CHECK(marker.color.has_value());
-              MarkerState marker_state{.label_name = marker.label_name.value(),
+              MarkerState marker_state{.begin_info = submitted_marker,
+                                       .label_name = marker.label_name.value(),
                                        .color = marker.color.value(),
-                                       .begin_info = submitted_marker,
                                        .depth = markers.marker_stack.size(),
                                        .depth_exceeds_maximum = marker.cut_off};
               markers.marker_stack.push(std::move(marker_state));
@@ -505,13 +505,13 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
 
               if (queue_submission_optional.has_value() && marker.slot_index.has_value() &&
                   !marker_state.depth_exceeds_maximum) {
-                CHECK(submitted_marker.has_value());
                 queue_submission_optional->completed_markers.emplace_back(
                     SubmittedMarkerSlice{.begin_info = marker_state.begin_info,
                                          .end_info = submitted_marker.value(),
-                                         .depth = marker_state.depth,
+                                         .label_name = std::move(marker_state.label_name),
                                          .color = marker_state.color,
-                                         .label_name = std::move(marker_state.label_name)});
+                                         .depth = marker_state.depth});
+                CHECK(submitted_marker.has_value());
               }
 
               break;

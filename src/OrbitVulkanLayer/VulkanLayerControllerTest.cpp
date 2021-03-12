@@ -149,20 +149,15 @@ Matcher<VkExtensionProperties> VkExtensionPropertiesAreEqual(
 class VulkanLayerControllerTest : public ::testing::Test {
  protected:
   VulkanLayerControllerImpl controller_;
-  static constexpr VkExtensionProperties kDebugMarkerExtension{
-      .extensionName = VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
-      .specVersion = VK_EXT_DEBUG_MARKER_SPEC_VERSION};
-  static constexpr VkExtensionProperties kDebugUtilsExtension{
-      .extensionName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-      .specVersion = VK_EXT_DEBUG_UTILS_SPEC_VERSION};
-  static constexpr VkExtensionProperties kDebugReportExtension{
-      .extensionName = VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-      .specVersion = VK_EXT_DEBUG_REPORT_SPEC_VERSION};
+  static constexpr VkExtensionProperties kDebugMarkerExtension{VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
+                                                               VK_EXT_DEBUG_MARKER_SPEC_VERSION};
+  static constexpr VkExtensionProperties kDebugUtilsExtension{VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+                                                              VK_EXT_DEBUG_UTILS_SPEC_VERSION};
+  static constexpr VkExtensionProperties kDebugReportExtension{VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+                                                               VK_EXT_DEBUG_REPORT_SPEC_VERSION};
 
-  static constexpr VkExtensionProperties kFakeExtension1{.extensionName = "Other Extension 1",
-                                                         .specVersion = 3};
-  static constexpr VkExtensionProperties kFakeExtension2{.extensionName = "Other Extension 2",
-                                                         .specVersion = 2};
+  static constexpr VkExtensionProperties kFakeExtension1{"Other Extension 1", 3};
+  static constexpr VkExtensionProperties kFakeExtension2{"Other Extension 2", 2};
 
   static constexpr PFN_vkEnumerateDeviceExtensionProperties
       kFakeEnumerateDeviceExtensionPropertiesFunction =
@@ -380,8 +375,9 @@ TEST_F(
           *property_count = 1;
           return VK_SUCCESS;
         }
-        *properties = {.extensionName = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-                       .specVersion = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        VkExtensionProperties p{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        *properties = p;
         return VK_SUCCESS;
       }));
 
@@ -409,12 +405,13 @@ TEST_F(
   };
 
   VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
-  VkLayerInstanceLink layer_link_2 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
-                                      .pNext = &layer_link_1};
+  VkLayerInstanceLink layer_link_2 = {
+      .pNext = &layer_link_1,
+      .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
+  };
   VkLayerInstanceCreateInfo layer_create_info{
-      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO,
-      .function = VK_LAYER_LINK_INFO,
-      .u.pLayerInfo = &layer_link_2};
+      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO, .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_2;
   VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
                                    .pNext = &layer_create_info,
                                    .enabledExtensionCount = 0,
@@ -433,7 +430,7 @@ TEST_F(
       .WillOnce(SaveArg<0>(&actual_producer));
   controller.reset();
   EXPECT_EQ(actual_producer, nullptr);
-}
+}  // namespace orbit_vulkan_layer
 
 // This will test the good case of a call to CreateInstance. Similar to the test case above, but
 // this time the game already requested the required extensions. We still ensure that those are
@@ -458,8 +455,9 @@ TEST_F(
           *property_count = 1;
           return VK_SUCCESS;
         }
-        *properties = {.extensionName = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-                       .specVersion = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        VkExtensionProperties p{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        *properties = p;
         return VK_SUCCESS;
       }));
 
@@ -492,9 +490,8 @@ TEST_F(
 
   VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
   VkLayerInstanceCreateInfo layer_create_info{
-      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO,
-      .function = VK_LAYER_LINK_INFO,
-      .u.pLayerInfo = &layer_link_1};
+      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO, .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_1;
   VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
                                    .pNext = &layer_create_info,
                                    .enabledExtensionCount = 1,
@@ -574,8 +571,9 @@ TEST_F(
       *property_count = 1;
       return VK_SUCCESS;
     }
-    *properties = {.extensionName = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
-                   .specVersion = VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+    VkExtensionProperties p{VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
+                            VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+    *properties = p;
     return VK_SUCCESS;
   };
 
@@ -593,14 +591,16 @@ TEST_F(
     return nullptr;
   };
 
-  VkLayerDeviceLink layer_link_1 = {.pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
-                                    .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
-  VkLayerDeviceLink layer_link_2 = {.pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
-                                    .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
-                                    .pNext = &layer_link_1};
+  VkLayerDeviceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
+                                    .pfnNextGetDeviceProcAddr = fake_get_device_proc_addr};
+  VkLayerDeviceLink layer_link_2 = {
+      .pNext = &layer_link_1,
+      .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
+      .pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
+  };
   VkLayerDeviceCreateInfo layer_create_info{.sType = VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO,
-                                            .function = VK_LAYER_LINK_INFO,
-                                            .u.pLayerInfo = &layer_link_2};
+                                            .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_2;
   VkDeviceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
                                  .pNext = &layer_create_info,
                                  .enabledExtensionCount = 0,
@@ -648,8 +648,9 @@ TEST_F(VulkanLayerControllerTest,
       *property_count = 1;
       return VK_SUCCESS;
     }
-    *properties = {.extensionName = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
-                   .specVersion = VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+    VkExtensionProperties p{VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME,
+                            VK_EXT_HOST_QUERY_RESET_SPEC_VERSION};
+    *properties = p;
     return VK_SUCCESS;
   };
 
@@ -667,11 +668,11 @@ TEST_F(VulkanLayerControllerTest,
     return nullptr;
   };
 
-  VkLayerDeviceLink layer_link_1 = {.pfnNextGetDeviceProcAddr = fake_get_device_proc_addr,
-                                    .pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerDeviceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr,
+                                    .pfnNextGetDeviceProcAddr = fake_get_device_proc_addr};
   VkLayerDeviceCreateInfo layer_create_info{.sType = VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO,
-                                            .function = VK_LAYER_LINK_INFO,
-                                            .u.pLayerInfo = &layer_link_1};
+                                            .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_1;
   std::string requested_extension_name = VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME;
   std::vector<const char*> requested_extensions{};
   requested_extensions.push_back(requested_extension_name.c_str());
@@ -765,8 +766,8 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnAllocateCommandBuffersToSubmissionTr
 
   VkCommandBufferAllocateInfo allocate_info{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                                             .pNext = nullptr,
-                                            .commandBufferCount = 1,
-                                            .commandPool = command_pool};
+                                            .commandPool = command_pool,
+                                            .commandBufferCount = 1};
 
   VkResult result = controller_.OnAllocateCommandBuffers(device, &allocate_info, &command_buffer);
   EXPECT_EQ(result, VK_SUCCESS);
