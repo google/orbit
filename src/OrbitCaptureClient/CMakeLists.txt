@@ -40,6 +40,7 @@ add_executable(OrbitCaptureClientTests)
 target_compile_options(OrbitCaptureClientTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCaptureClientTests PRIVATE
+        ApiEventProcessorTest.cpp
         CaptureEventProcessorTest.cpp)
 
 target_link_libraries(
