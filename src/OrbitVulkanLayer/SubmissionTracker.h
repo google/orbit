@@ -322,7 +322,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     state.markers.emplace_back(std::move(marker));
     // We might see more "ends" than "begins", as the "begins" can be on a different command
     // buffer.
-    if (state.local_marker_stack_size != 0) {
+    if (state.local_marker_stack_size > 0) {
       --state.local_marker_stack_size;
     }
 
@@ -894,9 +894,11 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     command_buffer_to_state_.erase(command_buffer);
   }
 
-  void PersistSingleCommandBufferOnSubmitUnsafe(
-      VkDevice device, VkCommandBuffer command_buffer, QueueSubmission* queue_submission,
-      SubmitInfo* submitted_submit_info, std::vector<uint32_t>* query_slots_not_needed_to_read) {
+  void PersistSingleCommandBufferOnSubmit(VkDevice device, VkCommandBuffer command_buffer,
+                                          QueueSubmission* queue_submission,
+                                          SubmitInfo* submitted_submit_info,
+                                          std::vector<uint32_t>* query_slots_not_needed_to_read) {
+    mutex_.AssertReaderHeld();
     CHECK(queue_submission != nullptr);
     CHECK(submitted_submit_info != nullptr);
     CHECK(query_slots_not_needed_to_read != nullptr);
@@ -950,9 +952,10 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     }
   }
 
-  void PersistDebugMarkersOfASingleCommandBufferOnSubmitUnsafe(
+  void PersistDebugMarkersOfASingleCommandBufferOnSubmit(
       VkCommandBuffer command_buffer, std::optional<QueueSubmission>* queue_submission_optional,
       QueueMarkerState* markers, std::vector<uint32_t>* marker_slots_not_needed_to_read) {
+    mutex_.AssertReaderHeld();
     CHECK(queue_submission_optional != nullptr);
     CHECK(markers != nullptr);
     CHECK(marker_slots_not_needed_to_read != nullptr);
