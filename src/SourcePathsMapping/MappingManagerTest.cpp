@@ -43,7 +43,7 @@ TEST(MappingManager, Append) {
   EXPECT_EQ(manager.GetMappings(), mappings);
 }
 
-TEST(MappingManager, SaveAndLoad) {
+TEST(MappingManager, SaveLoadAndClear) {
   QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName("MappingManager.SaveAndLoad");
 
@@ -56,6 +56,12 @@ TEST(MappingManager, SaveAndLoad) {
   {
     MappingManager manager{};
     EXPECT_EQ(manager.GetMappings(), mappings);
+    manager.SetMappings({});
+  }
+
+  {
+    MappingManager manager{};
+    EXPECT_TRUE(manager.GetMappings().empty());
   }
 }
 }  // namespace orbit_source_paths_mapping
