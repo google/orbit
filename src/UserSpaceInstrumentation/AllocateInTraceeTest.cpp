@@ -64,7 +64,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   CHECK(AttachAndStopProcess(pid).has_value());
 
   // Allocate a megabyte in the tracee.
-  uint64_t kMemorySize = 1024 * 1024;
+  constexpr uint64_t kMemorySize = 1024 * 1024;
   auto result_allocate = AllocateInTracee(pid, kMemorySize);
   CHECK(result_allocate.has_value());
 
@@ -78,7 +78,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   // Detach and end child.
   CHECK(DetachAndContinueProcess(pid).has_value());
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
