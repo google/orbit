@@ -21,7 +21,7 @@ using orbit_grpc_protos::ClientCaptureEvent;
 
 namespace {
 
-// Helper empty implementation of CaptureListener to reduce the complexity of subclasses.
+// Empty implementation of CaptureListener used as helper to reduce the complexity in subclasses.
 class EmptyCaptureListener : public CaptureListener {
  public:
   void OnCaptureStarted(ProcessData&&,
@@ -50,7 +50,7 @@ class ApiEventCaptureListener : public EmptyCaptureListener {
 // ApiTester exposes methods that mocks the Orbit API and internally creates grpc events that it
 // forwards to both a CaptureEventProcessor and a ApiEventProcessor. The test makes sure that both
 // processors forward the same information to their listener. Note that a CaptureEventProcessor owns
-// a ApiEventProcessor to which it forwards ApiEvent events. To help readability of the tests, the
+// a ApiEventProcessor to which it forwards ApiEvent events. To help readability of test code, the
 // api methods return a ApiTester reference so that we can chain function calls.
 class ApiTester {
  public:
