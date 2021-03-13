@@ -23,8 +23,8 @@ void Child() {
   CHECK(ptrace(PTRACE_TRACEME, 0, NULL, 0) != -1);
 
   uint64_t rax = 0xaabbccdd;
-  uint8_t avx_bytes[32];
-  for (int i = 0; i < 32; ++i) {
+  std::array<uint8_t, 32> avx_bytes;
+  for (size_t i = 0; i < avx_bytes.size(); ++i) {
     avx_bytes[i] = i;
   }
   // The first two lines move the memory to the registers. The "%0" and "%1" refer to the addresses
@@ -38,13 +38,13 @@ void Child() {
       "mov %%rax, (%0)\n\t"
       "vmovups %%ymm0, (%1)\n\t"
       :
-      : "r"(&rax), "b"(avx_bytes)
+      : "r"(&rax), "b"(avx_bytes.data())
       : "%rax", "%ymm0", "memory");
 
   if (rax != 0xaabbccdd + 0x11223344) {
     exit(1);
   }
-  for (int i = 0; i < 32; ++i) {
+  for (size_t i = 0; i < avx_bytes.size(); ++i) {
     if (avx_bytes[i] != 0x10 + i) {
       exit(1);
     }
