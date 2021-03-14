@@ -60,6 +60,7 @@ class ElfFile {
   [[nodiscard]] virtual bool HasGnuDebuglink() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
+  [[nodiscard]] virtual std::string GetSoname() const = 0;
   [[nodiscard]] virtual std::filesystem::path GetFilePath() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
@@ -72,7 +73,6 @@ class ElfFile {
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(
       const std::filesystem::path& file_path, const void* buf, size_t len);
-
   [[nodiscard]] static ErrorMessageOr<uint32_t> CalculateDebuglinkChecksum(
       const std::filesystem::path& file_path);
 };
