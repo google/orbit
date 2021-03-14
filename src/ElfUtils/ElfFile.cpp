@@ -4,14 +4,21 @@
 
 #include "ElfUtils/ElfFile.h"
 
+#include <absl/base/casts.h>
+#include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Twine.h>
 #include <llvm/ADT/iterator_range.h>
 #include <llvm/BinaryFormat/ELF.h>
+#include <llvm/DebugInfo/Symbolize/Symbolize.h>
+#include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/ELF.h>
+#include <llvm/Object/ELFObjectFile.h>
 #include <llvm/Object/ELFTypes.h>
+#include <llvm/Object/ObjectFile.h>
 #include <llvm/Object/SymbolicFile.h>
 #include <llvm/Support/CRC.h>
 #include <llvm/Support/Casting.h>
@@ -19,6 +26,7 @@
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemoryBuffer.h>
 
+#include <outcome.hpp>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -27,13 +35,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "llvm/DebugInfo/Symbolize/Symbolize.h"
-#include "llvm/Demangle/Demangle.h"
-#include "llvm/Object/ELFObjectFile.h"
-#include "llvm/Object/ObjectFile.h"
-#include "outcome.hpp"
 #include "symbol.pb.h"
 
 namespace orbit_elf_utils {
@@ -59,12 +60,14 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] bool HasGnuDebuglink() const override;
   [[nodiscard]] bool Is64Bit() const override;
   [[nodiscard]] std::string GetBuildId() const override;
+  [[nodiscard]] std::string GetSoname() const override;
   [[nodiscard]] std::filesystem::path GetFilePath() const override;
   [[nodiscard]] ErrorMessageOr<LineInfo> GetLineInfo(uint64_t address) override;
   [[nodiscard]] std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const override;
 
  private:
   void InitSections();
+  void InitDynamicEntries(const llvm::object::ELFFile<ElfT>* elf_file);
   ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
 
   const std::filesystem::path file_path_;
@@ -72,6 +75,7 @@ class ElfFileImpl : public ElfFile {
   llvm::object::ELFObjectFile<ElfT>* object_file_;
   llvm::symbolize::LLVMSymbolizer symbolizer_;
   std::string build_id_;
+  std::string soname_;
   bool has_symtab_section_;
   bool has_dynsym_section_;
   bool has_debug_info_section_;
@@ -135,6 +139,71 @@ ElfFileImpl<ElfT>::ElfFileImpl(std::filesystem::path file_path,
 }
 
 template <typename ElfT>
+void ElfFileImpl<ElfT>::InitDynamicEntries(const llvm::object::ELFFile<ElfT>* elf_file) {
+  auto dynamic_entries_or_error = elf_file->dynamicEntries();
+  if (!dynamic_entries_or_error) {
+    LOG("Unable to get dynamic entries from \"%s\": %s", file_path_.string(),
+        llvm::toString(dynamic_entries_or_error.takeError()));
+    return;
+  }
+
+  std::optional<uint64_t> soname_offset;
+  std::optional<uint64_t> dynamic_string_table_addr;
+  std::optional<uint64_t> dynamic_string_table_size;
+  auto dyn_range = dynamic_entries_or_error.get();
+  for (const auto& dyn_entry : dyn_range) {
+    switch (dyn_entry.getTag()) {
+      case llvm::ELF::DT_SONAME:
+        soname_offset.emplace(dyn_entry.getVal());
+        break;
+      case llvm::ELF::DT_STRTAB:
+        dynamic_string_table_addr.emplace(dyn_entry.getPtr());
+        break;
+      case llvm::ELF::DT_STRSZ:
+        dynamic_string_table_size.emplace(dyn_entry.getVal());
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!soname_offset.has_value() || !dynamic_string_table_addr.has_value() ||
+      !dynamic_string_table_size.has_value()) {
+    return;
+  }
+
+  auto strtab_last_byte_or_error = elf_file->toMappedAddr(dynamic_string_table_addr.value() +
+                                                          dynamic_string_table_size.value() - 1);
+  if (!strtab_last_byte_or_error) {
+    LOG("Unable get last byte address of dynamic string table \"%s\": %s", file_path_.string(),
+        llvm::toString(strtab_last_byte_or_error.takeError()));
+    return;
+  }
+
+  if (soname_offset.value() >= dynamic_string_table_size.value()) {
+    ERROR(
+        "Soname offset is out of bounds of the string table (file=\"%s\", offset=%u "
+        "strtab size=%u)",
+        file_path_.string(), soname_offset.value(), dynamic_string_table_size.value());
+    return;
+  }
+
+  if (*strtab_last_byte_or_error.get() != 0) {
+    ERROR("Dynamic string table is not null-termintated (file=\"%s\")", file_path_.string());
+    return;
+  }
+
+  auto strtab_addr_or_error = elf_file->toMappedAddr(dynamic_string_table_addr.value());
+  if (!strtab_addr_or_error) {
+    LOG("Unable to get dynamic string table from DT_STRTAB in \"%s\": %s", file_path_.string(),
+        llvm::toString(strtab_addr_or_error.takeError()));
+    return;
+  }
+
+  soname_ = absl::bit_cast<const char*>(strtab_addr_or_error.get()) + soname_offset.value();
+}
+
+template <typename ElfT>
 void ElfFileImpl<ElfT>::InitSections() {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
@@ -143,6 +212,8 @@ void ElfFileImpl<ElfT>::InitSections() {
     LOG("Unable to load sections");
     return;
   }
+
+  InitDynamicEntries(elf_file);
 
   for (const typename ElfT::Shdr& section : sections_or_err.get()) {
     llvm::Expected<llvm::StringRef> name_or_error = elf_file->getSectionName(&section);
@@ -154,14 +225,17 @@ void ElfFileImpl<ElfT>::InitSections() {
 
     if (name.str() == ".symtab") {
       has_symtab_section_ = true;
+      continue;
     }
 
-    if (name.str() == ".dynsym") {
+    if (section.sh_type == llvm::ELF::SHT_DYNSYM) {
       has_dynsym_section_ = true;
+      continue;
     }
 
     if (name.str() == ".debug_info") {
       has_debug_info_section_ = true;
+      continue;
     }
 
     if (name.str() == ".note.gnu.build-id" && section.sh_type == llvm::ELF::SHT_NOTE) {
@@ -177,6 +251,7 @@ void ElfFileImpl<ElfT>::InitSections() {
       if (error) {
         LOG("Error while reading elf notes");
       }
+      continue;
     }
 
     if (name.str() == ".gnu_debuglink") {
@@ -187,6 +262,7 @@ void ElfFileImpl<ElfT>::InitSections() {
         ERROR("Invalid .gnu_debuglink section in \"%s\". %s", file_path_.string(),
               error_or_info.error().message());
       }
+      continue;
     }
   }
 }
@@ -202,7 +278,7 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
   if (!symbol_ref.getType()) {
     LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name,
         file_path_.string());
-    return ErrorMessage(absl::StrFormat("Type is not set for symbol \"%s\" in \"%s\", skipping.",
+    return ErrorMessage(absl::StrFormat(R"(Type is not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }
   // Limit list of symbols to functions. Ignore sections and variables.
@@ -327,6 +403,11 @@ bool ElfFileImpl<ElfT>::HasGnuDebuglink() const {
 template <typename ElfT>
 std::string ElfFileImpl<ElfT>::GetBuildId() const {
   return build_id_;
+}
+
+template <typename ElfT>
+std::string ElfFileImpl<ElfT>::GetSoname() const {
+  return soname_;
 }
 
 template <typename ElfT>

@@ -341,3 +341,23 @@ TEST(ElfFile, CompressedDebugInfo) {
       program.value()->GetLineInfo(kFirstInstructionOfInlinedPrintHelloWorld);
   ASSERT_TRUE(line_info.has_value()) << line_info.error().message();
 }
+
+TEST(ElfFile, GetSonameSmoke) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
+
+  auto elf_file_or_error = ElfFile::Create(file_path);
+  ASSERT_TRUE(elf_file_or_error.has_value()) << elf_file_or_error.error().message();
+
+  EXPECT_EQ(elf_file_or_error.value()->GetSoname(), "libtest.so");
+}
+
+TEST(ElfFile, GetSonameForFileWithoutSoname) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
+
+  auto elf_file_or_error = ElfFile::Create(file_path);
+  ASSERT_TRUE(elf_file_or_error.has_value()) << elf_file_or_error.error().message();
+
+  EXPECT_EQ(elf_file_or_error.value()->GetSoname(), "");
+}
