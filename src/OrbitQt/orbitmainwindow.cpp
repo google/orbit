@@ -1380,26 +1380,26 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
 
 void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
                                      std::optional<std::unique_ptr<CodeReport>> maybe_code_report) {
-  orbit_code_viewer::Dialog code_viewer_dialog{this};
+  auto code_viewer_dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
 
-  code_viewer_dialog.SetEnableLineNumbers(true);
-  code_viewer_dialog.SetHighlightCurrentLine(true);
-  code_viewer_dialog.setWindowTitle(QString::fromStdString(file_path.filename().string()));
+  code_viewer_dialog->SetEnableLineNumbers(true);
+  code_viewer_dialog->SetHighlightCurrentLine(true);
+  code_viewer_dialog->setWindowTitle(QString::fromStdString(file_path.filename().string()));
 
   const auto source_code = LoadSourceCode(file_path.lexically_normal());
 
   if (!source_code.has_value()) return;
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
-  code_viewer_dialog.SetSourceCode(source_code.value(), std::move(syntax_highlighter));
+  code_viewer_dialog->SetSourceCode(source_code.value(), std::move(syntax_highlighter));
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
 
   if (maybe_code_report.has_value()) {
     CHECK(maybe_code_report->get() != nullptr);
-    code_viewer_dialog.SetEnableSampleCounters(true);
-    code_viewer_dialog.SetHeatmap(kHeatmapAreaWidth, maybe_code_report->get());
+    code_viewer_dialog->SetEnableSampleCounters(true);
+    code_viewer_dialog->SetOwningHeatmap(kHeatmapAreaWidth, std::move(*maybe_code_report));
   }
 
-  code_viewer_dialog.GoToLineNumber(line_number);
-  code_viewer_dialog.exec();
+  code_viewer_dialog->GoToLineNumber(line_number);
+  orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
