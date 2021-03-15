@@ -284,6 +284,32 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   frame_track_online_processor_.ProcessTimer(timer_info, func);
 }
 
+void OrbitApp::OnSystemMemoryUsage(
+    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
+  TimerInfo timer_info;
+  timer_info.set_type(TimerInfo::kSystemMemoryUsage);
+  timer_info.set_start(system_memory_usage.timestamp_ns());
+  timer_info.set_end(system_memory_usage.timestamp_ns());
+
+  constexpr size_t kNumOfEncodedValues = 5;
+  timer_info.mutable_registers()->Reserve(kNumOfEncodedValues);
+  timer_info.mutable_registers()->Set(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kTotalKb),
+                                      orbit_api::Encode<uint64_t>(system_memory_usage.total_kb()));
+  timer_info.mutable_registers()->Set(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kFreeKb),
+                                      orbit_api::Encode<uint64_t>(system_memory_usage.free_kb()));
+  timer_info.mutable_registers()->Set(
+      static_cast<size_t>(SystemMemoryUsageEncodingIndex::kAvailableKb),
+      orbit_api::Encode<uint64_t>(system_memory_usage.available_kb()));
+  timer_info.mutable_registers()->Set(
+      static_cast<size_t>(SystemMemoryUsageEncodingIndex::kBuffersKb),
+      orbit_api::Encode<uint64_t>(system_memory_usage.buffers_kb()));
+  timer_info.mutable_registers()->Set(
+      static_cast<size_t>(SystemMemoryUsageEncodingIndex::kCachedKb),
+      orbit_api::Encode<uint64_t>(system_memory_usage.cached_kb()));
+
+  GetMutableTimeGraph()->ProcessTimer(timer_info, nullptr);
+}
+
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_.AddIfNotPresent(key, std::move(str));
 }

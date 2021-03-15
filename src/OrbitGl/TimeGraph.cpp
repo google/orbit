@@ -288,6 +288,9 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       scheduler_track->OnTimer(timer_info);
       break;
     }
+    case TimerInfo::kSystemMemoryUsage: {
+      break;
+    }
     case TimerInfo::kNone: {
       ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
       track->OnTimer(timer_info);

@@ -30,6 +30,7 @@
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientServices/ProcessClient.h"
 #include "StringManager.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "tracepoint.pb.h"
@@ -54,6 +55,8 @@ class ClientGgp final : public CaptureListener {
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  void OnSystemMemoryUsage(
+      const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallStack(CallStack callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;

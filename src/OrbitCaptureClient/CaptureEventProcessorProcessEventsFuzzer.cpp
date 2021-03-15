@@ -16,6 +16,7 @@
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "absl/flags/flag.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "services.pb.h"
 #include "tracepoint.pb.h"
@@ -39,6 +40,7 @@ class MyCaptureListener : public CaptureListener {
       TracepointInfoSet /*selected_tracepoints*/,
       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnTimer(const TimerInfo&) override {}
+  void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
   void OnUniqueCallStack(CallStack) override {}
   void OnCallstackEvent(CallstackEvent) override {}

@@ -80,7 +80,7 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
       // TODO (http://b/168797897): Process module update events
       break;
     case ClientCaptureEvent::kSystemMemoryUsage:
-      // TODO (http://b/179000848): Process the system memory usage information.
+      ProcessSystemMemoryUsage(event.system_memory_usage());
       break;
     case ClientCaptureEvent::kApiEvent: {
       api_event_processor_.ProcessApiEvent(event.api_event());
@@ -256,6 +256,11 @@ void CaptureEventProcessor::ProcessGpuQueueSubmission(
   for (const TimerInfo& timer : vulkan_related_timers) {
     capture_listener_->OnTimer(timer);
   }
+}
+
+void CaptureEventProcessor::ProcessSystemMemoryUsage(
+    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
+  capture_listener_->OnSystemMemoryUsage(system_memory_usage);
 }
 
 void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
