@@ -26,6 +26,7 @@ class MockCaptureListener : public CaptureListener {
                         TracepointInfoSet, absl::flat_hash_set<uint64_t>) override {}
 
   void OnTimer(const orbit_client_protos::TimerInfo&) override {}
+  void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
   void OnUniqueCallStack(CallStack) override {}
   void OnCallstackEvent(orbit_client_protos::CallstackEvent) override {}

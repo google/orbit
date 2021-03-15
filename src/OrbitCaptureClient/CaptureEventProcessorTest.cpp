@@ -50,6 +50,7 @@ using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
@@ -71,6 +72,7 @@ class MockCaptureListener : public CaptureListener {
                absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
               (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
+  MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
