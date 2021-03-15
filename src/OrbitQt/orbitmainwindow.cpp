@@ -64,8 +64,10 @@
 #include "CaptureOptionsDialog.h"
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
+#include "CodeViewer/OwningDialog.h"
 #include "Connections.h"
 #include "DataViewFactory.h"
+#include "DisassemblyReport.h"
 #include "GlCanvas.h"
 #include "LiveFunctionsController.h"
 #include "LiveFunctionsDataView.h"
@@ -135,22 +137,23 @@ const QString kTargetLabelColorFileTarget = "#BDBDBD";
 const QString kTargetLabelColorTargetProcessDied = "orange";
 const QString kTargetLabelColorTargetDisconnected = "red";
 
-void OpenDisassembly(const std::string& assembly, const DisassemblyReport& report) {
-  orbit_code_viewer::Dialog dialog{};
-  dialog.setWindowTitle("Orbit Disassembly");
-  dialog.SetEnableLineNumbers(true);
-  dialog.SetHighlightCurrentLine(true);
+void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
+  auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
+  dialog->setWindowTitle("Orbit Disassembly");
+  dialog->SetEnableLineNumbers(true);
+  dialog->SetHighlightCurrentLine(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
-  dialog.SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
+  dialog->SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
 
   if (report.GetNumSamples() > 0) {
     constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
-    dialog.SetHeatmap(kHeatmapAreaWidth, &report);
-    dialog.SetEnableSampleCounters(true);
+    dialog->SetOwningHeatmap(kHeatmapAreaWidth,
+                             std::make_unique<DisassemblyReport>(std::move(report)));
+    dialog->SetEnableSampleCounters(true);
   }
 
-  dialog.exec();
+  orbit_code_viewer::OpenAndDeleteOnClose(std::move(dialog));
 }
 }  // namespace
 
