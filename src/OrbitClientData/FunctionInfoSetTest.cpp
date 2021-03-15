@@ -52,7 +52,7 @@ TEST(FunctionInfoSet, DifferentName) {
   right.set_name("bar");
 
   internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_TRUE(eq(left, right));
 }
 
 TEST(FunctionInfoSet, DifferentPrettyName) {
@@ -70,7 +70,7 @@ TEST(FunctionInfoSet, DifferentPrettyName) {
   right.set_pretty_name("void bar()");
 
   internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_TRUE(eq(left, right));
 }
 
 TEST(FunctionInfoSet, DifferentLoadedModulePath) {
@@ -124,7 +124,7 @@ TEST(FunctionInfoSet, DifferentSize) {
   right.set_size(15);
 
   internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_TRUE(eq(left, right));
 }
 
 TEST(FunctionInfoSet, DifferentFile) {
@@ -142,7 +142,7 @@ TEST(FunctionInfoSet, DifferentFile) {
   right.set_file("other.cpp");
 
   internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_TRUE(eq(left, right));
 }
 
 TEST(FunctionInfoSet, DifferentLine) {
@@ -160,7 +160,7 @@ TEST(FunctionInfoSet, DifferentLine) {
   right.set_line(12);
 
   internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_TRUE(eq(left, right));
 }
 
 TEST(FunctionInfoSet, Insertion) {
