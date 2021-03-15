@@ -13,12 +13,14 @@ target_link_libraries(CodeViewer PUBLIC OrbitBase OrbitGl Qt5::Widgets)
 
 target_sources(CodeViewer PUBLIC include/CodeViewer/Dialog.h
                                  include/CodeViewer/FontSizeInEm.h
+                                 include/CodeViewer/OwningDialog.h
                                  include/CodeViewer/Viewer.h
                                  include/CodeViewer/PlaceHolderWidget.h)
 
 target_sources(CodeViewer PRIVATE Dialog.cpp 
                                   Dialog.ui
                                   FontSizeInEm.cpp
+                                  OwningDialog.cpp
                                   PlaceHolderWidget.cpp
                                   Viewer.cpp)
 
