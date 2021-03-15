@@ -426,13 +426,19 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   const std::string kBuffersOrCachedLabel = "Memory Buffers / Cached (kB)";
   const std::string kUsedLabel = "Memory Used (kB)";
 
-  GraphTrack* track;
+  const std::pair<std::string, uint64_t> kProductionLimit =
+      std::make_pair("Production Limit (kB)", 1024 * 1024 * 8);
+
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
+  std::optional<std::pair<std::string, int64_t>> total_label_and_kb = std::nullopt;
+  if (total_kb != kMissingInfo) total_label_and_kb = std::make_pair(kTotalLabel, total_kb);
+
+  GraphTrack* track;
   int64_t unused_kb = orbit_api::Decode<int64_t>(
       timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
   if (unused_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel);
+    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel, std::nullopt, total_label_and_kb);
     track->AddValue(unused_kb, timer_info.start());
   }
 
@@ -441,13 +447,14 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
   if (buffers_kb != kMissingInfo && cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel);
+    track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel, std::nullopt,
+                                                  total_label_and_kb);
     track->AddValue(buffers_kb + cached_kb, timer_info.start());
   }
 
   if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
       cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel);
+    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel, kProductionLimit, total_label_and_kb);
     track->AddValue(total_kb - unused_kb - buffers_kb - cached_kb, timer_info.start());
   }
 }
