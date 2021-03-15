@@ -20,16 +20,17 @@ namespace orbit_user_space_instrumentation {
 // on either libdl or libc being loaded into the tracee.
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag);
-[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string symbol);
+[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string_view symbol);
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle);
 
 // Returns the absolute virtual address of a function in a module of a process as resolved by the
 // dynsym section of the file that module is associated with.
 // The function name has to match the symbol name exactly. The module name needs start with the
-// string given to the function; this is done to allow for different versions of a library to be
-// matched.
-[[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function,
-                                                           std::string_view module);
+// given string and only have version numbering, dashes, and the suffix `so` after that. This is
+// done to allow for different versions of a library to be matched.
+[[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid,
+                                                           std::string_view function_name,
+                                                           std::string_view module_prefix);
 
 }  // namespace orbit_user_space_instrumentation
 

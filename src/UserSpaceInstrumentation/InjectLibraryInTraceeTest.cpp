@@ -49,7 +49,7 @@ TEST(InjectLibraryInTraceeTest, FindFunctionAddress) {
   function_address_or_error = FindFunctionAddress(pid, "printf", "NOT_A_LIB-");
   EXPECT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
-                                "There is no module NOT_A_LIB- in process"));
+                                "There is no module \"NOT_A_LIB-\" in process"));
 
   function_address_or_error = FindFunctionAddress(-1, "printf", "libc-");
   EXPECT_TRUE(function_address_or_error.has_error());

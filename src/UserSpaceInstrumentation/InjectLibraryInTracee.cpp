@@ -7,10 +7,12 @@
 #include <absl/base/casts.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_cat.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <csignal>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -130,20 +132,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // address of dlopen into rax and do the call. Assembly in Intel syntax (destination first),
   // machine code on the right:
 
-  // movabs rax, address_so_path      48 b8 address_so_path
-  // mov rbx, 2                       48 c7 c3 flag
-  // mov rdi, rax                     48 8b f8
-  // mov rsi, rbx                     48 8b f3
-  // movabs rax, address_dlopen       48 b8 address_dlopen
+  // movabsq rdi, address_so_path     48 bf address_so_path
+  // movl esi, flag                   be flag
+  // movabsq rax, address_dlopen      48 b8 address_dlopen
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
-  code.AppendBytes({0x48, 0xb8})
+  code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(address_so_path)
-      .AppendBytes({0x48, 0xc7, 0xc3})
+      .AppendBytes({0xbe})
       .AppendImmediate32(flag)
-      .AppendBytes({0x48, 0x8b, 0xf8})
-      .AppendBytes({0x48, 0x8b, 0xf3})
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(address_dlopen)
       .AppendBytes({0xff, 0xd0})
@@ -158,13 +156,13 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
   void* return_value = absl::bit_cast<void*>(GetReturnValueOrDie(pid));
 
-  // Cleanup memory and registers.
+  // Clean up memory and registers.
   RestoreRegistersOrDie(original_registers);
   FreeMemoryOrDie(pid, address_code, memory_size);
   return return_value;
 }
 
-[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string symbol) {
+[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string_view symbol) {
   // Figure out address of dlsym in libc.
   OUTCOME_TRY(address_dlsym,
               FindFunctionAddressWithFallback(pid, "dlsym", "libdl-", "__libc_dlsym", "libc-"));
@@ -179,8 +177,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   OUTCOME_TRY(address_code, AllocateInTracee(pid, memory_size));
 
   // Write the name of symbol into memory at address_code with offset of kCodeScratchPadSize.
-  std::vector<uint8_t> symbol_name_as_vector(symbol_name_length);
-  memcpy(symbol_name_as_vector.data(), symbol.c_str(), symbol_name_length);
+  std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
+  memcpy(symbol_name_as_vector.data(), symbol.data(), symbol.length());
   const uint64_t address_symbol_name = address_code + kCodeScratchPadSize;
   auto result_write_symbol_name =
       WriteTraceesMemory(pid, address_symbol_name, symbol_name_as_vector);
@@ -196,20 +194,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // address of dlsym into rax and do the call. Assembly in Intel syntax (destination first),
   // machine code on the right:
 
-  // movabs rax, handle               48 b8 handle
-  // mov rdi, rax                     48 89 c7
-  // movabs rax, address_symbol_name  48 b8 address_symbol_name
-  // mov rsi, rax                     48 89 c6
-  // movabs rax, address_dlsym        48 b8 address_dlsym
+  // movabsq rdi, handle              48 bf handle
+  // movabsq rsi, address_symbol_name 48 be address_symbol_name
+  // movabsq rax, address_dlsym       48 b8 address_dlsym
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
-  code.AppendBytes({0x48, 0xb8})
+  code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(absl::bit_cast<uint64_t>(handle))
-      .AppendBytes({0x48, 0x89, 0xc7})
-      .AppendBytes({0x48, 0xb8})
+      .AppendBytes({0x48, 0xbe})
       .AppendImmediate64(address_symbol_name)
-      .AppendBytes({0x48, 0x89, 0xc6})
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(address_dlsym)
       .AppendBytes({0xff, 0xd0})
@@ -248,15 +242,13 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // address_dlclose into rax and do the call. Assembly in Intel syntax (destination first), machine
   // code on the right:
 
-  // movabs rax, handle               48 b8 handle
-  // mov rdi, rax                     48 8b f8
-  // movabs rax, address_dlclose      48 b8 address_dlclose
+  // movabsq rdi, handle              48 bf handle
+  // movabsq rax, address_dlclose     48 b8 address_dlclose
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
-  code.AppendBytes({0x48, 0xb8})
+   code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(absl::bit_cast<uint64_t>(handle))
-      .AppendBytes({0x48, 0x8b, 0xf8})
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(address_dlclose)
       .AppendBytes({0xff, 0xd0})
@@ -279,8 +271,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   return outcome::success();
 }
 
-ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function,
-                                             std::string_view module) {
+ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function_name,
+                                             std::string_view module_prefix) {
   auto modules = ReadModules(pid);
   if (modules.has_error()) {
     return modules.error();
@@ -289,13 +281,19 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
   std::string module_file_path;
   uint64_t module_base_address = 0;
   for (const auto& m : modules.value()) {
-    if (absl::StartsWith(m.name(), module)) {
+    // This matches the name of the module followed by any (possibly empty) combination of `.`, `-`
+    // and digits and a single occurance of the letters `so`.
+    // If module is `libc` this matches `libc-2.31.so`, `libc`, `libc1.so` and also `libcso-9-2...-`
+    // but not `libc-something-3.14.so` or `i-am-not-libc-2.31.so`
+    std::string re_as_string = absl::StrCat(module_prefix, "[\\.\\-0-9]*(so)*[\\.\\-0-9]*");
+    if (std::regex_match(m.name(), std::regex(re_as_string))) {
       module_file_path = m.file_path();
       module_base_address = m.address_start();
     }
   }
   if (module_file_path.empty()) {
-    return ErrorMessage(absl::StrFormat("There is no module %s in process %d.", module, pid));
+    return ErrorMessage(
+        absl::StrFormat("There is no module \"%s\" in process %d.", module_prefix, pid));
   }
 
   auto elf_file = ElfFile::Create(module_file_path);
@@ -305,18 +303,18 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
 
   auto syms = elf_file.value()->LoadSymbolsFromDynsym();
   if (syms.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s", module,
-                                        syms.error().message()));
+    return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",
+                                        module_prefix, syms.error().message()));
   }
 
   for (const auto& sym : syms.value().symbol_infos()) {
-    if (sym.name() == function) {
+    if (sym.name() == function_name) {
       return sym.address() + module_base_address - syms.value().load_bias();
     }
   }
 
   return ErrorMessage(absl::StrFormat("Unable to locate function symbol \"%s\" in module \"%s\".",
-                                      function, module));
+                                      function_name, module_prefix));
 }
 
 }  // namespace orbit_user_space_instrumentation
