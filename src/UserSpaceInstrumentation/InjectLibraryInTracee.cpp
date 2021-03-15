@@ -57,14 +57,25 @@ uint64_t GetReturnValueOrDie(pid_t pid) {
   return return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax;
 }
 
-// Execute the code at `address_code`. The code segment has to end with an `int3`.
-void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address_code) {
+// Copies `code` to `address_code` in the tracee and executes it. The code segment has to end with
+// an `int3`. Takes care of backup and restore of register state in the tracee and also deallocates
+// the memory at `address_code` afterwards. The return value is the content of eax after the
+// execution finished.
+ErrorMessageOr<uint64_t> ExecuteOrDie(pid_t pid, uint64_t address_code, uint64_t memory_size,
+                                      const MachineCode& code) {
+  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
+  if (result_write_code.has_error()) {
+    FreeMemoryOrDie(pid, address_code, memory_size);
+    return result_write_code.error();
+  }
+
+  // Backup registers.
+  RegisterState original_registers;
+  OUTCOME_TRY(original_registers.BackupRegisters(pid));
+
   RegisterState registers_set_rip = original_registers;
   registers_set_rip.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
-  auto result_restore_registers = registers_set_rip.RestoreRegisters();
-  if (result_restore_registers.has_error()) {
-    FATAL("Unable to set registers in tracee: \"%s\"", result_restore_registers.error().message());
-  }
+  OUTCOME_TRY(registers_set_rip.RestoreRegisters());
   if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
     FATAL("Unable to continue tracee with PTRACE_CONT.");
   }
@@ -73,6 +84,13 @@ void ExecuteOrDie(pid_t pid, RegisterState& original_registers, uint64_t address
   if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
     FATAL("Failed to wait for sigtrap after PTRACE_CONT.");
   }
+
+  const uint64_t return_value = GetReturnValueOrDie(pid);
+
+  // Clean up memory and registers.
+  RestoreRegistersOrDie(original_registers);
+  FreeMemoryOrDie(pid, address_code, memory_size);
+  return return_value;
 }
 
 // Returns the absolute virtual address of a function in a module of a process as
@@ -105,10 +123,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Figure out address of dlopen in libc.
   OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl",
                                                               "__libc_dlopen_mode", "libc"));
-
-  // Backup registers.
-  RegisterState original_registers;
-  OUTCOME_TRY(original_registers.BackupRegisters(pid));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -146,20 +160,13 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendImmediate64(address_dlopen)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  if (result_write_code.has_error()) {
+
+  auto return_value_or_error = ExecuteOrDie(pid, address_code, memory_size, code);
+  if (return_value_or_error.has_error()) {
     FreeMemoryOrDie(pid, address_code, memory_size);
-    return result_write_code.error();
+    return return_value_or_error.error();
   }
-
-  ExecuteOrDie(pid, original_registers, address_code);
-
-  void* return_value = absl::bit_cast<void*>(GetReturnValueOrDie(pid));
-
-  // Clean up memory and registers.
-  RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, memory_size);
-  return return_value;
+  return absl::bit_cast<void*>(return_value_or_error.value());
 }
 
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
@@ -167,10 +174,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Figure out address of dlsym in libc.
   OUTCOME_TRY(address_dlsym,
               FindFunctionAddressWithFallback(pid, "dlsym", "libdl", "__libc_dlsym", "libc"));
-
-  // Backup registers.
-  RegisterState original_registers;
-  OUTCOME_TRY(original_registers.BackupRegisters(pid));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
@@ -209,30 +212,19 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendImmediate64(address_dlsym)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  if (result_write_code.has_error()) {
+
+  auto return_value_or_error = ExecuteOrDie(pid, address_code, memory_size, code);
+  if (return_value_or_error.has_error()) {
     FreeMemoryOrDie(pid, address_code, memory_size);
-    return result_write_code.error();
+    return return_value_or_error.error();
   }
-
-  ExecuteOrDie(pid, original_registers, address_code);
-
-  void* return_value = absl::bit_cast<void*>(GetReturnValueOrDie(pid));
-
-  // Cleanup memory and registers.
-  RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, memory_size);
-  return return_value;
+  return absl::bit_cast<void*>(return_value_or_error.value());
 }
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
   OUTCOME_TRY(address_dlclose,
               FindFunctionAddressWithFallback(pid, "dlclose", "libdl", "__libc_dlclose", "libc"));
-
-  // Backup registers.
-  RegisterState original_registers;
-  OUTCOME_TRY(original_registers.BackupRegisters(pid));
 
   // Allocate small memory area in the tracee.
   OUTCOME_TRY(address_code, AllocateInTracee(pid, kCodeScratchPadSize));
@@ -254,21 +246,13 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendImmediate64(address_dlclose)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  if (result_write_code.has_error()) {
+
+  auto return_value_or_error = ExecuteOrDie(pid, address_code, kCodeScratchPadSize, code);
+  if (return_value_or_error.has_error()) {
     FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
-    return result_write_code.error();
+    return return_value_or_error.error();
   }
 
-  ExecuteOrDie(pid, original_registers, address_code);
-
-  if (GetReturnValueOrDie(pid) != 0) {
-    FATAL("Unable to unload dynamic library from tracee.");
-  }
-
-  // Cleanup memory and registers.
-  RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
   return outcome::success();
 }
 
