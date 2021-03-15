@@ -58,7 +58,9 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   }
 
   ModuleInfo module_info;
-  module_info.set_name(std::filesystem::path{module_path}.filename());
+  std::string soname = elf_file_or_error.value()->GetSoname();
+  module_info.set_name(soname.empty() ? std::filesystem::path{module_path}.filename().string()
+                                      : soname);
   module_info.set_file_path(module_path);
   module_info.set_file_size(file_size);
   module_info.set_address_start(start_address);

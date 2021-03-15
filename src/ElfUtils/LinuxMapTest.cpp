@@ -70,6 +70,27 @@ TEST(LinuxMap, CreateModuleNotElf) {
               testing::HasSubstr("The file was not recognized as a valid object file"));
 }
 
+TEST(LinuxMan, CreateModuleWithSoname) {
+  using orbit_elf_utils::CreateModule;
+  using orbit_grpc_protos::ModuleInfo;
+
+  const std::filesystem::path hello_world_path =
+      orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+  auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
+  ASSERT_FALSE(result.has_error()) << result.error().message();
+
+  EXPECT_EQ(result.value().name(), "libtest.so");
+  EXPECT_EQ(result.value().file_path(), hello_world_path);
+  EXPECT_EQ(result.value().file_size(), 16128);
+  EXPECT_EQ(result.value().address_start(), kStartAddress);
+  EXPECT_EQ(result.value().address_end(), kEndAddress);
+  EXPECT_EQ(result.value().build_id(), "2e70049c5cf42e6c5105825b57104af5882a40a2");
+  EXPECT_EQ(result.value().load_bias(), 0x0);
+}
+
 TEST(LinuxMap, CreateModuleFileDoesNotExist) {
   using orbit_elf_utils::CreateModule;
   using orbit_grpc_protos::ModuleInfo;
