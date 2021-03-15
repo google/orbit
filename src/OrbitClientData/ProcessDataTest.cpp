@@ -207,9 +207,13 @@ TEST(ProcessData, GetModuleBaseAddress) {
   ProcessData process(ProcessInfo{});
   process.UpdateModuleInfos(module_infos);
 
-  EXPECT_EQ(process.GetModuleBaseAddress(file_path_1), start_address_1);
-  EXPECT_EQ(process.GetModuleBaseAddress(file_path_2), start_address_2);
-  EXPECT_DEATH(process.GetModuleBaseAddress("does/not/exist"), "Check failed");
+  const std::optional<uint64_t>& file_1_base_address = process.GetModuleBaseAddress(file_path_1);
+  ASSERT_TRUE(file_1_base_address.has_value());
+  EXPECT_EQ(file_1_base_address.value(), start_address_1);
+  const std::optional<uint64_t>& file_2_base_address = process.GetModuleBaseAddress(file_path_2);
+  ASSERT_TRUE(file_2_base_address.has_value());
+  EXPECT_EQ(file_2_base_address.value(), start_address_2);
+  EXPECT_FALSE(process.GetModuleBaseAddress("does/not/exist").has_value());
 }
 
 TEST(ProcessData, CreateCopy) {

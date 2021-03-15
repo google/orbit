@@ -39,6 +39,16 @@ uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
   return func.address() - module.load_bias();
 }
 
+std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
+                                           const ProcessData& process, const ModuleData& module) {
+  std::optional<uint64_t> base_address = process.GetModuleBaseAddress(func.module_path());
+  if (!base_address.has_value()) {
+    return std::nullopt;
+  }
+
+  return func.address() + base_address.value() - module.load_bias();
+}
+
 bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {
   return type != FunctionInfo::kNone;
 }

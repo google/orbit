@@ -72,8 +72,10 @@ class ProcessData final {
 
   [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
-  uint64_t GetModuleBaseAddress(const std::string& module_path) const {
-    CHECK(module_memory_map_.contains(module_path));
+  std::optional<uint64_t> GetModuleBaseAddress(const std::string& module_path) const {
+    if (!module_memory_map_.contains(module_path)) {
+      return std::nullopt;
+    }
     return module_memory_map_.at(module_path).start();
   }
   const absl::node_hash_map<std::string, ModuleInMemory>& GetMemoryMap() const {

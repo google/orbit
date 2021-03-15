@@ -43,7 +43,7 @@ using orbit_client_protos::ProcessInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
-using orbit_grpc_protos::InstrumentedFunction;
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::TracepointInfo;
@@ -54,7 +54,6 @@ using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::InSequence;
 using ::testing::InvokeWithoutArgs;
-using ::testing::IsEmpty;
 using ::testing::Matcher;
 using ::testing::SaveArg;
 using ::testing::Unused;
@@ -64,9 +63,7 @@ namespace {
 class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(void, OnCaptureStarted,
-              (ProcessData&& /*process*/,
-               (absl::flat_hash_map<uint64_t, InstrumentedFunction>)/*instrumented_functions*/,
-               TracepointInfoSet /*selected_tracepoints*/,
+              (const CaptureStarted& /*capture_started*/,
                absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
               (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
@@ -184,15 +181,17 @@ TEST(CaptureDeserializer, LoadNoCaptureInfo) {
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
+  constexpr uint64_t kLoadBias = 5;
+  constexpr const char* kModuleBuildId = "build_id";
+  constexpr const char* kExecutablePath = "path/to/executable";
+
   MockCaptureListener listener;
   CaptureInfo capture_info;
 
   ProcessInfo* process_info = capture_info.mutable_process();
   process_info->set_pid(42);
-  process_info->set_name("process");
+  process_info->set_full_path(kExecutablePath);
 
-  constexpr uint64_t kLoadBias = 5;
-  constexpr const char* kModuleBuildId = "build_id";
   orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
   module_info->set_load_bias(kLoadBias);
   module_info->set_name("module");
@@ -217,41 +216,32 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
 
   ModuleManager module_manager;
 
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _))
       .Times(1)
-      .WillOnce([&instrumented_function, load_bias = kLoadBias, kInstrumentedFunctionId,
-                 &module_manager](
-                    ProcessData&& process,
-                    absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>
-                        actual_instrumented_functions,
-                    Unused, Unused) {
-        EXPECT_EQ(process.name(), "process");
-        EXPECT_EQ(process.pid(), 42);
-        EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
+      .WillOnce([&module_manager, &instrumented_function, kExecutablePath, kInstrumentedFunctionId,
+                 kModuleBuildId](const CaptureStarted& capture_started, Unused) {
+        EXPECT_EQ(capture_started.process_id(), 42);
+        EXPECT_EQ(capture_started.executable_path(), kExecutablePath);
+        ASSERT_EQ(capture_started.capture_options().instrumented_functions_size(), 1);
 
-        ASSERT_EQ(actual_instrumented_functions.size(), 1);
-        ASSERT_TRUE(actual_instrumented_functions.contains(kInstrumentedFunctionId));
-        const InstrumentedFunction& actual_function_info =
-            actual_instrumented_functions.at(kInstrumentedFunctionId);
-
-        EXPECT_EQ(actual_function_info.function_name(), instrumented_function.pretty_name());
-        EXPECT_EQ(actual_function_info.file_path(), instrumented_function.module_path());
-        EXPECT_EQ(actual_function_info.file_build_id(), instrumented_function.module_build_id());
-        EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
+        const auto& actual_instrumented_function =
+            capture_started.capture_options().instrumented_functions()[0];
+        ASSERT_EQ(actual_instrumented_function.function_id(), kInstrumentedFunctionId);
+        ASSERT_EQ(actual_instrumented_function.function_name(), "void foo()");
 
         // Also check that we can find corresponding function_infos using module_path/build_id and
         // offset
         const ModuleData* module = module_manager.GetModuleByPathAndBuildId(
-            actual_function_info.file_path(), actual_function_info.file_build_id());
+            actual_instrumented_function.file_path(), actual_instrumented_function.file_build_id());
         ASSERT_NE(module, nullptr);
         const FunctionInfo* function_info = module->FindFunctionByElfAddress(
-            module->load_bias() + actual_function_info.file_offset(), true);
+            module->load_bias() + actual_instrumented_function.file_offset(), true);
         ASSERT_NE(function_info, nullptr);
 
         EXPECT_EQ(function_info->name(), instrumented_function.name());
         EXPECT_EQ(function_info->pretty_name(), instrumented_function.pretty_name());
         EXPECT_EQ(function_info->module_path(), instrumented_function.module_path());
-        EXPECT_EQ(function_info->module_build_id(), instrumented_function.module_build_id());
+        EXPECT_EQ(function_info->module_build_id(), kModuleBuildId);
         EXPECT_EQ(function_info->address(), instrumented_function.address());
         EXPECT_EQ(function_info->size(), instrumented_function.size());
       });
@@ -267,15 +257,17 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
 }
 
 TEST(CaptureDeserializer, LoadCaptureInfoNoBuildIdInFunctionInfo) {
+  constexpr uint64_t kLoadBias = 5;
+  constexpr const char* kModuleBuildId = "build_id";
+  constexpr const char* kExecutablePath = "path/to/executable";
+
   MockCaptureListener listener;
   CaptureInfo capture_info;
 
   ProcessInfo* process_info = capture_info.mutable_process();
   process_info->set_pid(42);
-  process_info->set_name("process");
+  process_info->set_full_path(kExecutablePath);
 
-  constexpr uint64_t kLoadBias = 5;
-  constexpr const char* kModuleBuildId = "build_id";
   orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
   module_info->set_load_bias(kLoadBias);
   module_info->set_name("module");
@@ -299,35 +291,26 @@ TEST(CaptureDeserializer, LoadCaptureInfoNoBuildIdInFunctionInfo) {
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
   ModuleManager module_manager;
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _))
       .Times(1)
-      .WillOnce([&instrumented_function, load_bias = kLoadBias, kInstrumentedFunctionId,
-                 kModuleBuildId, &module_manager](
-                    ProcessData&& process,
-                    absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>
-                        actual_instrumented_functions,
-                    Unused, Unused) {
-        EXPECT_EQ(process.name(), "process");
-        EXPECT_EQ(process.pid(), 42);
-        EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
+      .WillOnce([&module_manager, &instrumented_function, kExecutablePath, kInstrumentedFunctionId,
+                 kModuleBuildId](const CaptureStarted& capture_started, Unused) {
+        EXPECT_EQ(capture_started.process_id(), 42);
+        EXPECT_EQ(capture_started.executable_path(), kExecutablePath);
+        ASSERT_EQ(capture_started.capture_options().instrumented_functions_size(), 1);
 
-        ASSERT_EQ(actual_instrumented_functions.size(), 1);
-        ASSERT_TRUE(actual_instrumented_functions.contains(kInstrumentedFunctionId));
-        const InstrumentedFunction& actual_function_info =
-            actual_instrumented_functions.at(kInstrumentedFunctionId);
-
-        EXPECT_EQ(actual_function_info.function_name(), instrumented_function.pretty_name());
-        EXPECT_EQ(actual_function_info.file_path(), instrumented_function.module_path());
-        EXPECT_EQ(actual_function_info.file_build_id(), kModuleBuildId);
-        EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
+        const auto& actual_instrumented_function =
+            capture_started.capture_options().instrumented_functions()[0];
+        ASSERT_EQ(actual_instrumented_function.function_id(), kInstrumentedFunctionId);
+        ASSERT_EQ(actual_instrumented_function.function_name(), "void foo()");
 
         // Also check that we can find corresponding function_infos using module_path/build_id and
         // offset
         const ModuleData* module = module_manager.GetModuleByPathAndBuildId(
-            actual_function_info.file_path(), actual_function_info.file_build_id());
+            actual_instrumented_function.file_path(), actual_instrumented_function.file_build_id());
         ASSERT_NE(module, nullptr);
         const FunctionInfo* function_info = module->FindFunctionByElfAddress(
-            module->load_bias() + actual_function_info.file_offset(), true);
+            module->load_bias() + actual_instrumented_function.file_offset(), true);
         ASSERT_NE(function_info, nullptr);
 
         EXPECT_EQ(function_info->name(), instrumented_function.name());
@@ -801,7 +784,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   absl::flat_hash_set<uint64_t> actual_frame_track_function_ids;
   EXPECT_CALL(listener, OnCaptureStarted)
       .Times(1)
-      .WillOnce(SaveArg<3>(&actual_frame_track_function_ids));
+      .WillOnce(SaveArg<1>(&actual_frame_track_function_ids));
 
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =

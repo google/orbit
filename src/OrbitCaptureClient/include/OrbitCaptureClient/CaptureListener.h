@@ -20,12 +20,8 @@ class CaptureListener {
 
   virtual ~CaptureListener() = default;
 
-  // Called after capture started but before the first event arrived.
-  virtual void OnCaptureStarted(
-      ProcessData&& process,
-      absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions,
-      TracepointInfoSet selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids) = 0;
+  virtual void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
+                                absl::flat_hash_set<uint64_t> frame_track_function_ids) = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnSystemMemoryUsage(

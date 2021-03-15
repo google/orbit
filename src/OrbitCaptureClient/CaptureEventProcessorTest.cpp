@@ -34,6 +34,7 @@ using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::Color;
 using orbit_grpc_protos::FunctionCall;
@@ -66,11 +67,7 @@ namespace {
 
 class MockCaptureListener : public CaptureListener {
  public:
-  MOCK_METHOD(void, OnCaptureStarted,
-              (ProcessData&& /*process*/,
-               (absl::flat_hash_map<uint64_t, InstrumentedFunction>)/*instrumented_functions*/,
-               TracepointInfoSet /*selected_tracepoints*/,
-               absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
+  MOCK_METHOD(void, OnCaptureStarted, (const CaptureStarted&, absl::flat_hash_set<uint64_t>),
               (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
@@ -93,7 +90,7 @@ class MockCaptureListener : public CaptureListener {
 
 TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent event;
   SchedulingSlice* scheduling_slice = event.mutable_scheduling_slice();
@@ -149,7 +146,7 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
 
 TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent interned_callstack_event;
   InternedCallstack* interned_callstack =
@@ -174,7 +171,7 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
 
 TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
   std::vector<ClientCaptureEvent> events;
 
   ClientCaptureEvent event_interned_callstack;
@@ -210,7 +207,7 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
 
 TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent interned_callstack_event;
   InternedCallstack* interned_callstack = interned_callstack_event.mutable_interned_callstack();
@@ -240,7 +237,7 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
 
 TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent event;
   FunctionCall* function_call = event.mutable_function_call();
@@ -275,7 +272,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
 
 TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent event;
   IntrospectionScope* introspection_scope = event.mutable_introspection_scope();
@@ -307,7 +304,7 @@ TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
 
 TEST(CaptureEventProcessor, CanHandleThreadNames) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent event;
   ThreadName* thread_name = event.mutable_thread_name();
@@ -331,7 +328,7 @@ static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, std::string st
 
 TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   constexpr uint64_t kFunctionNameKey = 1;
   ClientCaptureEvent interned_function_name_event =
@@ -365,7 +362,7 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
 
 TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent interned_tracepoint_event;
   InternedTracepointInfo* interned_tracepoint =
@@ -429,7 +426,7 @@ static constexpr const char* kTimelineString = "timeline";
 
 TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent event;
   GpuJob* gpu_job = CreateGpuJob(&event, kTimelineKey, 10, 20, 30, 40);
@@ -563,7 +560,7 @@ void ExpectDebugMarkerTimerEq(const TimerInfo& actual_timer, uint64_t cpu_begin,
 
 TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent timeline_key_and_string =
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
@@ -634,7 +631,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
 
 TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent timeline_key_and_string =
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
@@ -709,7 +706,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent timeline_string = CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
@@ -799,7 +796,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent timeline_key_and_string =
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
@@ -864,7 +861,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent timeline_string = CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
@@ -937,7 +934,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
 
 TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   ClientCaptureEvent running_event;
   ThreadStateSlice* running_thread_state_slice = running_event.mutable_thread_state_slice();
@@ -1003,7 +1000,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
 
 TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener);
+  CaptureEventProcessor event_processor(&listener, {});
 
   std::vector<ClientCaptureEvent> events;
   ClientCaptureEvent event_1;

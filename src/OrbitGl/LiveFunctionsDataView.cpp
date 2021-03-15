@@ -98,7 +98,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
       return function.module_path();
     case kColumnAddress: {
       const CaptureData& capture_data = app_->GetCaptureData();
-      return absl::StrFormat("0x%" PRIx64, capture_data.GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%" PRIx64, capture_data.GetAbsoluteAddress(function).value_or(0));
     }
     default:
       return "";

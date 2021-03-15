@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/flags/flag.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
@@ -21,10 +22,8 @@
 namespace {
 class MockCaptureListener : public CaptureListener {
  public:
-  void OnCaptureStarted(ProcessData&&,
-                        absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>,
-                        TracepointInfoSet, absl::flat_hash_set<uint64_t>) override {}
-
+  void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted&,
+                        absl::flat_hash_set<uint64_t>) override {}
   void OnTimer(const orbit_client_protos::TimerInfo&) override {}
   void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}

@@ -33,12 +33,8 @@ using orbit_client_protos::TimerInfo;
 
 class MyCaptureListener : public CaptureListener {
  private:
-  void OnCaptureStarted(
-      ProcessData&& /*process*/,
-      absl::flat_hash_map<uint64_t,
-                          orbit_grpc_protos::InstrumentedFunction> /*instrumented_functions*/,
-      TracepointInfoSet /*selected_tracepoints*/,
-      absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
+  void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
+                        absl::flat_hash_set<uint64_t> /* frame_track_function_ids */) override {}
   void OnTimer(const TimerInfo&) override {}
   void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
@@ -56,6 +52,6 @@ class MyCaptureListener : public CaptureListener {
 
 DEFINE_PROTO_FUZZER(const CaptureResponse& response) {
   MyCaptureListener listener;
-  CaptureEventProcessor processor{&listener};
+  CaptureEventProcessor processor{&listener, {}};
   processor.ProcessEvents(response.capture_events());
 }

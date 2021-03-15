@@ -28,15 +28,15 @@ void ModuleData::UpdateIfChanged(ModuleInfo info) {
   CHECK(file_path() == info.file_path());
   CHECK(build_id() == info.build_id());
 
-  // This function only makes sense if build_id is empty.
-  CHECK(build_id().empty());
-
   const bool all_module_properties_matching =
       (name() == info.name() && file_size() == info.file_size() && load_bias() == info.load_bias());
 
-  module_info_ = std::move(info);
-
   if (all_module_properties_matching) return;
+
+  // The update only makes sense if build_id is empty.
+  CHECK(build_id().empty());
+
+  module_info_ = std::move(info);
 
   LOG("WARNING: Module \"%s\" changed and will to be updated (it does not have build_id).",
       file_path());
