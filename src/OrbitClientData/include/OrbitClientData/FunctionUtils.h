@@ -30,11 +30,10 @@ namespace function_utils {
 // Calculates and returns the absolute address of the function.
 [[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func,
                               const ModuleData& module);
-[[nodiscard]] inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
-                                                 const ProcessData& process,
-                                                 const ModuleData& module) {
-  return func.address() + process.GetModuleBaseAddress(func.module_path()) - module.load_bias();
-}
+
+[[nodiscard]] std::optional<uint64_t> GetAbsoluteAddress(
+    const orbit_client_protos::FunctionInfo& func, const ProcessData& process,
+    const ModuleData& module);
 
 [[nodiscard]] bool IsOrbitFunctionFromType(
     const orbit_client_protos::FunctionInfo::OrbitType& type);

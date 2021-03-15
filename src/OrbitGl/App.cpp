@@ -104,6 +104,7 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
@@ -175,11 +176,8 @@ OrbitApp::~OrbitApp() {
 #endif
 }
 
-void OrbitApp::OnCaptureStarted(
-    ProcessData&& process,
-    absl::flat_hash_map<uint64_t, InstrumentedFunction> instrumented_functions,
-    TracepointInfoSet selected_tracepoints,
-    absl::flat_hash_set<uint64_t> frame_track_function_ids) {
+void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
+                                absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
   absl::Mutex mutex;
@@ -187,19 +185,14 @@ void OrbitApp::OnCaptureStarted(
   bool initialization_complete = false;
 
   main_thread_executor_->Schedule(
-      [this, &initialization_complete, &mutex, process = std::move(process),
-       instrumented_functions = std::move(instrumented_functions),
-       selected_tracepoints = std::move(selected_tracepoints),
+      [this, &initialization_complete, &mutex, &capture_started,
        frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
-        const bool has_selected_functions = !instrumented_functions.empty();
-
         ClearCapture();
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ = CaptureData(
-            std::move(process), module_manager_.get(), std::move(instrumented_functions),
-            std::move(selected_tracepoints), std::move(frame_track_function_ids));
+        capture_data_ = CaptureData{module_manager_.get(), capture_started,
+                                    std::move(frame_track_function_ids)};
         capture_window_->CreateTimeGraph(&capture_data_.value());
 
         frame_track_online_processor_ =
@@ -208,7 +201,7 @@ void OrbitApp::OnCaptureStarted(
         CHECK(capture_started_callback_);
         capture_started_callback_();
 
-        if (has_selected_functions) {
+        if (!capture_data_->instrumented_functions().empty()) {
           CHECK(select_live_tab_callback_);
           select_live_tab_callback_();
         }
@@ -352,13 +345,32 @@ void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracep
       is_same_pid_as_target);
 }
 
+void OrbitApp::UpdateModulesAbortIfModuleWithoutBuildIdReloader(
+    absl::Span<const ModuleInfo> module_infos) {
+  auto updated_modules = module_manager_->AddOrUpdateModules(module_infos);
+
+  if (!updated_modules.empty()) {
+    std::string module_paths;
+    for (const auto* updated_module : updated_modules) {
+      if (!module_paths.empty()) module_paths += ", ";
+      module_paths += updated_module->file_path();
+      FATAL(
+          "Following modules have been updated during the capture: \"%s\", since they do not have "
+          "build_id, this will likely result in undefined behaviour/incorrect data being produced, "
+          "please recompile these modules with build_id support by adding \"-Wl,--build-id\" to "
+          "compile flags.",
+          module_paths);
+    }
+  }
+}
+
 void OrbitApp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
-  module_manager_->AddOrUpdateModules({module_info});
+  UpdateModulesAbortIfModuleWithoutBuildIdReloader({module_info});
   GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
 }
 
 void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
-  module_manager_->AddOrUpdateModules(module_infos);
+  UpdateModulesAbortIfModuleWithoutBuildIdReloader(module_infos);
   GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
 }
 
@@ -549,9 +561,18 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                                                                         function.module_build_id());
   CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
-  const uint64_t absolute_address =
+  std::optional<uint64_t> absolute_address =
       function_utils::GetAbsoluteAddress(function, *process_, *module);
-  thread_pool_->Schedule([this, absolute_address, is_64_bit, pid, function] {
+  if (!absolute_address.has_value()) {
+    SendErrorToUi(
+        "Error reading memory",
+        absl::StrFormat(
+            R"(Unable to calculate function "%s" address, likely because the module "%s" is not loaded.)",
+            function.pretty_name(), module->file_path()));
+    return;
+  }
+  thread_pool_->Schedule([this, absolute_address = absolute_address.value(), is_64_bit, pid,
+                          function] {
     auto result = GetProcessManager()->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
@@ -610,9 +631,16 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
               const auto absolute_address =
                   function_utils::GetAbsoluteAddress(function, *process_, *module);
 
+              if (!absolute_address.has_value()) {
+                return ErrorMessage{absl::StrFormat(
+                    R"(Unable calculate function "%s" address in memory, likely because the module "%s" is not loaded)",
+                    function.pretty_name(), module->file_path())};
+              }
+
               code_report = std::make_unique<orbit_gl::SourceCodeReport>(
-                  line_info.source_file(), function, absolute_address, elf_file.value().get(),
-                  sampling_data, GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
+                  line_info.source_file(), function, absolute_address.value(),
+                  elf_file.value().get(), sampling_data,
+                  GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
             }
 
             main_window_->ShowSourceCode(source_file_path, line_info.source_line(),

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <memory>
 #include <outcome.hpp>
+#include <vector>
 
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
@@ -17,7 +18,35 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
+
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
+using orbit_grpc_protos::ProcessInfo;
+
+CaptureData::CaptureData(orbit_client_data::ModuleManager* module_manager,
+                         const CaptureStarted& capture_started,
+                         absl::flat_hash_set<uint64_t> frame_track_function_ids)
+    : module_manager_{module_manager},
+      callstack_data_(std::make_unique<CallstackData>()),
+      selection_callstack_data_(std::make_unique<CallstackData>()),
+      tracepoint_data_(std::make_unique<TracepointData>()),
+      frame_track_function_ids_{std::move(frame_track_function_ids)} {
+  ProcessInfo process_info;
+  process_info.set_pid(capture_started.process_id());
+  std::filesystem::path executable_path{capture_started.executable_path()};
+  process_info.set_full_path(executable_path.string());
+  process_info.set_name(executable_path.filename().string());
+  process_info.set_is_64_bit(true);
+  process_.SetProcessInfo(process_info);
+
+  absl::flat_hash_map<uint64_t, FunctionInfo> instrumented_functions;
+
+  for (const auto& instrumented_function :
+       capture_started.capture_options().instrumented_functions()) {
+    instrumented_functions_.insert_or_assign(instrumented_function.function_id(),
+                                             instrumented_function);
+  }
+}
 
 void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
     int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
@@ -209,10 +238,14 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
                                                            result.value().build_id());
 }
 
-uint64_t CaptureData::GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& function) const {
+std::optional<uint64_t> CaptureData::GetAbsoluteAddress(
+    const orbit_client_protos::FunctionInfo& function) const {
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
-  CHECK(module != nullptr);
+  if (module == nullptr) {
+    return std::nullopt;
+  }
+
   return function_utils::GetAbsoluteAddress(function, process_, *module);
 }
 

@@ -41,7 +41,7 @@ TEST(ModuleManager, GetModuleByPathAndBuildId) {
   module_info.set_load_bias(load_bias);
 
   ModuleManager module_manager;
-  module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
   const ModuleData* module = module_manager.GetModuleByPathAndBuildId(file_path, build_id);
   ASSERT_NE(module, nullptr);
@@ -75,7 +75,7 @@ TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
   module_info.set_load_bias(load_bias);
 
   ModuleManager module_manager;
-  module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
   ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
   ASSERT_NE(module, nullptr);
@@ -181,7 +181,7 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
   module_info.set_address_end(kAddressEnd);
 
   ModuleManager module_manager;
-  module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
   ProcessInfo process_info;
   ProcessData process{process_info};
@@ -234,7 +234,7 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
 
   module_info.set_build_id(kBuildIdChanged);
   // Add same module with another build_id
-  module_manager.AddOrUpdateModules({module_info});
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
   {
     // We should still be able to lookup the function because old module did not go anywhere.
     std::vector<FunctionInfo> functions = module_manager.GetOrbitFunctionsOfProcess(process);

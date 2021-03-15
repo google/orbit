@@ -24,9 +24,8 @@ namespace {
 // Empty implementation of CaptureListener used as helper to reduce the complexity in subclasses.
 class EmptyCaptureListener : public CaptureListener {
  public:
-  void OnCaptureStarted(ProcessData&&,
-                        absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>,
-                        TracepointInfoSet, absl::flat_hash_set<uint64_t>) override {}
+  void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
+                        absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnTimer(const orbit_client_protos::TimerInfo&) override {}
   void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
@@ -61,7 +60,7 @@ class ApiTester {
  public:
   ApiTester()
       : api_event_processor_(&api_event_listener_),
-        capture_event_processor_(&capture_event_listener_) {}
+        capture_event_processor_(&capture_event_listener_, {}) {}
 
   ApiTester& Start(const char* name = nullptr, orbit_api_color color = kOrbitColorAuto) {
     EnqueueApiEvent(orbit_api::kScopeStart, name, 0, color);

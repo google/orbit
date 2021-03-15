@@ -18,6 +18,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
+#include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
@@ -39,6 +40,9 @@ using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::CaptureStarted;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ProcessInfo;
 
 namespace capture_deserializer {
@@ -148,12 +152,19 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
   }
   process.UpdateModuleInfos(modules);
 
-  module_manager->AddOrUpdateModules(modules);
+  CHECK(module_manager->AddOrUpdateModules(modules).empty());
 
   if (*cancellation_requested) {
     return CaptureListener::CaptureOutcome::kCancelled;
   }
 
+  CaptureStarted capture_started;
+  capture_started.set_process_id(capture_info.process().pid());
+  capture_started.set_executable_path(process.full_path());
+  capture_started.set_process_id(process.pid());
+
+  CaptureOptions* capture_options = capture_started.mutable_capture_options();
+  capture_options->set_pid(capture_info.process().pid());
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions;
   for (const auto& function : capture_info.instrumented_functions()) {
     orbit_grpc_protos::InstrumentedFunction instrumented_function;
@@ -176,10 +187,10 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     CHECK(module_data != nullptr);
     instrumented_function.set_file_build_id(module_data->build_id());
     instrumented_function.set_file_offset(function_utils::Offset(function.second, *module_data));
-
     instrumented_functions.insert_or_assign(function.first, instrumented_function);
 
     module_data->AddFunctionInfoWithBuildId(function.second, module_data->build_id());
+    *capture_options->add_instrumented_functions() = std::move(instrumented_function);
   }
 
   TracepointInfoSet selected_tracepoints;
@@ -201,9 +212,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     frame_track_function_ids.insert(function_id);
   }
 
-  capture_listener->OnCaptureStarted(std::move(process), std::move(instrumented_functions),
-                                     std::move(selected_tracepoints),
-                                     std::move(frame_track_function_ids));
+  capture_listener->OnCaptureStarted(capture_started, frame_track_function_ids);
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {

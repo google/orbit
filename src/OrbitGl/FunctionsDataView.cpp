@@ -124,8 +124,8 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       const ModuleData* module =
           app_->GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
       CHECK(module != nullptr);
-      return absl::StrFormat("0x%llx",
-                             function_utils::GetAbsoluteAddress(function, *process, *module));
+      return absl::StrFormat(
+          "0x%llx", function_utils::GetAbsoluteAddress(function, *process, *module).value_or(0));
     }
     default:
       return "";

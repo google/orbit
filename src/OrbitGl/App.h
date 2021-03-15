@@ -132,11 +132,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
   void ShowSourceCode(const orbit_client_protos::FunctionInfo& function);
 
-  void OnCaptureStarted(
-      ProcessData&& process,
-      absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions,
-      TracepointInfoSet selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
+  void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
+                        absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallStack(CallStack callstack) override;
@@ -444,6 +441,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
+  void UpdateModulesAbortIfModuleWithoutBuildIdReloader(
+      absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddSymbols(const std::filesystem::path& module_file_path, const std::string& module_build_id,
                   const orbit_grpc_protos::ModuleSymbols& symbols);
 

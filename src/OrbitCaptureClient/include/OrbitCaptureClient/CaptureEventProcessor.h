@@ -20,8 +20,11 @@
 
 class CaptureEventProcessor {
  public:
-  explicit CaptureEventProcessor(CaptureListener* capture_listener)
-      : capture_listener_(capture_listener), api_event_processor_(capture_listener) {}
+  explicit CaptureEventProcessor(CaptureListener* capture_listener,
+                                 absl::flat_hash_set<uint64_t> frame_track_function_ids)
+      : frame_track_function_ids_(std::move(frame_track_function_ids)),
+        capture_listener_(capture_listener),
+        api_event_processor_{capture_listener} {}
 
   void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event);
 
@@ -33,6 +36,7 @@ class CaptureEventProcessor {
   }
 
  private:
+  void ProcessCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started);
   void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
   void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
   void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
@@ -53,6 +57,8 @@ class CaptureEventProcessor {
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
   void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
+
+  absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
   absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;

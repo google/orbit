@@ -38,7 +38,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
   switch (event.event_case()) {
     case ClientCaptureEvent::kCaptureStarted:
-      // TODO: implement this (as part of this PR)
+      ProcessCaptureStarted(event.capture_started());
       break;
     case ClientCaptureEvent::kSchedulingSlice:
       ProcessSchedulingSlice(event.scheduling_slice());
@@ -99,6 +99,11 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
   }
+}
+
+void CaptureEventProcessor::ProcessCaptureStarted(
+    const orbit_grpc_protos::CaptureStarted& capture_started) {
+  capture_listener_->OnCaptureStarted(capture_started, frame_track_function_ids_);
 }
 
 void CaptureEventProcessor::ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice) {

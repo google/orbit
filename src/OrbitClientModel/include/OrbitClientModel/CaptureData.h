@@ -37,19 +37,9 @@
 
 class CaptureData {
  public:
-  explicit CaptureData(
-      ProcessData&& process, orbit_client_data::ModuleManager* module_manager,
-      absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions,
-      TracepointInfoSet selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids)
-      : process_(std::move(process)),
-        module_manager_(module_manager),
-        instrumented_functions_{std::move(instrumented_functions)},
-        selected_tracepoints_{std::move(selected_tracepoints)},
-        callstack_data_(std::make_unique<CallstackData>()),
-        selection_callstack_data_(std::make_unique<CallstackData>()),
-        tracepoint_data_(std::make_unique<TracepointData>()),
-        frame_track_function_ids_(std::move(frame_track_function_ids)) {}
+  explicit CaptureData(orbit_client_data::ModuleManager* module_manager,
+                       const orbit_grpc_protos::CaptureStarted& capture_started,
+                       absl::flat_hash_set<uint64_t> frame_track_function_ids);
 
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
@@ -102,7 +92,7 @@ class CaptureData {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       uint64_t absolute_address, bool is_exact) const;
   [[nodiscard]] ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
-  [[nodiscard]] uint64_t GetAbsoluteAddress(
+  [[nodiscard]] std::optional<uint64_t> GetAbsoluteAddress(
       const orbit_client_protos::FunctionInfo& function) const;
 
   static const std::string kUnknownFunctionOrModuleName;

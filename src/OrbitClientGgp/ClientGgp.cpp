@@ -48,6 +48,7 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
@@ -193,7 +194,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
         info.build_id());
   }
 
-  module_manager_.AddOrUpdateModules(module_infos);
+  CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_
@@ -307,13 +308,9 @@ void ClientGgp::ClearCapture() {
 void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_back(timer_info); }
 
 // CaptureListener implementation
-void ClientGgp::OnCaptureStarted(
-    ProcessData&& process,
-    absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> selected_functions,
-    TracepointInfoSet selected_tracepoints,
-    absl::flat_hash_set<uint64_t> frame_track_function_ids) {
-  capture_data_ = CaptureData(std::move(process), &module_manager_, std::move(selected_functions),
-                              std::move(selected_tracepoints), std::move(frame_track_function_ids));
+void ClientGgp::OnCaptureStarted(const CaptureStarted& capture_started,
+                                 absl::flat_hash_set<uint64_t> frame_track_function_ids) {
+  capture_data_ = CaptureData{&module_manager_, capture_started, frame_track_function_ids};
   LOG("Capture started");
 }
 
@@ -373,11 +370,11 @@ void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo trace
 }
 
 void ClientGgp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
-  module_manager_.AddOrUpdateModules({module_info});
+  CHECK(module_manager_.AddOrUpdateModules({module_info}).empty());
   GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
 }
 
 void ClientGgp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
-  module_manager_.AddOrUpdateModules(module_infos);
+  CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
   GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
 }

@@ -29,7 +29,7 @@ class ModuleManager final {
   // exist. If the update changed the module in a way that symbols were not valid anymore, the
   // symbols are discarded aka the module is not loaded anymore. This method returns the list of
   // modules that used to be loaded before the call and are not loaded anymore after the call.
-  std::vector<ModuleData*> AddOrUpdateModules(
+  [[nodiscard]] std::vector<ModuleData*> AddOrUpdateModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctionsOfProcess(
       const ProcessData& process) const;

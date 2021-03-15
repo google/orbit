@@ -39,7 +39,7 @@ using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
-static InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
+InstrumentedFunction::FunctionType CaptureClient::InstrumentedFunctionTypeFromOrbitType(
     FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
     case FunctionInfo::kOrbitTimerStart:
@@ -78,36 +78,31 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
   state_ = State::kStarting;
 
-  // TODO(168797897) Here a copy of the process is created. The loaded modules of this process were
-  // likely filled when the process was selected, which might be a while back. Between then and now
-  // the loaded modules might have changed. Up to date information about which modules are loaded
-  // should be used here. (Even better: while taking a capture this should always be up to date)
-  ProcessData process_copy = process;
-
   auto capture_result = thread_pool->Schedule(
-      [this, process = std::move(process_copy), &module_manager,
+      [this, process_id = process.pid(), &module_manager,
        selected_functions = std::move(selected_functions), selected_tracepoints,
        frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
        samples_per_second, unwinding_method, enable_introspection,
        max_local_marker_depth_per_command_buffer, collect_memory_info,
        memory_sampling_period_ns]() mutable {
-        return CaptureSync(std::move(process), module_manager, std::move(selected_functions),
-                           std::move(selected_tracepoints), std::move(frame_track_function_ids),
-                           samples_per_second, unwinding_method, collect_thread_state,
-                           enable_introspection, max_local_marker_depth_per_command_buffer,
-                           collect_memory_info, memory_sampling_period_ns);
+        return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
+                           frame_track_function_ids, samples_per_second, unwinding_method,
+                           collect_thread_state, enable_introspection,
+                           max_local_marker_depth_per_command_buffer, collect_memory_info,
+                           memory_sampling_period_ns);
       });
 
   return capture_result;
 }
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
-    ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
+    int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
-    TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    double samples_per_second, UnwindingMethod unwinding_method, bool collect_thread_state,
-    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
-    bool collect_memory_info, uint64_t memory_sampling_period_ns) {
+    const TracepointInfoSet& selected_tracepoints,
+    absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
+    UnwindingMethod unwinding_method, bool collect_thread_state, bool enable_introspection,
+    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
+    uint64_t memory_sampling_period_ns) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -122,7 +117,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
-  capture_options->set_pid(process.pid());
+  capture_options->set_pid(process_id);
   if (samples_per_second == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
   } else {
@@ -188,11 +183,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     state_ = State::kStarted;
   }
 
-  CaptureEventProcessor event_processor(capture_listener_);
-
-  capture_listener_->OnCaptureStarted(std::move(process), std::move(instrumented_functions),
-                                      std::move(selected_tracepoints),
-                                      std::move(frame_track_function_ids));
+  CaptureEventProcessor event_processor(capture_listener_, std::move(frame_track_function_ids));
 
   while (!writes_done_failed_ && !try_abort_) {
     CaptureResponse response;

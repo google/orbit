@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/flags/flag.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <sys/types.h>
 
-#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -17,9 +17,7 @@
 #include "CaptureSerializationTestMatchers.h"
 #include "CoreUtils.h"
 #include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"
-#include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"
@@ -27,7 +25,6 @@
 #include "absl/strings/str_cat.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
-#include "process.pb.h"
 #include "tracepoint.pb.h"
 
 using orbit_client_data::ModuleManager;
@@ -38,31 +35,30 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TracepointEventInfo;
+using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
 using ::testing::ElementsAreArray;
 
 TEST(CaptureSerializer, GetCaptureFileName) {
-  int32_t process_id = 42;
-  std::string process_name = "p";
-  orbit_grpc_protos::ProcessInfo process_info;
-  process_info.set_name(process_name);
-  process_info.set_pid(process_id);
-  ProcessData process(process_info);
+  constexpr int32_t kProcessId = 42;
+
+  CaptureStarted capture_started;
+  capture_started.set_process_id(kProcessId);
+  capture_started.set_capture_start_timestamp_ns(1'392'033'600'000'000);
+  capture_started.set_executable_path("/path/to/p");
 
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_load_bias(0);
   module_info.set_file_path("path/to/module");
   module_info.set_address_start(15);
   module_info.set_address_end(1000);
-  ModuleData module(module_info);
 
-  std::vector<orbit_grpc_protos::ModuleInfo> module_infos{module_info};
-  process.UpdateModuleInfos(module_infos);
   ModuleManager module_manager;
-  module_manager.AddOrUpdateModules(module_infos);
 
-  CaptureData capture_data{std::move(process), &module_manager, {}, {}, {}};
+  CaptureData capture_data{&module_manager, capture_started, {}};
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
+  capture_data.mutable_process()->UpdateModuleInfos({module_info});
 
   time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
   std::string expected_file_name = absl::StrCat("p_", orbit_core::FormatTime(timestamp), ".orbit");
@@ -81,61 +77,67 @@ TEST(CaptureSerializer, IncludeOrbitExtensionInFile) {
 }
 
 TEST(CaptureSerializer, GenerateCaptureInfo) {
-  int32_t process_id = 42;
-  std::string process_name = "p";
-  orbit_grpc_protos::ProcessInfo process_info;
-  process_info.set_name(process_name);
-  process_info.set_pid(process_id);
-  ProcessData process(process_info);
+  constexpr int32_t kProcessId = 42;
+  constexpr const char* kExpectedProcessName = "p";
+
+  CaptureStarted capture_started;
+  capture_started.set_process_id(kProcessId);
+  capture_started.set_capture_start_timestamp_ns(1'392'033'600'000'000);
+  capture_started.set_executable_path("/path/to/p");
+
+  constexpr uint64_t kModuleLoadBias = 10;
+  constexpr uint64_t kModuleBaseAddress = 15;
 
   constexpr const char* kModulePath = "path/to/module";
   constexpr const char* kModuleBuildId = "build_id_id";
 
   orbit_grpc_protos::ModuleInfo module_info;
-  module_info.set_load_bias(0);
+  module_info.set_load_bias(kModuleLoadBias);
   module_info.set_file_path(kModulePath);
   module_info.set_build_id(kModuleBuildId);
-  module_info.set_address_start(15);
+  module_info.set_address_start(kModuleBaseAddress);
   module_info.set_address_end(1000);
 
-  std::vector<orbit_grpc_protos::ModuleInfo> module_infos{module_info};
-  process.UpdateModuleInfos(module_infos);
-  ModuleManager module_manager;
-  module_manager.AddOrUpdateModules(module_infos);
-  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(kModulePath, kModuleBuildId);
-  ASSERT_NE(module, nullptr);
-
-  orbit_grpc_protos::ModuleSymbols symbols;
-  symbols.set_symbols_file_path(kModulePath);
-  orbit_grpc_protos::SymbolInfo* symbol_info = symbols.add_symbol_infos();
-  symbol_info->set_name("foo");
-  symbol_info->set_demangled_name("void foo()");
-  symbol_info->set_address(123);
-  symbol_info->set_size(12);
-  module->AddSymbols(symbols);
-
   constexpr uint64_t kInstrumentedFunctionId = 23;
-  absl::flat_hash_map<uint64_t, InstrumentedFunction> instrumented_functions;
-  InstrumentedFunction instrumented_function;
+  constexpr uint64_t kInstrumentedFunctionAddress = 123;
+
+  orbit_grpc_protos::InstrumentedFunction instrumented_function;
   instrumented_function.set_function_id(kInstrumentedFunctionId);
-  instrumented_function.set_function_name("void foo()");
-  instrumented_function.set_file_offset(123);
+  instrumented_function.set_function_name("foo");
+  instrumented_function.set_file_offset(kInstrumentedFunctionAddress - kModuleLoadBias);
   instrumented_function.set_file_path(kModulePath);
   instrumented_function.set_file_build_id(kModuleBuildId);
-  uint64_t selected_function_absolute_address = 123 + 15 - 0;
-  instrumented_functions[kInstrumentedFunctionId] = instrumented_function;
 
-  TracepointInfoSet selected_tracepoints;
-  TracepointInfo selected_tracepoint_info;
-  selected_tracepoint_info.set_category("sched");
-  selected_tracepoint_info.set_name("sched_switch");
-  selected_tracepoints.insert(selected_tracepoint_info);
+  capture_started.mutable_capture_options()->add_instrumented_functions()->CopyFrom(
+      instrumented_function);
+
+  constexpr uint64_t kSelectedFunctionAbsoluteAddress =
+      kInstrumentedFunctionAddress + kModuleBaseAddress - kModuleLoadBias;
+
+  orbit_grpc_protos::TracepointInfo tracepoint_info;
+  tracepoint_info.set_category("sched");
+  tracepoint_info.set_name("sched_switch");
+  capture_started.mutable_capture_options()->add_instrumented_tracepoint()->CopyFrom(
+      tracepoint_info);
 
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
   frame_track_function_ids.insert(kInstrumentedFunctionId);
 
-  CaptureData capture_data{std::move(process), &module_manager, instrumented_functions,
-                           selected_tracepoints, frame_track_function_ids};
+  ModuleManager module_manager;
+  CaptureData capture_data{&module_manager, capture_started, frame_track_function_ids};
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
+  capture_data.mutable_process()->UpdateModuleInfos({module_info});
+
+  orbit_grpc_protos::ModuleSymbols symbols;
+  symbols.set_symbols_file_path("path/to/symbols");
+  symbols.set_load_bias(kModuleLoadBias);
+  orbit_grpc_protos::SymbolInfo* symbol_info = symbols.add_symbol_infos();
+  symbol_info->set_demangled_name("foo");
+  symbol_info->set_name("foo");
+  symbol_info->set_address(kInstrumentedFunctionAddress);
+  symbol_info->set_size(10);
+
+  module_manager.GetMutableModuleByPathAndBuildId(kModulePath, kModuleBuildId)->AddSymbols(symbols);
 
   capture_data.AddOrAssignThreadName(42, "t42");
   capture_data.AddOrAssignThreadName(43, "t43");
@@ -173,7 +175,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   callstack_event.set_callstack_id(callstack.id());
   capture_data.AddCallstackEvent(callstack_event);
 
-  capture_data.AddUniqueTracepointEventInfo(1, selected_tracepoint_info);
+  capture_data.AddUniqueTracepointEventInfo(1, tracepoint_info);
 
   TracepointEventInfo tracepoint_event;
   tracepoint_event.set_tracepoint_info_key(1);
@@ -200,11 +202,13 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ASSERT_EQ(1, capture_info.instrumented_functions_size());
   const FunctionInfo& actual_selected_function =
       capture_info.instrumented_functions().begin()->second;
-  EXPECT_EQ(instrumented_function.file_offset(), actual_selected_function.address() - 0);
+  EXPECT_EQ(instrumented_function.file_offset(),
+            actual_selected_function.address() - kModuleLoadBias);
+  EXPECT_EQ(instrumented_function.file_path(), actual_selected_function.module_path());
   EXPECT_EQ(instrumented_function.function_name(), actual_selected_function.pretty_name());
 
-  EXPECT_EQ(process_id, capture_info.process().pid());
-  EXPECT_EQ(process_name, capture_info.process().name());
+  EXPECT_EQ(capture_info.process().pid(), kProcessId);
+  EXPECT_EQ(capture_info.process().name(), kExpectedProcessName);
 
   ASSERT_EQ(1, capture_info.modules_size());
   const orbit_client_protos::ModuleInfo& actual_module = capture_info.modules(0);
@@ -242,8 +246,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ASSERT_EQ(1, capture_info.tracepoint_infos_size());
   const orbit_client_protos::TracepointInfo& actual_tracepoint_info =
       capture_info.tracepoint_infos(0);
-  ASSERT_EQ(actual_tracepoint_info.category(), selected_tracepoint_info.category());
-  ASSERT_EQ(actual_tracepoint_info.name(), selected_tracepoint_info.name());
+  ASSERT_EQ(actual_tracepoint_info.category(), tracepoint_info.category());
+  ASSERT_EQ(actual_tracepoint_info.name(), tracepoint_info.name());
   ASSERT_EQ(actual_tracepoint_info.tracepoint_info_key(), 1);
 
   ASSERT_EQ(1, capture_info.tracepoint_event_infos_size());
@@ -262,9 +266,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(actual_frame_track_function_id, kInstrumentedFunctionId);
 
   ASSERT_EQ(1, capture_info.function_stats_size());
-  ASSERT_TRUE(capture_info.function_stats().contains(selected_function_absolute_address));
+  ASSERT_TRUE(capture_info.function_stats().contains(kSelectedFunctionAbsoluteAddress));
   const FunctionStats& actual_function_stats =
-      capture_info.function_stats().at(selected_function_absolute_address);
+      capture_info.function_stats().at(kSelectedFunctionAbsoluteAddress);
   const FunctionStats& expected_function_stats =
       capture_data.GetFunctionStatsOrDefault(instrumented_function.function_id());
   EXPECT_EQ(expected_function_stats.count(), actual_function_stats.count());

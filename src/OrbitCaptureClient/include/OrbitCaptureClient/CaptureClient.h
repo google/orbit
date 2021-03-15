@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
+#include <grpcpp/channel.h>
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
@@ -24,7 +25,6 @@
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "capture_data.pb.h"
-#include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
@@ -69,11 +69,14 @@ class CaptureClient {
 
   bool AbortCaptureAndWait(int64_t max_wait_ms);
 
+  [[nodiscard]] static orbit_grpc_protos::InstrumentedFunction::FunctionType
+  InstrumentedFunctionTypeFromOrbitType(orbit_client_protos::FunctionInfo::OrbitType orbit_type);
+
  private:
   ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
-      ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
+      int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
-      TracepointInfoSet selected_tracepoints,
+      const TracepointInfoSet& selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,

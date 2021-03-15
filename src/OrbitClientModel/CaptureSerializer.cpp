@@ -135,8 +135,9 @@ CaptureInfo GenerateCaptureInfo(
     }
     // Fix names/offset/module in address infos (some might only be in process):
     added_address_info->set_function_name(function_utils::GetDisplayName(*function));
-    uint64_t absolute_function_address = capture_data.GetAbsoluteAddress(*function);
-    const uint64_t offset = absolute_address - absolute_function_address;
+    const ModuleData* module = capture_data.GetModuleByPathAndBuildId(function->module_path(),
+                                                                      function->module_build_id());
+    const uint64_t offset = function_utils::Offset(*function, *module);
     added_address_info->set_offset_in_function(offset);
     added_address_info->set_module_path(function->module_path());
   }
@@ -152,8 +153,9 @@ CaptureInfo GenerateCaptureInfo(
     const FunctionInfo* function = capture_data.FindFunctionByModulePathBuildIdAndOffset(
         module_path, build_id, instrumented_function->file_offset());
     CHECK(function != nullptr);
-    uint64_t absolute_address = capture_data.GetAbsoluteAddress(*function);
-    capture_info.mutable_function_stats()->operator[](absolute_address) = stats;
+    std::optional<uint64_t> absolute_address = capture_data.GetAbsoluteAddress(*function);
+    CHECK(absolute_address.has_value());
+    capture_info.mutable_function_stats()->operator[](absolute_address.value()) = stats;
   }
 
   // TODO: this is not really synchronized, since GetCallstackData processing below is not under the
