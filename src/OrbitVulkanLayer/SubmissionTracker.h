@@ -966,7 +966,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
     CHECK(command_buffer_to_state_.contains(command_buffer));
-    CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
+    const CommandBufferState& state = command_buffer_to_state_.at(command_buffer);
 
     for (const Marker& marker : state.markers) {
       std::optional<SubmittedMarker> submitted_marker = std::nullopt;
