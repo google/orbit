@@ -36,22 +36,23 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
 
 using orbit_base::Future;
 
-static CaptureOptions::InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
+static InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
     FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
     case FunctionInfo::kOrbitTimerStart:
     case FunctionInfo::kOrbitTimerStartAsync:
-      return CaptureOptions::InstrumentedFunction::kTimerStart;
+      return InstrumentedFunction::kTimerStart;
     case FunctionInfo::kOrbitTimerStop:
     case FunctionInfo::kOrbitTimerStopAsync:
-      return CaptureOptions::InstrumentedFunction::kTimerStop;
+      return InstrumentedFunction::kTimerStop;
     case FunctionInfo::kOrbitTrackValue:
     case FunctionInfo::kNone:
-      return CaptureOptions::InstrumentedFunction::kRegular;
+      return InstrumentedFunction::kRegular;
     case orbit_client_protos::
         FunctionInfo_OrbitType_FunctionInfo_OrbitType_INT_MIN_SENTINEL_DO_NOT_USE_:
     case orbit_client_protos::
@@ -135,13 +136,13 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   capture_options->set_max_local_marker_depth_per_command_buffer(
       max_local_marker_depth_per_command_buffer);
   for (const auto& [function_id, function] : selected_functions) {
-    CaptureOptions::InstrumentedFunction* instrumented_function =
-        capture_options->add_instrumented_functions();
+    InstrumentedFunction* instrumented_function = capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
     const ModuleData* module = module_manager.GetModuleByPath(function.loaded_module_path());
     CHECK(module != nullptr);
     instrumented_function->set_file_offset(function_utils::Offset(function, *module));
     instrumented_function->set_function_id(function_id);
+    instrumented_function->set_function_name(function.pretty_name());
     instrumented_function->set_function_type(
         InstrumentedFunctionTypeFromOrbitType(function.orbit_type()));
   }

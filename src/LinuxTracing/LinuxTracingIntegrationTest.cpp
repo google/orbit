@@ -481,20 +481,22 @@ void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions*
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
       CHECK(!outer_function_symbol_found);
       outer_function_symbol_found = true;
-      orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
+      orbit_grpc_protos::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(outer_function_id);
+      instrumented_function.set_function_name(symbol.name());
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
       CHECK(!inner_function_symbol_found);
       inner_function_symbol_found = true;
-      orbit_grpc_protos::CaptureOptions::InstrumentedFunction instrumented_function;
+      orbit_grpc_protos::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(inner_function_id);
+      instrumented_function.set_function_name(symbol.name());
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
   }
