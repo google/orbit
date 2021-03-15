@@ -22,6 +22,7 @@
 #include "GlUtils.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
+#include "GrpcProtos/Constants.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -39,6 +40,8 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
+
+using orbit_grpc_protos::kMissingInfo;
 
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
                      const CaptureData* capture_data)
@@ -289,6 +292,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kSystemMemoryUsage: {
+      ProcessMemoryTrackingTimer(timer_info);
       break;
     }
     case TimerInfo::kNone: {
@@ -413,6 +417,38 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 
   if (track->GetProcessId() == -1) {
     track->SetProcessId(timer_info.process_id());
+  }
+}
+
+void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
+  const std::string kTotalLabel = "Memory Total (kB)";
+  const std::string kUnusedLabel = "Memory Unused (kB)";
+  const std::string kBuffersOrCachedLabel = "Memory Buffers / Cached (kB)";
+  const std::string kUsedLabel = "Memory Used (kB)";
+
+  GraphTrack* track;
+  int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
+  int64_t unused_kb = orbit_api::Decode<int64_t>(
+      timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
+  if (unused_kb != kMissingInfo) {
+    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel);
+    track->AddValue(unused_kb, timer_info.start());
+  }
+
+  int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kBuffersKb)));
+  int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
+  if (buffers_kb != kMissingInfo && cached_kb != kMissingInfo) {
+    track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel);
+    track->AddValue(buffers_kb + cached_kb, timer_info.start());
+  }
+
+  if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
+      cached_kb != kMissingInfo) {
+    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel);
+    track->AddValue(total_kb - unused_kb - buffers_kb - cached_kb, timer_info.start());
   }
 }
 

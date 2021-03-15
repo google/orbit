@@ -179,6 +179,7 @@ class TimeGraph {
   void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
   TextRenderer text_renderer_static_;
