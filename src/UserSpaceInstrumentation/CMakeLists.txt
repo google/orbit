@@ -28,6 +28,8 @@ target_sources(UserSpaceInstrumentation PRIVATE
         AllocateInTracee.cpp
         AllocateInTracee.h
         Attach.cpp
+        InjectLibraryInTracee.cpp
+        InjectLibraryInTracee.h
         MachineCode.cpp
         MachineCode.h
         RegisterState.cpp)
@@ -64,6 +66,7 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         AccessTraceesMemoryTest.cpp
         AllocateInTraceeTest.cpp
         AttachTest.cpp
+        InjectLibraryInTraceeTest.cpp
         MachineCodeTest.cpp
         RegisterStateTest.cpp
         TestProcess.cpp
