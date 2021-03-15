@@ -103,8 +103,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen in libc.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl-",
-                                                              "__libc_dlopen_mode", "libc-"));
+  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl",
+                                                              "__libc_dlopen_mode", "libc"));
 
   // Backup registers.
   RegisterState original_registers;
@@ -166,7 +166,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
                                                   std::string_view symbol) {
   // Figure out address of dlsym in libc.
   OUTCOME_TRY(address_dlsym,
-              FindFunctionAddressWithFallback(pid, "dlsym", "libdl-", "__libc_dlsym", "libc-"));
+              FindFunctionAddressWithFallback(pid, "dlsym", "libdl", "__libc_dlsym", "libc"));
 
   // Backup registers.
   RegisterState original_registers;
@@ -228,7 +228,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
   OUTCOME_TRY(address_dlclose,
-              FindFunctionAddressWithFallback(pid, "dlclose", "libdl-", "__libc_dlclose", "libc-"));
+              FindFunctionAddressWithFallback(pid, "dlclose", "libdl", "__libc_dlclose", "libc"));
 
   // Backup registers.
   RegisterState original_registers;
