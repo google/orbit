@@ -897,7 +897,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
                                           QueueSubmission* queue_submission,
                                           SubmitInfo* submitted_submit_info,
                                           std::vector<uint32_t>* query_slots_not_needed_to_read) {
-    mutex_.AssertReaderHeld();
+    mutex_.AssertHeld();
     CHECK(queue_submission != nullptr);
     CHECK(submitted_submit_info != nullptr);
     CHECK(query_slots_not_needed_to_read != nullptr);
@@ -954,7 +954,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   void PersistDebugMarkersOfASingleCommandBufferOnSubmit(
       VkCommandBuffer command_buffer, std::optional<QueueSubmission>* queue_submission_optional,
       QueueMarkerState* markers, std::vector<uint32_t>* marker_slots_not_needed_to_read) {
-    mutex_.AssertReaderHeld();
+    mutex_.AssertHeld();
     CHECK(queue_submission_optional != nullptr);
     CHECK(markers != nullptr);
     CHECK(marker_slots_not_needed_to_read != nullptr);
