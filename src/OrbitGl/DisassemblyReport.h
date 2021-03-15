@@ -32,10 +32,10 @@ class DisassemblyReport : public CodeReport {
   [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override;
 
  private:
-  const Disassembler disasm_;
-  const std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
-  const uint32_t function_count_;
-  const uint32_t samples_count_;
+  Disassembler disasm_;
+  std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
+  uint32_t function_count_;
+  uint32_t samples_count_;
 };
 
 #endif  // ORBIT_GL_DISASSEMBLY_REPORT_H_
