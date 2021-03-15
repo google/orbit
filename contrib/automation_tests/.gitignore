@@ -1,0 +1,4 @@
+# Ignore common names of virtual environments
+.env
+env
+venv
