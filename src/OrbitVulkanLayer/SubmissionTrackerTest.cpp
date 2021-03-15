@@ -1733,4 +1733,134 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
                            tid, pid);
 }
 
+// ------------------------------------------------------------------------------------------------
+// Tests to ensure that we can handle some common misuses of the command buffer lifecycle:
+// ------------------------------------------------------------------------------------------------
+
+TEST_F(SubmissionTrackerTest, MarkCommandBufferEndWontWriteTimestampsInInitialState) {
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
+      .Times(1)
+      .WillOnce(Invoke(MockNextReadyQuerySlot1));
+  std::vector<uint32_t> actual_slots_to_rollback;
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
+      .Times(1)
+      .WillOnce(Return(dummy_write_timestamp_function));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+
+  EXPECT_THAT(actual_slots_to_rollback, UnorderedElementsAre(kSlotIndex1));
+}
+
+TEST_F(SubmissionTrackerTest, MarkDebugMarkerBeginWontWriteTimestampsInInitialState) {
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
+      .Times(1)
+      .WillOnce(Invoke(MockNextReadyQuerySlot1));
+  std::vector<uint32_t> actual_slots_to_rollback;
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
+      .Times(1)
+      .WillOnce(Return(dummy_write_timestamp_function));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, "Some Text", {});
+
+  EXPECT_THAT(actual_slots_to_rollback, UnorderedElementsAre(kSlotIndex1));
+}
+
+TEST_F(SubmissionTrackerTest, MarkDebugMarkerEndWontWriteTimestampsInInitialState) {
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
+      .Times(2)
+      .WillOnce(Invoke(MockNextReadyQuerySlot1))
+      .WillOnce(Invoke(MockNextReadyQuerySlot2));
+  std::vector<uint32_t> actual_slots_to_rollback;
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
+      .Times(2)
+      .WillRepeatedly(Return(dummy_write_timestamp_function));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkDebugMarkerBegin(command_buffer_, "Some Text", {});
+  tracker_.ResetCommandBuffer(command_buffer_);
+  tracker_.MarkDebugMarkerEnd(command_buffer_);
+
+  EXPECT_THAT(actual_slots_to_rollback, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
+}
+
+TEST_F(SubmissionTrackerTest, SubmitCommandBufferInInitialStateWillNotYieldTimestamps) {
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
+      .Times(2)
+      .WillOnce(Invoke(MockNextReadyQuerySlot1))
+      .WillOnce(Invoke(MockNextReadyQuerySlot2));
+  std::vector<uint32_t> actual_slots_to_rollback;
+  EXPECT_CALL(timer_query_pool_, RollbackPendingQuerySlots)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_slots_to_rollback));
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
+      .Times(2)
+      .WillRepeatedly(Return(dummy_write_timestamp_function));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  tracker_.ResetCommandBuffer(command_buffer_);
+  std::optional<QueueSubmission> queue_submission_optional =
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
+
+  EXPECT_THAT(actual_slots_to_rollback, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
+
+  // Here we don't mind about the actual implementation. If the implementation detects that this
+  // submission does not not contain any timestamp and thus drop the submission, this is fine.
+  // Otherwise, we need to check, that the yielded submission does not contain a timestamp.
+  if (!queue_submission_optional.has_value()) {
+    return;
+  }
+
+  for (const auto& submit_info : queue_submission_optional->submit_infos) {
+    EXPECT_TRUE(submit_info.command_buffers.empty());
+  }
+  EXPECT_TRUE(queue_submission_optional->completed_markers.empty());
+}
+
+TEST_F(SubmissionTrackerTest, WillWriteTimestampEvenWhenCommandBufferIsNotInInitialState) {
+  EXPECT_CALL(timer_query_pool_, NextReadyQuerySlot)
+      .Times(3)
+      .WillOnce(Invoke(MockNextReadyQuerySlot1))
+      .WillOnce(Invoke(MockNextReadyQuerySlot2))
+      .WillOnce(Invoke(MockNextReadyQuerySlot3));
+  std::vector<uint32_t> actual_slots_to_reset;
+  EXPECT_CALL(timer_query_pool_, MarkQuerySlotsForReset)
+      .Times(1)
+      .WillOnce(SaveArg<1>(&actual_slots_to_reset));
+  EXPECT_CALL(dispatch_table_, CmdWriteTimestamp)
+      .Times(3)
+      .WillRepeatedly(Return(dummy_write_timestamp_function));
+
+  producer_->StartCapture();
+  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffer_, 1);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+  tracker_.MarkCommandBufferEnd(command_buffer_);
+  std::optional<QueueSubmission> queue_submission_optional =
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_info_);
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_info_, queue_submission_optional);
+  tracker_.MarkCommandBufferBegin(command_buffer_);
+
+  EXPECT_THAT(actual_slots_to_reset, UnorderedElementsAre(kSlotIndex1, kSlotIndex2));
+}
 }  // namespace orbit_vulkan_layer
