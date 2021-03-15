@@ -38,7 +38,7 @@ namespace orbit_linux_tracing {
 using orbit_base::GetAllPids;
 using orbit_base::GetTidsOfProcess;
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ThreadName;
 
 TracerThread::TracerThread(const CaptureOptions& capture_options)
@@ -59,17 +59,16 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
 
   instrumented_functions_.reserve(capture_options.instrumented_functions_size());
 
-  for (const CaptureOptions::InstrumentedFunction& instrumented_function :
+  for (const InstrumentedFunction& instrumented_function :
        capture_options.instrumented_functions()) {
     uint64_t function_id = instrumented_function.function_id();
     instrumented_functions_.emplace_back(function_id, instrumented_function.file_path(),
                                          instrumented_function.file_offset());
 
     // Manual instrumentation.
-    if (instrumented_function.function_type() == CaptureOptions_InstrumentedFunction::kTimerStart) {
+    if (instrumented_function.function_type() == InstrumentedFunction::kTimerStart) {
       manual_instrumentation_config_.AddTimerStartFunctionId(function_id);
-    } else if (instrumented_function.function_type() ==
-               CaptureOptions_InstrumentedFunction::kTimerStop) {
+    } else if (instrumented_function.function_type() == InstrumentedFunction::kTimerStop) {
       manual_instrumentation_config_.AddTimerStopFunctionId(function_id);
     }
   }
