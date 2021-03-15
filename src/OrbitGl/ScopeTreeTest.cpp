@@ -67,9 +67,6 @@ void CreateNestedTestScopes(size_t max_num_nodes, size_t max_depth, size_t num_s
 }
 
 void ValidateTree(const ScopeTree<TestScope>& tree) {
-  // The output of tree.Print() is visible by running ctest with --verbose.
-  tree.Print();
-
   // Check that recursively counting nodes produces the same result as Size().
   EXPECT_EQ(tree.Size(), tree.Root()->CountNodesInSubtree());
 
@@ -176,7 +173,6 @@ TEST(ScopeTree, OutOfOrderScopes) {
     std::shuffle(test_scopes.begin(), test_scopes.end(), gen);
     ScopeTree<TestScope> tree;
     for (TestScope* scope : test_scopes) {
-      LOG("Adding [%lu, %lu]", scope->start, scope->end);
       tree.Insert(scope);
     }
     ValidateTree(tree);
