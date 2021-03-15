@@ -131,6 +131,20 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
                      kThresholdColor);
     batcher->AddLine(Vec2(text_box_position[0] + text_box_size[0], y), to, text_z, kThresholdColor);
   }
+
+  // Add value upper bound text box (e.g., the "Memory Total" text box for the memory tracks).
+  if (value_upper_bound_.has_value()) {
+    std::string text = absl::StrFormat("%s: %f", value_upper_bound_.value().first,
+                                       value_upper_bound_.value().second);
+    uint32_t font_size = layout_->CalculateZoomedFontSize();
+    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
+    Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
+    Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0],
+                           pos_[1] - layout_->GetTextBoxHeight() / 2.f);
+    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
+                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
+                                      kWhite, font_size, text_box_size[0]);
+  }
 }
 
 void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,
