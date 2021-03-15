@@ -59,7 +59,10 @@ class TrackManager {
   SchedulerTrack* GetOrCreateSchedulerTrack();
   ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
-  GraphTrack* GetOrCreateGraphTrack(const std::string& name);
+  GraphTrack* GetOrCreateGraphTrack(
+      const std::string& name,
+      const std::optional<std::pair<std::string, double>>& warning_threshold = std::nullopt,
+      const std::optional<std::pair<std::string, double>>& value_upper_bound = std::nullopt);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
 
