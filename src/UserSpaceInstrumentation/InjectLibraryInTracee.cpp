@@ -6,8 +6,8 @@
 
 #include <absl/base/casts.h>
 #include <absl/strings/match.h>
-#include <absl/strings/str_format.h>
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
@@ -162,7 +162,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   return return_value;
 }
 
-[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string_view symbol) {
+[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
+                                                  std::string_view symbol) {
   // Figure out address of dlsym in libc.
   OUTCOME_TRY(address_dlsym,
               FindFunctionAddressWithFallback(pid, "dlsym", "libdl-", "__libc_dlsym", "libc-"));
@@ -247,7 +248,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
-   code.AppendBytes({0x48, 0xbf})
+  code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(absl::bit_cast<uint64_t>(handle))
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(address_dlclose)
