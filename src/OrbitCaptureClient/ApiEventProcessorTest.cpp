@@ -48,10 +48,10 @@ class ApiEventCaptureListener : public EmptyCaptureListener {
 };
 
 // ApiTester exposes methods that mocks the Orbit API and internally creates grpc events that it
-// forwards to both a CaptureEventProcessor and a ApiEventProcessor. The test makes sure that both
+// forwards to both a CaptureEventProcessor and an ApiEventProcessor. The test makes sure that both
 // processors forward the same information to their listener. Note that a CaptureEventProcessor owns
-// a ApiEventProcessor to which it forwards ApiEvent events. To help readability of test code, the
-// api methods return a ApiTester reference so that we can chain function calls.
+// an ApiEventProcessor to which it forwards ApiEvent events. To help readability of test code, the
+// api methods return an ApiTester reference so that we can chain function calls.
 class ApiTester {
  public:
   ApiTester()
