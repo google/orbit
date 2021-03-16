@@ -367,6 +367,20 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
 
+  void SetCollectMemoryInfo(bool collect_memory_info) {
+    data_manager_->set_collect_memory_info(collect_memory_info);
+  }
+  [[nodiscard]] bool GetCollectMemoryInfo() const { return data_manager_->collect_memory_info(); }
+  void SetMemorySamplingPeriodNs(uint64_t memory_sampling_period_ns) {
+    data_manager_->set_memory_sampling_period_ns(memory_sampling_period_ns);
+  }
+  void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
+    data_manager_->set_memory_warning_threshold_kb(memory_warning_threshold_kb);
+  }
+  [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const {
+    return data_manager_->memory_warning_threshold_kb();
+  }
+
   // TODO(kuebler): Move them to a separate controler at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
   void DeselectFunction(const orbit_client_protos::FunctionInfo& func);

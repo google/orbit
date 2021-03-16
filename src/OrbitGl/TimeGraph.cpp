@@ -426,8 +426,11 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   const std::string kBuffersOrCachedLabel = "Memory Buffers / Cached (kB)";
   const std::string kUsedLabel = "Memory Used (kB)";
 
-  const std::pair<std::string, uint64_t> kProductionLimit =
-      std::make_pair("Production Limit (kB)", 1024 * 1024 * 8);
+  std::optional<std::pair<std::string, uint64_t>> warning_threshold_label_and_kb = std::nullopt;
+  if (app_->GetCollectMemoryInfo()) {
+    warning_threshold_label_and_kb =
+        std::make_pair("Production Limit (kB)", app_->GetMemoryWarningThresholdKb());
+  }
 
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
@@ -454,7 +457,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
 
   if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
       cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel, kProductionLimit, total_label_and_kb);
+    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel, warning_threshold_label_and_kb,
+                                                  total_label_and_kb);
     track->AddValue(total_kb - unused_kb - buffers_kb - cached_kb, timer_info.start());
   }
 }

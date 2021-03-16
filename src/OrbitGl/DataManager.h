@@ -91,6 +91,23 @@ class DataManager final {
     return max_local_marker_depth_per_command_buffer_;
   }
 
+  void set_collect_memory_info(bool collect_memory_info) {
+    collect_memory_info_ = collect_memory_info;
+  }
+  [[nodiscard]] bool collect_memory_info() const { return collect_memory_info_; }
+
+  void set_memory_sampling_period_ns(uint64_t memory_sampling_period_ns) {
+    memory_sampling_period_ns_ = memory_sampling_period_ns;
+  }
+  [[nodiscard]] uint64_t memory_sampling_period_ns() const { return memory_sampling_period_ns_; }
+
+  void set_memory_warning_threshold_kb(uint64_t memory_warning_threshold_kb) {
+    memory_warning_threshold_kb_ = memory_warning_threshold_kb;
+  }
+  [[nodiscard]] uint64_t memory_warning_threshold_kb() const {
+    return memory_warning_threshold_kb_;
+  }
+
  private:
   const std::thread::id main_thread_id_;
   FunctionInfoSet selected_functions_;
@@ -110,6 +127,10 @@ class DataManager final {
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
   orbit_grpc_protos::UnwindingMethod unwinding_method_{};
+
+  bool collect_memory_info_ = false;
+  uint64_t memory_sampling_period_ns_ = 100'000'000;
+  uint64_t memory_warning_threshold_kb_ = 1024 * 1024 * 8;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_
