@@ -89,23 +89,12 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
     return;
   }
 
-  // Draw label
-  uint64_t current_mouse_time_ns = time_graph_->GetCurrentMouseTimeNs();
-  auto previous_point = GetPreviousValueAndTime(current_mouse_time_ns);
-
-  double value =
-      previous_point.has_value() ? previous_point.value().second : values_.begin()->second;
-  uint64_t first_time = values_.begin()->first;
-  uint64_t label_time = std::max(current_mouse_time_ns, first_time);
-  float point_x = time_graph_->GetWorldFromTick(label_time);
-  double normalized_value = (value - min_) * inv_value_range_;
-  float point_y = pos_[1] - size_[1] * (1.f - static_cast<float>(normalized_value));
   const Color kBlack(0, 0, 0, 255);
   const Color kWhite(255, 255, 255, 255);
   float text_z = GlCanvas::kZValueEvent + z_offset;
-  DrawLabel(canvas, Vec2(point_x, point_y), std::to_string(value), kBlack, kWhite, text_z);
 
   // Add warning threshold text box and line.
+  Batcher* batcher = canvas->GetBatcher();
   if (warning_threshold_.has_value()) {
     const Color kThresholdColor(244, 67, 54, 255);
 
@@ -115,8 +104,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
     Vec2 from(x, y);
     Vec2 to(x + size_[0], y);
 
-    std::string text = absl::StrFormat("%s: %f", warning_threshold_.value().first,
-                                       warning_threshold_.value().second);
+    std::string text = warning_threshold_.value().first;
     uint32_t font_size = layout_->CalculateZoomedFontSize();
     float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
@@ -126,7 +114,6 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
                                       text_box_position[1] + layout_->GetTextOffset(), text_z,
                                       kThresholdColor, font_size, text_box_size[0]);
 
-    Batcher* batcher = canvas->GetBatcher();
     batcher->AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z,
                      kThresholdColor);
     batcher->AddLine(Vec2(text_box_position[0] + text_box_size[0], y), to, text_z, kThresholdColor);
@@ -134,17 +121,29 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
 
   // Add value upper bound text box (e.g., the "Memory Total" text box for the memory tracks).
   if (value_upper_bound_.has_value()) {
-    std::string text = absl::StrFormat("%s: %f", value_upper_bound_.value().first,
-                                       value_upper_bound_.value().second);
+    std::string text = value_upper_bound_.value().first;
     uint32_t font_size = layout_->CalculateZoomedFontSize();
     float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
-    Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0],
+    Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
+                               layout_->GetSliderWidth(),
                            pos_[1] - layout_->GetTextBoxHeight() / 2.f);
     canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
                                       text_box_position[1] + layout_->GetTextOffset(), text_z,
                                       kWhite, font_size, text_box_size[0]);
   }
+
+  // Draw label
+  uint64_t current_mouse_time_ns = time_graph_->GetCurrentMouseTimeNs();
+  auto previous_point = GetPreviousValueAndTime(current_mouse_time_ns);
+  double value =
+      previous_point.has_value() ? previous_point.value().second : values_.begin()->second;
+  uint64_t first_time = values_.begin()->first;
+  uint64_t label_time = std::max(current_mouse_time_ns, first_time);
+  float point_x = time_graph_->GetWorldFromTick(label_time);
+  double normalized_value = (value - min_) * inv_value_range_;
+  float point_y = pos_[1] - size_[1] * (1.f - static_cast<float>(normalized_value));
+  DrawLabel(canvas, Vec2(point_x, point_y), std::to_string(value), kBlack, kWhite, text_z);
 }
 
 void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,
