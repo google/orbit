@@ -21,7 +21,7 @@
 #include "ElfUtils/LinuxMap.h"
 #include "MachineCode.h"
 #include "OrbitBase/Logging.h"
-#include "UserSpaceInstrumentation/RegisterState.h"
+#include "RegisterState.h"
 
 namespace orbit_user_space_instrumentation {
 

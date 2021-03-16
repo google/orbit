@@ -18,21 +18,19 @@ target_include_directories(UserSpaceInstrumentation PUBLIC
 target_include_directories(UserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(UserSpaceInstrumentation PUBLIC
-        include/UserSpaceInstrumentation/Attach.h
-        include/UserSpaceInstrumentation/RegisterState.h)
-
 target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.cpp
         AccessTraceesMemory.h
         AllocateInTracee.cpp
         AllocateInTracee.h
         Attach.cpp
+        Attach.h
         InjectLibraryInTracee.cpp
         InjectLibraryInTracee.h
         MachineCode.cpp
         MachineCode.h
-        RegisterState.cpp)
+        RegisterState.cpp
+        RegisterState.h)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
         LinuxTracing

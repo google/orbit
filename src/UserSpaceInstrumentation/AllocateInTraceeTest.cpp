@@ -15,10 +15,10 @@
 #include <vector>
 
 #include "AllocateInTracee.h"
+#include "Attach.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 

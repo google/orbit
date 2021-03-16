@@ -16,14 +16,14 @@
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
+#include "Attach.h"
 #include "InjectLibraryInTracee.h"
 #include "MachineCode.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "UserSpaceInstrumentation/Attach.h"
-#include "UserSpaceInstrumentation/RegisterState.h"
+#include "RegisterState.h"
 
 namespace orbit_user_space_instrumentation {
 
