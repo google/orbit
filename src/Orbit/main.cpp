@@ -96,6 +96,8 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   if (metrics_uploader_result.has_value()) {
     metrics_uploader = std::move(metrics_uploader_result.value());
     LOG("MetricsUploader was initialized successfully");
+    metrics_uploader->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_METRICS_UPLOADER_START);
   } else {
     ERROR("%s", metrics_uploader_result.error().message());
   }
