@@ -111,8 +111,8 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
         target_config = orbit_qt::FileTarget(capture_file_path);
         skip_profiling_target_dialog = false;
       } else {
-        orbit_qt::ProfilingTargetDialog target_dialog{&ssh_connection_artifacts,
-                                                      std::move(target_config)};
+        orbit_qt::ProfilingTargetDialog target_dialog{
+            &ssh_connection_artifacts, std::move(target_config), metrics_uploader.get()};
         target_config = target_dialog.Exec();
 
         if (!target_config.has_value()) {

@@ -22,6 +22,7 @@ message OrbitLogEvent {
     ORBIT_ITERATOR_ADD = 8;
     ORBIT_ITERATOR_REMOVE = 9;
     ORBIT_MAIN_WINDOW_CLOSE = 10;
+    ORBIT_SESSION_SETUP_WINDOW_OPEN = 11;
   }
   enum StatusCode {
     UNKNOWN_STATUS = 0;
