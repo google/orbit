@@ -17,11 +17,12 @@
 
 #include "ElfUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "module.pb.h"
 
 TEST(LinuxMap, CreateModuleHelloWorld) {
-  using orbit_elf_utils::CreateModule;
+  using orbit_elf_utils::CreateModuleFromFile;
   using orbit_grpc_protos::ModuleInfo;
 
   const std::filesystem::path hello_world_path =
@@ -29,7 +30,7 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
-  auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
+  auto result = CreateModuleFromFile(hello_world_path, kStartAddress, kEndAddress);
   ASSERT_FALSE(result.has_error()) << result.error().message();
 
   EXPECT_EQ(result.value().name(), "hello_world_elf");
@@ -42,21 +43,21 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
 }
 
 TEST(LinuxMap, CreateModuleOnDev) {
-  using orbit_elf_utils::CreateModule;
+  using orbit_elf_utils::CreateModuleFromFile;
   using orbit_grpc_protos::ModuleInfo;
 
   const std::filesystem::path dev_zero_path = "/dev/zero";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
-  auto result = CreateModule(dev_zero_path, kStartAddress, kEndAddress);
+  auto result = CreateModuleFromFile(dev_zero_path, kStartAddress, kEndAddress);
   ASSERT_TRUE(result.has_error());
   EXPECT_EQ(result.error().message(),
             "The module \"/dev/zero\" is a character or block device (is in /dev/)");
 }
 
 TEST(LinuxMap, CreateModuleNotElf) {
-  using orbit_elf_utils::CreateModule;
+  using orbit_elf_utils::CreateModuleFromFile;
   using orbit_grpc_protos::ModuleInfo;
 
   const std::filesystem::path text_file =
@@ -64,14 +65,14 @@ TEST(LinuxMap, CreateModuleNotElf) {
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
-  auto result = CreateModule(text_file, kStartAddress, kEndAddress);
+  auto result = CreateModuleFromFile(text_file, kStartAddress, kEndAddress);
   ASSERT_TRUE(result.has_error());
   EXPECT_THAT(result.error().message(),
               testing::HasSubstr("The file was not recognized as a valid object file"));
 }
 
 TEST(LinuxMan, CreateModuleWithSoname) {
-  using orbit_elf_utils::CreateModule;
+  using orbit_elf_utils::CreateModuleFromFile;
   using orbit_grpc_protos::ModuleInfo;
 
   const std::filesystem::path hello_world_path =
@@ -79,7 +80,7 @@ TEST(LinuxMan, CreateModuleWithSoname) {
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
-  auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
+  auto result = CreateModuleFromFile(hello_world_path, kStartAddress, kEndAddress);
   ASSERT_FALSE(result.has_error()) << result.error().message();
 
   EXPECT_EQ(result.value().name(), "libtest.so");
@@ -92,14 +93,14 @@ TEST(LinuxMan, CreateModuleWithSoname) {
 }
 
 TEST(LinuxMap, CreateModuleFileDoesNotExist) {
-  using orbit_elf_utils::CreateModule;
+  using orbit_elf_utils::CreateModuleFromFile;
   using orbit_grpc_protos::ModuleInfo;
 
   const std::filesystem::path file_path = "/not/a/valid/file/path";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
-  auto result = CreateModule(file_path, kStartAddress, kEndAddress);
+  auto result = CreateModuleFromFile(file_path, kStartAddress, kEndAddress);
   ASSERT_TRUE(result.has_error());
   EXPECT_EQ(result.error().message(), "The module file \"/not/a/valid/file/path\" does not exist");
 }
@@ -183,4 +184,31 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_EQ(no_symbols_module_info->build_id(), "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
     EXPECT_EQ(no_symbols_module_info->load_bias(), 0x400000);
   }
+}
+
+TEST(LinuxMap, CreateModuleFromBufferHelloWorld) {
+  using orbit_elf_utils::CreateModuleFromBuffer;
+  using orbit_grpc_protos::ModuleInfo;
+
+  const std::filesystem::path hello_world_path =
+      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
+  ASSERT_TRUE(std::filesystem::exists(hello_world_path));
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+  auto buffer_or_error = orbit_base::ReadFileToString(hello_world_path);
+  ASSERT_TRUE(buffer_or_error.has_value());
+  const auto& buffer = buffer_or_error.value();
+
+  auto result = CreateModuleFromBuffer(hello_world_path.filename().string(), buffer, kStartAddress,
+                                       kEndAddress);
+  ASSERT_FALSE(result.has_error()) << result.error().message();
+
+  EXPECT_EQ(result.value().name(), "hello_world_elf");
+  EXPECT_EQ(result.value().file_path(), "hello_world_elf");
+  EXPECT_EQ(result.value().file_size(), 16616);
+  EXPECT_EQ(result.value().address_start(), kStartAddress);
+  EXPECT_EQ(result.value().address_end(), kEndAddress);
+  EXPECT_EQ(result.value().build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
+  EXPECT_EQ(result.value().load_bias(), 0x0);
 }

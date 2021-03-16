@@ -19,9 +19,12 @@
 
 namespace orbit_elf_utils {
 
-ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModule(const std::filesystem::path& module_path,
-                                                           uint64_t start_address,
-                                                           uint64_t end_address);
+ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromFile(
+    const std::filesystem::path& module_path, uint64_t start_address, uint64_t end_address);
+ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromBuffer(std::string module_name,
+                                                                     std::string_view buffer,
+                                                                     uint64_t start_address,
+                                                                     uint64_t end_address);
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t pid);
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
     std::string_view proc_maps_data);

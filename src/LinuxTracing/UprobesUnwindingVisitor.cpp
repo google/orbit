@@ -231,8 +231,8 @@ void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   }
 
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_elf_utils::CreateModule(event->filename(), event->address(),
-                                    event->address() + event->length());
+      orbit_elf_utils::CreateModuleFromFile(event->filename(), event->address(),
+                                            event->address() + event->length());
   if (module_info_or_error.has_error()) {
     ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;

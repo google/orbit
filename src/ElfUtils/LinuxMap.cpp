@@ -27,8 +27,8 @@ namespace orbit_elf_utils {
 using orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
 
-ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path,
-                                        uint64_t start_address, uint64_t end_address) {
+ErrorMessageOr<ModuleInfo> CreateModuleFromFile(const std::filesystem::path& module_path,
+                                                uint64_t start_address, uint64_t end_address) {
   // This excludes mapped character or block devices.
   if (absl::StartsWith(module_path.string(), "/dev/")) {
     return ErrorMessage(absl::StrFormat(
@@ -67,6 +67,35 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   module_info.set_address_end(end_address);
   module_info.set_build_id(elf_file_or_error.value()->GetBuildId());
   module_info.set_load_bias(load_bias_or_error.value());
+  module_info.set_is_virtual_module(false);
+
+  return module_info;
+}
+
+ErrorMessageOr<ModuleInfo> CreateModuleFromBuffer(std::string module_name, std::string_view buffer,
+                                                  uint64_t start_address, uint64_t end_address) {
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error =
+      ElfFile::CreateFromBuffer({}, buffer.data(), buffer.size());
+  if (elf_file_or_error.has_error()) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to load module: %s", elf_file_or_error.error().message()));
+  }
+
+  ErrorMessageOr<uint64_t> load_bias_or_error = elf_file_or_error.value()->GetLoadBias();
+  // Every loadable module contains a load bias.
+  if (load_bias_or_error.has_error()) {
+    return load_bias_or_error.error();
+  }
+
+  ModuleInfo module_info;
+  module_info.set_name(module_name);
+  module_info.set_file_path(std::move(module_name));
+  module_info.set_file_size(buffer.size());
+  module_info.set_address_start(start_address);
+  module_info.set_address_end(end_address);
+  module_info.set_build_id(elf_file_or_error.value()->GetBuildId());
+  module_info.set_load_bias(load_bias_or_error.value());
+  module_info.set_is_virtual_module(true);
 
   return module_info;
 }
@@ -119,7 +148,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     if (!address_range.is_executable) continue;
 
     ErrorMessageOr<ModuleInfo> module_info_or_error =
-        CreateModule(module_path, address_range.start_address, address_range.end_address);
+        CreateModuleFromFile(module_path, address_range.start_address, address_range.end_address);
     if (module_info_or_error.has_error()) {
       ERROR("Unable to create module: %s", module_info_or_error.error().message());
       continue;
