@@ -237,10 +237,8 @@ class ShowSourceCode(E2ETestCase):
     def _handle_source_code_dialog(self):
         logging.info("Waiting for the source code dialog.")
 
-        def get_source_code_dialog():
-            return self.find_control(control_type="Window", name="main.c", parent=self.suite.top_window(), recurse=False)
-        wait_for_condition(lambda: get_source_code_dialog().is_visible())
-        source_code_dialog = get_source_code_dialog()
+        source_code_dialog = self.suite.application.window(auto_id="CodeViewerDialog")
+        source_code_dialog.wait('visible')
 
         logging.info("Found source code dialog. Checking contents...")
         source_code_edit = self.find_control(
