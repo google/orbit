@@ -33,14 +33,14 @@ using orbit_elf_utils::ReadModules;
 // Size of the small amount of memory we need in the tracee to write machine code into.
 constexpr uint64_t kCodeScratchPadSize = 1024;
 
-constexpr char kLibcSoname[] = "libc.so.6";
-constexpr char kLibdlSoname[] = "libdl.so.2";
-constexpr char kDlopenInLibdl[] = "dlopen";
-constexpr char kDlopenInLibc[] = "__libc_dlopen_mode";
-constexpr char kDlsymInLibdl[] = "dlsym";
-constexpr char kDlsymInLibc[] = "__libc_dlsym";
-constexpr char kDlcloseInLibdl[] = "dlclose";
-constexpr char kDlcloseInLibc[] = "__libc_dlclose";
+constexpr const char* kLibcSoname = "libc.so.6";
+constexpr const char* kLibdlSoname = "libdl.so.2";
+constexpr const char* kDlopenInLibdl = "dlopen";
+constexpr const char* kDlopenInLibc = "__libc_dlopen_mode";
+constexpr const char* kDlsymInLibdl = "dlsym";
+constexpr const char* kDlsymInLibc = "__libc_dlsym";
+constexpr const char* kDlcloseInLibdl = "dlclose";
+constexpr const char* kDlcloseInLibc = "__libc_dlclose";
 
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
