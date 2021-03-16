@@ -46,7 +46,8 @@ class CaptureClient {
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
-      bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer);
+      bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
+      bool collect_memory_info = false, uint64_t memory_sampling_period_ns = 0);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -75,7 +76,8 @@ class CaptureClient {
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
-      bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer);
+      bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
+      bool collect_memory_info, uint64_t memory_sampling_period_ns);
 
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 

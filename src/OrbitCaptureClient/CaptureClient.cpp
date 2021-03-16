@@ -60,13 +60,15 @@ static InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
   UNREACHABLE();
 }
 
+// TODO(vickyliu): This method contains a lot of arguments. Consider making it more structured.
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     ThreadPool* thread_pool, const ProcessData& process,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
     double samples_per_second, UnwindingMethod unwinding_method, bool collect_thread_state,
-    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer) {
+    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
+    bool collect_memory_info, uint64_t memory_sampling_period_ns) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return {
@@ -87,11 +89,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
        selected_functions = std::move(selected_functions), selected_tracepoints,
        frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
        samples_per_second, unwinding_method, enable_introspection,
-       max_local_marker_depth_per_command_buffer]() mutable {
+       max_local_marker_depth_per_command_buffer, collect_memory_info,
+       memory_sampling_period_ns]() mutable {
         return CaptureSync(std::move(process), module_manager, std::move(selected_functions),
                            std::move(selected_tracepoints), std::move(frame_track_function_ids),
                            samples_per_second, unwinding_method, collect_thread_state,
-                           enable_introspection, max_local_marker_depth_per_command_buffer);
+                           enable_introspection, max_local_marker_depth_per_command_buffer,
+                           collect_memory_info, memory_sampling_period_ns);
       });
 
   return capture_result;
@@ -102,7 +106,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
     double samples_per_second, UnwindingMethod unwinding_method, bool collect_thread_state,
-    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer) {
+    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
+    bool collect_memory_info, uint64_t memory_sampling_period_ns) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -128,6 +133,9 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
       capture_options->set_unwinding_method(CaptureOptions::kDwarf);
     }
   }
+
+  capture_options->set_collect_memory_info(collect_memory_info);
+  capture_options->set_memory_sampling_period_ns(memory_sampling_period_ns);
 
   capture_options->set_trace_thread_state(collect_thread_state);
   capture_options->set_trace_gpu_driver(true);

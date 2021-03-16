@@ -169,6 +169,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
   static const QString kCollectThreadStatesSettingKey;
+  static const QString kCollectMemoryInfoSettingKey;
+  static const QString kMemorySamplingPeriodNsSettingKey;
+  static const QString kMemoryWarningThresholdKbSettingKey;
   static const QString kLimitLocalMarkerDepthPerCommandBufferSettingsKey;
   static const QString kMaxLocalMarkerDepthPerCommandBufferSettingsKey;
   void LoadCaptureOptionsIntoApp();
