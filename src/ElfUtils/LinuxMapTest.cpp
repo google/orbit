@@ -110,6 +110,39 @@ TEST(LinuxMap, ReadModules) {
   EXPECT_FALSE(result.has_error()) << result.error().message();
 }
 
+TEST(LineMap, ParseMapEntryRegularFile) {
+  const std::string map_line{
+      "7f687428f000-7f6874290000 r-xp 00009000 fe:01 661216                     "
+      "/whatever/file/path.so"};
+
+  const std::optional<orbit_elf_utils::MapEntry> result = orbit_elf_utils::ParseMapEntry(map_line);
+
+  ASSERT_TRUE(result.has_value());
+  const auto& map_entry = result.value();
+
+  EXPECT_EQ(map_entry.module_path, "/whatever/file/path.so");
+  EXPECT_EQ(map_entry.start_address, 0x7f687428f000LU);
+  EXPECT_EQ(map_entry.end_address, 0x7f6874290000LU);
+  EXPECT_EQ(map_entry.inode, 661216);
+  EXPECT_TRUE(map_entry.is_executable);
+}
+
+TEST(LineMap, ParseMapEntryVdso) {
+  const std::string map_line{
+      "7ffc6a78e000-7ffc6a790000 r-xp 00000000 00:00 0                          [vdso]"};
+
+  const std::optional<orbit_elf_utils::MapEntry> result = orbit_elf_utils::ParseMapEntry(map_line);
+
+  ASSERT_TRUE(result.has_value());
+  const auto& map_entry = result.value();
+
+  EXPECT_EQ(map_entry.module_path, "[vdso]");
+  EXPECT_EQ(map_entry.start_address, 0x7ffc6a78e000LU);
+  EXPECT_EQ(map_entry.end_address, 0x7ffc6a790000LU);
+  EXPECT_EQ(map_entry.inode, 0);
+  EXPECT_TRUE(map_entry.is_executable);
+}
+
 TEST(LinuxMap, ParseMaps) {
   using orbit_elf_utils::ParseMaps;
   using orbit_grpc_protos::ModuleInfo;
@@ -117,8 +150,7 @@ TEST(LinuxMap, ParseMaps) {
   {
     // Empty data
     const auto result = ParseMaps(std::string_view{""});
-    ASSERT_FALSE(result.has_error()) << result.error().message();
-    EXPECT_TRUE(result.value().empty());
+    EXPECT_TRUE(result.empty());
   }
 
   const std::filesystem::path test_path = orbit_base::GetExecutableDir() / "testdata";
@@ -126,8 +158,6 @@ TEST(LinuxMap, ParseMaps) {
   const std::filesystem::path text_file = test_path / "textfile.txt";
 
   {
-    // Testing correct size of result. The entry with dev/zero is ignored due to the path starting
-    // with /dev/. The last entry has a valid path, but the executable flag is not set.
     const std::string data{absl::StrFormat(
         "7f687428f000-7f6874290000 r-xp 00009000 fe:01 661216                     "
         "/not/a/valid/file/path\n"
@@ -136,8 +166,7 @@ TEST(LinuxMap, ParseMaps) {
         "7f6874290001-7f6874297002 r-dp 00000000 fe:01 661214                     %s\n",
         hello_world_path, text_file)};
     const auto result = ParseMaps(data);
-    ASSERT_FALSE(result.has_error()) << result.error().message();
-    EXPECT_EQ(result.value().size(), 1);
+    EXPECT_EQ(result.size(), 4);
   }
 
   const std::filesystem::path no_symbols_path = test_path / "no_symbols_elf";
@@ -153,19 +182,25 @@ TEST(LinuxMap, ParseMaps) {
         hello_world_path, hello_world_path, hello_world_path, hello_world_path, hello_world_path,
         no_symbols_path)};
 
-    const auto result = ParseMaps(data);
-    ASSERT_FALSE(result.has_error()) << result.error().message();
-    ASSERT_EQ(result.value().size(), 2);
+    const auto map_entries = ParseMaps(data);
+    ASSERT_EQ(map_entries.size(), 2);  // Only two unique module paths
+
+    std::vector<ModuleInfo> result;
+    for (const auto& map_entry : map_entries) {
+      auto module_or_error = orbit_elf_utils::CreateModuleFromFile(map_entry);
+      if (module_or_error.has_value()) result.emplace_back(std::move(module_or_error.value()));
+    }
+    ASSERT_EQ(result.size(), 2);
 
     const ModuleInfo* hello_module_info = nullptr;
     const ModuleInfo* no_symbols_module_info = nullptr;
-    ;
-    if (result.value()[0].name() == "hello_world_elf") {
-      hello_module_info = &result.value()[0];
-      no_symbols_module_info = &result.value()[1];
+
+    if (result[0].name() == "hello_world_elf") {
+      hello_module_info = &result[0];
+      no_symbols_module_info = &result[1];
     } else {
-      hello_module_info = &result.value()[1];
-      no_symbols_module_info = &result.value()[0];
+      hello_module_info = &result[1];
+      no_symbols_module_info = &result[0];
     }
 
     EXPECT_EQ(hello_module_info->name(), "hello_world_elf");

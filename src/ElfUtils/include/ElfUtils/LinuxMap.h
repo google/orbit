@@ -19,15 +19,34 @@
 
 namespace orbit_elf_utils {
 
+// MapEntry combines all the (needed) fields of a single line (mapping) from a Linux
+// /proc/<pid>/maps file.
+//
+// It is the result type of `ParseMapEntry`.
+struct MapEntry {
+  std::string module_path;
+  uint64_t start_address;
+  uint64_t end_address;
+  uint64_t inode;
+  bool is_executable;
+};
+
 ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromFile(
     const std::filesystem::path& module_path, uint64_t start_address, uint64_t end_address);
+ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromFile(const MapEntry& map_entry);
+
 ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromBuffer(std::string module_name,
                                                                      std::string_view buffer,
                                                                      uint64_t start_address,
                                                                      uint64_t end_address);
+ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromBuffer(const MapEntry& map_entry,
+                                                                     std::string_view buffer);
+
+ErrorMessageOr<std::string> ReadProcMapsFile(int32_t pid);
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t pid);
-ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
-    std::string_view proc_maps_data);
+
+std::optional<MapEntry> ParseMapEntry(std::string_view proc_maps_line);
+std::vector<MapEntry> ParseMaps(std::string_view proc_maps_data);
 
 }  // namespace orbit_elf_utils
 
