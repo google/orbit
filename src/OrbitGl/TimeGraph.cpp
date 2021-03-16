@@ -421,28 +421,43 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 }
 
 void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
-  const std::string kTotalLabel = "Memory Total (kB)";
-  const std::string kUnusedLabel = "Memory Unused (kB)";
-  const std::string kBuffersOrCachedLabel = "Memory Buffers / Cached (kB)";
-  const std::string kUsedLabel = "Memory Used (kB)";
+  const std::string kTotalLabel = "System Memory Total";
+  const std::string kUnusedLabel = "System Memory Unused (MB)";
+  const std::string kBuffersOrCachedLabel = "System Memory Buffers / Cached (MB)";
+  const std::string kUsedLabel = "System Memory Used (MB)";
+  const std::string kWarningThresholdLabel = "Production Limit";
 
-  std::optional<std::pair<std::string, uint64_t>> warning_threshold_label_and_kb = std::nullopt;
+  std::optional<std::pair<std::string, uint64_t>> warning_threshold_pretty_name_and_raw_value =
+      std::nullopt;
+  constexpr uint64_t kKilobytesToBytes = 1024;
+  constexpr double kMegabytesToKilobytes = 1024.0;
+
   if (app_->GetCollectMemoryInfo()) {
-    warning_threshold_label_and_kb =
-        std::make_pair("Production Limit (kB)", app_->GetMemoryWarningThresholdKb());
+    uint64_t warning_threshold_kb = app_->GetMemoryWarningThresholdKb();
+    std::string pretty_size = GetPrettySize(warning_threshold_kb * kKilobytesToBytes);
+    std::string pretty_name = absl::StrFormat("%s: %s", kWarningThresholdLabel, pretty_size);
+    double raw_value = static_cast<double>(warning_threshold_kb) / kMegabytesToKilobytes;
+    warning_threshold_pretty_name_and_raw_value = std::make_pair(pretty_name, raw_value);
   }
 
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
-  std::optional<std::pair<std::string, int64_t>> total_label_and_kb = std::nullopt;
-  if (total_kb != kMissingInfo) total_label_and_kb = std::make_pair(kTotalLabel, total_kb);
+  std::optional<std::pair<std::string, int64_t>> total_pretty_name_and_raw_value = std::nullopt;
+  if (total_kb != kMissingInfo) {
+    std::string pretty_size = GetPrettySize(total_kb * kKilobytesToBytes);
+    std::string pretty_name = absl::StrFormat("%s: %s", kTotalLabel, pretty_size);
+    double raw_value = static_cast<double>(total_kb) / kMegabytesToKilobytes;
+    total_pretty_name_and_raw_value = std::make_pair(pretty_name, raw_value);
+  }
 
   GraphTrack* track;
   int64_t unused_kb = orbit_api::Decode<int64_t>(
       timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
   if (unused_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel, std::nullopt, total_label_and_kb);
-    track->AddValue(unused_kb, timer_info.start());
+    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel, std::nullopt,
+                                                  total_pretty_name_and_raw_value);
+    double unused_mb = static_cast<double>(unused_kb) / kMegabytesToKilobytes;
+    track->AddValue(unused_mb, timer_info.start());
   }
 
   int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
@@ -451,15 +466,19 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
   if (buffers_kb != kMissingInfo && cached_kb != kMissingInfo) {
     track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel, std::nullopt,
-                                                  total_label_and_kb);
-    track->AddValue(buffers_kb + cached_kb, timer_info.start());
+                                                  total_pretty_name_and_raw_value);
+    double buffers_or_cached_mb =
+        static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes;
+    track->AddValue(buffers_or_cached_mb, timer_info.start());
   }
 
   if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
       cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel, warning_threshold_label_and_kb,
-                                                  total_label_and_kb);
-    track->AddValue(total_kb - unused_kb - buffers_kb - cached_kb, timer_info.start());
+    track = track_manager_->GetOrCreateGraphTrack(
+        kUsedLabel, warning_threshold_pretty_name_and_raw_value, total_pretty_name_and_raw_value);
+    double used_mb =
+        static_cast<double>(total_kb - unused_kb - buffers_kb - cached_kb) / kMegabytesToKilobytes;
+    track->AddValue(used_mb, timer_info.start());
   }
 }
 
