@@ -21,6 +21,7 @@ message OrbitLogEvent {
     ORBIT_PRESET_DELETE = 7;
     ORBIT_ITERATOR_ADD = 8;
     ORBIT_ITERATOR_REMOVE = 9;
+    ORBIT_MAIN_WINDOW_CLOSE = 10;
   }
   enum StatusCode {
     UNKNOWN_STATUS = 0;
