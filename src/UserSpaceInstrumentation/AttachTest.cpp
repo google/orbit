@@ -9,9 +9,9 @@
 #include <set>
 #include <vector>
 
+#include "Attach.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "TestProcess.h"
-#include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
