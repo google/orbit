@@ -93,6 +93,7 @@
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 #include "TargetConfiguration.h"
+#include "TargetLabel.h"
 #include "TutorialContent.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
@@ -130,12 +131,6 @@ constexpr int kHintFramePosX = 21;
 constexpr int kHintFramePosY = 47;
 constexpr int kHintFrameWidth = 140;
 constexpr int kHintFrameHeight = 45;
-
-const QString kTargetLabelDefaultStyleSheet = "#TargetLabel { color: %1; }";
-const QString kTargetLabelColorConnected = "#66BB6A";
-const QString kTargetLabelColorFileTarget = "#BDBDBD";
-const QString kTargetLabelColorTargetProcessDied = "orange";
-const QString kTargetLabelColorTargetDisconnected = "red";
 
 void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
@@ -415,9 +410,8 @@ void OrbitMainWindow::SetupHintFrame() {
 void OrbitMainWindow::SetupTargetLabel() {
   auto* target_widget = new QWidget();
   target_widget->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
-  target_label_ = new QLabel();
+  target_label_ = new orbit_qt::TargetLabel{};
   target_label_->setContentsMargins(6, 0, 0, 0);
-  target_label_->setObjectName("TargetLabel");
   auto* disconnect_target_button = new QPushButton("End Session");
   auto* target_layout = new QHBoxLayout();
   target_layout->addWidget(target_label_);
@@ -429,6 +423,9 @@ void OrbitMainWindow::SetupTargetLabel() {
 
   QObject::connect(disconnect_target_button, &QPushButton::clicked, this,
                    [this] { on_actionEnd_Session_triggered(); });
+
+  QObject::connect(target_label_, &orbit_qt::TargetLabel::SizeChanged, ui->menuBar,
+                   &QMenuBar::adjustSize);
 }
 
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
@@ -1190,9 +1187,7 @@ void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
                               .arg(target.GetConnection()->GetInstance().display_name)
                               .arg(QString::fromStdString(error.message()));
 
-  target_label_->setStyleSheet(
-      kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorTargetDisconnected));
-  target_label_->setToolTip(error_message);
+  target_label_->SetConnectionDead(error_message);
 
   QMessageBox::critical(this, "Connection error", error_message, QMessageBox::Ok);
 }
@@ -1213,9 +1208,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
 
-  target_label_->setStyleSheet(kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorConnected));
-  target_label_->setText(QString::fromStdString(target.GetProcess()->name()) + " @ " +
-                         target.GetConnection()->GetInstance().display_name);
+  target_label_->ChangeToStadiaTarget(target);
 
   using ProcessInfo = orbit_grpc_protos::ProcessInfo;
   target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
@@ -1234,9 +1227,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
 
-  target_label_->setStyleSheet(kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorConnected));
-  target_label_->setText(QString("Local target: ") +
-                         QString::fromStdString(target.GetProcess()->name()));
+  target_label_->ChangeToLocalTarget(target);
 
   using ProcessInfo = orbit_grpc_protos::ProcessInfo;
   target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
@@ -1250,9 +1241,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
 }
 
 void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
-  target_label_->setStyleSheet(kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorFileTarget));
-  target_label_->setText(QString::fromStdString(target.GetCaptureFilePath().filename().string()));
-
+  target_label_->ChangeToFileTarget(target);
   OpenCapture(target.GetCaptureFilePath().string());
 }
 
@@ -1263,17 +1252,14 @@ void OrbitMainWindow::OnProcessListUpdated(
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();
   };
   const auto current_process = std::find_if(processes.begin(), processes.end(), is_current_process);
-  const bool process_died = current_process == processes.end();
+  const bool process_ended = current_process == processes.end();
 
-  if (process_died) {
-    target_label_->setStyleSheet(
-        kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorTargetProcessDied));
-    target_label_->setToolTip("The process ended on the instance");
+  if (process_ended) {
     target_process_state_ = TargetProcessState::kEnded;
+    target_label_->SetProcessEnded();
   } else {
-    target_label_->setStyleSheet(kTargetLabelDefaultStyleSheet.arg(kTargetLabelColorConnected));
-    target_label_->setToolTip({});
     target_process_state_ = TargetProcessState::kRunning;
+    target_label_->SetProcessCpuUsageInPercent(current_process->cpu_usage());
   }
   UpdateProcessConnectionStateDependentWidgets();
 }

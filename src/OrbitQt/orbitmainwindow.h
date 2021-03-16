@@ -41,6 +41,7 @@
 #include "OrbitClientServices/ProcessManager.h"
 #include "StatusListener.h"
 #include "TargetConfiguration.h"
+#include "TargetLabel.h"
 #include "capture_data.pb.h"
 #include "orbitglwidget.h"
 #include "process.pb.h"
@@ -189,7 +190,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::vector<OrbitGLWidget*> gl_widgets_;
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
-  QLabel* target_label_ = nullptr;
+  orbit_qt::TargetLabel* target_label_ = nullptr;
   QStringList command_line_flags_;
 
   // Capture toolbar.
