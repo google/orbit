@@ -144,7 +144,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
  private:
   void StartMainTimer();
   void SetupCaptureToolbar();
-  void SetupMainWindow(orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+  void SetupMainWindow();
   void SetupHintFrame();
   void SetupTargetLabel();
 
@@ -221,6 +221,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   // to a file, it is not connected and this bool is false. This is also false when the connection
   // broke.
   bool is_connected_ = false;
+
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

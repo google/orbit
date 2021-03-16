@@ -358,11 +358,6 @@ void OrbitApp::PostInit(bool is_connected) {
 
   ListPresets();
 
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
-  }
-
   if (!absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     return;
   }
