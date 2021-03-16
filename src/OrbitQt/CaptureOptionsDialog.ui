@@ -77,14 +77,14 @@
         <item>
          <layout class="QHBoxLayout" name="memoryHorizontalLayout">
           <item>
-           <widget class="QLabel" name="memorySamplingPeriodNsLabel">
+           <widget class="QLabel" name="memorySamplingPeriodMsLabel">
             <property name="text">
-             <string>Sampling period (ns):</string>
+             <string>Sampling period (ms):</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="memorySamplingPeriodNsLineEdit">
+           <widget class="QLineEdit" name="memorySamplingPeriodMsLineEdit">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -92,7 +92,7 @@
              <set>Qt::ImhDigitsOnly</set>
             </property>
             <property name="text">
-             <string>100000000</string>
+             <string>100</string>
             </property>
            </widget>
           </item>
@@ -286,7 +286,7 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
   <connection>
    <sender>collectMemoryInfoCheckBox</sender>
    <signal>toggled(bool)</signal>
-   <receiver>memorySamplingPeriodNsLineEdit</receiver>
+   <receiver>memorySamplingPeriodMsLineEdit</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -315,8 +315,42 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>memorySamplingPeriodMsLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>CaptureOptionsDialog</receiver>
+   <slot>ResetMemorySamplingPeriodMsLineEditWhenEmpty()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>174</x>
+     <y>128</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>239</x>
+     <y>203</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>memoryWarningThresholdKbLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>CaptureOptionsDialog</receiver>
+   <slot>ResetMemoryWarningThresholdKbLineEditWhenEmpty()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>413</x>
+     <y>128</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>239</x>
+     <y>203</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>ResetLocalMarkerDepthLineEdit()</slot>
+  <slot>ResetMemorySamplingPeriodMsLineEditWhenEmpty()</slot>
+  <slot>ResetMemoryWarningThresholdKbLineEditWhenEmpty()</slot>
  </slots>
 </ui>

@@ -875,28 +875,31 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
-const QString OrbitMainWindow::kMemorySamplingPeriodNsSettingKey{"MemorySamplingPeriodNs"};
+const QString OrbitMainWindow::kMemorySamplingPeriodMsSettingKey{"MemorySamplingPeriodMs"};
 const QString OrbitMainWindow::kMemoryWarningThresholdKbSettingKey{"MemoryWarningThresholdKb"};
 const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey{
     "LimitLocalMarkerDepthPerCommandBuffer"};
 const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
 
-constexpr uint64_t kMemorySamplingPeriodNsDefaultValue = 100'000'000;        // 100ms
+constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 100;
 constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
+constexpr uint64_t kMilliSecondsToNanoSeconds = 1000'000;
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
 
   app_->SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
-  uint64_t memory_sampling_period_ns = kMemorySamplingPeriodNsDefaultValue;
+  uint64_t memory_sampling_period_ns =
+      kMemorySamplingPeriodMsDefaultValue * kMilliSecondsToNanoSeconds;
   uint64_t memory_warning_threshold_kb = kMemoryWarningThresholdKbDefaultValue;
   if (app_->GetCollectMemoryInfo()) {
     memory_sampling_period_ns = settings
-                                    .value(kMemorySamplingPeriodNsSettingKey,
-                                           QVariant::fromValue(kMemorySamplingPeriodNsDefaultValue))
-                                    .toULongLong();
+                                    .value(kMemorySamplingPeriodMsSettingKey,
+                                           QVariant::fromValue(kMemorySamplingPeriodMsDefaultValue))
+                                    .toULongLong() *
+                                kMilliSecondsToNanoSeconds;
     memory_warning_threshold_kb =
         settings
             .value(kMemoryWarningThresholdKbSettingKey,
@@ -920,10 +923,10 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   orbit_qt::CaptureOptionsDialog dialog{this};
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
-  dialog.SetMemorySamplingPeriodNs(
+  dialog.SetMemorySamplingPeriodMs(
       settings
-          .value(kMemorySamplingPeriodNsSettingKey,
-                 QVariant::fromValue(kMemorySamplingPeriodNsDefaultValue))
+          .value(kMemorySamplingPeriodMsSettingKey,
+                 QVariant::fromValue(kMemorySamplingPeriodMsDefaultValue))
           .toULongLong());
   dialog.SetMemoryWarningThresholdKb(
       settings
@@ -942,8 +945,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
   settings.setValue(kCollectMemoryInfoSettingKey, dialog.GetCollectMemoryInfo());
-  settings.setValue(kMemorySamplingPeriodNsSettingKey,
-                    QString::number(dialog.GetMemorySamplingPeriodNs()));
+  settings.setValue(kMemorySamplingPeriodMsSettingKey,
+                    QString::number(dialog.GetMemorySamplingPeriodMs()));
   settings.setValue(kMemoryWarningThresholdKbSettingKey,
                     QString::number(dialog.GetMemoryWarningThresholdKb()));
   settings.setValue(kLimitLocalMarkerDepthPerCommandBufferSettingsKey,
