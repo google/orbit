@@ -24,7 +24,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
-  ui_->memorySamplingPeriodNsLineEdit->setValidator(&uint64_validator_);
+  ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(1));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
 
   QObject::connect(ui_->openSourcePathsMappingDialog, &QAbstractButton::clicked, this,
@@ -87,20 +87,37 @@ bool CaptureOptionsDialog::GetCollectMemoryInfo() const {
   return ui_->collectMemoryInfoCheckBox->isChecked();
 }
 
-void CaptureOptionsDialog::SetMemorySamplingPeriodNs(uint64_t memory_sampling_period_ns) {
-  ui_->memorySamplingPeriodNsLineEdit->setText(QString::number(memory_sampling_period_ns));
+void CaptureOptionsDialog::SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms) {
+  ui_->memorySamplingPeriodMsLineEdit->setText(QString::number(memory_sampling_period_ms));
 }
 
-uint64_t CaptureOptionsDialog::GetMemorySamplingPeriodNs() const {
-  CHECK(!ui_->memorySamplingPeriodNsLineEdit->text().isEmpty());
+void CaptureOptionsDialog::ResetMemorySamplingPeriodMsLineEditWhenEmpty() {
+  if (!ui_->memorySamplingPeriodMsLineEdit->text().isEmpty()) return;
+
+  constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 100;
+  ui_->memorySamplingPeriodMsLineEdit->setText(
+      QString::number(kMemorySamplingPeriodMsDefaultValue));
+}
+
+uint64_t CaptureOptionsDialog::GetMemorySamplingPeriodMs() const {
+  CHECK(!ui_->memorySamplingPeriodMsLineEdit->text().isEmpty());
   bool valid = false;
-  uint64_t result = ui_->memorySamplingPeriodNsLineEdit->text().toULongLong(&valid);
+  uint64_t memory_sampling_period_ms =
+      ui_->memorySamplingPeriodMsLineEdit->text().toULongLong(&valid);
   CHECK(valid);
-  return result;
+  return memory_sampling_period_ms;
 }
 
 void CaptureOptionsDialog::SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
   ui_->memoryWarningThresholdKbLineEdit->setText(QString::number(memory_warning_threshold_kb));
+}
+
+void CaptureOptionsDialog::ResetMemoryWarningThresholdKbLineEditWhenEmpty() {
+  if (!ui_->memoryWarningThresholdKbLineEdit->text().isEmpty()) return;
+
+  constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;
+  ui_->memoryWarningThresholdKbLineEdit->setText(
+      QString::number(kMemoryWarningThresholdKbDefaultValue));
 }
 
 uint64_t CaptureOptionsDialog::GetMemoryWarningThresholdKb() const {

@@ -20,17 +20,22 @@ namespace orbit_qt {
 class UInt64Validator : public QValidator {
  public:
   explicit UInt64Validator(QObject* parent = nullptr) : QValidator(parent) {}
+  explicit UInt64Validator(uint64_t minimum, QObject* parent = nullptr)
+      : QValidator(parent), minimum_(minimum) {}
   QValidator::State validate(QString& input, int& /*pos*/) const override {
     if (input.isEmpty()) {
       return QValidator::State::Acceptable;
     }
     bool valid = false;
-    input.toULongLong(&valid);
-    if (valid) {
+    uint64_t input_value = input.toULongLong(&valid);
+    if (valid && input_value >= minimum_) {
       return QValidator::State::Acceptable;
     }
     return QValidator::State::Invalid;
   }
+
+ private:
+  uint64_t minimum_ = 0;
 };
 
 class CaptureOptionsDialog : public QDialog {
@@ -48,13 +53,15 @@ class CaptureOptionsDialog : public QDialog {
 
   void SetCollectMemoryInfo(bool collect_memory_info);
   [[nodiscard]] bool GetCollectMemoryInfo() const;
-  void SetMemorySamplingPeriodNs(uint64_t memory_sampling_period_ns);
-  [[nodiscard]] uint64_t GetMemorySamplingPeriodNs() const;
+  void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms);
+  [[nodiscard]] uint64_t GetMemorySamplingPeriodMs() const;
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb);
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const;
 
  public slots:
   void ResetLocalMarkerDepthLineEdit();
+  void ResetMemorySamplingPeriodMsLineEditWhenEmpty();
+  void ResetMemoryWarningThresholdKbLineEditWhenEmpty();
   void ShowSourcePathsMappingEditor();
 
  private:
