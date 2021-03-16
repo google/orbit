@@ -12,7 +12,6 @@
 #include <sys/wait.h>
 
 #include <csignal>
-#include <regex>
 #include <string>
 #include <vector>
 
@@ -120,9 +119,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
-  // Figure out address of dlopen in libc.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl",
-                                                              "__libc_dlopen_mode", "libc"));
+  // Figure out address of dlopen.
+  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl.so.2",
+                                                              "__libc_dlopen_mode", "libc.so.6"));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -171,9 +170,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
-  // Figure out address of dlsym in libc.
+  // Figure out address of dlsym.
   OUTCOME_TRY(address_dlsym,
-              FindFunctionAddressWithFallback(pid, "dlsym", "libdl", "__libc_dlsym", "libc"));
+              FindFunctionAddressWithFallback(pid, "dlsym", "libdl.so.2", "__libc_dlsym", "libc.so.6"));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
@@ -224,7 +223,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
   OUTCOME_TRY(address_dlclose,
-              FindFunctionAddressWithFallback(pid, "dlclose", "libdl", "__libc_dlclose", "libc"));
+              FindFunctionAddressWithFallback(pid, "dlclose", "libdl.so.2", "__libc_dlclose", "libc.so.6"));
 
   // Allocate small memory area in the tracee.
   OUTCOME_TRY(address_code, AllocateInTracee(pid, kCodeScratchPadSize));
@@ -257,7 +256,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 }
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function_name,
-                                             std::string_view module_prefix) {
+                                             std::string_view module_soname) {
   auto modules = ReadModules(pid);
   if (modules.has_error()) {
     return modules.error();
@@ -266,19 +265,14 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
   std::string module_file_path;
   uint64_t module_base_address = 0;
   for (const auto& m : modules.value()) {
-    // This matches the name of the module followed by any (possibly empty) combination of `.`, `-`
-    // and digits and a single occurance of the letters `so`.
-    // If module is `libc` this matches `libc-2.31.so`, `libc`, `libc1.so` and also `libcso-9-2...-`
-    // but not `libc-something-3.14.so` or `i-am-not-libc-2.31.so`
-    std::string re_as_string = absl::StrCat(module_prefix, "[\\.\\-0-9]*(so)*[\\.\\-0-9]*");
-    if (std::regex_match(m.name(), std::regex(re_as_string))) {
+    if (m.name() == module_soname) {
       module_file_path = m.file_path();
       module_base_address = m.address_start();
     }
   }
   if (module_file_path.empty()) {
     return ErrorMessage(
-        absl::StrFormat("There is no module \"%s\" in process %d.", module_prefix, pid));
+        absl::StrFormat("There is no module \"%s\" in process %d.", module_soname, pid));
   }
 
   auto elf_file = ElfFile::Create(module_file_path);
@@ -289,7 +283,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
   auto syms = elf_file.value()->LoadSymbolsFromDynsym();
   if (syms.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",
-                                        module_prefix, syms.error().message()));
+                                        module_soname, syms.error().message()));
   }
 
   for (const auto& sym : syms.value().symbol_infos()) {
@@ -299,7 +293,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
   }
 
   return ErrorMessage(absl::StrFormat("Unable to locate function symbol \"%s\" in module \"%s\".",
-                                      function_name, module_prefix));
+                                      function_name, module_soname));
 }
 
 }  // namespace orbit_user_space_instrumentation
