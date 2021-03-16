@@ -41,9 +41,6 @@ TEST(InjectLibraryInTraceeTest, FindFunctionAddress) {
   auto function_address_or_error = FindFunctionAddress(pid, "printf", "libc.so.6");
   EXPECT_TRUE(function_address_or_error.has_value());
 
-  function_address_or_error = FindFunctionAddress(pid, "dlclose", "libdl.so.2");
-  EXPECT_TRUE(function_address_or_error.has_value());
-
   function_address_or_error = FindFunctionAddress(pid, "NOT_A_SYMBOL", "libc.so.6");
   EXPECT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),

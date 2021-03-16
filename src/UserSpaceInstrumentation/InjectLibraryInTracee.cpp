@@ -33,6 +33,15 @@ using orbit_elf_utils::ReadModules;
 // Size of the small amount of memory we need in the tracee to write machine code into.
 constexpr uint64_t kCodeScratchPadSize = 1024;
 
+constexpr char kLibcSoname[] = "libc.so.6";
+constexpr char kLibdlSoname[] = "libdl.so.2";
+constexpr char kDlopenInLibdl[] = "dlopen";
+constexpr char kDlopenInLibc[] = "__libc_dlopen_mode";
+constexpr char kDlsymInLibdl[] = "dlsym";
+constexpr char kDlsymInLibc[] = "__libc_dlsym";
+constexpr char kDlcloseInLibdl[] = "dlclose";
+constexpr char kDlcloseInLibc[] = "__libc_dlclose";
+
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
 // obvioulsy. That's what the *OrDie methods below are for.
@@ -120,8 +129,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, "dlopen", "libdl.so.2",
-                                                              "__libc_dlopen_mode", "libc.so.6"));
+  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, kDlopenInLibdl, kLibdlSoname,
+                                                              kDlopenInLibc, kLibcSoname));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -171,8 +180,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(address_dlsym,
-              FindFunctionAddressWithFallback(pid, "dlsym", "libdl.so.2", "__libc_dlsym", "libc.so.6"));
+  OUTCOME_TRY(address_dlsym, FindFunctionAddressWithFallback(pid, kDlsymInLibdl, kLibdlSoname,
+                                                             kDlsymInLibc, kLibcSoname));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
@@ -222,8 +231,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
-  OUTCOME_TRY(address_dlclose,
-              FindFunctionAddressWithFallback(pid, "dlclose", "libdl.so.2", "__libc_dlclose", "libc.so.6"));
+  OUTCOME_TRY(address_dlclose, FindFunctionAddressWithFallback(pid, kDlcloseInLibdl, kLibdlSoname,
+                                                               kDlcloseInLibc, kLibcSoname));
 
   // Allocate small memory area in the tracee.
   OUTCOME_TRY(address_code, AllocateInTracee(pid, kCodeScratchPadSize));
