@@ -20,7 +20,8 @@
 
 // OrbitBase defines an implementation of the Orbit API for introspection. To prevent symbol clash
 // with the header-only use of the API, we wrap the include of Orbit.h in a namespace. This is only
-// needed for internal projects that link with OrbitBase, basically only OrbitTest.
+// needed for internal projects that link with OrbitBase, basically only OrbitTest. This should be
+// removed once we split the introspection and manual instrumentation apis TODO(b/182848566).
 namespace orbit_api_wrapper {
 #include "Api/Orbit.h"
 }

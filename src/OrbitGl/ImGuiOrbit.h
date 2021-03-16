@@ -58,7 +58,6 @@ IMGUI_API void Orbit_ImGui_KeyCallback(ImGuiContext* context, int key, bool down
                                        bool shift, bool alt);
 IMGUI_API void Orbit_ImGui_CharCallback(ImGuiContext* context, unsigned int c);
 
-
 struct ScopeImguiContext {
   explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
     ImGuiContext* state = static_cast<ImGuiContext*>(ImGui::GetCurrentContext());
