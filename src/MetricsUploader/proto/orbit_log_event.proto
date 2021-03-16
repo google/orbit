@@ -12,7 +12,7 @@ package orbit_metrics_uploader;
 message OrbitLogEvent {
   enum LogEventType {
     UNKNOWN_EVENT_TYPE = 0;
-    ORBIT_INITIALIZED = 1;
+    ORBIT_MAIN_WINDOW_OPEN = 1;
     ORBIT_CAPTURE_DURATION = 2;
     ORBIT_CAPTURE_SAVE = 3;
     ORBIT_CAPTURE_LOAD = 4;

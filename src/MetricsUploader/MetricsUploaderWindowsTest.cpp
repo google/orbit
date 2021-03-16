@@ -43,12 +43,13 @@ TEST(MetricsUploader, SendLogEvent) {
   bool result =
       metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
   EXPECT_FALSE(result);
-  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_INITIALIZED);
+  result =
+      metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
   EXPECT_TRUE(result);
   result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
                                                   std::chrono::milliseconds(100));
   EXPECT_TRUE(result);
-  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_INITIALIZED,
+  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN,
                                                   std::chrono::milliseconds(0),
                                                   OrbitLogEvent_StatusCode_SUCCESS);
   EXPECT_TRUE(result);

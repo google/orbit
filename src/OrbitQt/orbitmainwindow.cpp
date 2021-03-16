@@ -166,8 +166,9 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
       app_{OrbitApp::Create(this, main_thread_executor_.get(), crash_handler, metrics_uploader)},
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
-      target_configuration_(std::move(target_configuration)) {
-  SetupMainWindow(metrics_uploader);
+      target_configuration_(std::move(target_configuration)),
+      metrics_uploader_(metrics_uploader) {
+  SetupMainWindow();
 
   SetupTargetLabel();
   SetupHintFrame();
@@ -191,9 +192,14 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   UpdateCaptureStateDependentWidgets();
 
   LoadCaptureOptionsIntoApp();
+
+  if (metrics_uploader_ != nullptr) {
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
+  }
 }
 
-void OrbitMainWindow::SetupMainWindow(orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+void OrbitMainWindow::SetupMainWindow() {
   DataViewFactory* data_view_factory = app_.get();
 
   ui->setupUi(this);
@@ -329,7 +335,7 @@ void OrbitMainWindow::SetupMainWindow(orbit_metrics_uploader::MetricsUploader* m
 
   StartMainTimer();
 
-  ui->liveFunctions->Initialize(app_.get(), metrics_uploader, SelectionType::kExtended,
+  ui->liveFunctions->Initialize(app_.get(), metrics_uploader_, SelectionType::kExtended,
                                 FontType::kDefault);
 
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
