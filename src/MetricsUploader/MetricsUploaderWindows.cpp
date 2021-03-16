@@ -211,6 +211,7 @@ bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event
 bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type) {
   OrbitLogEvent log_event;
   log_event.set_log_event_type(log_event_type);
+  log_event.set_status_code(OrbitLogEvent_StatusCode_SUCCESS);
   return FillAndSendLogEvent(std::move(log_event));
 }
 
@@ -219,6 +220,7 @@ bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type
   OrbitLogEvent log_event;
   log_event.set_log_event_type(log_event_type);
   log_event.set_event_duration_milliseconds(event_duration.count());
+  log_event.set_status_code(OrbitLogEvent_StatusCode_SUCCESS);
   return FillAndSendLogEvent(std::move(log_event));
 }
 
