@@ -1159,6 +1159,11 @@ void OrbitMainWindow::Exit(int return_code) {
     introspection_widget_->close();
   }
 
+  if (metrics_uploader_ != nullptr) {
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_CLOSE);
+  }
+
   QApplication::exit(return_code);
 }
 
