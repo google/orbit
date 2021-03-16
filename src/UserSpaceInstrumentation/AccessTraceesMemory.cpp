@@ -48,7 +48,7 @@ using orbit_base::ReadFileToString;
     uint64_t data = 0;
     std::memcpy(&data, bytes.data() + pos, sizeof(uint64_t));
     if (ptrace(PTRACE_POKEDATA, pid, address_start + pos, data) == -1) {
-      ErrorMessage(absl::StrFormat("Failed to PTRACE_POKEDATA for pid: %d.", pid));
+      return ErrorMessage(absl::StrFormat("Failed to PTRACE_POKEDATA for pid: %d.", pid));
     }
     pos += sizeof(uint64_t);
   } while (pos < bytes.size());
