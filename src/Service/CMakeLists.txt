@@ -34,6 +34,8 @@ target_sources(ServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
+        ProcessUtils.cpp
+        ProcessUtils.h
         ProducerEventProcessor.cpp
         ProducerEventProcessor.h
         ProducerSideServer.cpp
@@ -73,6 +75,7 @@ target_compile_options(ServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(ServiceTests PRIVATE
         ProcessListTest.cpp
         ProcessTest.cpp
+        ProcessUtilsTest.cpp
         ProducerEventProcessorTest.cpp
         ProducerSideServiceImplTest.cpp
         ServiceUtilsTest.cpp)

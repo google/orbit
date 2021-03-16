@@ -17,6 +17,7 @@
 #include "ElfUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "ProcessUtils.h"
 #include "ServiceUtils.h"
 #include "module.pb.h"
 #include "process.pb.h"
@@ -66,7 +67,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   int32_t pid = request->process_id();
   LOG("Sending modules for process %d", pid);
 
-  const auto module_infos = orbit_elf_utils::ReadModules(pid);
+  const auto module_infos = orbit_service::ReadModulesFromProcMaps(pid);
   if (module_infos.has_error()) {
     return Status(StatusCode::NOT_FOUND, module_infos.error().message());
   }
