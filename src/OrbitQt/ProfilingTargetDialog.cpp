@@ -225,7 +225,6 @@ void ProfilingTargetDialog::SetupStadiaStates() {
   state_stadia_.assignProperty(ui_->stadiaWidget, "active", true);
   state_stadia_.assignProperty(ui_->loadCaptureRadioButton, "checked", false);
   state_stadia_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
-  state_stadia_.assignProperty(ui_->targetLabel, "text", "");
 
   // STATE state_stadia_connecting_
   state_stadia_connecting_.assignProperty(ui_->processesFrame, "enabled", false);
@@ -277,13 +276,14 @@ void ProfilingTargetDialog::SetupStadiaStates() {
   // STATE s_s_process_selected
   state_stadia_process_selected_.addTransition(this, &ProfilingTargetDialog::NoProcessSelected,
                                                &state_stadia_no_process_selected_);
-  QObject::connect(&state_stadia_process_selected_, &QState::entered, [this] {
+  QObject::connect(&state_stadia_process_selected_, &QState::entered, this, [this] {
     CHECK(process_ != nullptr);
-    QString process_name = QString::fromStdString(process_->name());
     CHECK(ui_->stadiaWidget->GetSelectedInstance().has_value());
-    QString instance_name = ui_->stadiaWidget->GetSelectedInstance().value().display_name;
-    ui_->targetLabel->setText(QString("%1 @ %2").arg(process_name).arg(instance_name));
+    ui_->targetLabel->ChangeToStadiaTarget(*process_,
+                                           ui_->stadiaWidget->GetSelectedInstance().value());
   });
+  QObject::connect(&state_stadia_process_selected_, &QState::exited, ui_->targetLabel,
+                   &TargetLabel::Clear);
 }
 
 void ProfilingTargetDialog::SetupLocalStates() {
@@ -301,7 +301,6 @@ void ProfilingTargetDialog::SetupLocalStates() {
   state_local_.assignProperty(ui_->localProfilingRadioButton, "checked", true);
   state_local_.assignProperty(ui_->stadiaWidget, "active", false);
   state_local_.assignProperty(ui_->loadCaptureRadioButton, "checked", false);
-  state_local_.assignProperty(ui_->targetLabel, "text", "");
 
   // STATE state_local_connecting_
   state_local_connecting_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connecting...");
@@ -353,11 +352,12 @@ void ProfilingTargetDialog::SetupLocalStates() {
   // STATE state_local_process_selected_
   state_local_process_selected_.addTransition(this, &ProfilingTargetDialog::NoProcessSelected,
                                               &state_local_no_process_selected_);
-  QObject::connect(&state_local_process_selected_, &QState::entered, [this] {
+  QObject::connect(&state_local_process_selected_, &QState::entered, this, [this] {
     CHECK(process_ != nullptr);
-    QString process_name = QString::fromStdString(process_->name());
-    ui_->targetLabel->setText(QString("%1 @ localhost").arg(process_name));
+    ui_->targetLabel->ChangeToLocalTarget(*process_);
   });
+  QObject::connect(&state_local_process_selected_, &QState::exited, ui_->targetLabel,
+                   &TargetLabel::Clear);
 }
 
 void ProfilingTargetDialog::SetStateMachineInitialStateFromTarget(TargetConfiguration config) {
@@ -386,7 +386,6 @@ void ProfilingTargetDialog::SetupFileStates() {
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
   state_file_.assignProperty(ui_->loadFromFileButton, "enabled", true);
   state_file_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
-  state_file_.assignProperty(ui_->targetLabel, "text", "");
 
   // STATE state_file_selected_
   state_file_selected_.assignProperty(ui_->confirmButton, "enabled", true);
@@ -409,8 +408,9 @@ void ProfilingTargetDialog::SetupFileStates() {
   QObject::connect(&state_file_selected_, &QState::entered, this, [this] {
     QString filename = QString::fromStdString(selected_file_path_.filename().string());
     ui_->selectedFileLabel->setText(filename);
-    ui_->targetLabel->setText(filename);
+    ui_->targetLabel->ChangeToFileTarget(selected_file_path_);
   });
+  QObject::connect(&state_file_selected_, &QState::exited, ui_->targetLabel, &TargetLabel::Clear);
 }
 
 void ProfilingTargetDialog::TearDownProcessManager() {
@@ -470,32 +470,45 @@ void ProfilingTargetDialog::OnProcessListUpdate(
     process_model_.SetProcesses(process_list);
     emit ProcessListUpdated();
 
-    // In case there is a selection already, do not change anything
-    if (ui_->processesTableView->selectionModel()->hasSelection()) return;
+    // In case there is a selection already, do not change anything, only update the cpu usage
+    if (ui_->processesTableView->selectionModel()->hasSelection()) {
+      const int32_t selected_process_id = ui_->processesTableView->selectionModel()
+                                              ->selectedRows()[0]
+                                              .data(Qt::UserRole)
+                                              .value<const ProcessInfo*>()
+                                              ->pid();
+      const auto it =
+          std::find_if(process_list.begin(), process_list.end(),
+                       [&](const auto& process) { return process.pid() == selected_process_id; });
+      if (it != process_list.end()) {
+        ui_->targetLabel->SetProcessCpuUsageInPercent(it->cpu_usage());
+      }
+      return;
+    }
 
-    // If process_ != nullptr here, that means it has been moved into the
-    // ProfilingTargetDialog and the user was using this process before.
-    // TrySelectProcess attempts to select the process again if it exists
-    // in process_model_.
+    // If process_ != nullptr here, that means it has been moved into the ProfilingTargetDialog and
+    // the user was using this process before. TrySelectProcess attempts to select the process again
+    // if it exists in process_model_.
     if (process_ != nullptr) {
       bool success = TrySelectProcess(process_->name());
       if (success) return;
     }
 
-    if (absl::GetFlag(FLAGS_process_name) != "") {
+    if (!absl::GetFlag(FLAGS_process_name).empty()) {
       bool success = TrySelectProcess(absl::GetFlag(FLAGS_process_name));
-      if (success) accept();
+      if (success) {
+        accept();
+        return;
+      }
     }
 
-    // The first time a list of processes arrives, the cpu utilization
-    // values are not valid, since they are computed as an average since
-    // the last time the list was refreshed. Hence return here and do not
-    // perform a selection.
+    // The first time a list of processes arrives, the cpu utilization values are not valid, since
+    // they are computed as an average since the last time the list was refreshed. Hence return here
+    // and do not perform a selection.
     if (!had_processes_before) return;
 
-    // This selects the first (top most) row. The table is sorted by cpu
-    // usage (%) by default, so unless the user changed the sorting, this
-    // will select the process with the highest cpu load
+    // This selects the first (top most) row. The table is sorted by cpu usage (%) by default, so
+    // unless the user changed the sorting, this will select the process with the highest cpu load
     ui_->processesTableView->selectRow(0);
   });
 }

@@ -358,10 +358,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="targetLabel">
-          <property name="text">
-           <string/>
-          </property>
+         <widget class="orbit_qt::TargetLabel" name="targetLabel">
          </widget>
         </item>
         <item>
@@ -392,6 +389,11 @@
    <extends>QWidget</extends>
    <header>OverlayWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>orbit_qt::TargetLabel</class>
+   <extends>QWidget</extends>
+   <header>TargetLabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>
