@@ -46,6 +46,13 @@ class CaptureOptionsDialog : public QDialog {
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);
   [[nodiscard]] uint64_t GetMaxLocalMarkerDepthPerCommandBuffer() const;
 
+  void SetCollectMemoryInfo(bool collect_memory_info);
+  [[nodiscard]] bool GetCollectMemoryInfo() const;
+  void SetMemorySamplingPeriodNs(uint64_t memory_sampling_period_ns);
+  [[nodiscard]] uint64_t GetMemorySamplingPeriodNs() const;
+  void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb);
+  [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const;
+
  public slots:
   void ResetLocalMarkerDepthLineEdit();
   void ShowSourcePathsMappingEditor();
