@@ -64,10 +64,12 @@ using orbit_grpc_protos::ProcessInfo;
 
 ProfilingTargetDialog::ProfilingTargetDialog(
     SshConnectionArtifacts* ssh_connection_artifacts,
-    std::optional<TargetConfiguration> target_configuration_opt, QWidget* parent)
+    std::optional<TargetConfiguration> target_configuration_opt,
+    orbit_metrics_uploader::MetricsUploader* metrics_uploader, QWidget* parent)
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::ProfilingTargetDialog>()),
       local_grpc_port_(ssh_connection_artifacts->GetGrpcPort().grpc_port),
+      metrics_uploader_(metrics_uploader),
       state_stadia_(&state_machine_),
       state_stadia_history_(&state_stadia_),
       state_stadia_connecting_(&state_stadia_),
@@ -145,6 +147,11 @@ ProfilingTargetDialog::ProfilingTargetDialog(
     SetStateMachineInitialStateFromTarget(std::move(config));
   } else {
     SetStateMachineInitialState();
+  }
+
+  if (metrics_uploader_ != nullptr) {
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_OPEN);
   }
 }
 

@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "Connections.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientServices/ProcessManager.h"
 #include "ProcessItemModel.h"
@@ -39,6 +40,7 @@ class ProfilingTargetDialog : public QDialog {
  public:
   explicit ProfilingTargetDialog(SshConnectionArtifacts* ssh_connection_artifacts,
                                  std::optional<TargetConfiguration> target_configuration_opt,
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  QWidget* parent = nullptr);
   ~ProfilingTargetDialog() noexcept override;
 
@@ -71,6 +73,8 @@ class ProfilingTargetDialog : public QDialog {
   uint16_t local_grpc_port_;
 
   std::filesystem::path selected_file_path_;
+
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
   // State Machine & States
   QStateMachine state_machine_;
