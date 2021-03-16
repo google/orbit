@@ -137,7 +137,7 @@ ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   iov.iov_base = xsave_area_.data();
   result = ptrace(PTRACE_SETREGSET, tid_, NT_X86_XSTATE, &iov);
   if (result == -1) {
-    ErrorMessage(
+    return ErrorMessage(
         absl::StrFormat("PTRACE_SETREGSET failed to write NT_X86_XSTATE with errno: %d: \"%s\"",
                         errno, SafeStrerror(errno)));
   }
