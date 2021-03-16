@@ -306,7 +306,7 @@ union EncodedEvent {
     event.type = static_cast<uint8_t>(type);
     memset(event.name, 0, kMaxEventStringSize);
     if (name != nullptr) {
-      std::strncpy(event.name, name, kMaxEventStringSize - 1);
+      std::strncpy(event.name, name, kMaxEventStringSize);
       event.name[kMaxEventStringSize - 1] = 0;
     }
     event.data = data;
