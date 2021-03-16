@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>379</height>
+    <height>408</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,6 +57,82 @@
            <string>Collect thread states</string>
           </property>
          </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_4">
+       <property name="title">
+        <string>Memory tracing</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QCheckBox" name="collectMemoryInfoCheckBox">
+          <property name="text">
+           <string>Collect system-wide memory usage information</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="memoryHorizontalLayout">
+          <item>
+           <widget class="QLabel" name="memorySamplingPeriodNsLabel">
+            <property name="text">
+             <string>Sampling period (ns):</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="memorySamplingPeriodNsLineEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="inputMethodHints">
+             <set>Qt::ImhDigitsOnly</set>
+            </property>
+            <property name="text">
+             <string>100000000</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="memoryWarningThresholdKbLabel">
+            <property name="text">
+             <string>Warning threshold (kb):</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="memoryWarningThresholdKbLineEdit">
+            <property name="toolTip">
+             <string>The default value is 8388608 KB, i.e., 8GB.</string>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="inputMethodHints">
+             <set>Qt::ImhDigitsOnly</set>
+            </property>
+            <property name="text">
+             <string>8388608</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -204,6 +280,38 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
     <hint type="destinationlabel">
      <x>219</x>
      <y>129</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>collectMemoryInfoCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>memorySamplingPeriodNsLineEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>239</x>
+     <y>103</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>173</x>
+     <y>128</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>collectMemoryInfoCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>memoryWarningThresholdKbLineEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>239</x>
+     <y>103</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>413</x>
+     <y>128</y>
     </hint>
    </hints>
   </connection>

@@ -24,6 +24,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
+  ui_->memorySamplingPeriodNsLineEdit->setValidator(&uint64_validator_);
+  ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
 
   QObject::connect(ui_->openSourcePathsMappingDialog, &QAbstractButton::clicked, this,
                    &CaptureOptionsDialog::ShowSourcePathsMappingEditor);
@@ -75,6 +77,38 @@ void CaptureOptionsDialog::ShowSourcePathsMappingEditor() {
   if (result_code == QDialog::Accepted) {
     manager.SetMappings(dialog.GetMappings());
   }
+}
+
+void CaptureOptionsDialog::SetCollectMemoryInfo(bool collect_memory_info) {
+  ui_->collectMemoryInfoCheckBox->setChecked(collect_memory_info);
+}
+
+bool CaptureOptionsDialog::GetCollectMemoryInfo() const {
+  return ui_->collectMemoryInfoCheckBox->isChecked();
+}
+
+void CaptureOptionsDialog::SetMemorySamplingPeriodNs(uint64_t memory_sampling_period_ns) {
+  ui_->memorySamplingPeriodNsLineEdit->setText(QString::number(memory_sampling_period_ns));
+}
+
+uint64_t CaptureOptionsDialog::GetMemorySamplingPeriodNs() const {
+  CHECK(!ui_->memorySamplingPeriodNsLineEdit->text().isEmpty());
+  bool valid = false;
+  uint64_t result = ui_->memorySamplingPeriodNsLineEdit->text().toULongLong(&valid);
+  CHECK(valid);
+  return result;
+}
+
+void CaptureOptionsDialog::SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
+  ui_->memoryWarningThresholdKbLineEdit->setText(QString::number(memory_warning_threshold_kb));
+}
+
+uint64_t CaptureOptionsDialog::GetMemoryWarningThresholdKb() const {
+  CHECK(!ui_->memoryWarningThresholdKbLineEdit->text().isEmpty());
+  bool valid = false;
+  uint64_t result = ui_->memoryWarningThresholdKbLineEdit->text().toULongLong(&valid);
+  CHECK(valid);
+  return result;
 }
 
 }  // namespace orbit_qt
