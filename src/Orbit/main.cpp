@@ -31,6 +31,8 @@
 #include <variant>
 #include <vector>
 
+#include "MetricsUploader/ScopedMetric.h"
+
 #ifdef _WIN32
 #include <process.h>
 #else
@@ -101,6 +103,9 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   } else {
     ERROR("%s", metrics_uploader_result.error().message());
   }
+
+  orbit_metrics_uploader::ScopedMetric(
+      metrics_uploader.get(), orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_EXIT);
 
   // If Orbit starts with loading a capture file, we skip ProfilingTargetDialog and create a
   // FileTarget from capture_file_path. After creating the FileTarget, we reset
