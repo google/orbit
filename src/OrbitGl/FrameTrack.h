@@ -28,7 +28,9 @@ class FrameTrack : public TimerTrack {
   explicit FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
-                      const orbit_client_model::CaptureData* capture_data);
+                      const orbit_client_model::CaptureData* capture_data,
+                      uint32_t indentation_level = 0);
+
   [[nodiscard]] Type GetType() const override { return Type::kFrameTrack; }
   [[nodiscard]] uint64_t GetFunctionId() const { return function_.function_id(); }
   [[nodiscard]] bool IsCollapsible() const override { return GetMaximumScaleFactor() > 0.f; }

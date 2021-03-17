@@ -29,10 +29,25 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
         super().execute(suite=suite)
 
-    def _find_tracks(self, name_filter: str = None):
-        tracks = self._time_graph.children()
-        if name_filter is not None:
-            tracks = filter(lambda track: fnmatch(track.texts()[0], name_filter), tracks)
+    def _find_tracks(self, name_filter: str = None, recursive: bool = False):
+        if not recursive:
+            tracks = self._time_graph.children()
+            if name_filter is not None:
+                tracks = filter(lambda track: fnmatch(track.texts()[0], name_filter), tracks)
+            return list(tracks)
+
+        work_list = self._time_graph.children()
+        tracks = list()
+
+        while work_list:
+            track = work_list.pop()
+            if name_filter is None or fnmatch(track.texts()[0], name_filter):
+                tracks.append(track)
+            # Find all sub tracks of this track. We identify a track by its first child being a tab.
+            for sub_track in track.children():
+                if self.find_control("TabItem", parent=sub_track, raise_on_failure=False):
+                    work_list.append(sub_track)
+
         return list(tracks)
 
 
@@ -125,6 +140,7 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
     """
     Verify that the existing visible tracks match the expected tracks
     """
+
     def _execute(self, expected_count: int = None, expected_names: List[str or Iterable[str]] = None,
                  allow_additional_tracks=False):
         """
@@ -212,6 +228,7 @@ class ExpandTrack(CollapsingTrackBase):
     """
     Click on a collapsed track's triangle toggle, verify that the height increased.
     """
+
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
         self.expect_true(prev_click_height < post_click_height, "Expanding track '{}' changed its height from {:d} to {:d}".format(
             track_name, prev_click_height, post_click_height))
@@ -221,6 +238,7 @@ class CollapseTrack(CollapsingTrackBase):
     """
     Click on an expanded track's triangle toggle, verify that the height decreased.
     """
+
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
         self.expect_true(prev_click_height > post_click_height, "Collapsing track '{}' changed its height from {:d} to {:d}".format(
             track_name, prev_click_height, post_click_height))
@@ -262,10 +280,11 @@ class Capture(E2ETestCase):
         logging.info('Opening "Capture Options" dialog')
         capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
         capture_options_button.click_input()
-        
+
         capture_options_dialog = self.find_control('Window', 'Capture Options')
 
-        collect_thread_states_checkbox = self.find_control('CheckBox', 'Collect thread states', parent=capture_options_dialog)
+        collect_thread_states_checkbox = self.find_control('CheckBox', 'Collect thread states',
+                                                           parent=capture_options_dialog)
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
@@ -322,8 +341,8 @@ class CheckThreadStates(CaptureWindowE2ETestCaseBase):
 
 
 class CheckTimers(CaptureWindowE2ETestCaseBase):
-    def _execute(self, track_name_filter: str, expect_exists: bool = True):
-        tracks = self._find_tracks(track_name_filter)
+    def _execute(self, track_name_filter: str, expect_exists: bool = True, recursive: bool = False):
+        tracks = self._find_tracks(track_name_filter, recursive)
         self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
         logging.info('Checking for timers in {} tracks'.format(len(tracks)))
         for track in tracks:

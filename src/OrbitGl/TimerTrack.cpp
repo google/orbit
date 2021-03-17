@@ -32,8 +32,9 @@ const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
 TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                       const orbit_client_model::CaptureData* capture_data)
-    : Track(parent, time_graph, viewport, layout, capture_data), app_{app} {
+                       const orbit_client_model::CaptureData* capture_data,
+                       uint32_t indentation_level)
+    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();
 }
 

@@ -54,7 +54,8 @@ class TimerTrack : public Track {
  public:
   explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                      const orbit_client_model::CaptureData* capture_data);
+                      const orbit_client_model::CaptureData* capture_data,
+                      uint32_t indentation_level = 0);
   ~TimerTrack() override = default;
 
   // Pickable
@@ -100,6 +101,8 @@ class TimerTrack : public Track {
 
   [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
 
+  float GetHeight() const override;
+
  protected:
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
@@ -141,7 +144,6 @@ class TimerTrack : public Track {
         &text_box, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
   }
 
-  float GetHeight() const override;
   float box_height_ = 0.0f;
 
   static const Color kHighlightColor;

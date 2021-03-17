@@ -19,8 +19,9 @@
 
 GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                       const orbit_client_model::CaptureData* capture_data)
-    : Track(parent, time_graph, viewport, layout, capture_data) {
+                       const orbit_client_model::CaptureData* capture_data,
+                       uint32_t indentation_level)
+    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level) {
   SetName(name);
   SetLabel(name);
 }

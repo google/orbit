@@ -40,6 +40,8 @@ target_sources(
          GlCanvas.h
          GlSlider.h
          GlUtils.h
+         GpuDebugMarkerTrack.h
+         GpuSubmissionTrack.h
          GpuTrack.h
          GraphTrack.h
          Images.h
@@ -106,6 +108,8 @@ target_sources(
           GlCanvas.cpp
           GlSlider.cpp
           GlUtils.cpp
+          GpuDebugMarkerTrack.cpp
+          GpuSubmissionTrack.cpp
           GpuTrack.cpp
           GraphTrack.cpp
           ImGuiOrbit.cpp

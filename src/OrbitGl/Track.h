@@ -43,8 +43,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   };
 
   explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                 TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data);
-
+                 TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
+                 uint32_t indentation_level);
   ~Track() override = default;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
@@ -98,11 +98,16 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
   [[nodiscard]] bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
+  void Collapse() { collapse_toggle_->SetState(TriangleToggle::State::kCollapsed); }
 
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
+  [[nodiscard]] virtual uint32_t GetIntent() const { return indentation_level_; }
+
  protected:
+  // Returns the y-position of the triangle.
+  float DrawCollapsingTriangle(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0);
   void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
 
@@ -114,6 +119,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   int32_t thread_id_;
   int32_t process_id_;
   Color color_;
+  bool draw_background_ = true;
   bool visible_ = true;
   bool pinned_ = false;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
@@ -126,6 +132,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   TimeGraphLayout* layout_;
 
   const orbit_client_model::CaptureData* capture_data_ = nullptr;
+
+ private:
+  const uint32_t indentation_level_;
 };
 
 #endif

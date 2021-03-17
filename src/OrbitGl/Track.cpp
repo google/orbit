@@ -20,14 +20,21 @@
 #include "Viewport.h"
 
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-             TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data)
+             TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
+             uint32_t indentation_level)
     : CaptureViewElement(parent, time_graph, viewport, layout),
-      collapse_toggle_(std::make_shared<TriangleToggle>(
-          TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, viewport,
-          layout, this)),
       layout_(layout),
-      capture_data_(capture_data) {
+      capture_data_(capture_data),
+      indentation_level_(indentation_level) {
+  // We decrease the size of the collapse toggle per indentation, but as it becomes too small after
+  // 5 indentations, we cap the size here.
+  constexpr uint32_t kMaxIndentationLevel = 5;
+  uint32_t capped_indentation_level = std::min(indentation_level, kMaxIndentationLevel);
+  collapse_toggle_ = std::make_shared<TriangleToggle>(
+      TriangleToggle::State::kExpanded,
+      [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, viewport,
+      layout, this, 10.f - capped_indentation_level);
+
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
   num_timers_ = 0;
@@ -102,7 +109,10 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float text_z = GlCanvas::kZValueTrackText + z_offset;
   float top_margin = layout_->GetTrackTopMargin();
 
-  const Color kBackgroundColor = GetBackgroundColor();
+  Color background_color = GetBackgroundColor();
+  if (!draw_background_) {
+    background_color[3] = 0;
+  }
 
   // Draw tab.
   float label_height = layout_->GetTrackTabHeight();
@@ -111,11 +121,12 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float half_label_width = 0.5f * label_width;
   float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
-  Box box(Vec2(tab_x0, y0), Vec2(label_width, -label_height), track_z);
-  ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
+  const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIntentOffset());
+  Box box(Vec2(indentation_x0, y0), Vec2(label_width, -label_height), track_z);
+  ui_batcher->AddBox(box, background_color, shared_from_this());
 
   // Draw rounded corners.
-  if (!picking) {
+  if (!picking && draw_background_) {
     float right_margin = time_graph_->GetRightMargin();
     float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
     radius = std::min(radius, half_label_width);
@@ -129,7 +140,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     // |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
     // \__________________________________/
     // content_bottom_left                      content_bottom_right
-    Vec2 top_left(tab_x0, y0);
+    Vec2 top_left(indentation_x0, y0);
     Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
     Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] - label_height + top_margin);
     Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] - size_[1]);
@@ -141,7 +152,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
                     track_z);
     DrawTriangleFan(ui_batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
                     track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, tab_bottom_right, kBackgroundColor, 0, track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, tab_bottom_right, background_color, 0, track_z);
     DrawTriangleFan(ui_batcher, rounded_corner, content_bottom_left, GlCanvas::kBackgroundColor, 0,
                     track_z);
     DrawTriangleFan(ui_batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor,
@@ -158,15 +169,16 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   }
 
   // Draw collapsing triangle.
-  float button_offset = layout_->GetCollapseButtonOffset();
-  float toggle_y_pos = pos_[1] - half_label_height;
-  Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
-  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
-  collapse_toggle_->Draw(canvas, picking_mode, z_offset);
+  const float toggle_y_pos = DrawCollapsingTriangle(canvas, picking_mode, z_offset);
 
   // Draw label.
   if (!picking) {
     uint32_t font_size = layout_->CalculateZoomedFontSize();
+    // For the first 5 indentations, we decrease the font_size by 10 percent points (per
+    // indentation).
+    constexpr uint32_t kMaxIndentationLevel = 5;
+    uint32_t capped_indentation_level = std::min(indentation_level_, kMaxIndentationLevel);
+    font_size = (font_size * (10 - capped_indentation_level)) / 10;
     auto& text_renderer = canvas->GetTextRenderer();
     float label_offset_x = layout_->GetTrackLabelOffsetX();
     float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;
@@ -174,9 +186,10 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     const Color kColor =
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
 
-    text_renderer.AddTextTrailingCharsPrioritized(
-        label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
-        GetNumberOfPrioritizedTrailingCharacters(), font_size, label_width - label_offset_x);
+    text_renderer.AddTextTrailingCharsPrioritized(label_.c_str(), indentation_x0 + label_offset_x,
+                                                  toggle_y_pos - label_offset_y, text_z, kColor,
+                                                  GetNumberOfPrioritizedTrailingCharacters(),
+                                                  font_size, label_width - label_offset_x);
   }
 
   // Draw track's content background.
@@ -184,9 +197,23 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     if (layout_->GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 - label_height + top_margin),
               Vec2(size_[0], -size_[1] + label_height - top_margin), track_z);
-      ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
+      ui_batcher->AddBox(box, background_color, shared_from_this());
     }
   }
+}
+
+float Track::DrawCollapsingTriangle(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+  const float label_height = layout_->GetTrackTabHeight();
+  const float half_label_height = 0.5f * label_height;
+  const float x0 = pos_[0];
+  const float tab_x0 = x0 + layout_->GetTrackTabOffset();
+  const float intent_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIntentOffset());
+  const float button_offset = layout_->GetCollapseButtonOffset();
+  const float toggle_y_pos = pos_[1] - half_label_height;
+  Vec2 toggle_pos = Vec2(intent_x0 + button_offset, toggle_y_pos);
+  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
+  collapse_toggle_->Draw(canvas, picking_mode, z_offset);
+  return toggle_y_pos;
 }
 
 void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t /*t_max*/,

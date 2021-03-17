@@ -18,13 +18,13 @@
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
                                TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                               TimeGraphLayout* layout, Track* track)
+                               TimeGraphLayout* layout, Track* track, float size)
     : CaptureViewElement(track, time_graph, viewport, layout),
       track_(track),
       state_(initial_state),
       initial_state_(initial_state),
       handler_(std::move(handler)) {
-  SetSize(10.f, 10.f);
+  SetSize(size, size);
 }
 
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {

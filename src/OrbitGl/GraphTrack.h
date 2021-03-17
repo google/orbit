@@ -26,7 +26,9 @@ class GraphTrack : public Track {
  public:
   explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                      const orbit_client_model::CaptureData* capture_data);
+                      const orbit_client_model::CaptureData* capture_data,
+                      uint32_t indentation_level = 0);
+
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,

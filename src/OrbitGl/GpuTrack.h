@@ -13,6 +13,8 @@
 
 #include "CallstackThreadBar.h"
 #include "CoreMath.h"
+#include "GpuDebugMarkerTrack.h"
+#include "GpuSubmissionTrack.h"
 #include "PickingManager.h"
 #include "StringManager.h"
 #include "TextBox.h"
@@ -32,51 +34,46 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
 
 }  // namespace orbit_gl
 
-class GpuTrack : public TimerTrack {
+// A track to display Gpu related information (of a certain command queue). It contains two
+// subtracks to display "submission" related information, as well as "debug markers" (if present).
+class GpuTrack : public Track {
  public:
   explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                     TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
-                    const orbit_client_model::CaptureData* capture_data);
-  ~GpuTrack() override = default;
-  [[nodiscard]] std::string GetTooltip() const override;
-  [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
-  [[nodiscard]] float GetHeight() const override;
-
-  [[nodiscard]] const TextBox* GetLeft(const TextBox* text_box) const override;
-  [[nodiscard]] const TextBox* GetRight(const TextBox* text_box) const override;
-
-  [[nodiscard]] float GetYFromTimer(
-      const orbit_client_protos::TimerInfo& timer_info) const override;
-
+                    const orbit_client_model::CaptureData* capture_data,
+                    uint32_t indentation_level = 0);
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
-  [[nodiscard]] bool IsCollapsible() const override {
-    return depth_ > 1 || has_vulkan_layer_command_buffer_timers_;
-  }
+  [[nodiscard]] const TextBox* GetLeft(const TextBox* textbox) const;
+  [[nodiscard]] const TextBox* GetRight(const TextBox* textbox) const;
 
- protected:
-  [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
-  [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
-                                    bool is_highlighted) const override;
-  [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
-                        TextBox* text_box) override;
-  [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
+  [[nodiscard]] const TextBox* GetUp(const TextBox* textbox) const;
+  [[nodiscard]] const TextBox* GetDown(const TextBox* textbox) const;
+
+  [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
+  [[nodiscard]] std::string GetTooltip() const override;
+  [[nodiscard]] float GetHeight() const override;
+
+  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
+
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
+  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
+
+  [[nodiscard]] bool IsEmpty() const override {
+    return submission_track_->IsEmpty() && marker_track_->IsEmpty();
+  }
+  [[nodiscard]] bool IsCollapsible() const override { return true; }
+  void OnCollapseToggle(TriangleToggle::State state) override;
 
  private:
+  void UpdatePositionOfSubtracks();
+  const std::shared_ptr<GpuSubmissionTrack> submission_track_;
+  const std::shared_ptr<GpuDebugMarkerTrack> marker_track_;
+
   uint64_t timeline_hash_;
-  StringManager* string_manager_;
-  bool has_vulkan_layer_command_buffer_timers_ = false;
-  [[nodiscard]] std::string GetSwQueueTooltip(
-      const orbit_client_protos::TimerInfo& timer_info) const;
-  [[nodiscard]] std::string GetHwQueueTooltip(
-      const orbit_client_protos::TimerInfo& timer_info) const;
-  [[nodiscard]] std::string GetHwExecutionTooltip(
-      const orbit_client_protos::TimerInfo& timer_info) const;
-  [[nodiscard]] std::string GetCommandBufferTooltip(
-      const orbit_client_protos::TimerInfo& timer_info) const;
-  [[nodiscard]] std::string GetDebugMarkerTooltip(
-      const orbit_client_protos::TimerInfo& timer_info) const;
 };
 
 #endif  // ORBIT_GL_GPU_TRACK_H_
