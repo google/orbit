@@ -49,8 +49,9 @@ class TrackManager {
   void SortTracks();
   void SetFilter(const std::string& filter);
 
-  void UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                    PickingMode picking_mode);
+  void UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                             PickingMode picking_mode);
+
   [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
 
   SchedulerTrack* GetOrCreateSchedulerTrack();
@@ -70,6 +71,8 @@ class TrackManager {
   void UpdateFilteredTrackList();
   [[nodiscard]] int FindMovingTrackIndex();
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
+
+  void UpdateTrackPositions();
 
   mutable std::recursive_mutex mutex_;
 

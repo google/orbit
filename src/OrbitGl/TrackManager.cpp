@@ -169,6 +169,8 @@ void TrackManager::UpdateFilteredTrackList() {
       }
     }
   }
+
+  UpdateTrackPositions();
 }
 
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
@@ -194,6 +196,44 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
             });
 
   return sorted_tracks;
+}
+
+void TrackManager::UpdateTrackPositions() {
+  // Make sure track tab fits in the viewport.
+  float current_y = -layout_->GetSchedulerTrackOffset() - layout_->GetTrackTabHeight();
+  float pinned_tracks_height = 0.f;
+
+  // Update pinned tracks
+  for (auto& track : visible_tracks_) {
+    if (!track->IsPinned()) {
+      continue;
+    }
+
+    if (!track->IsMoving()) {
+      track->SetPos(track->GetPos()[0], current_y + time_graph_->GetCanvas()->GetWorldTopLeftY() -
+                                            layout_->GetTopMargin() -
+                                            layout_->GetSchedulerTrackOffset());
+    }
+    const float height = (track->GetHeight() + layout_->GetSpaceBetweenTracks());
+    current_y -= height;
+    pinned_tracks_height += height;
+  }
+
+  // Update unpinned tracks
+  for (auto& track : visible_tracks_) {
+    if (track->IsPinned()) {
+      continue;
+    }
+
+    if (!track->IsMoving()) {
+      track->SetPos(track->GetPos()[0], current_y);
+    }
+    current_y -= (track->GetHeight() + layout_->GetSpaceBetweenTracks());
+  }
+
+  // Tracks are drawn from 0 (top) to negative y-coordinates.
+  tracks_total_height_ = std::abs(current_y);
+  time_graph_->GetCanvas()->UpdateWorldTopLeftY(time_graph_->GetCanvas()->GetWorldTopLeftY());
 }
 
 void TrackManager::UpdateMovingTrackSorting() {
@@ -247,6 +287,8 @@ void TrackManager::UpdateMovingTrackSorting() {
           moving_track);
     }
   }
+
+  UpdateTrackPositions();
 }
 
 int TrackManager::FindMovingTrackIndex() {
@@ -259,46 +301,17 @@ int TrackManager::FindMovingTrackIndex() {
   return -1;
 }
 
-void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                PickingMode picking_mode) {
-  // Make sure track tab fits in the viewport.
-  float current_y = -layout_->GetSchedulerTrackOffset() - layout_->GetTrackTabHeight();
-  float pinned_tracks_height = 0.f;
-
-  // Draw pinned tracks
+void TrackManager::UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                         PickingMode picking_mode) {
   for (auto& track : visible_tracks_) {
-    if (!track->IsPinned()) {
-      continue;
-    }
-
-    const float z_offset = GlCanvas::kZOffsetPinnedTrack;
-    if (!track->IsMoving()) {
-      track->SetPos(track->GetPos()[0], current_y + time_graph_->GetCanvas()->GetWorldTopLeftY() -
-                                            layout_->GetTopMargin() -
-                                            layout_->GetSchedulerTrackOffset());
-    }
-    track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-    const float height = (track->GetHeight() + layout_->GetSpaceBetweenTracks());
-    current_y -= height;
-    pinned_tracks_height += height;
-  }
-
-  // Draw unpinned tracks
-  for (auto& track : visible_tracks_) {
+    float z_offset = 0.0f;
     if (track->IsPinned()) {
-      continue;
-    }
-
-    const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
-    if (!track->IsMoving()) {
-      track->SetPos(track->GetPos()[0], current_y);
+      z_offset = GlCanvas::kZOffsetPinnedTrack;
+    } else if (track->IsMoving()) {
+      z_offset = GlCanvas::kZOffsetMovingTack;
     }
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-    current_y -= (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
-
-  // Tracks are drawn from 0 (top) to negative y-coordinates.
-  tracks_total_height_ = std::abs(current_y);
 }
 
 void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
