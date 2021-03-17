@@ -1237,20 +1237,27 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return local_symbols_path;
   }
 
-  auto final_result =
-      RetrieveModuleFromRemote(module_path)
-          .Then(main_thread_executor_,
-                [this, module_path, local_error_message = local_symbols_path.error().message()](
-                    const ErrorMessageOr<std::filesystem::path>& remote_result)
-                    -> ErrorMessageOr<std::filesystem::path> {
-                  modules_currently_loading_.erase(module_path);
+  auto local_symbols_path_future = [&]() {
+    if (module_data->is_virtual_module()) {
+      return RetrieveVirtualModuleFromRemote(module_data);
+    }
 
-                  // If remote loading fails as well, we combine the error messages.
-                  if (remote_result.has_value()) return remote_result;
-                  return {ErrorMessage{absl::StrFormat(
-                      "Did not find symbols locally or on remote for module \"%s\": %s\n%s",
-                      module_path, local_error_message, remote_result.error().message())}};
-                });
+    return RetrieveModuleFromRemote(module_path);
+  }();
+
+  auto final_result = local_symbols_path_future.Then(
+      main_thread_executor_,
+      [this, module_path, local_error_message = local_symbols_path.error().message()](
+          const ErrorMessageOr<std::filesystem::path>& remote_result)
+          -> ErrorMessageOr<std::filesystem::path> {
+        modules_currently_loading_.erase(module_path);
+
+        // If remote loading fails as well, we combine the error messages.
+        if (remote_result.has_value()) return remote_result;
+        return {ErrorMessage{
+            absl::StrFormat("Did not find symbols locally or on remote for module \"%s\": %s\n%s",
+                            module_path, local_error_message, remote_result.error().message())}};
+      });
 
   modules_currently_loading_.emplace(module_path, final_result);
   return final_result;
@@ -1379,8 +1386,16 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   auto scoped_status = CreateScopedStatus(absl::StrFormat(
       R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
 
-  auto load_symbols_from_file = thread_pool_->Schedule(
-      [symbols_path]() { return SymbolHelper::LoadSymbolsFromFile(symbols_path); });
+  auto module_data = module_manager_->GetModuleByPath(module_file_path);
+  CHECK(module_data != nullptr);
+
+  // If the module is virtual (not backed by a file, like [vdso] or [vsyscall]), we will also
+  // consider the .dynsym section as a symbol source.
+  const bool also_consider_dynsym = module_data->is_virtual_module();
+
+  auto load_symbols_from_file = thread_pool_->Schedule([symbols_path, also_consider_dynsym]() {
+    return SymbolHelper::LoadSymbolsFromFile(symbols_path, also_consider_dynsym);
+  });
 
   auto add_symbols =
       [this, module_file_path, scoped_status = std::move(scoped_status)](
