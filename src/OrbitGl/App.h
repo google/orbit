@@ -422,6 +422,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>>
+  RetrieveVirtualModuleFromRemote(const ModuleData* module_data);
 
   void SelectFunctionsFromHashes(const ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);

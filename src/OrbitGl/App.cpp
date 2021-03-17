@@ -55,6 +55,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitBase/WriteStringToFile.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
@@ -1114,6 +1115,55 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   };
 
   return check_file_on_remote.Then(main_thread_executor_, std::move(download_file));
+}
+
+orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveVirtualModuleFromRemote(
+    const ModuleData* module_data) {
+  CHECK(module_data != nullptr);
+
+  if (module_data->address_end() <= module_data->address_start()) {
+    return ErrorMessage{
+        absl::StrFormat("Invalid address range for module \"%s\".", module_data->file_path())};
+  }
+
+  const auto size = module_data->address_end() - module_data->address_start();
+
+  // 8 MiB - That's also the limit that we support in the `ReadProcessMemory` gRPC endpoint.
+  // It's more than enough for reading [vdso] which is typically around 8 KiB.
+  if (size > 8 * 1024 * 1024) {
+    return ErrorMessage{absl::StrFormat(
+        "Module \"%s\" has a size of %d bytes (> 8MiB) and is too large to be read.",
+        module_data->file_path(), size)};
+  }
+
+  if (GetTargetProcess() == nullptr) {
+    return ErrorMessage{"Cannot load memory mapped module without a target process."};
+  }
+
+  if (GetProcessManager() == nullptr) {
+    return ErrorMessage{"Cannot load memory mapped module when not connected to a service."};
+  }
+
+  const auto pid = GetTargetProcess()->pid();
+  const auto address_start = module_data->address_start();
+
+  const auto memory_future = thread_pool_->Schedule([this, pid, address_start, size]() {
+    LOG("Requesting the memory region %#x - %#x from process %d", address_start,
+        address_start + size, pid);
+    return GetProcessManager()->LoadProcessMemory(pid, address_start, size);
+  });
+
+  return memory_future.ThenIfSuccess(
+      main_thread_executor_,
+      [this, size,
+       module_data](const std::string& buffer) -> ErrorMessageOr<std::filesystem::path> {
+        CHECK(buffer.size() == size);
+        const auto file_path_in_cache =
+            symbol_helper_.GenerateCachedFileName(module_data->file_path());
+        const auto result = orbit_base::WriteStringToFile(file_path_in_cache, buffer);
+        if (result.has_error()) return result.error();
+        return file_path_in_cache;
+      });
 }
 
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
