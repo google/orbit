@@ -90,7 +90,10 @@ ErrorMessageOr<uint64_t> ExecuteOrDie(pid_t pid, uint64_t address_code, uint64_t
   int status = 0;
   pid_t waited = waitpid(pid, &status, 0);
   if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
-    FATAL("Failed to wait for sigtrap after PTRACE_CONT.");
+    FATAL(
+        "Failed to wait for sigtrap after PTRACE_CONT. Expected pid: %d Pid returned from waitpid: "
+        "%d status: %u, WIFSTOPPED: %u, WSTOPSIG: %u",
+        pid, waited, status, WIFSTOPPED(status), WSTOPSIG(status));
   }
 
   const uint64_t return_value = GetReturnValueOrDie(pid);
