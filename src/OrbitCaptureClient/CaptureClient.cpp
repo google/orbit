@@ -45,11 +45,11 @@ static InstrumentedFunction::FunctionType InstrumentedFunctionTypeFromOrbitType(
     FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {
     case FunctionInfo::kOrbitTimerStart:
-    case FunctionInfo::kOrbitTimerStartAsync:
       return InstrumentedFunction::kTimerStart;
     case FunctionInfo::kOrbitTimerStop:
-    case FunctionInfo::kOrbitTimerStopAsync:
       return InstrumentedFunction::kTimerStop;
+    case FunctionInfo::kOrbitTimerStartAsync:
+    case FunctionInfo::kOrbitTimerStopAsync:
     case FunctionInfo::kOrbitTrackValue:
     case FunctionInfo::kNone:
       return InstrumentedFunction::kRegular;
