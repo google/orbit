@@ -32,6 +32,10 @@ class ModuleData final {
   [[nodiscard]] const std::string& build_id() const { return module_info_.build_id(); }
   [[nodiscard]] uint64_t load_bias() const { return module_info_.load_bias(); }
   [[nodiscard]] bool is_loaded() const;
+  [[nodiscard]] bool is_virtual_module() const { return module_info_.is_virtual_module(); }
+  [[nodiscard]] uint64_t address_start() const { return module_info_.address_start(); }
+  [[nodiscard]] uint64_t address_end() const { return module_info_.address_end(); }
+
   void UpdateIfChanged(orbit_grpc_protos::ModuleInfo info);
   // relative_address here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
