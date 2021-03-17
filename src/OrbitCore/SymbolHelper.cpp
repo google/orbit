@@ -222,9 +222,11 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
   return cache_file_path;
 }
 
-ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path) {
+ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path,
+                                                                bool also_consider_dynsym) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
+  SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s, also_consider_dynsym=%s", file_path.string(),
+                   also_consider_dynsym ? "true" : "false");
   ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = ElfFile::Create(file_path.string());
 
   if (elf_file_or_error.has_error()) {
@@ -232,7 +234,13 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& 
                                         file_path.string(), elf_file_or_error.error().message()));
   }
 
-  return elf_file_or_error.value()->LoadSymbolsFromSymtab();
+  auto result = elf_file_or_error.value()->LoadSymbolsFromSymtab();
+
+  if (result.has_error() && also_consider_dynsym) {
+    return elf_file_or_error.value()->LoadSymbolsFromDynsym();
+  }
+
+  return result;
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {

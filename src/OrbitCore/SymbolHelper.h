@@ -29,7 +29,7 @@ class SymbolHelper {
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsInCache(const fs::path& module_path,
                                                             const std::string& build_id) const;
   [[nodiscard]] static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
-      const fs::path& file_path);
+      const fs::path& file_path, bool also_consider_dynsym = false);
   [[nodiscard]] static ErrorMessageOr<void> VerifySymbolsFile(const fs::path& symbols_path,
                                                               const std::string& build_id);
 
