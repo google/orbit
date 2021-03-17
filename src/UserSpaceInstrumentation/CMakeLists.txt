@@ -80,6 +80,7 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         ExecuteInProcessTest.cpp
         ExecuteMachineCodeTest.cpp
         FindFunctionAddressTest.cpp
+        DisassembleTest.cpp
         InjectLibraryInTraceeTest.cpp
         MachineCodeTest.cpp
         RegisterStateTest.cpp
