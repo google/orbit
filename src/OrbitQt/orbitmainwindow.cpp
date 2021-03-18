@@ -1246,21 +1246,34 @@ void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
 }
 
 void OrbitMainWindow::OnProcessListUpdated(
-    const std::vector<orbit_grpc_protos::ProcessInfo>& processes) {
-  const auto is_current_process = [this](const auto& process) {
-    const ProcessData* const target_process = app_->GetTargetProcess();
-    return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();
-  };
-  const auto current_process = std::find_if(processes.begin(), processes.end(), is_current_process);
-  const bool process_ended = current_process == processes.end();
+    const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos) {
+  ProcessData* const target_process = app_->GetMutableTargetProcess();
+  CHECK(target_process != nullptr);
 
-  if (process_ended) {
+  const auto is_same_based_on_full_path = [&](const auto& process) {
+    return process.full_path() == target_process->full_path();
+  };
+
+  const auto matched_process_info =
+      std::find_if(process_infos.begin(), process_infos.end(), is_same_based_on_full_path);
+
+  if (matched_process_info == process_infos.end()) {
+    // In this case the process simply ended and no new process with the same full_path was found
     target_process_state_ = TargetProcessState::kEnded;
     target_label_->SetProcessEnded();
-  } else {
-    target_process_state_ = TargetProcessState::kRunning;
-    target_label_->SetProcessCpuUsageInPercent(current_process->cpu_usage());
+    UpdateProcessConnectionStateDependentWidgets();
+    return;
   }
+
+  if (matched_process_info->pid() != target_process->pid()) {
+    // In this case there is a process in the process_infos with the same path as target_process,
+    // but with a different pid. That means the process was restarted and needs to be updated.
+    target_process->SetProcessInfo(*matched_process_info);
+    app_->UpdateProcessAndModuleList();
+  }
+
+  target_process_state_ = TargetProcessState::kRunning;
+  target_label_->SetProcessCpuUsageInPercent(current_process->cpu_usage());
   UpdateProcessConnectionStateDependentWidgets();
 }
 

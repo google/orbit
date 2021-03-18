@@ -165,7 +165,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetTarget(const orbit_qt::LocalTarget& target);
   void SetTarget(const orbit_qt::FileTarget& target);
 
-  void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
+  void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos);
 
   static const QString kCollectThreadStatesSettingKey;
   static const QString kLimitLocalMarkerDepthPerCommandBufferSettingsKey;

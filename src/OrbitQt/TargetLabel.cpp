@@ -124,7 +124,7 @@ bool TargetLabel::SetProcessEnded() {
 
   ui_->textLabel->setText(QString{"%1 @ %2"}.arg(process_, machine_));
   SetColor(kOrangeColor);
-  setToolTip("The process ended.");
+  setToolTip("The process ended. Restart the process to continue profiling.");
   SetIcon(IconType::kOrangeDisconnectedIcon);
   emit SizeChanged();
   return true;

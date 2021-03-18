@@ -121,7 +121,7 @@ TEST(TargetLabel, SetProcessEnded) {
     EXPECT_TRUE(result);
     EXPECT_NE(label.GetText(), updated_text);
     EXPECT_FALSE(label.GetText().contains("10%"));
-    EXPECT_EQ(label.GetToolTip(), "The process ended.");
+    EXPECT_EQ(label.GetToolTip(), "The process ended. Restart the process to continue profiling.");
     EXPECT_NE(label.GetColor(), initial_color);
     EXPECT_NE(label.GetColor(), updated_color);
     ASSERT_TRUE(label.GetIconType().has_value());
