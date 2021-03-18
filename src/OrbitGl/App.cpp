@@ -1128,11 +1128,10 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveVirt
 
   const auto size = module_data->address_end() - module_data->address_start();
 
-  // 8 MiB - That's also the limit that we support in the `ReadProcessMemory` gRPC endpoint.
-  // It's more than enough for reading [vdso] which is typically around 8 KiB.
-  if (size > 8 * 1024 * 1024) {
+  // 3 MiB - That's more than enough for reading [vdso] which is typically around 8 KiB
+  if (size > 3 * 1024 * 1024) {
     return ErrorMessage{absl::StrFormat(
-        "Module \"%s\" has a size of %d bytes (> 8MiB) and is too large to be read.",
+        "Module \"%s\" has a size of %d bytes (> 3MiB) and is too large to be read.",
         module_data->file_path(), size)};
   }
 
