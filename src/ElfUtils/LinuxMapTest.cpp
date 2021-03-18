@@ -232,7 +232,7 @@ TEST(LinuxMap, CreateModuleFromBufferHelloWorld) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto buffer_or_error = orbit_base::ReadFileToString(hello_world_path);
-  ASSERT_TRUE(buffer_or_error.has_value());
+  ASSERT_TRUE(buffer_or_error.has_value()) << buffer_or_error.error().message();
   const auto& buffer = buffer_or_error.value();
 
   auto result = CreateModuleFromBuffer(hello_world_path.filename().string(), buffer, kStartAddress,

@@ -83,8 +83,8 @@ ErrorMessageOr<ModuleInfo> CreateModuleFromBuffer(std::string module_name, std::
   ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error =
       ElfFile::CreateFromBuffer({}, buffer.data(), buffer.size());
   if (elf_file_or_error.has_error()) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load module: %s", elf_file_or_error.error().message()));
+    return ErrorMessage(absl::StrFormat("Unable to load module \"%s\": %s", module_name,
+                                        elf_file_or_error.error().message()));
   }
 
   ErrorMessageOr<uint64_t> load_bias_or_error = elf_file_or_error.value()->GetLoadBias();
