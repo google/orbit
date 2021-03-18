@@ -62,7 +62,7 @@ class ConnectToStadiaWidget : public QWidget {
   void OnConnectToStadiaRadioButtonClicked(bool checked);
   void OnErrorOccurred(const QString& message);
   void OnSelectionChanged(const QModelIndex& current);
-  void OnRememberCheckBoxToggled(bool checked);
+  void UpdateRememberInstance(bool value);
 
  signals:
   void ErrorOccurred(const QString& message);
