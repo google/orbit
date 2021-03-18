@@ -27,3 +27,5 @@ QWidget* FilterPanelWidgetAction::createWidget(QWidget* parent) {
           &FilterPanelWidget::SetFilterFunctionsText);
   return filter_panel_;
 }
+
+void FilterPanelWidgetAction::ClearEdits() { filter_panel_->ClearEdits(); }
