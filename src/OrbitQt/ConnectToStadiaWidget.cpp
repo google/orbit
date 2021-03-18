@@ -152,11 +152,13 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   // PROPERTIES of states
   // STATE s_idle
   s_idle_.assignProperty(ui_->refreshButton, "enabled", true);
+  s_idle_.assignProperty(ui_->rememberCheckBox, "enabled", false);
   // STATE s_instances_loading
   s_instances_loading_.assignProperty(ui_->instancesTableOverlay, "visible", true);
   s_instances_loading_.assignProperty(ui_->instancesTableOverlay, "statusMessage",
                                       "Loading instances...");
   s_instances_loading_.assignProperty(ui_->instancesTableOverlay, "cancelable", false);
+  s_instances_loading_.assignProperty(ui_->rememberCheckBox, "enabled", false);
   // STATE s_instance_selected
   s_instance_selected_.assignProperty(ui_->refreshButton, "enabled", true);
   s_instance_selected_.assignProperty(ui_->connectButton, "enabled", true);
@@ -173,7 +175,6 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   s_connected_.assignProperty(ui_->instancesTableOverlay, "spinning", false);
   s_connected_.assignProperty(ui_->instancesTableOverlay, "cancelable", true);
   s_connected_.assignProperty(ui_->instancesTableOverlay, "buttonMessage", "Disconnect");
-  s_connected_.assignProperty(ui_->rememberCheckBox, "enabled", true);
 
   // TRANSITIONS (and entered/exit events)
   // STATE s_idle_
@@ -323,8 +324,6 @@ void ConnectToStadiaWidget::Disconnect() {
   // }
   service_deploy_manager_ = nullptr;
 
-  ui_->rememberCheckBox->setChecked(false);
-
   emit Disconnected();
 }
 
@@ -349,6 +348,7 @@ void ConnectToStadiaWidget::OnSelectionChanged(const QModelIndex& current) {
 
   CHECK(current.model() == &instance_model_);
   selected_instance_ = current.data(Qt::UserRole).value<Instance>();
+  UpdateRememberInstance(ui_->rememberCheckBox->isChecked());
   emit InstanceSelected();
 }
 
@@ -424,14 +424,12 @@ void ConnectToStadiaWidget::TrySelectRememberedInstance() {
       instance_model_.index(0, static_cast<int>(orbit_ggp::InstanceItemModel::Columns::kId)),
       Qt::DisplayRole, QVariant::fromValue(remembered_instance_id_.value()));
 
-  if (!matches.isEmpty()) {
-    ui_->instancesTableView->selectionModel()->setCurrentIndex(
-        matches[0], {QItemSelectionModel::SelectCurrent, QItemSelectionModel::Rows});
-    emit Connect();
-    remembered_instance_id_ = std::nullopt;
-  } else {
-    ui_->rememberCheckBox->setChecked(false);
-  }
+  if (matches.isEmpty()) return;
+
+  ui_->instancesTableView->selectionModel()->setCurrentIndex(
+      matches[0], {QItemSelectionModel::SelectCurrent, QItemSelectionModel::Rows});
+  emit Connect();
+  remembered_instance_id_ = std::nullopt;
 }
 
 void ConnectToStadiaWidget::showEvent(QShowEvent* event) {

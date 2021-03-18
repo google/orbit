@@ -231,7 +231,7 @@
                <item>
                 <widget class="QCheckBox" name="rememberCheckBox">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="toolTip">
                   <string>Connect to the selected instance on Orbits next start</string>
