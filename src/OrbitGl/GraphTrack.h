@@ -36,22 +36,18 @@ class GraphTrack : public Track {
   [[nodiscard]] bool IsEmpty() const override { return values_.empty(); }
 
   void SetWarningThresholdWhenEmpty(
-      const std::optional<std::pair<std::string, double>>& warning_threshold) {
-    if (warning_threshold_.has_value() || !warning_threshold.has_value()) return;
-    warning_threshold_ = warning_threshold;
-    max_ = std::max(max_, warning_threshold.value().second);
-    min_ = std::min(min_, warning_threshold.value().second);
-  }
+      const std::optional<std::pair<std::string, double>>& warning_threshold);
   void SetValueUpperBoundWhenEmpty(
-      const std::optional<std::pair<std::string, double>>& value_upper_bound) {
-    if (value_upper_bound_.has_value() || !value_upper_bound.has_value()) return;
-    value_upper_bound_ = value_upper_bound;
-  }
+      const std::optional<std::pair<std::string, double>>& value_upper_bound);
+  void SetValueLowerBoundWhenEmpty(
+      const std::optional<std::pair<std::string, double>>& value_lower_bound);
 
  protected:
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
   void DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
                  const Color& text_color, const Color& font_color, float z);
+  void UpdateMinAndMax(double value);
+
   std::map<uint64_t, double> values_;
   double min_ = std::numeric_limits<double>::max();
   double max_ = std::numeric_limits<double>::lowest();
@@ -59,6 +55,7 @@ class GraphTrack : public Track {
   double inv_value_range_ = 0;
   std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;
   std::optional<std::pair<std::string, double>> value_upper_bound_ = std::nullopt;
+  std::optional<std::pair<std::string, double>> value_lower_bound_ = std::nullopt;
 };
 
 #endif  // ORBIT_GL_GRAPH_TRACK_H_
