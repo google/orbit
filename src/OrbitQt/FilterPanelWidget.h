@@ -25,6 +25,8 @@ class FilterPanelWidget : public QFrame {
   void SetFilterFunctionsText(const QString& text);
   void SetTimerLabelText(const QString& text);
 
+  void ClearEdits();
+
  signals:
   void FilterTracksTextChanged(const QString& text);
   void FilterFunctionsTextChanged(const QString& text);

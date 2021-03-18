@@ -32,3 +32,8 @@ void FilterPanelWidget::SetFilterFunctionsText(const QString& text) {
 }
 
 void FilterPanelWidget::SetTimerLabelText(const QString& text) { ui->timerLabel->setText(text); }
+
+void FilterPanelWidget::ClearEdits() {
+  ui->filterFunctions->clear();
+  ui->filterTracks->clear();
+}

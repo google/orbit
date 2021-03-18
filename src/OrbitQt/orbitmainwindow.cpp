@@ -207,6 +207,7 @@ void OrbitMainWindow::SetupMainWindow() {
 
   app_->SetCaptureStartedCallback([this] {
     UpdateCaptureStateDependentWidgets();
+    ClearCaptureFilters();
     setWindowTitle({});
   });
 
@@ -548,6 +549,8 @@ void OrbitMainWindow::UpdateProcessConnectionStateDependentWidgets() {
 
   UpdateCaptureToolbarIconOpacity();
 }
+
+void OrbitMainWindow::ClearCaptureFilters() { filter_panel_action_->ClearEdits(); }
 
 void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
   const QTabWidget* capture_parent = FindParentTabWidget(ui->CaptureTab);

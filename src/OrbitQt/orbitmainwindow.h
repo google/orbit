@@ -156,6 +156,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint pos);
   void UpdateCaptureStateDependentWidgets();
   void UpdateProcessConnectionStateDependentWidgets();
+  void ClearCaptureFilters();
 
   void UpdateActiveTabsAfterSelection(bool selection_has_samples);
 
